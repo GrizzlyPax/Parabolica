@@ -1,0 +1,450 @@
+.season-setup {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0d0d0d 0%, #1a1018 50%, #0d0d0d 100%);
+  padding: 2rem;
+}
+
+.season-setup-content {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.season-setup .back-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #888;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  margin-bottom: 2rem;
+}
+
+.season-setup .back-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+
+.season-setup-header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.season-setup-header h1 {
+  font-size: 2rem;
+  color: #fff;
+  margin: 0 0 0.5rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.header-emoji {
+  font-size: 1.8rem;
+}
+
+.season-setup-header p {
+  color: #888;
+  margin: 0;
+  font-size: 1rem;
+}
+
+.setup-section {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border: 1px solid #2a2a4a;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.setup-section h2 {
+  color: #fff;
+  font-size: 1.1rem;
+  margin: 0 0 0.25rem 0;
+}
+
+.setup-hint {
+  color: #666;
+  font-size: 0.85rem;
+  margin: 0 0 1rem 0;
+}
+
+.race-count-options {
+  display: flex;
+  gap: 1rem;
+}
+
+.race-count-btn {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.3);
+  border: 2px solid #3a3a5a;
+  border-radius: 10px;
+  padding: 1.25rem 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.race-count-btn:hover {
+  border-color: #5a5a8a;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.race-count-btn.selected {
+  border-color: #9b59b6;
+  background: rgba(155, 89, 182, 0.2);
+}
+
+.count-number {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #fff;
+}
+
+.race-count-btn.selected .count-number {
+  color: #9b59b6;
+}
+
+.count-label {
+  font-size: 0.8rem;
+  color: #666;
+  text-transform: uppercase;
+}
+
+/* Points preview */
+.points-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.5rem;
+}
+
+.points-item {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 6px;
+  padding: 0.5rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.points-item .position {
+  font-size: 0.75rem;
+  color: #888;
+}
+
+.points-item .points {
+  font-size: 0.9rem;
+  color: #fff;
+  font-weight: bold;
+}
+
+.points-item.gold {
+  background: rgba(255, 215, 0, 0.15);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+.points-item.gold .position {
+  color: #ffd700;
+}
+
+.points-item.silver {
+  background: rgba(192, 192, 192, 0.15);
+  border: 1px solid rgba(192, 192, 192, 0.3);
+}
+
+.points-item.silver .position {
+  color: #c0c0c0;
+}
+
+.points-item.bronze {
+  background: rgba(205, 127, 50, 0.15);
+  border: 1px solid rgba(205, 127, 50, 0.3);
+}
+
+.points-item.bronze .position {
+  color: #cd7f32;
+}
+
+/* Summary */
+.setup-summary {
+  background: linear-gradient(135deg, #1a1a2e 0%, #2a1a3e 100%);
+  border: 1px solid #3a2a5a;
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+.summary-stats {
+  display: flex;
+  justify-content: center;
+  gap: 3rem;
+  margin-bottom: 1.5rem;
+}
+
+.summary-stat {
+  text-align: center;
+}
+
+.summary-stat .stat-value {
+  display: block;
+  font-size: 2rem;
+  font-weight: bold;
+  color: #9b59b6;
+}
+
+.summary-stat .stat-label {
+  font-size: 0.8rem;
+  color: #888;
+  text-transform: uppercase;
+}
+
+.start-season-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+  border: none;
+  border-radius: 8px;
+  padding: 1rem 2rem;
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.start-season-btn:hover {
+  background: linear-gradient(135deg, #a569c6 0%, #9e54bd 100%);
+  transform: translateY(-2px);
+}
+
+.start-season-btn:active {
+  transform: translateY(0);
+}
+
+.btn-arrow {
+  font-size: 1.2rem;
+  transition: transform 0.2s ease;
+}
+
+.start-season-btn:hover .btn-arrow {
+  transform: translateX(4px);
+}
+
+/* Tabs */
+.setup-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 0.5rem;
+  border-radius: 10px;
+}
+
+.setup-tab {
+  flex: 1;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  color: #888;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.setup-tab:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #aaa;
+}
+
+.setup-tab.active {
+  background: rgba(155, 89, 182, 0.3);
+  color: #fff;
+}
+
+/* Selection Section */
+.selection-section {
+  max-height: none;
+}
+
+.selection-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+  gap: 1rem;
+}
+
+.selection-header h2 {
+  margin-bottom: 0.25rem;
+}
+
+.selection-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.action-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  color: #aaa;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.action-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+
+/* Selection Grid */
+.selection-grid {
+  display: grid;
+  gap: 0.75rem;
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.kingdoms-grid {
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+
+.tracks-grid {
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+}
+
+/* Selection Card */
+.selection-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: rgba(0, 0, 0, 0.3);
+  border: 2px solid #3a3a5a;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.selection-card:hover {
+  background: rgba(50, 50, 70, 0.5);
+  border-color: #5a5a8a;
+}
+
+.selection-card.selected {
+  border-color: #9b59b6;
+  background: rgba(155, 89, 182, 0.15);
+}
+
+.kingdom-card.selected {
+  border-color: var(--kingdom-color, #9b59b6);
+  background: linear-gradient(135deg,
+    rgba(155, 89, 182, 0.1) 0%,
+    rgba(var(--kingdom-color), 0.05) 100%
+  );
+}
+
+.selection-checkbox {
+  width: 24px;
+  height: 24px;
+  border: 2px solid #5a5a7a;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  color: #fff;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.selection-card.selected .selection-checkbox {
+  background: #9b59b6;
+  border-color: #9b59b6;
+}
+
+.kingdom-card.selected .selection-checkbox {
+  background: var(--kingdom-color, #9b59b6);
+  border-color: var(--kingdom-color, #9b59b6);
+}
+
+.selection-emoji {
+  font-size: 1.8rem;
+  flex-shrink: 0;
+}
+
+.selection-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.selection-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.selection-desc {
+  font-size: 0.75rem;
+  color: #888;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Track-specific styles */
+.track-meta {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.track-stat {
+  font-size: 0.7rem;
+  color: #666;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+}
+
+/* Scrollbar styling */
+.selection-grid::-webkit-scrollbar {
+  width: 6px;
+}
+
+.selection-grid::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.selection-grid::-webkit-scrollbar-thumb {
+  background: rgba(155, 89, 182, 0.4);
+  border-radius: 3px;
+}
+
+.selection-grid::-webkit-scrollbar-thumb:hover {
+  background: rgba(155, 89, 182, 0.6);
+}
+
+/* Disabled start button */
+.start-season-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}

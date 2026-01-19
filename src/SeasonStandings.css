@@ -1,0 +1,475 @@
+.season-standings {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border-radius: 12px;
+  padding: 1.25rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.standings-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #2a2a4a;
+}
+
+.standings-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.standings-title h2 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #fff;
+}
+
+.title-emoji {
+  font-size: 1.2rem;
+}
+
+.standings-progress {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.progress-text {
+  font-size: 0.8rem;
+  color: #888;
+  white-space: nowrap;
+}
+
+.progress-bar {
+  width: 100px;
+  height: 6px;
+  background: #2a2a4a;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #9b59b6, #3498db);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.close-btn:hover {
+  color: #fff;
+}
+
+/* Tabs */
+.standings-tabs {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 0.25rem;
+  border-radius: 6px;
+}
+
+.standings-tab {
+  flex: 1;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  padding: 0.5rem 0.75rem;
+  color: #888;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.standings-tab:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #aaa;
+}
+
+.standings-tab.active {
+  background: rgba(155, 89, 182, 0.3);
+  color: #fff;
+}
+
+/* Table */
+.standings-table {
+  flex: 1;
+  overflow-y: auto;
+  margin-bottom: 1rem;
+}
+
+.table-header {
+  display: grid;
+  grid-template-columns: 50px 1fr 70px 50px 60px 50px 50px 80px;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  font-size: 0.7rem;
+  color: #666;
+  text-transform: uppercase;
+  position: sticky;
+  top: 0;
+}
+
+.table-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.table-row {
+  display: grid;
+  grid-template-columns: 50px 1fr 70px 50px 60px 50px 50px 80px;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  font-size: 0.85rem;
+  transition: background 0.15s ease;
+}
+
+.table-row:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.table-row.leader {
+  background: rgba(255, 215, 0, 0.1);
+  border-left: 3px solid #ffd700;
+}
+
+.table-row.podium:not(.leader) {
+  border-left: 3px solid #4a4a6a;
+}
+
+.col-pos {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.pos-number {
+  font-weight: bold;
+  color: #fff;
+  min-width: 20px;
+}
+
+.pos-change {
+  font-size: 0.65rem;
+}
+
+.pos-change.up {
+  color: #2ecc71;
+}
+
+.pos-change.down {
+  color: #e74c3c;
+}
+
+.pos-change.same {
+  color: #666;
+}
+
+.col-driver {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  overflow: hidden;
+}
+
+.driver-emoji {
+  font-size: 1rem;
+}
+
+.driver-name {
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.col-points {
+  text-align: right;
+}
+
+.points-value {
+  font-weight: bold;
+  color: #fff;
+  background: rgba(155, 89, 182, 0.3);
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+}
+
+.table-row.leader .points-value {
+  background: rgba(255, 215, 0, 0.3);
+  color: #ffd700;
+}
+
+.col-wins, .col-podiums, .col-best, .col-dnfs {
+  text-align: center;
+  color: #888;
+}
+
+.col-form {
+  display: flex;
+  gap: 3px;
+  justify-content: flex-end;
+}
+
+.form-dot {
+  font-size: 0.8rem;
+  width: 14px;
+  text-align: center;
+}
+
+.form-dot.podium {
+  color: #ffd700;
+}
+
+.form-dot.points {
+  color: #2ecc71;
+}
+
+.form-dot.no-points {
+  color: #666;
+}
+
+.form-dot.dnf {
+  color: #e74c3c;
+}
+
+/* Recent races */
+.recent-races {
+  border-top: 1px solid #2a2a4a;
+  padding-top: 1rem;
+}
+
+.recent-races h3 {
+  font-size: 0.85rem;
+  color: #888;
+  margin: 0 0 0.75rem 0;
+  text-transform: uppercase;
+}
+
+.races-list {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+}
+
+.race-result-card {
+  flex-shrink: 0;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 160px;
+}
+
+.race-number {
+  font-weight: bold;
+  color: #666;
+  font-size: 0.75rem;
+}
+
+.race-track {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.track-emoji {
+  font-size: 0.9rem;
+}
+
+.track-name {
+  font-size: 0.75rem;
+  color: #aaa;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.race-podium {
+  display: flex;
+  gap: 2px;
+}
+
+.podium-driver {
+  font-size: 0.9rem;
+  padding: 2px;
+  border-radius: 4px;
+}
+
+.podium-driver.gold {
+  background: rgba(255, 215, 0, 0.2);
+}
+
+.podium-driver.silver {
+  background: rgba(192, 192, 192, 0.2);
+}
+
+.podium-driver.bronze {
+  background: rgba(205, 127, 50, 0.2);
+}
+
+/* Team standings */
+.team-standings .table-header,
+.team-standings .table-row {
+  grid-template-columns: 50px 1fr 70px 50px 60px 50px 140px;
+}
+
+.col-team {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  overflow: hidden;
+}
+
+.team-emoji {
+  font-size: 1.1rem;
+}
+
+.team-name {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.col-drivers-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  font-size: 0.7rem;
+}
+
+.driver-mini {
+  color: #888;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.team-row.leader {
+  border-left-color: var(--team-color, #ffd700);
+}
+
+/* Points Chart */
+.points-chart {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.chart-container {
+  flex: 1;
+  min-height: 180px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  padding: 0.5rem;
+  overflow-x: auto;
+}
+
+.chart-svg {
+  width: 100%;
+  height: 100%;
+  min-width: 300px;
+}
+
+.points-chart-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  padding: 2rem;
+  color: #666;
+  text-align: center;
+}
+
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 0.75rem 0;
+  justify-content: center;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+}
+
+.legend-line {
+  width: 20px;
+  height: 3px;
+  border-radius: 2px;
+  position: relative;
+}
+
+.legend-dashed {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent,
+    transparent 3px,
+    rgba(0, 0, 0, 0.8) 3px,
+    rgba(0, 0, 0, 0.8) 6px
+  );
+}
+
+.legend-emoji {
+  font-size: 0.85rem;
+}
+
+.legend-name {
+  font-weight: 500;
+  max-width: 60px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.legend-points {
+  color: #888;
+  font-size: 0.7rem;
+}
+
+.chart-note {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  font-size: 0.7rem;
+  color: #555;
+  padding-bottom: 0.5rem;
+}

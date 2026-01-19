@@ -1,0 +1,421 @@
+.driver-selection-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.driver-selection-modal {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #1a1a2e 100%);
+  border: 2px solid #3a3a5a;
+  border-radius: 16px;
+  padding: 2rem;
+  max-width: 800px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 40px rgba(100, 100, 150, 0.2);
+}
+
+.selection-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.selection-header h2 {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #e8e8e8;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin: 0 0 0.5rem 0;
+}
+
+.selection-subtitle {
+  font-family: 'Crimson Text', Georgia, serif;
+  font-size: 1rem;
+  color: #888;
+  margin: 0;
+}
+
+/* Driver Grid (legacy) */
+.driver-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.driver-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem 0.5rem;
+  background: rgba(30, 30, 40, 0.6);
+  border: 2px solid #3a3a4a;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.driver-card:hover:not(.disabled) {
+  background: rgba(50, 50, 70, 0.8);
+  border-color: #5a5a7a;
+  transform: translateY(-2px);
+}
+
+.driver-card.selected {
+  border-color: #ffd700;
+  background: rgba(255, 215, 0, 0.1);
+}
+
+.driver-card.favorite {
+  border-color: #ffd700;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+}
+
+.driver-card.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.driver-card-emoji {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.driver-card-name {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-align: center;
+  letter-spacing: 0.5px;
+}
+
+.selection-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  font-size: 1.2rem;
+}
+
+/* Kingdom Grid - Team selection */
+.kingdom-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.kingdom-selection-card {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  background: rgba(30, 30, 40, 0.6);
+  border: 2px solid #3a3a4a;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.kingdom-selection-card:hover:not(.disabled) {
+  background: rgba(50, 50, 70, 0.8);
+  border-color: var(--kingdom-color);
+  transform: translateY(-2px);
+}
+
+.kingdom-selection-card.selected {
+  border-color: #ffd700;
+  background: rgba(255, 215, 0, 0.1);
+}
+
+.kingdom-selection-card.favorite {
+  border-color: #ffd700;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+}
+
+.kingdom-selection-card.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.kingdom-selection-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.kingdom-selection-emoji {
+  font-size: 2rem;
+}
+
+.kingdom-selection-name {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.kingdom-selection-drivers {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding-left: 0.5rem;
+  border-left: 2px solid rgba(100, 100, 120, 0.3);
+  margin-left: 0.5rem;
+}
+
+.kingdom-driver-name {
+  font-family: 'Crimson Text', Georgia, serif;
+  font-size: 0.85rem;
+  color: #999;
+}
+
+/* Selected Teams (confirmation view) */
+.selected-teams {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+}
+
+.selected-team {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  border-radius: 12px;
+  position: relative;
+}
+
+.selected-team.favorite {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 215, 0, 0.05) 100%);
+  border: 2px solid #ffd700;
+}
+
+.selected-team.rival {
+  background: linear-gradient(135deg, rgba(231, 76, 60, 0.15) 0%, rgba(231, 76, 60, 0.05) 100%);
+  border: 2px solid #e74c3c;
+}
+
+.selected-drivers-list {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+}
+
+.selected-driver-name {
+  font-family: 'Crimson Text', Georgia, serif;
+  font-size: 0.85rem;
+  color: #bbb;
+}
+
+/* Confirmation View */
+.confirmation-view {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.selected-drivers {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+}
+
+.selected-driver {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  border-radius: 12px;
+  position: relative;
+}
+
+.selected-driver.favorite {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 215, 0, 0.05) 100%);
+  border: 2px solid #ffd700;
+}
+
+.selected-driver.rival {
+  background: linear-gradient(135deg, rgba(231, 76, 60, 0.15) 0%, rgba(231, 76, 60, 0.05) 100%);
+  border: 2px solid #e74c3c;
+}
+
+.selected-label {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #888;
+  margin-bottom: 0.5rem;
+}
+
+.selected-emoji {
+  font-size: 3.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.selected-name {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.champion-star, .rival-skull {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  font-size: 1.5rem;
+}
+
+.vs-divider {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #555;
+  letter-spacing: 2px;
+}
+
+/* Powers Preview */
+.powers-preview {
+  background: rgba(20, 20, 30, 0.6);
+  border: 1px solid #2a2a3a;
+  border-radius: 10px;
+  padding: 1.5rem;
+}
+
+.powers-preview h3 {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #aaa;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-align: center;
+  margin: 0 0 1rem 0;
+}
+
+.power-cards {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.power-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+  border-radius: 8px;
+  min-width: 160px;
+  text-align: center;
+}
+
+.power-card.blessing-card {
+  background: linear-gradient(135deg, rgba(46, 204, 113, 0.2) 0%, rgba(46, 204, 113, 0.05) 100%);
+  border: 1px solid #2ecc71;
+}
+
+.power-card.curse-card {
+  background: linear-gradient(135deg, rgba(231, 76, 60, 0.2) 0%, rgba(231, 76, 60, 0.05) 100%);
+  border: 1px solid #e74c3c;
+}
+
+.power-card.god-card {
+  background: linear-gradient(135deg, rgba(155, 89, 182, 0.2) 0%, rgba(155, 89, 182, 0.05) 100%);
+  border: 1px solid #9b59b6;
+}
+
+.power-emoji {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.power-name {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #e8e8e8;
+  margin-bottom: 0.25rem;
+}
+
+.power-desc {
+  font-family: 'Crimson Text', Georgia, serif;
+  font-size: 0.8rem;
+  color: #999;
+  margin-bottom: 0.5rem;
+  line-height: 1.3;
+}
+
+.power-target {
+  font-family: 'Crimson Text', Georgia, serif;
+  font-size: 0.7rem;
+  color: #666;
+  font-style: italic;
+}
+
+/* Actions */
+.selection-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.back-btn, .confirm-btn {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 0.75rem 2rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.back-btn {
+  background: rgba(60, 60, 70, 0.8);
+  color: #aaa;
+  border: 1px solid #4a4a5a;
+}
+
+.back-btn:hover {
+  background: rgba(80, 80, 90, 0.9);
+  color: #ccc;
+}
+
+.confirm-btn {
+  background: linear-gradient(135deg, #4a6fa5 0%, #3a5a8a 100%);
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(74, 111, 165, 0.3);
+}
+
+.confirm-btn:hover {
+  background: linear-gradient(135deg, #5a7fb5 0%, #4a6a9a 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(74, 111, 165, 0.4);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
