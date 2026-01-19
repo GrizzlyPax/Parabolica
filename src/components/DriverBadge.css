@@ -27,18 +27,18 @@
   border-width: 4px;
 }
 
-/* Primary driver (slot 1): White background with colored ring */
+/* Primary driver (slot 1): Team color background with white ring */
 .driver-badge[data-slot="1"] {
-  background: #fff;
-  border-style: solid;
-  border-color: var(--team-color);
-}
-
-/* Secondary driver (slot 2): Colored background with white ring */
-.driver-badge[data-slot="2"] {
   background: var(--team-color);
   border-style: solid;
   border-color: #fff;
+}
+
+/* Secondary driver (slot 2): Team color background with dark ring */
+.driver-badge[data-slot="2"] {
+  background: var(--team-color);
+  border-style: solid;
+  border-color: #222;
 }
 
 /* Emoji sizing */

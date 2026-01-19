@@ -1,16 +1,16 @@
-import { useState, useMemo } from 'react';
-import { generateRoster, generateRosterFromKingdoms, GeneratedDriver } from './generators/drivers';
-import { Track, ALL_TRACKS, getDynamicEventDescription } from './generators/tracks';
+import { useState } from 'react';
+import { generateRosterFromTeams, GeneratedDriver } from './generators/drivers';
+import { Track, ALL_TRACKS, getDynamicEventDescription, generateTrack } from './generators/tracks';
 import { generateCarsForKingdoms, GeneratedCar, getStatDescription, getStatEmoji } from './generators/cars';
-import { KINGDOMS, getKingdomsByIds, Kingdom } from './data/kingdoms';
+import { getTeamsByIds, getRandomTeams, Team } from './data/teams';
 import RaceEngine from './RaceEngine';
 import StarRating from './components/StarRating';
 import Tooltip from './components/Tooltip';
 import './LeagueSetup.css';
 
 interface LeagueSetupProps {
-  onStartRace: (favoriteKingdomId: string | null, rivalKingdomId: string | null) => void;
-  // Season mode - use specific kingdoms and track
+  onStartRace: (favoriteTeamId: string | null, rivalTeamId: string | null) => void;
+  // Season mode - use specific teams and track
   seasonKingdomIds?: string[];
   seasonTrack?: Track;
 }
@@ -19,75 +19,72 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
   // Determine if we're in season mode
   const isSeasonMode = !!seasonKingdomIds && seasonKingdomIds.length > 0;
 
-  // Get the active kingdoms (either season-selected or default 10)
-  const activeKingdoms: Kingdom[] = useMemo(() =>
-    isSeasonMode ? getKingdomsByIds(seasonKingdomIds!) : KINGDOMS,
-    [isSeasonMode, seasonKingdomIds]
+  // Get the active teams (either season-selected or random 10 for single race)
+  const [activeTeams] = useState<Team[]>(() =>
+    isSeasonMode ? getTeamsByIds(seasonKingdomIds!) : getRandomTeams(10)
   );
 
-  // Generate roster based on mode
+  // Generate roster based on active teams
   const [roster, setRoster] = useState<GeneratedDriver[]>(() =>
-    isSeasonMode ? generateRosterFromKingdoms(seasonKingdomIds!) : generateRoster()
+    generateRosterFromTeams(activeTeams.map(t => t.id))
   );
 
-  // Generate cars for each kingdom
+  // Generate cars for each team
   const [cars, setCars] = useState<Map<string, GeneratedCar>>(() =>
-    generateCarsForKingdoms(activeKingdoms.map(k => k.id))
+    generateCarsForKingdoms(activeTeams.map(t => t.id))
   );
 
-  // Use season track if provided, otherwise default to first track
+  // Use season track if provided, otherwise pick a random track for single race
   const [track, setTrack] = useState<Track>(() =>
-    seasonTrack || ALL_TRACKS[0]
+    seasonTrack || generateTrack()
   );
 
   const [selectedDriver, setSelectedDriver] = useState<GeneratedDriver | null>(null);
   const [activeTab, setActiveTab] = useState<'roster' | 'track'>('roster');
-  // Now we select teams (kingdoms) instead of individual drivers
-  const [chosenKingdomId, setChosenKingdomId] = useState<string | null>(null);
-  const [cursedKingdomId, setCursedKingdomId] = useState<string | null>(null);
+  // Team selection for favorites/rivals
+  const [chosenTeamId, setChosenTeamId] = useState<string | null>(null);
+  const [cursedTeamId, setCursedTeamId] = useState<string | null>(null);
 
   const engine = RaceEngine.getInstance();
 
-  // Get drivers for a kingdom
-  const getKingdomDrivers = (kingdomId: string) =>
-    roster.filter(d => d.kingdomId === kingdomId);
+  // Get drivers for a team
+  const getTeamDrivers = (teamId: string) =>
+    roster.filter(d => d.kingdomId === teamId);
 
   const handleRerollRoster = () => {
-    // Use season kingdoms if in season mode, otherwise full roster
-    const newRoster = isSeasonMode
-      ? generateRosterFromKingdoms(seasonKingdomIds!)
-      : generateRoster();
+    // Generate new drivers for the current teams
+    const newRoster = generateRosterFromTeams(activeTeams.map(t => t.id));
     setRoster(newRoster);
     setSelectedDriver(null);
     // Reset selections when roster changes
-    setChosenKingdomId(null);
-    setCursedKingdomId(null);
+    setChosenTeamId(null);
+    setCursedTeamId(null);
     // Also regenerate cars
-    setCars(generateCarsForKingdoms(activeKingdoms.map(k => k.id)));
+    setCars(generateCarsForKingdoms(activeTeams.map(t => t.id)));
   };
 
-  const handleChosenKingdomClick = (kingdomId: string, e: React.MouseEvent) => {
+  const handleChosenTeamClick = (teamId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (chosenKingdomId === kingdomId) {
-      setChosenKingdomId(null);
+    if (chosenTeamId === teamId) {
+      setChosenTeamId(null);
     } else {
-      setChosenKingdomId(kingdomId);
-      // If this kingdom was the cursed one, clear that
-      if (cursedKingdomId === kingdomId) {
-        setCursedKingdomId(null);
+      setChosenTeamId(teamId);
+      // If this team was the cursed one, clear that
+      if (cursedTeamId === teamId) {
+        setCursedTeamId(null);
       }
     }
   };
 
-  const handleCursedKingdomClick = (kingdomId: string, e: React.MouseEvent) => {
+  const handleCursedTeamClick = (teamId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (cursedKingdomId === kingdomId) {
-      setCursedKingdomId(null);
+    if (cursedTeamId === teamId) {
+      setCursedTeamId(null);
     } else {
-      setCursedKingdomId(kingdomId);
-      // If this kingdom was the chosen one, clear that
-      if (chosenKingdomId === kingdomId) {
-        setChosenKingdomId(null);
+      setCursedTeamId(teamId);
+      // If this team was the chosen one, clear that
+      if (chosenTeamId === teamId) {
+        setChosenTeamId(null);
       }
     }
   };
@@ -139,19 +136,19 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
       totalLaps: track.laps,
     });
 
-    // Pass kingdom IDs directly (powers now affect whole team)
-    onStartRace(chosenKingdomId, cursedKingdomId);
+    // Pass team IDs directly (powers now affect whole team)
+    onStartRace(chosenTeamId, cursedTeamId);
   };
 
-  // Get chosen/cursed kingdom objects for preview
-  const chosenKingdom = chosenKingdomId ? activeKingdoms.find(k => k.id === chosenKingdomId) : null;
-  const cursedKingdom = cursedKingdomId ? activeKingdoms.find(k => k.id === cursedKingdomId) : null;
+  // Get chosen/cursed team objects for preview
+  const chosenTeam = chosenTeamId ? activeTeams.find(t => t.id === chosenTeamId) : null;
+  const cursedTeam = cursedTeamId ? activeTeams.find(t => t.id === cursedTeamId) : null;
 
   return (
     <div className="league-setup">
       <header className="setup-header">
-        <h1>👑 Crown Prix</h1>
-        <p className="subtitle">{activeKingdoms.length} kingdoms compete for glory on the sacred tracks</p>
+        <h1>Parabolica</h1>
+        <p className="subtitle">{activeTeams.length} teams. {roster.length} drivers. Unclear outcomes.</p>
       </header>
 
       <div className="setup-tabs">
@@ -159,13 +156,13 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
           className={`setup-tab ${activeTab === 'roster' ? 'active' : ''}`}
           onClick={() => setActiveTab('roster')}
         >
-          The Kingdoms ({activeKingdoms.length} teams)
+          Teams ({activeTeams.length})
         </button>
         <button
           className={`setup-tab ${activeTab === 'track' ? 'active' : ''}`}
           onClick={() => setActiveTab('track')}
         >
-          The Circuit
+          Location
         </button>
       </div>
 
@@ -173,42 +170,42 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
         {activeTab === 'roster' && (
           <div className="roster-panel">
             <div className="panel-header">
-              <h2>Competing Kingdoms</h2>
+              <h2>Competing Teams</h2>
               <button className="reroll-btn" onClick={handleRerollRoster}>
-                🎲 Summon New Drivers
+                🎲 New Drivers
               </button>
             </div>
 
             <div className="kingdoms-list">
-              {activeKingdoms.map(kingdom => {
-                const drivers = getKingdomDrivers(kingdom.id);
-                const isChosen = chosenKingdomId === kingdom.id;
-                const isCursed = cursedKingdomId === kingdom.id;
+              {activeTeams.map(team => {
+                const drivers = getTeamDrivers(team.id);
+                const isChosen = chosenTeamId === team.id;
+                const isCursed = cursedTeamId === team.id;
 
                 return (
                   <div
-                    key={kingdom.id}
+                    key={team.id}
                     className={`kingdom-card ${isChosen ? 'chosen-kingdom' : ''} ${isCursed ? 'cursed-kingdom' : ''}`}
-                    style={{ borderColor: kingdom.color }}
+                    style={{ borderColor: team.color }}
                   >
                     <div className="kingdom-header">
-                      <span className="kingdom-emoji">{kingdom.emoji}</span>
+                      <span className="kingdom-emoji">{team.emoji}</span>
                       <div className="kingdom-info">
-                        <h3 className="kingdom-name" style={{ color: kingdom.color }}>{kingdom.name}</h3>
-                        <p className="kingdom-desc">{kingdom.description}</p>
+                        <h3 className="kingdom-name" style={{ color: team.color }}>{team.name}</h3>
+                        <p className="kingdom-desc">{team.description}</p>
                       </div>
                       <div className="kingdom-selection-buttons">
                         <button
                           className={`selection-btn chosen-btn ${isChosen ? 'active' : ''}`}
-                          onClick={(e) => handleChosenKingdomClick(kingdom.id, e)}
-                          title="Follow this team (optional - highlights during race)"
+                          onClick={(e) => handleChosenTeamClick(team.id, e)}
+                          title="Follow this team"
                         >
                           {isChosen ? '⭐' : '☆'}
                         </button>
                         <button
                           className={`selection-btn cursed-btn ${isCursed ? 'active' : ''}`}
-                          onClick={(e) => handleCursedKingdomClick(kingdom.id, e)}
-                          title="Mark as rival (optional - highlights during race)"
+                          onClick={(e) => handleCursedTeamClick(team.id, e)}
+                          title="Mark as rival"
                         >
                           {isCursed ? '💀' : '☠'}
                         </button>
@@ -216,8 +213,8 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
                     </div>
 
                     {/* Car and Team stats display */}
-                    {cars.get(kingdom.id) && (() => {
-                      const car = cars.get(kingdom.id)!;
+                    {cars.get(team.id) && (() => {
+                      const car = cars.get(team.id)!;
                       return (
                         <div className="kingdom-car">
                           <div className="car-header">
@@ -268,11 +265,11 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
                           className={`driver-row ${selectedDriver?.id === driver.id ? 'selected' : ''}`}
                           onClick={() => setSelectedDriver(selectedDriver?.id === driver.id ? null : driver)}
                         >
-                          <div className="driver-badge" data-slot={driver.driverSlot} style={{ '--team-color': kingdom.color } as React.CSSProperties}>
-                            <span className="badge-emoji">{kingdom.emoji}</span>
+                          <div className="driver-badge" data-slot={driver.driverSlot} style={{ '--team-color': team.color } as React.CSSProperties}>
+                            <span className="badge-emoji">{team.emoji}</span>
                           </div>
                           <span className="driver-name">{driver.fullName}</span>
-                          <span className="driver-slot">{driver.driverSlot === 1 ? 'Primary' : 'Secondary'}</span>
+                          <span className="driver-slot">{driver.driverSlot === 1 ? '#1' : '#2'}</span>
                           <div className="driver-stats-inline">
                             <Tooltip content="Base Speed: Determines raw pace. Multiplied by car Power on straights.">
                               <div className="stat-group">
@@ -312,9 +309,9 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
         {activeTab === 'track' && (
           <div className="track-panel">
             <div className="panel-header">
-              <h2>The Ritual Grounds</h2>
+              <h2>The Venue</h2>
               {isSeasonMode && (
-                <span className="season-track-note">Season Calendar Track</span>
+                <span className="season-track-note">Season Calendar</span>
               )}
             </div>
 
@@ -373,25 +370,25 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
 
       <div className="setup-footer">
         <div className="race-preview">
-          <span>{activeKingdoms.length} kingdoms • {roster.length} drivers</span>
+          <span>{activeTeams.length} teams • {roster.length} drivers</span>
           <span>•</span>
           <span>{track.emoji} {track.name}</span>
           <span>•</span>
           <span>{track.laps} laps</span>
-          {(chosenKingdom || cursedKingdom) && <span>•</span>}
-          {chosenKingdom && (
+          {(chosenTeam || cursedTeam) && <span>•</span>}
+          {chosenTeam && (
             <span className="preview-chosen">
-              ⭐ {chosenKingdom.emoji} {chosenKingdom.name}
+              ⭐ {chosenTeam.emoji} {chosenTeam.name}
             </span>
           )}
-          {cursedKingdom && (
+          {cursedTeam && (
             <span className="preview-cursed">
-              💀 {cursedKingdom.emoji} {cursedKingdom.name}
+              💀 {cursedTeam.emoji} {cursedTeam.name}
             </span>
           )}
         </div>
         <button className="start-race-btn" onClick={handleStartRace}>
-          👑 Begin the Crown Prix
+          Start Race
         </button>
       </div>
     </div>

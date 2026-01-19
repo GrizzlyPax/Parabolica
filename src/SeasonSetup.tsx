@@ -1,10 +1,10 @@
 import { useState, useMemo } from 'react';
-import { ALL_KINGDOMS, getRandomKingdoms } from './data/kingdoms';
+import { ALL_TEAMS, getRandomTeams } from './data/teams';
 import { ALL_TRACKS, getRandomTracks } from './generators/tracks';
 import './SeasonSetup.css';
 
 interface SeasonSetupProps {
-  onStartSeason: (numRaces: number, selectedKingdomIds: string[], selectedTrackIds: string[]) => void;
+  onStartSeason: (numRaces: number, selectedTeamIds: string[], selectedTrackIds: string[]) => void;
   onBack: () => void;
 }
 
@@ -17,9 +17,9 @@ function SeasonSetup({ onStartSeason, onBack }: SeasonSetupProps) {
   const [activeTab, setActiveTab] = useState<SetupTab>('overview');
 
   // Team selection - default to random 10
-  const [selectedKingdomIds, setSelectedKingdomIds] = useState<Set<string>>(() => {
-    const random10 = getRandomKingdoms(10);
-    return new Set(random10.map(k => k.id));
+  const [selectedTeamIds, setSelectedTeamIds] = useState<Set<string>>(() => {
+    const random10 = getRandomTeams(10);
+    return new Set(random10.map(t => t.id));
   });
 
   // Track selection - default to random based on race count
@@ -28,18 +28,18 @@ function SeasonSetup({ onStartSeason, onBack }: SeasonSetupProps) {
     return new Set(randomTracks.map(t => t.id));
   });
 
-  const toggleKingdom = (kingdomId: string) => {
-    setSelectedKingdomIds(prev => {
+  const toggleTeam = (teamId: string) => {
+    setSelectedTeamIds(prev => {
       const next = new Set(prev);
-      if (next.has(kingdomId)) {
+      if (next.has(teamId)) {
         // Don't allow fewer than 5 teams
         if (next.size > 5) {
-          next.delete(kingdomId);
+          next.delete(teamId);
         }
       } else {
-        // Don't allow more than 15 teams
-        if (next.size < 15) {
-          next.add(kingdomId);
+        // Don't allow more than 20 teams
+        if (next.size < 20) {
+          next.add(teamId);
         }
       }
       return next;
@@ -61,9 +61,9 @@ function SeasonSetup({ onStartSeason, onBack }: SeasonSetupProps) {
     });
   };
 
-  const randomizeKingdoms = () => {
-    const random = getRandomKingdoms(10);
-    setSelectedKingdomIds(new Set(random.map(k => k.id)));
+  const randomizeTeams = () => {
+    const random = getRandomTeams(10);
+    setSelectedTeamIds(new Set(random.map(t => t.id)));
   };
 
   const randomizeTracks = () => {
@@ -71,8 +71,8 @@ function SeasonSetup({ onStartSeason, onBack }: SeasonSetupProps) {
     setSelectedTrackIds(new Set(random.map(t => t.id)));
   };
 
-  const selectAllKingdoms = () => {
-    setSelectedKingdomIds(new Set(ALL_KINGDOMS.slice(0, 15).map(k => k.id)));
+  const selectAllTeams = () => {
+    setSelectedTeamIds(new Set(ALL_TEAMS.slice(0, 20).map(t => t.id)));
   };
 
   const selectAllTracks = () => {
@@ -80,9 +80,9 @@ function SeasonSetup({ onStartSeason, onBack }: SeasonSetupProps) {
   };
 
   // Computed values
-  const selectedKingdoms = useMemo(() =>
-    ALL_KINGDOMS.filter(k => selectedKingdomIds.has(k.id)),
-    [selectedKingdomIds]
+  const selectedTeams = useMemo(() =>
+    ALL_TEAMS.filter(t => selectedTeamIds.has(t.id)),
+    [selectedTeamIds]
   );
 
   const selectedTracks = useMemo(() =>
@@ -90,12 +90,12 @@ function SeasonSetup({ onStartSeason, onBack }: SeasonSetupProps) {
     [selectedTrackIds]
   );
 
-  const driverCount = selectedKingdoms.length * 2;
+  const driverCount = selectedTeams.length * 2;
 
   const handleStartSeason = () => {
     onStartSeason(
       selectedRaces,
-      Array.from(selectedKingdomIds),
+      Array.from(selectedTeamIds),
       Array.from(selectedTrackIds)
     );
   };
@@ -110,7 +110,7 @@ function SeasonSetup({ onStartSeason, onBack }: SeasonSetupProps) {
             <span className="header-emoji">🏆</span>
             Season Setup
           </h1>
-          <p>Configure your championship season</p>
+          <p>Configure your championship</p>
         </div>
 
         {/* Tab Navigation */}
@@ -125,7 +125,7 @@ function SeasonSetup({ onStartSeason, onBack }: SeasonSetupProps) {
             className={`setup-tab ${activeTab === 'teams' ? 'active' : ''}`}
             onClick={() => setActiveTab('teams')}
           >
-            Teams ({selectedKingdoms.length}/{ALL_KINGDOMS.length})
+            Teams ({selectedTeams.length}/{ALL_TEAMS.length})
           </button>
           <button
             className={`setup-tab ${activeTab === 'tracks' ? 'active' : ''}`}
@@ -158,7 +158,7 @@ function SeasonSetup({ onStartSeason, onBack }: SeasonSetupProps) {
 
             <div className="setup-section points-preview">
               <h2>Points System</h2>
-              <p className="setup-hint">F1-style championship points awarded to top 10 finishers</p>
+              <p className="setup-hint">Championship points awarded to top 10 finishers</p>
 
               <div className="points-grid">
                 <div className="points-item gold">
@@ -211,38 +211,38 @@ function SeasonSetup({ onStartSeason, onBack }: SeasonSetupProps) {
           <div className="setup-section selection-section">
             <div className="selection-header">
               <div>
-                <h2>Select Competing Kingdoms</h2>
-                <p className="setup-hint">Choose 5-15 teams. Each team has 2 drivers.</p>
+                <h2>Select Teams</h2>
+                <p className="setup-hint">Choose 5-20 teams. Each team has 2 drivers.</p>
               </div>
               <div className="selection-actions">
-                <button className="action-btn" onClick={randomizeKingdoms}>
+                <button className="action-btn" onClick={randomizeTeams}>
                   🎲 Random 10
                 </button>
-                <button className="action-btn" onClick={selectAllKingdoms}>
-                  ✓ Select 15
+                <button className="action-btn" onClick={selectAllTeams}>
+                  ✓ Select 20
                 </button>
               </div>
             </div>
 
             <div className="selection-grid kingdoms-grid">
-              {ALL_KINGDOMS.map(kingdom => {
-                const isSelected = selectedKingdomIds.has(kingdom.id);
+              {ALL_TEAMS.map(team => {
+                const isSelected = selectedTeamIds.has(team.id);
                 return (
                   <div
-                    key={kingdom.id}
+                    key={team.id}
                     className={`selection-card kingdom-card ${isSelected ? 'selected' : ''}`}
-                    onClick={() => toggleKingdom(kingdom.id)}
-                    style={{ '--kingdom-color': kingdom.color } as React.CSSProperties}
+                    onClick={() => toggleTeam(team.id)}
+                    style={{ '--kingdom-color': team.color } as React.CSSProperties}
                   >
                     <div className="selection-checkbox">
                       {isSelected ? '✓' : ''}
                     </div>
-                    <span className="selection-emoji">{kingdom.emoji}</span>
+                    <span className="selection-emoji">{team.emoji}</span>
                     <div className="selection-info">
-                      <span className="selection-name" style={{ color: kingdom.color }}>
-                        {kingdom.name}
+                      <span className="selection-name" style={{ color: team.color }}>
+                        {team.name}
                       </span>
-                      <span className="selection-desc">{kingdom.description}</span>
+                      <span className="selection-desc">{team.description}</span>
                     </div>
                   </div>
                 );
@@ -306,7 +306,7 @@ function SeasonSetup({ onStartSeason, onBack }: SeasonSetupProps) {
               <span className="stat-label">Races</span>
             </div>
             <div className="summary-stat">
-              <span className="stat-value">{selectedKingdoms.length}</span>
+              <span className="stat-value">{selectedTeams.length}</span>
               <span className="stat-label">Teams</span>
             </div>
             <div className="summary-stat">
@@ -322,7 +322,7 @@ function SeasonSetup({ onStartSeason, onBack }: SeasonSetupProps) {
           <button
             className="start-season-btn"
             onClick={handleStartSeason}
-            disabled={selectedKingdoms.length < 5 || selectedTracks.length < 3}
+            disabled={selectedTeams.length < 5 || selectedTracks.length < 3}
           >
             Start Championship
             <span className="btn-arrow">→</span>

@@ -1,101 +1,101 @@
 import { useState, useMemo } from 'react';
 import { Driver } from './RaceEngine';
 import { RacePowerSet } from './powers';
-import { KINGDOMS } from './data/kingdoms';
+import { ALL_TEAMS } from './data/teams';
 import './DriverSelection.css';
 
 interface DriverSelectionProps {
   drivers: Driver[];
-  onSelectionComplete: (favoriteKingdomId: string, rivalKingdomId: string) => void;
+  onSelectionComplete: (favoriteTeamId: string, rivalTeamId: string) => void;
   powers: RacePowerSet;
 }
 
 function DriverSelection({ drivers, onSelectionComplete, powers }: DriverSelectionProps) {
-  const [favoriteKingdomId, setFavoriteKingdomId] = useState<string | null>(null);
-  const [rivalKingdomId, setRivalKingdomId] = useState<string | null>(null);
+  const [favoriteTeamId, setFavoriteTeamId] = useState<string | null>(null);
+  const [rivalTeamId, setRivalTeamId] = useState<string | null>(null);
   const [step, setStep] = useState<'favorite' | 'rival' | 'confirm'>('favorite');
 
-  // Get drivers for a kingdom
-  const getKingdomDrivers = (kingdomId: string): Driver[] => {
-    return drivers.filter(d => d.kingdomId === kingdomId);
+  // Get drivers for a team
+  const getTeamDrivers = (teamId: string): Driver[] => {
+    return drivers.filter(d => d.kingdomId === teamId);
   };
 
-  // Get unique kingdoms that have drivers in this race
-  const activeKingdoms = useMemo(() => {
-    const kingdomIds = new Set(drivers.map(d => d.kingdomId).filter(Boolean));
-    return KINGDOMS.filter(k => kingdomIds.has(k.id));
+  // Get unique teams that have drivers in this race
+  const activeTeams = useMemo(() => {
+    const teamIds = new Set(drivers.map(d => d.kingdomId).filter(Boolean));
+    return ALL_TEAMS.filter(t => teamIds.has(t.id));
   }, [drivers]);
 
-  const handleKingdomClick = (kingdomId: string) => {
+  const handleTeamClick = (teamId: string) => {
     if (step === 'favorite') {
-      setFavoriteKingdomId(kingdomId);
+      setFavoriteTeamId(teamId);
       setStep('rival');
-    } else if (step === 'rival' && kingdomId !== favoriteKingdomId) {
-      setRivalKingdomId(kingdomId);
+    } else if (step === 'rival' && teamId !== favoriteTeamId) {
+      setRivalTeamId(teamId);
       setStep('confirm');
     }
   };
 
   const handleConfirm = () => {
-    if (favoriteKingdomId !== null && rivalKingdomId !== null) {
-      onSelectionComplete(favoriteKingdomId, rivalKingdomId);
+    if (favoriteTeamId !== null && rivalTeamId !== null) {
+      onSelectionComplete(favoriteTeamId, rivalTeamId);
     }
   };
 
   const handleBack = () => {
     if (step === 'rival') {
       setStep('favorite');
-      setFavoriteKingdomId(null);
+      setFavoriteTeamId(null);
     } else if (step === 'confirm') {
       setStep('rival');
-      setRivalKingdomId(null);
+      setRivalTeamId(null);
     }
   };
 
-  const favoriteKingdom = activeKingdoms.find(k => k.id === favoriteKingdomId);
-  const rivalKingdom = activeKingdoms.find(k => k.id === rivalKingdomId);
-  const favoriteDrivers = favoriteKingdomId ? getKingdomDrivers(favoriteKingdomId) : [];
-  const rivalDrivers = rivalKingdomId ? getKingdomDrivers(rivalKingdomId) : [];
+  const favoriteTeam = activeTeams.find(t => t.id === favoriteTeamId);
+  const rivalTeam = activeTeams.find(t => t.id === rivalTeamId);
+  const favoriteDrivers = favoriteTeamId ? getTeamDrivers(favoriteTeamId) : [];
+  const rivalDrivers = rivalTeamId ? getTeamDrivers(rivalTeamId) : [];
 
   return (
     <div className="driver-selection-overlay">
       <div className="driver-selection-modal">
         <div className="selection-header">
           <h2>
-            {step === 'favorite' && 'Choose Your Kingdom'}
-            {step === 'rival' && 'Choose Your Rival Kingdom'}
+            {step === 'favorite' && 'Choose Your Team'}
+            {step === 'rival' && 'Choose Your Rival'}
             {step === 'confirm' && 'Confirm Selections'}
           </h2>
           <p className="selection-subtitle">
-            {step === 'favorite' && 'Both drivers from this kingdom will receive your blessings'}
-            {step === 'rival' && 'Both drivers from this kingdom will suffer your curses'}
+            {step === 'favorite' && 'Both drivers from this team will receive your blessings'}
+            {step === 'rival' && 'Both drivers from this team will suffer your curses'}
             {step === 'confirm' && 'Ready to race?'}
           </p>
         </div>
 
         {step !== 'confirm' ? (
           <div className="kingdom-grid">
-            {activeKingdoms.map(kingdom => {
-              const isSelected = kingdom.id === favoriteKingdomId || kingdom.id === rivalKingdomId;
-              const isFavorite = kingdom.id === favoriteKingdomId;
-              const isDisabled = step === 'rival' && kingdom.id === favoriteKingdomId;
-              const kingdomDrivers = getKingdomDrivers(kingdom.id);
+            {activeTeams.map(team => {
+              const isSelected = team.id === favoriteTeamId || team.id === rivalTeamId;
+              const isFavorite = team.id === favoriteTeamId;
+              const isDisabled = step === 'rival' && team.id === favoriteTeamId;
+              const teamDrivers = getTeamDrivers(team.id);
 
               return (
                 <div
-                  key={kingdom.id}
+                  key={team.id}
                   className={`kingdom-selection-card ${isSelected ? 'selected' : ''} ${isFavorite ? 'favorite' : ''} ${isDisabled ? 'disabled' : ''}`}
-                  onClick={() => !isDisabled && handleKingdomClick(kingdom.id)}
-                  style={{ '--kingdom-color': kingdom.color } as React.CSSProperties}
+                  onClick={() => !isDisabled && handleTeamClick(team.id)}
+                  style={{ '--kingdom-color': team.color } as React.CSSProperties}
                 >
                   <div className="kingdom-selection-header">
-                    <span className="kingdom-selection-emoji">{kingdom.emoji}</span>
-                    <span className="kingdom-selection-name" style={{ color: kingdom.color }}>
-                      {kingdom.name}
+                    <span className="kingdom-selection-emoji">{team.emoji}</span>
+                    <span className="kingdom-selection-name" style={{ color: team.color }}>
+                      {team.name}
                     </span>
                   </div>
                   <div className="kingdom-selection-drivers">
-                    {kingdomDrivers.map(driver => (
+                    {teamDrivers.map(driver => (
                       <span key={driver.id} className="kingdom-driver-name">{driver.name}</span>
                     ))}
                   </div>
@@ -108,10 +108,10 @@ function DriverSelection({ drivers, onSelectionComplete, powers }: DriverSelecti
           <div className="confirmation-view">
             <div className="selected-teams">
               <div className="selected-team favorite">
-                <div className="selected-label">Your Kingdom</div>
-                <div className="selected-emoji">{favoriteKingdom?.emoji}</div>
-                <div className="selected-name" style={{ color: favoriteKingdom?.color }}>
-                  {favoriteKingdom?.name}
+                <div className="selected-label">Your Team</div>
+                <div className="selected-emoji">{favoriteTeam?.emoji}</div>
+                <div className="selected-name" style={{ color: favoriteTeam?.color }}>
+                  {favoriteTeam?.name}
                 </div>
                 <div className="selected-drivers-list">
                   {favoriteDrivers.map(d => (
@@ -124,10 +124,10 @@ function DriverSelection({ drivers, onSelectionComplete, powers }: DriverSelecti
               <div className="vs-divider">VS</div>
 
               <div className="selected-team rival">
-                <div className="selected-label">Rival Kingdom</div>
-                <div className="selected-emoji">{rivalKingdom?.emoji}</div>
-                <div className="selected-name" style={{ color: rivalKingdom?.color }}>
-                  {rivalKingdom?.name}
+                <div className="selected-label">Rival Team</div>
+                <div className="selected-emoji">{rivalTeam?.emoji}</div>
+                <div className="selected-name" style={{ color: rivalTeam?.color }}>
+                  {rivalTeam?.name}
                 </div>
                 <div className="selected-drivers-list">
                   {rivalDrivers.map(d => (
@@ -145,13 +145,13 @@ function DriverSelection({ drivers, onSelectionComplete, powers }: DriverSelecti
                   <span className="power-emoji">{powers.blessing.emoji}</span>
                   <span className="power-name">{powers.blessing.name}</span>
                   <span className="power-desc">{powers.blessing.description}</span>
-                  <span className="power-target">Target: {favoriteKingdom?.name} (both drivers)</span>
+                  <span className="power-target">Target: {favoriteTeam?.name} (both drivers)</span>
                 </div>
                 <div className="power-card curse-card">
                   <span className="power-emoji">{powers.curse.emoji}</span>
                   <span className="power-name">{powers.curse.name}</span>
                   <span className="power-desc">{powers.curse.description}</span>
-                  <span className="power-target">Target: {rivalKingdom?.name} (both drivers)</span>
+                  <span className="power-target">Target: {rivalTeam?.name} (both drivers)</span>
                 </div>
                 <div className="power-card god-card">
                   <span className="power-emoji">{powers.godPower.emoji}</span>

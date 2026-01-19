@@ -1,4 +1,5 @@
-// Crown Prix Kingdoms - 20 teams total, 10 selected per season
+// Olympus GP - Divine Stables
+// Each team is backed by a Greek god, with drivers chosen from their mortal champions
 
 export interface Kingdom {
   id: string;
@@ -8,153 +9,154 @@ export interface Kingdom {
   description: string;
 }
 
-// Full roster of all available kingdoms
+// The 20 Divine Stables of Olympus GP
 export const ALL_KINGDOMS: Kingdom[] = [
-  // Original 10
+  // The Twelve Olympians
   {
-    id: 'crimson-vale',
-    name: 'Crimson Vale',
-    emoji: '🧛',
-    color: '#C62828',
-    description: 'The blood-red banners of the vampiric lords',
-  },
-  {
-    id: 'emberreach',
-    name: 'Emberreach',
-    emoji: '🐉',
-    color: '#FF6F00',
-    description: 'Dragon tamers from the volcanic highlands',
-  },
-  {
-    id: 'lunareth',
-    name: 'Lunareth',
-    emoji: '🌙',
-    color: '#7E57C2',
-    description: 'Moon worshippers who race under starlight',
-  },
-  {
-    id: 'thornwild',
-    name: 'Thornwild',
-    emoji: '🌿',
-    color: '#2E7D32',
-    description: 'Forest dwellers with nature-blessed steeds',
-  },
-  {
-    id: 'brasshaven',
-    name: 'Brasshaven',
-    emoji: '⚙️',
-    color: '#8D6E63',
-    description: 'Inventors and engineers of clockwork mounts',
-  },
-  {
-    id: 'candlecourt',
-    name: 'Candlecourt',
-    emoji: '🕯️',
-    color: '#FFE082',
-    description: 'The gilded nobles with their sacred flames',
-  },
-  {
-    id: 'tideward',
-    name: 'Tideward',
-    emoji: '🌊',
-    color: '#0288D1',
-    description: 'Sea-born racers who command the waves',
-  },
-  {
-    id: 'virel-dominion',
-    name: 'Virel Dominion',
-    emoji: '👁️',
-    color: '#00BFA5',
-    description: 'Seers with unnatural foresight',
-  },
-  {
-    id: 'saffron-expanse',
-    name: 'Saffron Expanse',
-    emoji: '🏜️',
-    color: '#FB8C00',
-    description: 'Desert nomads with sun-hardened resolve',
-  },
-  {
-    id: 'starfall-concord',
-    name: 'Starfall Concord',
-    emoji: '⭐',
-    color: '#4FC3F7',
-    description: 'Celestial travelers touched by comets',
-  },
-  // New 10
-  {
-    id: 'ironhold',
-    name: 'Ironhold',
-    emoji: '🛡️',
-    color: '#607D8B',
-    description: 'Armored warriors from the mountain fortresses',
-  },
-  {
-    id: 'frostmere',
-    name: 'Frostmere',
-    emoji: '❄️',
-    color: '#81D4FA',
-    description: 'Ice-bound racers from the frozen north',
-  },
-  {
-    id: 'shadowfen',
-    name: 'Shadowfen',
-    emoji: '🦇',
-    color: '#37474F',
-    description: 'Mysterious riders from the dark marshlands',
-  },
-  {
-    id: 'phoenixcrest',
-    name: 'Phoenixcrest',
-    emoji: '🔥',
-    color: '#FF5722',
-    description: 'Reborn from ashes, they never stay down',
-  },
-  {
-    id: 'crystalspire',
-    name: 'Crystalspire',
-    emoji: '💎',
-    color: '#E1BEE7',
-    description: 'Gem-encrusted chariots of the mining lords',
-  },
-  {
-    id: 'stormwright',
-    name: 'Stormwright',
+    id: 'zeus',
+    name: 'House Zeus',
     emoji: '⚡',
-    color: '#FDD835',
-    description: 'Thunder callers who race with lightning',
+    color: '#F0E68C',
+    description: 'The Thunderer\'s chosen race with lightning speed',
   },
   {
-    id: 'verdant-throne',
-    name: 'Verdant Throne',
-    emoji: '🌳',
-    color: '#388E3C',
-    description: 'Ancient tree-speakers of the old growth',
+    id: 'hera',
+    name: 'House Hera',
+    emoji: '🦚',
+    color: '#4B0082',
+    description: 'The Queen\'s peacock-adorned chariots of sovereignty',
   },
   {
-    id: 'obsidian-order',
-    name: 'Obsidian Order',
-    emoji: '🖤',
-    color: '#212121',
-    description: 'Volcanic glass knights of dark precision',
+    id: 'poseidon',
+    name: 'House Poseidon',
+    emoji: '🔱',
+    color: '#0077BE',
+    description: 'The Earth-Shaker\'s tide-blessed speed demons',
   },
   {
-    id: 'pearlharbor',
-    name: 'Pearlharbor',
-    emoji: '🐚',
-    color: '#80CBC4',
-    description: 'Ocean treasure hunters with shell-crafted speed',
+    id: 'demeter',
+    name: 'House Demeter',
+    emoji: '🌾',
+    color: '#3CB371',
+    description: 'The Harvest Queen\'s ever-renewing champions',
   },
   {
-    id: 'sunspear',
-    name: 'Sunspear',
+    id: 'ares',
+    name: 'House Ares',
+    emoji: '⚔️',
+    color: '#8B0000',
+    description: 'The War God\'s aggressive and fearless warriors',
+  },
+  {
+    id: 'athena',
+    name: 'House Athena',
+    emoji: '🦉',
+    color: '#708090',
+    description: 'The Wise One\'s tactical precision racers',
+  },
+  {
+    id: 'apollo',
+    name: 'House Apollo',
     emoji: '☀️',
-    color: '#FFB300',
-    description: 'Solar knights who draw power from daylight',
+    color: '#FFD700',
+    description: 'The Radiant One\'s sun-blessed golden chariots',
+  },
+  {
+    id: 'artemis',
+    name: 'House Artemis',
+    emoji: '🏹',
+    color: '#228B22',
+    description: 'The Huntress\'s swift and precise moonlit racers',
+  },
+  {
+    id: 'hephaestus',
+    name: 'House Hephaestus',
+    emoji: '🛠️',
+    color: '#E25822',
+    description: 'The Smith God\'s masterfully forged machines',
+  },
+  {
+    id: 'aphrodite',
+    name: 'House Aphrodite',
+    emoji: '🕊️',
+    color: '#FFB6C1',
+    description: 'The Love Goddess\'s irresistibly alluring team',
+  },
+  {
+    id: 'hermes',
+    name: 'House Hermes',
+    emoji: '🪽',
+    color: '#C0C0C0',
+    description: 'The Messenger\'s winged-sandal speedsters',
+  },
+  {
+    id: 'dionysus',
+    name: 'House Dionysus',
+    emoji: '🍷',
+    color: '#800020',
+    description: 'The Revelry God\'s unpredictable wild cards',
+  },
+  // The Underworld & Beyond
+  {
+    id: 'hades',
+    name: 'House Hades',
+    emoji: '💀',
+    color: '#2C3E50',
+    description: 'The Unseen One\'s shadow-wreathed champions',
+  },
+  {
+    id: 'persephone',
+    name: 'House Persephone',
+    emoji: '🌷',
+    color: '#DA70D6',
+    description: 'The Spring Queen\'s dual-natured racers',
+  },
+  {
+    id: 'hestia',
+    name: 'House Hestia',
+    emoji: '🕯️',
+    color: '#FF4500',
+    description: 'The Hearth Keeper\'s steady and enduring team',
+  },
+  // Titans & Primordials
+  {
+    id: 'helios',
+    name: 'House Helios',
+    emoji: '🌅',
+    color: '#FF8C00',
+    description: 'The Sun Titan\'s blazing dawn chariots',
+  },
+  {
+    id: 'selene',
+    name: 'House Selene',
+    emoji: '🌙',
+    color: '#F5F5F5',
+    description: 'The Moon Titan\'s ethereal night riders',
+  },
+  {
+    id: 'pan',
+    name: 'House Pan',
+    emoji: '🐐',
+    color: '#8B4513',
+    description: 'The Wild God\'s chaotic nature-bound racers',
+  },
+  {
+    id: 'nemesis',
+    name: 'House Nemesis',
+    emoji: '⚖️',
+    color: '#1C1C1C',
+    description: 'The Retribution Goddess\'s balanced avengers',
+  },
+  {
+    id: 'nike',
+    name: 'House Nike',
+    emoji: '👟',
+    color: '#FFFFFF',
+    description: 'The Victory Goddess\'s glory-destined champions',
   },
 ];
 
-// Default selection of 10 kingdoms (legacy compatibility)
+// Default selection of 10 teams (legacy compatibility)
 export const KINGDOMS = ALL_KINGDOMS.slice(0, 10);
 
 // Driver slot within a team (1 = primary, 2 = secondary)
@@ -164,7 +166,7 @@ export function getKingdomById(id: string): Kingdom | undefined {
   return ALL_KINGDOMS.find(k => k.id === id);
 }
 
-// Get a random selection of N kingdoms
+// Get a random selection of N divine stables
 export function getRandomKingdoms(count: number = 10): Kingdom[] {
   const shuffled = [...ALL_KINGDOMS].sort(() => Math.random() - 0.5);
   return shuffled.slice(0, count);

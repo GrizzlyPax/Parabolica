@@ -7,11 +7,11 @@
 }
 
 body {
-  background: linear-gradient(135deg, #0d0d0d 0%, #1a1018 50%, #0d0d0d 100%);
+  background: #111;
   min-height: 100vh;
-  font-family: 'Crimson Text', Georgia, 'Times New Roman', serif;
+  font-family: 'Times New Roman', Times, Georgia, serif;
   font-size: 16px;
-  color: #d4d4d4;
+  color: #ccc;
 }
 
 /* ========================================
@@ -31,15 +31,15 @@ body {
 }
 
 .panel-left {
-  background: rgba(10, 8, 15, 0.95);
-  border-right: 1px solid #2a2030;
+  background: #111;
+  border-right: 1px solid #333;
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
 }
 
 .panel-right {
-  background: rgba(15, 12, 22, 0.98);
+  background: #0d0d0d;
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -53,7 +53,7 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(135deg, #0d0d0d 0%, #1a1018 50%, #0d0d0d 100%);
+  background: #111;
 }
 
 .detail-header {
@@ -64,9 +64,8 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 0.75rem 1.5rem;
-  background: rgba(15, 12, 20, 0.98);
-  border-bottom: 1px solid #2a2535;
-  backdrop-filter: blur(8px);
+  background: #0d0d0d;
+  border-bottom: 1px solid #333;
 }
 
 .header-left {
@@ -86,10 +85,10 @@ body {
 }
 
 .header-left .track-name {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif;
   font-size: 1.1rem;
-  color: #c9a8e9;
-  letter-spacing: 1px;
+  color: #fff;
+  font-weight: 600;
 }
 
 .header-center {
@@ -114,9 +113,9 @@ body {
 }
 
 .race-timer {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif;
   font-size: 1.25rem;
-  color: #b898c8;
+  color: #fff;
   font-weight: 600;
 }
 
@@ -133,18 +132,18 @@ body {
 }
 
 .detail-section {
-  background: rgba(20, 15, 28, 0.5);
-  border: 1px solid #2a2535;
-  border-radius: 6px;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 4px;
   padding: 1rem;
 }
 
 .detail-section h3 {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif;
   font-size: 0.85rem;
   text-transform: uppercase;
-  letter-spacing: 2px;
-  color: #8a7a9a;
+  letter-spacing: 1px;
+  color: #888;
   margin-bottom: 0.75rem;
   font-weight: 600;
 }
@@ -156,8 +155,8 @@ body {
 }
 
 .summary-section {
-  background: rgba(40, 30, 50, 0.5);
-  border-color: #5a4a6a;
+  background: #1f1f1f;
+  border-color: #444;
 }
 
 .standings-section {
@@ -182,7 +181,7 @@ body {
   flex-direction: row;
   justify-content: space-between;
   padding: 0.5rem;
-  background: rgba(25, 20, 35, 0.5);
+  background: #111;
   border-radius: 4px;
 }
 
@@ -252,8 +251,8 @@ body {
   align-items: center;
   gap: 1.5rem;
   padding: 1rem 2rem;
-  background: rgba(15, 12, 20, 0.95);
-  border-bottom: 1px solid #2a2535;
+  background: #0d0d0d;
+  border-bottom: 1px solid #333;
 }
 
 .race-controls {
@@ -268,8 +267,8 @@ body {
 
 .view-toggle {
   display: flex;
-  background: rgba(20, 15, 28, 0.6);
-  border: 1px solid #3a3545;
+  background: #1a1a1a;
+  border: 1px solid #333;
   border-radius: 4px;
   overflow: hidden;
 }
@@ -278,22 +277,28 @@ body {
   padding: 0.4rem 0.75rem;
   background: transparent;
   border: none;
-  color: #8a8a9a;
-  font-family: 'Cinzel', Georgia, serif;
+  border-right: 1px solid #333;
+  color: #777;
+  font-family: 'Times New Roman', Times, Georgia, serif;
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 1px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
+}
+
+.view-btn:last-child {
+  border-right: none;
 }
 
 .view-btn:hover {
-  color: #c9a8e9;
+  color: #fff;
+  background: #222;
 }
 
 .view-btn.active {
-  background: rgba(90, 74, 106, 0.4);
-  color: #c9a8e9;
+  background: #333;
+  color: #fff;
 }
 
 /* ========================================
@@ -305,34 +310,32 @@ body {
   align-items: center;
   gap: 1.5rem;
   padding-bottom: 1rem;
-  border-bottom: 1px solid #2a2535;
+  border-bottom: 1px solid #333;
 }
 
 .panel-header h1 {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif;
   font-size: 1.5rem;
-  font-weight: 600;
-  color: #c9a8e9;
-  letter-spacing: 2px;
-  text-transform: uppercase;
+  font-weight: 700;
+  color: #fff;
   flex: 1;
 }
 
 .back-btn {
   padding: 0.5rem 1rem;
-  background: rgba(60, 40, 80, 0.3);
-  border: 1px solid #5a4a6a;
-  color: #c9b8d9;
+  background: transparent;
+  border: 1px solid #444;
+  color: #888;
   border-radius: 3px;
-  font-family: 'Crimson Text', Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif;
   font-size: 0.9rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
 }
 
 .back-btn:hover {
-  background: rgba(80, 50, 100, 0.4);
-  color: #e8d8f8;
+  border-color: #666;
+  color: #fff;
 }
 
 .race-status {
@@ -342,19 +345,19 @@ body {
 }
 
 .status-time {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif;
   font-size: 1.25rem;
-  color: #b898c8;
+  color: #fff;
   font-weight: 600;
 }
 
 .status-finished {
   padding: 0.3rem 0.75rem;
-  background: rgba(80, 160, 80, 0.25);
-  border: 1px solid #6a9a6a;
+  background: #1a1a1a;
+  border: 1px solid #555;
   border-radius: 3px;
-  color: #a8d8a8;
-  font-family: 'Cinzel', Georgia, serif;
+  color: #aaa;
+  font-family: 'Times New Roman', Times, Georgia, serif;
   font-size: 0.8rem;
   letter-spacing: 1px;
   animation: pulse 1.5s ease-in-out infinite;
@@ -377,15 +380,14 @@ body {
 
 .control-btn {
   padding: 0.6rem 1.25rem;
-  font-size: 0.9rem;
-  font-family: 'Cinzel', Georgia, serif;
+  font-size: 0.85rem;
+  font-family: 'Times New Roman', Times, Georgia, serif;
   font-weight: 600;
   border: 1px solid;
   border-radius: 3px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
   text-transform: uppercase;
-  letter-spacing: 1px;
 }
 
 .control-btn:disabled {
@@ -394,33 +396,36 @@ body {
 }
 
 .control-btn.start {
-  background: rgba(40, 80, 40, 0.3);
-  border-color: #4a7a4a;
-  color: #a8d8a8;
+  background: transparent;
+  border-color: #555;
+  color: #aaa;
 }
 
 .control-btn.start:hover:not(:disabled) {
-  background: rgba(50, 100, 50, 0.5);
+  background: #222;
+  color: #fff;
 }
 
 .control-btn.stop {
-  background: rgba(80, 40, 40, 0.3);
-  border-color: #7a4a4a;
-  color: #d8a8a8;
+  background: transparent;
+  border-color: #555;
+  color: #aaa;
 }
 
 .control-btn.stop:hover:not(:disabled) {
-  background: rgba(100, 50, 50, 0.5);
+  background: #222;
+  color: #fff;
 }
 
 .control-btn.reset {
-  background: rgba(80, 70, 40, 0.3);
-  border-color: #7a6a4a;
-  color: #d8c8a8;
+  background: transparent;
+  border-color: #555;
+  color: #aaa;
 }
 
 .control-btn.reset:hover:not(:disabled) {
-  background: rgba(100, 90, 50, 0.5);
+  background: #222;
+  color: #fff;
 }
 
 /* ========================================
@@ -428,8 +433,8 @@ body {
    ======================================== */
 
 .standings-compact {
-  background: rgba(20, 15, 28, 0.5);
-  border: 1px solid #2a2535;
+  background: #1a1a1a;
+  border: 1px solid #333;
   border-radius: 4px;
   display: flex;
   flex-direction: column;
@@ -441,12 +446,12 @@ body {
   grid-template-columns: 40px 1fr 65px 50px 60px 60px;
   gap: 0.4rem;
   padding: 0.5rem 0.75rem;
-  background: rgba(30, 25, 40, 0.8);
-  font-family: 'Cinzel', Georgia, serif;
+  background: #111;
+  font-family: 'Times New Roman', Times, Georgia, serif;
   font-size: 0.65rem;
   text-transform: uppercase;
   letter-spacing: 1px;
-  color: #7a7a8a;
+  color: #666;
   font-weight: 600;
   flex-shrink: 0;
 }
@@ -461,13 +466,13 @@ body {
   grid-template-columns: 40px 1fr 65px 50px 60px 60px;
   gap: 0.4rem;
   padding: 0.4rem 0.75rem;
-  border-bottom: 1px solid rgba(40, 35, 55, 0.4);
+  border-bottom: 1px solid #222;
   font-size: 0.85rem;
   transition: background 0.15s ease;
 }
 
 .standing-row-compact:hover {
-  background: rgba(40, 35, 55, 0.4);
+  background: #1f1f1f;
 }
 
 .standing-row-compact:last-child {
@@ -475,13 +480,13 @@ body {
 }
 
 .standing-row-compact.finished {
-  background: rgba(50, 80, 50, 0.15);
+  background: #1f1f1f;
 }
 
 .standing-row-compact .col-pos {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif;
   font-weight: 600;
-  color: #b898c8;
+  color: #fff;
 }
 
 .standing-row-compact .col-driver {
@@ -504,24 +509,24 @@ body {
 }
 
 .standing-row-compact .col-gap {
-  color: #9a9aaa;
+  color: #888;
   font-size: 0.75rem;
 }
 
 .standing-row-compact .col-lap {
-  color: #8a8a9a;
+  color: #777;
   font-size: 0.75rem;
 }
 
 .standing-row-compact .col-lastlap,
 .standing-row-compact .col-bestlap {
-  color: #8a8a9a;
-  font-family: 'Crimson Text', Georgia, serif;
+  color: #777;
+  font-family: 'Times New Roman', Times, Georgia, serif;
   font-size: 0.75rem;
 }
 
 .standing-row-compact .col-bestlap.fastest {
-  color: #c898d8;
+  color: #fff;
   font-weight: 600;
 }
 
@@ -530,18 +535,18 @@ body {
    ======================================== */
 
 .track-section {
-  background: rgba(20, 15, 28, 0.5);
-  border: 1px solid #2a2535;
+  background: #1a1a1a;
+  border: 1px solid #333;
   border-radius: 4px;
   padding: 1rem;
 }
 
 .track-section h3 {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif;
   font-size: 0.85rem;
   text-transform: uppercase;
-  letter-spacing: 2px;
-  color: #8a7a9a;
+  letter-spacing: 1px;
+  color: #888;
   margin-bottom: 0.75rem;
   font-weight: 600;
 }
@@ -563,10 +568,10 @@ body {
 }
 
 .track-pos {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif;
   font-size: 0.7rem;
   font-weight: 600;
-  color: #b898c8;
+  color: #fff;
   width: 24px;
   text-align: right;
 }
@@ -580,8 +585,8 @@ body {
 .track-bar {
   flex: 1;
   height: 12px;
-  background: rgba(25, 20, 35, 0.8);
-  border: 1px solid #2a2535;
+  background: #111;
+  border: 1px solid #333;
   border-radius: 2px;
   position: relative;
   overflow: hidden;
@@ -599,7 +604,7 @@ body {
   top: 0;
   bottom: 0;
   width: 1px;
-  background: rgba(120, 100, 140, 0.5);
+  background: #333;
 }
 
 /* ========================================
@@ -607,8 +612,8 @@ body {
    ======================================== */
 
 .race-summary-compact {
-  background: rgba(40, 30, 50, 0.4);
-  border: 2px solid #5a4a6a;
+  background: #1f1f1f;
+  border: 2px solid #444;
   border-radius: 4px;
   padding: 1rem;
 }
@@ -618,7 +623,7 @@ body {
   align-items: center;
   gap: 1rem;
   padding-bottom: 0.75rem;
-  border-bottom: 1px solid #3a3545;
+  border-bottom: 1px solid #333;
   margin-bottom: 0.75rem;
 }
 
@@ -631,23 +636,24 @@ body {
 }
 
 .summary-winner .winner-label {
+  font-family: 'Times New Roman', Times, Georgia, serif;
   display: block;
   font-size: 0.7rem;
   text-transform: uppercase;
-  letter-spacing: 2px;
+  letter-spacing: 1px;
   color: #ffd700;
-  font-family: 'Cinzel', Georgia, serif;
 }
 
 .summary-winner .winner-name {
+  font-family: 'Times New Roman', Times, Georgia, serif;
   font-size: 1.3rem;
   font-weight: 600;
 }
 
 .summary-winner .winner-time {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif;
   font-size: 1.1rem;
-  color: #b898c8;
+  color: #aaa;
 }
 
 .summary-narrative {
@@ -657,9 +663,10 @@ body {
 }
 
 .summary-narrative p {
+  font-family: 'Times New Roman', Times, Georgia, serif;
   margin: 0;
   font-size: 0.9rem;
-  color: #b8b8c8;
+  color: #aaa;
   font-style: italic;
   line-height: 1.4;
 }
@@ -669,8 +676,8 @@ body {
    ======================================== */
 
 .analytics-section {
-  background: rgba(20, 15, 28, 0.4);
-  border: 1px solid #2a2535;
+  background: #1a1a1a;
+  border: 1px solid #333;
   border-radius: 4px;
   padding: 0.75rem;
 }
@@ -709,8 +716,8 @@ body {
   grid-template-columns: repeat(4, 1fr);
   gap: 0.75rem;
   padding: 0.75rem;
-  background: rgba(20, 15, 28, 0.4);
-  border: 1px solid #2a2535;
+  background: #1a1a1a;
+  border: 1px solid #333;
   border-radius: 4px;
 }
 
@@ -724,16 +731,16 @@ body {
 .race-stats-bar .stat-value {
   font-size: 1.5rem;
   font-weight: 600;
-  color: #c9a8e9;
-  font-family: 'Cinzel', Georgia, serif;
+  color: #fff;
+  font-family: 'Times New Roman', Times, Georgia, serif;
 }
 
 .race-stats-bar .stat-label {
   font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 1px;
-  color: #7a7a8a;
-  font-family: 'Cinzel', Georgia, serif;
+  color: #666;
+  font-family: 'Times New Roman', Times, Georgia, serif;
 }
 
 /* ========================================
@@ -748,7 +755,7 @@ body {
 
   .panel-left {
     border-right: none;
-    border-bottom: 1px solid #2a2030;
+    border-bottom: 1px solid #333;
   }
 }
 
@@ -786,8 +793,8 @@ body {
 
 .speed-control {
   display: flex;
-  background: rgba(20, 15, 28, 0.6);
-  border: 1px solid #3a3545;
+  background: #1a1a1a;
+  border: 1px solid #333;
   border-radius: 4px;
   overflow: hidden;
   margin-left: 0.5rem;
@@ -797,12 +804,12 @@ body {
   padding: 0.4rem 0.6rem;
   background: transparent;
   border: none;
-  border-right: 1px solid #3a3545;
-  color: #6a6a7a;
-  font-family: 'Cinzel', Georgia, serif;
+  border-right: 1px solid #333;
+  color: #666;
+  font-family: 'Times New Roman', Times, Georgia, serif;
   font-size: 0.7rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
 }
 
 .speed-btn:last-child {
@@ -810,13 +817,13 @@ body {
 }
 
 .speed-btn:hover {
-  color: #b898c8;
-  background: rgba(90, 74, 106, 0.2);
+  color: #fff;
+  background: #222;
 }
 
 .speed-btn.active {
-  background: rgba(90, 74, 106, 0.4);
-  color: #c9a8e9;
+  background: #333;
+  color: #fff;
 }
 
 /* ========================================
@@ -827,7 +834,7 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(135deg, #0d0d0d 0%, #1a1018 50%, #0d0d0d 100%);
+  background: #111;
 }
 
 .season-view-content {

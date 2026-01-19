@@ -538,14 +538,15 @@ class RaceEngine {
     driver: Driver | null,
     description: string,
     impact: 'positive' | 'negative' | 'neutral',
-    magnitude: number
+    magnitude: number,
+    eventEmoji?: string
   ): void {
     this.raceEvents.push({
       tick: this.raceState.totalTicks,
       type,
       driverId: driver?.id ?? -1,
       driverName: driver?.name ?? 'Track Event',
-      emoji: driver?.emoji ?? '🏁',
+      emoji: eventEmoji || driver?.emoji || '🏁',
       description,
       impact,
       magnitude: Math.min(1, Math.max(0, magnitude)),
@@ -1327,7 +1328,8 @@ class RaceEngine {
               driver,
               `Lost ground due to ${event.name}`,
               'negative',
-              0.6
+              0.6,
+              event.emoji
             );
           }
         }
@@ -1349,7 +1351,8 @@ class RaceEngine {
               driver,
               `Spun out! Lost significant time`,
               'negative',
-              0.8
+              0.8,
+              event.emoji
             );
           }
         }
@@ -1379,7 +1382,8 @@ class RaceEngine {
             null,
             `The pack has bunched up!`,
             'neutral',
-            0.7
+            0.7,
+            event.emoji
           );
         }
         break;
@@ -1400,7 +1404,8 @@ class RaceEngine {
             driver,
             `Gained a speed boost from ${event.name}!`,
             'positive',
-            0.7
+            0.7,
+            event.emoji
           );
         }
         break;
@@ -1421,7 +1426,8 @@ class RaceEngine {
             driver,
             `Slowed by ${event.name}`,
             'negative',
-            0.6
+            0.6,
+            event.emoji
           );
         }
         break;
@@ -1447,7 +1453,8 @@ class RaceEngine {
             null,
             `Positions shuffled by ${event.name}!`,
             'neutral',
-            0.8
+            0.8,
+            event.emoji
           );
         }
         break;
@@ -1471,7 +1478,8 @@ class RaceEngine {
               driver,
               `Tire damage from ${event.name}! Must pit soon`,
               'negative',
-              0.8
+              0.8,
+              event.emoji
             );
           }
         }
@@ -1495,7 +1503,8 @@ class RaceEngine {
               driver,
               `Forced into pit lane by ${event.name}!`,
               'negative',
-              0.9
+              0.9,
+              event.emoji
             );
           }
         }
@@ -1515,7 +1524,8 @@ class RaceEngine {
           null,
           `Increased danger on track!`,
           'negative',
-          0.7
+          0.7,
+          event.emoji
         );
         break;
       }
@@ -1545,7 +1555,8 @@ class RaceEngine {
                 null,
                 `${first.name} and ${last.name} swapped positions!`,
                 'neutral',
-                1.0
+                1.0,
+                event.emoji
               );
             }
           }
@@ -1571,7 +1582,8 @@ class RaceEngine {
                 null,
                 `${d1.name} and ${d2.name} swapped positions!`,
                 'neutral',
-                0.8
+                0.8,
+                event.emoji
               );
             }
           }
@@ -1592,7 +1604,8 @@ class RaceEngine {
           null,
           `Pit lane affected by ${event.name}!`,
           'negative',
-          0.6
+          0.6,
+          event.emoji
         );
         break;
       }

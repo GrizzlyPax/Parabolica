@@ -1,124 +1,104 @@
-// Name generation pools - Blaseball-inspired weirdness balanced with normalcy
+// Name generation pools - absurdist Blaseball-inspired names
 
 export const FIRST_NAMES = [
+  // Common mundane names (heavily weighted for balance)
+  "James", "Mary", "Robert", "Patricia", "John", "Jennifer", "Michael", "Linda",
+  "David", "Elizabeth", "William", "Barbara", "Richard", "Susan", "Joseph", "Jessica",
+  "Thomas", "Sarah", "Charles", "Karen", "Chris", "Lisa", "Daniel", "Nancy",
+  "Matthew", "Betty", "Anthony", "Margaret", "Mark", "Sandra", "Donald", "Ashley",
+  "Steven", "Kimberly", "Paul", "Emily", "Andrew", "Donna", "Joshua", "Michelle",
+  "Kevin", "Dorothy", "Brian", "Carol", "George", "Amanda", "Timothy", "Melissa",
+  "Ronald", "Deborah", "Edward", "Stephanie", "Jason", "Rebecca", "Jeffrey", "Sharon",
+  "Ryan", "Laura", "Jacob", "Cynthia", "Gary", "Kathleen", "Nicholas", "Amy",
+  "Eric", "Angela", "Jonathan", "Shirley", "Stephen", "Anna", "Larry", "Brenda",
+  "Justin", "Pamela", "Scott", "Emma", "Brandon", "Nicole", "Benjamin", "Helen",
+  "Samuel", "Samantha", "Gregory", "Katherine", "Alexander", "Christine", "Patrick", "Debra",
+
   // Normal-ish names
-  "John", "Mike", "Dave", "Steve", "Bob", "Jim", "Tom", "Bill", "Dan", "Chris",
-  "Sarah", "Lisa", "Emma", "Anna", "Kate", "Jane", "Mary", "Beth", "Amy", "Jess",
-  "Alex", "Sam", "Jordan", "Taylor", "Casey", "Morgan", "Riley", "Quinn", "Avery", "Dakota",
+  "August", "Beverly", "Carmen", "Dana", "Eliot", "Frances", "Glenn", "Harper",
+  "Indigo", "Jordan", "Kennedy", "Leslie", "Morgan", "Noel", "Oakley", "Parker",
+  "Quinn", "Riley", "Sage", "Taylor", "Urban", "Valentine", "Winter", "Xander",
 
-  // Slightly unusual
-  "Bartholomew", "Cornelius", "Reginald", "Percival", "Thaddeus", "Archibald", "Montgomery", "Wellington",
-  "Clementine", "Prudence", "Millicent", "Gertrude", "Henrietta", "Beatrix", "Cordelia", "Winifred",
+  // Slightly off names
+  "Sixto", "Eleven", "Cricket", "Tuesday", "Noon", "Decimal", "Memo", "Toggle",
+  "Placeholder", "Pending", "Meanwhile", "Shortly", "Ongoing", "Currently", "Adjacent",
 
-  // Weird objects/concepts as names
-  "Wheelbarrow", "Sandwich", "Paperclip", "Thunderstorm", "Dishwasher", "Lamppost", "Escalator", "Toaster",
-  "Refrigerator", "Sidewalk", "Mailbox", "Ceiling", "Doorknob", "Staircase", "Windowsill", "Bathtub",
+  // Object names
+  "Brisket", "Sandwich", "Crouton", "Noodle", "Pretzel", "Waffle", "Dumpling",
+  "Peanut", "Pickle", "Biscuit", "Muffin", "Scone", "Gravy", "Soup", "Salad",
 
-  // Food names
-  "Brisket", "Pancake", "Waffle", "Omelette", "Burrito", "Lasagna", "Meatball", "Pretzel",
-  "Croissant", "Dumpling", "Noodle", "Biscuit", "Gravy", "Mustard", "Pickle", "Churro",
+  // Concept names
+  "Mercy", "Justice", "Patience", "Courage", "Comfort", "Notion", "Theory",
+  "Method", "System", "Process", "Instance", "Version", "Update", "Backup",
 
-  // Nature/cosmic
-  "Nebula", "Quasar", "Comet", "Eclipse", "Tsunami", "Avalanche", "Volcano", "Glacier",
-  "Monsoon", "Typhoon", "Blizzard", "Tempest", "Aurora", "Solstice", "Equinox", "Zenith",
+  // Sound names
+  "Beep", "Click", "Buzz", "Hum", "Ping", "Whir", "Static", "Echo", "Tone",
 
-  // Abstract concepts
-  "Tuesday", "Longitude", "Hypothesis", "Paradox", "Entropy", "Velocity", "Momentum", "Friction",
-  "Destiny", "Chaos", "Serenity", "Infinity", "Oblivion", "Eternity", "Prophecy", "Legacy",
+  // Time names
+  "Yesterday", "Tomorrow", "Earlier", "Later", "Sometimes", "Always", "Never",
+  "Eventually", "Momentarily", "Briefly", "Soon", "Presently", "Formerly",
 
-  // Sounds/Actions
-  "Whisper", "Thunder", "Crunch", "Sizzle", "Whoosh", "Clang", "Thud", "Zap",
-  "Splash", "Crackle", "Rumble", "Hiss", "Buzz", "Whir", "Ping", "Boom",
+  // Weather names
+  "Foggy", "Cloudy", "Drizzle", "Overcast", "Partly", "Mostly", "Clearing",
 
-  // Colors with attitude
-  "Crimson", "Cobalt", "Chartreuse", "Vermillion", "Cerulean", "Magenta", "Obsidian", "Ivory",
+  // Direction names
+  "North", "East", "Slightly", "Approximately", "Roughly", "Nearly", "Almost",
 
-  // Numbers and Math
-  "Seven", "Twelve", "Forty", "Billion", "Pi", "Zero", "Hexagon", "Fraction",
-
-  // Feelings
-  "Anxiety", "Euphoria", "Melancholy", "Rage", "Bliss", "Dread", "Wonder", "Spite"
+  // Status names
+  "Pending", "Loading", "Buffering", "Syncing", "Processing", "Updating"
 ];
 
 export const LAST_NAMES = [
-  // Normal surnames
+  // Common mundane surnames (heavily weighted for balance)
   "Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis",
-  "Rodriguez", "Martinez", "Anderson", "Taylor", "Thomas", "Moore", "Jackson", "White",
-  "Harris", "Martin", "Thompson", "Young", "King", "Wright", "Scott", "Green",
+  "Rodriguez", "Martinez", "Hernandez", "Lopez", "Gonzalez", "Wilson", "Anderson", "Thomas",
+  "Taylor", "Moore", "Jackson", "Martin", "Lee", "Perez", "Thompson", "White",
+  "Harris", "Sanchez", "Clark", "Ramirez", "Lewis", "Robinson", "Walker", "Young",
+  "Allen", "King", "Wright", "Scott", "Torres", "Nguyen", "Hill", "Flores",
+  "Green", "Adams", "Nelson", "Baker", "Hall", "Rivera", "Campbell", "Mitchell",
+  "Carter", "Roberts", "Gomez", "Phillips", "Evans", "Turner", "Diaz", "Parker",
+  "Cruz", "Edwards", "Collins", "Reyes", "Stewart", "Morris", "Morales", "Murphy",
+  "Cook", "Rogers", "Gutierrez", "Ortiz", "Morgan", "Cooper", "Peterson", "Bailey",
+  "Reed", "Kelly", "Howard", "Ramos", "Kim", "Cox", "Ward", "Richardson",
+  "Watson", "Brooks", "Chavez", "Wood", "James", "Bennett", "Gray", "Mendoza",
+  "Ruiz", "Hughes", "Price", "Alvarez", "Castillo", "Sanders", "Patel", "Myers",
 
-  // Occupational (normal)
-  "Baker", "Fisher", "Hunter", "Carter", "Mason", "Cooper", "Turner", "Parker",
-  "Walker", "Porter", "Shepherd", "Gardener", "Brewer", "Thatcher", "Weaver", "Fletcher",
+  // Occupational
+  "Mechanic", "Accountant", "Consultant", "Coordinator", "Administrator", "Supervisor",
+  "Representative", "Specialist", "Technician", "Analyst", "Manager", "Director",
 
-  // Occupational (weird)
-  "Ghostwriter", "Timekeeper", "Dreamcatcher", "Stormchaser", "Mindreader", "Bonecrusher", "Skywatcher", "Voidwalker",
-  "Gravedigger", "Taxidermist", "Ventriloquist", "Cryptozoologist", "Pyromaniac", "Somnambulist",
+  // Compound absurd
+  "Placeholder", "Undefined", "Untitled", "Unnamed", "Unspecified", "TBD",
+  "Various", "Assorted", "Miscellaneous", "Generic", "Standard", "Default",
 
-  // Compound weirdness
-  "Hotdog-Fingers", "Thunderpants", "Wheelhouse", "Crankshaft", "Sparkplug", "Bumpercar", "Roadkill", "Speedbump",
-  "Facemelt", "Brainfreeze", "Heartburn", "Backflip", "Nosedive", "Bellyflop", "Headrush", "Footloose",
+  // Object-based
+  "Lamppost", "Sidewalk", "Crosswalk", "Parking", "Elevator", "Escalator",
+  "Hallway", "Doorway", "Stairwell", "Cubicle", "Breakroom", "Backlog",
 
-  // Food items
-  "Stroganoff", "Carbonara", "Chimichanga", "Quesadilla", "Tempura", "Gazpacho", "Fettuccine", "Bolognese",
-  "Worcestershire", "Mayonnaise", "Hollandaise", "Remoulade", "Béarnaise", "Vinaigrette",
+  // State/condition
+  "Pending", "Complete", "Partial", "Ongoing", "Resolved", "Deferred",
+  "Tentative", "Conditional", "Approximate", "Estimated", "Projected",
 
-  // Places that sound like names
-  "Constantinople", "Albuquerque", "Saskatchewan", "Tallahassee", "Tuscaloosa", "Kalamazoo", "Chattanooga", "Walla-Walla",
+  // Number-adjacent
+  "Twelve", "Several", "Multiple", "Numerous", "Few", "Many", "Some",
+  "Occasional", "Frequent", "Rare", "Common", "Typical", "Average",
 
-  // Suffixes gone wrong
-  "Esq.", "Jr. Jr.", "The Third", "PhD", "DDS", "M.D.", "et al.", "LLC",
+  // Corporate/bureaucratic
+  "Incorporated", "Limited", "Holdings", "Solutions", "Services", "Associates",
+  "Enterprises", "Industries", "Dynamics", "Logistics", "Systems", "Networks",
 
-  // Descriptors
-  "The Unforgivable", "The Adequate", "The Moist", "The Crispy", "The Lukewarm", "The Regrettable", "The Inevitable", "The Suspicious",
+  // Vaguely ominous
+  "Void", "Null", "Empty", "Blank", "Missing", "Gone", "Lost", "Found",
+  "Returned", "Recovered", "Restored", "Salvaged", "Reclaimed",
 
-  // Numbers/Symbols
-  "XXIV", "99", "3000", "√2", "#1", "∞", "404", "2.0",
+  // Roman numerals
+  "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII",
 
-  // Sounds
-  "Splort", "Blorp", "Yeet", "Boing", "Cronch", "Splat", "Thwack", "Zoink",
-
-  // Abstract
-  "Uncertainty", "Disappointment", "Schadenfreude", "Wanderlust", "Zeitgeist", "Angst", "Ennui", "Hubris"
+  // Suffixes
+  "Jr.", "Sr.", "Esq.", "PhD", "etc.", "et al."
 ];
 
-export const TEAM_EMOJIS = [
-  // Vehicles/Racing
-  "🏎️", "🚗", "🚕", "🚙", "🚌", "🚐", "🛻", "🚚", "🚛", "🏍️", "🛵", "🚲", "🛴", "🚂", "✈️", "🚀", "🛸", "🚁",
-
-  // Animals
-  "🐆", "🦁", "🐅", "🐻", "🦊", "🐺", "🦅", "🦆", "🦉", "🦇", "🐉", "🦖", "🦕", "🐙", "🦑", "🦈", "🐋", "🦭",
-  "🦩", "🦚", "🦜", "🐓", "🦃", "🦤", "🪿", "🦢", "🦔", "🦡", "🦫", "🦦", "🦥", "🐿️", "🦘", "🦬", "🦣", "🐘",
-
-  // Food
-  "🍕", "🌮", "🍔", "🌭", "🍟", "🍿", "🥓", "🥞", "🧇", "🥐", "🥨", "🧀", "🍖", "🍗", "🥩", "🌯", "🫔", "🥙",
-  "🍣", "🍜", "🍝", "🍲", "🍛", "🍤", "🦐", "🦞", "🦀", "🍩", "🍪", "🎂", "🧁", "🥧", "🍰", "🍫", "🍬", "🍭",
-
-  // Nature/Weather
-  "🌋", "🏔️", "⛰️", "🌊", "🌪️", "⚡", "☄️", "🔥", "💧", "❄️", "🌈", "🌙", "⭐", "💫", "✨", "🌸", "🌺", "🌻",
-
-  // Objects
-  "💎", "🔮", "🎱", "🎰", "🎲", "♟️", "🎯", "🪃", "🛡️", "⚔️", "🔧", "🔨", "⚙️", "🧲", "💣", "🧨", "🪤", "🔑",
-  "🎸", "🥁", "🎺", "🎷", "🪗", "🎻", "🪕", "📯", "🔔", "🎪", "🎭", "🎨", "🖼️", "🗿", "🪬", "🧿", "👑", "💀",
-
-  // Symbols/Abstract
-  "🌀", "💥", "💢", "💯", "🔥", "⚡", "💨", "🌟", "⚜️", "🔱", "⚓", "🛟", "🏴‍☠️", "🚩", "🏁", "♾️", "⚛️", "☢️",
-
-  // Faces/Creatures
-  "👽", "👾", "🤖", "👻", "💩", "🎃", "👹", "👺", "🤡", "👁️", "🧠", "👅", "🦷", "🦴", "💪", "🦵", "🦶", "👊",
-
-  // Misc weird
-  "🧲", "🧪", "🧫", "🧬", "🔬", "🔭", "📡", "🛰️", "🧯", "🪜", "🧸", "🪆", "🎎", "🪅", "🎐", "🏺", "🫗", "🪣"
-];
-
-export const TEAM_COLORS = [
-  "#FF6B6B", "#4ECDC4", "#45B7D1", "#96CEB4", "#FFEAA7", "#DDA0DD", "#98D8C8", "#F7DC6F",
-  "#BB8FCE", "#85C1E9", "#F8B500", "#00CED1", "#FF6347", "#7B68EE", "#3CB371", "#FFD700",
-  "#FF69B4", "#00FA9A", "#FF4500", "#1E90FF", "#32CD32", "#FF1493", "#00BFFF", "#ADFF2F",
-  "#DC143C", "#00FFFF", "#FF8C00", "#9932CC", "#8B0000", "#006400", "#4B0082", "#FF00FF",
-  "#808000", "#008080", "#800000", "#000080", "#808080", "#C0C0C0", "#FFB6C1", "#ADD8E6"
-];
-
-// Middle name modifiers - now empty, just first name + last name
+// Middle name modifiers - empty for cleaner names
 export const MIDDLE_MODIFIERS = [""];
 
 // Generate a random driver name
@@ -134,25 +114,27 @@ export function generateDriverName(): { firstName: string; middleName: string; l
   return { firstName, middleName, lastName, fullName };
 }
 
-// Generate a team with emoji and color
-export function generateTeam(): { emoji: string; color: string; name: string } {
-  const emoji = TEAM_EMOJIS[Math.floor(Math.random() * TEAM_EMOJIS.length)];
-  const color = TEAM_COLORS[Math.floor(Math.random() * TEAM_COLORS.length)];
-
-  // Generate a team name from parts
-  const teamNameParts = [
-    ["Racing", "Speed", "Turbo", "Lightning", "Thunder", "Storm", "Fire", "Ice", "Shadow", "Cosmic"],
-    ["Demons", "Angels", "Dragons", "Phoenixes", "Wolves", "Bears", "Eagles", "Serpents", "Titans", "Legends"],
-    ["", "", "", " Inc.", " LLC", " Racing", " Motorsports", " Team", " Squadron", " Collective"]
+// Generate a car name (random combination)
+export function generateCarName(): string {
+  const prefixes = [
+    "Model", "Type", "Series", "Version", "Unit", "Batch", "Run", "Edition",
+    "Prototype", "Beta", "Alpha", "Delta", "Sigma", "Omega", "Gamma", "Theta"
   ];
 
-  const part1 = teamNameParts[0][Math.floor(Math.random() * teamNameParts[0].length)];
-  const part2 = teamNameParts[1][Math.floor(Math.random() * teamNameParts[1].length)];
-  const part3 = teamNameParts[2][Math.floor(Math.random() * teamNameParts[2].length)];
+  const suffixes = [
+    "A", "B", "C", "X", "Z", "Q", "R", "S", "T", "V",
+    "1", "2", "3", "7", "9", "11", "13", "17", "23", "42",
+    "Plus", "Pro", "Max", "Ultra", "Lite", "Mini", "Turbo", "GT"
+  ];
 
-  return {
-    emoji,
-    color,
-    name: `${part1} ${part2}${part3}`
-  };
+  const modifiers = [
+    "", "", "", // Empty more often for cleaner names
+    "-", ".", "/", " ", "_"
+  ];
+
+  const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+  const modifier = modifiers[Math.floor(Math.random() * modifiers.length)];
+  const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
+
+  return `${prefix}${modifier}${suffix}`;
 }

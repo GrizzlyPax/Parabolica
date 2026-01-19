@@ -1,4 +1,4 @@
-// Track generation system - 20 fixed tracks with unique events
+// Parabolica Track System - absurdist racing venues
 
 // ============================================
 // TRACK LAYOUT SYSTEM
@@ -25,11 +25,11 @@ export interface TrackLayout {
 // ============================================
 
 export type TrackEventTrigger =
-  | { type: 'lap'; laps: number[] }           // Specific laps (e.g., [3, 8, 'final'])
+  | { type: 'lap'; laps: number[] }           // Specific laps
   | { type: 'interval'; every: number }        // Every N laps
   | { type: 'random'; chance: number }         // % chance per lap
   | { type: 'halfway' }                        // At halfway point
-  | { type: 'condition'; condition: string }   // Special condition (e.g., 'leader_3_laps')
+  | { type: 'condition'; condition: string }   // Special condition
   | { type: 'final_laps'; count: number };     // Final N laps
 
 export type TrackEventEffect =
@@ -49,8 +49,8 @@ export interface TrackEvent {
   id: string;
   name: string;
   emoji: string;
-  description: string;            // Short description for UI
-  flavorText: string;             // What shows in notification
+  description: string;
+  flavorText: string;
   trigger: TrackEventTrigger;
   effect: TrackEventEffect;
 }
@@ -124,386 +124,386 @@ const LAYOUTS: Record<string, TrackLayout> = {
 };
 
 // ============================================
-// THE 20 TRACKS
+// THE 20 ABSURDIST TRACKS
 // ============================================
 
 export const ALL_TRACKS: Track[] = [
-  // 1. Caldera Circuit - Eruption
+  // 1. Parking Structure
   {
-    id: 'caldera-circuit',
-    name: 'Caldera Circuit',
-    description: 'Ancient volcanic crater, dormant but restless',
-    emoji: '🌋',
+    id: 'parking-structure',
+    name: 'The Parking Structure',
+    description: 'Level 4. The elevator is broken.',
+    emoji: '🅿️',
     length: 800,
     laps: 15,
-    layout: LAYOUTS.oval,
+    layout: LAYOUTS.rectangle,
     event: {
-      id: 'eruption',
-      name: 'Eruption',
-      emoji: '🌋',
-      description: 'Every 5 laps: Bottom 4 lose progress',
-      flavorText: 'The volcano erupts! Lava engulfs the back of the pack!',
-      trigger: { type: 'interval', every: 5 },
-      effect: { type: 'progress_loss', targets: 'bottom', count: 4, amount: [5, 10] },
-    },
-  },
-  // 2. Frostfang Pass - Avalanche
-  {
-    id: 'frostfang-pass',
-    name: 'Frostfang Pass',
-    description: 'Carved through glacier mountains',
-    emoji: '❄️',
-    length: 700,
-    laps: 16,
-    layout: LAYOUTS.triangle,
-    event: {
-      id: 'avalanche',
-      name: 'Avalanche',
-      emoji: '❄️',
-      description: 'Laps 3, 8, final: 3 random drivers spin',
-      flavorText: 'AVALANCHE! Ice and snow cascade onto the track!',
-      trigger: { type: 'lap', laps: [3, 8, -1] }, // -1 = final lap
-      effect: { type: 'spin', targets: 'random', count: 3, timeLoss: [2, 4] },
-    },
-  },
-  // 3. Sirensong Bay - High Tide
-  {
-    id: 'sirensong-bay',
-    name: 'Sirensong Bay',
-    description: 'Coastal track that floods twice per race',
-    emoji: '🌊',
-    length: 780,
-    laps: 17,
-    layout: LAYOUTS.stadium,
-    event: {
-      id: 'high-tide',
-      name: 'High Tide',
-      emoji: '🌊',
-      description: 'Halfway: Gaps compress to leader',
-      flavorText: 'The tide rises! Water sweeps across the track, bunching the field!',
-      trigger: { type: 'halfway' },
-      effect: { type: 'gap_compress', within: 5 },
-    },
-  },
-  // 4. Tempest Spire - Lightning Strike
-  {
-    id: 'tempest-spire',
-    name: 'Tempest Spire',
-    description: 'Tower peak where storms gather',
-    emoji: '⚡',
-    length: 750,
-    laps: 18,
-    layout: LAYOUTS.diamond,
-    event: {
-      id: 'lightning-strike',
-      name: 'Lightning Strike',
-      emoji: '⚡',
+      id: 'ticket-validation',
+      name: 'Ticket Validation',
+      emoji: '🎫',
       description: '15% per lap: Random driver gets speed boost',
-      flavorText: 'LIGHTNING STRIKE! Raw energy courses through a driver!',
+      flavorText: 'TICKET VALIDATED! Someone found their parking stub!',
       trigger: { type: 'random', chance: 15 },
       effect: { type: 'speed_boost', targets: 'random', count: 1, amount: 20, duration: 1 },
     },
   },
-  // 5. Dune Sea Drift - Sandstorm
+  // 2. Loading Zone
   {
-    id: 'dune-sea-drift',
-    name: 'Dune Sea Drift',
-    description: 'Endless golden sands, visibility drops without warning',
-    emoji: '🏜️',
-    length: 950,
-    laps: 14,
+    id: 'loading-zone',
+    name: 'Loading Zone',
+    description: 'No parking any time. Results may vary.',
+    emoji: '🚛',
+    length: 700,
+    laps: 16,
     layout: LAYOUTS.oval,
     event: {
-      id: 'sandstorm',
-      name: 'Sandstorm',
-      emoji: '🏜️',
-      description: 'Laps 4-7: Pit stops take 50% longer',
-      flavorText: 'A SANDSTORM engulfs the pits! Crews struggle to see!',
-      trigger: { type: 'lap', laps: [4, 5, 6, 7] },
-      effect: { type: 'pit_delay', modifier: 1.5, duration: 4 },
-    },
-  },
-  // 6. Wraithwood Run - Ghost Lap
-  {
-    id: 'wraithwood-run',
-    name: 'Wraithwood Run',
-    description: 'Haunted forest where drivers see things',
-    emoji: '👻',
-    length: 850,
-    laps: 15,
-    layout: LAYOUTS.rectangle,
-    event: {
-      id: 'ghost-lap',
-      name: 'Ghost Lap',
-      emoji: '👻',
-      description: '12% per lap: Last place teleports to P10',
-      flavorText: 'A GHOST possesses the last place driver and hurls them forward!',
-      trigger: { type: 'random', chance: 12 },
-      effect: { type: 'position_shuffle', targets: 'random', positions: [20, 10] },
-    },
-  },
-  // 7. Jester's Gambit - Wheel of Fate
-  {
-    id: 'jesters-gambit',
-    name: "Jester's Gambit",
-    description: 'Carnival grounds, nothing is predictable',
-    emoji: '🎪',
-    length: 680,
-    laps: 20,
-    layout: LAYOUTS.stadium,
-    event: {
-      id: 'wheel-of-fate',
-      name: 'Wheel of Fate',
-      emoji: '🎪',
-      description: '20% per lap: Random driver gains or loses 2 positions',
-      flavorText: 'The WHEEL OF FATE spins! Fortune smiles... or frowns!',
-      trigger: { type: 'random', chance: 20 },
-      effect: { type: 'position_shuffle', targets: 'random', positions: [-2, 2] },
-    },
-  },
-  // 8. Thornheart Trail - Fallen Tree
-  {
-    id: 'thornheart-trail',
-    name: 'Thornheart Trail',
-    description: 'Dense ancient forest, nature fights back',
-    emoji: '🌲',
-    length: 720,
-    laps: 18,
-    layout: LAYOUTS.triangle,
-    event: {
-      id: 'fallen-tree',
-      name: 'Fallen Tree',
-      emoji: '🌲',
-      description: '10% per lap: Random driver forced into pit',
-      flavorText: 'A TREE crashes onto the track! Emergency pit stop required!',
-      trigger: { type: 'random', chance: 10 },
-      effect: { type: 'forced_pit', targets: 'random', count: 1 },
-    },
-  },
-  // 9. Prismatic Hollow - Crystal Resonance
-  {
-    id: 'prismatic-hollow',
-    name: 'Prismatic Hollow',
-    description: 'Crystal caves that hum with strange energy',
-    emoji: '💎',
-    length: 900,
-    laps: 14,
-    layout: LAYOUTS.diamond,
-    event: {
-      id: 'crystal-resonance',
-      name: 'Crystal Resonance',
-      emoji: '💎',
+      id: 'delivery-arrives',
+      name: 'Delivery Arrives',
+      emoji: '📦',
       description: 'Leader for 3+ laps gets speed penalty',
-      flavorText: 'The CRYSTALS resonate against dominance! The leader is slowed!',
+      flavorText: 'DELIVERY ARRIVES! The leader must wait for unloading!',
       trigger: { type: 'condition', condition: 'leader_3_laps' },
       effect: { type: 'speed_penalty', targets: 'leader', count: 1, amount: 5, duration: 2 },
     },
   },
-  // 10. Lunar Terrace - Moonphase Shift
+  // 3. The Roundabout
   {
-    id: 'lunar-terrace',
-    name: 'Lunar Terrace',
-    description: 'Elevated plateau bathed in moonlight',
-    emoji: '🌙',
-    length: 800,
-    laps: 16,
-    layout: LAYOUTS.rectangle,
-    event: {
-      id: 'moonphase-shift',
-      name: 'Moonphase Shift',
-      emoji: '🌙',
-      description: 'Every 4 laps: Top 5 slowed, bottom 5 boosted',
-      flavorText: 'The MOON shifts phase! Fortune reverses for leaders and stragglers!',
-      trigger: { type: 'interval', every: 4 },
-      effect: { type: 'speed_boost', targets: 'bottom', count: 5, amount: 10, duration: 1 },
-    },
-  },
-  // 11. Emberclaw Descent - Dragon's Breath
-  {
-    id: 'emberclaw-descent',
-    name: 'Emberclaw Descent',
-    description: 'Volcanic slopes where dragons once nested',
-    emoji: '🐉',
-    length: 750,
-    laps: 17,
-    layout: LAYOUTS.triangle,
-    event: {
-      id: 'dragons-breath',
-      name: "Dragon's Breath",
-      emoji: '🐉',
-      description: 'Lap 1 & final 3: +50% crash risk',
-      flavorText: "DRAGON'S BREATH scorches the track! Drive carefully!",
-      trigger: { type: 'lap', laps: [1, -3, -2, -1] }, // 1 and final 3
-      effect: { type: 'crash_risk', modifier: 1.5, duration: 1 },
-    },
-  },
-  // 12. Astral Fields - Star Shower
-  {
-    id: 'astral-fields',
-    name: 'Astral Fields',
-    description: 'Open plains under infinite stars',
-    emoji: '⭐',
-    length: 820,
-    laps: 16,
-    layout: LAYOUTS.oval,
-    event: {
-      id: 'star-shower',
-      name: 'Star Shower',
-      emoji: '⭐',
-      description: '8% per lap: All drivers get random speed modifier',
-      flavorText: 'STARS rain down! Cosmic energy affects everyone differently!',
-      trigger: { type: 'random', chance: 8 },
-      effect: { type: 'speed_boost', targets: 'random', count: 20, amount: 10, duration: 1 },
-    },
-  },
-  // 13. Maelstrom Marina - Whirlpool
-  {
-    id: 'maelstrom-marina',
-    name: 'Maelstrom Marina',
-    description: 'Harbor track built over restless waters',
-    emoji: '🌀',
+    id: 'roundabout',
+    name: 'The Roundabout',
+    description: 'Nobody knows who has right of way.',
+    emoji: '🔄',
     length: 780,
     laps: 17,
     layout: LAYOUTS.stadium,
     event: {
-      id: 'whirlpool',
-      name: 'Whirlpool',
-      emoji: '🌀',
-      description: 'Halfway: Positions 8-12 shuffle randomly',
-      flavorText: 'A WHIRLPOOL churns beneath the track! The midpack scrambles!',
+      id: 'merge-confusion',
+      name: 'Merge Confusion',
+      emoji: '🔀',
+      description: 'Halfway: Gaps compress to leader',
+      flavorText: 'MERGE CONFUSION! Everyone hesitates at once!',
       trigger: { type: 'halfway' },
-      effect: { type: 'position_shuffle', targets: 'midpack', positions: [8, 12] },
+      effect: { type: 'gap_compress', within: 5 },
     },
   },
-  // 14. Solara Heights - Solar Flare
+  // 4. Office Park
   {
-    id: 'solara-heights',
-    name: 'Solara Heights',
-    description: 'Sun-scorched peaks, blinding and purifying',
-    emoji: '☀️',
+    id: 'office-park',
+    name: 'Office Park Circuit',
+    description: 'Between buildings C and D. Mind the speed bumps.',
+    emoji: '🏢',
     length: 850,
     laps: 15,
-    layout: LAYOUTS.diamond,
-    event: {
-      id: 'solar-flare',
-      name: 'Solar Flare',
-      emoji: '☀️',
-      description: 'Every 6 laps: All boosts/penalties reset',
-      flavorText: 'A SOLAR FLARE washes over the track! All effects neutralized!',
-      trigger: { type: 'interval', every: 6 },
-      effect: { type: 'speed_boost', targets: 'all' as any, count: 20, amount: 0, duration: 0 },
-    },
-  },
-  // 15. Shatterstone Ridge - Tremor
-  {
-    id: 'shatterstone-ridge',
-    name: 'Shatterstone Ridge',
-    description: 'Unstable mountain pass, cracks form mid-race',
-    emoji: '🏔️',
-    length: 770,
-    laps: 16,
-    layout: LAYOUTS.rectangle,
-    event: {
-      id: 'tremor',
-      name: 'Tremor',
-      emoji: '🏔️',
-      description: '15% per lap: Random team loses progress',
-      flavorText: 'TREMOR! The ground shakes and cracks open!',
-      trigger: { type: 'random', chance: 15 },
-      effect: { type: 'progress_loss', targets: 'random', count: 2, amount: [2, 5] },
-    },
-  },
-  // 16. Misthollow Bend - Fog Bank
-  {
-    id: 'misthollow-bend',
-    name: 'Misthollow Bend',
-    description: 'Valley that fills with dense mist',
-    emoji: '🌫️',
-    length: 800,
-    laps: 16,
     layout: LAYOUTS.oval,
     event: {
-      id: 'fog-bank',
-      name: 'Fog Bank',
-      emoji: '🌫️',
-      description: 'Laps 2-4: Crash risk increases',
-      flavorText: 'FOG rolls in! Visibility drops to near zero!',
-      trigger: { type: 'lap', laps: [2, 3, 4] },
-      effect: { type: 'crash_risk', modifier: 1.4, duration: 3 },
+      id: 'lunch-break',
+      name: 'Lunch Break',
+      emoji: '🍽️',
+      description: 'Every 5 laps: Bottom 4 get speed boost',
+      flavorText: 'LUNCH BREAK! Stragglers find energy in the cafeteria!',
+      trigger: { type: 'interval', every: 5 },
+      effect: { type: 'speed_boost', targets: 'bottom', count: 4, amount: 12, duration: 1 },
     },
   },
-  // 17. Crimson Eclipse - Blood Moon
+  // 5. Construction Zone
   {
-    id: 'crimson-eclipse',
-    name: 'Crimson Eclipse',
-    description: 'Cursed grounds where the moon turns red',
-    emoji: '🔴',
+    id: 'construction-zone',
+    name: 'Active Construction',
+    description: 'Work has been ongoing for several years.',
+    emoji: '🚧',
     length: 750,
     laps: 17,
     layout: LAYOUTS.triangle,
     event: {
-      id: 'blood-moon',
-      name: 'Blood Moon',
-      emoji: '🔴',
-      description: 'Final 2 laps: DNF chance doubles',
-      flavorText: 'The BLOOD MOON rises! Danger lurks in every corner!',
-      trigger: { type: 'final_laps', count: 2 },
-      effect: { type: 'crash_risk', modifier: 2.0, duration: 2 },
+      id: 'flaggers',
+      name: 'Flaggers',
+      emoji: '🚩',
+      description: 'Lap 1 & final 3: +50% crash risk',
+      flavorText: 'FLAGGERS ON COURSE! The signals are confusing!',
+      trigger: { type: 'lap', laps: [1, -3, -2, -1] },
+      effect: { type: 'crash_risk', modifier: 1.5, duration: 1 },
     },
   },
-  // 18. Clover Crossing - Fortune's Favor
+  // 6. The Mall
   {
-    id: 'clover-crossing',
-    name: 'Clover Crossing',
-    description: 'Lucky track where close battles are rewarded',
-    emoji: '🍀',
-    length: 800,
-    laps: 16,
-    layout: LAYOUTS.stadium,
+    id: 'the-mall',
+    name: 'The Mall',
+    description: 'Past the food court, near the defunct Sears.',
+    emoji: '🛒',
+    length: 900,
+    laps: 14,
+    layout: LAYOUTS.rectangle,
     event: {
-      id: 'fortunes-favor',
-      name: "Fortune's Favor",
-      emoji: '🍀',
-      description: 'When P1 & P2 within 0.5s: Both get speed boost',
-      flavorText: "FORTUNE'S FAVOR! Close racing is rewarded!",
-      trigger: { type: 'condition', condition: 'close_battle' },
-      effect: { type: 'speed_boost', targets: 'top' as any, count: 2, amount: 10, duration: 1 },
-    },
-  },
-  // 19. Riftgate Ruins - Arcane Surge
-  {
-    id: 'riftgate-ruins',
-    name: 'Riftgate Ruins',
-    description: 'Ancient magical site with unpredictable energy',
-    emoji: '🔮',
-    length: 820,
-    laps: 16,
-    layout: LAYOUTS.diamond,
-    event: {
-      id: 'arcane-surge',
-      name: 'Arcane Surge',
-      emoji: '🔮',
+      id: 'store-closing',
+      name: 'Store Closing',
+      emoji: '🚪',
       description: '10% per lap: Random driver gets instant pit',
-      flavorText: 'ARCANE SURGE! Magic grants an instant pit stop!',
+      flavorText: 'STORE CLOSING! Someone finds the exit they needed!',
       trigger: { type: 'random', chance: 10 },
       effect: { type: 'instant_pit', targets: 'random', count: 1 },
     },
   },
-  // 20. Thunderhoof Plains - Stampede
+  // 7. Airport Terminal
   {
-    id: 'thunderhoof-plains',
-    name: 'Thunderhoof Plains',
-    description: 'Wild grasslands where underdogs thrive',
-    emoji: '🦬',
-    length: 780,
-    laps: 17,
+    id: 'airport-terminal',
+    name: 'Departures Level',
+    description: 'Flight delayed. Racing continues.',
+    emoji: '✈️',
+    length: 820,
+    laps: 16,
+    layout: LAYOUTS.oval,
+    event: {
+      id: 'gate-change',
+      name: 'Gate Change',
+      emoji: '🚶',
+      description: '8% per lap: Random drivers get speed modifier',
+      flavorText: 'GATE CHANGE! Everyone scrambles differently!',
+      trigger: { type: 'random', chance: 8 },
+      effect: { type: 'speed_boost', targets: 'random', count: 20, amount: 10, duration: 1 },
+    },
+  },
+  // 8. The Warehouse
+  {
+    id: 'warehouse',
+    name: 'The Warehouse',
+    description: 'Aisle 7. Product location unknown.',
+    emoji: '📦',
+    length: 720,
+    laps: 18,
+    layout: LAYOUTS.triangle,
+    event: {
+      id: 'inventory-count',
+      name: 'Inventory Count',
+      emoji: '📋',
+      description: '10% per lap: Random driver forced into pit',
+      flavorText: 'INVENTORY COUNT! Someone stops for verification!',
+      trigger: { type: 'random', chance: 10 },
+      effect: { type: 'forced_pit', targets: 'random', count: 1 },
+    },
+  },
+  // 9. Server Room
+  {
+    id: 'server-room',
+    name: 'Server Room B',
+    description: 'Temperature controlled. The hum is normal.',
+    emoji: '🖥️',
+    length: 800,
+    laps: 15,
+    layout: LAYOUTS.diamond,
+    event: {
+      id: 'scheduled-maintenance',
+      name: 'Scheduled Maintenance',
+      emoji: '🔧',
+      description: 'Every 5 laps: Bottom 4 lose progress',
+      flavorText: 'SCHEDULED MAINTENANCE! Brief interruption to service!',
+      trigger: { type: 'interval', every: 5 },
+      effect: { type: 'progress_loss', targets: 'bottom', count: 4, amount: [5, 10] },
+    },
+  },
+  // 10. The Waiting Room
+  {
+    id: 'waiting-room',
+    name: 'The Waiting Room',
+    description: 'Now serving: eventually.',
+    emoji: '🪑',
+    length: 800,
+    laps: 16,
+    layout: LAYOUTS.stadium,
+    event: {
+      id: 'number-called',
+      name: 'Number Called',
+      emoji: '🎰',
+      description: 'When P1 & P2 within 0.5s: Both get speed boost',
+      flavorText: 'NUMBER CALLED! The close ones get attention!',
+      trigger: { type: 'condition', condition: 'close_battle' },
+      effect: { type: 'speed_boost', targets: 'random', count: 2, amount: 10, duration: 1 },
+    },
+  },
+  // 11. Expressway
+  {
+    id: 'expressway',
+    name: 'Express Lane',
+    description: '10 items or less. Nobody counts.',
+    emoji: '🛣️',
+    length: 680,
+    laps: 20,
+    layout: LAYOUTS.oval,
+    event: {
+      id: 'self-checkout',
+      name: 'Self Checkout',
+      emoji: '💳',
+      description: '12% per lap: Last place teleports forward',
+      flavorText: 'SELF CHECKOUT OPENS! Someone skips ahead!',
+      trigger: { type: 'random', chance: 12 },
+      effect: { type: 'position_shuffle', targets: 'random', positions: [20, 10] },
+    },
+  },
+  // 12. The Buffet
+  {
+    id: 'buffet',
+    name: 'The Buffet',
+    description: 'All you can eat. Results may vary.',
+    emoji: '🍽️',
+    length: 680,
+    laps: 20,
+    layout: LAYOUTS.stadium,
+    event: {
+      id: 'fresh-tray',
+      name: 'Fresh Tray',
+      emoji: '🍕',
+      description: '20% per lap: Random driver shuffled',
+      flavorText: 'FRESH TRAY OUT! Everyone repositions!',
+      trigger: { type: 'random', chance: 20 },
+      effect: { type: 'position_shuffle', targets: 'random', positions: [-2, 2] },
+    },
+  },
+  // 13. Basement Level
+  {
+    id: 'basement',
+    name: 'Basement Level',
+    description: 'The lights flicker. This is normal.',
+    emoji: '🔦',
+    length: 850,
+    laps: 15,
     layout: LAYOUTS.rectangle,
     event: {
-      id: 'stampede',
-      name: 'Stampede',
-      emoji: '🦬',
+      id: 'power-flicker',
+      name: 'Power Flicker',
+      emoji: '💡',
+      description: 'Final 2 laps: DNF chance doubles',
+      flavorText: 'POWER FLICKER! The basement grows unstable!',
+      trigger: { type: 'final_laps', count: 2 },
+      effect: { type: 'crash_risk', modifier: 2.0, duration: 2 },
+    },
+  },
+  // 14. Breakroom
+  {
+    id: 'breakroom',
+    name: 'The Breakroom',
+    description: 'The coffee is questionable.',
+    emoji: '☕',
+    length: 800,
+    laps: 16,
+    layout: LAYOUTS.diamond,
+    event: {
+      id: 'coffee-run',
+      name: 'Coffee Run',
+      emoji: '🏃',
+      description: 'Every 4 laps: Top 5 slowed, bottom 5 boosted',
+      flavorText: 'COFFEE RUN! Fortune reverses briefly!',
+      trigger: { type: 'interval', every: 4 },
+      effect: { type: 'speed_boost', targets: 'bottom', count: 5, amount: 10, duration: 1 },
+    },
+  },
+  // 15. Fire Drill
+  {
+    id: 'fire-drill',
+    name: 'Fire Drill',
+    description: 'This is only a test. Probably.',
+    emoji: '🔥',
+    length: 770,
+    laps: 16,
+    layout: LAYOUTS.oval,
+    event: {
+      id: 'false-alarm',
+      name: 'False Alarm',
+      emoji: '🚨',
+      description: 'Laps 2-4: Crash risk increases',
+      flavorText: 'FALSE ALARM! Everyone panics anyway!',
+      trigger: { type: 'lap', laps: [2, 3, 4] },
+      effect: { type: 'crash_risk', modifier: 1.4, duration: 3 },
+    },
+  },
+  // 16. Rush Hour
+  {
+    id: 'rush-hour',
+    name: 'Rush Hour',
+    description: 'Everyone is late.',
+    emoji: '⏰',
+    length: 850,
+    laps: 15,
+    layout: LAYOUTS.diamond,
+    event: {
+      id: 'light-change',
+      name: 'Light Change',
+      emoji: '🚦',
+      description: 'Every 6 laps: All effects reset',
+      flavorText: 'LIGHT CHANGES! Everything resets!',
+      trigger: { type: 'interval', every: 6 },
+      effect: { type: 'speed_boost', targets: 'random', count: 20, amount: 0, duration: 0 },
+    },
+  },
+  // 17. Night Shift
+  {
+    id: 'night-shift',
+    name: 'Night Shift',
+    description: 'The fluorescent lights never stop.',
+    emoji: '🌙',
+    length: 780,
+    laps: 17,
+    layout: LAYOUTS.stadium,
+    event: {
+      id: 'skeleton-crew',
+      name: 'Skeleton Crew',
+      emoji: '💀',
+      description: 'Halfway: Midpack shuffles randomly',
+      flavorText: 'SKELETON CREW! The middle shifts around!',
+      trigger: { type: 'halfway' },
+      effect: { type: 'position_shuffle', targets: 'midpack', positions: [8, 12] },
+    },
+  },
+  // 18. Bike Lane
+  {
+    id: 'bike-lane',
+    name: 'The Bike Lane',
+    description: 'Shared space. Mind the pedestrians.',
+    emoji: '🚲',
+    length: 770,
+    laps: 16,
+    layout: LAYOUTS.triangle,
+    event: {
+      id: 'pedestrian',
+      name: 'Pedestrian',
+      emoji: '🚶',
+      description: '15% per lap: Random team loses progress',
+      flavorText: 'PEDESTRIAN CROSSING! Brief delay!',
+      trigger: { type: 'random', chance: 15 },
+      effect: { type: 'progress_loss', targets: 'random', count: 2, amount: [2, 5] },
+    },
+  },
+  // 19. DMV
+  {
+    id: 'dmv',
+    name: 'The DMV',
+    description: 'Take a number. Wait.',
+    emoji: '📝',
+    length: 950,
+    laps: 14,
+    layout: LAYOUTS.rectangle,
+    event: {
+      id: 'paperwork',
+      name: 'Paperwork',
+      emoji: '📄',
+      description: 'Laps 4-7: Pit stops take 50% longer',
+      flavorText: 'PAPERWORK REQUIRED! Everything takes longer!',
+      trigger: { type: 'lap', laps: [4, 5, 6, 7] },
+      effect: { type: 'pit_delay', modifier: 1.5, duration: 4 },
+    },
+  },
+  // 20. Lost and Found
+  {
+    id: 'lost-and-found',
+    name: 'Lost and Found',
+    description: 'Unclaimed items will be donated.',
+    emoji: '🔍',
+    length: 780,
+    laps: 17,
+    layout: LAYOUTS.oval,
+    event: {
+      id: 'item-found',
+      name: 'Item Found',
+      emoji: '🎁',
       description: 'Every 3 laps: Bottom 6 get speed boost',
-      flavorText: 'STAMPEDE! The pack charges forward with renewed energy!',
+      flavorText: 'ITEM FOUND! Stragglers recover something useful!',
       trigger: { type: 'interval', every: 3 },
       effect: { type: 'speed_boost', targets: 'bottom', count: 6, amount: 8, duration: 1 },
     },
@@ -516,21 +516,15 @@ export const ALL_TRACKS: Track[] = [
 
 /**
  * Generate a dynamic event description based on total laps
- * Replaces hardcoded lap numbers with actual lap numbers for the race
  */
 export function getDynamicEventDescription(event: TrackEvent, totalLaps: number): string {
   const trigger = event.trigger;
 
   switch (trigger.type) {
     case 'lap': {
-      // Convert negative lap numbers (final laps) to actual numbers
       const laps = trigger.laps.map(lap => lap < 0 ? totalLaps + lap + 1 : lap);
       const sortedLaps = [...laps].sort((a, b) => a - b);
-
-      // Format the lap list nicely
       const lapStr = formatLapList(sortedLaps, totalLaps);
-
-      // Get the effect description
       const effectDesc = getEffectDescription(event.effect);
       return `${lapStr}: ${effectDesc}`;
     }
@@ -561,7 +555,6 @@ export function getDynamicEventDescription(event: TrackEvent, totalLaps: number)
     }
 
     case 'condition': {
-      // Condition-based triggers keep their original descriptions
       return event.description;
     }
 
@@ -570,16 +563,12 @@ export function getDynamicEventDescription(event: TrackEvent, totalLaps: number)
   }
 }
 
-/**
- * Format a list of laps into a readable string
- */
 function formatLapList(laps: number[], totalLaps: number): string {
   if (laps.length === 0) return 'No laps';
   if (laps.length === 1) {
     return laps[0] === totalLaps ? 'Final lap' : `Lap ${laps[0]}`;
   }
 
-  // Check if it's a consecutive range
   const isConsecutive = laps.every((lap, i) => i === 0 || lap === laps[i - 1] + 1);
   if (isConsecutive && laps.length > 2) {
     const hasFinal = laps[laps.length - 1] === totalLaps;
@@ -589,7 +578,6 @@ function formatLapList(laps: number[], totalLaps: number): string {
     return `Laps ${laps[0]}-${laps[laps.length - 1]}`;
   }
 
-  // Format as list, replacing final lap with "final"
   const formatted = laps.map(lap => lap === totalLaps ? 'final' : lap.toString());
   if (formatted.length === 2) {
     return `Laps ${formatted[0]} & ${formatted[1]}`;
@@ -597,9 +585,6 @@ function formatLapList(laps: number[], totalLaps: number): string {
   return `Laps ${formatted.slice(0, -1).join(', ')} & ${formatted[formatted.length - 1]}`;
 }
 
-/**
- * Get a short description of an effect
- */
 function getEffectDescription(effect: TrackEventEffect): string {
   switch (effect.type) {
     case 'progress_loss':
@@ -649,12 +634,10 @@ export function getRandomTracks(count: number): Track[] {
   return shuffled.slice(0, count);
 }
 
-// For backwards compatibility - generates a random track from the fixed list
 export function generateTrack(): Track {
   return ALL_TRACKS[Math.floor(Math.random() * ALL_TRACKS.length)];
 }
 
-// Generate a season of unique tracks
 export function generateSeason(numTracks: number = 5): Track[] {
   return getRandomTracks(Math.min(numTracks, ALL_TRACKS.length));
 }

@@ -1,6 +1,6 @@
 import { generateDriverName } from './names';
 import { DriverStats } from '../RaceEngine';
-import { KINGDOMS, Kingdom, DriverSlot, getKingdomsByIds } from '../data/kingdoms';
+import { TEAMS, Team, DriverSlot, getTeamsByIds } from '../data/teams';
 
 export interface GeneratedDriver {
   id: number;
@@ -11,7 +11,7 @@ export interface GeneratedDriver {
   shortName: string;      // For display in tight spaces
   emoji: string;
   teamName: string;
-  kingdomId: string;      // Reference to kingdom
+  kingdomId: string;      // Reference to team (legacy name kept for compatibility)
   color: string;
   driverSlot: DriverSlot; // 1 = primary driver, 2 = secondary driver
   stats: DriverStats;
@@ -19,70 +19,76 @@ export interface GeneratedDriver {
   quirk: string;
 }
 
-// Backstory templates
+// Absurdist backstory templates - Blaseball-inspired
 const BACKSTORY_TEMPLATES = [
-  "Former {job} who discovered racing after {incident}.",
-  "Born into a family of {profession}s, but always dreamed of speed.",
-  "Won their first race at age {age} in a modified {vehicle}.",
-  "Banned from {place} for going too fast. Now they race professionally.",
-  "Nobody knows where they came from. They just showed up one day with a {vehicle}.",
-  "Trained by the legendary {trainer} in the art of going fast.",
-  "Once held the world record for {activity}. Now seeks glory on the track.",
-  "Their {relative} was a famous racer. They have big shoes to fill.",
-  "Started racing to pay off their {debt} debt. Now they can't stop.",
-  "Emerged from {location} with an unexplained talent for speed.",
-  "Claims to have been a {creature} in a past life. Drives like one too.",
-  "Built their first {vehicle} out of {material} at age {age}.",
-  "Former child prodigy who {incident}. Racing is their redemption.",
-  "The only survivor of the infamous {event}. Now they race for those who can't.",
-  "Discovered racing in a {dream}. Now lives it every day."
+  "Appeared one day in the {place}. Nobody asked questions.",
+  "Claims to have been born {age} ago in {location}. Records say otherwise.",
+  "Found driving a {vehicle} through {place} with no explanation.",
+  "Woke up one morning knowing how to race. Previously was a {profession}.",
+  "Emerged from {place} after {incident}. Has never spoken about it.",
+  "The {organization} has no record of them existing before {event}.",
+  "Technically still {situation} according to {authority}.",
+  "Won their seat in a {game} against {entity}. The rules are unclear.",
+  "Former {profession}. The transition to racing was {descriptor}.",
+  "There are {number} of them. This is the one that races.",
+  "Arrived via {method}. Return trip is {status}.",
+  "Once held the {title} of {place}. It was {adjective}.",
+  "Has a {relationship} with {entity} that defies explanation.",
+  "The last person to {action} in {place}. Probably.",
+  "Remembered by {number} people. The number {verb} daily."
 ];
 
 const BACKSTORY_FILLS = {
-  job: ["accountant", "librarian", "dentist", "crossing guard", "food critic", "lighthouse keeper", "mime", "taxidermist", "sommelier", "mortician"],
-  incident: ["a near-death experience", "finding a mysterious key", "eating a suspicious mushroom", "a prophetic dream", "winning a radio contest", "a mild concussion", "reading the wrong book", "a midlife crisis at 12"],
-  profession: ["baker", "butcher", "candlestick maker", "competitive yodeler", "professional mourner", "cloud watcher", "furniture tester", "pet psychic"],
-  age: ["4", "7", "12", "47", "103", "-2 (time travel)", "unknown"],
-  vehicle: ["shopping cart", "riding lawnmower", "ice cream truck", "hearse", "golf cart", "zamboni", "forklift", "parade float"],
-  place: ["Luxembourg", "the moon", "a Costco", "the DMV", "all Waffle Houses", "time itself", "the concept of Tuesday"],
-  trainer: ["Speed McSpeedface", "The Fast Whisperer", "a mysterious old turtle", "an AI from the future", "their own reflection", "a retired pizza delivery driver"],
-  activity: ["competitive sleeping", "extreme knitting", "speed reading", "aggressive meditation", "tactical breathing", "professional waiting"],
-  relative: ["grandmother", "second cousin twice removed", "evil twin", "time-displaced ancestor", "imaginary friend"],
-  debt: ["student loan", "cosmic", "sleep", "flavor", "emotional", "parking ticket"],
-  location: ["the ocean", "a volcano", "the concept of speed itself", "a dimension of pure velocity", "New Jersey", "a really long CVS receipt"],
-  creature: ["cheetah", "rocket ship", "bolt of lightning", "caffeinated squirrel", "anxious hummingbird", "sentient wind"],
-  material: ["cardboard", "dreams", "pure spite", "recycled hope", "compressed anxiety", "concentrated determination"],
-  event: ["Great Ketchup Incident of '98", "Tuesday That Never Ended", "Legendary Traffic Jam", "Forbidden Race", "Incident We Don't Speak Of"],
-  dream: ["recurring nightmare", "fever dream", "daydream during a meeting", "prophetic vision", "especially vivid nap"]
+  place: ["the parking lot", "aisle 7", "the storage unit", "the breakroom", "a roundabout", "the waiting room", "the elevator", "sector 7G", "the supply closet", "an unnamed hallway"],
+  age: ["several Tuesdays", "an undisclosed amount of time", "47 minutes", "before the incident", "after the reckoning", "during the interval", "between commercials"],
+  location: ["a place that no longer exists", "somewhere overhead", "the back of a receipt", "an unmarked location", "coordinates that don't resolve"],
+  vehicle: ["a shopping cart", "a office chair", "a moving walkway", "a conveyor belt", "a rotating door", "an escalator (going up)"],
+  profession: ["a filing clerk", "a parking meter", "a software update", "a loading screen", "a hold message", "a terms of service agreement"],
+  incident: ["the reorganization", "the downtime", "scheduled maintenance", "an unplanned restart", "the merge conflict", "the timezone shift"],
+  organization: ["HR", "the committee", "the board", "management", "the algorithm", "customer service"],
+  event: ["the last update", "the migration", "the rebranding", "the pivot", "the restructuring"],
+  situation: ["on hold", "pending review", "in transit", "buffering", "syncing", "processing"],
+  authority: ["the system", "the records", "the database", "the manifest", "the spreadsheet"],
+  game: ["coin flip", "staring contest", "round of rock-paper-scissors", "game of telephone", "spelling bee"],
+  entity: ["a concept", "a committee", "a spreadsheet", "a policy", "a voicemail", "a FAQ section"],
+  descriptor: ["inevitable", "concerning", "technically legal", "poorly documented", "still loading"],
+  number: ["several", "approximately twelve", "a non-zero amount", "fewer than expected", "more than is comfortable"],
+  method: ["unclear means", "a loophole", "scheduled maintenance", "a clerical error", "the wrong door"],
+  status: ["pending", "complicated", "not applicable", "redacted", "under review"],
+  title: ["interim manager", "acting representative", "temporary placeholder", "backup option"],
+  adjective: ["brief", "confusing", "technically correct", "procedurally sound", "poorly timed"],
+  relationship: ["arrangement", "understanding", "ongoing situation", "recurring appointment"],
+  action: ["check the settings", "read the manual", "use the old system", "remember the password"],
+  verb: ["fluctuates", "changes", "updates", "syncs", "refreshes"]
 };
 
-// Quirks that affect personality/racing style
+// Absurdist quirks - Blaseball-inspired
 const QUIRKS = [
-  "Only races on days that end in 'y'",
-  "Believes the car is sentient and consults it before races",
-  "Has never actually learned how to drive",
-  "Races with their eyes closed for 'focus'",
-  "Communicates only through car horn beeps",
-  "Constantly apologizes to other racers mid-race",
-  "Thinks they're in a different sport entirely",
-  "Has an ongoing rivalry with a specific traffic cone",
-  "Refuses to turn left",
-  "Only accelerates when no one is looking",
-  "Brings a emotional support vehicle to every race",
-  "Convinced they're in a simulation",
-  "Has never finished a sentence or a race",
-  "Races to pay off a debt to a mysterious organization",
-  "Believes speed is just a social construct",
-  "Has a pre-race ritual involving interpretive dance",
-  "Narrates their own racing in third person",
-  "Claims to be from the future but won't give spoilers",
-  "Allergic to second place",
-  "Has diplomatic immunity from racing rules (unverified)",
-  "Their car runs on spite and determination",
-  "Technically racing for a small country that may not exist",
-  "Won their spot in the league in a poker game",
-  "Is actually three smaller racers in a trenchcoat",
-  "Racing to prove a point to their high school guidance counselor"
+  "Only races during approved hours",
+  "Their car makes a sound no one can describe",
+  "Technically two drivers in an agreement",
+  "Receives instructions from somewhere",
+  "Has never been photographed from the left",
+  "The tires know something",
+  "Communicates exclusively through indicators",
+  "Their pit crew is also them, somehow",
+  "Racing to resolve a clerical error",
+  "The car predates them by several owners",
+  "Keeps finding notes they don't remember writing",
+  "Their fuel gauge shows something else entirely",
+  "Legally required to race by an obscure regulation",
+  "The mirrors show a different race",
+  "Has a subscription they can't cancel",
+  "Their contract has footnotes about footnotes",
+  "The steering wheel has opinions",
+  "Racing until further notice",
+  "Their lap times are suggestions",
+  "Technically racing and not racing simultaneously",
+  "The engine runs on something adjacent to fuel",
+  "Always in the wrong timezone",
+  "Their helmet contains questions",
+  "Racing to maintain an average",
+  "The brakes work differently each time"
 ];
 
 function fillBackstoryTemplate(template: string): string {
@@ -118,10 +124,10 @@ function generateStats(): DriverStats {
   };
 }
 
-// Generate a single driver for a specific kingdom and slot
-export function generateDriverForKingdom(
+// Generate a single driver for a specific team and slot
+export function generateDriverForTeam(
   id: number,
-  kingdom: Kingdom,
+  team: Team,
   slot: DriverSlot
 ): GeneratedDriver {
   const name = generateDriverName();
@@ -145,10 +151,10 @@ export function generateDriverForKingdom(
     lastName: name.lastName,
     fullName: name.fullName,
     shortName,
-    emoji: kingdom.emoji,
-    teamName: kingdom.name,
-    kingdomId: kingdom.id,
-    color: kingdom.color,
+    emoji: team.emoji,
+    teamName: team.name,
+    kingdomId: team.id,  // Legacy field name
+    color: team.color,
     driverSlot: slot,
     stats: generateStats(),
     backstory,
@@ -156,34 +162,40 @@ export function generateDriverForKingdom(
   };
 }
 
-// Generate a full roster of drivers (20 drivers: 2 per kingdom)
+// Legacy alias
+export const generateDriverForKingdom = generateDriverForTeam;
+
+// Generate a full roster of drivers (2 per team)
 export function generateRoster(): GeneratedDriver[] {
   const drivers: GeneratedDriver[] = [];
   let id = 0;
 
-  for (const kingdom of KINGDOMS) {
-    // Generate two drivers for each kingdom
-    drivers.push(generateDriverForKingdom(id++, kingdom, 1)); // Primary driver
-    drivers.push(generateDriverForKingdom(id++, kingdom, 2)); // Secondary driver
+  for (const team of TEAMS) {
+    // Generate two drivers for each team
+    drivers.push(generateDriverForTeam(id++, team, 1)); // Primary driver
+    drivers.push(generateDriverForTeam(id++, team, 2)); // Secondary driver
   }
 
   return drivers;
 }
 
-// Generate a roster from specific kingdom IDs (for season mode)
-export function generateRosterFromKingdoms(kingdomIds: string[]): GeneratedDriver[] {
+// Generate a roster from specific team IDs (for season mode)
+export function generateRosterFromTeams(teamIds: string[]): GeneratedDriver[] {
   const drivers: GeneratedDriver[] = [];
   let id = 0;
 
-  const kingdoms = getKingdomsByIds(kingdomIds);
-  for (const kingdom of kingdoms) {
-    // Generate two drivers for each kingdom
-    drivers.push(generateDriverForKingdom(id++, kingdom, 1)); // Primary driver
-    drivers.push(generateDriverForKingdom(id++, kingdom, 2)); // Secondary driver
+  const teams = getTeamsByIds(teamIds);
+  for (const team of teams) {
+    // Generate two drivers for each team
+    drivers.push(generateDriverForTeam(id++, team, 1)); // Primary driver
+    drivers.push(generateDriverForTeam(id++, team, 2)); // Secondary driver
   }
 
   return drivers;
 }
+
+// Legacy alias
+export const generateRosterFromKingdoms = generateRosterFromTeams;
 
 // Serialize roster for storage
 export function serializeRoster(roster: GeneratedDriver[]): string {

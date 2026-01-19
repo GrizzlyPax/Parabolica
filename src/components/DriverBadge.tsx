@@ -11,8 +11,8 @@ interface DriverBadgeProps {
 /**
  * DriverBadge - Displays a driver's team badge with slot-based styling
  *
- * Primary driver (slot 1): White background with colored ring
- * Secondary driver (slot 2): Colored background with white ring
+ * Primary driver (slot 1): Team color background with white ring
+ * Secondary driver (slot 2): Team color background with dark ring
  */
 function DriverBadge({ emoji, color, driverSlot = 1, size = 'md', className = '' }: DriverBadgeProps) {
   return (

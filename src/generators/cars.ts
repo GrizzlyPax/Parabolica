@@ -1,5 +1,5 @@
-// Car and team generation for Crown Prix teams
-// Each kingdom has one car shared by both drivers, plus team-level stats
+// Chariot and stable generation for Olympus GP teams
+// Each divine house has one chariot shared by both drivers, plus team-level stats
 
 export interface CarStats {
   power: number;        // 1-5 stars - Multiplies with driver speed on straights
@@ -7,7 +7,7 @@ export interface CarStats {
   reliability: number;  // 1-5 stars - Affects mechanical failure chance, interacts with driver luck
 }
 
-// Team stats affect both drivers equally - these are team operation quality
+// Team stats affect both drivers equally - these are stable operation quality
 export interface TeamStats {
   tireManagement: number;  // 1-5 stars - How aggressively team pushes tire strategy (higher = riskier, faster)
   pitCrew: number;         // 1-5 stars - Reduces chance of slow pit stops
@@ -15,63 +15,63 @@ export interface TeamStats {
 
 export interface GeneratedCar {
   kingdomId: string;
-  name: string;         // e.g., "CV-24" for Crimson Vale 2024
+  name: string;         // e.g., "Thunderbolt-VII" for House Zeus
   stats: CarStats;
   teamStats: TeamStats; // Team-level operational stats
-  quirk: string;        // Flavor text about the car
+  quirk: string;        // Flavor text about the chariot
 }
 
-// Car name prefixes based on kingdom style
+// Chariot name prefixes based on divine house
 const CAR_PREFIXES: Record<string, string[]> = {
-  'crimson-vale': ['CV', 'Bloodracer', 'Nighthowl'],
-  'emberreach': ['ER', 'Dragonfyre', 'Inferno'],
-  'lunareth': ['LN', 'Moonshadow', 'Eclipse'],
-  'thornwild': ['TW', 'Briarswift', 'Rootrunner'],
-  'brasshaven': ['BH', 'Clockwerk', 'Steamstrike'],
-  'candlecourt': ['CC', 'Flamewright', 'Gilded'],
-  'tideward': ['TD', 'Wavecutter', 'Tidechaser'],
-  'virel-dominion': ['VD', 'Farsight', 'Oracle'],
-  'saffron-expanse': ['SE', 'Dunestrider', 'Sandstorm'],
-  'starfall-concord': ['SC', 'Cometdash', 'Starburst'],
-  'ironhold': ['IH', 'Ironsides', 'Fortress'],
-  'frostmere': ['FM', 'Frostbite', 'Icebreaker'],
-  'shadowfen': ['SF', 'Nightstalker', 'Murkmover'],
-  'phoenixcrest': ['PC', 'Ashborne', 'Rebirth'],
-  'crystalspire': ['CS', 'Gemcutter', 'Prismatic'],
-  'stormwright': ['SW', 'Thunderbolt', 'Voltaic'],
-  'verdant-throne': ['VT', 'Oakenspeed', 'Rootracer'],
-  'obsidian-order': ['OO', 'Darkglass', 'Volcanic'],
-  'pearlharbor': ['PH', 'Shellswift', 'Deephunter'],
-  'sunspear': ['SS', 'Solarflare', 'Dawnchaser'],
+  'zeus': ['Thunderbolt', 'Aegis', 'Olympian'],
+  'hera': ['Argos', 'Diadem', 'Regal'],
+  'poseidon': ['Trident', 'Tsunami', 'Hippocampus'],
+  'demeter': ['Harvest', 'Cornucopia', 'Elysian'],
+  'ares': ['Warbreaker', 'Phobos', 'Deimos'],
+  'athena': ['Strategem', 'Aegis', 'Pallas'],
+  'apollo': ['Phaeton', 'Lyre', 'Oracle'],
+  'artemis': ['Moonbow', 'Stag', 'Huntress'],
+  'hephaestus': ['Forgefire', 'Automaton', 'Anvil'],
+  'aphrodite': ['Adonis', 'Eros', 'Cytherea'],
+  'hermes': ['Caduceus', 'Talaria', 'Psychopomp'],
+  'dionysus': ['Thyrsus', 'Maeniad', 'Reveler'],
+  'hades': ['Cerberus', 'Stygian', 'Pluton'],
+  'persephone': ['Kore', 'Pomegranate', 'Blossom'],
+  'hestia': ['Hearthfire', 'Sanctuary', 'Eternal'],
+  'helios': ['Sunchariot', 'Hyperion', 'Radiant'],
+  'selene': ['Moonrise', 'Endymion', 'Crescent'],
+  'pan': ['Syrinx', 'Arcadian', 'Wildling'],
+  'nemesis': ['Retribution', 'Scales', 'Adrasteia'],
+  'nike': ['Victoria', 'Laureate', 'Triumphant'],
 };
 
-// Car quirks that add personality
+// Chariot quirks with Greek mythology flavor
 const CAR_QUIRKS = [
-  'The engine sounds like it\'s singing an ancient war hymn.',
-  'Somehow goes faster when the driver is angry.',
-  'The mechanics swear they hear it whispering at night.',
-  'Leaves a faint trail of sparkles. Nobody knows why.',
-  'Has never needed an oil change. Suspicious.',
-  'The steering wheel is warm to the touch. Always.',
-  'Sometimes turns left when you steer right. Keeps you sharp.',
-  'Purrs like a giant cat when idle.',
-  'The horn plays a different tune each time.',
-  'Accelerates better when you compliment it.',
-  'The previous three drivers all reported strange dreams.',
-  'Found in a crater. Came with no instructions.',
-  'Has a small shrine to velocity in the glove compartment.',
-  'Runs on a fuel that doesn\'t technically exist.',
-  'The paint job changes slightly between races.',
-  'Won a race while no one was driving it. Once.',
-  'Refuses to go in reverse. Philosophically.',
-  'The exhaust smells like fresh bread. Unexplained.',
-  'Has more horsepower than should be possible for its size.',
-  'The chassis is made from a material that can\'t be identified.',
+  'Blessed by the Muses - the engine hums in perfect hexameter.',
+  'Forged in Hephaestus\'s own workshop. Still warm.',
+  'The steering wheel is carved from the Argo\'s original rudder.',
+  'Leaves a faint trail of ambrosia vapor.',
+  'The horn sounds like a distant lyre.',
+  'Rumored to have outrun Hermes himself. Once.',
+  'The previous driver ascended to minor godhood.',
+  'Found at the bottom of the River Styx. Surprisingly intact.',
+  'The seats are upholstered with golden fleece.',
+  'Apollo wrote a poem about this chariot. It was mediocre.',
+  'Runs on nectar. Don\'t ask how.',
+  'The Fates themselves wove its timing belt.',
+  'Has completed the Labyrinth in under three minutes.',
+  'Athena nodded approvingly at its design. She never nods.',
+  'The paint was mixed with ichor. Dries immortal.',
+  'Won a race against a centaur. The centaur was sore about it.',
+  'Refuses to race on days sacred to Hera. Nobody knows why.',
+  'The exhaust sounds like distant thunder from Olympus.',
+  'Dionysus once borrowed it. Came back with grape vines.',
+  'The chassis is forged from Celestial Bronze.',
 ];
 
 /**
  * Generate a random star rating (1-5) with weighted distribution
- * Most cars cluster around 2-4 stars, with 1 and 5 being rare
+ * Most chariots cluster around 2-4 stars, with 1 and 5 being rare
  */
 function generateStarRating(): number {
   const roll = Math.random();
@@ -84,7 +84,7 @@ function generateStarRating(): number {
 
 /**
  * Convert star rating to actual multiplier value
- * Used by the race engine to apply car stats
+ * Used by the race engine to apply chariot stats
  */
 export function starToMultiplier(stars: number, statType: 'power' | 'grip' | 'reliability' | 'tireManagement' | 'pitCrew'): number {
   // Power: affects top speed (1 star = 0.92x, 5 stars = 1.08x)
@@ -114,24 +114,27 @@ export function starToMultiplier(stars: number, statType: 'power' | 'grip' | 're
   return 1;
 }
 
+// Roman numerals for chariot naming
+const ROMAN_NUMERALS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
+
 /**
- * Generate a car for a specific kingdom
+ * Generate a chariot for a specific divine house
  */
 export function generateCarForKingdom(kingdomId: string): GeneratedCar {
-  // Get name prefix for this kingdom
-  const prefixes = CAR_PREFIXES[kingdomId] || ['XX'];
+  // Get name prefix for this divine house
+  const prefixes = CAR_PREFIXES[kingdomId] || ['Chariot'];
   const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
-  const suffix = Math.floor(Math.random() * 100).toString().padStart(2, '0');
-  const name = `${prefix}-${suffix}`;
+  const numeral = ROMAN_NUMERALS[Math.floor(Math.random() * ROMAN_NUMERALS.length)];
+  const name = `${prefix}-${numeral}`;
 
-  // Generate random car stats
+  // Generate random chariot stats
   const stats: CarStats = {
     power: generateStarRating(),
     grip: generateStarRating(),
     reliability: generateStarRating(),
   };
 
-  // Generate random team stats
+  // Generate random stable stats
   const teamStats: TeamStats = {
     tireManagement: generateStarRating(),
     pitCrew: generateStarRating(),
@@ -150,7 +153,7 @@ export function generateCarForKingdom(kingdomId: string): GeneratedCar {
 }
 
 /**
- * Generate cars for all kingdoms in a roster
+ * Generate chariots for all divine houses in a roster
  */
 export function generateCarsForKingdoms(kingdomIds: string[]): Map<string, GeneratedCar> {
   const cars = new Map<string, GeneratedCar>();
@@ -163,14 +166,14 @@ export function generateCarsForKingdoms(kingdomIds: string[]): Map<string, Gener
 }
 
 /**
- * Serialize cars for storage
+ * Serialize chariots for storage
  */
 export function serializeCars(cars: Map<string, GeneratedCar>): string {
   return JSON.stringify(Object.fromEntries(cars), null, 2);
 }
 
 /**
- * Deserialize cars from storage
+ * Deserialize chariots from storage
  */
 export function deserializeCars(json: string): Map<string, GeneratedCar> {
   const obj = JSON.parse(json);
@@ -178,25 +181,25 @@ export function deserializeCars(json: string): Map<string, GeneratedCar> {
 }
 
 /**
- * Get description of what a car/team stat does (for tooltips)
+ * Get description of what a chariot/stable stat does (for tooltips)
  */
 export function getStatDescription(statType: 'power' | 'grip' | 'reliability' | 'tireManagement' | 'pitCrew'): string {
   switch (statType) {
     case 'power':
       return 'Multiplies driver speed on straights. High power = faster top speed.';
     case 'grip':
-      return 'Multiplies driver consistency in corners. High grip = more forgiving car that helps inconsistent drivers.';
+      return 'Multiplies driver consistency in corners. High grip = more forgiving chariot that helps inconsistent drivers.';
     case 'reliability':
-      return 'Reduces mechanical failure chance. Interacts with driver luck - unlucky drivers need reliable cars.';
+      return 'Reduces mechanical failure chance. Interacts with driver luck - unlucky drivers need reliable chariots.';
     case 'tireManagement':
-      return 'How aggressively the team pushes tire strategy. High = faster but more tire wear and risk. Low = conservative, preserves tires.';
+      return 'How aggressively the stable pushes tire strategy. High = faster but more tire wear and risk. Low = conservative, preserves tires.';
     case 'pitCrew':
       return 'Pit crew skill reduces chance of slow pit stops. Poor crews can double pit stop time!';
   }
 }
 
 /**
- * Get emoji icon for a car/team stat
+ * Get emoji icon for a chariot/stable stat
  */
 export function getStatEmoji(statType: 'power' | 'grip' | 'reliability' | 'tireManagement' | 'pitCrew'): string {
   switch (statType) {

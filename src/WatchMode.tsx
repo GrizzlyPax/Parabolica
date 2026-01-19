@@ -43,12 +43,19 @@ interface CrashPosition {
   type: 'crash' | 'blowout';  // Different visual for tire blowouts
 }
 
-// Track event effect on a driver (shows emoji pop-up)
+// Track event effect on a driver (shows emoji pop-up on track)
 interface TrackEventEffect {
   driverId: number;
   emoji: string;
   impact: 'positive' | 'negative' | 'neutral';
   tick: number;
+}
+
+// Status effect for timing tower (persists longer than visual pop-up)
+interface StatusEffect {
+  driverId: number;
+  emoji: string;
+  expiresAtTick: number;
 }
 
 // Tire compound colors
@@ -187,9 +194,12 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, favorite
   // Crash positions for SVG effects only (visual on track)
   const [crashPositions, setCrashPositions] = useState<CrashPosition[]>([]);
 
-  // Track event effects on drivers (emoji pop-ups)
+  // Track event effects on drivers (emoji pop-ups on track - short duration)
   const [trackEventEffects, setTrackEventEffects] = useState<TrackEventEffect[]>([]);
   const seenTrackEventEffectsRef = useRef<Set<string>>(new Set()); // Track which effects we've shown
+
+  // Status effects for timing tower (longer duration - persists for ~1 lap)
+  const [statusEffects, setStatusEffects] = useState<StatusEffect[]>([]);
 
   // Active power effect for visual display on track (now tracks kingdom for team effects)
   const [activePowerEffect, setActivePowerEffect] = useState<{
@@ -204,7 +214,8 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, favorite
 
   // Sector-based gap tracking (like F1 timing)
   // Gaps only update when a driver crosses a sector boundary
-  const NUM_SECTORS = 3;
+  // 6 sectors = updates at each 1/6 of the track (more frequent than 3)
+  const NUM_SECTORS = 6;
   const sectorLength = trackLength / NUM_SECTORS;
 
   // Track each driver's last sector and their frozen gap values
@@ -214,7 +225,7 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, favorite
   const [frozenSortedDrivers, setFrozenSortedDrivers] = useState<Driver[]>([]);
   const lastSortUpdateSectorRef = useRef<number>(-1);
 
-  // Helper to get current sector (0, 1, or 2) from position
+  // Helper to get current sector (0-5) from position
   const getSector = (position: number): number => {
     return Math.floor((position % trackLength) / sectorLength);
   };
@@ -461,23 +472,20 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, favorite
     // Find track_event_effect events for individual drivers
     const newEffects = raceEvents.filter(e => {
       if (e.type !== 'track_event_effect') return false;
-      if (e.driverId === 0) return false; // Skip events without a specific driver
+      if (e.driverId < 0) return false; // Skip events without a specific driver (driverId is -1 when null)
       const key = `${e.tick}-${e.driverId}`;
       if (seenTrackEventEffectsRef.current.has(key)) return false;
       return true;
     });
 
     if (newEffects.length > 0) {
-      // Get the most recent track_event to get the emoji
-      const lastTrackEvent = raceEvents.filter(e => e.type === 'track_event').pop();
-      const eventEmoji = lastTrackEvent?.emoji || trackInfo?.event?.emoji || '⚡';
-
       const effectsToAdd: TrackEventEffect[] = newEffects.map(e => {
         const key = `${e.tick}-${e.driverId}`;
         seenTrackEventEffectsRef.current.add(key);
+        // Use the emoji from the event directly (now passed from RaceEngine)
         return {
           driverId: e.driverId,
-          emoji: eventEmoji,
+          emoji: e.emoji || trackInfo?.event?.emoji || '⚡',
           impact: e.impact,
           tick: e.tick,
         };
@@ -485,21 +493,36 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, favorite
 
       setTrackEventEffects(prev => [...prev, ...effectsToAdd]);
 
-      // Remove effects after 3 seconds
+      // Also add to status effects (persists longer for timing tower)
+      // Status effects last for ~500 ticks (roughly 1 lap worth)
+      const statusToAdd: StatusEffect[] = newEffects.map(e => ({
+        driverId: e.driverId,
+        emoji: e.emoji || trackInfo?.event?.emoji || '⚡',
+        expiresAtTick: raceState.totalTicks + 500,
+      }));
+      setStatusEffects(prev => [...prev, ...statusToAdd]);
+
+      // Remove track visual effects after 10 seconds (matches CSS animation duration)
       setTimeout(() => {
         const ticksToRemove = new Set(effectsToAdd.map(e => `${e.tick}-${e.driverId}`));
         setTrackEventEffects(prev =>
           prev.filter(e => !ticksToRemove.has(`${e.tick}-${e.driverId}`))
         );
-      }, 3000);
+      }, 10000);
     }
-  }, [raceEvents, trackInfo]);
+  }, [raceEvents, trackInfo, raceState.totalTicks]);
+
+  // Clean up expired status effects based on tick count
+  useEffect(() => {
+    setStatusEffects(prev => prev.filter(e => e.expiresAtTick > raceState.totalTicks));
+  }, [raceState.totalTicks]);
 
   // Reset track event tracking when race resets
   useEffect(() => {
     if (raceState.totalTicks === 0) {
       lastTrackEventTickRef.current = -1;
       setTrackEventEffects([]);
+      setStatusEffects([]);
       seenTrackEventEffectsRef.current.clear();
     }
   }, [raceState.totalTicks]);
@@ -816,7 +839,10 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, favorite
     const MAX_LANES = 5; // Cap at 5 lanes to stay on track
 
     return racingDrivers.map((driver) => {
-      const lapProgress = driver.position / trackLength;
+      // Normalize position to track length to prevent visual glitches when
+      // speed boosts push position beyond trackLength before lap counting
+      const normalizedPosition = ((driver.position % trackLength) + trackLength) % trackLength;
+      const lapProgress = normalizedPosition / trackLength;
       const point = getPointAlongPath(trackPathRef.current, lapProgress);
       const perp = getPerpendicularOffset(trackPathRef.current, lapProgress);
 
@@ -873,9 +899,16 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, favorite
       // Check if this driver just exited the pits (was pitting, now racing)
       const justExitedPit = previouslyPittingRef.current.has(driver.id);
 
-      if (!smoothed || isGracePeriod || justExitedPit) {
-        // First time, grace period, or just exited pit - snap to target position
-        // This prevents the "fly back to pit entrance" visual glitch
+      // Check for large position jumps (lap crossing, speed boosts, etc.)
+      // If the target moved more than 100px, snap instead of interpolate
+      const distanceToTarget = smoothed
+        ? Math.sqrt((targetX - smoothed.x) ** 2 + (targetY - smoothed.y) ** 2)
+        : Infinity;
+      const shouldSnap = distanceToTarget > 100;
+
+      if (!smoothed || isGracePeriod || justExitedPit || shouldSnap) {
+        // First time, grace period, exited pit, or large jump - snap to target position
+        // This prevents visual glitches from interpolating across the track
         smoothed = { x: targetX, y: targetY, targetX, targetY };
         smoothedPositionsRef.current.set(driver.id, smoothed);
       } else {
@@ -978,6 +1011,7 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, favorite
             <span className="lh-last">Last</span>
             <span className="lh-best">Best</span>
             <span className="lh-tire">Tires</span>
+            <span className="lh-status"></span>
           </div>
           {sortedDrivers.map((driver, index) => {
             const isFinished = driver.status === 'finished';
@@ -1058,23 +1092,37 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, favorite
               } else if ((crossedSector && currentSector > 0) || (hasFirstSectorTime && crossedSector)) {
                 // Driver crossed a sector boundary - update their gaps
                 if (leader && leader.status !== 'finished') {
-                  const distGapToLeader = leaderDist - driverDist;
-                  const estimatedTickGapToLeader = distGapToLeader * 0.8;
-                  if (estimatedTickGapToLeader > 0) {
-                    leaderGapDisplay = formatGap(estimatedTickGapToLeader);
+                  // Check if driver is lapped (on a different lap than leader)
+                  const lapsBehindLeader = leader.currentLap - driver.currentLap;
+                  if (lapsBehindLeader > 0) {
+                    // Driver is lapped - show lap difference
+                    leaderGapDisplay = `+${lapsBehindLeader}L`;
                   } else {
-                    leaderGapDisplay = '-';
+                    const distGapToLeader = leaderDist - driverDist;
+                    const estimatedTickGapToLeader = distGapToLeader * 0.8;
+                    if (estimatedTickGapToLeader > 0) {
+                      leaderGapDisplay = formatGap(estimatedTickGapToLeader);
+                    } else {
+                      leaderGapDisplay = '-';
+                    }
                   }
 
                   const carAhead = sortedDrivers[index - 1];
                   if (carAhead && carAhead.status !== 'dnf') {
-                    const carAheadDist = carAhead.currentLap * trackLength + carAhead.position;
-                    const distGapToAhead = carAheadDist - driverDist;
-                    const estimatedTickGapToAhead = distGapToAhead * 0.8;
-                    if (estimatedTickGapToAhead > 0) {
-                      intervalGapDisplay = formatGap(estimatedTickGapToAhead);
+                    // Check if driver is on a different lap than car ahead
+                    const lapsBehindCarAhead = carAhead.currentLap - driver.currentLap;
+                    if (lapsBehindCarAhead > 0) {
+                      // Driver is lapped by car ahead - show lap difference
+                      intervalGapDisplay = `+${lapsBehindCarAhead}L`;
                     } else {
-                      intervalGapDisplay = '-';
+                      const carAheadDist = carAhead.currentLap * trackLength + carAhead.position;
+                      const distGapToAhead = carAheadDist - driverDist;
+                      const estimatedTickGapToAhead = distGapToAhead * 0.8;
+                      if (estimatedTickGapToAhead > 0) {
+                        intervalGapDisplay = formatGap(estimatedTickGapToAhead);
+                      } else {
+                        intervalGapDisplay = '-';
+                      }
                     }
                   } else {
                     intervalGapDisplay = '-';
@@ -1179,7 +1227,7 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, favorite
                 className={`leaderboard-row ${isFinished ? 'finished' : ''} ${isDNF ? 'dnf' : ''} ${isPitting ? 'pitting' : ''} ${isFavorite ? 'favorite-driver' : ''} ${isRival ? 'rival-driver' : ''}`}
               >
                 <span className="leaderboard-pos">
-                  {isFinished ? `#${finishPos + 1}` : isDNF ? (driver.dnfInfo?.reason === 'tire_failure' ? '💨' : '💥') : `${index + 1}`}
+                  {isFinished ? `#${finishPos + 1}` : isDNF ? 'DNF' : `${index + 1}`}
                 </span>
                 <span
                   className="leaderboard-badge"
@@ -1325,6 +1373,26 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, favorite
                     </div>
                   )}
                 </span>
+                {/* Status column - shows active effects or DNF reason */}
+                <span className="leaderboard-status">
+                  {(() => {
+                    // Check for active status effect on this driver (persists longer)
+                    const activeStatus = statusEffects.find(e => e.driverId === driver.id);
+
+                    // For DNF drivers, show what caused it
+                    if (isDNF && driver.dnfInfo) {
+                      const dnfEmoji = driver.dnfInfo.reason === 'tire_failure' ? '💨' : '💥';
+                      return <span className="status-icon status-icon-dnf">{dnfEmoji}</span>;
+                    }
+
+                    // Show active status effect emoji (the actual track event emoji)
+                    if (activeStatus) {
+                      return <span className="status-icon">{activeStatus.emoji}</span>;
+                    }
+
+                    return null;
+                  })()}
+                </span>
               </div>
             );
           })}
@@ -1360,40 +1428,6 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, favorite
             strokeDasharray="8 8"
             className="track-centerline"
           />
-
-          {/* Sector markers - at 1/3 and 2/3 of the track */}
-          {pathsReady && trackPathRef.current && (() => {
-            const sector1 = getPointAlongPath(trackPathRef.current, 1/3);
-            const sector2 = getPointAlongPath(trackPathRef.current, 2/3);
-            return (
-              <>
-                {/* Sector 1 marker - cyan line */}
-                <line
-                  x1={sector1.x - 12}
-                  y1={sector1.y - 12}
-                  x2={sector1.x + 12}
-                  y2={sector1.y + 12}
-                  stroke="#4ecdc4"
-                  strokeWidth="4"
-                  strokeLinecap="round"
-                  opacity="0.7"
-                  className="sector-line"
-                />
-                {/* Sector 2 marker - orange line */}
-                <line
-                  x1={sector2.x - 12}
-                  y1={sector2.y - 12}
-                  x2={sector2.x + 12}
-                  y2={sector2.y + 12}
-                  stroke="#f39c12"
-                  strokeWidth="4"
-                  strokeLinecap="round"
-                  opacity="0.7"
-                  className="sector-line"
-                />
-              </>
-            );
-          })()}
 
           {/* Start/Finish line - checkered pattern */}
           {pathsReady && trackPathRef.current && (() => {
@@ -1536,21 +1570,25 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, favorite
             const trackEffect = trackEventEffects.find(e => e.driverId === driver.id);
 
             return (
-              <g key={driver.id} className={`driver-marker ${isTop3 ? 'top3' : ''} ${hasPowerEffect ? `power-effect power-${powerCategory}` : ''}`}>
+              <g
+                key={driver.id}
+                className={`driver-marker ${isTop3 ? 'top3' : ''} ${hasPowerEffect ? `power-effect power-${powerCategory}` : ''}`}
+                transform={`translate(${x}, ${y})`}
+              >
                 {/* Power effect glow ring */}
                 {hasPowerEffect && (
                   <>
                     <circle
-                      cx={x}
-                      cy={y}
+                      cx={0}
+                      cy={0}
                       r="22"
                       className={`power-glow power-glow-${powerCategory}`}
                       fill="none"
                       strokeWidth="4"
                     />
                     <circle
-                      cx={x}
-                      cy={y}
+                      cx={0}
+                      cy={0}
                       r="18"
                       className={`power-glow-inner power-glow-inner-${powerCategory}`}
                       fill="none"
@@ -1559,67 +1597,80 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, favorite
                   </>
                 )}
                 {/* Favorite/Rival indicator ring */}
-                {(isFavorite || isRival) && !hasPowerEffect && (
+                {(isFavorite || isRival) && !hasPowerEffect && !isTop3 && (
                   <circle
-                    cx={x}
-                    cy={y}
+                    cx={0}
+                    cy={0}
                     r="16"
                     className={isFavorite ? 'favorite-ring' : 'rival-ring'}
                     fill="none"
                     strokeWidth="2"
                   />
                 )}
-                {/* Position badge for top 3 */}
+                {/* Position ring for top 3 (gold/silver/bronze) */}
                 {isTop3 && (
-                  <>
-                    <circle
-                      cx={x}
-                      cy={y - 14}
-                      r="8"
-                      className={`position-badge position-${rank}`}
-                    />
-                    <text
-                      x={x}
-                      y={y - 11}
-                      textAnchor="middle"
-                      className="position-badge-text"
-                    >
-                      {rank}
-                    </text>
-                  </>
+                  <circle
+                    cx={0}
+                    cy={0}
+                    r="14"
+                    className={`position-ring position-ring-${rank}`}
+                    fill="none"
+                    strokeWidth="3"
+                  />
                 )}
                 {/* Driver badge circle - slot-based styling */}
                 <circle
-                  cx={x}
-                  cy={y}
-                  r={isTop3 ? 12 : 10}
+                  cx={0}
+                  cy={0}
+                  r={10}
                   className={`driver-badge-circle ${hasPowerEffect ? 'power-pulse' : ''}`}
-                  fill={driver.driverSlot === 2 ? driver.color : '#fff'}
-                  stroke={driver.driverSlot === 2 ? '#fff' : driver.color}
-                  strokeWidth={isTop3 ? 3 : 2}
+                  fill={driver.color}
+                  stroke={driver.driverSlot === 2 ? '#222' : '#fff'}
+                  strokeWidth={2}
                 />
                 <text
-                  x={x}
-                  y={y}
+                  x={0}
+                  y={0}
                   textAnchor="middle"
                   dominantBaseline="middle"
                   className={`driver-emoji-track ${hasPowerEffect ? 'power-pulse' : ''}`}
-                  style={{ fontSize: isTop3 ? '12px' : '10px' }}
+                  style={{ fontSize: '10px' }}
                 >
                   {driver.emoji}
                 </text>
-                {/* Track event effect pop-up */}
+                {/* Track event effect pop-up - matches crash style */}
                 {trackEffect && (
                   <g className={`track-event-popup track-event-${trackEffect.impact}`}>
+                    {/* Expanding rings - same size as crash rings */}
                     <circle
-                      cx={x}
-                      cy={y - 22}
-                      r="12"
-                      className={`track-event-bg track-event-bg-${trackEffect.impact}`}
+                      cx={0}
+                      cy={0}
+                      r="15"
+                      className={`track-event-ring track-event-ring-${trackEffect.impact} track-event-ring-1`}
                     />
+                    <circle
+                      cx={0}
+                      cy={0}
+                      r="15"
+                      className={`track-event-ring track-event-ring-${trackEffect.impact} track-event-ring-2`}
+                    />
+                    <circle
+                      cx={0}
+                      cy={0}
+                      r="15"
+                      className={`track-event-ring track-event-ring-${trackEffect.impact} track-event-ring-3`}
+                    />
+                    {/* Center flash - same as crash */}
+                    <circle
+                      cx={0}
+                      cy={0}
+                      r="8"
+                      className={`track-event-flash track-event-flash-${trackEffect.impact}`}
+                    />
+                    {/* Event emoji - pops up above driver and fades */}
                     <text
-                      x={x}
-                      y={y - 22}
+                      x={0}
+                      y={-20}
                       textAnchor="middle"
                       dominantBaseline="middle"
                       className="track-event-emoji"
@@ -1644,34 +1695,27 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, favorite
                 : '#f1c40f'; // Yellow for normal
             return (
             <g key={driver.id} className={`driver-marker pitting ${isTop3 ? 'top3' : ''}`}>
-              {/* Position badge for top 3 */}
+              {/* Position ring for top 3 (gold/silver/bronze) */}
               {isTop3 && (
-                <>
-                  <circle
-                    cx={x}
-                    cy={y - 14}
-                    r="8"
-                    className={`position-badge position-${rank}`}
-                  />
-                  <text
-                    x={x}
-                    y={y - 11}
-                    textAnchor="middle"
-                    className="position-badge-text"
-                  >
-                    {rank}
-                  </text>
-                </>
+                <circle
+                  cx={x}
+                  cy={y}
+                  r="14"
+                  className={`position-ring position-ring-${rank}`}
+                  fill="none"
+                  strokeWidth="3"
+                  opacity={0.7}
+                />
               )}
               {/* Driver badge circle - slot-based styling */}
               <circle
                 cx={x}
                 cy={y}
-                r={isTop3 ? 12 : 10}
+                r={10}
                 className="driver-badge-circle"
-                fill={driver.driverSlot === 2 ? driver.color : '#fff'}
-                stroke={driver.driverSlot === 2 ? '#fff' : driver.color}
-                strokeWidth={isTop3 ? 3 : 2}
+                fill={driver.color}
+                stroke={driver.driverSlot === 2 ? '#222' : '#fff'}
+                strokeWidth={2}
                 opacity={0.7}
               />
               <text
@@ -1680,7 +1724,7 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, favorite
                 textAnchor="middle"
                 dominantBaseline="middle"
                 className="driver-emoji-track"
-                style={{ fontSize: isTop3 ? '11px' : '9px' }}
+                style={{ fontSize: '9px' }}
               >
                 {driver.emoji}
               </text>
@@ -1716,8 +1760,8 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, favorite
                   cy={y}
                   r={10}
                   className="driver-badge-circle"
-                  fill={driver.driverSlot === 2 ? driver.color : '#fff'}
-                  stroke={driver.driverSlot === 2 ? '#fff' : driver.color}
+                  fill={driver.color}
+                  stroke={driver.driverSlot === 2 ? '#222' : '#fff'}
                   strokeWidth={2}
                   opacity={0.3}
                 />
