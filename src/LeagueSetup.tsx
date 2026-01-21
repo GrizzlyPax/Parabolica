@@ -8,6 +8,50 @@ import StarRating from './components/StarRating';
 import Tooltip from './components/Tooltip';
 import './LeagueSetup.css';
 
+// Calculate driver overall rating (50-99)
+function calculateDriverRating(driver: GeneratedDriver): number {
+  const speedNorm = (driver.stats.baseSpeed - 0.85) / 0.30;
+  const consistencyNorm = (driver.stats.consistency - 0.3) / 0.50;
+  const luckNorm = (driver.stats.luck - 0.3) / 0.50;
+  const accelNorm = (driver.stats.acceleration - 0.85) / 0.30;
+  const enduranceNorm = (driver.stats.endurance - 0.85) / 0.30;
+  const aggressionNorm = (driver.stats.aggression - 0.3) / 0.50;
+
+  const driverScore = (
+    speedNorm * 0.25 +
+    consistencyNorm * 0.20 +
+    accelNorm * 0.15 +
+    enduranceNorm * 0.15 +
+    luckNorm * 0.15 +
+    (1 - Math.abs(aggressionNorm - 0.5) * 2) * 0.10
+  );
+
+  return Math.round(50 + driverScore * 49);
+}
+
+// Calculate car overall rating (50-99)
+function calculateCarRating(car: GeneratedCar): number {
+  const carPower = (car.stats.power - 1) / 4;
+  const carGrip = (car.stats.grip - 1) / 4;
+  const carReliability = (car.stats.reliability - 1) / 4;
+
+  const carScore = (
+    carPower * 0.45 +
+    carGrip * 0.35 +
+    carReliability * 0.20
+  );
+
+  return Math.round(50 + carScore * 49);
+}
+
+// Get color for rating (F1 style: red < yellow < green < purple)
+function getRatingColor(rating: number): string {
+  if (rating >= 90) return '#a855f7';  // Purple - elite
+  if (rating >= 80) return '#22c55e';  // Green - great
+  if (rating >= 70) return '#eab308';  // Yellow - good
+  return '#ef4444';                     // Red - below average
+}
+
 interface LeagueSetupProps {
   onStartRace: (favoriteTeamId: string | null, rivalTeamId: string | null) => void;
   // Season mode - use specific teams and track
@@ -20,7 +64,7 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
   const isSeasonMode = !!seasonKingdomIds && seasonKingdomIds.length > 0;
 
   // Get the active teams (either season-selected or random 10 for single race)
-  const [activeTeams] = useState<Team[]>(() =>
+  const [activeTeams, setActiveTeams] = useState<Team[]>(() =>
     isSeasonMode ? getTeamsByIds(seasonKingdomIds!) : getRandomTeams(10)
   );
 
@@ -51,16 +95,22 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
   const getTeamDrivers = (teamId: string) =>
     roster.filter(d => d.kingdomId === teamId);
 
-  const handleRerollRoster = () => {
-    // Generate new drivers for the current teams
-    const newRoster = generateRosterFromTeams(activeTeams.map(t => t.id));
-    setRoster(newRoster);
+  const handleSummonAgain = () => {
+    // In single race mode, reroll everything: teams, drivers, cars, track
+    // In season mode, only reroll drivers and cars (teams and track are fixed)
+    let newTeams = activeTeams;
+    if (!isSeasonMode) {
+      newTeams = getRandomTeams(10);
+      setActiveTeams(newTeams);
+      setTrack(generateTrack());
+    }
+
+    const teamIds = newTeams.map(t => t.id);
+    setRoster(generateRosterFromTeams(teamIds));
+    setCars(generateCarsForKingdoms(teamIds));
     setSelectedDriver(null);
-    // Reset selections when roster changes
     setChosenTeamId(null);
     setCursedTeamId(null);
-    // Also regenerate cars
-    setCars(generateCarsForKingdoms(activeTeams.map(t => t.id)));
   };
 
   const handleChosenTeamClick = (teamId: string, e: React.MouseEvent) => {
@@ -171,8 +221,8 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
           <div className="roster-panel">
             <div className="panel-header">
               <h2>Competing Teams</h2>
-              <button className="reroll-btn" onClick={handleRerollRoster}>
-                🎲 New Drivers
+              <button className="reroll-btn" onClick={handleSummonAgain}>
+                👁️ Summon Again
               </button>
             </div>
 
@@ -219,6 +269,12 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
                         <div className="kingdom-car">
                           <div className="car-header">
                             <span className="car-name">🏎️ {car.name}</span>
+                            <span
+                              className="car-rating"
+                              style={{ color: getRatingColor(calculateCarRating(car)) }}
+                            >
+                              {calculateCarRating(car)}
+                            </span>
                             <span className="car-quirk">{car.quirk}</span>
                           </div>
                           <div className="car-stats">
@@ -269,6 +325,12 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
                             <span className="badge-emoji">{team.emoji}</span>
                           </div>
                           <span className="driver-name">{driver.fullName}</span>
+                          <span
+                            className="driver-rating"
+                            style={{ color: getRatingColor(calculateDriverRating(driver)) }}
+                          >
+                            {calculateDriverRating(driver)}
+                          </span>
                           <span className="driver-slot">{driver.driverSlot === 1 ? '#1' : '#2'}</span>
                           <div className="driver-stats-inline">
                             <Tooltip content="Base Speed: Determines raw pace. Multiplied by car Power on straights.">

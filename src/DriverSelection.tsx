@@ -4,6 +4,52 @@ import { RacePowerSet } from './powers';
 import { ALL_TEAMS } from './data/teams';
 import './DriverSelection.css';
 
+// Calculate driver overall rating (50-99)
+function calculateDriverRating(driver: Driver): number {
+  const speedNorm = (driver.stats.baseSpeed - 0.85) / 0.30;
+  const consistencyNorm = (driver.stats.consistency - 0.3) / 0.50;
+  const luckNorm = (driver.stats.luck - 0.3) / 0.50;
+  const accelNorm = (driver.stats.acceleration - 0.85) / 0.30;
+  const enduranceNorm = (driver.stats.endurance - 0.85) / 0.30;
+  const aggressionNorm = (driver.stats.aggression - 0.3) / 0.50;
+
+  const driverScore = (
+    speedNorm * 0.25 +
+    consistencyNorm * 0.20 +
+    accelNorm * 0.15 +
+    enduranceNorm * 0.15 +
+    luckNorm * 0.15 +
+    (1 - Math.abs(aggressionNorm - 0.5) * 2) * 0.10
+  );
+
+  return Math.round(50 + driverScore * 49);
+}
+
+// Calculate car overall rating (50-99)
+function calculateCarRating(driver: Driver): number {
+  if (!driver.carStats) return 50;
+
+  const carPower = (driver.carStats.power - 1) / 4;
+  const carGrip = (driver.carStats.grip - 1) / 4;
+  const carReliability = (driver.carStats.reliability - 1) / 4;
+
+  const carScore = (
+    carPower * 0.45 +
+    carGrip * 0.35 +
+    carReliability * 0.20
+  );
+
+  return Math.round(50 + carScore * 49);
+}
+
+// Get color for rating (F1 style: red < yellow < green < purple)
+function getRatingColor(rating: number): string {
+  if (rating >= 90) return '#a855f7';  // Purple - elite
+  if (rating >= 80) return '#22c55e';  // Green - great
+  if (rating >= 70) return '#eab308';  // Yellow - good
+  return '#ef4444';                     // Red - below average
+}
+
 interface DriverSelectionProps {
   drivers: Driver[];
   onSelectionComplete: (favoriteTeamId: string, rivalTeamId: string) => void;
@@ -96,8 +142,19 @@ function DriverSelection({ drivers, onSelectionComplete, powers }: DriverSelecti
                   </div>
                   <div className="kingdom-selection-drivers">
                     {teamDrivers.map(driver => (
-                      <span key={driver.id} className="kingdom-driver-name">{driver.name}</span>
+                      <div key={driver.id} className="kingdom-driver-row">
+                        <span className="kingdom-driver-name">{driver.name}</span>
+                        <span className="kingdom-driver-rating" style={{ color: getRatingColor(calculateDriverRating(driver)) }}>
+                          {calculateDriverRating(driver)}
+                        </span>
+                      </div>
                     ))}
+                  </div>
+                  <div className="kingdom-car-rating">
+                    <span className="kingdom-car-label">Car</span>
+                    <span className="kingdom-car-value" style={{ color: getRatingColor(calculateCarRating(teamDrivers[0])) }}>
+                      {calculateCarRating(teamDrivers[0])}
+                    </span>
                   </div>
                   {isFavorite && <span className="selection-badge favorite-badge">⭐</span>}
                 </div>
@@ -115,8 +172,19 @@ function DriverSelection({ drivers, onSelectionComplete, powers }: DriverSelecti
                 </div>
                 <div className="selected-drivers-list">
                   {favoriteDrivers.map(d => (
-                    <span key={d.id} className="selected-driver-name">{d.name}</span>
+                    <div key={d.id} className="selected-driver-row">
+                      <span className="selected-driver-name">{d.name}</span>
+                      <span className="selected-driver-rating" style={{ color: getRatingColor(calculateDriverRating(d)) }}>
+                        {calculateDriverRating(d)}
+                      </span>
+                    </div>
                   ))}
+                </div>
+                <div className="selected-car-rating">
+                  <span className="selected-car-label">Car</span>
+                  <span className="selected-car-value" style={{ color: getRatingColor(calculateCarRating(favoriteDrivers[0])) }}>
+                    {favoriteDrivers[0] && calculateCarRating(favoriteDrivers[0])}
+                  </span>
                 </div>
                 <span className="champion-star">⭐</span>
               </div>
@@ -131,8 +199,19 @@ function DriverSelection({ drivers, onSelectionComplete, powers }: DriverSelecti
                 </div>
                 <div className="selected-drivers-list">
                   {rivalDrivers.map(d => (
-                    <span key={d.id} className="selected-driver-name">{d.name}</span>
+                    <div key={d.id} className="selected-driver-row">
+                      <span className="selected-driver-name">{d.name}</span>
+                      <span className="selected-driver-rating" style={{ color: getRatingColor(calculateDriverRating(d)) }}>
+                        {calculateDriverRating(d)}
+                      </span>
+                    </div>
                   ))}
+                </div>
+                <div className="selected-car-rating">
+                  <span className="selected-car-label">Car</span>
+                  <span className="selected-car-value" style={{ color: getRatingColor(calculateCarRating(rivalDrivers[0])) }}>
+                    {rivalDrivers[0] && calculateCarRating(rivalDrivers[0])}
+                  </span>
                 </div>
                 <span className="rival-skull">💀</span>
               </div>

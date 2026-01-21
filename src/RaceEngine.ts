@@ -283,7 +283,7 @@ const DEFAULT_CONFIG: RaceConfig = {
   randomEventChance: 0.05,
   // Tire/Pit/Crash defaults
   tireWearRate: 0.02,
-  pitStopDuration: 40,
+  pitStopDuration: 60,
   mandatoryPitStops: 2,
   crashProximityThreshold: 0.03,
   baseCrashChance: 0.0008,  // Reduced from 0.002 to lower pileup frequency

@@ -228,6 +228,13 @@
   font-weight: 600;
 }
 
+.car-rating {
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-shadow: 0 0 8px currentColor;
+}
+
 .car-quirk {
   font-family: 'Times New Roman', Times, Georgia, serif;
   font-size: 0.7rem;
@@ -338,6 +345,15 @@
   font-size: 0.9rem;
   color: #ddd;
   min-width: 150px;
+}
+
+.driver-rating {
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-shadow: 0 0 8px currentColor;
+  min-width: 28px;
+  text-align: center;
 }
 
 .driver-slot {

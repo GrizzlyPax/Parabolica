@@ -169,10 +169,47 @@
   margin-left: 0.4rem;
 }
 
+.kingdom-driver-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .kingdom-driver-name {
   font-family: 'Times New Roman', Times, Georgia, serif;
   font-size: 0.8rem;
   color: #888;
+}
+
+.kingdom-driver-rating {
+  font-family: 'Courier New', monospace;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-shadow: 0 0 6px currentColor;
+}
+
+.kingdom-car-rating {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.4rem;
+  padding-top: 0.4rem;
+  border-top: 1px solid #333;
+}
+
+.kingdom-car-label {
+  font-size: 0.65rem;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.kingdom-car-value {
+  font-family: 'Courier New', monospace;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-shadow: 0 0 6px currentColor;
 }
 
 /* Selected Teams (confirmation view) */
@@ -210,10 +247,46 @@
   margin-top: 0.4rem;
 }
 
+.selected-driver-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .selected-driver-name {
   font-family: 'Times New Roman', Times, Georgia, serif;
   font-size: 0.85rem;
   color: #aaa;
+}
+
+.selected-driver-rating {
+  font-family: 'Courier New', monospace;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-shadow: 0 0 6px currentColor;
+}
+
+.selected-car-rating {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #444;
+}
+
+.selected-car-label {
+  font-size: 0.7rem;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.selected-car-value {
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-shadow: 0 0 8px currentColor;
 }
 
 /* Confirmation View */

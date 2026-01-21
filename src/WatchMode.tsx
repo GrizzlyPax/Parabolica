@@ -78,6 +78,58 @@ function renderStars(count: number, maxStars: number = 5): string {
   return filled + empty;
 }
 
+// Calculate driver overall rating (50-99)
+function calculateDriverRating(driver: Driver): number {
+  // Driver stats normalized to 0-1 scale
+  const speedNorm = (driver.stats.baseSpeed - 0.85) / 0.30;        // 0.85-1.15 range
+  const consistencyNorm = (driver.stats.consistency - 0.3) / 0.50; // 0.3-0.8 range
+  const luckNorm = (driver.stats.luck - 0.3) / 0.50;               // 0.3-0.8 range
+  const accelNorm = (driver.stats.acceleration - 0.85) / 0.30;     // 0.85-1.15 range
+  const enduranceNorm = (driver.stats.endurance - 0.85) / 0.30;    // 0.85-1.15 range
+  const aggressionNorm = (driver.stats.aggression - 0.3) / 0.50;   // 0.3-0.8 range (middle is best)
+
+  // Driver weighted average (speed and consistency matter most)
+  const driverScore = (
+    speedNorm * 0.25 +
+    consistencyNorm * 0.20 +
+    accelNorm * 0.15 +
+    enduranceNorm * 0.15 +
+    luckNorm * 0.15 +
+    (1 - Math.abs(aggressionNorm - 0.5) * 2) * 0.10  // Aggression: middle values are optimal
+  );
+
+  // Scale to 50-99 range (like FIFA/EA sports - nobody is below 50)
+  return Math.round(50 + driverScore * 49);
+}
+
+// Calculate car overall rating (50-99)
+function calculateCarRating(driver: Driver): number {
+  if (!driver.carStats) return 50;
+
+  // Car stats normalized to 0-1 scale (1-5 stars)
+  const carPower = (driver.carStats.power - 1) / 4;
+  const carGrip = (driver.carStats.grip - 1) / 4;
+  const carReliability = (driver.carStats.reliability - 1) / 4;
+
+  // Car weighted average (power matters most for pace)
+  const carScore = (
+    carPower * 0.45 +
+    carGrip * 0.35 +
+    carReliability * 0.20
+  );
+
+  // Scale to 50-99 range
+  return Math.round(50 + carScore * 49);
+}
+
+// Get color for overall rating (F1 style: red < yellow < green < purple)
+function getOverallRatingColor(rating: number): string {
+  if (rating >= 90) return '#a855f7';  // Purple - elite
+  if (rating >= 80) return '#22c55e';  // Green - great
+  if (rating >= 70) return '#eab308';  // Yellow - good
+  return '#ef4444';                     // Red - below average
+}
+
 // Default fallback track path (oval) if no layout provided
 const DEFAULT_TRACK_PATH = 'M 150 60 L 450 60 Q 550 60, 550 150 Q 550 240, 450 240 L 150 240 Q 50 240, 50 150 Q 50 60, 150 60 Z';
 
@@ -1253,44 +1305,88 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, favorite
                       <span className="hover-card-emoji">{driver.emoji}</span>
                       <span className="hover-card-name" style={{ color: driver.color }}>{driver.name}</span>
                     </div>
-                    <div className="hover-card-stats">
-                      <div className="stat-row-stars">
-                        <span className="stat-label">Speed</span>
-                        <span className="stat-stars" style={{ color: '#3498db' }}>
-                          {renderStars(statToStars(driver.stats.baseSpeed, 0.85, 1.15))}
+                    <div className="hover-card-section">
+                      <div className="hover-card-section-header">
+                        <span className="hover-card-section-label">Driver</span>
+                        <span
+                          className="hover-card-rating"
+                          style={{ color: getOverallRatingColor(calculateDriverRating(driver)) }}
+                        >
+                          {calculateDriverRating(driver)}
                         </span>
                       </div>
-                      <div className="stat-row-stars">
-                        <span className="stat-label">Consistency</span>
-                        <span className="stat-stars" style={{ color: '#2ecc71' }}>
-                          {renderStars(statToStars(driver.stats.consistency, 0.3, 0.8))}
-                        </span>
-                      </div>
-                      <div className="stat-row-stars">
-                        <span className="stat-label">Luck</span>
-                        <span className="stat-stars" style={{ color: '#f1c40f' }}>
-                          {renderStars(statToStars(driver.stats.luck, 0.3, 0.8))}
-                        </span>
-                      </div>
-                      <div className="stat-row-stars">
-                        <span className="stat-label">Accel</span>
-                        <span className="stat-stars" style={{ color: '#e74c3c' }}>
-                          {renderStars(statToStars(driver.stats.acceleration, 0.85, 1.15))}
-                        </span>
-                      </div>
-                      <div className="stat-row-stars">
-                        <span className="stat-label">Endurance</span>
-                        <span className="stat-stars" style={{ color: '#9b59b6' }}>
-                          {renderStars(statToStars(driver.stats.endurance, 0.85, 1.15))}
-                        </span>
-                      </div>
-                      <div className="stat-row-stars">
-                        <span className="stat-label">Aggression</span>
-                        <span className="stat-stars" style={{ color: '#e67e22' }}>
-                          {renderStars(statToStars(driver.stats.aggression, 0.3, 0.8))}
-                        </span>
+                      <div className="hover-card-stats">
+                        <div className="stat-row-stars">
+                          <span className="stat-label">Speed</span>
+                          <span className="stat-stars" style={{ color: '#3498db' }}>
+                            {renderStars(statToStars(driver.stats.baseSpeed, 0.85, 1.15))}
+                          </span>
+                        </div>
+                        <div className="stat-row-stars">
+                          <span className="stat-label">Consistency</span>
+                          <span className="stat-stars" style={{ color: '#2ecc71' }}>
+                            {renderStars(statToStars(driver.stats.consistency, 0.3, 0.8))}
+                          </span>
+                        </div>
+                        <div className="stat-row-stars">
+                          <span className="stat-label">Luck</span>
+                          <span className="stat-stars" style={{ color: '#f1c40f' }}>
+                            {renderStars(statToStars(driver.stats.luck, 0.3, 0.8))}
+                          </span>
+                        </div>
+                        <div className="stat-row-stars">
+                          <span className="stat-label">Accel</span>
+                          <span className="stat-stars" style={{ color: '#e74c3c' }}>
+                            {renderStars(statToStars(driver.stats.acceleration, 0.85, 1.15))}
+                          </span>
+                        </div>
+                        <div className="stat-row-stars">
+                          <span className="stat-label">Endurance</span>
+                          <span className="stat-stars" style={{ color: '#9b59b6' }}>
+                            {renderStars(statToStars(driver.stats.endurance, 0.85, 1.15))}
+                          </span>
+                        </div>
+                        <div className="stat-row-stars">
+                          <span className="stat-label">Aggression</span>
+                          <span className="stat-stars" style={{ color: '#e67e22' }}>
+                            {renderStars(statToStars(driver.stats.aggression, 0.3, 0.8))}
+                          </span>
+                        </div>
                       </div>
                     </div>
+                    {driver.carStats && (
+                      <div className="hover-card-section">
+                        <div className="hover-card-section-header">
+                          <span className="hover-card-section-label">Car</span>
+                          <span
+                            className="hover-card-rating"
+                            style={{ color: getOverallRatingColor(calculateCarRating(driver)) }}
+                          >
+                            {calculateCarRating(driver)}
+                          </span>
+                        </div>
+                        <div className="hover-card-stats">
+                          <div className="stat-row-stars">
+                            <span className="stat-label">Power</span>
+                            <span className="stat-stars" style={{ color: '#e74c3c' }}>
+                              {renderStars(driver.carStats.power)}
+                            </span>
+                          </div>
+                          <div className="stat-row-stars">
+                            <span className="stat-label">Grip</span>
+                            <span className="stat-stars" style={{ color: '#3498db' }}>
+                              {renderStars(driver.carStats.grip)}
+                            </span>
+                          </div>
+                          <div className="stat-row-stars">
+                            <span className="stat-label">Reliability</span>
+                            <span className="stat-stars" style={{ color: '#2ecc71' }}>
+                              {renderStars(driver.carStats.reliability)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                     {driver.quirk && (
                       <div className="hover-card-quirk">"{driver.quirk}"</div>
                     )}

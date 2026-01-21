@@ -21,52 +21,32 @@ export interface GeneratedCar {
   quirk: string;        // Flavor text about the chariot
 }
 
-// Chariot name prefixes based on divine house
-const CAR_PREFIXES: Record<string, string[]> = {
-  'zeus': ['Thunderbolt', 'Aegis', 'Olympian'],
-  'hera': ['Argos', 'Diadem', 'Regal'],
-  'poseidon': ['Trident', 'Tsunami', 'Hippocampus'],
-  'demeter': ['Harvest', 'Cornucopia', 'Elysian'],
-  'ares': ['Warbreaker', 'Phobos', 'Deimos'],
-  'athena': ['Strategem', 'Aegis', 'Pallas'],
-  'apollo': ['Phaeton', 'Lyre', 'Oracle'],
-  'artemis': ['Moonbow', 'Stag', 'Huntress'],
-  'hephaestus': ['Forgefire', 'Automaton', 'Anvil'],
-  'aphrodite': ['Adonis', 'Eros', 'Cytherea'],
-  'hermes': ['Caduceus', 'Talaria', 'Psychopomp'],
-  'dionysus': ['Thyrsus', 'Maeniad', 'Reveler'],
-  'hades': ['Cerberus', 'Stygian', 'Pluton'],
-  'persephone': ['Kore', 'Pomegranate', 'Blossom'],
-  'hestia': ['Hearthfire', 'Sanctuary', 'Eternal'],
-  'helios': ['Sunchariot', 'Hyperion', 'Radiant'],
-  'selene': ['Moonrise', 'Endymion', 'Crescent'],
-  'pan': ['Syrinx', 'Arcadian', 'Wildling'],
-  'nemesis': ['Retribution', 'Scales', 'Adrasteia'],
-  'nike': ['Victoria', 'Laureate', 'Triumphant'],
-};
-
-// Chariot quirks with Greek mythology flavor
+// Car quirks - absurdist racing flavor
 const CAR_QUIRKS = [
-  'Blessed by the Muses - the engine hums in perfect hexameter.',
-  'Forged in Hephaestus\'s own workshop. Still warm.',
-  'The steering wheel is carved from the Argo\'s original rudder.',
-  'Leaves a faint trail of ambrosia vapor.',
-  'The horn sounds like a distant lyre.',
-  'Rumored to have outrun Hermes himself. Once.',
-  'The previous driver ascended to minor godhood.',
-  'Found at the bottom of the River Styx. Surprisingly intact.',
-  'The seats are upholstered with golden fleece.',
-  'Apollo wrote a poem about this chariot. It was mediocre.',
-  'Runs on nectar. Don\'t ask how.',
-  'The Fates themselves wove its timing belt.',
-  'Has completed the Labyrinth in under three minutes.',
-  'Athena nodded approvingly at its design. She never nods.',
-  'The paint was mixed with ichor. Dries immortal.',
-  'Won a race against a centaur. The centaur was sore about it.',
-  'Refuses to race on days sacred to Hera. Nobody knows why.',
-  'The exhaust sounds like distant thunder from Olympus.',
-  'Dionysus once borrowed it. Came back with grape vines.',
-  'The chassis is forged from Celestial Bronze.',
+  'The engine hums at a frequency only dogs can hear.',
+  'Assembled entirely on a Tuesday. Nobody knows why that matters.',
+  'The previous owner was a time traveler. Probably.',
+  'Handles corners like it knows something you don\'t.',
+  'The fuel gauge has never been accurate. Ever.',
+  'Makes a weird noise at exactly 127 km/h.',
+  'The engineers forgot to install fear.',
+  'Technically illegal in three dimensions.',
+  'The steering wheel is sentient. It doesn\'t talk about it.',
+  'Built from parts that shouldn\'t fit together but do.',
+  'The manual is written in a language that doesn\'t exist yet.',
+  'Runs better when you\'re not looking at it.',
+  'The suspension was tuned by a jazz musician.',
+  'Has won races it wasn\'t entered in.',
+  'The paint changes color based on driver anxiety levels.',
+  'Smells faintly of burnt toast and ambition.',
+  'The horn plays a chord that makes engineers weep.',
+  'Factory defect: accidentally perfect.',
+  'The windshield wipers have never been used. They\'re decorative.',
+  'Comes with a warranty that expired before you were born.',
+  'The chassis remembers every race. It holds grudges.',
+  'Built during a solar eclipse. The engineers insist this matters.',
+  'The tachometer goes to 11. No one knows why.',
+  'Rumored to have a soul. Unconfirmed but likely.',
 ];
 
 /**
@@ -114,18 +94,57 @@ export function starToMultiplier(stars: number, statType: 'power' | 'grip' | 're
   return 1;
 }
 
-// Roman numerals for chariot naming
-const ROMAN_NUMERALS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
+// Car name components for random generation
+const CAR_PREFIXES_GENERIC = [
+  'Apex', 'Vector', 'Pulse', 'Nova', 'Vortex', 'Phantom', 'Specter', 'Zenith',
+  'Flux', 'Cipher', 'Echo', 'Drift', 'Surge', 'Bolt', 'Razor', 'Stratos',
+  'Nebula', 'Prism', 'Vertex', 'Torque', 'Thrust', 'Blitz', 'Fury', 'Storm',
+  'Onyx', 'Cobalt', 'Crimson', 'Obsidian', 'Titan', 'Raptor', 'Falcon', 'Viper'
+];
+
+const CAR_SUFFIXES = [
+  'GT', 'RS', 'LM', 'EVO', 'Pro', 'Sport', 'Turbo', 'X', 'S', 'R',
+  'Elite', 'Prime', 'Max', 'Ultra', 'Plus', 'Zero', 'One', 'Alpha', 'Omega'
+];
+
+const CAR_ACRONYMS = [
+  'XR', 'GT', 'RS', 'LM', 'GP', 'SS', 'ZX', 'RX', 'VX', 'MR', 'SR', 'TR',
+  'FX', 'NX', 'QX', 'DX', 'HX', 'KX', 'PX', 'WX'
+];
 
 /**
- * Generate a chariot for a specific divine house
+ * Generate a random car name with varied formats
+ */
+function generateCarName(): string {
+  const format = Math.floor(Math.random() * 6);
+  const prefix = CAR_PREFIXES_GENERIC[Math.floor(Math.random() * CAR_PREFIXES_GENERIC.length)];
+  const suffix = CAR_SUFFIXES[Math.floor(Math.random() * CAR_SUFFIXES.length)];
+  const acronym = CAR_ACRONYMS[Math.floor(Math.random() * CAR_ACRONYMS.length)];
+  const number = Math.floor(Math.random() * 900) + 100; // 100-999
+  const smallNum = Math.floor(Math.random() * 90) + 10; // 10-99
+
+  switch (format) {
+    case 0: // "Apex GT-7"
+      return `${prefix} ${suffix}-${Math.floor(Math.random() * 9) + 1}`;
+    case 1: // "XR-470"
+      return `${acronym}-${number}`;
+    case 2: // "Vortex 88"
+      return `${prefix} ${smallNum}`;
+    case 3: // "Phantom RS"
+      return `${prefix} ${suffix}`;
+    case 4: // "GT Stratos"
+      return `${acronym} ${prefix}`;
+    case 5: // "Zenith XR-22"
+    default:
+      return `${prefix} ${acronym}-${smallNum}`;
+  }
+}
+
+/**
+ * Generate a car for a specific team
  */
 export function generateCarForKingdom(kingdomId: string): GeneratedCar {
-  // Get name prefix for this divine house
-  const prefixes = CAR_PREFIXES[kingdomId] || ['Chariot'];
-  const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
-  const numeral = ROMAN_NUMERALS[Math.floor(Math.random() * ROMAN_NUMERALS.length)];
-  const name = `${prefix}-${numeral}`;
+  const name = generateCarName();
 
   // Generate random chariot stats
   const stats: CarStats = {
