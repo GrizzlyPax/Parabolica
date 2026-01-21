@@ -1,10 +1,10 @@
 ================================================================================
-                         THE ELDRITCH GRAND PRIX
+                              PARABOLICA
                     How Everything Works (For Humans!)
 ================================================================================
 
 LAST UPDATED: January 2026
-VERSION: 3.0 - Tire Strategy & Analytics Update
+VERSION: 4.0 - Tags, Teams & Track Events
 
 ================================================================================
                               QUICK START
@@ -22,18 +22,19 @@ That's it! You'll see a race simulation with drivers, a track, and controls.
                            WHAT IS THIS?
 ================================================================================
 
-This is a racing simulation engine inspired by Blaseball. It generates:
+Parabolica is a racing simulation inspired by Blaseball. It generates:
 
-  - Random drivers with weird names (like "Pancake Thunderpants")
-  - Teams with emoji avatars
-  - Tracks with unique properties, layouts, and weather
-  - Chaos cards that modify races in fun ways
-  - Season-long leagues with points and standings
+  - Random drivers with procedural names and backstories
+  - Teams (Kingdoms) with unique colors and emojis
+  - Cars with power, grip, and reliability stats
+  - Tags that give drivers, cars, and teams unique abilities
+  - Tracks with dynamic events that change race conditions
   - F1-style tire strategy with pit stops and compound variety
-  - Crashes, pileups, and tire blowouts for drama
+  - Crashes, mechanical failures, and tire blowouts for drama
+  - Season mode with multiple races and championship standings
 
 The goal is to create entertaining, unpredictable races where you can see
-exactly WHY things are happening via the Analytics tab.
+exactly WHY things are happening.
 
 ================================================================================
                      THE BIG PICTURE: HOW A RACE WORKS
@@ -43,148 +44,193 @@ Every 100 milliseconds (configurable), the simulation "ticks". On each tick:
 
   1. EACH DRIVER gets a speed calculation:
 
-     FINAL SPEED = Base Roll × Stats × Consistency × Luck × Endurance × Chaos × Tires
+     FINAL SPEED = Base Roll x Stats x Car x Tires x Tags x Track Effects
 
   2. Tire wear accumulates based on driving style and compound
   3. Crash proximity checks occur when drivers are close together
-  4. Pit stop decisions are evaluated (mandatory 2 stops, must use all compounds)
-  5. The driver's position advances along the track
-  6. When the leader finishes, all drivers complete their current lap
-  7. Race ends when all drivers finish or DNF
+  4. Pit stop decisions are evaluated
+  5. Tag triggers are evaluated (overtake, pit_stop, final_lap, etc.)
+  6. Track events may trigger based on lap or random chance
+  7. The driver's position advances along the track
+  8. When the leader finishes, all drivers complete their current lap
 
 ================================================================================
-                         TIRE SYSTEM (NEW!)
+                              TAG SYSTEM
 ================================================================================
 
-The tire system adds real strategy to races. Drivers must make 2 pit stops
-and use all 3 tire compounds during a race.
+Tags are special abilities that can be attached to drivers, cars, or teams.
+They add personality and create unique race dynamics.
+
+TAG TYPES:
+  - Driver Tags: Personal abilities (e.g., "Lucky Break", "Pressure Proof")
+  - Car Tags: Vehicle characteristics (e.g., "Rocket Engine", "Fuel Sipper")
+  - Team Tags: Organizational traits (e.g., "Pit Wizards", "Lucky Garage")
+
+TAG TRIGGERS:
+  - passive: Always active (applies every tick)
+  - race_start: Activates at race beginning
+  - overtake: Activates when passing another driver
+  - pit_stop: Activates when entering the pits
+  - crash_proximity: Activates when near a crash
+  - final_lap: Activates on the last lap
+
+TAG EFFECTS:
+  - speed_boost: Temporary speed increase
+  - speed_penalty: Temporary speed decrease
+  - luck_boost: Increase luck stat
+  - tire_preserve: Reduce tire wear
+  - pit_speed: Faster pit stops
+  - crash_resist: Reduce crash probability
+
+Tags are visible in the driver info dropdown during races and documented
+in the Compendium.
+
+================================================================================
+                            KINGDOM (TEAM) SYSTEM
+================================================================================
+
+Drivers are organized into Kingdoms (teams). Each Kingdom has:
+
+  - 2 Drivers who share the same car and team stats
+  - A Car with Power, Grip, and Reliability ratings (1-5 stars)
+  - Team Stats: Tire Management and Pit Crew quality (1-5 stars)
+  - A Team Tag that affects both drivers
+
+DRIVER DIFFERENTIATION:
+Within a team, drivers have different marker styles:
+  - Driver 1: Lighter variant of team color
+  - Driver 2: Darker variant of team color
+
+This makes it easy to distinguish teammates on the track and leaderboard.
+
+================================================================================
+                              CAR STATS
+================================================================================
+
++----------------+------------------------------------------------------------+
+| STAT           | WHAT IT DOES                                               |
++----------------+------------------------------------------------------------+
+| Power          | Multiplies driver speed on straights. 5 stars = +20%      |
+| (1-5 stars)    | speed bonus.                                               |
++----------------+------------------------------------------------------------+
+| Grip           | Multiplies driver consistency in corners. Higher grip =    |
+| (1-5 stars)    | more consistent lap times.                                 |
++----------------+------------------------------------------------------------+
+| Reliability    | Reduces mechanical failure chance. Low reliability cars    |
+| (1-5 stars)    | may retire unexpectedly.                                   |
++----------------+------------------------------------------------------------+
+
+================================================================================
+                             TEAM STATS
+================================================================================
+
++----------------+------------------------------------------------------------+
+| STAT           | WHAT IT DOES                                               |
++----------------+------------------------------------------------------------+
+| Tire Mgmt      | How aggressively the team runs tires. Higher = faster but  |
+| (1-5 stars)    | more wear. Affects pit window strategy.                    |
++----------------+------------------------------------------------------------+
+| Pit Crew       | Reduces chance of slow pit stops and increases chance of   |
+| (1-5 stars)    | quick stops. 5-star crew rarely fumbles.                   |
++----------------+------------------------------------------------------------+
+
+================================================================================
+                         TIRE SYSTEM
+================================================================================
+
+The tire system adds real strategy to races. Drivers must make pit stops
+and use different tire compounds during a race.
 
 TIRE COMPOUNDS:
-┌────────────┬───────────┬───────────┬────────────┬───────────────────────────┐
-│ COMPOUND   │ SPEED     │ WEAR RATE │ CLIFF AT   │ BEHAVIOR                  │
-├────────────┼───────────┼───────────┼────────────┼───────────────────────────┤
-│ SOFT       │ +8% bonus │ 1.5x      │ 70% wear   │ Sharp cliff, high blowout │
-│ (Red)      │           │           │            │ risk. Sprint tire.        │
-├────────────┼───────────┼───────────┼────────────┼───────────────────────────┤
-│ MEDIUM     │ Baseline  │ 1.0x      │ 80% wear   │ Moderate cliff. Balanced. │
-│ (Yellow)   │           │           │            │                           │
-├────────────┼───────────┼───────────┼────────────┼───────────────────────────┤
-│ HARD       │ -5%       │ 0.7x      │ 88% wear   │ Gentle cliff. Durable.    │
-│ (White)    │           │           │            │                           │
-└────────────┴───────────┴───────────┴────────────┴───────────────────────────┘
++------------+-----------+-----------+------------+---------------------------+
+| COMPOUND   | SPEED     | WEAR RATE | CLIFF AT   | BEHAVIOR                  |
++------------+-----------+-----------+------------+---------------------------+
+| SOFT       | +8% bonus | 1.5x      | 70% wear   | Sharp cliff, high blowout |
+| (Red)      |           |           |            | risk. Sprint tire.        |
++------------+-----------+-----------+------------+---------------------------+
+| MEDIUM     | Baseline  | 1.0x      | 80% wear   | Moderate cliff. Balanced. |
+| (Yellow)   |           |           |            |                           |
++------------+-----------+-----------+------------+---------------------------+
+| HARD       | -5%       | 0.7x      | 88% wear   | Gentle cliff. Durable.    |
+| (White)    |           |           |            |                           |
++------------+-----------+-----------+------------+---------------------------+
 
 DEGRADATION CURVE:
   - 0-40% wear: Full compound performance
   - 40% to critical: Gradual 5% performance loss
   - Past critical: THE CLIFF - compound-specific steep drop
-    • Soft: Loses up to 32% speed rapidly
-    • Medium: Loses up to 20% speed
-    • Hard: Loses up to 12% speed
+    * Soft: Loses up to 32% speed rapidly
+    * Medium: Loses up to 20% speed
+    * Hard: Loses up to 12% speed
   - Floor at 60% performance (can't go lower)
 
 TIRE BLOWOUTS:
   - Risk only exists past critical wear threshold
   - Chance scales exponentially as wear approaches 100%
-  - Soft tires have highest blowout risk (0.4% base, up to 2% at max wear)
-  - Aggressive (low consistency) drivers have 30% higher risk
-  - Blowout = instant DNF with dramatic event message
+  - Soft tires have highest blowout risk
+  - Aggressive (low consistency) drivers have higher risk
+  - Blowout = instant DNF
 
-PIT STRATEGY:
-  - Mandatory 2 pit stops per race
-  - Must use all 3 compounds during the race
-  - AI calculates optimal pit windows based on tire wear
-  - Pit stop takes ~40 ticks (4 seconds)
-  - Entering/exiting pit lane shown on track visualization
+PIT STOPS:
+  - Pit entry at 85% track position, exit at 15%
+  - Drivers cross start/finish line at 50% pit progress
+  - Slow stops: Double duration (low pit crew stat increases risk)
+  - Quick stops: Reduced duration (high pit crew stat increases chance)
+  - Position tracked during pitting so overtakes happen correctly
 
 ================================================================================
-                         SPEED CALCULATION BREAKDOWN
+                         TRACK EVENT SYSTEM
 ================================================================================
 
-Here's exactly what happens when we calculate a driver's speed each tick:
+Each track has a unique event that can change race dynamics:
 
-┌─────────────────────────────────────────────────────────────────────────────┐
-│ STEP 1: BASE ROLL                                                           │
-│                                                                             │
-│ We roll a random number between 0 and 1, then scale it:                    │
-│                                                                             │
-│   Base Speed = Min Speed + (Roll × (Max Speed - Min Speed))                │
-│                                                                             │
-│ Default: Min=5, Max=20, so base speed is 5-20 units per tick               │
-└─────────────────────────────────────────────────────────────────────────────┘
-                                    ↓
-┌─────────────────────────────────────────────────────────────────────────────┐
-│ STEP 2: DRIVER STATS MODIFIER                                               │
-│                                                                             │
-│ Each driver has a "baseSpeed" stat (0.85 - 1.15)                           │
-│                                                                             │
-│ A driver with baseSpeed=1.15 is 15% faster than average                    │
-│ A driver with baseSpeed=0.85 is 15% slower than average                    │
-└─────────────────────────────────────────────────────────────────────────────┘
-                                    ↓
-┌─────────────────────────────────────────────────────────────────────────────┐
-│ STEP 3: CONSISTENCY EFFECT                                                  │
-│                                                                             │
-│ High consistency = your speed stays close to average (less risky)          │
-│ Low consistency = wild swings (could be amazing or terrible)               │
-│                                                                             │
-│ The math: We look at how far the base roll was from average, then          │
-│ reduce/amplify that variance based on consistency stat.                    │
-│                                                                             │
-│ Consistency=0.8: Reliable, performs close to expected                      │
-│ Consistency=0.3: Wildcard! Could be great, could be awful                  │
-└─────────────────────────────────────────────────────────────────────────────┘
-                                    ↓
-┌─────────────────────────────────────────────────────────────────────────────┐
-│ STEP 4: LUCK BONUS (Time-based proc)                                        │
-│                                                                             │
-│ Every tick, there's a 3% chance of a luck proc for ALL drivers.            │
-│ The driver's luck stat affects MAGNITUDE, not frequency:                   │
-│                                                                             │
-│   If triggered: Boost = 1 + (Luck stat × 0.3)                             │
-│   A high-luck driver gets up to +30% speed boost                          │
-│   A low-luck driver gets only +9% speed boost                             │
-│                                                                             │
-│ This means everyone has equal CHANCE at luck, but lucky drivers            │
-│ benefit more when it procs.                                                │
-└─────────────────────────────────────────────────────────────────────────────┘
-                                    ↓
-┌─────────────────────────────────────────────────────────────────────────────┐
-│ STEP 5: ENDURANCE FACTOR                                                    │
-│                                                                             │
-│ Drivers get tired over the race. Each lap:                                 │
-│                                                                             │
-│   Effective Endurance = Base Endurance - (Lap Number × Decay Rate)         │
-│                                                                             │
-│ High endurance drivers barely slow down over laps                          │
-│ Low endurance drivers fade badly in later laps                             │
-│                                                                             │
-│ Minimum endurance factor is capped at 0.5 (you never stop completely)      │
-└─────────────────────────────────────────────────────────────────────────────┘
-                                    ↓
-┌─────────────────────────────────────────────────────────────────────────────┐
-│ STEP 6: CHAOS MODIFIER (Random Events)                                      │
-│                                                                             │
-│ If random events are enabled (default: yes), each tick has a small         │
-│ chance of triggering a chaos event:                                        │
-│                                                                             │
-│   50% chance: SLOWDOWN (multiply speed by 0.7-1.0)                         │
-│   50% chance: BOOST (multiply speed by 1.0-1.25)                           │
-│                                                                             │
-│ The Chaos Level setting controls how extreme these effects are.            │
-└─────────────────────────────────────────────────────────────────────────────┘
-                                    ↓
-┌─────────────────────────────────────────────────────────────────────────────┐
-│ STEP 7: TIRE MODIFIER                                                       │
-│                                                                             │
-│ Final speed is multiplied by tire performance:                             │
-│                                                                             │
-│   Fresh soft tires: ×1.08 (8% bonus!)                                     │
-│   Fresh hard tires: ×0.95 (5% slower but longer lasting)                  │
-│   Worn tires past cliff: ×0.60-0.80 (major penalty!)                      │
-│                                                                             │
-│ Tire modifier is tracked separately in analytics so you can see            │
-│ exactly how much strategy affected each driver.                            │
-└─────────────────────────────────────────────────────────────────────────────┘
+EVENT TRIGGERS:
+  - Lap-based: Activates on specific lap (e.g., lap 5, final lap)
+  - Random: Chance to trigger each lap (e.g., 20% per lap)
+
+EVENT EFFECTS:
+  - Speed Boost/Penalty: Affects all drivers or specific positions
+  - Tire Wear: Increases or decreases degradation rate
+  - Crash Risk: Modifies collision probability
+  - Pit Speed: Affects pit stop duration
+
+EFFECT DURATION:
+  - Instant: Single tick
+  - Laps: Persists for N laps
+  - Race: Lasts until race end
+
+Examples:
+  - "Monsoon Season" - Heavy rain on lap 5, +50% tire wear for 3 laps
+  - "Sandstorm" - 25% chance per lap, -10% speed for all
+  - "Solar Flare" - Random timing, affects electronics, +20% mechanical failure
+
+================================================================================
+                            DRIVER STATS
+================================================================================
+
+Each driver has stats that define their racing style:
+
++----------------+------------------------------------------------------------+
+| STAT           | WHAT IT DOES                                               |
++----------------+------------------------------------------------------------+
+| Base Speed     | Raw speed multiplier. 1.0 = average. Higher = faster.     |
+| (0.85 - 1.15)  | The most straightforward stat.                             |
++----------------+------------------------------------------------------------+
+| Consistency    | How reliable they are. 0.8 = very consistent.             |
+| (0.3 - 0.8)    | 0.3 = completely unpredictable. Also affects tire wear.   |
++----------------+------------------------------------------------------------+
+| Luck           | Magnitude of luck boosts when they proc.                   |
+| (0.3 - 0.8)    | A lucky driver can upset the favorites!                    |
++----------------+------------------------------------------------------------+
+| Acceleration   | How fast they start from rest and exit corners.            |
+| (0.85 - 1.15)  | High accel helps in traffic.                               |
++----------------+------------------------------------------------------------+
+| Endurance      | How well they maintain speed over multiple laps.           |
+| (0.85 - 1.15)  | High endurance = stays strong late in race.                |
++----------------+------------------------------------------------------------+
+| Aggression     | Risk-taking behavior. Higher = more risky/reward.          |
+| (0.3 - 0.8)    | Affects tire wear and crash probability.                   |
++----------------+------------------------------------------------------------+
 
 ================================================================================
                          CRASH & DNF SYSTEM
@@ -192,13 +238,17 @@ Here's exactly what happens when we calculate a driver's speed each tick:
 
 CRASH PROXIMITY:
   - When drivers are within 3% of track position, crash risk activates
-  - Base crash chance: 0.08% per tick (reduced for longer races)
+  - Base crash chance: 0.08% per tick
   - More drivers close together = higher pileup risk
-  - Crashes can involve multiple drivers
 
 CRASH OUTCOMES:
   - 70% chance: DNF (out of the race entirely)
   - 30% chance: Damaged but continue with 15% speed penalty
+
+MECHANICAL FAILURES:
+  - Random chance based on car Reliability stat
+  - Low reliability = higher failure risk
+  - Always results in DNF
 
 TIRE FAILURES:
   - Only occur past critical wear threshold
@@ -207,100 +257,26 @@ TIRE FAILURES:
   - Always results in DNF
 
 ================================================================================
-                          RACE FINISH LOGIC
+                          SEASON MODE
 ================================================================================
 
-The race uses F1-style finish logic:
+Season mode lets you run a championship across multiple races:
 
-  1. When the LEADER crosses the finish line, the race enters "final lap" mode
-  2. All other drivers complete their CURRENT lap, then are classified
-  3. Drivers on the lead lap are ranked by finish time
-  4. Lapped drivers are classified after all lead-lap drivers
-  5. DNF drivers are classified by when they retired
+SETUP:
+  1. Choose number of races (5-20)
+  2. Select kingdoms to participate
+  3. Select tracks for the calendar
+  4. Optionally pick favorite/rival teams
 
-This prevents lapped cars from being incorrectly placed on the podium.
+POINTS SYSTEM:
+  Position:  1st  2nd  3rd  4th  5th  6th  7th  8th  9th  10th
+  Points:    25   18   15   12   10   8    6    4    2    1
+  Fastest Lap: +1 bonus point
 
-================================================================================
-                            ANALYTICS TAB
-================================================================================
-
-After (or during) a race, the Analytics tab shows detailed breakdowns:
-
-RACE SUMMARY:
-  - Winner announcement with victory narrative
-  - Tire strategy analysis (who managed tires well/poorly)
-  - Tire blowout victims
-  - Drivers who lost pace due to worn rubber
-  - Key race moments
-
-POSITION CHART:
-  - Visual timeline of position changes throughout the race
-  - Shows when drivers gained/lost positions
-
-FACTOR BARS:
-  - Per-driver breakdown of what affected their race:
-    • Luck triggers (gold bar)
-    • Chaos boosts/penalties (blue/pink bars)
-    • Endurance impact (green bar)
-    • Tire degradation impact (red bar)
-  - Counts show specific numbers for each factor
-
-EVENT TIMELINE:
-  - Chronological feed of significant race events
-  - Crashes, lead changes, pit stops, tire warnings, etc.
-  - Filter by event type or significance
-
-================================================================================
-                            DRIVER STATS EXPLAINED
-================================================================================
-
-Each driver has 5 stats that define their racing style:
-
-┌────────────────┬─────────────────────────────────────────────────────────────┐
-│ STAT           │ WHAT IT DOES                                                │
-├────────────────┼─────────────────────────────────────────────────────────────┤
-│ Base Speed     │ Raw speed multiplier. 1.0 = average. Higher = faster.      │
-│ (0.85 - 1.15)  │ The most straightforward stat.                              │
-├────────────────┼─────────────────────────────────────────────────────────────┤
-│ Consistency    │ How reliable they are. 0.8 = very consistent.              │
-│ (0.3 - 0.8)    │ 0.3 = completely unpredictable (could be genius or trash). │
-│                │ Also affects tire wear (aggressive = more wear).           │
-├────────────────┼─────────────────────────────────────────────────────────────┤
-│ Luck           │ Magnitude of luck boosts when they proc. Higher = luckier. │
-│ (0.3 - 0.8)    │ A lucky driver can upset the favorites!                    │
-├────────────────┼─────────────────────────────────────────────────────────────┤
-│ Acceleration   │ How fast they start from rest. (Currently unused in base   │
-│ (0.85 - 1.15)  │ simulation but available for future features)              │
-├────────────────┼─────────────────────────────────────────────────────────────┤
-│ Endurance      │ How well they maintain speed over multiple laps.           │
-│ (0.85 - 1.15)  │ High endurance = marathon runner. Low = sprinter who fades.│
-└────────────────┴─────────────────────────────────────────────────────────────┘
-
-Example Driver Archetypes:
-  - The Consistent Pro: High speed, high consistency, low luck
-  - The Lucky Underdog: Low speed, low consistency, HIGH luck
-  - The Sprinter: High speed, high acceleration, low endurance
-  - The Marathon Runner: Medium speed, high consistency, HIGH endurance
-  - The Wildcard: High speed, VERY low consistency (anything can happen!)
-
-================================================================================
-                         TRACK GENERATION
-================================================================================
-
-Tracks are randomly generated with unique properties:
-
-TRACK STRUCTURE:
-  - Length: 300-1000 units per lap
-  - Laps: 10-20 laps (longer races for tire strategy)
-  - Difficulty: 1-10, affects tire wear rate
-  - Chaos Modifier: Multiplier for random events
-  - Weather: Visual theme and potential effects
-  - SVG Layout: Unique track shape rendered visually
-
-TRACK THEMES (determine visual style):
-  - Volcano, Mountain, Ocean, Desert, Forest, etc.
-  - Each has unique background gradient and track colors
-  - Weather tendencies tied to theme
+STANDINGS:
+  - Championship order by total points
+  - Tiebreaker: Most wins, then most podiums
+  - Track wins, podiums, and DNFs per driver
 
 ================================================================================
                               FILE STRUCTURE
@@ -309,55 +285,95 @@ TRACK THEMES (determine visual style):
 Key files and what they do:
 
 src/
-├── RaceEngine.ts        Core simulation - speed calc, tire wear, crashes, pits
-├── App.tsx              Main UI - mode switching, race controls
-├── App.css              Main app styling
-├── WatchMode.tsx        Race visualization - track, leaderboard, race feed
-├── WatchMode.css        Watch mode styling
-├── LeagueSetup.tsx      League/roster generation UI
-├── LeagueSetup.css      Setup styling
-├── ChaosButton.tsx      The "Invoke Chaos" button
-├── ChaosButton.css      Chaos button styling
-├── main.tsx             React entry point
-│
-├── analytics/
-│   ├── AnalyticsTab.tsx    Main analytics container
-│   ├── AnalyticsTab.css    Analytics styling
-│   ├── RaceSummary.tsx     Winner narrative & tire strategy analysis
-│   ├── FactorBars.tsx      Per-driver factor breakdown (luck, chaos, tires)
-│   ├── PositionChart.tsx   Position-over-time visualization
-│   ├── EventTimeline.tsx   Race event feed with filtering
-│   ├── RaceExport.tsx      Export race data
-│   └── index.ts            Analytics module exports
-│
-├── components/
-│   ├── StarRating.tsx      Star rating component
-│   └── StarRating.css      Star rating styling
-│
-├── generators/
-│   ├── names.ts         Name pools (first names, last names, emojis)
-│   ├── drivers.ts       Driver generation (stats, backstories, quirks)
-│   ├── cards.ts         Card/deck system for modifiers
-│   ├── tracks.ts        Track generation with layouts and rules
-│   ├── league.ts        League/season management
-│   └── index.ts         Exports everything from generators
-│
-└── utils/
-    └── raceTime.ts      Time formatting utilities (ticks to mm:ss.ms)
++-- RaceEngine.ts        Core simulation - speed calc, tire wear, crashes, tags
++-- App.tsx              Main UI - mode switching, race controls
++-- WatchMode.tsx        Race visualization - track, leaderboard, notifications
++-- LeagueSetup.tsx      League/roster generation UI
++-- MainMenu.tsx         Main menu with mode selection
++-- Compendium.tsx       Reference for all tags, tracks, and mechanics
++-- SeasonSetup.tsx      Season mode configuration
++-- SeasonStandings.tsx  Championship standings display
++-- SeasonComplete.tsx   End of season summary
++-- RaceStartCountdown.tsx  Race start countdown animation
+|
++-- data/
+|   +-- tags.ts          Tag definitions (driver, car, team)
+|   +-- teams.ts         Kingdom definitions
+|   +-- kingdoms.ts      Kingdom data and colors
+|
++-- generators/
+|   +-- names.ts         Name pools for procedural generation
+|   +-- drivers.ts       Driver generation (stats, backstories)
+|   +-- cars.ts          Car generation
+|   +-- tracks.ts        Track generation with events and layouts
+|   +-- index.ts         Exports
+|
++-- analytics/
+|   +-- AnalyticsTab.tsx    Main analytics container
+|   +-- RaceSummary.tsx     Winner narrative & strategy analysis
+|   +-- FactorBars.tsx      Per-driver factor breakdown
+|   +-- PositionChart.tsx   Position-over-time visualization
+|   +-- EventTimeline.tsx   Race event feed with filtering
+|
++-- components/
+|   +-- StarRating.tsx   Star rating display component
+|   +-- Tooltip.tsx      Hover tooltip component
+|
++-- types/
+|   +-- season.ts        Season state types
+|
++-- utils/
+    +-- raceTime.ts      Time formatting utilities
 
-HOW_IT_WORKS.txt         This file! Human-readable documentation.
+================================================================================
+                         WATCH MODE UI
+================================================================================
+
+The main race view shows:
+
+NOTIFICATION FEED (top):
+  - Real-time event notifications
+  - Color-coded by severity:
+    * Red: Crashes, failures (critical)
+    * Gold: Lead changes, race finish (highlights)
+    * Gray: Overtakes, pit stops (neutral)
+    * Dim: Fastest laps, milestones (muted)
+
+LEADERBOARD (left):
+  - Position number
+  - Driver badge (team color, light/dark variant)
+  - Driver name (click to expand info)
+  - Gap to leader (time or laps behind)
+  - Tire compound indicator
+  - Status indicators (pitting, damaged, finished, DNF)
+
+DRIVER INFO DROPDOWN:
+  - Click driver name to expand
+  - Shows driver/car/team ratings
+  - Lists all active tags with descriptions
+  - Hover tags for full effect details
+
+TRACK (center):
+  - SVG visualization of track layout
+  - Driver markers moving along track
+  - Pit lane with entry/exit paths
+  - Position badges for top 3
+  - Lap counter and track name
+
+PODIUM (appears after race):
+  - Shows top 3 finishers
+  - Winner celebration
 
 ================================================================================
                          CONFIGURABLE PARAMETERS
 ================================================================================
 
-All of these can be adjusted in the race config:
+All of these can be adjusted in the race config (DEFAULT_CONFIG in RaceEngine.ts):
 
 RACE STRUCTURE:
-  - Total Laps: Number of laps to complete (default: 10-20, randomized)
-  - Lap Length: Distance units per lap (default: 300-1000)
+  - Total Laps: Number of laps to complete (default: varies by track)
+  - Lap Length: Distance units per lap (default: varies by track)
   - Tick Interval: Milliseconds between updates (default: 100ms)
-  - Mandatory Pit Stops: Required pit stops (default: 2)
 
 SPEED SETTINGS:
   - Base Speed Min: Slowest possible speed per tick (default: 5)
@@ -368,49 +384,12 @@ RANDOMNESS & CHAOS:
   - Enable Random Events: Toggle events on/off (default: on)
   - Random Event Chance: Probability per tick (default: 5%)
 
-STAT WEIGHTS:
-  - Consistency Weight: How much consistency matters (default: 0.5)
-  - Luck Weight: How much luck affects boost magnitude (default: 0.3)
-  - Endurance Decay: Speed penalty per lap (default: 0.1)
-
 TIRE/PIT/CRASH:
   - Tire Wear Rate: Base wear per tick (default: 0.02)
-  - Pit Stop Duration: Ticks in pit (default: 40)
+  - Pit Stop Duration: Base ticks in pit (default: 40)
   - Base Crash Chance: Crash probability when close (default: 0.0008)
   - Enable Crashes: Toggle crash system (default: on)
   - Enable Tire Wear: Toggle tire wear system (default: on)
-
-================================================================================
-                            WATCH MODE UI
-================================================================================
-
-The main race view shows:
-
-LEADERBOARD (left):
-  - Position number
-  - Driver emoji
-  - Driver name (colored)
-  - Gap to leader (time or laps)
-  - Last lap time (purple = fastest overall, green = improved, yellow = slower)
-  - Best lap time (purple = fastest overall)
-  - Tire dots: Shows compounds used in order (filled = used, empty = unused)
-
-TRACK (center):
-  - SVG visualization of track layout
-  - Driver emojis moving along the track
-  - Position badges (gold/silver/bronze) for top 3
-  - Pit lane with entry/exit markers
-  - Lap indicator
-  - Crash effects when collisions occur
-
-PODIUM (below track):
-  - Appears when drivers finish
-  - Shows 1st/2nd/3rd with champagne animation
-
-RACE FEED (right):
-  - Real-time event notifications
-  - Color-coded by type (crash=red, lead change=green, pit=yellow)
-  - Auto-scrolling timeline
 
 ================================================================================
                             DEVELOPMENT TIPS
@@ -421,36 +400,28 @@ For Developers:
   - npm run build - Build for production
   - npm run preview - Preview production build
 
-When tuning the simulation:
-  1. Watch the race feed for unusual patterns
-  2. Check the Analytics tab for factor breakdowns
-  3. Look at tire degradation bars to see strategy impact
-  4. Adjust compound properties in RaceEngine.ts TIRE_COMPOUNDS
-  5. Reset and run again to compare
-
 Key places to modify behavior:
-  - TIRE_COMPOUNDS: Compound speed, wear rate, cliff severity, blowout risk
-  - DEFAULT_CONFIG: Race length, crash chance, tire wear rate
-  - calculateSpeed(): Luck proc chance, chaos effects
-  - getTireSpeedModifier(): Degradation curve, cliff behavior
-  - checkTireBlowout(): Blowout probability scaling
+  - TIRE_COMPOUNDS in RaceEngine.ts: Compound properties
+  - DEFAULT_CONFIG in RaceEngine.ts: Race parameters
+  - data/tags.ts: Tag definitions and effects
+  - generators/tracks.ts: Track events and layouts
 
 ================================================================================
-                         QUESTIONS? ISSUES?
+                         THE COMPENDIUM
 ================================================================================
 
-This is a development tool. Things might break. That's okay!
+The in-game Compendium (accessible from main menu) documents:
 
-If something seems wrong:
-  1. Check the Analytics tab for factor breakdowns
-  2. Look at the Race Feed for event patterns
-  3. Check if tire degradation is too harsh/gentle
-  4. Try different race lengths to see strategy play out
-  5. Adjust parameters to see what changes
+  - All driver tags with effects and activation conditions
+  - All car tags with stat modifiers
+  - All team tags with operational effects
+  - All tracks with events and descriptions
+  - Core mechanics and formulas
 
-The whole point is to SHOW THE WORK so you can understand and tune
-the simulation to get the races you want.
+Use the Compendium to understand what tags do before a race!
 
-Happy racing! 🏁
+================================================================================
+
+Happy racing!
 
 ================================================================================

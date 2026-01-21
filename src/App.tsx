@@ -7,11 +7,12 @@ import SeasonStandings from './SeasonStandings';
 import SeasonComplete from './SeasonComplete';
 import RaceStartCountdown from './RaceStartCountdown';
 import WatchMode from './WatchMode';
+import Compendium from './Compendium';
 import { generateTrack, getTracksByIds, getDynamicEventDescription, Track } from './generators/tracks';
 import { SeasonState, createInitialSeasonState, updateSeasonWithRaceResult } from './types/season';
 import './App.css';
 
-type AppScreen = 'main-menu' | 'setup' | 'season-setup' | 'race' | 'season-complete';
+type AppScreen = 'main-menu' | 'setup' | 'season-setup' | 'race' | 'season-complete' | 'compendium';
 type ViewMode = 'watch' | 'season';
 type GameMode = 'single' | 'season';
 type RaceSpeed = 0.5 | 1 | 2 | 10;
@@ -84,6 +85,10 @@ function App() {
   const handleSeasonMode = () => {
     setGameMode('season');
     setScreen('season-setup');
+  };
+
+  const handleCompendium = () => {
+    setScreen('compendium');
   };
 
   const handleStartSeason = (numRaces: number, selectedKingdomIds: string[], selectedTrackIds: string[]) => {
@@ -249,7 +254,12 @@ function App() {
 
   // Show main menu
   if (screen === 'main-menu') {
-    return <MainMenu onSingleRace={handleSingleRace} onSeason={handleSeasonMode} />;
+    return <MainMenu onSingleRace={handleSingleRace} onSeason={handleSeasonMode} onCompendium={handleCompendium} />;
+  }
+
+  // Show compendium
+  if (screen === 'compendium') {
+    return <Compendium onBack={handleBackToMainMenu} />;
   }
 
   // Show season setup

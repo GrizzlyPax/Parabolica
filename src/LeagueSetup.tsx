@@ -140,7 +140,7 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
   };
 
   const handleStartRace = () => {
-    // Attach car stats and team stats to each driver before loading into engine
+    // Attach car stats, team stats, and tags to each driver before loading into engine
     const rosterWithCars = roster.map(driver => {
       const car = cars.get(driver.kingdomId);
       return {
@@ -148,6 +148,9 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
         carStats: car?.stats,
         carName: car?.name,
         teamStats: car?.teamStats,
+        driverTag: driver.tag,
+        carTag: car?.carTag,
+        teamTag: car?.teamTag,
       };
     });
 
@@ -262,7 +265,23 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
                       </div>
                     </div>
 
-                    {/* Car and Team stats display */}
+                    {/* Team Tag Section */}
+                    <div className="entity-tags-section team-tags-section">
+                      <span className="entity-tags-label">Team</span>
+                      <div className="entity-tags-list">
+                        {cars.get(team.id)?.teamTag ? (
+                          <Tooltip content={cars.get(team.id)!.teamTag!.description}>
+                            <span className="tag-chip">
+                              {cars.get(team.id)!.teamTag!.emoji} {cars.get(team.id)!.teamTag!.name}
+                            </span>
+                          </Tooltip>
+                        ) : (
+                          <span className="no-tags">No tag</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Car stats display */}
                     {cars.get(team.id) && (() => {
                       const car = cars.get(team.id)!;
                       return (
@@ -310,6 +329,21 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
                               </div>
                             </Tooltip>
                           </div>
+                          {/* Car Tag */}
+                          <div className="entity-tags-section car-tags-section">
+                            <span className="entity-tags-label">Car</span>
+                            <div className="entity-tags-list">
+                              {car.carTag ? (
+                                <Tooltip content={car.carTag.description}>
+                                  <span className="tag-chip">
+                                    {car.carTag.emoji} {car.carTag.name}
+                                  </span>
+                                </Tooltip>
+                              ) : (
+                                <span className="no-tags">No tag</span>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       );
                     })()}
@@ -352,6 +386,18 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
                               </div>
                             </Tooltip>
                           </div>
+                          {/* Driver Tag */}
+                          <div className="driver-tag-inline">
+                            {driver.tag ? (
+                              <Tooltip content={driver.tag.description}>
+                                <span className="tag-chip">
+                                  {driver.tag.emoji} {driver.tag.name}
+                                </span>
+                              </Tooltip>
+                            ) : (
+                              <span className="no-tags">No tag</span>
+                            )}
+                          </div>
                           {selectedDriver?.id === driver.id && (
                             <div className="driver-details-expanded">
                               <p className="driver-backstory">{driver.backstory}</p>
@@ -361,6 +407,7 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
                         </div>
                       ))}
                     </div>
+
                   </div>
                 );
               })}

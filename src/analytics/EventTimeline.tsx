@@ -74,6 +74,7 @@ const IMPACT_EXPLANATIONS: Record<RaceEventType, (event: RaceEvent) => string> =
   close_call: (e) => `${e.driverName} narrowly avoided a collision! Close racing is thrilling but dangerous.`,
   track_event: () => `A track event has been triggered! The race dynamics are about to change.`,
   track_event_effect: (e) => `${e.driverName} was affected by a track event! This could impact their race.`,
+  tag_activation: (e) => `${e.driverName}'s tag activated! Tags give drivers unique abilities and effects.`,
 };
 
 const EVENT_LABELS: Record<RaceEventType, string> = {
@@ -98,6 +99,7 @@ const EVENT_LABELS: Record<RaceEventType, string> = {
   close_call: 'CLOSE!',
   track_event: 'TRACK',
   track_event_effect: 'EFFECT',
+  tag_activation: 'TAG',
 };
 
 const EVENT_COLORS: Record<RaceEventType, string> = {
@@ -122,6 +124,7 @@ const EVENT_COLORS: Record<RaceEventType, string> = {
   close_call: '#f39c12',
   track_event: '#9b59b6',
   track_event_effect: '#8e44ad',
+  tag_activation: '#3498db',
 };
 
 function EventTimeline({ events, filter, onFilterChange }: EventTimelineProps) {

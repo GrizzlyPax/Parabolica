@@ -1,6 +1,7 @@
 import { generateDriverName } from './names';
 import { DriverStats } from '../RaceEngine';
 import { TEAMS, Team, DriverSlot, getTeamsByIds } from '../data/teams';
+import { Tag, maybeAssignTag } from '../data/tags';
 
 export interface GeneratedDriver {
   id: number;
@@ -17,6 +18,7 @@ export interface GeneratedDriver {
   stats: DriverStats;
   backstory: string;
   quirk: string;
+  tag?: Tag;              // Optional tag that affects driver behavior
 }
 
 // Absurdist backstory templates - Blaseball-inspired
@@ -144,6 +146,9 @@ export function generateDriverForTeam(
     ? name.firstName.slice(0, 8)
     : `${name.firstName} ${name.lastName[0]}.`;
 
+  // Maybe assign a tag (15% chance)
+  const tag = maybeAssignTag('driver') || undefined;
+
   return {
     id,
     firstName: name.firstName,
@@ -158,7 +163,8 @@ export function generateDriverForTeam(
     driverSlot: slot,
     stats: generateStats(),
     backstory,
-    quirk
+    quirk,
+    tag
   };
 }
 

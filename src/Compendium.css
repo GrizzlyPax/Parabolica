@@ -1,0 +1,486 @@
+.compendium {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0a0a0a 0%, #111111 50%, #0a0a0a 100%);
+  padding: 2rem;
+}
+
+.compendium-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.compendium-header .back-btn {
+  position: absolute;
+  left: 2rem;
+  top: 2rem;
+  background: transparent;
+  border: 1px solid #444;
+  color: #888;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.compendium-header .back-btn:hover {
+  border-color: #666;
+  color: #ccc;
+}
+
+.compendium-header h1 {
+  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-size: 2.5rem;
+  color: #e8e8e8;
+  margin: 0 0 0.5rem 0;
+}
+
+.compendium-subtitle {
+  font-size: 1rem;
+  color: #666;
+  margin: 0;
+}
+
+/* Tabs */
+.compendium-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.tab-btn {
+  background: transparent;
+  border: 1px solid #333;
+  color: #888;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.tab-btn:hover {
+  border-color: #555;
+  color: #ccc;
+}
+
+.tab-btn.active {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: #666;
+  color: #fff;
+}
+
+/* Content */
+.compendium-content {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* Collapsible Sections */
+.collapsible-section {
+  margin-bottom: 0.75rem;
+  background: #1a1a1a;
+  border: 2px solid #333;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.collapsible-section.open {
+  border-color: #555;
+}
+
+.collapsible-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: transparent;
+  border: none;
+  color: #ddd;
+  cursor: pointer;
+  font-size: 0.9rem;
+  text-align: left;
+  transition: all 0.15s ease;
+}
+
+.collapsible-header:hover {
+  background: #222;
+}
+
+.collapsible-icon {
+  font-size: 1rem;
+}
+
+.collapsible-title {
+  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-weight: 500;
+}
+
+.collapsible-count {
+  font-size: 0.7rem;
+  color: #666;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.15rem 0.4rem;
+  border-radius: 3px;
+  margin-left: 0.5rem;
+}
+
+.collapsible-arrow {
+  margin-left: auto;
+  font-size: 0.7rem;
+  color: #555;
+}
+
+.collapsible-content {
+  padding: 0.5rem 1rem 1rem;
+  background: #151515;
+}
+
+/* Compact List */
+.compact-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.compact-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  gap: 1rem;
+}
+
+.compact-row:last-child {
+  border-bottom: none;
+}
+
+.compact-row.expandable {
+  padding: 0.5rem 0;
+}
+
+.compact-label {
+  font-size: 0.8rem;
+  color: #aaa;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+.compact-value {
+  font-size: 0.75rem;
+  color: #777;
+  text-align: right;
+  font-family: 'Courier New', monospace;
+}
+
+.compact-value.formula {
+  font-style: italic;
+  font-family: inherit;
+}
+
+.compact-value.positive {
+  color: #22c55e;
+}
+
+.compact-value.negative {
+  color: #ef4444;
+}
+
+/* Item details in compact rows */
+.item-emoji {
+  font-size: 0.9rem;
+  margin-right: 0.25rem;
+}
+
+.item-source {
+  font-size: 0.65rem;
+  color: #555;
+  margin-left: 0.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 0.1rem 0.3rem;
+  border-radius: 2px;
+}
+
+.item-trigger {
+  font-size: 0.65rem;
+  color: #666;
+  margin-left: 0.5rem;
+  text-transform: capitalize;
+}
+
+/* Section notes */
+.section-note {
+  font-size: 0.75rem;
+  color: #666;
+  margin: 0 0 0.5rem 0;
+  font-style: italic;
+}
+
+/* Rating dots */
+.rating-dot {
+  margin-right: 0.25rem;
+}
+
+.rating-dot.red {
+  color: #ef4444;
+}
+
+.rating-dot.yellow {
+  color: #eab308;
+}
+
+.rating-dot.green {
+  color: #22c55e;
+}
+
+.rating-dot.purple {
+  color: #a855f7;
+}
+
+/* Legacy styles kept for compatibility */
+.section-group {
+  margin-bottom: 2.5rem;
+}
+
+.section-title {
+  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-size: 1.4rem;
+  color: #ddd;
+  margin: 0 0 0.5rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.section-icon {
+  font-size: 1.2rem;
+}
+
+.section-count {
+  font-size: 0.75rem;
+  color: #666;
+  font-weight: normal;
+  margin-left: auto;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+}
+
+.section-desc {
+  font-size: 0.85rem;
+  color: #777;
+  margin: 0 0 1rem 0;
+}
+
+/* Cards Grid - legacy */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.compendium-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid #2a2a2a;
+  border-radius: 6px;
+  padding: 1rem;
+  transition: all 0.2s ease;
+}
+
+.compendium-card:hover {
+  border-color: #444;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.card-emoji {
+  font-size: 1.3rem;
+}
+
+.card-name {
+  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #ddd;
+}
+
+.card-category {
+  margin-left: auto;
+  font-size: 0.65rem;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.15rem 0.4rem;
+  border-radius: 3px;
+}
+
+.card-description {
+  font-size: 0.8rem;
+  color: #888;
+  margin: 0 0 0.75rem 0;
+  line-height: 1.4;
+}
+
+.card-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.5rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  margin-bottom: 0.5rem;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.detail-label {
+  font-size: 0.7rem;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.detail-value {
+  font-size: 0.75rem;
+  color: #aaa;
+  font-family: 'Courier New', monospace;
+}
+
+.detail-value.positive {
+  color: #22c55e;
+}
+
+.detail-value.negative {
+  color: #ef4444;
+}
+
+.card-activation {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #2a2a2a;
+}
+
+.activation-label {
+  font-size: 0.65rem;
+  color: #666;
+  display: block;
+  margin-bottom: 0.2rem;
+}
+
+.activation-text {
+  font-size: 0.75rem;
+  color: #888;
+  font-style: italic;
+}
+
+.track-events {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #2a2a2a;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  align-items: center;
+}
+
+.events-label {
+  font-size: 0.65rem;
+  color: #666;
+  margin-right: 0.3rem;
+}
+
+.track-event-chip {
+  font-size: 0.7rem;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.15rem 0.4rem;
+  border-radius: 3px;
+  color: #aaa;
+}
+
+.mechanics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+.mechanic-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid #2a2a2a;
+  border-radius: 6px;
+  padding: 1rem;
+}
+
+.mechanic-card h3 {
+  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-size: 1rem;
+  color: #ddd;
+  margin: 0 0 0.75rem 0;
+}
+
+.mechanic-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.mechanic-note {
+  font-size: 0.75rem;
+  color: #888;
+  line-height: 1.5;
+  margin: 0.5rem 0 0 0;
+}
+
+.events-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.event-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid #2a2a2a;
+  border-radius: 4px;
+}
+
+.event-emoji {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.event-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.event-name {
+  font-size: 0.85rem;
+  color: #ddd;
+  font-weight: 500;
+}
+
+.event-desc {
+  font-size: 0.75rem;
+  color: #777;
+}

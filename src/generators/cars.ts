@@ -1,5 +1,7 @@
-// Chariot and stable generation for Olympus GP teams
-// Each divine house has one chariot shared by both drivers, plus team-level stats
+// Car and team generation for Parabolica teams
+// Each team has one car shared by both drivers, plus team-level stats
+
+import { Tag, maybeAssignTag } from '../data/tags';
 
 export interface CarStats {
   power: number;        // 1-5 stars - Multiplies with driver speed on straights
@@ -7,7 +9,7 @@ export interface CarStats {
   reliability: number;  // 1-5 stars - Affects mechanical failure chance, interacts with driver luck
 }
 
-// Team stats affect both drivers equally - these are stable operation quality
+// Team stats affect both drivers equally - these are operational quality
 export interface TeamStats {
   tireManagement: number;  // 1-5 stars - How aggressively team pushes tire strategy (higher = riskier, faster)
   pitCrew: number;         // 1-5 stars - Reduces chance of slow pit stops
@@ -15,10 +17,12 @@ export interface TeamStats {
 
 export interface GeneratedCar {
   kingdomId: string;
-  name: string;         // e.g., "Thunderbolt-VII" for House Zeus
+  name: string;         // e.g., "Apex GT-7"
   stats: CarStats;
   teamStats: TeamStats; // Team-level operational stats
-  quirk: string;        // Flavor text about the chariot
+  quirk: string;        // Flavor text about the car
+  carTag?: Tag;         // Optional tag for the car
+  teamTag?: Tag;        // Optional tag for the team
 }
 
 // Car quirks - absurdist racing flavor
@@ -162,12 +166,18 @@ export function generateCarForKingdom(kingdomId: string): GeneratedCar {
   // Pick a random quirk
   const quirk = CAR_QUIRKS[Math.floor(Math.random() * CAR_QUIRKS.length)];
 
+  // Maybe assign tags (15% chance each)
+  const carTag = maybeAssignTag('car') || undefined;
+  const teamTag = maybeAssignTag('team') || undefined;
+
   return {
     kingdomId,
     name,
     stats,
     teamStats,
     quirk,
+    carTag,
+    teamTag,
   };
 }
 

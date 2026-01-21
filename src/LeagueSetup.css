@@ -356,6 +356,87 @@
   text-align: center;
 }
 
+.driver-tag,
+.car-tag,
+.team-tag {
+  font-size: 0.9rem;
+  cursor: help;
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.3));
+  transition: transform 0.15s ease;
+}
+
+.driver-tag:hover,
+.car-tag:hover,
+.team-tag:hover {
+  transform: scale(1.2);
+}
+
+/* Entity Tags Sections */
+.entity-tags-section {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.team-tags-section {
+  border-bottom: 1px solid #333;
+  padding-bottom: 0.6rem;
+  margin-bottom: 0.5rem;
+}
+
+.car-tags-section {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #333;
+}
+
+.entity-tags-label {
+  font-size: 0.65rem;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  min-width: 35px;
+}
+
+.entity-tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.driver-tag-inline {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  cursor: help;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #ddd;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.tag-chip:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.no-tags {
+  font-size: 0.65rem;
+  color: #555;
+  font-style: italic;
+}
+
 .driver-slot {
   font-family: 'Times New Roman', Times, Georgia, serif;
   font-size: 0.65rem;

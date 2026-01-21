@@ -22,7 +22,7 @@ interface WatchModeProps {
 }
 
 // Modular notification system for race events
-export type NotificationType = 'crash' | 'lead_change' | 'pit_stop' | 'slow_pit_stop' | 'quick_pit_stop' | 'weather' | 'finish' | 'info' | 'overtake' | 'fastest_lap' | 'milestone' | 'power_blessing' | 'power_curse' | 'power_god' | 'track_event';
+export type NotificationType = 'crash' | 'lead_change' | 'pit_stop' | 'slow_pit_stop' | 'quick_pit_stop' | 'weather' | 'finish' | 'info' | 'overtake' | 'fastest_lap' | 'milestone' | 'power_blessing' | 'power_curse' | 'power_god' | 'track_event' | 'tag_activation';
 
 export interface RaceNotification {
   id: number;
@@ -33,6 +33,7 @@ export interface RaceNotification {
   tick: number;
   expiresAt: number; // Timestamp for auto-removal
   drivers?: Array<{ id: number; name: string; emoji: string }>;
+  color?: string; // Optional team color for styling
 }
 
 // Crash/blowout position for SVG effects (separate from notifications)
@@ -65,17 +66,30 @@ const TIRE_COLORS: Record<string, string> = {
   hard: '#ecf0f1',
 };
 
-// Convert a stat value (0.3-0.8 or 0.85-1.15 range) to stars (1-5)
-function statToStars(value: number, min: number, max: number): number {
-  const normalized = (value - min) / (max - min);
-  return Math.round(normalized * 4) + 1; // 1 to 5 stars
-}
+// Generate light and dark variants of a hex color
+function getColorVariants(hexColor: string): { light: string; dark: string } {
+  // Parse hex to RGB
+  const hex = hexColor.replace('#', '');
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
 
-// Render star rating
-function renderStars(count: number, maxStars: number = 5): string {
-  const filled = '★'.repeat(count);
-  const empty = '☆'.repeat(maxStars - count);
-  return filled + empty;
+  // Light variant: blend toward white (70% original, 30% white)
+  const lightR = Math.round(r * 0.6 + 255 * 0.4);
+  const lightG = Math.round(g * 0.6 + 255 * 0.4);
+  const lightB = Math.round(b * 0.6 + 255 * 0.4);
+
+  // Dark variant: blend toward black (50% original, 50% black)
+  const darkR = Math.round(r * 0.4);
+  const darkG = Math.round(g * 0.4);
+  const darkB = Math.round(b * 0.4);
+
+  const toHex = (n: number) => n.toString(16).padStart(2, '0');
+
+  return {
+    light: `#${toHex(lightR)}${toHex(lightG)}${toHex(lightB)}`,
+    dark: `#${toHex(darkR)}${toHex(darkG)}${toHex(darkB)}`,
+  };
 }
 
 // Calculate driver overall rating (50-99)
@@ -242,6 +256,7 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, favorite
   const winnerAnnouncedRef = useRef(false); // Track if winner notification sent
   const lastPowerTimestampRef = useRef<number>(0); // Track last power activation to avoid duplicates
   const lastTrackEventTickRef = useRef<number>(-1); // Track last track event tick to avoid duplicates
+  const seenTagActivationsRef = useRef<Set<string>>(new Set()); // Track which tag activations we've shown
 
   // Crash positions for SVG effects only (visual on track)
   const [crashPositions, setCrashPositions] = useState<CrashPosition[]>([]);
@@ -260,9 +275,12 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, favorite
     expiresAt: number;
   } | null>(null);
 
-  // Hover card state
-  const [hoveredDriverId, setHoveredDriverId] = useState<number | null>(null);
+  // Driver card state - click to expand (not hover)
+  const [expandedDriverId, setExpandedDriverId] = useState<number | null>(null);
+  const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number } | null>(null);
   const [hoveredTireDriverId, setHoveredTireDriverId] = useState<number | null>(null);
+  const [hoveredTagId, setHoveredTagId] = useState<string | null>(null);
+  const [tagTooltipPosition, setTagTooltipPosition] = useState<{ top: number; left: number } | null>(null);
 
   // Sector-based gap tracking (like F1 timing)
   // Gaps only update when a driver crosses a sector boundary
@@ -289,7 +307,8 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, favorite
     message: string,
     emoji: string,
     involvedDrivers?: Array<{ id: number; name: string; emoji: string }>,
-    durationMs: number = 12000 // Default 12 seconds for ticker - longer for readability
+    durationMs: number = 12000, // Default 12 seconds for ticker - longer for readability
+    color?: string // Optional team color
   ) => {
     const now = Date.now();
     const newNotification: RaceNotification = {
@@ -301,6 +320,7 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, favorite
       tick: raceState.totalTicks,
       expiresAt: now + durationMs,
       drivers: involvedDrivers,
+      color,
     };
     setNotifications(prev => [newNotification, ...prev].slice(0, 15)); // Keep last 15
 
@@ -404,28 +424,18 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, favorite
       d => d.status === 'pitting' && d.currentPitIsSlowStop && !seenSlowPitStopsRef.current.has(d.id)
     );
 
-    // Varied slow stop messages
-    const slowStopMessages = [
-      'stuck wheel nut!',
-      'fumbled tire change!',
-      'cross-threaded wheel!',
-      'dropped wheel gun!',
-      'wrong tire compound grabbed!',
-      'jack malfunction!',
-      'communication mix-up!',
-    ];
-
     if (slowPitStopDrivers.length > 0) {
       slowPitStopDrivers.forEach(driver => {
         seenSlowPitStopsRef.current.add(driver.id);
-        const message = slowStopMessages[Math.floor(Math.random() * slowStopMessages.length)];
 
         addNotification(
           'slow_pit_stop',
-          'SLOW STOP!',
-          `${driver.emoji} ${driver.name} - ${message}`,
-          '🔧',
-          [{ id: driver.id, name: driver.name, emoji: driver.emoji }]
+          'Slow Stop',
+          `${driver.name}`,
+          '🛞',
+          [{ id: driver.id, name: driver.name, emoji: driver.emoji }],
+          12000,
+          driver.color
         );
       });
     }
@@ -435,26 +445,18 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, favorite
       d => d.status === 'pitting' && d.currentPitIsQuickStop && !seenQuickPitStopsRef.current.has(d.id)
     );
 
-    // Varied quick stop messages
-    const quickStopMessages = [
-      'perfect tire change!',
-      'flawless execution!',
-      'textbook pit stop!',
-      'incredible coordination!',
-      'lightning fast crew!',
-    ];
-
     if (quickPitStopDrivers.length > 0) {
       quickPitStopDrivers.forEach(driver => {
         seenQuickPitStopsRef.current.add(driver.id);
-        const message = quickStopMessages[Math.floor(Math.random() * quickStopMessages.length)];
 
         addNotification(
           'quick_pit_stop',
-          'QUICK STOP!',
-          `${driver.emoji} ${driver.name} - ${message}`,
-          '⚡',
-          [{ id: driver.id, name: driver.name, emoji: driver.emoji }]
+          'Fast Stop',
+          `${driver.name}`,
+          '🛞',
+          [{ id: driver.id, name: driver.name, emoji: driver.emoji }],
+          12000,
+          driver.color
         );
       });
     }
@@ -564,6 +566,55 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, favorite
     }
   }, [raceEvents, trackInfo, raceState.totalTicks]);
 
+  // Detect tag activations and show notifications
+  useEffect(() => {
+    if (!raceEvents || raceEvents.length === 0) return;
+
+    // Find tag_activation events we haven't shown yet
+    const tagActivations = raceEvents.filter(e => {
+      if (e.type !== 'tag_activation') return false;
+      const key = `${e.tick}-${e.driverId}-${e.description}`;
+      if (seenTagActivationsRef.current.has(key)) return false;
+      return true;
+    });
+
+    for (const event of tagActivations) {
+      const key = `${event.tick}-${event.driverId}-${event.description}`;
+      seenTagActivationsRef.current.add(key);
+
+      // Find the driver to get their name
+      const driver = drivers.find(d => d.id === event.driverId);
+      const driverName = driver ? driver.name : 'Unknown Driver';
+
+      addNotification(
+        'tag_activation',
+        `${event.emoji || '🏷️'} ${driverName}`,
+        event.description,
+        event.emoji || '🏷️',
+        driver ? [{ id: driver.id, name: driver.name, emoji: driver.emoji }] : undefined,
+        10000 // 10 seconds duration
+      );
+
+      // Also show emoji effect on track for the driver
+      if (driver && event.driverId >= 0) {
+        const effectToAdd: TrackEventEffect = {
+          driverId: event.driverId,
+          emoji: event.emoji || '🏷️',
+          impact: 'neutral', // Tags are neutral visual effects
+          tick: event.tick,
+        };
+        setTrackEventEffects(prev => [...prev, effectToAdd]);
+
+        // Remove visual effect after 8 seconds
+        setTimeout(() => {
+          setTrackEventEffects(prev =>
+            prev.filter(e => !(e.tick === event.tick && e.driverId === event.driverId))
+          );
+        }, 8000);
+      }
+    }
+  }, [raceEvents, drivers]);
+
   // Clean up expired status effects based on tick count
   useEffect(() => {
     setStatusEffects(prev => prev.filter(e => e.expiresAtTick > raceState.totalTicks));
@@ -576,6 +627,7 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, favorite
       setTrackEventEffects([]);
       setStatusEffects([]);
       seenTrackEventEffectsRef.current.clear();
+      seenTagActivationsRef.current.clear();
     }
   }, [raceState.totalTicks]);
 
@@ -1043,6 +1095,31 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, favorite
         {raceState.raceFinished && <span className="watch-finished">RACE COMPLETE</span>}
       </div>
 
+      {/* Race Feed - ticker style under header */}
+      <div className="race-feed-container">
+        <div className="race-feed">
+          <span className="race-feed-label">LIVE</span>
+          <div className="race-feed-items">
+            {notifications.slice(0, 6).map((notification) => (
+              <div
+                key={notification.id}
+                className={`feed-item feed-${notification.type}`}
+                style={notification.color ? { '--feed-color': notification.color } as React.CSSProperties : undefined}
+              >
+                <span className="feed-emoji">{notification.emoji}</span>
+                <span className="feed-text">
+                  <span className="feed-title">{notification.title}</span>
+                  {notification.message && <span className="feed-message">{notification.message}</span>}
+                </span>
+              </div>
+            ))}
+            {notifications.length === 0 && (
+              <span className="feed-empty">Awaiting race action...</span>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* Main content: Leaderboard left, Track right */}
       <div className="watch-content">
         {/* Leaderboard */}
@@ -1144,11 +1221,22 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, favorite
               } else if ((crossedSector && currentSector > 0) || (hasFirstSectorTime && crossedSector)) {
                 // Driver crossed a sector boundary - update their gaps
                 if (leader && leader.status !== 'finished') {
-                  // Check if driver is lapped (on a different lap than leader)
+                  // Check if driver is truly lapped:
+                  // A driver is lapped when the leader is on a higher lap AND
+                  // the leader's track position is >= the driver's track position
+                  // (meaning the leader has physically passed them on track)
                   const lapsBehindLeader = leader.currentLap - driver.currentLap;
-                  if (lapsBehindLeader > 0) {
+                  const leaderTrackPos = leader.position; // Position within current lap
+                  const driverTrackPos = driver.position;
+                  const isActuallyLapped = lapsBehindLeader > 0 && leaderTrackPos >= driverTrackPos;
+
+                  // Also count full laps behind (if leader is 2+ laps ahead, at least 1 full lap is confirmed)
+                  const confirmedLapsBehind = lapsBehindLeader > 1 ? lapsBehindLeader - 1 : 0;
+                  const displayLapsBehind = isActuallyLapped ? lapsBehindLeader : confirmedLapsBehind;
+
+                  if (displayLapsBehind > 0) {
                     // Driver is lapped - show lap difference
-                    leaderGapDisplay = `+${lapsBehindLeader}L`;
+                    leaderGapDisplay = `+${displayLapsBehind}L`;
                   } else {
                     const distGapToLeader = leaderDist - driverDist;
                     const estimatedTickGapToLeader = distGapToLeader * 0.8;
@@ -1161,11 +1249,16 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, favorite
 
                   const carAhead = sortedDrivers[index - 1];
                   if (carAhead && carAhead.status !== 'dnf') {
-                    // Check if driver is on a different lap than car ahead
+                    // Check if driver is truly lapped by car ahead
                     const lapsBehindCarAhead = carAhead.currentLap - driver.currentLap;
-                    if (lapsBehindCarAhead > 0) {
+                    const carAheadTrackPos = carAhead.position;
+                    const isActuallyLappedByCarAhead = lapsBehindCarAhead > 0 && carAheadTrackPos >= driverTrackPos;
+                    const confirmedLapsBehindCarAhead = lapsBehindCarAhead > 1 ? lapsBehindCarAhead - 1 : 0;
+                    const displayLapsBehindCarAhead = isActuallyLappedByCarAhead ? lapsBehindCarAhead : confirmedLapsBehindCarAhead;
+
+                    if (displayLapsBehindCarAhead > 0) {
                       // Driver is lapped by car ahead - show lap difference
-                      intervalGapDisplay = `+${lapsBehindCarAhead}L`;
+                      intervalGapDisplay = `+${displayLapsBehindCarAhead}L`;
                     } else {
                       const carAheadDist = carAhead.currentLap * trackLength + carAhead.position;
                       const distGapToAhead = carAheadDist - driverDist;
@@ -1284,111 +1377,140 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, favorite
                 <span
                   className="leaderboard-badge"
                   data-slot={driver.driverSlot || 1}
-                  style={{ '--team-color': driver.color } as React.CSSProperties}
+                  style={{
+                    '--team-color': driver.color,
+                    '--team-color-light': getColorVariants(driver.color).light,
+                    '--team-color-dark': getColorVariants(driver.color).dark,
+                  } as React.CSSProperties}
                 >
                   {driver.emoji}
                   {isFavorite && <span className="driver-marker-icon favorite-icon">⭐</span>}
                   {isRival && <span className="driver-marker-icon rival-icon">💀</span>}
                 </span>
                 <span
-                  className="leaderboard-name hoverable"
+                  className={`leaderboard-name clickable ${expandedDriverId === driver.id ? 'expanded' : ''}`}
                   style={{ color: isDNF ? '#666' : driver.color }}
-                  onMouseEnter={() => setHoveredDriverId(driver.id)}
-                  onMouseLeave={() => setHoveredDriverId(null)}
+                  onClick={(e) => {
+                    if (expandedDriverId === driver.id) {
+                      setExpandedDriverId(null);
+                      setDropdownPosition(null);
+                    } else {
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      setExpandedDriverId(driver.id);
+                      setDropdownPosition({ top: rect.bottom + 4, left: rect.left });
+                    }
+                  }}
                 >
                   {driver.name}
                 </span>
-                {/* Driver Stats Hover Card - positioned relative to row */}
-                {hoveredDriverId === driver.id && (
-                  <div className="hover-card driver-hover-card">
-                    <div className="hover-card-header">
-                      <span className="hover-card-emoji">{driver.emoji}</span>
-                      <span className="hover-card-name" style={{ color: driver.color }}>{driver.name}</span>
-                    </div>
-                    <div className="hover-card-section">
-                      <div className="hover-card-section-header">
-                        <span className="hover-card-section-label">Driver</span>
+                {/* Driver Stats Dropdown - click to open, mouseout to close */}
+                {expandedDriverId === driver.id && dropdownPosition && (
+                  <div
+                    className="driver-dropdown"
+                    style={{ top: dropdownPosition.top, left: dropdownPosition.left }}
+                    onMouseLeave={() => { setExpandedDriverId(null); setDropdownPosition(null); }}
+                  >
+                    <div className="driver-dropdown-ratings">
+                      <div className="dropdown-rating-item">
+                        <span className="dropdown-rating-label">Driver</span>
                         <span
-                          className="hover-card-rating"
+                          className="dropdown-rating-value"
                           style={{ color: getOverallRatingColor(calculateDriverRating(driver)) }}
                         >
                           {calculateDriverRating(driver)}
                         </span>
                       </div>
-                      <div className="hover-card-stats">
-                        <div className="stat-row-stars">
-                          <span className="stat-label">Speed</span>
-                          <span className="stat-stars" style={{ color: '#3498db' }}>
-                            {renderStars(statToStars(driver.stats.baseSpeed, 0.85, 1.15))}
-                          </span>
-                        </div>
-                        <div className="stat-row-stars">
-                          <span className="stat-label">Consistency</span>
-                          <span className="stat-stars" style={{ color: '#2ecc71' }}>
-                            {renderStars(statToStars(driver.stats.consistency, 0.3, 0.8))}
-                          </span>
-                        </div>
-                        <div className="stat-row-stars">
-                          <span className="stat-label">Luck</span>
-                          <span className="stat-stars" style={{ color: '#f1c40f' }}>
-                            {renderStars(statToStars(driver.stats.luck, 0.3, 0.8))}
-                          </span>
-                        </div>
-                        <div className="stat-row-stars">
-                          <span className="stat-label">Accel</span>
-                          <span className="stat-stars" style={{ color: '#e74c3c' }}>
-                            {renderStars(statToStars(driver.stats.acceleration, 0.85, 1.15))}
-                          </span>
-                        </div>
-                        <div className="stat-row-stars">
-                          <span className="stat-label">Endurance</span>
-                          <span className="stat-stars" style={{ color: '#9b59b6' }}>
-                            {renderStars(statToStars(driver.stats.endurance, 0.85, 1.15))}
-                          </span>
-                        </div>
-                        <div className="stat-row-stars">
-                          <span className="stat-label">Aggression</span>
-                          <span className="stat-stars" style={{ color: '#e67e22' }}>
-                            {renderStars(statToStars(driver.stats.aggression, 0.3, 0.8))}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    {driver.carStats && (
-                      <div className="hover-card-section">
-                        <div className="hover-card-section-header">
-                          <span className="hover-card-section-label">Car</span>
+                      {driver.carStats && (
+                        <div className="dropdown-rating-item">
+                          <span className="dropdown-rating-label">Car</span>
                           <span
-                            className="hover-card-rating"
+                            className="dropdown-rating-value"
                             style={{ color: getOverallRatingColor(calculateCarRating(driver)) }}
                           >
                             {calculateCarRating(driver)}
                           </span>
                         </div>
-                        <div className="hover-card-stats">
-                          <div className="stat-row-stars">
-                            <span className="stat-label">Power</span>
-                            <span className="stat-stars" style={{ color: '#e74c3c' }}>
-                              {renderStars(driver.carStats.power)}
-                            </span>
-                          </div>
-                          <div className="stat-row-stars">
-                            <span className="stat-label">Grip</span>
-                            <span className="stat-stars" style={{ color: '#3498db' }}>
-                              {renderStars(driver.carStats.grip)}
-                            </span>
-                          </div>
-                          <div className="stat-row-stars">
-                            <span className="stat-label">Reliability</span>
-                            <span className="stat-stars" style={{ color: '#2ecc71' }}>
-                              {renderStars(driver.carStats.reliability)}
-                            </span>
-                          </div>
+                      )}
+                    </div>
+                    {/* Tags section with hover tooltips */}
+                    <div className="driver-dropdown-tags">
+                      {driver.driverTag && (
+                        <div
+                          className="dropdown-tag"
+                          onMouseEnter={(e) => {
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            setHoveredTagId(`${driver.id}-driver`);
+                            setTagTooltipPosition({ top: rect.top, left: rect.right + 8 });
+                          }}
+                          onMouseLeave={() => { setHoveredTagId(null); setTagTooltipPosition(null); }}
+                        >
+                          <span className="tag-emoji">{driver.driverTag.emoji}</span>
+                          <span className="tag-name">{driver.driverTag.name}</span>
+                          <span className="tag-type">Driver</span>
                         </div>
+                      )}
+                      {driver.carTag && (
+                        <div
+                          className="dropdown-tag"
+                          onMouseEnter={(e) => {
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            setHoveredTagId(`${driver.id}-car`);
+                            setTagTooltipPosition({ top: rect.top, left: rect.right + 8 });
+                          }}
+                          onMouseLeave={() => { setHoveredTagId(null); setTagTooltipPosition(null); }}
+                        >
+                          <span className="tag-emoji">{driver.carTag.emoji}</span>
+                          <span className="tag-name">{driver.carTag.name}</span>
+                          <span className="tag-type">Car</span>
+                        </div>
+                      )}
+                      {driver.teamTag && (
+                        <div
+                          className="dropdown-tag"
+                          onMouseEnter={(e) => {
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            setHoveredTagId(`${driver.id}-team`);
+                            setTagTooltipPosition({ top: rect.top, left: rect.right + 8 });
+                          }}
+                          onMouseLeave={() => { setHoveredTagId(null); setTagTooltipPosition(null); }}
+                        >
+                          <span className="tag-emoji">{driver.teamTag.emoji}</span>
+                          <span className="tag-name">{driver.teamTag.name}</span>
+                          <span className="tag-type">Team</span>
+                        </div>
+                      )}
+                      {!driver.driverTag && !driver.carTag && !driver.teamTag && (
+                        <span className="no-tags">No active tags</span>
+                      )}
+                    </div>
+                    {/* Tag tooltip - rendered with fixed position */}
+                    {hoveredTagId && tagTooltipPosition && (
+                      <div
+                        className="tag-tooltip"
+                        style={{ top: tagTooltipPosition.top, left: tagTooltipPosition.left }}
+                      >
+                        {hoveredTagId === `${driver.id}-driver` && driver.driverTag && (
+                          <>
+                            <div className="tag-tooltip-header">{driver.driverTag.emoji} {driver.driverTag.name}</div>
+                            <div className="tag-tooltip-desc">{driver.driverTag.description}</div>
+                            <div className="tag-tooltip-trigger">Trigger: {driver.driverTag.trigger}</div>
+                          </>
+                        )}
+                        {hoveredTagId === `${driver.id}-car` && driver.carTag && (
+                          <>
+                            <div className="tag-tooltip-header">{driver.carTag.emoji} {driver.carTag.name}</div>
+                            <div className="tag-tooltip-desc">{driver.carTag.description}</div>
+                            <div className="tag-tooltip-trigger">Trigger: {driver.carTag.trigger}</div>
+                          </>
+                        )}
+                        {hoveredTagId === `${driver.id}-team` && driver.teamTag && (
+                          <>
+                            <div className="tag-tooltip-header">{driver.teamTag.emoji} {driver.teamTag.name}</div>
+                            <div className="tag-tooltip-desc">{driver.teamTag.description}</div>
+                            <div className="tag-tooltip-trigger">Trigger: {driver.teamTag.trigger}</div>
+                          </>
+                        )}
                       </div>
-                    )}
-                    {driver.quirk && (
-                      <div className="hover-card-quirk">"{driver.quirk}"</div>
                     )}
                   </div>
                 )}
@@ -1721,7 +1843,7 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, favorite
                   r={10}
                   className={`driver-badge-circle ${hasPowerEffect ? 'power-pulse' : ''}`}
                   fill={driver.color}
-                  stroke={driver.driverSlot === 2 ? '#222' : '#fff'}
+                  stroke={driver.driverSlot === 2 ? getColorVariants(driver.color).dark : getColorVariants(driver.color).light}
                   strokeWidth={2}
                 />
                 <text
@@ -1810,7 +1932,7 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, favorite
                 r={10}
                 className="driver-badge-circle"
                 fill={driver.color}
-                stroke={driver.driverSlot === 2 ? '#222' : '#fff'}
+                stroke={driver.driverSlot === 2 ? getColorVariants(driver.color).dark : getColorVariants(driver.color).light}
                 strokeWidth={2}
                 opacity={0.7}
               />
@@ -1857,7 +1979,7 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, favorite
                   r={10}
                   className="driver-badge-circle"
                   fill={driver.color}
-                  stroke={driver.driverSlot === 2 ? '#222' : '#fff'}
+                  stroke={driver.driverSlot === 2 ? getColorVariants(driver.color).dark : getColorVariants(driver.color).light}
                   strokeWidth={2}
                   opacity={0.3}
                 />
@@ -1984,27 +2106,6 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, favorite
         </div>
       </div>
 
-      {/* Race Feed - ticker style under the track */}
-      <div className="race-feed-container">
-        <div className="race-feed">
-          <span className="race-feed-label">LIVE</span>
-          <div className="race-feed-items">
-            {notifications.slice(0, 6).map((notification) => (
-              <div
-                key={notification.id}
-                className={`feed-item feed-${notification.type}`}
-              >
-                <span className="feed-emoji">{notification.emoji}</span>
-                <span className="feed-text">{notification.message}</span>
-              </div>
-            ))}
-            {notifications.length === 0 && (
-              <span className="feed-empty">Awaiting race action...</span>
-            )}
-          </div>
-        </div>
-      </div>
-
       {/* Race Finished Modal Overlay */}
       {raceState.raceFinished && sortedFinished.length >= 3 && (
         <div className="finish-modal-overlay">
@@ -2023,7 +2124,11 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, favorite
                   <span
                     className="podium-badge"
                     data-slot={sortedFinished[1]?.driverSlot || 1}
-                    style={{ '--team-color': sortedFinished[1]?.color } as React.CSSProperties}
+                    style={{
+                      '--team-color': sortedFinished[1]?.color,
+                      '--team-color-light': sortedFinished[1]?.color ? getColorVariants(sortedFinished[1].color).light : '#fff',
+                      '--team-color-dark': sortedFinished[1]?.color ? getColorVariants(sortedFinished[1].color).dark : '#222',
+                    } as React.CSSProperties}
                   >
                     {sortedFinished[1]?.emoji}
                   </span>
@@ -2043,7 +2148,11 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, favorite
                   <span
                     className="podium-badge"
                     data-slot={sortedFinished[0]?.driverSlot || 1}
-                    style={{ '--team-color': sortedFinished[0]?.color } as React.CSSProperties}
+                    style={{
+                      '--team-color': sortedFinished[0]?.color,
+                      '--team-color-light': sortedFinished[0]?.color ? getColorVariants(sortedFinished[0].color).light : '#fff',
+                      '--team-color-dark': sortedFinished[0]?.color ? getColorVariants(sortedFinished[0].color).dark : '#222',
+                    } as React.CSSProperties}
                   >
                     {sortedFinished[0]?.emoji}
                   </span>
@@ -2064,7 +2173,11 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, favorite
                   <span
                     className="podium-badge"
                     data-slot={sortedFinished[2]?.driverSlot || 1}
-                    style={{ '--team-color': sortedFinished[2]?.color } as React.CSSProperties}
+                    style={{
+                      '--team-color': sortedFinished[2]?.color,
+                      '--team-color-light': sortedFinished[2]?.color ? getColorVariants(sortedFinished[2].color).light : '#fff',
+                      '--team-color-dark': sortedFinished[2]?.color ? getColorVariants(sortedFinished[2].color).dark : '#222',
+                    } as React.CSSProperties}
                   >
                     {sortedFinished[2]?.emoji}
                   </span>

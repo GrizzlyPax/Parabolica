@@ -835,7 +835,8 @@
 /* Horizontal Race Feed - Ticker Style */
 .race-feed-container {
   width: 100%;
-  padding: 0 1rem 1rem 1rem;
+  padding: 0 0 0.75rem 0;
+  margin-top: 0.5rem;
 }
 
 .race-feed {
@@ -927,6 +928,22 @@
   font-size: 0.95rem;
   color: #d0d0d0;
   font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.feed-title {
+  font-weight: 600;
+}
+
+.feed-message {
+  color: inherit;
+  opacity: 0.85;
+}
+
+.feed-title::after {
+  content: ' -';
 }
 
 .feed-empty {
@@ -937,147 +954,111 @@
   padding: 0 1rem;
 }
 
-/* Feed item type colors */
+/* ===========================================
+   FEED ITEM SEVERITY HIERARCHY
+   - Critical: Full colored background (crashes, DNFs)
+   - Highlight: Subtle gold accent (lead changes, finish)
+   - Neutral: Dark background, muted text (routine events)
+   - Muted: Very dark, gray text (info/stats)
+   =========================================== */
+
+/* Default/Neutral - most events are quiet */
+.feed-item {
+  background: transparent;
+}
+
+.feed-item .feed-text {
+  color: #888;
+}
+
+/* --- CRITICAL: Race-ending or major negative events --- */
 .feed-crash {
-  background: rgba(231, 76, 60, 0.15);
-  border-left: 2px solid #e74c3c;
+  background: rgba(231, 76, 60, 0.25);
+  border-left: 3px solid #e74c3c;
 }
 
 .feed-crash .feed-text {
-  color: #e74c3c;
-}
-
-.feed-lead_change {
-  background: rgba(46, 204, 113, 0.15);
-  border-left: 2px solid #2ecc71;
-}
-
-.feed-lead_change .feed-text {
-  color: #2ecc71;
-}
-
-.feed-pit_stop {
-  background: rgba(241, 196, 15, 0.15);
-  border-left: 2px solid #f1c40f;
-}
-
-.feed-pit_stop .feed-text {
-  color: #f1c40f;
-}
-
-.feed-slow_pit_stop {
-  background: rgba(231, 76, 60, 0.2);
-  border-left: 2px solid #e74c3c;
-}
-
-.feed-slow_pit_stop .feed-text {
-  color: #e74c3c;
-}
-
-.feed-quick_pit_stop {
-  background: rgba(46, 204, 113, 0.2);
-  border-left: 2px solid #2ecc71;
-}
-
-.feed-quick_pit_stop .feed-text {
-  color: #2ecc71;
-}
-
-.feed-weather {
-  background: rgba(52, 152, 219, 0.15);
-  border-left: 2px solid #3498db;
-}
-
-.feed-weather .feed-text {
-  color: #3498db;
-}
-
-.feed-finish {
-  background: rgba(155, 89, 182, 0.15);
-  border-left: 2px solid #9b59b6;
-}
-
-.feed-finish .feed-text {
-  color: #9b59b6;
-}
-
-.feed-info {
-  background: rgba(149, 165, 166, 0.15);
-  border-left: 2px solid #95a5a6;
-}
-
-.feed-info .feed-text {
-  color: #95a5a6;
-}
-
-.feed-overtake {
-  background: rgba(52, 152, 219, 0.15);
-  border-left: 2px solid #3498db;
-}
-
-.feed-overtake .feed-text {
-  color: #3498db;
-}
-
-.feed-fastest_lap {
-  background: rgba(187, 134, 252, 0.15);
-  border-left: 2px solid #bb86fc;
-}
-
-.feed-fastest_lap .feed-text {
-  color: #bb86fc;
-}
-
-.feed-milestone {
-  background: rgba(241, 196, 15, 0.15);
-  border-left: 2px solid #f1c40f;
-}
-
-.feed-milestone .feed-text {
-  color: #f1c40f;
-}
-
-.feed-power_blessing {
-  background: linear-gradient(90deg, rgba(46, 204, 113, 0.25) 0%, rgba(46, 204, 113, 0.1) 100%);
-  border-left: 2px solid #2ecc71;
-}
-
-.feed-power_blessing .feed-text {
-  color: #2ecc71;
-}
-
-.feed-power_curse {
-  background: linear-gradient(90deg, rgba(231, 76, 60, 0.25) 0%, rgba(231, 76, 60, 0.1) 100%);
-  border-left: 2px solid #e74c3c;
-}
-
-.feed-power_curse .feed-text {
-  color: #e74c3c;
-}
-
-.feed-power_god {
-  background: linear-gradient(90deg, rgba(155, 89, 182, 0.25) 0%, rgba(155, 89, 182, 0.1) 100%);
-  border-left: 2px solid #9b59b6;
-}
-
-.feed-power_god .feed-text {
-  color: #9b59b6;
-}
-
-.feed-track_event {
-  background: linear-gradient(90deg, rgba(142, 68, 173, 0.3) 0%, rgba(142, 68, 173, 0.15) 100%);
-  border-left: 3px solid #8e44ad;
-  animation: track-event-pulse 0.6s ease-in-out 2;
-}
-
-.feed-track_event .feed-text {
-  color: #bf92e8;
+  color: #ff6b5b;
   font-weight: 600;
 }
 
-@keyframes track-event-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+/* --- HIGHLIGHT: Key competitive moments --- */
+.feed-lead_change {
+  background: rgba(255, 215, 0, 0.1);
+  border-left: 2px solid #ffd700;
+}
+
+.feed-lead_change .feed-text {
+  color: #ffd700;
+  font-weight: 500;
+}
+
+.feed-finish {
+  background: rgba(255, 215, 0, 0.15);
+  border-left: 3px solid #ffd700;
+}
+
+.feed-finish .feed-text {
+  color: #ffd700;
+  font-weight: 600;
+}
+
+/* --- NEUTRAL: Routine race action (subtle styling) --- */
+.feed-pit_stop .feed-text {
+  color: var(--feed-color, #888);
+}
+
+.feed-slow_pit_stop .feed-text {
+  color: var(--feed-color, #888);
+}
+
+.feed-quick_pit_stop .feed-text {
+  color: var(--feed-color, #888);
+}
+
+.feed-overtake .feed-text {
+  color: #999;
+}
+
+.feed-tag_activation .feed-text {
+  color: #999;
+}
+
+.feed-track_event {
+  border-left: 2px solid #666;
+}
+
+.feed-track_event .feed-text {
+  color: #bbb;
+}
+
+.feed-weather .feed-text {
+  color: #7eb8da;
+}
+
+.feed-power_blessing .feed-text {
+  color: #7dcea0;
+}
+
+.feed-power_curse .feed-text {
+  color: #e67e73;
+}
+
+.feed-power_god .feed-text {
+  color: #bb8fce;
+}
+
+/* --- MUTED: Nice-to-know info (very quiet) --- */
+.feed-fastest_lap .feed-text {
+  color: #777;
+}
+
+.feed-milestone .feed-text {
+  color: #777;
+}
+
+.feed-info .feed-text {
+  color: #666;
 }
 
 /* Leaderboard */
@@ -1139,7 +1120,7 @@
 
 .leaderboard-header {
   display: grid;
-  grid-template-columns: 28px 24px 1fr 52px 46px 52px 52px 42px 24px;
+  grid-template-columns: 28px 24px minmax(90px, 1fr) 52px 46px 52px 52px 42px 24px;
   gap: 0.35rem;
   align-items: center;
   padding: 0.25rem 0.5rem;
@@ -1159,7 +1140,7 @@
 
 .leaderboard-row {
   display: grid;
-  grid-template-columns: 28px 24px 1fr 52px 46px 52px 52px 42px 24px;
+  grid-template-columns: 28px 24px minmax(90px, 1fr) 52px 46px 52px 52px 42px 24px;
   gap: 0.35rem;
   align-items: center;
   padding: 0.25rem 0.5rem;
@@ -1194,16 +1175,16 @@
   flex-shrink: 0;
 }
 
-/* Primary driver: Team color background with white ring */
+/* Primary driver: Team color background with light variant ring */
 .leaderboard-badge[data-slot="1"] {
   background: var(--team-color);
-  border: 2px solid #fff;
+  border: 2px solid var(--team-color-light, #fff);
 }
 
-/* Secondary driver: Team color background with dark ring */
+/* Secondary driver: Team color background with dark variant ring */
 .leaderboard-badge[data-slot="2"] {
   background: var(--team-color);
-  border: 2px solid #222;
+  border: 2px solid var(--team-color-dark, #222);
 }
 
 .driver-marker-icon {
@@ -1303,7 +1284,6 @@
   font-weight: 600;
   font-size: 0.75rem;
   position: relative;
-  overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   min-width: 0;
@@ -1375,7 +1355,34 @@
   flex: 1;
 }
 
-/* Section with rating */
+/* Compact ratings row */
+.hover-card-ratings {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.hover-rating-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.hover-rating-label {
+  font-size: 0.65rem;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.hover-rating-value {
+  font-weight: 700;
+  font-size: 1rem;
+  font-family: 'Courier New', monospace;
+  text-shadow: 0 0 8px currentColor;
+}
+
+/* Section with rating (legacy) */
 .hover-card-section {
   margin-top: 0.5rem;
   padding-top: 0.5rem;
@@ -1460,6 +1467,40 @@
   color: #aaa;
   text-align: right;
   font-family: 'Crimson Text', Georgia, serif;
+}
+
+/* Tags Section */
+.hover-card-tags {
+  padding-top: 0.5rem;
+  border-top: 1px solid #2a2a3a;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.hover-tag {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.4rem;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid #333;
+}
+
+.hover-tag .tag-emoji {
+  font-size: 0.8rem;
+}
+
+.hover-tag .tag-name {
+  font-size: 0.7rem;
+  color: #aaa;
+}
+
+.hover-card-tags .no-tags {
+  font-size: 0.7rem;
+  color: #555;
+  font-style: italic;
 }
 
 .hover-card-quirk {
@@ -1634,12 +1675,12 @@
 
 .podium-badge[data-slot="1"] {
   background: var(--team-color);
-  border: 4px solid #fff;
+  border: 4px solid var(--team-color-light, #fff);
 }
 
 .podium-badge[data-slot="2"] {
   background: var(--team-color);
-  border: 4px solid #222;
+  border: 4px solid var(--team-color-dark, #222);
 }
 
 .podium-spot.podium-1 .podium-badge {
@@ -1988,4 +2029,152 @@
   text-align: center;
   font-size: 0.65rem;
   color: #666;
+}
+
+/* Clickable Driver Name */
+.leaderboard-name.clickable {
+  cursor: pointer;
+}
+
+.leaderboard-name.clickable:hover {
+  text-decoration: underline;
+  text-decoration-style: dotted;
+}
+
+.leaderboard-name.clickable.expanded {
+  text-decoration: underline;
+}
+
+/* Driver Dropdown (replaces hover card) */
+.driver-dropdown {
+  position: fixed;
+  z-index: 9999;
+  background: rgba(20, 20, 25, 0.98);
+  border: 1px solid #3a3a4a;
+  border-radius: 6px;
+  padding: 0.6rem;
+  min-width: 240px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  animation: fadeIn 0.15s ease-out;
+}
+
+.driver-dropdown-ratings {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #2a2a3a;
+}
+
+.dropdown-rating-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.dropdown-rating-label {
+  font-size: 0.65rem;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.dropdown-rating-value {
+  font-weight: 700;
+  font-size: 1rem;
+  font-family: 'Courier New', monospace;
+  text-shadow: 0 0 8px currentColor;
+}
+
+/* Tags in Dropdown */
+.driver-dropdown-tags {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.dropdown-tag {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.5rem;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid #333;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.dropdown-tag:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: #555;
+}
+
+.dropdown-tag .tag-emoji {
+  font-size: 0.9rem;
+}
+
+.dropdown-tag .tag-name {
+  font-size: 0.75rem;
+  color: #ccc;
+  flex: 1;
+}
+
+.dropdown-tag .tag-type {
+  font-size: 0.6rem;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 0.1rem 0.3rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 2px;
+}
+
+.driver-dropdown-tags .no-tags {
+  font-size: 0.7rem;
+  color: #555;
+  font-style: italic;
+  padding: 0.2rem 0;
+}
+
+/* Tag Tooltip (appears on hover within dropdown) */
+.tag-tooltip {
+  position: fixed;
+  z-index: 10000;
+  background: rgba(30, 30, 35, 0.98);
+  border: 1px solid #4a4a5a;
+  border-radius: 6px;
+  padding: 0.6rem;
+  min-width: 200px;
+  max-width: 280px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+  animation: fadeIn 0.1s ease-out;
+  pointer-events: none;
+}
+
+.tag-tooltip-header {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #fff;
+  margin-bottom: 0.4rem;
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid #3a3a4a;
+}
+
+.tag-tooltip-desc {
+  font-size: 0.75rem;
+  color: #aaa;
+  line-height: 1.4;
+  margin-bottom: 0.4rem;
+}
+
+.tag-tooltip-trigger {
+  font-size: 0.65rem;
+  color: #888;
+  text-transform: capitalize;
+  padding: 0.2rem 0.4rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+  display: inline-block;
 }

@@ -1,3 +1,5 @@
+import { Tag } from './data/tags';
+
 export interface DriverStats {
   baseSpeed: number;      // Base speed multiplier (0.85 - 1.15)
   consistency: number;    // How consistent they are (0.3 - 0.8)
@@ -61,6 +63,10 @@ export interface Driver {
   // Final classification
   lapsBehind: number;       // How many laps behind the winner (0 = on lead lap)
   finishTick: number | null; // Tick when this driver was classified
+  // Tags
+  driverTag?: Tag;          // Optional driver tag
+  carTag?: Tag;             // Optional car tag (shared by team)
+  teamTag?: Tag;            // Optional team tag (shared by team)
 }
 
 export interface TickFactors {
@@ -191,7 +197,9 @@ export type RaceEventType =
   | 'close_call'       // Near miss (drama)
   // Track events
   | 'track_event'      // Track event triggered
-  | 'track_event_effect'; // Effect from track event applied to driver
+  | 'track_event_effect' // Effect from track event applied to driver
+  // Tag events
+  | 'tag_activation';  // A driver/car/team tag triggered
 
 export interface RaceEvent {
   tick: number;
@@ -269,7 +277,7 @@ const DEFAULT_DRIVERS = [
   { name: "Ghatanothoa", emoji: "💀", color: "#191970", stats: { baseSpeed: 1.00, consistency: 0.65, luck: 0.58, acceleration: 0.98, endurance: 1.04, aggression: 0.50 } },
 ];
 
-const DEFAULT_CONFIG: RaceConfig = {
+export const DEFAULT_CONFIG: RaceConfig = {
   totalLaps: 10,
   lapLength: 500,
   tickInterval: 100,
@@ -335,6 +343,10 @@ class RaceEngine {
   private trackEventTriggeredLaps: Set<number> = new Set();  // Laps where one-time events have triggered
   private lastEventCheckLap: number = 0;  // For interval-based triggers
   private leaderLapCount: Map<number, number> = new Map();  // Track how many laps each driver has led
+
+  // Tag activation state - tracks which tags have activated and when
+  private activeTagEffects: Map<number, { tagId: string; speedModifier: number; consistencyModifier: number; luckModifier: number; expiresAtTick: number | null }[]> = new Map();
+  private tagActivatedThisRace: Set<string> = new Set();  // "driverId-tagId" to track one-time activations
 
   private constructor() {
     this.initializeDrivers();
@@ -404,6 +416,9 @@ class RaceEngine {
     carStats?: CarStats;
     carName?: string;
     teamStats?: TeamStats;
+    driverTag?: Tag;
+    carTag?: Tag;
+    teamTag?: Tag;
   }>): void {
     this.stop();
     this.drivers = roster.map(d => {
@@ -430,6 +445,9 @@ class RaceEngine {
         carStats: d.carStats,
         carName: d.carName,
         teamStats: d.teamStats,
+        driverTag: d.driverTag,
+        carTag: d.carTag,
+        teamTag: d.teamTag,
         // Tire/Pit/Crash initial state
         tireState: {
           compound: startingCompound,
@@ -554,15 +572,38 @@ class RaceEngine {
   }
 
   getDrivers(): Driver[] {
-    // Sort by: status (finished > racing > pitting > dnf), then laps, then position
+    // Helper to calculate effective track position for a driver
+    // Pitting drivers have a "virtual" position based on pit progress
+    const getEffectivePosition = (driver: Driver): number => {
+      if (driver.status !== 'pitting') {
+        return driver.position;
+      }
+
+      // Pit lane maps: entry (85%) -> start/finish (100%/0% at 50% progress) -> exit (15%)
+      // We use lapLength as the track length for calculations
+      const lapLength = this.config.lapLength;
+      const pitProgress = driver.pitProgress;
+
+      if (pitProgress <= 0.5) {
+        // First half: 85% -> 100% of lap (entry to start/finish)
+        // Map 0-0.5 progress to 0.85-1.0 position
+        const progressRatio = pitProgress / 0.5; // 0 to 1
+        const positionRatio = 0.85 + (progressRatio * 0.15); // 0.85 to 1.0
+        return Math.floor(positionRatio * lapLength);
+      } else {
+        // Second half: 0% -> 15% of lap (start/finish to exit)
+        // Map 0.5-1.0 progress to 0.0-0.15 position
+        const progressRatio = (pitProgress - 0.5) / 0.5; // 0 to 1
+        const positionRatio = progressRatio * 0.15; // 0.0 to 0.15
+        return Math.floor(positionRatio * lapLength);
+      }
+    };
+
+    // Sort by: status (finished > racing/pitting > dnf), then laps, then effective position
     return [...this.drivers].sort((a, b) => {
       // DNF drivers go last
       if (a.status === 'dnf' && b.status !== 'dnf') return 1;
       if (b.status === 'dnf' && a.status !== 'dnf') return -1;
-
-      // Pitting drivers ranked by their last position
-      if (a.status === 'pitting' && b.status !== 'pitting') return 1;
-      if (b.status === 'pitting' && a.status !== 'pitting') return -1;
 
       // Finished drivers ranked by finish order
       if (a.status === 'finished' && b.status === 'finished') {
@@ -571,11 +612,12 @@ class RaceEngine {
         if (aPos !== -1 && bPos !== -1) return aPos - bPos;
       }
 
-      // Standard sort: laps then position
+      // Standard sort: laps then effective position
+      // Racing and pitting drivers are now sorted together using effective position
       if (a.currentLap !== b.currentLap) {
         return b.currentLap - a.currentLap;
       }
-      return b.position - a.position;
+      return getEffectivePosition(b) - getEffectivePosition(a);
     });
   }
 
@@ -704,6 +746,9 @@ class RaceEngine {
     this.trackEventTriggeredLaps = new Set();
     this.lastEventCheckLap = 0;
     this.leaderLapCount = new Map();
+    // Reset tag activation state
+    this.activeTagEffects = new Map();
+    this.tagActivatedThisRace = new Set();
     this.notifyListeners();
     this.notifyStateListeners();
     this.notifyLogListeners();
@@ -774,8 +819,15 @@ class RaceEngine {
     // Track event speed modifier (from active effects like speed_boost/speed_penalty)
     const trackEventModifier = this.getActiveSpeedModifier(driver.id);
 
+    // Tag speed modifier (from activated tags)
+    const tagSpeedModifier = this.getTagSpeedModifier(driver.id);
+    const tagConsistencyModifier = this.getTagConsistencyModifier(driver.id);
+
+    // Apply tag consistency modifier to the consistency effect
+    const adjustedConsistencyEffect = consistencyEffect * tagConsistencyModifier;
+
     // Calculate final speed (car modifiers already incorporated into statsModifier and consistencyEffect)
-    const finalSpeed = baseSpeed * statsModifier * consistencyEffect * luckBonus * enduranceFactor * chaosModifier * trackEventModifier;
+    const finalSpeed = baseSpeed * statsModifier * adjustedConsistencyEffect * luckBonus * enduranceFactor * chaosModifier * trackEventModifier * tagSpeedModifier;
 
     return {
       baseRoll,
@@ -1647,6 +1699,143 @@ class RaceEngine {
     this.activeTrackEffects = this.activeTrackEffects.filter(
       effect => effect.expiresAtTick > this.raceState.totalTicks
     );
+    // Also clean up expired tag effects
+    for (const [driverId, effects] of this.activeTagEffects.entries()) {
+      const activeEffects = effects.filter(e => e.expiresAtTick === null || e.expiresAtTick > this.raceState.totalTicks);
+      if (activeEffects.length === 0) {
+        this.activeTagEffects.delete(driverId);
+      } else {
+        this.activeTagEffects.set(driverId, activeEffects);
+      }
+    }
+  }
+
+  // === TAG TRIGGER SYSTEM ===
+
+  /**
+   * Evaluate if a tag should trigger based on its trigger type and current race state
+   */
+  private shouldTagTrigger(driver: Driver, tag: Tag, context: { isOvertaking?: boolean; isPitting?: boolean; isFinalLap?: boolean; isRaceStart?: boolean; inCrashProximity?: boolean }): boolean {
+    // Check if already activated (for non-passive tags)
+    const activationKey = `${driver.id}-${tag.id}`;
+    if (tag.trigger !== 'passive' && this.tagActivatedThisRace.has(activationKey)) {
+      return false;
+    }
+
+    // Check trigger condition
+    switch (tag.trigger) {
+      case 'passive':
+        // Passive tags are always "active" but we only log them once
+        return !this.tagActivatedThisRace.has(activationKey);
+      case 'race_start':
+        return context.isRaceStart === true;
+      case 'pit_stop':
+        return context.isPitting === true;
+      case 'overtake':
+        return context.isOvertaking === true;
+      case 'crash_proximity':
+        return context.inCrashProximity === true;
+      case 'final_lap':
+        return context.isFinalLap === true;
+      default:
+        return false;
+    }
+  }
+
+  /**
+   * Attempt to activate a tag for a driver
+   */
+  private tryActivateTag(driver: Driver, tag: Tag, context: { isOvertaking?: boolean; isPitting?: boolean; isFinalLap?: boolean; isRaceStart?: boolean; inCrashProximity?: boolean }): boolean {
+    if (!this.shouldTagTrigger(driver, tag, context)) {
+      return false;
+    }
+
+    // Check trigger chance (default 100%)
+    const triggerChance = tag.triggerChance ?? 1.0;
+    if (Math.random() > triggerChance) {
+      return false;
+    }
+
+    // Mark as activated
+    const activationKey = `${driver.id}-${tag.id}`;
+    this.tagActivatedThisRace.add(activationKey);
+
+    // Determine effect duration (passive = rest of race, others = temporary)
+    const duration = tag.trigger === 'passive' ? null : 200; // ~200 ticks for triggered effects
+    const expiresAtTick = duration ? this.raceState.totalTicks + duration : null;
+
+    // Add to active effects
+    const effects = this.activeTagEffects.get(driver.id) || [];
+    effects.push({
+      tagId: tag.id,
+      speedModifier: tag.effects.speedModifier ?? 1,
+      consistencyModifier: tag.effects.consistencyModifier ?? 1,
+      luckModifier: tag.effects.luckModifier ?? 1,
+      expiresAtTick,
+    });
+    this.activeTagEffects.set(driver.id, effects);
+
+    // Only log event for non-passive tags (passive tags are always active, no need to announce)
+    if (tag.trigger !== 'passive') {
+      const activationText = tag.activationText || 'tag activated!';
+      this.logEvent(
+        'tag_activation',
+        driver,
+        `${tag.name}: ${activationText}`,
+        tag.effects.speedModifier && tag.effects.speedModifier > 1 ? 'positive' :
+          tag.effects.speedModifier && tag.effects.speedModifier < 1 ? 'negative' : 'neutral',
+        0.7,
+        tag.emoji
+      );
+    }
+
+    return true;
+  }
+
+  /**
+   * Check and activate tags for a driver based on current context
+   */
+  private evaluateDriverTags(driver: Driver, context: { isOvertaking?: boolean; isPitting?: boolean; isFinalLap?: boolean; isRaceStart?: boolean; inCrashProximity?: boolean }): void {
+    // Check driver tag
+    if (driver.driverTag) {
+      this.tryActivateTag(driver, driver.driverTag, context);
+    }
+    // Check car tag
+    if (driver.carTag) {
+      this.tryActivateTag(driver, driver.carTag, context);
+    }
+    // Check team tag
+    if (driver.teamTag) {
+      this.tryActivateTag(driver, driver.teamTag, context);
+    }
+  }
+
+  /**
+   * Get combined tag speed modifier for a driver
+   */
+  private getTagSpeedModifier(driverId: number): number {
+    const effects = this.activeTagEffects.get(driverId);
+    if (!effects || effects.length === 0) return 1;
+
+    let modifier = 1;
+    for (const effect of effects) {
+      modifier *= effect.speedModifier;
+    }
+    return modifier;
+  }
+
+  /**
+   * Get combined tag consistency modifier for a driver
+   */
+  private getTagConsistencyModifier(driverId: number): number {
+    const effects = this.activeTagEffects.get(driverId);
+    if (!effects || effects.length === 0) return 1;
+
+    let modifier = 1;
+    for (const effect of effects) {
+      modifier *= effect.consistencyModifier;
+    }
+    return modifier;
   }
 
   private tick(): void {
@@ -1657,6 +1846,23 @@ class RaceEngine {
     // Clean up expired effects
     this.cleanupExpiredEffects();
 
+    // === TAG TRIGGER EVALUATION ===
+    const isRaceStart = this.raceState.totalTicks === 1;
+
+    // Evaluate passive and race_start tags on first tick
+    if (isRaceStart) {
+      for (const driver of this.drivers) {
+        this.evaluateDriverTags(driver, { isRaceStart: true });
+      }
+    }
+
+    // Evaluate final_lap tags when entering final lap (check each driver individually)
+    for (const driver of this.drivers) {
+      if (driver.status === 'racing' && driver.currentLap >= this.config.totalLaps - 1) {
+        this.evaluateDriverTags(driver, { isFinalLap: true });
+      }
+    }
+
     // === CRASH DETECTION (before movement) ===
     const proximityPairs = this.detectProximityPairs();
     const crashedThisTick: Set<number> = new Set();
@@ -1665,6 +1871,10 @@ class RaceEngine {
     for (const pair of proximityPairs) {
       // Skip if either driver already crashed this tick
       if (crashedThisTick.has(pair[0].id) || crashedThisTick.has(pair[1].id)) continue;
+
+      // Evaluate crash_proximity tags for both drivers in proximity
+      this.evaluateDriverTags(pair[0], { inCrashProximity: true });
+      this.evaluateDriverTags(pair[1], { inCrashProximity: true });
 
       const result = this.processCrashRisk(pair);
       if (result.crashed) {
@@ -1819,6 +2029,9 @@ class RaceEngine {
 
       // Check if driver should pit
       if (this.shouldDriverPit(driver)) {
+        // Evaluate pit_stop tags when entering the pits
+        this.evaluateDriverTags(driver, { isPitting: true });
+
         // Calculate pit duration and slow stop status when entering
         const { duration, isSlowStop, isQuickStop } = this.calculatePitDuration(driver);
 
@@ -2150,6 +2363,10 @@ class RaceEngine {
       const currRank = currentRanks.get(driver.id);
       if (prevRank !== undefined && currRank !== undefined && prevRank > currRank) {
         const positionsGained = prevRank - currRank;
+
+        // Evaluate overtake tags when a driver gains positions
+        this.evaluateDriverTags(driver, { isOvertaking: true });
+
         if (positionsGained >= 2) {  // Only log if gained 2+ positions
           this.logEvent(
             'overtake',
@@ -2235,230 +2452,14 @@ class RaceEngine {
     this.notifyPositionListeners();
   }
 
-  invokeEldritch(): void {
-    const positions = this.drivers.map(d => d.position);
-
-    for (let i = positions.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [positions[i], positions[j]] = [positions[j], positions[i]];
-    }
-
-    this.drivers = this.drivers.map((driver, index) => ({
-      ...driver,
-      position: positions[index],
-      lastTickFactors: {
-        ...driver.lastTickFactors!,
-        chaosModifier: 999, // Mark as chaos-affected
-      } as TickFactors,
-    }));
-
-    this.notifyListeners();
-  }
-
-  // Modify a specific driver's stats
-  updateDriverStats(driverId: number, updates: Partial<DriverStats>): void {
-    this.drivers = this.drivers.map(driver => {
-      if (driver.id === driverId) {
-        return {
-          ...driver,
-          stats: { ...driver.stats, ...updates },
-        };
-      }
-      return driver;
-    });
-    this.notifyListeners();
-  }
-
   isRaceRunning(): boolean {
     return this.isRunning;
   }
 
-  // === POWER SYSTEM ===
+  // === ACTIVE EFFECTS SYSTEM ===
+  // Used for temporary speed modifiers and crash protection
 
-  // Active temporary effects: { driverId: { expiresAtTick, speedMultiplier, isProtected } }
   private activeEffects: Map<number, { expiresAtTick: number; speedMultiplier: number; isProtected: boolean }> = new Map();
-
-  applyPowerEffect(
-    power: { id: string; effectType: string; effectValue?: number; duration?: number },
-    favoriteDriverIds: number[],
-    rivalDriverIds: number[]
-  ): void {
-    const currentTick = this.raceState.totalTicks;
-
-    switch (power.effectType) {
-      case 'position_change': {
-        // Determine target based on effect value (positive = favorite gains, negative = rival loses)
-        const positions = power.effectValue || 0;
-        const targetIds = positions > 0 ? favoriteDriverIds : rivalDriverIds;
-        if (targetIds.length === 0) return;
-
-        // Apply to all drivers in the team
-        for (const targetId of targetIds) {
-          this.applyPositionChange(targetId, Math.abs(positions), positions > 0 ? 'gain' : 'lose');
-        }
-        break;
-      }
-
-      case 'speed_boost': {
-        if (favoriteDriverIds.length === 0) return;
-        const duration = power.duration || 200;
-        // Apply to all drivers on the team
-        for (const driverId of favoriteDriverIds) {
-          this.activeEffects.set(driverId, {
-            expiresAtTick: currentTick + duration,
-            speedMultiplier: power.effectValue || 1.15,
-            isProtected: false,
-          });
-        }
-        break;
-      }
-
-      case 'speed_penalty': {
-        if (rivalDriverIds.length === 0) return;
-        const duration = power.duration || 200;
-        // Apply to all drivers on the team
-        for (const driverId of rivalDriverIds) {
-          this.activeEffects.set(driverId, {
-            expiresAtTick: currentTick + duration,
-            speedMultiplier: power.effectValue || 0.85,
-            isProtected: false,
-          });
-        }
-        break;
-      }
-
-      case 'tire_restore': {
-        if (power.effectValue && power.effectValue < 0) {
-          // Negative = curse, add wear to rival team
-          if (rivalDriverIds.length === 0) return;
-          for (const rivalId of rivalDriverIds) {
-            const driver = this.drivers.find(d => d.id === rivalId);
-            if (driver) {
-              driver.tireState.wear = Math.min(100, driver.tireState.wear + Math.abs(power.effectValue));
-            }
-          }
-        } else {
-          // Positive/neutral = blessing, restore favorite team's tires
-          if (favoriteDriverIds.length === 0) return;
-          for (const favId of favoriteDriverIds) {
-            const driver = this.drivers.find(d => d.id === favId);
-            if (driver) {
-              driver.tireState.wear = Math.max(0, driver.tireState.wear - 30);
-            }
-          }
-        }
-        this.notifyListeners();
-        break;
-      }
-
-      case 'protection': {
-        if (favoriteDriverIds.length === 0) return;
-        const duration = power.duration || 600;
-        // Apply protection to all drivers on the team
-        for (const driverId of favoriteDriverIds) {
-          this.activeEffects.set(driverId, {
-            expiresAtTick: currentTick + duration,
-            speedMultiplier: 1.0,
-            isProtected: true,
-          });
-        }
-        break;
-      }
-
-      case 'swap': {
-        // Different swap behaviors based on power id
-        if (power.id === 'mind_meld') {
-          // Swap two random drivers (not top 3)
-          const eligible = this.getActiveDrivers().filter((_, idx) => idx >= 3);
-          if (eligible.length >= 2) {
-            const idx1 = Math.floor(Math.random() * eligible.length);
-            let idx2 = Math.floor(Math.random() * eligible.length);
-            while (idx2 === idx1) idx2 = Math.floor(Math.random() * eligible.length);
-            this.swapDriverPositions(eligible[idx1].id, eligible[idx2].id);
-          }
-        } else if (power.id === 'chaos_shuffle') {
-          // Shuffle positions 4-10
-          const active = this.getActiveDrivers();
-          const toShuffle = active.slice(3, 10);
-          for (let i = toShuffle.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [toShuffle[i].position, toShuffle[j].position] = [toShuffle[j].position, toShuffle[i].position];
-          }
-          this.notifyListeners();
-        } else if (power.id === 'time_warp') {
-          // Swap the primary drivers of favorite and rival teams
-          if (favoriteDriverIds.length > 0 && rivalDriverIds.length > 0) {
-            this.swapDriverPositions(favoriteDriverIds[0], rivalDriverIds[0]);
-          }
-        }
-        break;
-      }
-
-      case 'dnf': {
-        // Lightning strike - DNF a random mid-pack driver (positions 5-12)
-        const active = this.getActiveDrivers();
-        const midPack = active.slice(4, 12);
-        if (midPack.length > 0) {
-          const victim = midPack[Math.floor(Math.random() * midPack.length)];
-          victim.status = 'dnf';
-          victim.dnfInfo = {
-            reason: 'crash',
-            tick: currentTick,
-            lap: victim.currentLap,
-          };
-          this.notifyListeners();
-        }
-        break;
-      }
-    }
-  }
-
-  private applyPositionChange(driverId: number, positions: number, direction: 'gain' | 'lose'): void {
-    const active = this.getActiveDrivers();
-    const driverIdx = active.findIndex(d => d.id === driverId);
-    if (driverIdx === -1) return;
-
-    const driver = active[driverIdx];
-
-    if (direction === 'gain') {
-      // Find driver(s) ahead and swap/push past them
-      for (let i = 0; i < positions && driverIdx - i > 0; i++) {
-        const aheadDriver = active[driverIdx - 1 - i];
-        // Push our driver's position just ahead
-        driver.position = aheadDriver.position + 1;
-      }
-    } else {
-      // Find driver(s) behind and swap/drop behind them
-      for (let i = 0; i < positions && driverIdx + 1 + i < active.length; i++) {
-        const behindDriver = active[driverIdx + 1 + i];
-        // Push our driver's position just behind
-        driver.position = behindDriver.position - 1;
-      }
-    }
-
-    this.notifyListeners();
-  }
-
-  private swapDriverPositions(id1: number, id2: number): void {
-    const d1 = this.drivers.find(d => d.id === id1);
-    const d2 = this.drivers.find(d => d.id === id2);
-    if (d1 && d2) {
-      const tempPos = d1.position;
-      d1.position = d2.position;
-      d2.position = tempPos;
-      this.notifyListeners();
-    }
-  }
-
-  private getActiveDrivers(): Driver[] {
-    return this.drivers
-      .filter(d => d.status === 'racing' || d.status === 'pitting')
-      .sort((a, b) => {
-        const aDist = a.currentLap * this.config.lapLength + a.position;
-        const bDist = b.currentLap * this.config.lapLength + b.position;
-        return bDist - aDist;
-      });
-  }
 
   // Called during tick to apply active effects
   getSpeedMultiplierForDriver(driverId: number): number {

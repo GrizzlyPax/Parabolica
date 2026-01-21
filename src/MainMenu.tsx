@@ -3,9 +3,10 @@ import './MainMenu.css';
 interface MainMenuProps {
   onSingleRace: () => void;
   onSeason: () => void;
+  onCompendium: () => void;
 }
 
-function MainMenu({ onSingleRace, onSeason }: MainMenuProps) {
+function MainMenu({ onSingleRace, onSeason, onCompendium }: MainMenuProps) {
   return (
     <div className="main-menu">
       <div className="main-menu-content">
@@ -26,11 +27,20 @@ function MainMenu({ onSingleRace, onSeason }: MainMenuProps) {
             <div className="mode-arrow">→</div>
           </button>
 
-          <button className="mode-card season-card" onClick={onSeason}>
+          <button className="mode-card" onClick={onSeason}>
             <div className="mode-icon">🏆</div>
             <div className="mode-info">
               <h2>Season Mode</h2>
               <p>Multiple races. Points accumulate. Someone probably wins.</p>
+            </div>
+            <div className="mode-arrow">→</div>
+          </button>
+
+          <button className="mode-card" onClick={onCompendium}>
+            <div className="mode-icon">📜</div>
+            <div className="mode-info">
+              <h2>Compendium</h2>
+              <p>All the systems, tags, and mechanics. The fine print.</p>
             </div>
             <div className="mode-arrow">→</div>
           </button>
