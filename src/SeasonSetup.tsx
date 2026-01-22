@@ -206,9 +206,9 @@ function SeasonSetup({ onStartSeason, onBack }: SeasonSetupProps) {
           </>
         )}
 
-        {/* Teams Tab */}
+        {/* Teams Tab - Wordle Grid Style */}
         {activeTab === 'teams' && (
-          <div className="setup-section selection-section">
+          <div className="setup-section selection-section wordle-selection">
             <div className="selection-header">
               <div>
                 <h2>Select Teams</h2>
@@ -219,41 +219,40 @@ function SeasonSetup({ onStartSeason, onBack }: SeasonSetupProps) {
                   🎲 Random 10
                 </button>
                 <button className="action-btn" onClick={selectAllTeams}>
-                  ✓ Select 20
+                  ✓ All 20
                 </button>
               </div>
             </div>
 
-            <div className="selection-grid kingdoms-grid">
+            <div className="wordle-selection-grid teams-grid">
               {ALL_TEAMS.map(team => {
                 const isSelected = selectedTeamIds.has(team.id);
+                // Get short name - first word or "The X" becomes just "X"
+                const shortName = team.name.startsWith('The ')
+                  ? team.name.slice(4).split(' ')[0]
+                  : team.name.split(' ')[0];
                 return (
-                  <div
+                  <button
                     key={team.id}
-                    className={`selection-card kingdom-card ${isSelected ? 'selected' : ''}`}
+                    className={`wordle-selection-cell ${isSelected ? 'selected' : ''}`}
                     onClick={() => toggleTeam(team.id)}
-                    style={{ '--kingdom-color': team.color } as React.CSSProperties}
+                    style={{ '--team-color': team.color } as React.CSSProperties}
                   >
-                    <div className="selection-checkbox">
-                      {isSelected ? '✓' : ''}
-                    </div>
-                    <span className="selection-emoji">{team.emoji}</span>
-                    <div className="selection-info">
-                      <span className="selection-name" style={{ color: team.color }}>
-                        {team.name}
-                      </span>
-                      <span className="selection-desc">{team.description}</span>
-                    </div>
-                  </div>
+                    <span className="cell-emoji">{team.emoji}</span>
+                    <span className="cell-name" style={{ color: isSelected ? team.color : undefined }}>
+                      {shortName}
+                    </span>
+                    {isSelected && <span className="cell-check">✓</span>}
+                  </button>
                 );
               })}
             </div>
           </div>
         )}
 
-        {/* Tracks Tab */}
+        {/* Tracks Tab - Wordle Grid Style */}
         {activeTab === 'tracks' && (
-          <div className="setup-section selection-section">
+          <div className="setup-section selection-section wordle-selection">
             <div className="selection-header">
               <div>
                 <h2>Select Race Calendar</h2>
@@ -266,33 +265,29 @@ function SeasonSetup({ onStartSeason, onBack }: SeasonSetupProps) {
                   🎲 Random {Math.min(selectedRaces, ALL_TRACKS.length)}
                 </button>
                 <button className="action-btn" onClick={selectAllTracks}>
-                  ✓ Select All
+                  ✓ All
                 </button>
               </div>
             </div>
 
-            <div className="selection-grid tracks-grid">
+            <div className="wordle-selection-grid tracks-grid">
               {ALL_TRACKS.map(track => {
                 const isSelected = selectedTrackIds.has(track.id);
+                // Get short name - first word or "The X" becomes just "X"
+                const shortName = track.name.startsWith('The ')
+                  ? track.name.slice(4).split(' ')[0]
+                  : track.name.split(' ')[0];
                 return (
-                  <div
+                  <button
                     key={track.id}
-                    className={`selection-card track-card ${isSelected ? 'selected' : ''}`}
+                    className={`wordle-selection-cell track-cell ${isSelected ? 'selected' : ''}`}
                     onClick={() => toggleTrack(track.id)}
                   >
-                    <div className="selection-checkbox">
-                      {isSelected ? '✓' : ''}
-                    </div>
-                    <span className="selection-emoji">{track.emoji}</span>
-                    <div className="selection-info">
-                      <span className="selection-name">{track.name}</span>
-                      <span className="selection-desc">{track.description}</span>
-                      <div className="track-meta">
-                        <span className="track-stat">{track.laps} laps</span>
-                        <span className="track-stat">{track.event.emoji} {track.event.name}</span>
-                      </div>
-                    </div>
-                  </div>
+                    <span className="cell-emoji">{track.emoji}</span>
+                    <span className="cell-name">{shortName}</span>
+                    <span className="cell-laps">{track.laps}L</span>
+                    {isSelected && <span className="cell-check">✓</span>}
+                  </button>
                 );
               })}
             </div>

@@ -340,138 +340,133 @@
   color: #fff;
 }
 
-/* Selection Grid */
-.selection-grid {
+/* ============================================
+   WORDLE-STYLE SELECTION GRID
+   ============================================ */
+
+.wordle-selection {
+  padding: 1rem;
+}
+
+.wordle-selection-grid {
   display: grid;
   gap: 0.5rem;
-  max-height: 400px;
-  overflow-y: auto;
-  padding-right: 0.5rem;
+  max-width: 700px;
+  margin: 0 auto;
 }
 
-.kingdoms-grid {
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+.wordle-selection-grid.teams-grid {
+  grid-template-columns: repeat(5, 1fr);
 }
 
-.tracks-grid {
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+.wordle-selection-grid.tracks-grid {
+  grid-template-columns: repeat(5, 1fr);
 }
 
-/* Selection Card */
-.selection-card {
+/* Wordle-style Cell */
+.wordle-selection-cell {
+  aspect-ratio: 1;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.65rem;
-  padding: 0.6rem 0.75rem;
-  background: #111;
-  border: 1px solid #333;
-  border-radius: 3px;
+  justify-content: center;
+  gap: 0.15rem;
+  padding: 0.4rem;
+  border: 2px solid #2a2a30;
+  border-radius: 6px;
+  background: rgba(20, 20, 24, 0.9);
   cursor: pointer;
   transition: all 0.15s ease;
+  position: relative;
 }
 
-.selection-card:hover {
-  background: #1a1a1a;
-  border-color: #444;
+.wordle-selection-cell:hover {
+  transform: scale(1.05);
+  border-color: #4a4a50;
+  z-index: 1;
 }
 
-.selection-card.selected {
-  border-color: #666;
-  background: #1a1a1a;
+.wordle-selection-cell.selected {
+  border-color: var(--team-color, #666);
+  background: rgba(40, 40, 45, 0.95);
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.1);
 }
 
-.kingdom-card.selected {
-  border-color: var(--kingdom-color, #666);
-  background: #1a1a1a;
+.wordle-selection-cell .cell-emoji {
+  font-size: 1.5rem;
+  line-height: 1;
 }
 
-.selection-checkbox {
-  width: 20px;
-  height: 20px;
-  border: 1px solid #555;
-  border-radius: 3px;
+.wordle-selection-cell .cell-name {
+  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-size: 0.65rem;
+  color: #888;
+  text-align: center;
+  line-height: 1.1;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wordle-selection-cell.selected .cell-name {
+  color: #fff;
+  font-weight: 600;
+}
+
+.wordle-selection-cell .cell-laps {
+  font-family: 'Inconsolata', monospace;
+  font-size: 0.6rem;
+  color: #555;
+}
+
+.wordle-selection-cell.selected .cell-laps {
+  color: #888;
+}
+
+.wordle-selection-cell .cell-check {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 14px;
+  height: 14px;
+  background: var(--team-color, #666);
+  border-radius: 50%;
+  font-size: 9px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.8rem;
-  color: #fff;
-  flex-shrink: 0;
-  transition: all 0.15s ease;
+  color: #000;
+  font-weight: bold;
 }
 
-.selection-card.selected .selection-checkbox {
-  background: #555;
-  border-color: #777;
-}
-
-.kingdom-card.selected .selection-checkbox {
-  background: var(--kingdom-color, #555);
-  border-color: var(--kingdom-color, #777);
-}
-
-.selection-emoji {
-  font-size: 1.5rem;
-  flex-shrink: 0;
-}
-
-.selection-info {
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-  min-width: 0;
-}
-
-.selection-name {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: #fff;
-}
-
-.selection-desc {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
-  font-size: 0.75rem;
-  color: #777;
-  font-style: italic;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* Track-specific styles */
-.track-meta {
-  display: flex;
-  gap: 0.5rem;
-  margin-top: 0.25rem;
-}
-
-.track-stat {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
-  font-size: 0.65rem;
-  color: #666;
-  background: #1a1a1a;
-  padding: 0.15rem 0.35rem;
-  border-radius: 2px;
-  border: 1px solid #333;
+.wordle-selection-cell.track-cell .cell-check {
+  background: #4a8;
 }
 
 /* Scrollbar styling */
-.selection-grid::-webkit-scrollbar {
+.wordle-selection-grid::-webkit-scrollbar {
   width: 6px;
 }
 
-.selection-grid::-webkit-scrollbar-track {
+.wordle-selection-grid::-webkit-scrollbar-track {
   background: #111;
   border-radius: 3px;
 }
 
-.selection-grid::-webkit-scrollbar-thumb {
+.wordle-selection-grid::-webkit-scrollbar-thumb {
   background: #444;
   border-radius: 3px;
 }
 
-.selection-grid::-webkit-scrollbar-thumb:hover {
+.wordle-selection-grid::-webkit-scrollbar-thumb:hover {
   background: #555;
+}
+
+/* Disabled start button */
+.start-season-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 /* Disabled start button */
@@ -483,131 +478,195 @@
 /* Mobile phone breakpoint */
 @media (max-width: 640px) {
   .season-setup {
-    padding: 1.5rem 1rem;
+    padding: 1rem 0.5rem;
+    overflow-x: hidden;
+  }
+
+  .season-setup-content {
+    max-width: 100%;
   }
 
   .season-setup .back-btn {
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
     min-height: 44px; /* Touch target */
   }
 
+  .season-setup-header {
+    margin-bottom: 1rem;
+  }
+
   .season-setup-header h1 {
-    font-size: 1.8rem;
-    gap: 0.5rem;
+    font-size: 1.5rem;
+    gap: 0.4rem;
   }
 
   .header-emoji {
-    font-size: 1.4rem;
+    font-size: 1.2rem;
+  }
+
+  .season-setup-header p {
+    font-size: 0.85rem;
   }
 
   .setup-section {
-    padding: 1rem;
+    padding: 0.75rem;
+    margin-bottom: 0.75rem;
   }
 
   .setup-section h2 {
-    font-size: 1rem;
+    font-size: 0.95rem;
+  }
+
+  .setup-hint {
+    font-size: 0.75rem;
+    margin-bottom: 0.75rem;
   }
 
   /* Race count buttons */
   .race-count-options {
-    gap: 0.5rem;
+    gap: 0.4rem;
   }
 
   .race-count-btn {
-    padding: 0.75rem 0.5rem;
-    min-height: 60px; /* Touch target */
+    padding: 0.6rem 0.4rem;
+    min-height: 56px; /* Touch target */
   }
 
   .count-number {
-    font-size: 1.5rem;
+    font-size: 1.3rem;
   }
 
   .count-label {
-    font-size: 0.65rem;
-  }
-
-  /* Points grid - 3 columns on mobile */
-  .points-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.3rem;
-  }
-
-  .points-item {
-    padding: 0.35rem;
-  }
-
-  .points-item .position {
     font-size: 0.6rem;
   }
 
+  /* Points grid - 5 columns, more compact */
+  .points-grid {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.2rem;
+  }
+
+  .points-item {
+    padding: 0.25rem;
+  }
+
+  .points-item .position {
+    font-size: 0.55rem;
+  }
+
   .points-item .points {
-    font-size: 0.75rem;
+    font-size: 0.65rem;
   }
 
   /* Tabs */
   .setup-tabs {
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    margin-bottom: 0.75rem;
   }
 
   .setup-tab {
-    padding: 0.6rem 0.75rem;
-    font-size: 0.8rem;
-    min-height: 44px; /* Touch target */
+    padding: 0.5rem 0.5rem;
+    font-size: 0.7rem;
+    min-height: 40px; /* Touch target */
+    flex: 1;
+    text-align: center;
   }
 
   /* Selection header */
   .selection-header {
     flex-direction: column;
     align-items: flex-start;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .selection-header h2 {
+    margin-bottom: 0.1rem;
   }
 
   .selection-actions {
     width: 100%;
     justify-content: flex-start;
+    gap: 0.4rem;
   }
 
   .action-btn {
-    min-height: 36px; /* Touch target */
+    min-height: 36px;
+    padding: 0.35rem 0.5rem;
+    font-size: 0.75rem;
   }
 
-  /* Selection grid - single column */
-  .selection-grid {
-    max-height: 300px;
+  /* Wordle selection - tighter on mobile */
+  .wordle-selection {
+    padding: 0.5rem;
   }
 
-  .kingdoms-grid,
-  .tracks-grid {
-    grid-template-columns: 1fr;
+  .wordle-selection-grid.teams-grid,
+  .wordle-selection-grid.tracks-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.35rem;
   }
 
-  .selection-card {
-    min-height: 56px; /* Touch target */
+  .wordle-selection-cell {
+    padding: 0.3rem;
+    border-radius: 4px;
+    border-width: 1.5px;
   }
 
-  .selection-emoji {
-    font-size: 1.3rem;
+  .wordle-selection-cell .cell-emoji {
+    font-size: 1.2rem;
   }
 
-  .selection-name {
-    font-size: 0.9rem;
+  .wordle-selection-cell .cell-name {
+    font-size: 0.55rem;
   }
 
-  /* Summary */
+  .wordle-selection-cell .cell-laps {
+    font-size: 0.5rem;
+  }
+
+  .wordle-selection-cell .cell-check {
+    width: 12px;
+    height: 12px;
+    font-size: 7px;
+    top: 2px;
+    right: 2px;
+  }
+
+  /* Summary - more compact */
+  .setup-summary {
+    padding: 1rem;
+    margin-top: 0.5rem;
+  }
+
   .summary-stats {
-    gap: 1.5rem;
+    gap: 1rem;
+    margin-bottom: 1rem;
   }
 
   .summary-stat .stat-value {
-    font-size: 1.6rem;
+    font-size: 1.4rem;
   }
 
   .summary-stat .stat-label {
-    font-size: 0.7rem;
+    font-size: 0.65rem;
   }
 
   .start-season-btn {
-    padding: 0.85rem 1.5rem;
-    font-size: 1rem;
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
     min-height: 48px; /* Touch target */
+  }
+
+  .btn-arrow {
+    font-size: 1rem;
+  }
+}
+
+/* Extra small screens */
+@media (max-width: 360px) {
+  .wordle-selection-grid.teams-grid,
+  .wordle-selection-grid.tracks-grid {
+    grid-template-columns: repeat(3, 1fr);
   }
 }

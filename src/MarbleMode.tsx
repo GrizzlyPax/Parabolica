@@ -147,6 +147,131 @@ function getMisterMarblesQuote(category: keyof typeof MISTER_MARBLES): string {
 }
 
 // ============================================
+// RATING DESCRIPTORS - Vibes over numbers
+// Tiers: legendary (purple/best) → elite (green) → solid (yellow) → scrappy (orange) → hopeless (red/worst)
+// ============================================
+
+type RatingTier = 'legendary' | 'elite' | 'solid' | 'hopeless';
+
+interface RatingDescriptor {
+  tier: RatingTier;
+  label: string;
+}
+
+// Driver skill descriptors (based on combined driver stats)
+// 4 tiers: legendary (purple) → elite (green) → solid (yellow) → hopeless (red)
+const DRIVER_DESCRIPTORS: Record<RatingTier, string[]> = {
+  legendary: [
+    'Legendary', 'Mythical', 'Godlike', 'Transcendent', 'Chosen One',
+    'The GOAT', 'Untouchable', 'Built Different', 'Main Character',
+    'Sicko Mode', 'Final Boss', 'Prophecy Fulfilled', 'Literally Him',
+  ],
+  elite: [
+    'Elite', 'Masterful', 'Brilliant', 'Exceptional', 'Cracked',
+    'Dialed In', 'On One', 'Locked In', 'Different Gravy',
+    'Certified', 'Top Shelf', 'Premium', 'Chef\'s Kiss',
+  ],
+  solid: [
+    'Solid', 'Reliable', 'Dependable', 'Steady', 'Gets The Job Done',
+    'Honest Work', 'No Drama', 'Lunch Pail Guy', 'Professional',
+    'Shows Up', 'Pays Rent', 'Fine I Guess', 'Could Be Worse',
+    'Scrappy', 'Gritty', 'Questionable', 'Winging It', 'Mid',
+  ],
+  hopeless: [
+    'Hopeless', 'Tragic', 'Doomed', 'Walking DNF', 'Lost Cause',
+    'Thoughts & Prayers', 'Bless Their Heart', 'Oh No Baby',
+    'Disaster Artist', 'Absolute Cinema', 'Content Creator',
+    'Participation Trophy', 'At Least They Tried', 'Yikes',
+    'Sus', 'Concerning', 'Prayers Required', 'Red Flags',
+  ],
+};
+
+// Car quality descriptors (based on car stats)
+const CAR_DESCRIPTORS: Record<RatingTier, string[]> = {
+  legendary: [
+    'Rocketship', 'Absolute Unit', 'Cheat Code', 'Engineering Porn',
+    'Beast Mode', 'Straight Nasty', 'War Machine', 'Death Star',
+    'Weapon of Choice', 'Pure Violence', 'Unfair Advantage',
+  ],
+  elite: [
+    'Refined', 'Tuned', 'Sharp', 'Pristine', 'Dialed',
+    'Clean Build', 'Chef\'s Kiss', 'Money Well Spent', 'Actually Good',
+    'The Real Deal', 'Legit', 'Premium Gas Only',
+  ],
+  solid: [
+    'Decent', 'Gets Around', 'Runs Fine', 'Adequate', 'It\'ll Do',
+    'Nothing Special', 'Basic', 'Economy Class', 'Sensible',
+    'Mid', 'Could Be Worse', 'Passes Inspection',
+    'Sketchy', 'Held Together', 'Vibes Only',
+  ],
+  hopeless: [
+    'Tractor', 'Shopping Cart', 'Dumpster Fire', 'Insurance Claim',
+    'Rolling Coffin', 'Lawsuit Waiting', 'Tetanus Mobile',
+    'Yard Sale', 'Scrap Metal', 'Museum Piece', 'Tax Write-Off',
+    'Crime Scene', 'Cry For Help', 'Health Hazard',
+    'Duct Tape Dreams', 'Concerning Noises', 'Check Engine Light',
+  ],
+};
+
+function getRandomDescriptor(descriptors: string[]): string {
+  return descriptors[Math.floor(Math.random() * descriptors.length)];
+}
+
+/**
+ * Calculate a driver's overall rating tier based on their stats
+ * Returns a vibe-based descriptor instead of numbers
+ */
+export function getDriverRating(driver: Driver): RatingDescriptor {
+  // Combine driver stats into overall score (0-1 scale)
+  const speedScore = (driver.stats.baseSpeed - 0.85) / 0.30;
+  const consistencyScore = (driver.stats.consistency - 0.3) / 0.50;
+  const luckScore = (driver.stats.luck - 0.3) / 0.50;
+
+  // Weighted average favoring speed and consistency
+  const overall = speedScore * 0.5 + consistencyScore * 0.35 + luckScore * 0.15;
+
+  let tier: RatingTier;
+  if (overall >= 0.75) tier = 'legendary';
+  else if (overall >= 0.5) tier = 'elite';
+  else if (overall >= 0.25) tier = 'solid';
+  else tier = 'hopeless';
+
+  return {
+    tier,
+    label: getRandomDescriptor(DRIVER_DESCRIPTORS[tier]),
+  };
+}
+
+/**
+ * Calculate a car's overall rating tier based on its stats
+ * Returns a vibe-based descriptor instead of numbers
+ */
+export function getCarRating(driver: Driver): RatingDescriptor {
+  if (!driver.carStats) {
+    return { tier: 'solid', label: getRandomDescriptor(CAR_DESCRIPTORS.solid) };
+  }
+
+  // Car stats are 1-5 scale, normalize to 0-1
+  const powerScore = (driver.carStats.power - 1) / 4;
+  const gripScore = (driver.carStats.grip - 1) / 4;
+  const reliabilityScore = (driver.carStats.reliability - 1) / 4;
+
+  // Weighted average
+  const overall = powerScore * 0.4 + gripScore * 0.35 + reliabilityScore * 0.25;
+
+  let tier: RatingTier;
+  if (overall >= 0.75) tier = 'legendary';
+  else if (overall >= 0.5) tier = 'elite';
+  else if (overall >= 0.25) tier = 'solid';
+  else tier = 'hopeless';
+
+  return {
+    tier,
+    label: getRandomDescriptor(CAR_DESCRIPTORS[tier]),
+  };
+}
+
+// ============================================
 // ODDS CALCULATION
 // ============================================
 
@@ -332,6 +457,44 @@ export function BettingInterface({
     return oddsMap;
   }, [drivers]);
 
+  // Sort drivers by win odds for display
+  const sortedDrivers = useMemo(() => {
+    return [...drivers].sort((a, b) => {
+      const oddsA = driverOdds.get(a.id)?.win ?? 100;
+      const oddsB = driverOdds.get(b.id)?.win ?? 100;
+      return oddsA - oddsB;
+    });
+  }, [drivers, driverOdds]);
+
+  // Get tier color for a driver based on odds
+  const getDriverTierByOdds = (driver: Driver): 'favorite' | 'contender' | 'longshot' | 'wildcard' => {
+    const winOdds = driverOdds.get(driver.id)?.win ?? 100;
+    if (winOdds < 5) return 'favorite';
+    if (winOdds < 12) return 'contender';
+    if (winOdds < 25) return 'longshot';
+    return 'wildcard';
+  };
+
+  // Memoize driver ratings so they don't re-randomize on every render
+  const driverRatings = useMemo(() => {
+    const ratings = new Map<number, RatingDescriptor>();
+    drivers.forEach(driver => {
+      const rating = getDriverRating(driver);
+      ratings.set(driver.id, rating);
+    });
+    return ratings;
+  }, [drivers]);
+
+  // Memoize car ratings so they don't re-randomize on every render
+  const carRatings = useMemo(() => {
+    const ratings = new Map<number, RatingDescriptor>();
+    drivers.forEach(driver => {
+      const rating = getCarRating(driver);
+      ratings.set(driver.id, rating);
+    });
+    return ratings;
+  }, [drivers]);
+
   // Total wagered so far
   const totalWagered = currentBets.reduce((sum, b) => sum + b.amount, 0);
   const remaining = raceBudget - totalWagered;
@@ -455,11 +618,21 @@ export function BettingInterface({
 
   const getBetTypeLabel = (type: BetType): string => {
     switch (type) {
-      case 'win': return 'Win (P1)';
-      case 'podium': return 'Podium (Top 3)';
-      case 'points': return 'Points (Top 10)';
+      case 'win': return 'Win';
+      case 'podium': return 'Podium';
+      case 'points': return 'Points';
       case 'finishes': return 'Finishes';
       case 'dnf': return 'DNF';
+    }
+  };
+
+  const getBetTypeDesc = (type: BetType): string => {
+    switch (type) {
+      case 'win': return 'P1';
+      case 'podium': return 'Top 3';
+      case 'points': return 'Top 10';
+      case 'finishes': return 'Complete';
+      case 'dnf': return 'Crash';
     }
   };
 
@@ -484,345 +657,175 @@ export function BettingInterface({
     return getBetCountByType(type) >= getBetTypeLimit(type);
   };
 
-  // Categorize drivers into tiers by win odds
-  const driverTiers = useMemo(() => {
-    const sorted = [...drivers].sort((a, b) => {
-      const oddsA = driverOdds.get(a.id)?.win ?? 100;
-      const oddsB = driverOdds.get(b.id)?.win ?? 100;
-      return oddsA - oddsB;
-    });
-
-    // Favorites: win odds < 5x (top ~3-4)
-    // Contenders: win odds 5-12x (middle pack)
-    // Longshots: win odds 12-25x (back of midfield)
-    // Wildcards: win odds > 25x (backmarkers with crazy odds)
-    const favorites: Driver[] = [];
-    const contenders: Driver[] = [];
-    const longshots: Driver[] = [];
-    const wildcards: Driver[] = [];
-
-    sorted.forEach(driver => {
-      const winOdds = driverOdds.get(driver.id)?.win ?? 100;
-      if (winOdds < 5) {
-        favorites.push(driver);
-      } else if (winOdds < 12) {
-        contenders.push(driver);
-      } else if (winOdds < 25) {
-        longshots.push(driver);
-      } else {
-        wildcards.push(driver);
-      }
-    });
-
-    return { favorites, contenders, longshots, wildcards };
-  }, [drivers, driverOdds]);
+  // Find the index of selected driver for inline bet panel positioning
+  const selectedDriverIndex = selectedDriver ? sortedDrivers.findIndex(d => d.id === selectedDriver.id) : -1;
 
   return (
-    <div className="betting-interface">
+    <div className="betting-interface wordle-style">
+      {/* Header - Compact */}
       <div className="betting-header">
         <div className="race-info">
-          <span className="race-number">Race {raceNumber} of {totalRaces}</span>
+          <span className="race-number">Race {raceNumber}/{totalRaces}</span>
           <h2 className="track-name">{trackName}</h2>
         </div>
         <div className="marble-status">
           <div className="bankroll">
-            <span className="label">Bankroll</span>
-            <span className="value">{bankroll.toLocaleString()} ṁ</span>
+            <span className="label">Bank</span>
+            <span className="value">{bankroll.toLocaleString()}</span>
           </div>
           <div className="race-budget">
-            <span className="label">Race Budget</span>
-            <span className="value">{remaining} ṁ</span>
+            <span className="label">Budget</span>
+            <span className="value">{remaining}</span>
           </div>
         </div>
       </div>
 
+      {/* Narrator - Prominent */}
       <div className="narrator-box">
-        <span className="narrator-name">Mister Marbles:</span>
+        <span className="narrator-name">🔮 Mister Marbles</span>
         <span className="narrator-message">"{narratorMessage}"</span>
+        <span className="betting-tip">Better drivers, worse odds. The chaos doesn't care about your favorites.</span>
       </div>
 
-      <div className="betting-content">
-        <div className="driver-grid">
-          <h3>Select Driver</h3>
-          <div className="drivers-list tiered">
-            {/* Favorites - Green */}
-            {driverTiers.favorites.length > 0 && (
-              <div className="driver-tier favorites">
-                <div className="tier-header">
-                  <span className="tier-label">Favorites</span>
-                  <span className="tier-desc">Low risk, low reward</span>
-                </div>
-                <div className="tier-drivers">
-                  {driverTiers.favorites.map(driver => {
-                    const odds = driverOdds.get(driver.id);
-                    const isSelected = selectedDriver?.id === driver.id;
-                    const hasBet = currentBets.some(b => b.driverId === driver.id);
-                    return (
-                      <button
-                        key={driver.id}
-                        className={`driver-option tier-favorite ${isSelected ? 'selected' : ''} ${hasBet ? 'has-bet' : ''}`}
-                        onClick={() => setSelectedDriver(driver)}
-                      >
-                        <span className="driver-emoji">{driver.emoji}</span>
-                        <span className="driver-name">{driver.shortName}</span>
-                        <span className="driver-odds">{odds?.win.toFixed(1)}x</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
+      {/* Main Grid Area */}
+      <div className="wordle-main">
+        {/* Driver Grid - Wordle Style */}
+        <div className="wordle-grid">
+          {sortedDrivers.map((driver, index) => {
+            const odds = driverOdds.get(driver.id);
+            const isSelected = selectedDriver?.id === driver.id;
+            const hasBet = currentBets.some(b => b.driverId === driver.id);
+            const tier = getDriverTierByOdds(driver);
 
-            {/* Contenders - Yellow */}
-            {driverTiers.contenders.length > 0 && (
-              <div className="driver-tier contenders">
-                <div className="tier-header">
-                  <span className="tier-label">Contenders</span>
-                  <span className="tier-desc">Could surprise</span>
-                </div>
-                <div className="tier-drivers">
-                  {driverTiers.contenders.map(driver => {
-                    const odds = driverOdds.get(driver.id);
-                    const isSelected = selectedDriver?.id === driver.id;
-                    const hasBet = currentBets.some(b => b.driverId === driver.id);
-                    return (
-                      <button
-                        key={driver.id}
-                        className={`driver-option tier-contender ${isSelected ? 'selected' : ''} ${hasBet ? 'has-bet' : ''}`}
-                        onClick={() => setSelectedDriver(driver)}
-                      >
-                        <span className="driver-emoji">{driver.emoji}</span>
-                        <span className="driver-name">{driver.shortName}</span>
-                        <span className="driver-odds">{odds?.win.toFixed(1)}x</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
+            // Check if bet panel should appear after this driver
+            const showBetPanelAfter = selectedDriver && selectedDriverIndex === index;
 
-            {/* Longshots - Red */}
-            {driverTiers.longshots.length > 0 && (
-              <div className="driver-tier longshots">
-                <div className="tier-header">
-                  <span className="tier-label">Longshots</span>
-                  <span className="tier-desc">Risky business</span>
-                </div>
-                <div className="tier-drivers">
-                  {driverTiers.longshots.map(driver => {
-                    const odds = driverOdds.get(driver.id);
-                    const isSelected = selectedDriver?.id === driver.id;
-                    const hasBet = currentBets.some(b => b.driverId === driver.id);
-                    return (
-                      <button
-                        key={driver.id}
-                        className={`driver-option tier-longshot ${isSelected ? 'selected' : ''} ${hasBet ? 'has-bet' : ''}`}
-                        onClick={() => setSelectedDriver(driver)}
-                      >
-                        <span className="driver-emoji">{driver.emoji}</span>
-                        <span className="driver-name">{driver.shortName}</span>
-                        <span className="driver-odds">{odds?.win.toFixed(1)}x</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Wildcards - Purple */}
-            {driverTiers.wildcards.length > 0 && (
-              <div className="driver-tier wildcards">
-                <div className="tier-header">
-                  <span className="tier-label">Wildcards</span>
-                  <span className="tier-desc">Chaos agents</span>
-                </div>
-                <div className="tier-drivers">
-                  {driverTiers.wildcards.map(driver => {
-                    const odds = driverOdds.get(driver.id);
-                    const isSelected = selectedDriver?.id === driver.id;
-                    const hasBet = currentBets.some(b => b.driverId === driver.id);
-                    return (
-                      <button
-                        key={driver.id}
-                        className={`driver-option tier-wildcard ${isSelected ? 'selected' : ''} ${hasBet ? 'has-bet' : ''}`}
-                        onClick={() => setSelectedDriver(driver)}
-                      >
-                        <span className="driver-emoji">{driver.emoji}</span>
-                        <span className="driver-name">{driver.shortName}</span>
-                        <span className="driver-odds">{odds?.win.toFixed(1)}x</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="bet-builder">
-          {selectedDriver ? (
-            <>
-              <div className="selected-driver-info">
-                <span className="emoji">{selectedDriver.emoji}</span>
-                <span className="name">{selectedDriver.name}</span>
-              </div>
-
-              <div className="bet-type-selector">
-                <h4>Bet Type</h4>
-                <div className="bet-types">
-                  {(['win', 'podium', 'points', 'finishes', 'dnf'] as BetType[]).map(type => {
-                    const odds = driverOdds.get(selectedDriver.id)?.[type] ?? 0;
-                    const count = getBetCountByType(type);
-                    const limit = getBetTypeLimit(type);
-                    const atLimit = count >= limit;
-                    const showCount = limit <= 10;  // Only show count for limited types
-                    return (
-                      <button
-                        key={type}
-                        className={`bet-type ${selectedBetType === type ? 'selected' : ''} ${atLimit ? 'at-limit' : ''}`}
-                        onClick={() => !atLimit && setSelectedBetType(type)}
-                        disabled={atLimit}
-                      >
-                        <span className="type-label">
-                          {getBetTypeLabel(type)}
-                          {showCount && <span className="type-count"> ({count}/{limit})</span>}
-                        </span>
-                        <span className="type-odds">{atLimit ? 'FULL' : `${odds.toFixed(1)}x`}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="bet-amount-selector">
-                <h4>Amount</h4>
-                <div className="amount-controls">
-                  <button onClick={() => setBetAmount(Math.max(1, betAmount - 5))}>-5</button>
-                  <button onClick={() => setBetAmount(Math.max(1, betAmount - 1))}>-1</button>
-                  <span className="amount-display">{betAmount} ṁ</span>
-                  <button onClick={() => setBetAmount(Math.min(remaining, betAmount + 1))}>+1</button>
-                  <button onClick={() => setBetAmount(Math.min(remaining, betAmount + 5))}>+5</button>
-                </div>
-                <div className="quick-amounts">
-                  <button onClick={() => setBetAmount(Math.min(remaining, 10))}>10</button>
-                  <button onClick={() => setBetAmount(Math.min(remaining, 25))}>25</button>
-                  <button onClick={() => setBetAmount(Math.min(remaining, 50))}>50</button>
-                  <button onClick={() => setBetAmount(remaining)}>All</button>
-                </div>
-              </div>
-
-              <div className="potential-payout">
-                {(() => {
-                  const totalOdds = driverOdds.get(selectedDriver.id)?.[selectedBetType] ?? 0;
-                  const baseMultiplier = BASE_MULTIPLIERS[selectedBetType];
-                  const driverMod = totalOdds / baseMultiplier;
-                  const betTypeShort = selectedBetType === 'finishes' ? 'Finish' :
-                                       selectedBetType === 'podium' ? 'Podium' :
-                                       selectedBetType === 'points' ? 'Points' :
-                                       selectedBetType === 'dnf' ? 'DNF' : 'Win';
-                  return (
-                    <>
-                      <div className="payout-breakdown">
-                        <div className="payout-part">
-                          <span className="payout-bet">{betAmount}ṁ</span>
-                          <span className="payout-label">Wager</span>
-                        </div>
-                        <span className="payout-times">×</span>
-                        <div className="payout-part">
-                          <span className="payout-base">{baseMultiplier}×</span>
-                          <span className="payout-label">{betTypeShort}</span>
-                        </div>
-                        <span className="payout-times">×</span>
-                        <div className="payout-part">
-                          <span className="payout-driver">{driverMod.toFixed(2)}×</span>
-                          <span className="payout-label">Driver</span>
-                        </div>
-                      </div>
-                      <div className="payout-result">
-                        <span className="payout-equals">=</span>
-                        <span className="payout-value">{Math.floor(betAmount * totalOdds)} ṁ</span>
-                      </div>
-                    </>
-                  );
-                })()}
-              </div>
-
-              {(() => {
-                const alreadyHasBet = currentBets.some(b => b.driverId === selectedDriver.id);
-                const betTypeAtLimit = isBetTypeAtLimit(selectedBetType);
-                const cannotPlace = remaining <= 0 || betAmount <= 0 || alreadyHasBet || betTypeAtLimit;
-                const buttonText = alreadyHasBet ? 'Already Bet On' :
-                                   betTypeAtLimit ? `${getBetTypeLabel(selectedBetType)} Full` :
-                                   'Place Bet';
-                return (
-                  <button
-                    className="place-bet-btn"
-                    onClick={handlePlaceBet}
-                    disabled={cannotPlace}
-                  >
-                    {buttonText}
-                  </button>
-                );
-              })()}
-            </>
-          ) : (
-            <div className="no-driver-selected">
-              <p>Select a driver to place a bet.</p>
-              <span className="hint">← Pick from the driver list</span>
-              {remaining > 0 && (
+            return (
+              <div key={driver.id} className="wordle-cell-wrapper">
                 <button
-                  className="mister-marbles-btn"
-                  onClick={handleMisterMarblesDecides}
+                  className={`wordle-cell tier-${tier} ${isSelected ? 'selected' : ''} ${hasBet ? 'has-bet' : ''}`}
+                  onClick={() => setSelectedDriver(isSelected ? null : driver)}
+                  disabled={hasBet}
                 >
-                  🔮 Let Mister Marbles Decide
+                  <span className="cell-emoji">{driver.emoji}</span>
+                  <span className="cell-odds">{odds?.win.toFixed(1)}x</span>
+                  {hasBet && <span className="cell-check">✓</span>}
                 </button>
-              )}
-            </div>
-          )}
-        </div>
 
-        <div className="current-bets">
-          <h3>
-            Your Bets
-            {currentBets.length > 0 && <span className="bet-count">{currentBets.length}</span>}
-          </h3>
-          {currentBets.length === 0 ? (
-            <p className="no-bets">Place bets to build your ticket.</p>
-          ) : (
-            <div className="bets-list">
-              {currentBets.map(bet => (
-                <div key={bet.id} className="bet-item">
-                  <div className="bet-item-header">
-                    <span className="bet-driver">{bet.driverEmoji} {bet.driverName}</span>
-                    <button className="remove-bet" onClick={() => onRemoveBet(bet.id)}>×</button>
-                  </div>
-                  <div className="bet-item-details">
-                    <span className="bet-type-label">{getBetTypeLabel(bet.type)}</span>
-                    <div className="bet-item-payout">
-                      <span className="bet-amount">{bet.amount}ṁ</span>
-                      <span className="bet-arrow">→</span>
-                      <span className="bet-potential">{Math.floor(bet.amount * bet.odds)}ṁ</span>
+                {/* Inline Bet Panel - appears below selected driver */}
+                {showBetPanelAfter && (
+                  <div className="inline-bet-panel">
+                    <div className="inline-bet-header">
+                      <span className="inline-driver-name">{selectedDriver.emoji} {selectedDriver.name}</span>
+                      <button className="inline-close" onClick={() => setSelectedDriver(null)}>×</button>
+                    </div>
+
+                    {/* Driver Vibes - Opaque ratings */}
+                    <div className="driver-vibes">
+                      <div className="vibe-ratings">
+                        <div className="vibe-item">
+                          <span className="vibe-label">Driver:</span>
+                          <span className={`vibe-value tier-${driverRatings.get(selectedDriver.id)?.tier}`}>
+                            {driverRatings.get(selectedDriver.id)?.label}
+                          </span>
+                        </div>
+                        <div className="vibe-item">
+                          <span className="vibe-label">Car:</span>
+                          <span className={`vibe-value tier-${carRatings.get(selectedDriver.id)?.tier}`}>
+                            {carRatings.get(selectedDriver.id)?.label}
+                          </span>
+                        </div>
+                      </div>
+                      {selectedDriver.quirk && (
+                        <div className="driver-quirk">
+                          <span className="quirk-tag">⚡ {selectedDriver.quirk}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Bet Type Pills */}
+                    <div className="bet-type-pills">
+                      {(['win', 'podium', 'points', 'finishes', 'dnf'] as BetType[]).map(type => {
+                        const typeOdds = driverOdds.get(selectedDriver.id)?.[type] ?? 0;
+                        const atLimit = isBetTypeAtLimit(type);
+                        return (
+                          <button
+                            key={type}
+                            className={`bet-pill ${selectedBetType === type ? 'selected' : ''} ${atLimit ? 'disabled' : ''}`}
+                            onClick={() => !atLimit && setSelectedBetType(type)}
+                            disabled={atLimit}
+                          >
+                            <span className="pill-label">{getBetTypeLabel(type)}</span>
+                            <span className="pill-desc">{getBetTypeDesc(type)}</span>
+                            <span className="pill-odds">{atLimit ? '—' : `${typeOdds.toFixed(1)}x`}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Amount & Place Bet */}
+                    <div className="inline-bet-actions">
+                      <div className="amount-row">
+                        <button onClick={() => setBetAmount(Math.max(1, betAmount - 10))}>−10</button>
+                        <button onClick={() => setBetAmount(Math.max(1, betAmount - 1))}>−1</button>
+                        <span className="amount-value">{betAmount}ṁ</span>
+                        <button onClick={() => setBetAmount(Math.min(remaining, betAmount + 1))}>+1</button>
+                        <button onClick={() => setBetAmount(Math.min(remaining, betAmount + 10))}>+10</button>
+                      </div>
+                      <div className="quick-row">
+                        <button onClick={() => setBetAmount(Math.min(remaining, 10))}>10</button>
+                        <button onClick={() => setBetAmount(Math.min(remaining, 25))}>25</button>
+                        <button onClick={() => setBetAmount(Math.min(remaining, 50))}>50</button>
+                        <button onClick={() => setBetAmount(remaining)}>All</button>
+                      </div>
+                      <button
+                        className="place-bet-inline"
+                        onClick={handlePlaceBet}
+                        disabled={remaining <= 0 || betAmount <= 0}
+                      >
+                        Place {betAmount}ṁ → {Math.floor(betAmount * (driverOdds.get(selectedDriver.id)?.[selectedBetType] ?? 0))}ṁ
+                      </button>
                     </div>
                   </div>
-                </div>
-              ))}
-              <div className="bets-total">
-                <span className="bets-total-label">Wagered</span>
-                <span className="bets-total-value">{totalWagered} ṁ</span>
+                )}
               </div>
-              <div className="bets-potential-total">
-                <span className="label">Max Payout</span>
-                <span className="value">{currentBets.reduce((sum, b) => sum + Math.floor(b.amount * b.odds), 0)} ṁ</span>
+            );
+          })}
+        </div>
+
+        {/* Bottom Section - Mister Marbles + Current Bets */}
+        <div className="wordle-bottom">
+          {/* Mister Marbles Button - Always Visible */}
+          {remaining > 0 && (
+            <button className="mister-marbles-btn" onClick={handleMisterMarblesDecides}>
+              🔮 Let Mister Marbles Decide ({remaining}ṁ)
+            </button>
+          )}
+
+          {/* Current Bets Summary */}
+          {currentBets.length > 0 && (
+            <div className="bets-summary">
+              <div className="bets-chips">
+                {currentBets.map(bet => (
+                  <div key={bet.id} className="bet-chip">
+                    <span className="chip-emoji">{bet.driverEmoji}</span>
+                    <span className="chip-type">{getBetTypeLabel(bet.type)}</span>
+                    <span className="chip-amount">{bet.amount}→{Math.floor(bet.amount * bet.odds)}</span>
+                    <button className="chip-remove" onClick={() => onRemoveBet(bet.id)}>×</button>
+                  </div>
+                ))}
+              </div>
+              <div className="bets-totals">
+                <span className="total-wagered">{totalWagered}ṁ wagered</span>
+                <span className="total-potential">→ {currentBets.reduce((sum, b) => sum + Math.floor(b.amount * b.odds), 0)}ṁ max</span>
               </div>
             </div>
           )}
         </div>
       </div>
 
+      {/* Footer - Start Race */}
       <div className="betting-footer">
-        {currentBets.length === 0 && (
-          <span className="betting-footer-hint">You can skip betting and just watch the race.</span>
-        )}
         <button
           className={`confirm-bets-btn ${currentBets.length > 0 ? 'has-bets' : ''}`}
           onClick={onConfirmBets}

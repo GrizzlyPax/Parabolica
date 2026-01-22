@@ -1,288 +1,210 @@
 /* ============================================
-   MARBLE MODE STYLES
+   MARBLE MODE STYLES - WORDLE GRID DESIGN
    ============================================ */
 
-/* Betting Interface - Redesigned for clear flow */
-.betting-interface {
+/* Betting Interface - Clean single-page layout */
+.betting-interface.wordle-style {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  padding: 1.5rem 2rem;
+  padding: 1rem;
   background: linear-gradient(180deg, #0a0a0c 0%, #0f0f12 50%, #0a0a0c 100%);
   color: #e8e8e8;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 /* Header - Compact and informative */
-.betting-header {
+.betting-interface.wordle-style .betting-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
-  padding-bottom: 0.75rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
   border-bottom: 1px solid #1a1a20;
 }
 
-.race-info {
+.betting-interface.wordle-style .race-info {
   display: flex;
   align-items: baseline;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
-.race-info .race-number {
-  font-family: 'Inconsolata', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
-  font-size: 0.75rem;
+.betting-interface.wordle-style .race-info .race-number {
+  font-family: 'Inconsolata', monospace;
+  font-size: 0.7rem;
   color: #555;
   text-transform: uppercase;
-  letter-spacing: 2px;
+  letter-spacing: 1px;
 }
 
-.race-info .track-name {
-  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
-  font-size: 1.4rem;
+.betting-interface.wordle-style .race-info .track-name {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 1.2rem;
   font-weight: 600;
   margin: 0;
   color: #ccc;
 }
 
-.marble-status {
+.betting-interface.wordle-style .marble-status {
   display: flex;
-  gap: 1.5rem;
+  gap: 1rem;
 }
 
-.marble-status > div {
+.betting-interface.wordle-style .marble-status > div {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  flex-direction: column;
+  align-items: flex-end;
 }
 
-.marble-status .label {
-  font-size: 0.7rem;
+.betting-interface.wordle-style .marble-status .label {
+  font-size: 0.6rem;
   color: #555;
   text-transform: uppercase;
   letter-spacing: 1px;
 }
 
-.marble-status .value {
-  font-family: 'Inconsolata', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
-  font-size: 1.1rem;
+.betting-interface.wordle-style .marble-status .value {
+  font-family: 'Inconsolata', monospace;
+  font-size: 1rem;
   font-weight: 600;
   color: #d4af37;
 }
 
-.marble-status .race-budget .value {
+.betting-interface.wordle-style .marble-status .race-budget .value {
   color: #7cb;
 }
 
-/* Narrator Box - Subtle, not blocking */
-.narrator-box {
-  background: rgba(15, 15, 18, 0.8);
-  border: 1px solid #1a1a20;
-  border-left: 2px solid #3a3a4a;
-  padding: 0.6rem 1rem;
+/* Narrator Box - Prominent */
+.betting-interface.wordle-style .narrator-box {
+  background: linear-gradient(135deg, rgba(30, 25, 40, 0.9) 0%, rgba(20, 18, 30, 0.95) 100%);
+  border: 1px solid #3a3050;
+  border-left: 3px solid #7c5da3;
+  padding: 1rem 1.25rem;
   margin-bottom: 1rem;
-  font-style: italic;
-  font-size: 0.85rem;
+  border-radius: 6px;
+  box-shadow: 0 2px 15px rgba(124, 93, 163, 0.15);
 }
 
-.narrator-box .narrator-name {
-  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
-  font-size: 0.75rem;
-  color: #666;
-  margin-right: 0.4rem;
-}
-
-.narrator-box .narrator-message {
-  color: #888;
-}
-
-.narrator-box.results {
-  border-left-color: #6a6a7a;
-}
-
-.narrator-box.final {
-  border-left-color: #d4af37;
-  background: rgba(30, 28, 20, 0.9);
-}
-
-/* ============================================
-   BETTING CONTENT - New Flow-Based Layout
-   ============================================ */
-
-.betting-content {
-  display: grid;
-  /* Driver picker is narrower, bet builder is dominant, slip is compact */
-  grid-template-columns: minmax(240px, 280px) minmax(360px, 1fr) minmax(220px, 260px);
-  gap: 1rem;
-  flex: 1;
-  align-items: start;
-}
-
-/* Flow arrows between panels */
-.betting-content::before,
-.betting-content::after {
-  display: none; /* We'll use panel styling for flow instead */
-}
-
-/* Panel Base Styles */
-.driver-grid,
-.bet-builder,
-.current-bets {
-  border-radius: 8px;
-  height: fit-content;
-}
-
-/* ============================================
-   PANEL 1: DRIVER PICKER (Left - Browse)
-   ============================================ */
-
-.driver-grid {
-  background: rgba(12, 12, 14, 0.8);
-  border: 1px solid #1a1a22;
-  padding: 0.75rem;
-}
-
-.driver-grid h3 {
-  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
-  font-size: 0.7rem;
-  color: #555;
-  margin: 0 0 0.6rem 0;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.driver-grid h3::after {
-  content: '→';
-  color: #333;
-  font-size: 0.8rem;
-}
-
-.drivers-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 0.5rem;
-}
-
-.drivers-list.tiered {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-}
-
-/* Driver Tiers - Compact */
-.driver-tier {
-  border-radius: 4px;
-  padding: 0.5rem;
-  background: rgba(18, 18, 22, 0.6);
-}
-
-.tier-header {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+.betting-interface.wordle-style .narrator-box .narrator-name {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 0.9rem;
+  color: #a88fd4;
+  display: block;
   margin-bottom: 0.4rem;
-  padding-bottom: 0.3rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.tier-label {
-  font-family: 'Inconsolata', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
-  font-size: 0.65rem;
-  font-weight: 700;
-  text-transform: uppercase;
+  font-weight: 600;
   letter-spacing: 1px;
 }
 
-.tier-desc {
-  font-size: 0.6rem;
-  color: #444;
+.betting-interface.wordle-style .narrator-box .narrator-message {
+  color: #c8c0d8;
   font-style: italic;
+  font-size: 1rem;
+  line-height: 1.4;
+  display: block;
 }
 
-.tier-drivers {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.25rem;
+/* Betting tip - appears below quote */
+.betting-interface.wordle-style .narrator-box .betting-tip {
+  display: block;
+  margin-top: 0.75rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid rgba(124, 93, 163, 0.3);
+  font-size: 0.8rem;
+  font-style: normal;
+  color: #8a8098;
+  letter-spacing: 0.5px;
 }
 
-/* Tier Colors */
-.driver-tier.favorites {
-  border-left: 2px solid #22c55e;
-  background: rgba(34, 197, 94, 0.03);
-}
+/* ============================================
+   WORDLE MAIN AREA
+   ============================================ */
 
-.driver-tier.favorites .tier-label {
-  color: #22c55e;
-}
-
-.driver-tier.contenders {
-  border-left: 2px solid #eab308;
-  background: rgba(234, 179, 8, 0.03);
-}
-
-.driver-tier.contenders .tier-label {
-  color: #eab308;
-}
-
-.driver-tier.longshots {
-  border-left: 2px solid #f97316;
-  background: rgba(249, 115, 22, 0.03);
-}
-
-.driver-tier.longshots .tier-label {
-  color: #f97316;
-}
-
-.driver-tier.wildcards {
-  border-left: 2px solid #a855f7;
-  background: rgba(168, 85, 247, 0.03);
-}
-
-.driver-tier.wildcards .tier-label {
-  color: #a855f7;
-}
-
-/* Driver Option - Odds-forward */
-.driver-option {
+.wordle-main {
+  flex: 1;
   display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* ============================================
+   WORDLE GRID - The Star of the Show
+   ============================================ */
+
+.wordle-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.5rem;
+  max-width: 600px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.wordle-cell-wrapper {
+  display: contents;
+}
+
+/* Individual Cell - Wordle-inspired square */
+.wordle-cell {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.35rem 0.5rem;
-  background: rgba(20, 20, 24, 0.8);
-  border: 1px solid #222;
-  border-radius: 3px;
+  justify-content: center;
+  gap: 0.15rem;
+  padding: 0.5rem;
+  border: 2px solid #2a2a30;
+  border-radius: 6px;
+  background: rgba(20, 20, 24, 0.9);
   cursor: pointer;
-  transition: all 0.12s ease;
-}
-
-.driver-option:hover {
-  background: rgba(35, 35, 42, 0.9);
-  border-color: #333;
-}
-
-.driver-option.selected {
-  background: rgba(50, 48, 40, 0.9);
-  border-color: #d4af37;
-  box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.3);
-}
-
-.driver-option.has-bet {
+  transition: all 0.15s ease;
   position: relative;
 }
 
-.driver-option.has-bet::after {
-  content: '✓';
+.wordle-cell:hover:not(:disabled) {
+  transform: scale(1.05);
+  border-color: #4a4a50;
+  z-index: 1;
+}
+
+.wordle-cell.selected {
+  border-color: #d4af37;
+  background: rgba(50, 45, 30, 0.95);
+  box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+  transform: scale(1.05);
+  z-index: 2;
+}
+
+.wordle-cell.has-bet {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.wordle-cell.has-bet:hover {
+  transform: none;
+}
+
+/* Cell content */
+.wordle-cell .cell-emoji {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.wordle-cell .cell-odds {
+  font-family: 'Inconsolata', monospace;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.wordle-cell .cell-check {
   position: absolute;
-  top: -4px;
-  right: -4px;
-  width: 14px;
-  height: 14px;
+  top: 4px;
+  right: 4px;
+  width: 16px;
+  height: 16px;
   background: #d4af37;
   border-radius: 50%;
-  font-size: 8px;
+  font-size: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -290,426 +212,314 @@
   font-weight: bold;
 }
 
-.driver-option .driver-emoji {
-  font-size: 0.9rem;
+/* Tier Colors */
+.wordle-cell.tier-favorite {
+  border-color: rgba(34, 197, 94, 0.4);
+  background: rgba(34, 197, 94, 0.08);
 }
+.wordle-cell.tier-favorite .cell-odds { color: #22c55e; }
+.wordle-cell.tier-favorite:hover { border-color: rgba(34, 197, 94, 0.7); }
+.wordle-cell.tier-favorite.selected { border-color: #22c55e; background: rgba(34, 197, 94, 0.15); }
 
-.driver-option .driver-name {
-  flex: 1;
-  font-size: 0.7rem;
-  color: #999;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.wordle-cell.tier-contender {
+  border-color: rgba(234, 179, 8, 0.4);
+  background: rgba(234, 179, 8, 0.08);
 }
+.wordle-cell.tier-contender .cell-odds { color: #eab308; }
+.wordle-cell.tier-contender:hover { border-color: rgba(234, 179, 8, 0.7); }
+.wordle-cell.tier-contender.selected { border-color: #eab308; background: rgba(234, 179, 8, 0.15); }
 
-/* Odds are the star - make them pop */
-.driver-option .driver-odds {
-  font-family: 'Inconsolata', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
-  font-size: 0.8rem;
-  font-weight: 700;
-  min-width: 32px;
-  text-align: right;
+.wordle-cell.tier-longshot {
+  border-color: rgba(249, 115, 22, 0.4);
+  background: rgba(249, 115, 22, 0.08);
 }
+.wordle-cell.tier-longshot .cell-odds { color: #f97316; }
+.wordle-cell.tier-longshot:hover { border-color: rgba(249, 115, 22, 0.7); }
+.wordle-cell.tier-longshot.selected { border-color: #f97316; background: rgba(249, 115, 22, 0.15); }
 
-.driver-option.tier-favorite .driver-odds { color: #22c55e; }
-.driver-option.tier-contender .driver-odds { color: #eab308; }
-.driver-option.tier-longshot .driver-odds { color: #f97316; }
-.driver-option.tier-wildcard .driver-odds { color: #a855f7; }
-
-.driver-option.tier-favorite:hover { border-color: rgba(34, 197, 94, 0.4); }
-.driver-option.tier-contender:hover { border-color: rgba(234, 179, 8, 0.4); }
-.driver-option.tier-longshot:hover { border-color: rgba(249, 115, 22, 0.4); }
-.driver-option.tier-wildcard:hover { border-color: rgba(168, 85, 247, 0.4); }
+.wordle-cell.tier-wildcard {
+  border-color: rgba(168, 85, 247, 0.4);
+  background: rgba(168, 85, 247, 0.08);
+}
+.wordle-cell.tier-wildcard .cell-odds { color: #a855f7; }
+.wordle-cell.tier-wildcard:hover { border-color: rgba(168, 85, 247, 0.7); }
+.wordle-cell.tier-wildcard.selected { border-color: #a855f7; background: rgba(168, 85, 247, 0.15); }
 
 /* ============================================
-   PANEL 2: BET BUILDER (Center - The Action)
+   INLINE BET PANEL - Appears below selected driver
    ============================================ */
 
-.bet-builder {
-  background: linear-gradient(180deg, rgba(20, 18, 15, 0.95) 0%, rgba(15, 14, 12, 0.95) 100%);
-  border: 2px solid #2a2520;
+.inline-bet-panel {
+  grid-column: 1 / -1;
+  background: linear-gradient(180deg, rgba(25, 23, 18, 0.98) 0%, rgba(18, 17, 14, 0.98) 100%);
+  border: 2px solid #3a3530;
   border-radius: 8px;
-  padding: 1.25rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  /* Visual prominence */
-  box-shadow:
-    0 0 0 1px rgba(212, 175, 55, 0.1),
-    0 4px 20px rgba(0, 0, 0, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.03);
-}
-
-/* Empty State */
-.no-driver-selected {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 3rem 2rem;
-  text-align: center;
-}
-
-.no-driver-selected p {
-  color: #555;
-  font-style: italic;
-  margin: 0 0 0.5rem 0;
-}
-
-.no-driver-selected .hint {
-  font-size: 0.75rem;
-  color: #444;
-}
-
-.mister-marbles-btn {
-  margin-top: 1.5rem;
-  padding: 0.75rem 1.25rem;
-  background: linear-gradient(135deg, #2a1f3d 0%, #1f1a2e 100%);
-  border: 1px solid #4c3a6b;
-  border-radius: 8px;
-  color: #a88fd4;
-  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.mister-marbles-btn:hover {
-  background: linear-gradient(135deg, #3a2f4d 0%, #2f2a3e 100%);
-  border-color: #7c5da3;
-  color: #c8b0e8;
-  box-shadow: 0 0 15px rgba(168, 143, 212, 0.2);
-}
-
-.mister-marbles-btn:active {
-  transform: scale(0.98);
-}
-
-/* Selected Driver - Big and Bold */
-.selected-driver-info {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
   padding: 0.75rem;
-  background: rgba(30, 28, 22, 0.8);
-  border: 1px solid #3a3530;
-  border-radius: 6px;
+  margin: 0.25rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  animation: panelSlideIn 0.2s ease-out;
 }
 
-.selected-driver-info .emoji {
-  font-size: 2.5rem;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+@keyframes panelSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.selected-driver-info .name {
-  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
-  font-size: 1.3rem;
+.inline-bet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.inline-driver-name {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 1rem;
   font-weight: 600;
   color: #e8e8e8;
-  flex: 1;
 }
 
-.selected-driver-info .driver-tier-badge {
-  font-family: 'Inconsolata', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
-  font-size: 0.7rem;
-  padding: 0.2rem 0.5rem;
-  border-radius: 3px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-/* Bet Type Selector - Scannable Cards */
-.bet-type-selector {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.bet-type-selector h4 {
-  font-family: 'Inconsolata', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
-  font-size: 0.7rem;
-  color: #555;
-  margin: 0;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.bet-types {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.4rem;
-}
-
-/* Second row spans 2 columns for finishes and dnf */
-.bet-types .bet-type:nth-child(4),
-.bet-types .bet-type:nth-child(5) {
-  grid-column: span 1;
-}
-
-.bet-type {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 0.5rem 0.25rem;
-  background: rgba(25, 24, 22, 0.9);
-  border: 1px solid #2a2a2a;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.bet-type:hover {
-  background: rgba(40, 38, 32, 0.9);
-  border-color: #3a3a3a;
-}
-
-.bet-type.selected {
-  background: rgba(50, 45, 30, 0.95);
-  border-color: #d4af37;
-  box-shadow: 0 0 12px rgba(212, 175, 55, 0.2);
-}
-
-.bet-type .type-label {
-  font-size: 0.75rem;
-  color: #aaa;
-  margin-bottom: 0.15rem;
-}
-
-.bet-type.selected .type-label {
-  color: #e8e8e8;
-}
-
-.bet-type .type-odds {
-  font-family: 'Inconsolata', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
-  font-size: 1.4rem;
-  font-weight: 700;
-  color: #d4af37;
-}
-
-.bet-type .type-count {
-  font-size: 0.65rem;
-  color: #666;
-}
-
-.bet-type.at-limit {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.bet-type.at-limit .type-odds {
-  font-size: 0.9rem;
-  color: #666;
-}
-
-.bet-type.at-limit:hover {
-  background: rgba(25, 24, 22, 0.9);
-  border-color: #2a2a2a;
-}
-
-/* Amount Controls - Clean and Clear */
-.bet-amount-selector {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.bet-amount-selector h4 {
-  font-family: 'Inconsolata', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
-  font-size: 0.7rem;
-  color: #555;
-  margin: 0;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.amount-controls {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: rgba(20, 20, 22, 0.8);
-  border: 1px solid #2a2a2a;
-  border-radius: 6px;
-  padding: 0.5rem;
-}
-
-.amount-controls button {
-  padding: 0.4rem 0.7rem;
-  background: rgba(40, 40, 45, 0.8);
-  border: 1px solid #3a3a3a;
+.inline-close {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: rgba(60, 50, 50, 0.5);
+  border: 1px solid #4a4040;
   border-radius: 4px;
   color: #888;
   cursor: pointer;
-  font-family: 'Inconsolata', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
-  font-size: 0.85rem;
-  transition: all 0.1s ease;
-}
-
-.amount-controls button:hover {
-  background: rgba(60, 60, 65, 0.9);
-  color: #ccc;
-}
-
-.amount-controls button:active {
-  transform: scale(0.95);
-}
-
-.amount-display {
-  flex: 1;
-  text-align: center;
-  font-family: 'Inconsolata', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
-  font-size: 1.6rem;
-  font-weight: 700;
-  color: #d4af37;
-}
-
-.quick-amounts {
+  font-size: 1rem;
   display: flex;
-  gap: 0.4rem;
-}
-
-.quick-amounts button {
-  flex: 1;
-  padding: 0.5rem;
-  background: rgba(25, 25, 28, 0.8);
-  border: 1px solid #2a2a2a;
-  border-radius: 4px;
-  color: #666;
-  cursor: pointer;
-  font-family: 'Inconsolata', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
-  font-size: 0.8rem;
+  align-items: center;
+  justify-content: center;
   transition: all 0.1s ease;
 }
 
-.quick-amounts button:hover {
-  background: rgba(45, 45, 48, 0.9);
-  color: #aaa;
-  border-color: #3a3a3a;
+.inline-close:hover {
+  background: rgba(120, 60, 60, 0.5);
+  border-color: #a55;
+  color: #e88;
 }
 
-/* Potential Payout - Formula Display */
-.potential-payout {
+/* Driver Vibes - Opaque ratings */
+.driver-vibes {
+  background: rgba(20, 20, 25, 0.6);
+  border: 1px solid #2a2a30;
+  border-radius: 6px;
+  padding: 0.6rem 0.8rem;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  padding: 0.75rem 0.5rem;
-  background: linear-gradient(135deg, rgba(50, 45, 25, 0.8) 0%, rgba(40, 35, 20, 0.8) 100%);
-  border: 1px solid #4a4530;
-  border-radius: 6px;
 }
 
-.potential-payout .payout-breakdown {
+.vibe-ratings {
   display: flex;
   justify-content: center;
-  align-items: flex-start;
-  gap: 0.35rem;
-  font-family: 'Inconsolata', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  gap: 1.5rem;
 }
 
-.potential-payout .payout-part {
+.vibe-item {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.15rem;
+  align-items: baseline;
+  gap: 0.4rem;
 }
 
-.potential-payout .payout-label {
-  font-size: 0.6rem;
+.vibe-label {
+  font-family: 'Inconsolata', monospace;
+  font-size: 0.7rem;
   color: #666;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
-.potential-payout .payout-bet {
-  font-size: 1rem;
-  color: #ccc;
-  padding: 0.2rem 0.4rem;
-  background: rgba(100, 100, 100, 0.15);
-  border-radius: 3px;
-}
-
-.potential-payout .payout-times {
-  font-size: 0.85rem;
-  color: #444;
-  margin-top: 0.25rem;
-}
-
-.potential-payout .payout-base {
-  font-size: 1rem;
+.vibe-value {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 0.9rem;
   font-weight: 600;
-  color: #9c9;
-  padding: 0.2rem 0.4rem;
-  background: rgba(100, 150, 100, 0.2);
-  border-radius: 3px;
+  letter-spacing: 0.5px;
 }
 
-.potential-payout .payout-driver {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #99c;
-  padding: 0.2rem 0.4rem;
-  background: rgba(100, 100, 150, 0.2);
-  border-radius: 3px;
+/* Rating tier colors - consistent across the app
+   Purple (legendary) → Green (elite) → Yellow (solid) → Red (hopeless)
+*/
+.vibe-value.tier-legendary {
+  color: #a855f7;
+  text-shadow: 0 0 10px rgba(168, 85, 247, 0.5);
 }
 
-.potential-payout .payout-result {
+.vibe-value.tier-elite {
+  color: #22c55e;
+  text-shadow: 0 0 6px rgba(34, 197, 94, 0.3);
+}
+
+.vibe-value.tier-solid {
+  color: #eab308;
+}
+
+.vibe-value.tier-hopeless {
+  color: #ef4444;
+}
+
+.driver-quirk {
   display: flex;
   justify-content: center;
+}
+
+.driver-quirk .quirk-tag {
+  font-size: 0.75rem;
+  color: #c8a050;
+  font-style: italic;
+  padding: 0.25rem 0.6rem;
+  background: rgba(200, 160, 80, 0.1);
+  border: 1px solid rgba(200, 160, 80, 0.3);
+  border-radius: 12px;
+}
+
+/* Bet Type Pills - Horizontal scrollable on mobile */
+.bet-type-pills {
+  display: flex;
+  gap: 0.4rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+.bet-pill {
+  flex: 1;
+  min-width: 70px;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
-  margin-top: 0.25rem;
-  padding-top: 0.5rem;
-  border-top: 1px solid rgba(100, 90, 60, 0.3);
+  padding: 0.5rem 0.4rem;
+  background: rgba(30, 28, 25, 0.9);
+  border: 1px solid #3a3535;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.12s ease;
 }
 
-.potential-payout .payout-equals {
-  font-family: 'Inconsolata', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+.bet-pill:hover:not(:disabled) {
+  background: rgba(45, 42, 38, 0.95);
+  border-color: #5a5550;
+}
+
+.bet-pill.selected {
+  background: rgba(60, 55, 35, 0.95);
+  border-color: #d4af37;
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.2);
+}
+
+.bet-pill.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.bet-pill .pill-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #ccc;
+}
+
+.bet-pill .pill-desc {
+  font-size: 0.6rem;
+  color: #666;
+}
+
+.bet-pill .pill-odds {
+  font-family: 'Inconsolata', monospace;
   font-size: 1rem;
-  color: #555;
-}
-
-.potential-payout .payout-value {
-  font-family: 'Inconsolata', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
-  font-size: 1.4rem;
   font-weight: 700;
   color: #d4af37;
-  text-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+  margin-top: 0.15rem;
 }
 
-/* PLACE BET BUTTON - Dominant Action */
-.place-bet-btn {
-  padding: 1rem 1.5rem;
+.bet-pill.selected .pill-label {
+  color: #fff;
+}
+
+/* Amount Controls */
+.inline-bet-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.amount-row,
+.quick-row {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.amount-row button,
+.quick-row button {
+  flex: 1;
+  padding: 0.5rem;
+  background: rgba(35, 35, 38, 0.9);
+  border: 1px solid #3a3a3a;
+  border-radius: 4px;
+  color: #888;
+  cursor: pointer;
+  font-family: 'Inconsolata', monospace;
+  font-size: 0.8rem;
+  transition: all 0.1s ease;
+  min-height: 36px;
+}
+
+.amount-row button:hover,
+.quick-row button:hover {
+  background: rgba(55, 55, 58, 0.95);
+  color: #ccc;
+  border-color: #5a5a5a;
+}
+
+.amount-row button:active,
+.quick-row button:active {
+  transform: scale(0.95);
+}
+
+.amount-value {
+  flex: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Inconsolata', monospace;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #d4af37;
+  background: rgba(25, 25, 28, 0.8);
+  border-radius: 4px;
+}
+
+/* Place Bet Button */
+.place-bet-inline {
+  padding: 0.75rem;
   background: linear-gradient(180deg, #5a5030 0%, #4a4025 50%, #3a3020 100%);
   border: 2px solid #7a7040;
   border-radius: 6px;
   color: #d4af37;
-  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
-  font-size: 1.1rem;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 0.95rem;
   font-weight: 600;
-  letter-spacing: 1px;
   cursor: pointer;
   transition: all 0.2s ease;
   text-transform: uppercase;
-  box-shadow:
-    0 2px 8px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  letter-spacing: 0.5px;
 }
 
-.place-bet-btn:hover:not(:disabled) {
+.place-bet-inline:hover:not(:disabled) {
   background: linear-gradient(180deg, #6a6040 0%, #5a5035 50%, #4a4030 100%);
   border-color: #9a9050;
-  box-shadow:
-    0 4px 15px rgba(212, 175, 55, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15);
-  transform: translateY(-1px);
+  box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
 }
 
-.place-bet-btn:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-.place-bet-btn:disabled {
+.place-bet-inline:disabled {
   opacity: 0.35;
   cursor: not-allowed;
   background: #2a2a2a;
@@ -718,237 +528,365 @@
 }
 
 /* ============================================
-   PANEL 3: BET SLIP (Right - Your Ticket)
+   BOTTOM SECTION - Mister Marbles + Bets
    ============================================ */
 
-.current-bets {
-  background: rgba(12, 12, 14, 0.8);
-  border: 1px solid #1a1a22;
-  border-radius: 8px;
-  padding: 0.75rem;
+.wordle-bottom {
   display: flex;
   flex-direction: column;
+  gap: 0.75rem;
+  margin-top: auto;
+  padding-top: 0.75rem;
+  border-top: 1px solid #1a1a20;
 }
 
-.current-bets h3 {
-  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
-  font-size: 0.7rem;
-  color: #555;
-  margin: 0 0 0.5rem 0;
-  text-transform: uppercase;
-  letter-spacing: 2px;
+/* Mister Marbles Button */
+.betting-interface.wordle-style .mister-marbles-btn {
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, #2a1f3d 0%, #1f1a2e 100%);
+  border: 1px solid #4c3a6b;
+  border-radius: 8px;
+  color: #a88fd4;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.betting-interface.wordle-style .mister-marbles-btn:hover {
+  background: linear-gradient(135deg, #3a2f4d 0%, #2f2a3e 100%);
+  border-color: #7c5da3;
+  color: #c8b0e8;
+  box-shadow: 0 0 15px rgba(168, 143, 212, 0.2);
+}
+
+/* Bets Summary */
+.bets-summary {
+  background: rgba(18, 18, 22, 0.8);
+  border: 1px solid #252528;
+  border-radius: 6px;
+  padding: 0.6rem;
+}
+
+.bets-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+}
+
+.bet-chip {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-}
-
-.current-bets h3 .bet-count {
-  background: #d4af37;
-  color: #000;
-  font-size: 0.6rem;
-  font-weight: 700;
-  padding: 0.1rem 0.4rem;
-  border-radius: 10px;
-  font-family: 'Inconsolata', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
-}
-
-.no-bets {
-  color: #444;
-  font-style: italic;
-  font-size: 0.8rem;
-  text-align: center;
-  padding: 2rem 1rem;
-}
-
-.bets-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  flex: 1;
-}
-
-/* Individual Bet Item - Reactive Card */
-.bet-item {
-  display: flex;
-  flex-direction: column;
   gap: 0.3rem;
-  padding: 0.6rem 0.7rem;
-  background: rgba(22, 22, 26, 0.9);
-  border: 1px solid #252528;
+  padding: 0.35rem 0.5rem;
+  background: rgba(30, 28, 25, 0.9);
+  border: 1px solid #3a3530;
   border-left: 3px solid #d4af37;
   border-radius: 4px;
   font-size: 0.75rem;
-  animation: betSlideIn 0.2s ease-out;
 }
 
-@keyframes betSlideIn {
-  from {
-    opacity: 0;
-    transform: translateX(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+.bet-chip .chip-emoji {
+  font-size: 0.9rem;
 }
 
-.bet-item-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+.bet-chip .chip-type {
+  color: #888;
+  font-size: 0.65rem;
+  text-transform: uppercase;
 }
 
-.bet-driver {
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: #ccc;
+.bet-chip .chip-amount {
+  font-family: 'Inconsolata', monospace;
+  color: #d4af37;
+  font-weight: 600;
 }
 
-.remove-bet {
+.bet-chip .chip-remove {
   width: 18px;
   height: 18px;
   padding: 0;
+  margin-left: 0.2rem;
   background: transparent;
-  border: 1px solid #333;
+  border: 1px solid #3a3535;
   border-radius: 3px;
-  color: #555;
+  color: #666;
   cursor: pointer;
   font-size: 0.8rem;
-  line-height: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.1s ease;
 }
 
-.remove-bet:hover {
-  background: rgba(180, 60, 60, 0.3);
+.bet-chip .chip-remove:hover {
+  background: rgba(150, 60, 60, 0.4);
   border-color: #a55;
   color: #e88;
 }
 
-.bet-item-details {
+.bets-totals {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-}
-
-.bet-type-label {
-  font-size: 0.7rem;
-  color: #666;
-  text-transform: uppercase;
-}
-
-.bet-item-payout {
-  display: flex;
-  align-items: baseline;
-  gap: 0.3rem;
-}
-
-.bet-amount {
-  font-family: 'Inconsolata', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
-  font-size: 0.75rem;
-  color: #888;
-}
-
-.bet-arrow {
-  color: #444;
-  font-size: 0.7rem;
-}
-
-.bet-potential {
-  font-family: 'Inconsolata', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #d4af37;
-}
-
-/* Bets Total - Summary Footer */
-.bets-total {
-  margin-top: auto;
-  padding-top: 0.6rem;
+  font-family: 'Inconsolata', monospace;
+  font-size: 0.8rem;
+  padding-top: 0.4rem;
   border-top: 1px solid #252528;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
 }
 
-.bets-total-label {
-  font-size: 0.7rem;
-  color: #555;
-  text-transform: uppercase;
-}
-
-.bets-total-value {
-  font-family: 'Inconsolata', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
-  font-size: 0.9rem;
-  color: #aaa;
-}
-
-/* Potential Total */
-.bets-potential-total {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 0.4rem;
-  padding: 0.5rem;
-  background: rgba(40, 35, 20, 0.5);
-  border-radius: 4px;
-}
-
-.bets-potential-total .label {
-  font-size: 0.7rem;
+.bets-totals .total-wagered {
   color: #888;
 }
 
-.bets-potential-total .value {
-  font-family: 'Inconsolata', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
-  font-size: 1rem;
-  font-weight: 600;
+.bets-totals .total-potential {
   color: #d4af37;
+  font-weight: 600;
 }
 
 /* ============================================
-   BETTING FOOTER
+   FOOTER
    ============================================ */
 
-.betting-footer {
-  margin-top: 1rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid #1a1a20;
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 1rem;
+.betting-interface.wordle-style .betting-footer {
+  margin-top: 0.75rem;
+  padding-top: 0.5rem;
 }
 
-.betting-footer-hint {
-  font-size: 0.75rem;
-  color: #444;
-  font-style: italic;
-}
-
-.confirm-bets-btn {
-  padding: 0.85rem 2.5rem;
+.betting-interface.wordle-style .confirm-bets-btn {
+  width: 100%;
+  padding: 0.9rem;
   background: linear-gradient(180deg, #2a3530 0%, #1a2520 100%);
   border: 1px solid #3a4540;
   border-radius: 6px;
   color: #7cb;
-  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: 'Cinzel', Georgia, serif;
   font-size: 1rem;
   cursor: pointer;
   transition: all 0.2s ease;
   letter-spacing: 1px;
 }
 
-.confirm-bets-btn:hover {
+.betting-interface.wordle-style .confirm-bets-btn:hover {
   background: linear-gradient(180deg, #3a4540 0%, #2a3530 100%);
   box-shadow: 0 0 15px rgba(100, 200, 180, 0.2);
 }
 
-.confirm-bets-btn.has-bets {
+.betting-interface.wordle-style .confirm-bets-btn.has-bets {
   background: linear-gradient(180deg, #304035 0%, #203025 100%);
   border-color: #4a5a50;
+}
+
+/* ============================================
+   RESPONSIVE - Mobile
+   ============================================ */
+
+@media (max-width: 640px) {
+  .betting-interface.wordle-style {
+    padding: 0.5rem;
+  }
+
+  .betting-interface.wordle-style .betting-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.3rem;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.4rem;
+  }
+
+  .betting-interface.wordle-style .race-info {
+    gap: 0.5rem;
+  }
+
+  .betting-interface.wordle-style .race-info .track-name {
+    font-size: 1rem;
+  }
+
+  .betting-interface.wordle-style .marble-status {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .betting-interface.wordle-style .marble-status > div {
+    flex-direction: row;
+    gap: 0.3rem;
+    align-items: baseline;
+  }
+
+  .betting-interface.wordle-style .narrator-box {
+    padding: 0.75rem 0.9rem;
+    margin-bottom: 0.75rem;
+    border-radius: 5px;
+  }
+
+  .betting-interface.wordle-style .narrator-box .narrator-name {
+    font-size: 0.8rem;
+    margin-bottom: 0.3rem;
+  }
+
+  .betting-interface.wordle-style .narrator-box .narrator-message {
+    font-size: 0.9rem;
+  }
+
+  .betting-interface.wordle-style .narrator-box .betting-tip {
+    font-size: 0.7rem;
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+  }
+
+  /* 4 columns on mobile for tighter grid */
+  .wordle-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.35rem;
+  }
+
+  .wordle-cell {
+    padding: 0.3rem;
+    border-radius: 4px;
+    border-width: 1.5px;
+  }
+
+  .wordle-cell .cell-emoji {
+    font-size: 1.2rem;
+  }
+
+  .wordle-cell .cell-odds {
+    font-size: 0.7rem;
+  }
+
+  .wordle-cell .cell-check {
+    width: 12px;
+    height: 12px;
+    font-size: 8px;
+    top: 2px;
+    right: 2px;
+  }
+
+  /* Inline bet panel - tighter */
+  .inline-bet-panel {
+    padding: 0.5rem;
+    gap: 0.5rem;
+    margin: 0.2rem 0;
+  }
+
+  .inline-driver-name {
+    font-size: 0.9rem;
+  }
+
+  .inline-close {
+    width: 32px;
+    height: 32px;
+  }
+
+  /* Driver vibes - tighter on mobile */
+  .driver-vibes {
+    padding: 0.5rem 0.6rem;
+    gap: 0.4rem;
+  }
+
+  .vibe-ratings {
+    gap: 1rem;
+  }
+
+  .vibe-label {
+    font-size: 0.6rem;
+  }
+
+  .vibe-value {
+    font-size: 0.8rem;
+  }
+
+  .driver-quirk .quirk-tag {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.5rem;
+  }
+
+  .bet-type-pills {
+    gap: 0.3rem;
+  }
+
+  .bet-pill {
+    min-width: 60px;
+    padding: 0.4rem 0.3rem;
+  }
+
+  .bet-pill .pill-label {
+    font-size: 0.65rem;
+  }
+
+  .bet-pill .pill-desc {
+    font-size: 0.55rem;
+  }
+
+  .bet-pill .pill-odds {
+    font-size: 0.85rem;
+  }
+
+  .amount-row button,
+  .quick-row button {
+    padding: 0.4rem;
+    font-size: 0.75rem;
+    min-height: 40px;
+  }
+
+  .amount-value {
+    font-size: 1.1rem;
+  }
+
+  .place-bet-inline {
+    padding: 0.65rem;
+    font-size: 0.85rem;
+  }
+
+  /* Bottom section */
+  .wordle-bottom {
+    gap: 0.5rem;
+    padding-top: 0.5rem;
+  }
+
+  .betting-interface.wordle-style .mister-marbles-btn {
+    padding: 0.65rem;
+    font-size: 0.85rem;
+  }
+
+  .bets-summary {
+    padding: 0.5rem;
+  }
+
+  .bets-chips {
+    gap: 0.3rem;
+  }
+
+  .bet-chip {
+    padding: 0.3rem 0.4rem;
+    font-size: 0.7rem;
+  }
+
+  .bet-chip .chip-emoji {
+    font-size: 0.8rem;
+  }
+
+  .bet-chip .chip-remove {
+    width: 22px;
+    height: 22px;
+  }
+
+  .bets-totals {
+    font-size: 0.75rem;
+  }
+
+  .betting-interface.wordle-style .confirm-bets-btn {
+    padding: 0.75rem;
+    font-size: 0.9rem;
+  }
+}
+
+/* Extra small screens */
+@media (max-width: 360px) {
+  .wordle-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 /* ============================================
@@ -966,7 +904,7 @@
 }
 
 .race-results h2 {
-  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: 'Cinzel', Georgia, serif;
   font-size: 1.8rem;
   margin-bottom: 1.5rem;
 }
@@ -975,6 +913,23 @@
   max-width: 600px;
   width: 100%;
   margin-bottom: 2rem;
+  background: rgba(15, 15, 18, 0.8);
+  border: 1px solid #1a1a20;
+  border-left: 2px solid #6a6a7a;
+  padding: 0.6rem 1rem;
+  font-style: italic;
+  font-size: 0.85rem;
+}
+
+.race-results .narrator-box .narrator-name {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 0.75rem;
+  color: #666;
+  margin-right: 0.4rem;
+}
+
+.race-results .narrator-box .narrator-message {
+  color: #888;
 }
 
 .results-list {
@@ -1017,18 +972,18 @@
 }
 
 .result-position {
-  font-family: 'Inconsolata', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: 'Inconsolata', monospace;
   color: #aaa;
 }
 
 .result-outcome .win {
-  font-family: 'Inconsolata', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: 'Inconsolata', monospace;
   color: #6c8;
   font-weight: 600;
 }
 
 .result-outcome .loss {
-  font-family: 'Inconsolata', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: 'Inconsolata', monospace;
   color: #a66;
 }
 
@@ -1052,7 +1007,7 @@
   display: flex;
   justify-content: space-between;
   padding: 0.5rem 0;
-  font-family: 'Inconsolata', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: 'Inconsolata', monospace;
 }
 
 .summary-row.net {
@@ -1085,7 +1040,7 @@
   border: 1px solid #4a4540;
   border-radius: 6px;
   color: #d4af37;
-  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: 'Cinzel', Georgia, serif;
   font-size: 1.1rem;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -1111,7 +1066,7 @@
 }
 
 .season-tally h1 {
-  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: 'Cinzel', Georgia, serif;
   font-size: 2.2rem;
   letter-spacing: 3px;
   margin-bottom: 1.5rem;
@@ -1121,6 +1076,23 @@
   max-width: 600px;
   width: 100%;
   margin-bottom: 2rem;
+  background: rgba(30, 28, 20, 0.9);
+  border: 1px solid #1a1a20;
+  border-left: 2px solid #d4af37;
+  padding: 0.6rem 1rem;
+  font-style: italic;
+  font-size: 0.85rem;
+}
+
+.season-tally .narrator-box .narrator-name {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 0.75rem;
+  color: #666;
+  margin-right: 0.4rem;
+}
+
+.season-tally .narrator-box .narrator-message {
+  color: #888;
 }
 
 .final-score {
@@ -1131,7 +1103,7 @@
 }
 
 .final-score .score-value {
-  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: 'Cinzel', Georgia, serif;
   font-size: 4rem;
   font-weight: 700;
   color: #d4af37;
@@ -1139,7 +1111,7 @@
 }
 
 .final-score .score-label {
-  font-family: 'Inconsolata', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: 'Inconsolata', monospace;
   font-size: 1rem;
   color: #888;
   text-transform: uppercase;
@@ -1166,7 +1138,7 @@
 }
 
 .stat .stat-value {
-  font-family: 'Inconsolata', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: 'Inconsolata', monospace;
   font-size: 1.4rem;
   color: #ccc;
 }
@@ -1186,7 +1158,7 @@
 }
 
 .race-history h3 {
-  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: 'Cinzel', Georgia, serif;
   font-size: 1rem;
   color: #888;
   margin-bottom: 1rem;
@@ -1215,7 +1187,7 @@
 }
 
 .history-row .race-net {
-  font-family: 'Inconsolata', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: 'Inconsolata', monospace;
   font-size: 0.9rem;
 }
 
@@ -1233,7 +1205,7 @@
   border: 1px solid #6a6530;
   border-radius: 6px;
   color: #d4af37;
-  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: 'Cinzel', Georgia, serif;
   font-size: 1.2rem;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -1249,7 +1221,7 @@
    ============================================ */
 
 .bet-indicator {
-  font-family: 'Inconsolata', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: 'Inconsolata', monospace;
   font-size: 0.7rem;
   padding: 0.1rem 0.3rem;
   border-radius: 2px;
@@ -1267,192 +1239,135 @@
 }
 
 /* ============================================
-   RESPONSIVE
+   RESPONSIVE - Results & Tally
    ============================================ */
 
-@media (max-width: 1000px) {
-  .betting-content {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-
-  .tier-drivers {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-/* Mobile phone breakpoint */
 @media (max-width: 640px) {
-  .betting-interface {
-    padding: 1rem;
-  }
-
-  .betting-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.75rem;
-  }
-
-  .race-info .track-name {
-    font-size: 1.2rem;
-  }
-
-  .marble-status {
-    gap: 1rem;
-    width: 100%;
-    justify-content: flex-start;
-  }
-
-  .marble-status .value {
-    font-size: 1rem;
-  }
-
-  .narrator-box {
-    padding: 0.5rem 0.75rem;
-    font-size: 0.8rem;
-  }
-
-  /* Driver grid - 2 columns on mobile */
-  .tier-drivers {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .driver-option {
-    padding: 0.5rem;
-    min-height: 44px; /* Touch target */
-  }
-
-  .driver-option .driver-name {
-    font-size: 0.65rem;
-  }
-
-  /* Bet builder */
-  .bet-builder {
-    padding: 1rem;
-  }
-
-  .selected-driver-info .emoji {
-    font-size: 2rem;
-  }
-
-  .selected-driver-info .name {
-    font-size: 1.1rem;
-  }
-
-  /* Bet types - 2 columns on mobile */
-  .bet-types {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .bet-type {
-    padding: 0.6rem 0.4rem;
-    min-height: 44px; /* Touch target */
-  }
-
-  .bet-type .type-odds {
-    font-size: 1.2rem;
-  }
-
-  /* Amount controls */
-  .amount-display {
-    font-size: 1.4rem;
-  }
-
-  .amount-controls button {
-    padding: 0.5rem 0.8rem;
-    min-height: 44px; /* Touch target */
-  }
-
-  .quick-amounts button {
-    padding: 0.6rem;
-    min-height: 44px; /* Touch target */
-  }
-
-  /* Place bet button - larger on mobile */
-  .place-bet-btn {
-    padding: 1rem;
-    font-size: 1rem;
-    width: 100%;
-  }
-
-  /* Current bets panel */
-  .bet-item {
-    padding: 0.75rem;
-  }
-
-  .remove-bet {
-    width: 24px;
-    height: 24px;
-    min-width: 44px;
-    min-height: 44px;
-  }
-
-  /* Footer */
-  .betting-footer {
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .confirm-bets-btn {
-    width: 100%;
-    padding: 1rem;
-  }
-
-  /* Results screen */
   .race-results {
-    padding: 2rem 1rem;
+    padding: 1.5rem 0.75rem;
   }
 
   .race-results h2 {
-    font-size: 1.4rem;
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+  }
+
+  .race-results .narrator-box {
+    margin-bottom: 1.5rem;
+  }
+
+  .results-list {
+    gap: 0.4rem;
+    margin-bottom: 1.5rem;
   }
 
   .result-item {
     grid-template-columns: 1fr auto;
-    gap: 0.5rem;
+    gap: 0.4rem;
+    padding: 0.6rem 0.75rem;
+  }
+
+  .result-driver {
+    font-size: 0.85rem;
   }
 
   .result-type,
   .result-position {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
+  }
+
+  .results-summary {
+    padding: 1rem;
+  }
+
+  .summary-row {
+    padding: 0.4rem 0;
+    font-size: 0.85rem;
+  }
+
+  .summary-row.net {
+    font-size: 1rem;
+  }
+
+  .summary-row.bankroll {
+    font-size: 1.1rem;
   }
 
   .continue-btn {
     width: 100%;
-    padding: 1rem;
+    padding: 0.85rem;
+    font-size: 1rem;
   }
 
-  /* Season tally */
   .season-tally {
-    padding: 2rem 1rem;
+    padding: 1.5rem 0.75rem;
   }
 
   .season-tally h1 {
-    font-size: 1.6rem;
-    letter-spacing: 2px;
+    font-size: 1.5rem;
+    letter-spacing: 1px;
+    margin-bottom: 1rem;
+  }
+
+  .season-tally .narrator-box {
+    margin-bottom: 1.5rem;
+  }
+
+  .final-score {
+    margin-bottom: 2rem;
   }
 
   .final-score .score-value {
-    font-size: 3rem;
+    font-size: 2.5rem;
+  }
+
+  .final-score .score-label {
+    font-size: 0.85rem;
   }
 
   .season-stats {
-    gap: 0.75rem;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
   }
 
   .stat {
-    padding: 0.75rem 1rem;
-    min-width: 80px;
+    padding: 0.6rem 0.8rem;
+    min-width: 70px;
+  }
+
+  .stat .stat-value {
+    font-size: 1.1rem;
+  }
+
+  .stat .stat-label {
+    font-size: 0.6rem;
+  }
+
+  .race-history {
+    margin-bottom: 1.5rem;
+  }
+
+  .race-history h3 {
+    font-size: 0.9rem;
+  }
+
+  .history-row {
+    padding: 0.5rem 0.6rem;
+    margin-bottom: 0.3rem;
+  }
+
+  .history-row .race-track {
+    font-size: 0.8rem;
+  }
+
+  .history-row .race-bets,
+  .history-row .race-net {
+    font-size: 0.75rem;
   }
 
   .new-season-btn {
     width: 100%;
-    padding: 1rem;
-  }
-
-  /* Mister Marbles button */
-  .mister-marbles-btn {
-    width: 100%;
-    padding: 1rem;
+    padding: 0.85rem;
+    font-size: 1rem;
   }
 }

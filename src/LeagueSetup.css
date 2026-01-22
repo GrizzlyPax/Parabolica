@@ -118,7 +118,334 @@
   border-radius: 3px;
 }
 
-/* Team Cards Layout */
+/* ============================================
+   WORDLE-STYLE LINEUP GRID
+   ============================================ */
+
+.wordle-lineup .lineup-hint {
+  font-size: 0.85rem;
+  color: #666;
+  font-style: italic;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.lineup-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.5rem;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.lineup-cell-wrapper {
+  display: contents;
+}
+
+.lineup-cell {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  padding: 0.4rem;
+  border: 2px solid var(--team-color, #2a2a30);
+  border-radius: 6px;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--team-color) 15%, #14141a) 0%,
+    rgba(20, 20, 24, 0.95) 100%
+  );
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+}
+
+.lineup-cell:hover {
+  transform: scale(1.05);
+  border-color: var(--team-color, #4a4a50);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--team-color) 25%, #14141a) 0%,
+    rgba(30, 30, 34, 0.95) 100%
+  );
+  box-shadow: 0 0 12px color-mix(in srgb, var(--team-color) 30%, transparent);
+  z-index: 1;
+}
+
+.lineup-cell.expanded {
+  border-color: var(--team-color, #666);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--team-color) 30%, #14141a) 0%,
+    rgba(35, 35, 40, 0.98) 100%
+  );
+  box-shadow: 0 0 20px color-mix(in srgb, var(--team-color) 40%, transparent);
+  transform: scale(1.05);
+  z-index: 2;
+}
+
+.lineup-cell.chosen {
+  border-color: #ffd700 !important;
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.3);
+}
+
+.lineup-cell.cursed {
+  border-color: #e74c3c !important;
+  box-shadow: 0 0 12px rgba(231, 76, 60, 0.3);
+}
+
+.lineup-cell .cell-emoji {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.lineup-cell .cell-name {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 0.55rem;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.2;
+  max-width: 100%;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.lineup-cell .cell-car-vibe {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 0.45rem;
+  font-weight: 500;
+  margin-top: 0.05rem;
+}
+
+/* Cell actions (star/skull) */
+.lineup-cell .cell-actions {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  display: flex;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.lineup-cell:hover .cell-actions,
+.lineup-cell .cell-actions:has(.active) {
+  opacity: 1;
+}
+
+.lineup-cell .cell-action {
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  font-size: 10px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid #444;
+  border-radius: 3px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.1s ease;
+}
+
+.lineup-cell .cell-action.star.active {
+  background: rgba(255, 215, 0, 0.3);
+  border-color: #ffd700;
+}
+
+.lineup-cell .cell-action.skull.active {
+  background: rgba(231, 76, 60, 0.3);
+  border-color: #e74c3c;
+}
+
+/* Expanded detail panel */
+.lineup-detail-panel {
+  grid-column: 1 / -1;
+  background: linear-gradient(180deg, rgba(25, 25, 28, 0.98) 0%, rgba(18, 18, 22, 0.98) 100%);
+  border: 2px solid #3a3a40;
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 0.25rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  animation: panelSlideIn 0.2s ease-out;
+}
+
+@keyframes panelSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.detail-team-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.detail-emoji {
+  font-size: 2rem;
+}
+
+.detail-team-info {
+  flex: 1;
+}
+
+.detail-team-info h3 {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.detail-team-info .detail-desc {
+  font-size: 0.8rem;
+  color: #777;
+  font-style: italic;
+  margin: 0.25rem 0 0 0;
+}
+
+.detail-close {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: rgba(60, 50, 50, 0.5);
+  border: 1px solid #4a4040;
+  border-radius: 4px;
+  color: #888;
+  cursor: pointer;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.1s ease;
+}
+
+.detail-close:hover {
+  background: rgba(120, 60, 60, 0.5);
+  border-color: #a55;
+  color: #e88;
+}
+
+/* Car section in detail panel */
+.detail-car {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(30, 30, 35, 0.6);
+  border: 1px solid #333;
+  border-radius: 4px;
+}
+
+.detail-car-name {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 0.9rem;
+  color: #ccc;
+}
+
+.detail-car-rating {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* Drivers section in detail panel */
+.detail-drivers {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.detail-driver {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(25, 25, 30, 0.8);
+  border: 1px solid #2a2a30;
+  border-radius: 4px;
+}
+
+.driver-main-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.driver-slot-badge {
+  font-family: 'Inconsolata', monospace;
+  font-size: 0.7rem;
+  color: #666;
+  padding: 0.15rem 0.4rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+.driver-slot-badge[data-slot="1"] {
+  color: #aaa;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.driver-fullname {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 0.9rem;
+  color: #ddd;
+  font-weight: 600;
+}
+
+.driver-vibe {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.driver-quirk-text {
+  width: 100%;
+  font-size: 0.75rem;
+  color: #888;
+  font-style: italic;
+  margin: 0.25rem 0 0 0;
+}
+
+/* Team tag in detail panel */
+.detail-team-tag {
+  padding-top: 0.5rem;
+  border-top: 1px solid #333;
+}
+
+/* Rating tier colors - consistent across the app
+   Purple (legendary) → Green (elite) → Yellow (solid) → Red (hopeless)
+*/
+.tier-legendary {
+  color: #a855f7 !important;
+  text-shadow: 0 0 8px rgba(168, 85, 247, 0.4);
+}
+
+.tier-elite {
+  color: #22c55e !important;
+  text-shadow: 0 0 6px rgba(34, 197, 94, 0.3);
+}
+
+.tier-solid {
+  color: #eab308 !important;
+}
+
+.tier-hopeless {
+  color: #ef4444 !important;
+}
+
+/* Legacy Team Cards Layout (keeping for backwards compatibility) */
 .kingdoms-list {
   display: flex;
   flex-direction: column;
@@ -1096,5 +1423,95 @@
   .race-preview {
     justify-content: center;
     text-align: center;
+  }
+
+  /* Wordle lineup responsive */
+  .lineup-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.35rem;
+  }
+
+  .lineup-cell {
+    padding: 0.35rem;
+    border-radius: 4px;
+    border-width: 1.5px;
+  }
+
+  .lineup-cell .cell-emoji {
+    font-size: 1.2rem;
+  }
+
+  .lineup-cell .cell-name {
+    font-size: 0.5rem;
+    line-height: 1.1;
+  }
+
+  .lineup-cell .cell-car-vibe {
+    font-size: 0.4rem;
+  }
+
+  .lineup-cell .cell-actions {
+    top: 2px;
+    right: 2px;
+  }
+
+  .lineup-cell .cell-action {
+    width: 16px;
+    height: 16px;
+    font-size: 9px;
+  }
+
+  .lineup-detail-panel {
+    padding: 0.75rem;
+    gap: 0.6rem;
+  }
+
+  .detail-emoji {
+    font-size: 1.5rem;
+  }
+
+  .detail-team-info h3 {
+    font-size: 1rem;
+  }
+
+  .detail-team-info .detail-desc {
+    font-size: 0.75rem;
+  }
+
+  .detail-car {
+    padding: 0.4rem 0.6rem;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .detail-car-name {
+    font-size: 0.8rem;
+  }
+
+  .detail-car-rating {
+    font-size: 0.75rem;
+  }
+
+  .detail-driver {
+    padding: 0.4rem 0.6rem;
+    gap: 0.4rem;
+  }
+
+  .driver-fullname {
+    font-size: 0.8rem;
+  }
+
+  .driver-vibe {
+    font-size: 0.7rem;
+  }
+
+  .driver-quirk-text {
+    font-size: 0.7rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .lineup-grid {
+    grid-template-columns: repeat(3, 1fr);
   }
 }
