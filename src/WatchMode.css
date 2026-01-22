@@ -199,26 +199,6 @@
   filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.5)) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
 }
 
-/* Favorite/Rival indicator rings on track */
-.favorite-ring {
-  stroke: #ffd700;
-  opacity: 0.6;
-  stroke-dasharray: 4 2;
-  animation: ringRotate 3s linear infinite;
-}
-
-.rival-ring {
-  stroke: #e74c3c;
-  opacity: 0.6;
-  stroke-dasharray: 4 2;
-  animation: ringRotate 3s linear infinite reverse;
-}
-
-@keyframes ringRotate {
-  from { transform-origin: center; stroke-dashoffset: 0; }
-  to { transform-origin: center; stroke-dashoffset: 24; }
-}
-
 /* Power effect visuals on track */
 .power-glow {
   animation: powerPulse 0.5s ease-out infinite alternate;
@@ -1198,18 +1178,6 @@
   position: relative;
 }
 
-/* Favorite driver highlighting */
-.leaderboard-row.favorite-driver {
-  background: linear-gradient(90deg, rgba(255, 215, 0, 0.15) 0%, rgba(18, 18, 18, 0.4) 100%);
-  border-left: 3px solid #ffd700;
-}
-
-/* Rival driver highlighting */
-.leaderboard-row.rival-driver {
-  background: linear-gradient(90deg, rgba(231, 76, 60, 0.15) 0%, rgba(18, 18, 18, 0.4) 100%);
-  border-left: 3px solid #e74c3c;
-}
-
 .leaderboard-badge {
   position: relative;
   width: 24px;
@@ -1232,21 +1200,6 @@
 .leaderboard-badge[data-slot="2"] {
   background: var(--team-color);
   border: 2px solid var(--team-color-dark, #222);
-}
-
-.driver-marker-icon {
-  position: absolute;
-  font-size: 0.5rem;
-  top: -4px;
-  right: -6px;
-}
-
-.favorite-icon {
-  color: #ffd700;
-}
-
-.rival-icon {
-  color: #e74c3c;
 }
 
 .leaderboard-leader,

@@ -189,16 +189,6 @@
   box-shadow: 0 0 12px rgba(74, 136, 102, 0.3);
 }
 
-.league-setup.betting-style .wordle-cell.chosen {
-  border-color: #ffd700 !important;
-  box-shadow: 0 0 12px rgba(255, 215, 0, 0.3);
-}
-
-.league-setup.betting-style .wordle-cell.cursed {
-  border-color: #e74c3c !important;
-  box-shadow: 0 0 12px rgba(231, 76, 60, 0.3);
-}
-
 .league-setup.betting-style .wordle-cell .cell-emoji {
   font-size: 1.4rem;
   line-height: 1;
@@ -757,16 +747,6 @@
   z-index: 2;
 }
 
-.lineup-cell.chosen {
-  border-color: #ffd700 !important;
-  box-shadow: 0 0 12px rgba(255, 215, 0, 0.3);
-}
-
-.lineup-cell.cursed {
-  border-color: #e74c3c !important;
-  box-shadow: 0 0 12px rgba(231, 76, 60, 0.3);
-}
-
 .lineup-cell .cell-emoji {
   font-size: 1.4rem;
   line-height: 1;
@@ -1034,16 +1014,6 @@
 .kingdom-card:hover {
   background: #1f1f1f;
   border-color: #444;
-}
-
-.kingdom-card.chosen-kingdom {
-  background: rgba(255, 215, 0, 0.05);
-  border-color: #ffd700;
-}
-
-.kingdom-card.cursed-kingdom {
-  background: rgba(231, 76, 60, 0.05);
-  border-color: #e74c3c;
 }
 
 .kingdom-header {
@@ -1376,60 +1346,6 @@
   border-radius: 3px;
   cursor: pointer;
   transition: all 0.15s ease;
-}
-
-.chosen-btn {
-  background: transparent;
-  border: 1px solid #444;
-  color: #555;
-}
-
-.chosen-btn:hover {
-  background: rgba(255, 215, 0, 0.1);
-  border-color: #ffd700;
-  color: #ffd700;
-}
-
-.chosen-btn.active {
-  background: rgba(255, 215, 0, 0.15);
-  border-color: #ffd700;
-  color: #ffd700;
-}
-
-.cursed-btn {
-  background: transparent;
-  border: 1px solid #444;
-  color: #555;
-}
-
-.cursed-btn:hover {
-  background: rgba(231, 76, 60, 0.1);
-  border-color: #e74c3c;
-  color: #e74c3c;
-}
-
-.cursed-btn.active {
-  background: rgba(231, 76, 60, 0.15);
-  border-color: #e74c3c;
-  color: #e74c3c;
-}
-
-/* Driver row states for chosen/cursed */
-.driver-row.chosen-one {
-  background: rgba(255, 215, 0, 0.05);
-}
-
-.driver-row.cursed-one {
-  background: rgba(231, 76, 60, 0.05);
-}
-
-/* Footer preview styles */
-.preview-chosen {
-  color: #ffd700;
-}
-
-.preview-cursed {
-  color: #e74c3c;
 }
 
 .driver-details-expanded {

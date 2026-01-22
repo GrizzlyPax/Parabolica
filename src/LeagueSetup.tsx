@@ -105,7 +105,7 @@ function getCarTier(car: GeneratedCar): RatingTier {
 }
 
 interface LeagueSetupProps {
-  onStartRace: (favoriteTeamId: string | null, rivalTeamId: string | null, prohibitionMode: boolean) => void;
+  onStartRace: (prohibitionMode: boolean) => void;
   // Season mode - use specific teams and track
   seasonKingdomIds?: string[];
   seasonTrack?: Track;
@@ -137,9 +137,6 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
 
   const [selectedDriver, setSelectedDriver] = useState<GeneratedDriver | null>(null);
   const [activeTab, setActiveTab] = useState<'roster' | 'track'>('roster');
-  // Team selection for favorites/rivals
-  const [chosenTeamId, setChosenTeamId] = useState<string | null>(null);
-  const [cursedTeamId, setCursedTeamId] = useState<string | null>(null);
   // Prohibition mode (no gambling) - defaults to false (gambling enabled)
   const [prohibitionMode, setProhibitionMode] = useState(false);
 
@@ -183,34 +180,6 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
     setRoster(generateRosterFromTeams(teamIds));
     setCars(generateCarsForKingdoms(teamIds));
     setSelectedDriver(null);
-    setChosenTeamId(null);
-    setCursedTeamId(null);
-  };
-
-  const handleChosenTeamClick = (teamId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (chosenTeamId === teamId) {
-      setChosenTeamId(null);
-    } else {
-      setChosenTeamId(teamId);
-      // If this team was the cursed one, clear that
-      if (cursedTeamId === teamId) {
-        setCursedTeamId(null);
-      }
-    }
-  };
-
-  const handleCursedTeamClick = (teamId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (cursedTeamId === teamId) {
-      setCursedTeamId(null);
-    } else {
-      setCursedTeamId(teamId);
-      // If this team was the chosen one, clear that
-      if (chosenTeamId === teamId) {
-        setChosenTeamId(null);
-      }
-    }
   };
 
   const handleStartRace = () => {
@@ -263,8 +232,7 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
       totalLaps: track.laps,
     });
 
-    // Pass team IDs directly (powers now affect whole team)
-    onStartRace(chosenTeamId, cursedTeamId, prohibitionMode);
+    onStartRace(prohibitionMode);
   };
 
   return (
@@ -275,7 +243,7 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
         <span className="narrator-message">
           "{activeTeams.length} teams assembled. {roster.length} drivers ready. {track.emoji} {track.name} awaits."
         </span>
-        <span className="setup-tip">Tap a team to see their drivers. Star your favorites, skull your rivals.</span>
+        <span className="setup-tip">Tap a team to see their drivers and car details.</span>
       </div>
 
       {/* Tabs */}
@@ -303,8 +271,6 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
           <div className="wordle-grid teams-grid">
             {activeTeams.map(team => {
               const carRating = carRatings.get(team.id) || null;
-              const isChosen = chosenTeamId === team.id;
-              const isCursed = cursedTeamId === team.id;
               const isSelected = selectedDriver?.kingdomId === team.id;
               const drivers = getTeamDrivers(team.id);
               const displayName = team.name.startsWith('The ')
@@ -314,7 +280,7 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
               return (
                 <button
                   key={team.id}
-                  className={`wordle-cell team-cell ${isChosen ? 'chosen' : ''} ${isCursed ? 'cursed' : ''} ${isSelected ? 'selected' : ''}`}
+                  className={`wordle-cell team-cell ${isSelected ? 'selected' : ''}`}
                   onClick={() => setSelectedDriver(isSelected ? null : drivers[0])}
                   style={{ '--team-color': team.color } as React.CSSProperties}
                 >
@@ -325,22 +291,6 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
                       {carRating.label}
                     </span>
                   )}
-                  <div className="cell-actions">
-                    <button
-                      className={`cell-action star ${isChosen ? 'active' : ''}`}
-                      onClick={(e) => handleChosenTeamClick(team.id, e)}
-                      title="Follow this team"
-                    >
-                      {isChosen ? '⭐' : '☆'}
-                    </button>
-                    <button
-                      className={`cell-action skull ${isCursed ? 'active' : ''}`}
-                      onClick={(e) => handleCursedTeamClick(team.id, e)}
-                      title="Mark as rival"
-                    >
-                      {isCursed ? '💀' : '☠'}
-                    </button>
-                  </div>
                 </button>
               );
             })}

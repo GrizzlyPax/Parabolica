@@ -16,8 +16,6 @@ interface WatchModeProps {
   raceState: RaceState;
   trackInfo: TrackInfo | null;
   onNextRace?: () => void;
-  favoriteKingdomId?: string | null;
-  rivalKingdomId?: string | null;
   powerActivation?: PowerActivation | null;
   raceEvents?: RaceEvent[];  // For track event notifications
   activeBets?: Bet[];  // Marble Mode: current bets to display in timing tower
@@ -225,7 +223,7 @@ const TRACK_THEMES: Record<string, { bg: string; trackColor: string; accent: str
 
 const DEFAULT_THEME = { bg: 'linear-gradient(135deg, #0d0d0d 0%, #1a1018 50%, #0d0d0d 100%)', trackColor: '#2a2535', accent: '#3a3545' };
 
-function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, favoriteKingdomId, rivalKingdomId, powerActivation, raceEvents, activeBets }: WatchModeProps) {
+function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, powerActivation, raceEvents, activeBets }: WatchModeProps) {
   const trackLength = config.lapLength;
   const totalLaps = config.totalLaps;
 
@@ -875,15 +873,9 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, favorite
       8000
     );
 
-    // Set visual effect on track - target the whole kingdom/team
-    const targetKingdom = powerActivation.power.category === 'blessing'
-      ? favoriteKingdomId
-      : powerActivation.power.category === 'curse'
-        ? rivalKingdomId
-        : null; // God powers affect random/all
-
+    // Set visual effect on track
     setActivePowerEffect({
-      targetKingdomId: targetKingdom ?? null,
+      targetKingdomId: null,
       category: powerActivation.power.category,
       expiresAt: Date.now() + 3000, // Visual effect lasts 3 seconds
     });
@@ -894,7 +886,7 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, favorite
     }, 3000);
 
     return () => clearTimeout(timer);
-  }, [powerActivation, favoriteKingdomId, rivalKingdomId]);
+  }, [powerActivation]);
 
   // Get theme based on track emoji
   const theme = trackInfo ? (TRACK_THEMES[trackInfo.emoji] || DEFAULT_THEME) : DEFAULT_THEME;
@@ -1429,13 +1421,10 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, favorite
               return stints;
             })();
 
-            const isFavorite = driver.kingdomId === favoriteKingdomId;
-            const isRival = driver.kingdomId === rivalKingdomId;
-
             return (
               <div
                 key={driver.id}
-                className={`leaderboard-row ${isFinished ? 'finished' : ''} ${isDNF ? 'dnf' : ''} ${isPitting ? 'pitting' : ''} ${isFavorite ? 'favorite-driver' : ''} ${isRival ? 'rival-driver' : ''}`}
+                className={`leaderboard-row ${isFinished ? 'finished' : ''} ${isDNF ? 'dnf' : ''} ${isPitting ? 'pitting' : ''}`}
               >
                 <span className="leaderboard-pos">
                   {isFinished ? `#${finishPos + 1}` : isDNF ? 'DNF' : `${index + 1}`}
@@ -1450,8 +1439,6 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, favorite
                   } as React.CSSProperties}
                 >
                   {driver.emoji}
-                  {isFavorite && <span className="driver-marker-icon favorite-icon">⭐</span>}
-                  {isRival && <span className="driver-marker-icon rival-icon">💀</span>}
                 </span>
                 <span
                   className={`leaderboard-name clickable ${expandedDriverId === driver.id ? 'expanded' : ''}`}
@@ -1877,8 +1864,6 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, favorite
           {driverPositions.map(({ driver, x, y }) => {
             const rank = getPositionRank(driver.id);
             const isTop3 = rank !== null;
-            const isFavorite = driver.kingdomId === favoriteKingdomId;
-            const isRival = driver.kingdomId === rivalKingdomId;
             const hasPowerEffect = activePowerEffect && (
               activePowerEffect.targetKingdomId === driver.kingdomId ||
               (activePowerEffect.category === 'god' && activePowerEffect.targetKingdomId === null)
@@ -1912,17 +1897,6 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, favorite
                       strokeWidth="2"
                     />
                   </>
-                )}
-                {/* Favorite/Rival indicator ring */}
-                {(isFavorite || isRival) && !hasPowerEffect && !isTop3 && (
-                  <circle
-                    cx={0}
-                    cy={0}
-                    r="16"
-                    className={isFavorite ? 'favorite-ring' : 'rival-ring'}
-                    fill="none"
-                    strokeWidth="2"
-                  />
                 )}
                 {/* Position ring for top 3 (gold/silver/bronze) */}
                 {isTop3 && (

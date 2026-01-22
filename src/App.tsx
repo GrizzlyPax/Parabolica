@@ -41,10 +41,6 @@ function App() {
   const [seasonTracks, setSeasonTracks] = useState<Track[]>([]);
   const [currentSeasonTrackIndex, setCurrentSeasonTrackIndex] = useState(0);
 
-  // Selected favorite/rival kingdoms for highlighting
-  const [favoriteKingdomId, setFavoriteKingdomId] = useState<string | null>(null);
-  const [rivalKingdomId, setRivalKingdomId] = useState<string | null>(null);
-
   // Race events for track event notifications
   const [raceEvents, setRaceEvents] = useState<RaceEvent[]>([]);
 
@@ -136,7 +132,7 @@ function App() {
     setScreen('setup');
   };
 
-  const handleStartRace = (favoriteKingdom: string | null, rivalKingdom: string | null, prohibitionMode: boolean) => {
+  const handleStartRace = (prohibitionMode: boolean) => {
     setTrackInfo(engine.getTrackInfo());
 
     // Initialize season state with driver IDs if this is a season and not yet initialized
@@ -144,10 +140,6 @@ function App() {
       const driverIds = engine.getDrivers().map(d => d.id);
       setSeasonState(createInitialSeasonState(seasonState.totalRaces, driverIds));
     }
-
-    // Set selections (can be null - they're optional)
-    setFavoriteKingdomId(favoriteKingdom);
-    setRivalKingdomId(rivalKingdom);
 
     // Prohibition mode disables marble mode (gambling)
     const gamblingEnabled = !prohibitionMode;
@@ -233,8 +225,6 @@ function App() {
   const handleBackToMainMenu = () => {
     engine.stop();
     engine.reset();
-    setFavoriteKingdomId(null);
-    setRivalKingdomId(null);
     setSeasonState(null);
     setShowCountdown(false);
     // Reset marble mode state
@@ -602,8 +592,6 @@ function App() {
           raceState={raceState}
           trackInfo={trackInfo}
           onNextRace={handleNextRace}
-          favoriteKingdomId={favoriteKingdomId}
-          rivalKingdomId={rivalKingdomId}
           raceEvents={raceEvents}
           activeBets={marbleModeEnabled ? marbleState.currentBets : undefined}
         />
