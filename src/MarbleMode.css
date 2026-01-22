@@ -212,7 +212,10 @@
   font-weight: bold;
 }
 
-/* Tier Colors */
+/* Betting Tier Colors (based on odds, not skill)
+   Low odds = favorite (safe bet, low payout)
+   High odds = longshot (risky bet, high payout)
+*/
 .wordle-cell.tier-favorite {
   border-color: rgba(34, 197, 94, 0.4);
   background: rgba(34, 197, 94, 0.08);
@@ -222,28 +225,28 @@
 .wordle-cell.tier-favorite.selected { border-color: #22c55e; background: rgba(34, 197, 94, 0.15); }
 
 .wordle-cell.tier-contender {
+  border-color: rgba(56, 189, 248, 0.4);
+  background: rgba(56, 189, 248, 0.08);
+}
+.wordle-cell.tier-contender .cell-odds { color: #38bdf8; }
+.wordle-cell.tier-contender:hover { border-color: rgba(56, 189, 248, 0.7); }
+.wordle-cell.tier-contender.selected { border-color: #38bdf8; background: rgba(56, 189, 248, 0.15); }
+
+.wordle-cell.tier-longshot {
   border-color: rgba(234, 179, 8, 0.4);
   background: rgba(234, 179, 8, 0.08);
 }
-.wordle-cell.tier-contender .cell-odds { color: #eab308; }
-.wordle-cell.tier-contender:hover { border-color: rgba(234, 179, 8, 0.7); }
-.wordle-cell.tier-contender.selected { border-color: #eab308; background: rgba(234, 179, 8, 0.15); }
-
-.wordle-cell.tier-longshot {
-  border-color: rgba(249, 115, 22, 0.4);
-  background: rgba(249, 115, 22, 0.08);
-}
-.wordle-cell.tier-longshot .cell-odds { color: #f97316; }
-.wordle-cell.tier-longshot:hover { border-color: rgba(249, 115, 22, 0.7); }
-.wordle-cell.tier-longshot.selected { border-color: #f97316; background: rgba(249, 115, 22, 0.15); }
+.wordle-cell.tier-longshot .cell-odds { color: #eab308; }
+.wordle-cell.tier-longshot:hover { border-color: rgba(234, 179, 8, 0.7); }
+.wordle-cell.tier-longshot.selected { border-color: #eab308; background: rgba(234, 179, 8, 0.15); }
 
 .wordle-cell.tier-wildcard {
-  border-color: rgba(168, 85, 247, 0.4);
-  background: rgba(168, 85, 247, 0.08);
+  border-color: rgba(239, 68, 68, 0.4);
+  background: rgba(239, 68, 68, 0.08);
 }
-.wordle-cell.tier-wildcard .cell-odds { color: #a855f7; }
-.wordle-cell.tier-wildcard:hover { border-color: rgba(168, 85, 247, 0.7); }
-.wordle-cell.tier-wildcard.selected { border-color: #a855f7; background: rgba(168, 85, 247, 0.15); }
+.wordle-cell.tier-wildcard .cell-odds { color: #ef4444; }
+.wordle-cell.tier-wildcard:hover { border-color: rgba(239, 68, 68, 0.7); }
+.wordle-cell.tier-wildcard.selected { border-color: #ef4444; background: rgba(239, 68, 68, 0.15); }
 
 /* ============================================
    INLINE BET PANEL - Appears below selected driver
