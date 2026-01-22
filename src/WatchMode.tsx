@@ -1,7 +1,7 @@
 import { Driver, RaceConfig, RaceState, TrackInfo, TireCompound, RaceEvent } from './RaceEngine';
 import { ticksToShortTime, formatGap } from './utils/raceTime';
 import { useMemo, useRef, useEffect, useState } from 'react';
-import { Bet, calculateLiveBetStatus } from './MarbleMode';
+import { Bet, calculateLiveBetStatus, resolveBets } from './MarbleMode';
 import './WatchMode.css';
 
 export interface PowerActivation {
@@ -358,6 +358,23 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, powerAct
     if (sortedFinished[1]) lines.push(`🥈 ${sortedFinished[1].emoji} ${sortedFinished[1].name}`);
     if (sortedFinished[2]) lines.push(`🥉 ${sortedFinished[2].emoji} ${sortedFinished[2].name}`);
 
+    // Betting results (if any bets were placed)
+    if (activeBets && activeBets.length > 0) {
+      const resolved = resolveBets(activeBets, drivers, raceState);
+      const totalWagered = resolved.reduce((sum, b) => sum + b.amount, 0);
+      const totalPayout = resolved.reduce((sum, b) => sum + b.payout, 0);
+      const netChange = totalPayout - totalWagered;
+      const wins = resolved.filter(b => b.won).length;
+      const losses = resolved.filter(b => !b.won).length;
+
+      lines.push('');
+      // Show win/loss boxes like Wordle
+      const resultBoxes = resolved.map(b => b.won ? '🟩' : '🟥').join('');
+      lines.push(resultBoxes);
+      const netEmoji = netChange >= 0 ? '📈' : '📉';
+      lines.push(`${netEmoji} ${netChange >= 0 ? '+' : ''}${netChange} marbles (${wins}W/${losses}L)`);
+    }
+
     lines.push('');
 
     // Stats line
@@ -367,7 +384,7 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, powerAct
     lines.push(statsLine.join(' • '));
 
     lines.push('');
-    lines.push('parabolica.game');
+    lines.push('playparabolica.com');
 
     return lines.join('\n');
   };

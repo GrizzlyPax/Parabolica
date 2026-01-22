@@ -1085,17 +1085,27 @@ export function SeasonTally({
     const netChange = totalWon - totalWagered;
     const netEmoji = netChange >= 0 ? '📈' : '📉';
 
+    // Generate race-by-race result boxes (like Wordle)
+    const raceBoxes = seasonHistory.map(race => {
+      if (race.bets.length === 0) return '⬜'; // No bets
+      const wins = race.bets.filter(b => b.won).length;
+      const total = race.bets.length;
+      if (wins === total) return '🟩'; // All wins
+      if (wins === 0) return '🟥'; // All losses
+      return '🟨'; // Mixed
+    }).join('');
+
     const lines: string[] = [
       '🏁 PARABOLICA 🏁',
       `Season Complete`,
       '',
-      `🎰 ${finalBankroll.toLocaleString()} Marbles`,
+      raceBoxes,
       '',
-      `📊 ${seasonHistory.length} races`,
+      `🎰 ${finalBankroll.toLocaleString()} Marbles`,
       `🎲 ${totalBetsPlaced} bets (${winRate}% win rate)`,
       `${netEmoji} ${netChange >= 0 ? '+' : ''}${netChange.toLocaleString()} ṁ`,
       '',
-      'parabolica.game',
+      'playparabolica.com',
     ];
 
     const shareText = lines.join('\n');
