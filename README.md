@@ -224,12 +224,6 @@ Same place! Describe what you'd like to see and why it would be fun.
 
 ---
 
-## License
-
-MIT License. Do what you want with it.
-
----
-
 ## Credits
 
 Created by [@GrizzlyPax](https://github.com/GrizzlyPax)
