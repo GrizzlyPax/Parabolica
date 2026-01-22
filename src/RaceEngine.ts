@@ -313,6 +313,10 @@ class RaceEngine {
   private intervalId: number | null = null;
   private isRunning = false;
   private config: RaceConfig = { ...DEFAULT_CONFIG };
+
+  // Render throttling: cap UI updates to ~30fps regardless of simulation speed
+  private lastNotifyTime: number = 0;
+  private readonly MIN_NOTIFY_INTERVAL = 33; // ms (~30fps)
   private raceState: RaceState = {
     totalTicks: 0,
     currentLeader: null,
@@ -651,6 +655,7 @@ class RaceEngine {
   start(): void {
     if (this.isRunning) return;
     this.isRunning = true;
+    this.lastNotifyTime = 0; // Reset throttle on race start
 
     this.intervalId = window.setInterval(() => {
       this.tick();
@@ -2382,9 +2387,18 @@ class RaceEngine {
       this.raceEvents = this.raceEvents.slice(-500);
     }
 
-    this.notifyListeners();
-    this.notifyStateListeners();
-    this.notifyEventListeners();
+    // Throttle UI updates to ~30fps for smooth rendering at high simulation speeds
+    // Always notify on race finish to ensure final state is captured
+    const now = performance.now();
+    const shouldNotify = this.raceState.raceFinished ||
+                         (now - this.lastNotifyTime >= this.MIN_NOTIFY_INTERVAL);
+
+    if (shouldNotify) {
+      this.lastNotifyTime = now;
+      this.notifyListeners();
+      this.notifyStateListeners();
+      this.notifyEventListeners();
+    }
   }
 
   isRaceRunning(): boolean {
