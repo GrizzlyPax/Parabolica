@@ -261,12 +261,30 @@ function App() {
   };
 
   const handleNextRace = () => {
-    // If marble mode is enabled and race just finished, show results first
+    // If marble mode is enabled and race just finished, record betting results
+    // (Results are now shown in the finish modal, so we don't need a separate screen)
     if (marbleModeEnabled && raceState?.raceFinished && marbleState.currentBets.length > 0 && screen === 'race') {
       const resolved = resolveBets(marbleState.currentBets, drivers, raceState);
-      setResolvedBets(resolved);
-      setScreen('race-results');
-      return;
+      const totalWagered = resolved.reduce((sum, b) => sum + b.amount, 0);
+      const totalWon = resolved.reduce((sum, b) => sum + b.payout, 0);
+      const netChange = totalWon - totalWagered;
+
+      // Record this race's betting results
+      const raceResult: SeasonRaceResult = {
+        raceIndex: currentRaceNumber - 1,
+        trackName: trackInfo?.name || 'Unknown Track',
+        bets: resolved,
+        totalWagered,
+        totalWon,
+        netChange,
+      };
+
+      setMarbleState(prev => ({
+        ...prev,
+        bankroll: prev.bankroll + netChange,
+        seasonHistory: [...prev.seasonHistory, raceResult],
+        currentBets: [],
+      }));
     }
 
     // Record race results for season mode

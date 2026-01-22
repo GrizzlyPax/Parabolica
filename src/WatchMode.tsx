@@ -2445,6 +2445,49 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, powerAct
               </div>
             )}
 
+            {/* Betting Results - show if any bets were placed */}
+            {activeBets && activeBets.length > 0 && (() => {
+              const resolved = resolveBets(activeBets, drivers, raceState);
+              const totalWagered = resolved.reduce((sum, b) => sum + b.amount, 0);
+              const totalPayout = resolved.reduce((sum, b) => sum + b.payout, 0);
+              const netChange = totalPayout - totalWagered;
+              const wins = resolved.filter(b => b.won).length;
+              const losses = resolved.filter(b => !b.won).length;
+
+              return (
+                <div className="finish-betting-results">
+                  <div className="betting-results-header">
+                    <span className="betting-icon">🎰</span>
+                    <span className="betting-title">Your Bets</span>
+                  </div>
+                  <div className="betting-results-list">
+                    {resolved.map(bet => (
+                      <div key={bet.id} className={`betting-result-item ${bet.won ? 'won' : 'lost'}`}>
+                        <span className="bet-driver">{bet.driverEmoji}</span>
+                        <span className="bet-type">{bet.type}</span>
+                        <span className="bet-outcome">
+                          {bet.won ? `+${bet.payout - bet.amount}` : `-${bet.amount}`} ṁ
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className={`betting-results-summary ${netChange >= 0 ? 'positive' : 'negative'}`}>
+                    <span className="summary-boxes">
+                      {resolved.map((b, i) => (
+                        <span key={i} className={`result-box ${b.won ? 'won' : 'lost'}`}>
+                          {b.won ? '🟩' : '🟥'}
+                        </span>
+                      ))}
+                    </span>
+                    <span className="summary-net">
+                      {netChange >= 0 ? '📈' : '📉'} {netChange >= 0 ? '+' : ''}{netChange} ṁ
+                      <span className="summary-record">({wins}W/{losses}L)</span>
+                    </span>
+                  </div>
+                </div>
+              );
+            })()}
+
             <div className="finish-modal-buttons">
               <button className="share-btn" onClick={handleShare}>
                 {shareCopied ? '✓ Copied!' : '📋 Share'}

@@ -1889,6 +1889,127 @@
   transform: translateY(0);
 }
 
+/* Betting Results in Finish Modal */
+.finish-betting-results {
+  background: linear-gradient(135deg, rgba(30, 25, 40, 0.95) 0%, rgba(20, 18, 30, 0.98) 100%);
+  border: 1px solid #3a3050;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 1rem;
+  width: 100%;
+  max-width: 320px;
+}
+
+.betting-results-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(124, 93, 163, 0.3);
+}
+
+.betting-results-header .betting-icon {
+  font-size: 1.2rem;
+}
+
+.betting-results-header .betting-title {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 0.9rem;
+  color: #a88fd4;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.betting-results-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+}
+
+.betting-result-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+.betting-result-item.won {
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.betting-result-item.lost {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.betting-result-item .bet-driver {
+  font-size: 1rem;
+}
+
+.betting-result-item .bet-type {
+  flex: 1;
+  color: #999;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}
+
+.betting-result-item .bet-outcome {
+  font-family: 'Inconsolata', monospace;
+  font-weight: 600;
+}
+
+.betting-result-item.won .bet-outcome {
+  color: #22c55e;
+}
+
+.betting-result-item.lost .bet-outcome {
+  color: #ef4444;
+}
+
+.betting-results-summary {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(124, 93, 163, 0.3);
+}
+
+.betting-results-summary .summary-boxes {
+  display: flex;
+  gap: 0.25rem;
+  font-size: 1.1rem;
+}
+
+.betting-results-summary .summary-net {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.betting-results-summary.positive .summary-net {
+  color: #22c55e;
+}
+
+.betting-results-summary.negative .summary-net {
+  color: #ef4444;
+}
+
+.betting-results-summary .summary-record {
+  font-size: 0.8rem;
+  color: #888;
+  font-weight: 400;
+}
+
 /* Responsive: stack on smaller screens */
 @media (max-width: 900px) {
   .watch-mode {
@@ -2038,6 +2159,56 @@
   .finish-modal-buttons {
     flex-direction: column;
     gap: 0.75rem;
+  }
+
+  /* Betting results mobile */
+  .finish-betting-results {
+    padding: 0.75rem;
+    margin-top: 0.75rem;
+    max-width: 100%;
+  }
+
+  .betting-results-header {
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.35rem;
+  }
+
+  .betting-results-header .betting-icon {
+    font-size: 1rem;
+  }
+
+  .betting-results-header .betting-title {
+    font-size: 0.8rem;
+  }
+
+  .betting-results-list {
+    gap: 0.3rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .betting-result-item {
+    padding: 0.25rem 0.4rem;
+    font-size: 0.8rem;
+  }
+
+  .betting-result-item .bet-driver {
+    font-size: 0.9rem;
+  }
+
+  .betting-result-item .bet-type {
+    font-size: 0.65rem;
+  }
+
+  .betting-results-summary .summary-boxes {
+    font-size: 0.9rem;
+  }
+
+  .betting-results-summary .summary-net {
+    font-size: 0.95rem;
+  }
+
+  .betting-results-summary .summary-record {
+    font-size: 0.7rem;
   }
 }
 
