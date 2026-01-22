@@ -122,15 +122,6 @@ export interface RaceState {
   unsafetyCarCooldownUntilLap: number;  // Can't deploy again until leader reaches this lap
 }
 
-export interface TickLog {
-  tick: number;
-  driverId: number;
-  driverName: string;
-  factors: TickFactors;
-  newPosition: number;
-  lap: number;
-}
-
 // === TIRE SYSTEM TYPES ===
 
 export type TireCompound = 'soft' | 'medium' | 'hard';
@@ -222,12 +213,6 @@ export interface RaceEvent {
   magnitude: number;  // 0-1 significance
 }
 
-// Position snapshot for tracking history
-export interface PositionSnapshot {
-  tick: number;
-  positions: Array<{ driverId: number; rank: number; distance: number }>;
-}
-
 // Track info for display purposes
 import type { TrackEventTrigger, TrackEventEffect } from './generators/tracks';
 
@@ -270,7 +255,6 @@ export interface ActiveTrackEffect {
 
 type RaceListener = (drivers: Driver[]) => void;
 type EventListener = (events: RaceEvent[]) => void;
-type PositionListener = (snapshots: PositionSnapshot[]) => void;
 
 // Default driver data (fallback when no generated roster)
 // Stats use compressed ranges: baseSpeed/accel/endurance: 0.85-1.15, consistency/luck/aggression: 0.3-0.8
@@ -318,7 +302,6 @@ function selectStartingTires(stats: DriverStats): TireCompound {
 
 type StateListener = (state: RaceState) => void;
 type ConfigListener = (config: RaceConfig) => void;
-type LogListener = (logs: TickLog[]) => void;
 
 class RaceEngine {
   private static instance: RaceEngine | null = null;
@@ -326,9 +309,7 @@ class RaceEngine {
   private listeners: Set<RaceListener> = new Set();
   private stateListeners: Set<StateListener> = new Set();
   private configListeners: Set<ConfigListener> = new Set();
-  private logListeners: Set<LogListener> = new Set();
   private eventListeners: Set<EventListener> = new Set();
-  private positionListeners: Set<PositionListener> = new Set();
   private intervalId: number | null = null;
   private isRunning = false;
   private config: RaceConfig = { ...DEFAULT_CONFIG };
@@ -348,9 +329,7 @@ class RaceEngine {
     unsafetyCarWaitingForLeader: false,
     unsafetyCarCooldownUntilLap: 0,
   };
-  private tickLogs: TickLog[] = [];
   private raceEvents: RaceEvent[] = [];
-  private positionHistory: PositionSnapshot[] = [];
   private lapStartTick: Map<number, number> = new Map(); // driverId -> tick when current lap started
   private previousPositions: Map<number, number> = new Map(); // driverId -> previous rank (for overtake detection)
   private trackInfo: TrackInfo | null = null;
@@ -503,14 +482,10 @@ class RaceEngine {
       unsafetyCarWaitingForLeader: false,
       unsafetyCarCooldownUntilLap: 0,
     };
-    this.tickLogs = [];
     this.raceEvents = [];
-    this.positionHistory = [];
     this.notifyListeners();
     this.notifyStateListeners();
-    this.notifyLogListeners();
     this.notifyEventListeners();
-    this.notifyPositionListeners();
   }
 
   subscribe(listener: RaceListener): () => void {
@@ -531,22 +506,10 @@ class RaceEngine {
     return () => this.configListeners.delete(listener);
   }
 
-  subscribeToLogs(listener: LogListener): () => void {
-    this.logListeners.add(listener);
-    listener(this.tickLogs);
-    return () => this.logListeners.delete(listener);
-  }
-
   subscribeToEvents(listener: EventListener): () => void {
     this.eventListeners.add(listener);
     listener(this.raceEvents);
     return () => this.eventListeners.delete(listener);
-  }
-
-  subscribeToPositions(listener: PositionListener): () => void {
-    this.positionListeners.add(listener);
-    listener(this.positionHistory);
-    return () => this.positionListeners.delete(listener);
   }
 
   private notifyListeners(): void {
@@ -562,16 +525,8 @@ class RaceEngine {
     this.configListeners.forEach(listener => listener({ ...this.config }));
   }
 
-  private notifyLogListeners(): void {
-    this.logListeners.forEach(listener => listener([...this.tickLogs]));
-  }
-
   private notifyEventListeners(): void {
     this.eventListeners.forEach(listener => listener([...this.raceEvents]));
-  }
-
-  private notifyPositionListeners(): void {
-    this.positionListeners.forEach(listener => listener([...this.positionHistory]));
   }
 
   private logEvent(
@@ -662,16 +617,8 @@ class RaceEngine {
     return { ...this.raceState };
   }
 
-  getTickLogs(): TickLog[] {
-    return [...this.tickLogs];
-  }
-
   getEvents(): RaceEvent[] {
     return [...this.raceEvents];
-  }
-
-  getPositionHistory(): PositionSnapshot[] {
-    return [...this.positionHistory];
   }
 
   getTrackLength(): number {
@@ -767,9 +714,7 @@ class RaceEngine {
       unsafetyCarWaitingForLeader: false,
       unsafetyCarCooldownUntilLap: 0,
     };
-    this.tickLogs = [];
     this.raceEvents = [];
-    this.positionHistory = [];
     // Reset track event state
     this.activeTrackEffects = [];
     this.trackEventTriggeredLaps = new Set();
@@ -780,9 +725,7 @@ class RaceEngine {
     this.tagActivatedThisRace = new Set();
     this.notifyListeners();
     this.notifyStateListeners();
-    this.notifyLogListeners();
     this.notifyEventListeners();
-    this.notifyPositionListeners();
   }
 
   private calculateSpeed(driver: Driver): TickFactors {
@@ -2218,16 +2161,6 @@ class RaceEngine {
         }
       }
 
-      // Log this tick
-      this.tickLogs.push({
-        tick: this.raceState.totalTicks,
-        driverId: driver.id,
-        driverName: driver.name,
-        factors,
-        newPosition,
-        lap: newLap,
-      });
-
       return {
         ...driver,
         position: newPosition,
@@ -2431,48 +2364,6 @@ class RaceEngine {
     }
     this.previousPositions = currentRanks;
 
-    // Record position snapshot (every 5 ticks to save memory)
-    if (this.raceState.totalTicks % 5 === 0 || this.raceState.totalTicks === 1) {
-      // Sort drivers for position snapshot, respecting finishOrder and DNF status
-      const snapshotSorted = [...this.drivers].sort((a, b) => {
-        const aFinished = a.status === 'finished' || a.currentLap >= this.config.totalLaps;
-        const bFinished = b.status === 'finished' || b.currentLap >= this.config.totalLaps;
-        const aDNF = a.status === 'dnf';
-        const bDNF = b.status === 'dnf';
-
-        // DNF drivers go last
-        if (aDNF && !bDNF) return 1;
-        if (bDNF && !aDNF) return -1;
-        if (aDNF && bDNF) {
-          // Both DNF: sort by when they crashed (earlier crash = higher rank among DNFs)
-          return (a.dnfInfo?.tick || 0) - (b.dnfInfo?.tick || 0);
-        }
-
-        // Both finished: use finish order
-        if (aFinished && bFinished) {
-          const aFinishPos = this.raceState.finishOrder.indexOf(a.id);
-          const bFinishPos = this.raceState.finishOrder.indexOf(b.id);
-          return aFinishPos - bFinishPos;
-        }
-        // Only one finished: finished driver is ahead
-        if (aFinished) return -1;
-        if (bFinished) return 1;
-        // Neither finished: sort by distance
-        const aDistance = a.currentLap * this.config.lapLength + a.position;
-        const bDistance = b.currentLap * this.config.lapLength + b.position;
-        return bDistance - aDistance;
-      });
-
-      this.positionHistory.push({
-        tick: this.raceState.totalTicks,
-        positions: snapshotSorted.map((driver, index) => ({
-          driverId: driver.id,
-          rank: index + 1,
-          distance: driver.currentLap * this.config.lapLength + driver.position,
-        })),
-      });
-    }
-
     // Check if race is finished
     // Race ends when winner has finished AND all other drivers are either:
     // - finished (including lapped drivers who completed their current lap)
@@ -2486,21 +2377,14 @@ class RaceEngine {
       this.stop();
     }
 
-    // Keep only last 1000 tick logs to prevent memory issues
-    if (this.tickLogs.length > 1000) {
-      this.tickLogs = this.tickLogs.slice(-1000);
-    }
-
-    // Keep only last 500 events
+    // Keep only last 500 events to prevent memory issues
     if (this.raceEvents.length > 500) {
       this.raceEvents = this.raceEvents.slice(-500);
     }
 
     this.notifyListeners();
     this.notifyStateListeners();
-    this.notifyLogListeners();
     this.notifyEventListeners();
-    this.notifyPositionListeners();
   }
 
   isRaceRunning(): boolean {
