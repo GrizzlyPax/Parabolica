@@ -144,3 +144,56 @@
   font-size: 0.85rem;
   font-style: italic;
 }
+
+/* Mister Marbles floating animation */
+.mister-marbles-float {
+  position: fixed;
+  top: 2rem;
+  left: 0;
+  right: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 100;
+}
+
+.mister-marbles-message {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  animation: floatAcross 20s linear infinite;
+  white-space: nowrap;
+}
+
+.mm-icon {
+  font-size: 1.2rem;
+  animation: wave 2s ease-in-out infinite;
+  display: inline-block;
+}
+
+.mm-text {
+  font-family: 'Times New Roman', Times, Georgia, serif;
+  color: #666;
+  font-size: 0.95rem;
+  font-style: italic;
+}
+
+@keyframes floatAcross {
+  0% {
+    transform: translateX(100vw);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes wave {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(15deg);
+  }
+  75% {
+    transform: rotate(-15deg);
+  }
+}

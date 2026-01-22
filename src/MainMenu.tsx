@@ -46,9 +46,11 @@ function MainMenu({ onSingleRace, onSeason, onCompendium }: MainMenuProps) {
           </button>
         </div>
 
-        <div className="main-menu-hint">
-          <span className="hint-icon">🔮</span>
-          <span className="hint-text">Mister Marbles is watching.</span>
+        <div className="mister-marbles-float">
+          <span className="mister-marbles-message">
+            <span className="mm-icon">🔮</span>
+            <span className="mm-text">Mister Marbles is watching.</span>
+          </span>
         </div>
 
         <div className="main-menu-footer">
