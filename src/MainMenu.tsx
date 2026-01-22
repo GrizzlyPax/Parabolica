@@ -19,9 +19,9 @@ function MainMenu({ onSingleRace, onSeason, onCompendium }: MainMenuProps) {
 
         <div className="mode-selection">
           <button className="mode-card marble" onClick={onSingleRace}>
-            <div className="mode-icon">🔮</div>
+            <div className="mode-icon">🏎️</div>
             <div className="mode-info">
-              <h2>Place Your Bets</h2>
+              <h2>Single Race</h2>
               <p>One race. Pick your winners. Results may vary.</p>
             </div>
             <div className="mode-arrow">→</div>

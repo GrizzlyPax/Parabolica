@@ -1,4 +1,575 @@
-.league-setup {
+/* ============================================
+   BETTING-STYLE LAYOUT
+   Mirrors the betting interface for consistency
+   ============================================ */
+
+.league-setup.betting-style {
+  min-height: 100vh;
+  padding: 1.5rem;
+  max-width: 800px;
+  margin: 0 auto;
+  color: #ccc;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  background: #111;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Narrator Box - matches betting screen */
+.league-setup.betting-style .narrator-box {
+  background: linear-gradient(135deg, rgba(30, 35, 25, 0.9) 0%, rgba(20, 25, 18, 0.95) 100%);
+  border: 1px solid #3a4530;
+  border-left: 3px solid #5da37c;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+  border-radius: 6px;
+  box-shadow: 0 2px 15px rgba(93, 163, 124, 0.15);
+}
+
+.league-setup.betting-style .narrator-box .narrator-name {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 0.9rem;
+  color: #8fd4a8;
+  display: block;
+  margin-bottom: 0.4rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.league-setup.betting-style .narrator-box .narrator-message {
+  color: #c8d8c0;
+  font-style: italic;
+  font-size: 1rem;
+  line-height: 1.4;
+  display: block;
+}
+
+.league-setup.betting-style .narrator-box .setup-tip {
+  display: block;
+  margin-top: 0.75rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid rgba(93, 163, 124, 0.3);
+  font-size: 0.8rem;
+  font-style: normal;
+  color: #8a9880;
+  letter-spacing: 0.5px;
+}
+
+/* Tabs row with reroll button */
+.league-setup.betting-style .setup-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  background: transparent;
+  border: none;
+}
+
+.league-setup.betting-style .setup-tab {
+  flex: 1;
+  padding: 0.6rem 1rem;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 4px;
+  color: #777;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.league-setup.betting-style .setup-tab:hover {
+  background: #222;
+  color: #aaa;
+}
+
+.league-setup.betting-style .setup-tab.active {
+  background: #333;
+  color: #fff;
+  border-color: #555;
+}
+
+.league-setup.betting-style .reroll-btn {
+  padding: 0.6rem 1rem;
+  background: transparent;
+  border: 1px solid #444;
+  color: #888;
+  border-radius: 4px;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.league-setup.betting-style .reroll-btn:hover {
+  border-color: #666;
+  color: #fff;
+  background: #222;
+}
+
+/* Main content area */
+.league-setup.betting-style .setup-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Wordle-style grid for teams and tracks */
+.league-setup.betting-style .wordle-grid {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.league-setup.betting-style .wordle-grid.teams-grid {
+  grid-template-columns: repeat(5, 1fr);
+}
+
+.league-setup.betting-style .wordle-grid.tracks-grid {
+  grid-template-columns: repeat(5, 1fr);
+}
+
+/* Wordle cell - team or track */
+.league-setup.betting-style .wordle-cell {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  padding: 0.4rem;
+  border: 2px solid #2a2a30;
+  border-radius: 6px;
+  background: rgba(20, 20, 24, 0.9);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+}
+
+.league-setup.betting-style .wordle-cell:hover {
+  transform: scale(1.05);
+  border-color: #4a4a50;
+  z-index: 1;
+}
+
+.league-setup.betting-style .wordle-cell.team-cell {
+  border-color: var(--team-color, #2a2a30);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--team-color) 15%, #14141a) 0%,
+    rgba(20, 20, 24, 0.95) 100%
+  );
+}
+
+.league-setup.betting-style .wordle-cell.team-cell:hover {
+  border-color: var(--team-color, #4a4a50);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--team-color) 25%, #14141a) 0%,
+    rgba(30, 30, 34, 0.95) 100%
+  );
+  box-shadow: 0 0 12px color-mix(in srgb, var(--team-color) 30%, transparent);
+}
+
+.league-setup.betting-style .wordle-cell.selected {
+  border-color: var(--team-color, #666);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--team-color) 30%, #14141a) 0%,
+    rgba(35, 35, 40, 0.98) 100%
+  );
+  box-shadow: 0 0 20px color-mix(in srgb, var(--team-color) 40%, transparent);
+  transform: scale(1.05);
+  z-index: 2;
+}
+
+.league-setup.betting-style .wordle-cell.track-cell.selected {
+  border-color: #4a8;
+  background: rgba(40, 60, 50, 0.6);
+  box-shadow: 0 0 12px rgba(74, 136, 102, 0.3);
+}
+
+.league-setup.betting-style .wordle-cell.chosen {
+  border-color: #ffd700 !important;
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.3);
+}
+
+.league-setup.betting-style .wordle-cell.cursed {
+  border-color: #e74c3c !important;
+  box-shadow: 0 0 12px rgba(231, 76, 60, 0.3);
+}
+
+.league-setup.betting-style .wordle-cell .cell-emoji {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.league-setup.betting-style .wordle-cell .cell-name {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 0.55rem;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.2;
+  max-width: 100%;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.league-setup.betting-style .wordle-cell .cell-car-vibe {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 0.45rem;
+  font-weight: 500;
+  margin-top: 0.05rem;
+}
+
+.league-setup.betting-style .wordle-cell .cell-laps {
+  font-family: 'Inconsolata', monospace;
+  font-size: 0.5rem;
+  color: #666;
+}
+
+.league-setup.betting-style .wordle-cell .cell-check {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 14px;
+  height: 14px;
+  background: var(--team-color, #4a8);
+  border-radius: 50%;
+  font-size: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #000;
+  font-weight: bold;
+}
+
+.league-setup.betting-style .wordle-cell.track-cell .cell-check {
+  background: #4a8;
+}
+
+/* Cell actions (star/skull) */
+.league-setup.betting-style .wordle-cell .cell-actions {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  display: flex;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.league-setup.betting-style .wordle-cell:hover .cell-actions,
+.league-setup.betting-style .wordle-cell .cell-actions:has(.active) {
+  opacity: 1;
+}
+
+.league-setup.betting-style .wordle-cell .cell-action {
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  font-size: 10px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid #444;
+  border-radius: 3px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.1s ease;
+}
+
+.league-setup.betting-style .wordle-cell .cell-action.star.active {
+  background: rgba(255, 215, 0, 0.3);
+  border-color: #ffd700;
+}
+
+.league-setup.betting-style .wordle-cell .cell-action.skull.active {
+  background: rgba(231, 76, 60, 0.3);
+  border-color: #e74c3c;
+}
+
+/* Inline detail panel - shows below the grid */
+.league-setup.betting-style .inline-detail-panel {
+  background: linear-gradient(180deg, rgba(25, 25, 28, 0.98) 0%, rgba(18, 18, 22, 0.98) 100%);
+  border: 2px solid #3a3a40;
+  border-radius: 8px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  animation: panelSlideIn 0.2s ease-out;
+}
+
+@keyframes panelSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.league-setup.betting-style .detail-team-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.league-setup.betting-style .detail-emoji {
+  font-size: 2rem;
+}
+
+.league-setup.betting-style .detail-team-info {
+  flex: 1;
+}
+
+.league-setup.betting-style .detail-team-info h3 {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.league-setup.betting-style .detail-team-info .detail-desc {
+  font-size: 0.8rem;
+  color: #777;
+  font-style: italic;
+  margin: 0.25rem 0 0 0;
+}
+
+.league-setup.betting-style .detail-close {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: rgba(60, 50, 50, 0.5);
+  border: 1px solid #4a4040;
+  border-radius: 4px;
+  color: #888;
+  cursor: pointer;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.1s ease;
+}
+
+.league-setup.betting-style .detail-close:hover {
+  background: rgba(120, 60, 60, 0.5);
+  border-color: #a55;
+  color: #e88;
+}
+
+/* Car section in detail panel */
+.league-setup.betting-style .detail-car {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(30, 30, 35, 0.6);
+  border: 1px solid #333;
+  border-radius: 4px;
+  flex-wrap: wrap;
+}
+
+.league-setup.betting-style .detail-car-name {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 0.9rem;
+  color: #ccc;
+}
+
+.league-setup.betting-style .detail-car-rating {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* Drivers section in detail panel */
+.league-setup.betting-style .detail-drivers {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.league-setup.betting-style .detail-driver {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(25, 25, 30, 0.8);
+  border: 1px solid #2a2a30;
+  border-radius: 4px;
+}
+
+.league-setup.betting-style .driver-main-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.league-setup.betting-style .driver-slot-badge {
+  font-family: 'Inconsolata', monospace;
+  font-size: 0.7rem;
+  color: #666;
+  padding: 0.15rem 0.4rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+.league-setup.betting-style .driver-slot-badge[data-slot="1"] {
+  color: #aaa;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.league-setup.betting-style .driver-fullname {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 0.9rem;
+  color: #ddd;
+  font-weight: 600;
+}
+
+.league-setup.betting-style .driver-vibe {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.league-setup.betting-style .driver-quirk-text {
+  width: 100%;
+  font-size: 0.75rem;
+  color: #888;
+  font-style: italic;
+  margin: 0.25rem 0 0 0;
+}
+
+/* Team tag in detail panel */
+.league-setup.betting-style .detail-team-tag {
+  padding-top: 0.5rem;
+  border-top: 1px solid #333;
+}
+
+/* Track detail panel */
+.league-setup.betting-style .inline-detail-panel.track-detail .detail-team-header {
+  border-bottom: 1px solid #333;
+  padding-bottom: 0.75rem;
+}
+
+.league-setup.betting-style .track-stats-row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.league-setup.betting-style .track-stat-pill {
+  padding: 0.3rem 0.6rem;
+  background: rgba(30, 35, 30, 0.6);
+  border: 1px solid #3a4030;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  color: #8a9;
+}
+
+.league-setup.betting-style .track-event-box {
+  background: rgba(25, 25, 30, 0.6);
+  border: 1px solid #333;
+  border-radius: 4px;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.league-setup.betting-style .track-event-box .event-title {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 0.9rem;
+  color: #ddd;
+  font-weight: 600;
+}
+
+.league-setup.betting-style .track-event-box .event-desc {
+  font-size: 0.8rem;
+  color: #888;
+  font-style: italic;
+}
+
+/* Bottom actions bar */
+.league-setup.betting-style .setup-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 6px;
+  margin-top: auto;
+}
+
+.league-setup.betting-style .prohibition-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: #888;
+}
+
+.league-setup.betting-style .prohibition-checkbox input {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.league-setup.betting-style .prohibition-checkbox:hover {
+  color: #aaa;
+}
+
+.league-setup.betting-style .place-bets-btn {
+  padding: 0.85rem 2rem;
+  background: linear-gradient(135deg, #2a3a28 0%, #1a2a18 100%);
+  border: 2px solid #4a6a48;
+  color: #8fc88a;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.league-setup.betting-style .place-bets-btn:hover {
+  background: linear-gradient(135deg, #3a4a38 0%, #2a3a28 100%);
+  border-color: #6a8a68;
+  color: #afeaab;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(100, 180, 100, 0.2);
+}
+
+/* Tag chip styling */
+.league-setup.betting-style .tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.5rem;
+  background: rgba(200, 160, 80, 0.1);
+  border: 1px solid rgba(200, 160, 80, 0.3);
+  border-radius: 12px;
+  font-size: 0.7rem;
+  color: #c8a050;
+  cursor: help;
+}
+
+/* ============================================
+   LEGACY STYLES (kept for backwards compat)
+   ============================================ */
+
+.league-setup:not(.betting-style) {
   min-height: 100vh;
   padding: 2rem;
   max-width: 1400px;
@@ -1396,8 +1967,185 @@
   color: #fff;
 }
 
+/* Mobile responsive for betting-style layout */
+@media (max-width: 640px) {
+  .league-setup.betting-style {
+    padding: 1rem 0.75rem;
+  }
+
+  .league-setup.betting-style .narrator-box {
+    padding: 0.75rem 0.9rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .league-setup.betting-style .narrator-box .narrator-name {
+    font-size: 0.8rem;
+    margin-bottom: 0.3rem;
+  }
+
+  .league-setup.betting-style .narrator-box .narrator-message {
+    font-size: 0.9rem;
+  }
+
+  .league-setup.betting-style .narrator-box .setup-tip {
+    font-size: 0.7rem;
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+  }
+
+  .league-setup.betting-style .setup-tabs {
+    gap: 0.35rem;
+  }
+
+  .league-setup.betting-style .setup-tab {
+    padding: 0.5rem 0.5rem;
+    font-size: 0.75rem;
+  }
+
+  .league-setup.betting-style .reroll-btn {
+    padding: 0.5rem 0.6rem;
+    font-size: 0.75rem;
+  }
+
+  .league-setup.betting-style .wordle-grid.teams-grid,
+  .league-setup.betting-style .wordle-grid.tracks-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.35rem;
+  }
+
+  .league-setup.betting-style .wordle-cell {
+    padding: 0.3rem;
+    border-radius: 4px;
+    border-width: 1.5px;
+  }
+
+  .league-setup.betting-style .wordle-cell .cell-emoji {
+    font-size: 1.2rem;
+  }
+
+  .league-setup.betting-style .wordle-cell .cell-name {
+    font-size: 0.5rem;
+    line-height: 1.1;
+  }
+
+  .league-setup.betting-style .wordle-cell .cell-car-vibe {
+    font-size: 0.4rem;
+  }
+
+  .league-setup.betting-style .wordle-cell .cell-laps {
+    font-size: 0.45rem;
+  }
+
+  .league-setup.betting-style .wordle-cell .cell-actions {
+    top: 2px;
+    right: 2px;
+  }
+
+  .league-setup.betting-style .wordle-cell .cell-action {
+    width: 16px;
+    height: 16px;
+    font-size: 9px;
+  }
+
+  .league-setup.betting-style .inline-detail-panel {
+    padding: 0.75rem;
+    gap: 0.6rem;
+  }
+
+  .league-setup.betting-style .detail-emoji {
+    font-size: 1.5rem;
+  }
+
+  .league-setup.betting-style .detail-team-info h3 {
+    font-size: 1rem;
+  }
+
+  .league-setup.betting-style .detail-team-info .detail-desc {
+    font-size: 0.75rem;
+  }
+
+  .league-setup.betting-style .detail-car {
+    padding: 0.4rem 0.6rem;
+    gap: 0.5rem;
+  }
+
+  .league-setup.betting-style .detail-car-name {
+    font-size: 0.8rem;
+  }
+
+  .league-setup.betting-style .detail-car-rating {
+    font-size: 0.75rem;
+  }
+
+  .league-setup.betting-style .detail-driver {
+    padding: 0.4rem 0.6rem;
+    gap: 0.4rem;
+  }
+
+  .league-setup.betting-style .driver-fullname {
+    font-size: 0.8rem;
+  }
+
+  .league-setup.betting-style .driver-vibe {
+    font-size: 0.7rem;
+  }
+
+  .league-setup.betting-style .driver-quirk-text {
+    font-size: 0.7rem;
+  }
+
+  .league-setup.betting-style .track-stats-row {
+    gap: 0.35rem;
+  }
+
+  .league-setup.betting-style .track-stat-pill {
+    padding: 0.2rem 0.5rem;
+    font-size: 0.7rem;
+  }
+
+  .league-setup.betting-style .track-event-box {
+    padding: 0.6rem;
+  }
+
+  .league-setup.betting-style .track-event-box .event-title {
+    font-size: 0.85rem;
+  }
+
+  .league-setup.betting-style .track-event-box .event-desc {
+    font-size: 0.75rem;
+  }
+
+  .league-setup.betting-style .setup-actions {
+    padding: 0.75rem;
+    gap: 0.75rem;
+  }
+
+  .league-setup.betting-style .prohibition-checkbox {
+    font-size: 0.75rem;
+  }
+
+  .league-setup.betting-style .prohibition-checkbox input {
+    width: 16px;
+    height: 16px;
+  }
+
+  .league-setup.betting-style .place-bets-btn {
+    padding: 0.75rem 1.25rem;
+    font-size: 0.95rem;
+    min-height: 48px;
+  }
+}
+
+@media (max-width: 360px) {
+  .league-setup.betting-style .wordle-grid.teams-grid,
+  .league-setup.betting-style .wordle-grid.tracks-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Legacy responsive styles */
 @media (max-width: 768px) {
-  .league-setup {
+  .league-setup:not(.betting-style) {
     padding: 1rem;
   }
 
@@ -1423,95 +2171,5 @@
   .race-preview {
     justify-content: center;
     text-align: center;
-  }
-
-  /* Wordle lineup responsive */
-  .lineup-grid {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 0.35rem;
-  }
-
-  .lineup-cell {
-    padding: 0.35rem;
-    border-radius: 4px;
-    border-width: 1.5px;
-  }
-
-  .lineup-cell .cell-emoji {
-    font-size: 1.2rem;
-  }
-
-  .lineup-cell .cell-name {
-    font-size: 0.5rem;
-    line-height: 1.1;
-  }
-
-  .lineup-cell .cell-car-vibe {
-    font-size: 0.4rem;
-  }
-
-  .lineup-cell .cell-actions {
-    top: 2px;
-    right: 2px;
-  }
-
-  .lineup-cell .cell-action {
-    width: 16px;
-    height: 16px;
-    font-size: 9px;
-  }
-
-  .lineup-detail-panel {
-    padding: 0.75rem;
-    gap: 0.6rem;
-  }
-
-  .detail-emoji {
-    font-size: 1.5rem;
-  }
-
-  .detail-team-info h3 {
-    font-size: 1rem;
-  }
-
-  .detail-team-info .detail-desc {
-    font-size: 0.75rem;
-  }
-
-  .detail-car {
-    padding: 0.4rem 0.6rem;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-  }
-
-  .detail-car-name {
-    font-size: 0.8rem;
-  }
-
-  .detail-car-rating {
-    font-size: 0.75rem;
-  }
-
-  .detail-driver {
-    padding: 0.4rem 0.6rem;
-    gap: 0.4rem;
-  }
-
-  .driver-fullname {
-    font-size: 0.8rem;
-  }
-
-  .driver-vibe {
-    font-size: 0.7rem;
-  }
-
-  .driver-quirk-text {
-    font-size: 0.7rem;
-  }
-}
-
-@media (max-width: 360px) {
-  .lineup-grid {
-    grid-template-columns: repeat(3, 1fr);
   }
 }

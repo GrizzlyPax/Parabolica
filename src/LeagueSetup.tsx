@@ -272,12 +272,17 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
   const cursedTeam = cursedTeamId ? activeTeams.find(t => t.id === cursedTeamId) : null;
 
   return (
-    <div className="league-setup">
-      <header className="setup-header">
-        <h1>Parabolica</h1>
-        <p className="subtitle">{activeTeams.length} teams. {roster.length} drivers. Unclear outcomes.</p>
-      </header>
+    <div className="league-setup betting-style">
+      {/* Narrator Box - mirrors betting screen */}
+      <div className="narrator-box">
+        <span className="narrator-name">🏁 Race Director</span>
+        <span className="narrator-message">
+          "{activeTeams.length} teams assembled. {roster.length} drivers ready. {track.emoji} {track.name} awaits."
+        </span>
+        <span className="setup-tip">Tap a team to see their drivers. Star your favorites, skull your rivals.</span>
+      </div>
 
+      {/* Tabs */}
       <div className="setup-tabs">
         <button
           className={`setup-tab ${activeTab === 'roster' ? 'active' : ''}`}
@@ -289,239 +294,200 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
           className={`setup-tab ${activeTab === 'track' ? 'active' : ''}`}
           onClick={() => setActiveTab('track')}
         >
-          Location
+          Track
+        </button>
+        <button className="reroll-btn" onClick={handleSummonAgain}>
+          🎲 Reroll
         </button>
       </div>
 
-      <div className="setup-content">
+      {/* Main Content Area */}
+      <div className="setup-main">
         {activeTab === 'roster' && (
-          <div className="roster-panel wordle-lineup">
-            <div className="panel-header">
-              <h2>The Grid</h2>
-              <button className="reroll-btn" onClick={handleSummonAgain}>
-                🎲 Summon Again
-              </button>
-            </div>
+          <div className="wordle-grid teams-grid">
+            {activeTeams.map(team => {
+              const carRating = carRatings.get(team.id) || null;
+              const isChosen = chosenTeamId === team.id;
+              const isCursed = cursedTeamId === team.id;
+              const isSelected = selectedDriver?.kingdomId === team.id;
+              const drivers = getTeamDrivers(team.id);
+              const displayName = team.name.startsWith('The ')
+                ? team.name.slice(4)
+                : team.name;
 
-            <p className="lineup-hint">Tap a team to see their drivers. Star your favorites, skull your rivals.</p>
-
-            {/* Wordle-style team grid */}
-            <div className="lineup-grid">
-              {activeTeams.map(team => {
-                const carRating = carRatings.get(team.id) || null;
-                const isChosen = chosenTeamId === team.id;
-                const isCursed = cursedTeamId === team.id;
-                const isExpanded = selectedDriver?.kingdomId === team.id;
-                const drivers = getTeamDrivers(team.id);
-                // Show full name, but strip "The " prefix if present
-                const displayName = team.name.startsWith('The ')
-                  ? team.name.slice(4)
-                  : team.name;
-
-                return (
-                  <div key={team.id} className="lineup-cell-wrapper">
+              return (
+                <button
+                  key={team.id}
+                  className={`wordle-cell team-cell ${isChosen ? 'chosen' : ''} ${isCursed ? 'cursed' : ''} ${isSelected ? 'selected' : ''}`}
+                  onClick={() => setSelectedDriver(isSelected ? null : drivers[0])}
+                  style={{ '--team-color': team.color } as React.CSSProperties}
+                >
+                  <span className="cell-emoji">{team.emoji}</span>
+                  <span className="cell-name" style={{ color: team.color }}>{displayName}</span>
+                  {carRating && (
+                    <span className={`cell-car-vibe tier-${carRating.tier}`}>
+                      {carRating.label}
+                    </span>
+                  )}
+                  <div className="cell-actions">
                     <button
-                      className={`lineup-cell ${isChosen ? 'chosen' : ''} ${isCursed ? 'cursed' : ''} ${isExpanded ? 'expanded' : ''}`}
-                      onClick={() => setSelectedDriver(isExpanded ? null : drivers[0])}
-                      style={{ '--team-color': team.color } as React.CSSProperties}
+                      className={`cell-action star ${isChosen ? 'active' : ''}`}
+                      onClick={(e) => handleChosenTeamClick(team.id, e)}
+                      title="Follow this team"
                     >
-                      <span className="cell-emoji">{team.emoji}</span>
-                      <span className="cell-name" style={{ color: team.color }}>{displayName}</span>
-                      {carRating && (
-                        <span className={`cell-car-vibe tier-${carRating.tier}`}>
-                          {carRating.label}
-                        </span>
-                      )}
-                      <div className="cell-actions">
-                        <button
-                          className={`cell-action star ${isChosen ? 'active' : ''}`}
-                          onClick={(e) => handleChosenTeamClick(team.id, e)}
-                          title="Follow this team"
-                        >
-                          {isChosen ? '⭐' : '☆'}
-                        </button>
-                        <button
-                          className={`cell-action skull ${isCursed ? 'active' : ''}`}
-                          onClick={(e) => handleCursedTeamClick(team.id, e)}
-                          title="Mark as rival"
-                        >
-                          {isCursed ? '💀' : '☠'}
-                        </button>
-                      </div>
+                      {isChosen ? '⭐' : '☆'}
                     </button>
-
-                    {/* Expanded driver details panel */}
-                    {isExpanded && (
-                      <div className="lineup-detail-panel">
-                        <div className="detail-team-header">
-                          <span className="detail-emoji">{team.emoji}</span>
-                          <div className="detail-team-info">
-                            <h3 style={{ color: team.color }}>{team.name}</h3>
-                            <p className="detail-desc">{team.description}</p>
-                          </div>
-                          <button className="detail-close" onClick={() => setSelectedDriver(null)}>×</button>
-                        </div>
-
-                        {/* Car vibes */}
-                        {(() => {
-                          const car = cars.get(team.id);
-                          return car && (
-                            <div className="detail-car">
-                              <span className="detail-car-name">🏎️ {car.name}</span>
-                              <span className={`detail-car-rating tier-${carRating?.tier}`}>
-                                {carRating?.label}
-                              </span>
-                              {car.carTag && (
-                                <Tooltip content={car.carTag.description}>
-                                  <span className="tag-chip">{car.carTag.emoji} {car.carTag.name}</span>
-                                </Tooltip>
-                              )}
-                            </div>
-                          );
-                        })()}
-
-                        {/* Drivers */}
-                        <div className="detail-drivers">
-                          {drivers.map(driver => {
-                            const driverRating = driverRatings.get(driver.id);
-                            return (
-                              <div key={driver.id} className="detail-driver">
-                                <div className="driver-main-info">
-                                  <span className="driver-slot-badge" data-slot={driver.driverSlot}>
-                                    #{driver.driverSlot}
-                                  </span>
-                                  <span className="driver-fullname">{driver.fullName}</span>
-                                  <span className={`driver-vibe tier-${driverRating?.tier}`}>
-                                    {driverRating?.label}
-                                  </span>
-                                </div>
-                                {driver.tag && (
-                                  <Tooltip content={driver.tag.description}>
-                                    <span className="tag-chip">{driver.tag.emoji} {driver.tag.name}</span>
-                                  </Tooltip>
-                                )}
-                                {driver.quirk && (
-                                  <p className="driver-quirk-text">⚡ {driver.quirk}</p>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-
-                        {/* Team tag */}
-                        {cars.get(team.id)?.teamTag && (
-                          <div className="detail-team-tag">
-                            <Tooltip content={cars.get(team.id)!.teamTag!.description}>
-                              <span className="tag-chip">
-                                {cars.get(team.id)!.teamTag!.emoji} {cars.get(team.id)!.teamTag!.name}
-                              </span>
-                            </Tooltip>
-                          </div>
-                        )}
-                      </div>
-                    )}
+                    <button
+                      className={`cell-action skull ${isCursed ? 'active' : ''}`}
+                      onClick={(e) => handleCursedTeamClick(team.id, e)}
+                      title="Mark as rival"
+                    >
+                      {isCursed ? '💀' : '☠'}
+                    </button>
                   </div>
-                );
-              })}
-            </div>
+                </button>
+              );
+            })}
           </div>
         )}
 
         {activeTab === 'track' && (
-          <div className="track-panel">
-            <div className="panel-header">
-              <h2>The Venue</h2>
-              {isSeasonMode && (
-                <span className="season-track-note">Season Calendar</span>
-              )}
-            </div>
-
-            {/* Track Picker for Single Race Mode */}
-            {!isSeasonMode && (
-              <div className="track-picker">
-                {ALL_TRACKS.map(t => (
-                  <div
-                    key={t.id}
-                    className={`track-picker-item ${track.id === t.id ? 'selected' : ''}`}
-                    onClick={() => setTrack(t)}
-                  >
-                    <span className="picker-emoji">{t.emoji}</span>
-                    <span className="picker-name">{t.name}</span>
-                    <span className="picker-event">{t.event.emoji}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Selected Track Details */}
-            <div className="track-card">
-              <div className="track-header">
-                <span className="track-emoji">{track.emoji}</span>
-                <h3 className="track-name">{track.name}</h3>
-              </div>
-
-              <p className="track-description">{track.description}</p>
-
-              <div className="track-stats">
-                <div className="track-stat">
-                  <span className="track-stat-label">Layout</span>
-                  <span className="track-stat-value">{track.layout.name}</span>
-                </div>
-                <div className="track-stat">
-                  <span className="track-stat-label">Laps</span>
-                  <span className="track-stat-value">{track.laps}</span>
-                </div>
-                <div className="track-stat">
-                  <span className="track-stat-label">Length</span>
-                  <span className="track-stat-value">{track.length} units</span>
-                </div>
-              </div>
-
-              {/* Track Event */}
-              <div className="track-event">
-                <h4>{track.event.emoji} {track.event.name}</h4>
-                <p className="event-description">{getDynamicEventDescription(track.event, track.laps)}</p>
-                <p className="event-flavor"><em>{track.event.flavorText}</em></p>
-              </div>
-            </div>
+          <div className="wordle-grid tracks-grid">
+            {ALL_TRACKS.map(t => {
+              const isSelected = track.id === t.id;
+              const shortName = t.name.startsWith('The ')
+                ? t.name.slice(4).split(' ')[0]
+                : t.name.split(' ')[0];
+              return (
+                <button
+                  key={t.id}
+                  className={`wordle-cell track-cell ${isSelected ? 'selected' : ''}`}
+                  onClick={() => !isSeasonMode && setTrack(t)}
+                  disabled={isSeasonMode}
+                >
+                  <span className="cell-emoji">{t.emoji}</span>
+                  <span className="cell-name">{shortName}</span>
+                  <span className="cell-laps">{t.laps}L</span>
+                  {isSelected && <span className="cell-check">✓</span>}
+                </button>
+              );
+            })}
           </div>
         )}
 
+        {/* Expanded Team Detail Panel - shows below grid when a team is selected */}
+        {selectedDriver && activeTab === 'roster' && (() => {
+          const team = activeTeams.find(t => t.id === selectedDriver.kingdomId);
+          const carRating = team ? carRatings.get(team.id) : null;
+          const drivers = team ? getTeamDrivers(team.id) : [];
+          if (!team) return null;
+          return (
+            <div className="inline-detail-panel">
+              <div className="detail-team-header">
+                <span className="detail-emoji">{team.emoji}</span>
+                <div className="detail-team-info">
+                  <h3 style={{ color: team.color }}>{team.name}</h3>
+                  <p className="detail-desc">{team.description}</p>
+                </div>
+                <button className="detail-close" onClick={() => setSelectedDriver(null)}>×</button>
+              </div>
+
+              {/* Car vibes */}
+              {(() => {
+                const car = cars.get(team.id);
+                return car && (
+                  <div className="detail-car">
+                    <span className="detail-car-name">🏎️ {car.name}</span>
+                    <span className={`detail-car-rating tier-${carRating?.tier}`}>
+                      {carRating?.label}
+                    </span>
+                    {car.carTag && (
+                      <Tooltip content={car.carTag.description}>
+                        <span className="tag-chip">{car.carTag.emoji} {car.carTag.name}</span>
+                      </Tooltip>
+                    )}
+                  </div>
+                );
+              })()}
+
+              {/* Drivers */}
+              <div className="detail-drivers">
+                {drivers.map(driver => {
+                  const driverRating = driverRatings.get(driver.id);
+                  return (
+                    <div key={driver.id} className="detail-driver">
+                      <div className="driver-main-info">
+                        <span className="driver-slot-badge" data-slot={driver.driverSlot}>
+                          #{driver.driverSlot}
+                        </span>
+                        <span className="driver-fullname">{driver.fullName}</span>
+                        <span className={`driver-vibe tier-${driverRating?.tier}`}>
+                          {driverRating?.label}
+                        </span>
+                      </div>
+                      {driver.tag && (
+                        <Tooltip content={driver.tag.description}>
+                          <span className="tag-chip">{driver.tag.emoji} {driver.tag.name}</span>
+                        </Tooltip>
+                      )}
+                      {driver.quirk && (
+                        <p className="driver-quirk-text">⚡ {driver.quirk}</p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Team tag */}
+              {cars.get(team.id)?.teamTag && (
+                <div className="detail-team-tag">
+                  <Tooltip content={cars.get(team.id)!.teamTag!.description}>
+                    <span className="tag-chip">
+                      {cars.get(team.id)!.teamTag!.emoji} {cars.get(team.id)!.teamTag!.name}
+                    </span>
+                  </Tooltip>
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
+        {/* Track Detail - shows below grid when on track tab */}
+        {activeTab === 'track' && (
+          <div className="inline-detail-panel track-detail">
+            <div className="detail-team-header">
+              <span className="detail-emoji">{track.emoji}</span>
+              <div className="detail-team-info">
+                <h3>{track.name}</h3>
+                <p className="detail-desc">{track.description}</p>
+              </div>
+            </div>
+            <div className="track-stats-row">
+              <span className="track-stat-pill">{track.layout.name}</span>
+              <span className="track-stat-pill">{track.laps} laps</span>
+              <span className="track-stat-pill">{track.length} units</span>
+            </div>
+            <div className="track-event-box">
+              <span className="event-title">{track.event.emoji} {track.event.name}</span>
+              <span className="event-desc">{getDynamicEventDescription(track.event, track.laps)}</span>
+            </div>
+          </div>
+        )}
       </div>
 
-      <div className="setup-footer">
-        <div className="race-preview">
-          <span>{activeTeams.length} teams • {roster.length} drivers</span>
-          <span>•</span>
-          <span>{track.emoji} {track.name}</span>
-          <span>•</span>
-          <span>{track.laps} laps</span>
-          {(chosenTeam || cursedTeam) && <span>•</span>}
-          {chosenTeam && (
-            <span className="preview-chosen">
-              ⭐ {chosenTeam.emoji} {chosenTeam.name}
-            </span>
-          )}
-          {cursedTeam && (
-            <span className="preview-cursed">
-              💀 {cursedTeam.emoji} {cursedTeam.name}
-            </span>
-          )}
-        </div>
-        <div className="footer-controls">
-          <label className="prohibition-toggle">
-            <input
-              type="checkbox"
-              checked={prohibitionMode}
-              onChange={(e) => setProhibitionMode(e.target.checked)}
-            />
-            <span className="prohibition-label">🚫 Prohibition Mode</span>
-            <span className="prohibition-hint">No gambling</span>
-          </label>
-          <button className="start-race-btn" onClick={handleStartRace}>
-            Start Race
-          </button>
-        </div>
+      {/* Bottom Actions - mirrors betting screen */}
+      <div className="setup-actions">
+        <label className="prohibition-checkbox">
+          <input
+            type="checkbox"
+            checked={prohibitionMode}
+            onChange={(e) => setProhibitionMode(e.target.checked)}
+          />
+          <span>🚫 No Betting</span>
+        </label>
+        <button className="place-bets-btn" onClick={handleStartRace}>
+          Place Your Bets →
+        </button>
       </div>
     </div>
   );
