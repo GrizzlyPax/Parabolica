@@ -1104,18 +1104,6 @@ export function SeasonTally({
 
   // Generate shareable season summary
   const handleShare = async () => {
-    const netChange = totalWon - totalWagered;
-
-    // Generate race-by-race result boxes (like Wordle)
-    const raceBoxes = seasonHistory.map(race => {
-      if (race.bets.length === 0) return '⬜'; // No bets
-      const wins = race.bets.filter(b => b.won).length;
-      const total = race.bets.length;
-      if (wins === total) return '🟩'; // All wins
-      if (wins === 0) return '🟥'; // All losses
-      return '🟨'; // Mixed
-    }).join('');
-
     // Count DNFs from bets (drivers we bet on who didn't finish)
     const eliminations = seasonHistory.reduce((sum, race) =>
       sum + race.bets.filter(b => b.finalPosition === null).length, 0);
@@ -1126,18 +1114,19 @@ export function SeasonTally({
     ];
 
     const lines: string[] = [
-      '🏁 PARABOLICA 🏁',
-      `Season Complete (${totalRaces} races)`,
+      '🏁 PARABOLICA',
       '',
-      raceBoxes,
+      `🏁| ${totalRaces} races | 💀 ${eliminations}`,
+      ...(champion ? [`🥇| ${champion.emoji} ${champion.name}`] : []),
       '',
-      ...(champion ? [`🏆 ${champion.emoji} ${champion.name}`] : []),
-      `🔮 ${netChange >= 0 ? '+' : ''}${netChange.toLocaleString()} marbles`,
-      ...(eliminations > 0 ? [`💀 ${eliminations} eliminations witnessed`] : []),
+      `Won Bets 🟩: ${totalBetsWon}`,
+      `Lost Bets 🟥: ${totalBetsPlaced - totalBetsWon}`,
+      '',
+      `Final Score 🔮: ${finalBankroll.toLocaleString()} marbles`,
       '',
       `"${quote}"`,
       '',
-      '🔮 playparabolica.com',
+      'playparabolica.com',
     ];
 
     const shareText = lines.join('\n');
