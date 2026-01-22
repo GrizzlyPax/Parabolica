@@ -456,29 +456,40 @@ export function BettingInterface({
     });
   }, [drivers, driverOdds]);
 
-  // Get betting tier color based on combined driver + car quality
-  // This aligns with the skill tier colors: purple (favorite) → green (contender) → yellow (longshot) → red (wildcard)
+  // Get betting tier based on rank position (sorted by odds)
+  // Dynamic tier distribution based on driver count:
+  // - Top ~15% = purple (favorite)
+  // - Next ~35% = green (contender)
+  // - Next ~25% = yellow (longshot)
+  // - Rest = red (wildcard)
+  // For 20 drivers: 3 purple, 7 green, 5 yellow, 5 red
+  const driverTiers = useMemo(() => {
+    const tiers = new Map<number, 'favorite' | 'contender' | 'longshot' | 'wildcard'>();
+    const total = sortedDrivers.length;
+
+    // Calculate tier cutoffs (proportional to grid size)
+    const purpleCutoff = Math.max(1, Math.round(total * 0.15));  // Top ~15%
+    const greenCutoff = purpleCutoff + Math.max(1, Math.round(total * 0.35));  // Next ~35%
+    const yellowCutoff = greenCutoff + Math.max(1, Math.round(total * 0.25));  // Next ~25%
+
+    sortedDrivers.forEach((driver, index) => {
+      const rank = index + 1;
+      if (rank <= purpleCutoff) {
+        tiers.set(driver.id, 'favorite');
+      } else if (rank <= greenCutoff) {
+        tiers.set(driver.id, 'contender');
+      } else if (rank <= yellowCutoff) {
+        tiers.set(driver.id, 'longshot');
+      } else {
+        tiers.set(driver.id, 'wildcard');
+      }
+    });
+
+    return tiers;
+  }, [sortedDrivers]);
+
   const getDriverTierByOdds = (driver: Driver): 'favorite' | 'contender' | 'longshot' | 'wildcard' => {
-    // Calculate driver skill score (same formula as getDriverRating)
-    const speedScore = (driver.stats.baseSpeed - 0.85) / 0.30;
-    const consistencyScore = (driver.stats.consistency - 0.3) / 0.50;
-    const luckScore = (driver.stats.luck - 0.3) / 0.50;
-    const driverOverall = speedScore * 0.5 + consistencyScore * 0.35 + luckScore * 0.15;
-
-    // Calculate car quality score (same formula as getCarRating)
-    const carPower = ((driver.carStats?.power ?? 3) - 1) / 4;
-    const carGrip = ((driver.carStats?.grip ?? 3) - 1) / 4;
-    const carReliability = ((driver.carStats?.reliability ?? 3) - 1) / 4;
-    const carOverall = carPower * 0.4 + carGrip * 0.35 + carReliability * 0.25;
-
-    // Combined score: 60% driver, 40% car (driver matters more but car is significant)
-    const combined = driverOverall * 0.6 + carOverall * 0.4;
-
-    // Map to betting tiers using same thresholds as skill tiers
-    if (combined >= 0.75) return 'favorite';    // legendary driver+car = purple
-    if (combined >= 0.5) return 'contender';    // elite driver+car = green
-    if (combined >= 0.25) return 'longshot';    // solid driver+car = yellow
-    return 'wildcard';                          // hopeless driver+car = red
+    return driverTiers.get(driver.id) ?? 'wildcard';
   };
 
   // Memoize driver ratings so they don't re-randomize on every render
