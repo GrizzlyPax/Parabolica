@@ -1079,6 +1079,7 @@ interface SeasonTallyProps {
   finalBankroll: number;
   seasonHistory: SeasonRaceResult[];
   totalRaces: number;
+  totalEliminations: number;
   champion: { name: string; emoji: string } | null;
   onNewSeason: () => void;
 }
@@ -1087,6 +1088,7 @@ export function SeasonTally({
   finalBankroll,
   seasonHistory,
   totalRaces,
+  totalEliminations,
   champion,
   onNewSeason,
 }: SeasonTallyProps) {
@@ -1104,9 +1106,6 @@ export function SeasonTally({
 
   // Generate shareable season summary
   const handleShare = async () => {
-    // Count DNFs from bets (drivers we bet on who didn't finish)
-    const eliminations = seasonHistory.reduce((sum, race) =>
-      sum + race.bets.filter(b => b.finalPosition === null).length, 0);
 
     // Random Mister Marbles quote
     const quote = MISTER_MARBLES.shareQuotes[
@@ -1116,7 +1115,7 @@ export function SeasonTally({
     const lines: string[] = [
       '🏁 PARABOLICA',
       '',
-      `🏁| ${totalRaces} races | 💀 ${eliminations}`,
+      `🏁| ${totalRaces} races | 💀 ${totalEliminations}`,
       ...(champion ? [`🥇| ${champion.emoji} ${champion.name}`] : []),
       '',
       `Won Bets 🟩: ${totalBetsWon}`,

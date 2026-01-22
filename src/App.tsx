@@ -485,11 +485,17 @@ function App() {
     const championId = standings[0]?.driverId;
     const champion = championId ? drivers.find(d => d.id === championId) : null;
 
+    // Calculate total eliminations across all races in the season
+    const totalEliminations = seasonState?.raceResults.reduce(
+      (sum, race) => sum + race.dnfDrivers.length, 0
+    ) ?? 0;
+
     return (
       <SeasonTally
         finalBankroll={marbleState.bankroll}
         seasonHistory={marbleState.seasonHistory}
         totalRaces={seasonState?.totalRaces ?? marbleState.seasonHistory.length}
+        totalEliminations={totalEliminations}
         champion={champion ? { name: champion.name, emoji: champion.emoji } : null}
         onNewSeason={() => {
           handleNewSeason();
