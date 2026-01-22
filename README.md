@@ -224,6 +224,12 @@ Same place! Describe what you'd like to see and why it would be fun.
 
 ---
 
+## License
+
+This is a private project. All rights reserved.
+
+---
+
 ## Credits
 
 Created by [@GrizzlyPax](https://github.com/GrizzlyPax)
