@@ -335,7 +335,6 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, powerAct
 
   // Generate shareable race summary (Wordle-style)
   const generateShareText = (): string => {
-    const trackName = trackInfo?.name || 'Unknown Track';
     const trackEmoji = trackInfo?.emoji || '🏁';
 
     // Get sorted finished drivers
@@ -346,17 +345,36 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, powerAct
     // Count DNFs
     const dnfCount = drivers.filter(d => d.status === 'dnf').length;
 
+    // Random Mister Marbles quote
+    const shareQuotes = [
+      "The marbles remember.",
+      "Everything is fine.",
+      "The simulation continues.",
+      "Chaos finds a way.",
+      "Fortune favors the bold. Sometimes.",
+      "The void watches.",
+      "Results may vary.",
+      "Past performance does not guarantee future results.",
+      "The house always... well.",
+      "Interesting.",
+      "You should have bet differently.",
+      "The numbers don't lie. But they do whisper.",
+      "Luck is a pattern we haven't identified yet.",
+      "The marbles are never wrong.",
+    ];
+    const quote = shareQuotes[Math.floor(Math.random() * shareQuotes.length)];
+
     // Build the share text
     const lines: string[] = [
-      '🏁 PARABOLICA 🏁',
-      `${trackEmoji} ${trackName}`,
+      '🏁 PARABOLICA',
       '',
+      `${trackEmoji}| ${totalLaps} 🔄 | 💀 ${dnfCount}`,
     ];
 
-    // Winner only
-    if (sortedFinished[0]) {
-      lines.push(`🏆 ${sortedFinished[0].emoji} ${sortedFinished[0].name}`);
-    }
+    // Podium
+    if (sortedFinished[0]) lines.push(`🥇| ${sortedFinished[0].emoji} ${sortedFinished[0].name}`);
+    if (sortedFinished[1]) lines.push(`🥈| ${sortedFinished[1].emoji} ${sortedFinished[1].name}`);
+    if (sortedFinished[2]) lines.push(`🥉| ${sortedFinished[2].emoji} ${sortedFinished[2].name}`);
 
     // Betting results (if any bets were placed)
     if (activeBets && activeBets.length > 0) {
@@ -366,20 +384,15 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, powerAct
       const netChange = totalPayout - totalWagered;
 
       lines.push('');
-      // Show win/loss boxes like Wordle
       const resultBoxes = resolved.map(b => b.won ? '🟩' : '🟥').join('');
       lines.push(resultBoxes);
       lines.push(`🔮 ${netChange >= 0 ? '+' : ''}${netChange} marbles`);
     }
 
-    // DNF count
-    if (dnfCount > 0) {
-      lines.push('');
-      lines.push(`💀 ${dnfCount} eliminations`);
-    }
-
     lines.push('');
-    lines.push('🔮 playparabolica.com');
+    lines.push(`"${quote}"`);
+    lines.push('');
+    lines.push('playparabolica.com');
 
     return lines.join('\n');
   };
