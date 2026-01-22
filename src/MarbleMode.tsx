@@ -124,6 +124,25 @@ const MISTER_MARBLES = {
     `${marbles.toLocaleString()} Marbles. The simulation has recorded your performance.`,
   ],
 
+  // Shareable quotes - cryptic, haunting, "interesting"
+  shareQuotes: [
+    "The marbles remember.",
+    "Everything is fine.",
+    "The simulation continues.",
+    "Chaos finds a way.",
+    "Fortune favors the bold. Sometimes.",
+    "The void watches.",
+    "Results may vary.",
+    "Past performance does not guarantee future results.",
+    "The house always... well.",
+    "Interesting.",
+    "You should have bet differently.",
+    "The numbers don't lie. But they do whisper.",
+    "Another season. Another story.",
+    "Luck is a pattern we haven't identified yet.",
+    "The marbles are never wrong.",
+  ],
+
   // Commenting on odds
   longshot: [
     "A longshot. The simulation approves of chaos.",
@@ -1081,9 +1100,7 @@ export function SeasonTally({
 
   // Generate shareable season summary
   const handleShare = async () => {
-    const winRate = totalBetsPlaced > 0 ? Math.round((totalBetsWon / totalBetsPlaced) * 100) : 0;
     const netChange = totalWon - totalWagered;
-    const netEmoji = netChange >= 0 ? '📈' : '📉';
 
     // Generate race-by-race result boxes (like Wordle)
     const raceBoxes = seasonHistory.map(race => {
@@ -1095,17 +1112,26 @@ export function SeasonTally({
       return '🟨'; // Mixed
     }).join('');
 
+    // Count DNFs from bets (drivers we bet on who didn't finish)
+    const eliminations = seasonHistory.reduce((sum, race) =>
+      sum + race.bets.filter(b => b.finalPosition === null).length, 0);
+
+    // Random Mister Marbles quote
+    const quote = MISTER_MARBLES.shareQuotes[
+      Math.floor(Math.random() * MISTER_MARBLES.shareQuotes.length)
+    ];
+
     const lines: string[] = [
       '🏁 PARABOLICA 🏁',
-      `Season Complete`,
       '',
       raceBoxes,
       '',
-      `🎰 ${finalBankroll.toLocaleString()} Marbles`,
-      `🎲 ${totalBetsPlaced} bets (${winRate}% win rate)`,
-      `${netEmoji} ${netChange >= 0 ? '+' : ''}${netChange.toLocaleString()} ṁ`,
+      `🔮 ${netChange >= 0 ? '+' : ''}${netChange.toLocaleString()} marbles`,
+      ...(eliminations > 0 ? [`💀 ${eliminations} eliminations witnessed`] : []),
       '',
-      'playparabolica.com',
+      `"${quote}"`,
+      '',
+      '🔮 playparabolica.com',
     ];
 
     const shareText = lines.join('\n');
