@@ -267,10 +267,6 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
     onStartRace(chosenTeamId, cursedTeamId, prohibitionMode);
   };
 
-  // Get chosen/cursed team objects for preview
-  const chosenTeam = chosenTeamId ? activeTeams.find(t => t.id === chosenTeamId) : null;
-  const cursedTeam = cursedTeamId ? activeTeams.find(t => t.id === cursedTeamId) : null;
-
   return (
     <div className="league-setup betting-style">
       {/* Narrator Box - mirrors betting screen */}

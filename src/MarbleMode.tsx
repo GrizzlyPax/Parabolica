@@ -303,28 +303,8 @@ export const BASE_MULTIPLIERS: Record<BetType, number> = {
  * This makes payouts more generous and the formula transparent
  */
 export function calculateDriverOdds(driver: Driver, allDrivers: Driver[]): DriverOdds {
-  // Calculate a "strength" score for the driver (0-1 scale)
-  const speedScore = (driver.stats.baseSpeed - 0.85) / 0.30;  // Normalized 0-1
-  const consistencyScore = (driver.stats.consistency - 0.3) / 0.50;
-  const luckScore = (driver.stats.luck - 0.3) / 0.50;
-
-  // Car stats matter too
-  const carPower = (driver.carStats?.power ?? 3) / 5;
-  const carGrip = (driver.carStats?.grip ?? 3) / 5;
-  const carReliability = (driver.carStats?.reliability ?? 3) / 5;
-
-  // Overall strength (weighted)
-  const strength = (
-    speedScore * 0.35 +
-    consistencyScore * 0.20 +
-    luckScore * 0.10 +
-    carPower * 0.20 +
-    carGrip * 0.10 +
-    carReliability * 0.05
-  );
-
-  // Rank among all drivers (affects modifier)
-  const allStrengths = allDrivers.map(d => {
+  // Helper to calculate strength score for any driver
+  const calcStrength = (d: Driver) => {
     const ss = (d.stats.baseSpeed - 0.85) / 0.30;
     const cs = (d.stats.consistency - 0.3) / 0.50;
     const ls = (d.stats.luck - 0.3) / 0.50;
@@ -332,9 +312,19 @@ export function calculateDriverOdds(driver: Driver, allDrivers: Driver[]): Drive
     const cg = (d.carStats?.grip ?? 3) / 5;
     const cr = (d.carStats?.reliability ?? 3) / 5;
     return ss * 0.35 + cs * 0.20 + ls * 0.10 + cp * 0.20 + cg * 0.10 + cr * 0.05;
-  }).sort((a, b) => b - a);
+  };
 
-  const rank = allStrengths.indexOf(strength) + 1 || allStrengths.length;
+  // Rank among all drivers (affects modifier)
+  // Use driver ID to ensure consistent ranking even with equal strengths
+  const allDriversWithStrength = allDrivers.map(d => ({
+    id: d.id,
+    strength: calcStrength(d)
+  })).sort((a, b) => b.strength - a.strength || a.id - b.id);
+
+  const rank = allDriversWithStrength.findIndex(d => d.id === driver.id) + 1 || allDriversWithStrength.length;
+
+  // Get car reliability for DNF/finishes calculations
+  const carReliability = (driver.carStats?.reliability ?? 3) / 5;
 
   // Driver modifier based on rank: favorites ~0.6×, midfield ~1.2×, longshots ~3×
   // This creates a nice spread without being too punishing or too generous
@@ -466,13 +456,29 @@ export function BettingInterface({
     });
   }, [drivers, driverOdds]);
 
-  // Get tier color for a driver based on odds
+  // Get betting tier color based on combined driver + car quality
+  // This aligns with the skill tier colors: purple (favorite) → green (contender) → yellow (longshot) → red (wildcard)
   const getDriverTierByOdds = (driver: Driver): 'favorite' | 'contender' | 'longshot' | 'wildcard' => {
-    const winOdds = driverOdds.get(driver.id)?.win ?? 100;
-    if (winOdds < 5) return 'favorite';
-    if (winOdds < 12) return 'contender';
-    if (winOdds < 25) return 'longshot';
-    return 'wildcard';
+    // Calculate driver skill score (same formula as getDriverRating)
+    const speedScore = (driver.stats.baseSpeed - 0.85) / 0.30;
+    const consistencyScore = (driver.stats.consistency - 0.3) / 0.50;
+    const luckScore = (driver.stats.luck - 0.3) / 0.50;
+    const driverOverall = speedScore * 0.5 + consistencyScore * 0.35 + luckScore * 0.15;
+
+    // Calculate car quality score (same formula as getCarRating)
+    const carPower = ((driver.carStats?.power ?? 3) - 1) / 4;
+    const carGrip = ((driver.carStats?.grip ?? 3) - 1) / 4;
+    const carReliability = ((driver.carStats?.reliability ?? 3) - 1) / 4;
+    const carOverall = carPower * 0.4 + carGrip * 0.35 + carReliability * 0.25;
+
+    // Combined score: 60% driver, 40% car (driver matters more but car is significant)
+    const combined = driverOverall * 0.6 + carOverall * 0.4;
+
+    // Map to betting tiers using same thresholds as skill tiers
+    if (combined >= 0.75) return 'favorite';    // legendary driver+car = purple
+    if (combined >= 0.5) return 'contender';    // elite driver+car = green
+    if (combined >= 0.25) return 'longshot';    // solid driver+car = yellow
+    return 'wildcard';                          // hopeless driver+car = red
   };
 
   // Memoize driver ratings so they don't re-randomize on every render
