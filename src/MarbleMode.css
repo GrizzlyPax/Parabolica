@@ -10,6 +10,7 @@
   padding: 1.5rem 2rem;
   background: linear-gradient(180deg, #0a0a0c 0%, #0f0f12 50%, #0a0a0c 100%);
   color: #e8e8e8;
+  overflow-y: auto;
 }
 
 /* Header - Compact and informative */
@@ -129,7 +130,6 @@
 .current-bets {
   border-radius: 8px;
   height: fit-content;
-  max-height: calc(100vh - 220px);
 }
 
 /* ============================================
@@ -140,7 +140,6 @@
   background: rgba(12, 12, 14, 0.8);
   border: 1px solid #1a1a22;
   padding: 0.75rem;
-  overflow-y: auto;
 }
 
 .driver-grid h3 {
@@ -729,7 +728,6 @@
   padding: 0.75rem;
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
 }
 
 .current-bets h3 {
@@ -1278,15 +1276,7 @@
     gap: 1rem;
   }
 
-  .driver-grid {
-    max-height: 300px;
-  }
-
   .tier-drivers {
     grid-template-columns: repeat(3, 1fr);
-  }
-
-  .current-bets {
-    max-height: 200px;
   }
 }

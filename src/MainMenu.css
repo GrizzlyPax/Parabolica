@@ -35,6 +35,14 @@
   font-size: 2rem;
 }
 
+.tm {
+  font-size: 0.4em;
+  vertical-align: super;
+  font-weight: 400;
+  opacity: 0.6;
+  margin-left: 0.1em;
+}
+
 .main-menu-subtitle {
   font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   color: #777;

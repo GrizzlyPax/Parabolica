@@ -205,8 +205,6 @@ body, button, input, select, textarea {
 }
 
 .timeline-section {
-  max-height: 350px;
-  overflow: hidden;
   display: flex;
   flex-direction: column;
 }
@@ -443,7 +441,6 @@ body, button, input, select, textarea {
   border-radius: 4px;
   display: flex;
   flex-direction: column;
-  max-height: 280px;
 }
 
 .standings-header {

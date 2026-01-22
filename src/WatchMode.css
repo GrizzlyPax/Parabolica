@@ -1,18 +1,20 @@
 .watch-mode {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  height: 100vh;
   padding: 1.5rem 2rem;
   background: linear-gradient(135deg, #0a0a0a 0%, #111111 50%, #0a0a0a 100%);
+  overflow: hidden;
 }
 
 .watch-content {
   display: flex;
   flex: 1;
   gap: 2rem;
-  align-items: flex-start;
+  align-items: stretch;
   justify-content: center;
   margin-top: 1rem;
+  min-height: 0; /* Critical for flex child to respect parent's height */
 }
 
 .watch-header {
@@ -722,7 +724,7 @@
   border-radius: 6px;
   min-width: 220px;
   max-width: 280px;
-  max-height: calc(100vh - 180px);
+  min-height: 0; /* Allow flex shrinking */
   overflow: hidden;
 }
 
@@ -1117,7 +1119,7 @@
   padding: 0.5rem;
   min-width: 420px;
   max-width: 480px;
-  max-height: calc(100vh - 120px);
+  min-height: 0; /* Allow flex shrinking */
   overflow-y: auto;
 }
 
@@ -1902,6 +1904,12 @@
 
 /* Responsive: stack on smaller screens */
 @media (max-width: 900px) {
+  .watch-mode {
+    height: auto;
+    min-height: 100vh;
+    overflow-y: auto;
+  }
+
   .watch-content {
     flex-direction: column-reverse;
     align-items: center;
@@ -1910,7 +1918,7 @@
   .watch-leaderboard {
     max-width: 100%;
     width: 100%;
-    max-height: 250px;
+    min-width: 0;
   }
 
   .oval-track-container {

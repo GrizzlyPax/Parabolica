@@ -12,7 +12,7 @@ function MainMenu({ onSingleRace, onSeason, onCompendium }: MainMenuProps) {
       <div className="main-menu-content">
         <div className="main-menu-header">
           <h1 className="main-menu-title">
-            Parabolica
+            Parabolica<span className="tm">TM</span>
           </h1>
           <p className="main-menu-subtitle">Racing, where everything is fine.</p>
         </div>
