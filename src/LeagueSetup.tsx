@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useCallback } from 'react';
 import { generateRosterFromTeams, GeneratedDriver } from './generators/drivers';
 import { Track, ALL_TRACKS, getDynamicEventDescription, generateTrack } from './generators/tracks';
 import { generateCarsForKingdoms, GeneratedCar } from './generators/cars';
@@ -139,6 +139,9 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
   const [activeTab, setActiveTab] = useState<'roster' | 'track'>('roster');
   // Prohibition mode (no gambling) - defaults to false (gambling enabled)
   const [prohibitionMode, setProhibitionMode] = useState(false);
+  // Debounce reroll to prevent rapid re-generation on mobile
+  const [isRerolling, setIsRerolling] = useState(false);
+  const rerollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const engine = RaceEngine.getInstance();
 
@@ -166,7 +169,16 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
   const getTeamDrivers = (teamId: string) =>
     roster.filter(d => d.kingdomId === teamId);
 
-  const handleSummonAgain = () => {
+  const handleSummonAgain = useCallback(() => {
+    // Debounce: prevent rapid rerolls on mobile (300ms cooldown)
+    if (isRerolling) return;
+    setIsRerolling(true);
+
+    // Clear any existing timeout
+    if (rerollTimeoutRef.current) {
+      clearTimeout(rerollTimeoutRef.current);
+    }
+
     // In single race mode, reroll everything: teams, drivers, cars, track
     // In season mode, only reroll drivers and cars (teams and track are fixed)
     let newTeams = activeTeams;
@@ -180,7 +192,12 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
     setRoster(generateRosterFromTeams(teamIds));
     setCars(generateCarsForKingdoms(teamIds));
     setSelectedDriver(null);
-  };
+
+    // Re-enable after cooldown
+    rerollTimeoutRef.current = setTimeout(() => {
+      setIsRerolling(false);
+    }, 300);
+  }, [isRerolling, activeTeams, isSeasonMode]);
 
   const handleStartRace = () => {
     // Attach car stats, team stats, and tags to each driver before loading into engine
@@ -260,7 +277,11 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
         >
           Track
         </button>
-        <button className="reroll-btn" onClick={handleSummonAgain}>
+        <button
+          className={`reroll-btn ${isRerolling ? 'disabled' : ''}`}
+          onClick={handleSummonAgain}
+          disabled={isRerolling}
+        >
           🎲 Reroll
         </button>
       </div>

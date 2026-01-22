@@ -293,6 +293,35 @@ export const BASE_MULTIPLIERS: Record<BetType, number> = {
   dnf: 3,       // 3× base for calling a DNF
 };
 
+// Helper to calculate strength score for any driver
+function calcDriverStrength(d: Driver): number {
+  const ss = (d.stats.baseSpeed - 0.85) / 0.30;
+  const cs = (d.stats.consistency - 0.3) / 0.50;
+  const ls = (d.stats.luck - 0.3) / 0.50;
+  const cp = (d.carStats?.power ?? 3) / 5;
+  const cg = (d.carStats?.grip ?? 3) / 5;
+  const cr = (d.carStats?.reliability ?? 3) / 5;
+  return ss * 0.35 + cs * 0.20 + ls * 0.10 + cp * 0.20 + cg * 0.10 + cr * 0.05;
+}
+
+/**
+ * Pre-compute driver rankings once for all odds calculations.
+ * Returns a Map of driverId -> rank (1-indexed).
+ * This avoids O(n²) sorting when calculating odds for each driver.
+ */
+export function computeDriverRankings(drivers: Driver[]): Map<number, number> {
+  const rankings = new Map<number, number>();
+  const sorted = drivers
+    .map(d => ({ id: d.id, strength: calcDriverStrength(d) }))
+    .sort((a, b) => b.strength - a.strength || a.id - b.id);
+
+  sorted.forEach((d, index) => {
+    rankings.set(d.id, index + 1);
+  });
+
+  return rankings;
+}
+
 /**
  * Calculate betting odds for a driver based on their stats
  *
@@ -302,27 +331,7 @@ export const BASE_MULTIPLIERS: Record<BetType, number> = {
  *
  * This makes payouts more generous and the formula transparent
  */
-export function calculateDriverOdds(driver: Driver, allDrivers: Driver[]): DriverOdds {
-  // Helper to calculate strength score for any driver
-  const calcStrength = (d: Driver) => {
-    const ss = (d.stats.baseSpeed - 0.85) / 0.30;
-    const cs = (d.stats.consistency - 0.3) / 0.50;
-    const ls = (d.stats.luck - 0.3) / 0.50;
-    const cp = (d.carStats?.power ?? 3) / 5;
-    const cg = (d.carStats?.grip ?? 3) / 5;
-    const cr = (d.carStats?.reliability ?? 3) / 5;
-    return ss * 0.35 + cs * 0.20 + ls * 0.10 + cp * 0.20 + cg * 0.10 + cr * 0.05;
-  };
-
-  // Rank among all drivers (affects modifier)
-  // Use driver ID to ensure consistent ranking even with equal strengths
-  const allDriversWithStrength = allDrivers.map(d => ({
-    id: d.id,
-    strength: calcStrength(d)
-  })).sort((a, b) => b.strength - a.strength || a.id - b.id);
-
-  const rank = allDriversWithStrength.findIndex(d => d.id === driver.id) + 1 || allDriversWithStrength.length;
-
+export function calculateDriverOdds(driver: Driver, rank: number, _totalDrivers: number): DriverOdds {
   // Get car reliability for DNF/finishes calculations
   const carReliability = (driver.carStats?.reliability ?? 3) / 5;
 
@@ -438,14 +447,19 @@ export function BettingInterface({
   const [betAmount, setBetAmount] = useState(10);
   const [narratorMessage, setNarratorMessage] = useState('');
 
-  // Calculate odds for all drivers
+  // Pre-compute rankings once (O(n log n)) instead of per-driver (O(n² log n))
+  const driverRankings = useMemo(() => computeDriverRankings(drivers), [drivers]);
+
+  // Calculate odds for all drivers using pre-computed rankings
   const driverOdds = useMemo(() => {
     const oddsMap = new Map<number, DriverOdds>();
+    const total = drivers.length;
     drivers.forEach(d => {
-      oddsMap.set(d.id, calculateDriverOdds(d, drivers));
+      const rank = driverRankings.get(d.id) ?? total;
+      oddsMap.set(d.id, calculateDriverOdds(d, rank, total));
     });
     return oddsMap;
-  }, [drivers]);
+  }, [drivers, driverRankings]);
 
   // Sort drivers by win odds for display
   const sortedDrivers = useMemo(() => {
