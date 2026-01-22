@@ -1014,7 +1014,7 @@ export function RaceResults({
               </span>
               <span className="result-outcome">
                 {bet.won ? (
-                  <span className="win">+{bet.payout} ṁ</span>
+                  <span className="win">+{bet.payout - bet.amount} ṁ</span>
                 ) : (
                   <span className="loss">-{bet.amount} ṁ</span>
                 )}
@@ -1072,10 +1072,49 @@ export function SeasonTally({
   const totalBetsPlaced = seasonHistory.reduce((sum, r) => sum + r.bets.length, 0);
   const totalBetsWon = seasonHistory.reduce((sum, r) => sum + r.bets.filter(b => b.won).length, 0);
 
+  const [shareCopied, setShareCopied] = useState(false);
+
   const narratorMessage = useMemo(() => {
     const quotes = MISTER_MARBLES.seasonEnd(finalBankroll);
     return quotes[Math.floor(Math.random() * quotes.length)];
   }, [finalBankroll]);
+
+  // Generate shareable season summary
+  const handleShare = async () => {
+    const winRate = totalBetsPlaced > 0 ? Math.round((totalBetsWon / totalBetsPlaced) * 100) : 0;
+    const netChange = totalWon - totalWagered;
+    const netEmoji = netChange >= 0 ? '📈' : '📉';
+
+    const lines: string[] = [
+      '🏁 PARABOLICA 🏁',
+      `Season Complete`,
+      '',
+      `🎰 ${finalBankroll.toLocaleString()} Marbles`,
+      '',
+      `📊 ${seasonHistory.length} races`,
+      `🎲 ${totalBetsPlaced} bets (${winRate}% win rate)`,
+      `${netEmoji} ${netChange >= 0 ? '+' : ''}${netChange.toLocaleString()} ṁ`,
+      '',
+      'parabolica.game',
+    ];
+
+    const shareText = lines.join('\n');
+
+    try {
+      await navigator.clipboard.writeText(shareText);
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 2000);
+    } catch {
+      const textarea = document.createElement('textarea');
+      textarea.value = shareText;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 2000);
+    }
+  };
 
   return (
     <div className="season-tally">
@@ -1127,9 +1166,14 @@ export function SeasonTally({
         ))}
       </div>
 
-      <button className="new-season-btn" onClick={onNewSeason}>
-        New Season
-      </button>
+      <div className="season-tally-buttons">
+        <button className="share-btn" onClick={handleShare}>
+          {shareCopied ? '✓ Copied!' : '📋 Share'}
+        </button>
+        <button className="new-season-btn" onClick={onNewSeason}>
+          New Season
+        </button>
+      </div>
     </div>
   );
 }

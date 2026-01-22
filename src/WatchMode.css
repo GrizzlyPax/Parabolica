@@ -1855,6 +1855,40 @@
   transform: translateY(0);
 }
 
+/* Finish modal button container */
+.finish-modal-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+/* Share Button */
+.share-btn {
+  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-size: 1.1rem;
+  font-weight: 600;
+  padding: 0.8rem 2rem;
+  background: linear-gradient(135deg, #3a5a3a 0%, #2a4a2a 100%);
+  color: #c0d4c0;
+  border: 2px solid #4a6a4a;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(74, 111, 74, 0.3);
+  min-width: 120px;
+}
+
+.share-btn:hover {
+  background: linear-gradient(135deg, #4a6a4a 0%, #3a5a3a 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(74, 111, 74, 0.4);
+}
+
+.share-btn:active {
+  transform: translateY(0);
+}
+
 /* Responsive: stack on smaller screens */
 @media (max-width: 900px) {
   .watch-mode {
@@ -1994,10 +2028,16 @@
 
   /* Continue button */
   .finish-modal .continue-btn,
-  .finish-modal .next-race-btn {
+  .finish-modal .next-race-btn,
+  .finish-modal .share-btn {
     width: 100%;
     padding: 1rem;
     min-height: 48px;
+  }
+
+  .finish-modal-buttons {
+    flex-direction: column;
+    gap: 0.75rem;
   }
 }
 

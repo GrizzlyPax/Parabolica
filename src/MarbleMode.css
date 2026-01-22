@@ -1220,6 +1220,32 @@
   box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
 }
 
+/* Season tally buttons container */
+.season-tally-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+/* Share button in season tally */
+.season-tally .share-btn {
+  padding: 1rem 2rem;
+  background: linear-gradient(135deg, #304530 0%, #203520 100%);
+  border: 1px solid #405530;
+  border-radius: 6px;
+  color: #90c090;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.season-tally .share-btn:hover {
+  background: linear-gradient(135deg, #405540 0%, #304530 100%);
+  box-shadow: 0 0 20px rgba(100, 200, 100, 0.3);
+}
+
 /* ============================================
    TIMING TOWER BET INDICATOR
    ============================================ */
@@ -1369,9 +1395,16 @@
     font-size: 0.75rem;
   }
 
-  .new-season-btn {
+  .new-season-btn,
+  .season-tally .share-btn {
     width: 100%;
     padding: 0.85rem;
     font-size: 1rem;
+  }
+
+  .season-tally-buttons {
+    flex-direction: column;
+    width: 100%;
+    gap: 0.75rem;
   }
 }

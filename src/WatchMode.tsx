@@ -282,6 +282,9 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, powerAct
   const [hoveredTagId, setHoveredTagId] = useState<string | null>(null);
   const [tagTooltipPosition, setTagTooltipPosition] = useState<{ top: number; left: number } | null>(null);
 
+  // Share button state
+  const [shareCopied, setShareCopied] = useState(false);
+
   // Sector-based gap tracking (like F1 timing)
   // Gaps only update when a driver crosses a sector boundary
   // 6 sectors = updates at each 1/6 of the track (more frequent than 3)
@@ -328,6 +331,65 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, powerAct
     setTimeout(() => {
       setNotifications(prev => prev.filter(n => n.id !== newNotification.id));
     }, durationMs);
+  };
+
+  // Generate shareable race summary (Wordle-style)
+  const generateShareText = (): string => {
+    const trackName = trackInfo?.name || 'Unknown Track';
+    const trackEmoji = trackInfo?.emoji || '🏁';
+
+    // Get sorted finished drivers
+    const sortedFinished = drivers
+      .filter(d => d.status === 'finished')
+      .sort((a, b) => raceState.finishOrder.indexOf(a.id) - raceState.finishOrder.indexOf(b.id));
+
+    // Count DNFs
+    const dnfCount = drivers.filter(d => d.status === 'dnf').length;
+
+    // Build the share text
+    const lines: string[] = [
+      '🏁 PARABOLICA 🏁',
+      `${trackEmoji} ${trackName}`,
+      '',
+    ];
+
+    // Podium
+    if (sortedFinished[0]) lines.push(`🥇 ${sortedFinished[0].emoji} ${sortedFinished[0].name}`);
+    if (sortedFinished[1]) lines.push(`🥈 ${sortedFinished[1].emoji} ${sortedFinished[1].name}`);
+    if (sortedFinished[2]) lines.push(`🥉 ${sortedFinished[2].emoji} ${sortedFinished[2].name}`);
+
+    lines.push('');
+
+    // Stats line
+    const statsLine: string[] = [];
+    if (dnfCount > 0) statsLine.push(`💀 ${dnfCount}`);
+    statsLine.push(`🔄 ${totalLaps} laps`);
+    lines.push(statsLine.join(' • '));
+
+    lines.push('');
+    lines.push('parabolica.game');
+
+    return lines.join('\n');
+  };
+
+  // Copy share text to clipboard
+  const handleShare = async () => {
+    const shareText = generateShareText();
+    try {
+      await navigator.clipboard.writeText(shareText);
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 2000);
+    } catch {
+      // Fallback for older browsers
+      const textarea = document.createElement('textarea');
+      textarea.value = shareText;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 2000);
+    }
   };
 
   // Get track path from layout or use default
@@ -1342,8 +1404,43 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, powerAct
                 sectorData.lastSector = currentSector;
               } else if (hasFirstSectorTime) {
                 // No sector crossing but has previous data - use frozen/stored gaps
-                leaderGapDisplay = sectorData.leaderGap;
-                intervalGapDisplay = sectorData.intervalGap;
+                // IMPORTANT: If stored gap is "Leader" but we're no longer P1, force recalculation
+                // This prevents the "multiple leaders" desync bug when positions change mid-sector
+                if (sectorData.leaderGap === 'Leader' && index > 0) {
+                  // Driver lost lead - recalculate gap immediately
+                  if (leader && leader.status !== 'finished') {
+                    const distGapToLeader = leaderDist - driverDist;
+                    const estimatedTickGapToLeader = distGapToLeader * 0.8;
+                    if (estimatedTickGapToLeader > 0) {
+                      leaderGapDisplay = formatGap(estimatedTickGapToLeader);
+                    } else {
+                      leaderGapDisplay = '-';
+                    }
+                    // Also recalculate interval to car ahead
+                    const carAhead = sortedDrivers[index - 1];
+                    if (carAhead && carAhead.status !== 'dnf') {
+                      const carAheadDist = carAhead.currentLap * trackLength + carAhead.position;
+                      const distGapToAhead = carAheadDist - driverDist;
+                      const estimatedTickGapToAhead = distGapToAhead * 0.8;
+                      if (estimatedTickGapToAhead > 0) {
+                        intervalGapDisplay = formatGap(estimatedTickGapToAhead);
+                      } else {
+                        intervalGapDisplay = '-';
+                      }
+                    } else {
+                      intervalGapDisplay = '-';
+                    }
+                    // Update stored values so they're correct for next render
+                    sectorData.leaderGap = leaderGapDisplay;
+                    sectorData.intervalGap = intervalGapDisplay;
+                  } else {
+                    leaderGapDisplay = '-';
+                    intervalGapDisplay = '-';
+                  }
+                } else {
+                  leaderGapDisplay = sectorData.leaderGap;
+                  intervalGapDisplay = sectorData.intervalGap;
+                }
               } else {
                 // Before first sector - show dashes
                 leaderGapDisplay = '-';
@@ -2331,11 +2428,16 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, powerAct
               </div>
             )}
 
-            {onNextRace && (
-              <button className="next-race-btn" onClick={onNextRace}>
-                Next Race
+            <div className="finish-modal-buttons">
+              <button className="share-btn" onClick={handleShare}>
+                {shareCopied ? '✓ Copied!' : '📋 Share'}
               </button>
-            )}
+              {onNextRace && (
+                <button className="next-race-btn" onClick={onNextRace}>
+                  Next Race
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}
