@@ -8,11 +8,12 @@ import SeasonComplete from './SeasonComplete';
 import RaceStartCountdown from './RaceStartCountdown';
 import WatchMode from './WatchMode';
 import Compendium from './Compendium';
+import { BettingInterface, RaceResults, SeasonTally, Bet, ResolvedBet, MarbleState, SeasonRaceResult, resolveBets } from './MarbleMode';
 import { generateTrack, getTracksByIds, getDynamicEventDescription, Track } from './generators/tracks';
 import { SeasonState, createInitialSeasonState, updateSeasonWithRaceResult } from './types/season';
 import './App.css';
 
-type AppScreen = 'main-menu' | 'setup' | 'season-setup' | 'race' | 'season-complete' | 'compendium';
+type AppScreen = 'main-menu' | 'setup' | 'season-setup' | 'betting' | 'race' | 'race-results' | 'season-complete' | 'marble-tally' | 'compendium';
 type ViewMode = 'watch' | 'season';
 type GameMode = 'single' | 'season';
 type RaceSpeed = 0.5 | 1 | 2 | 10;
@@ -47,6 +48,17 @@ function App() {
   // Race events for track event notifications
   const [raceEvents, setRaceEvents] = useState<RaceEvent[]>([]);
 
+  // Marble Mode state
+  const [marbleModeEnabled, setMarbleModeEnabled] = useState(false);
+  const [marbleState, setMarbleState] = useState<MarbleState>({
+    bankroll: 0,
+    raceBudget: 100,
+    currentBets: [],
+    seasonHistory: [],
+  });
+  const [resolvedBets, setResolvedBets] = useState<ResolvedBet[]>([]);
+  const [currentRaceNumber, setCurrentRaceNumber] = useState(1);
+
   const engine = RaceEngine.getInstance();
 
   useEffect(() => {
@@ -79,11 +91,29 @@ function App() {
   const handleSingleRace = () => {
     setGameMode('single');
     setSeasonState(null);
+    // Reset marble state for fresh start (marble mode enabled by default)
+    setMarbleModeEnabled(true);
+    setMarbleState({
+      bankroll: 0,
+      raceBudget: 100,
+      currentBets: [],
+      seasonHistory: [],
+    });
+    setCurrentRaceNumber(1);
     setScreen('setup');
   };
 
   const handleSeasonMode = () => {
     setGameMode('season');
+    // Reset marble state for fresh start (marble mode enabled by default)
+    setMarbleModeEnabled(true);
+    setMarbleState({
+      bankroll: 0,
+      raceBudget: 100,
+      currentBets: [],
+      seasonHistory: [],
+    });
+    setCurrentRaceNumber(1);
     setScreen('season-setup');
   };
 
@@ -106,7 +136,7 @@ function App() {
     setScreen('setup');
   };
 
-  const handleStartRace = (favoriteKingdom: string | null, rivalKingdom: string | null) => {
+  const handleStartRace = (favoriteKingdom: string | null, rivalKingdom: string | null, prohibitionMode: boolean) => {
     setTrackInfo(engine.getTrackInfo());
 
     // Initialize season state with driver IDs if this is a season and not yet initialized
@@ -118,15 +148,87 @@ function App() {
     // Set selections (can be null - they're optional)
     setFavoriteKingdomId(favoriteKingdom);
     setRivalKingdomId(rivalKingdom);
-    setScreen('race');
-    // Show countdown instead of auto-starting
-    setShowCountdown(true);
+
+    // Prohibition mode disables marble mode (gambling)
+    const gamblingEnabled = !prohibitionMode;
+    setMarbleModeEnabled(gamblingEnabled);
+
+    // If marble mode is enabled, go to betting first
+    if (gamblingEnabled) {
+      // Reset current bets and give 100 marbles for this race
+      setMarbleState(prev => ({
+        ...prev,
+        raceBudget: 100,
+        currentBets: [],
+      }));
+      setScreen('betting');
+    } else {
+      setScreen('race');
+      // Show countdown instead of auto-starting
+      setShowCountdown(true);
+    }
   };
 
   const handleCountdownComplete = useCallback(() => {
     setShowCountdown(false);
     engine.start();
   }, [engine]);
+
+  // Marble Mode handlers
+  const handlePlaceBet = (bet: Omit<Bet, 'id'>) => {
+    const newBet: Bet = {
+      ...bet,
+      id: `bet-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    };
+    setMarbleState(prev => ({
+      ...prev,
+      currentBets: [...prev.currentBets, newBet],
+    }));
+  };
+
+  const handleRemoveBet = (betId: string) => {
+    setMarbleState(prev => ({
+      ...prev,
+      currentBets: prev.currentBets.filter(b => b.id !== betId),
+    }));
+  };
+
+  const handleConfirmBets = () => {
+    // Move to race with the current bets
+    setScreen('race');
+    setShowCountdown(true);
+  };
+
+  const handleRaceResultsContinue = () => {
+    // Record this race's results for season tracking
+    const totalWagered = resolvedBets.reduce((sum, b) => sum + b.amount, 0);
+    const totalWon = resolvedBets.reduce((sum, b) => sum + b.payout, 0);
+    const netChange = totalWon - totalWagered;
+
+    const raceResult: SeasonRaceResult = {
+      raceIndex: currentRaceNumber - 1,
+      trackName: trackInfo?.name || 'Unknown Track',
+      bets: resolvedBets,
+      totalWagered,
+      totalWon,
+      netChange,
+    };
+
+    setMarbleState(prev => ({
+      ...prev,
+      bankroll: prev.bankroll + netChange,
+      seasonHistory: [...prev.seasonHistory, raceResult],
+      currentBets: [],
+    }));
+
+    // Check if this is the last race of the season
+    if (gameMode === 'season' && seasonState?.isComplete) {
+      setScreen('marble-tally');
+    } else {
+      // Proceed to next race setup
+      handleNextRace();
+    }
+  };
 
   const handleBackToMainMenu = () => {
     engine.stop();
@@ -135,6 +237,16 @@ function App() {
     setRivalKingdomId(null);
     setSeasonState(null);
     setShowCountdown(false);
+    // Reset marble mode state
+    setMarbleModeEnabled(false);
+    setMarbleState({
+      bankroll: 0,
+      raceBudget: 100,
+      currentBets: [],
+      seasonHistory: [],
+    });
+    setResolvedBets([]);
+    setCurrentRaceNumber(1);
     setScreen('main-menu');
   };
 
@@ -159,6 +271,14 @@ function App() {
   };
 
   const handleNextRace = () => {
+    // If marble mode is enabled and race just finished, show results first
+    if (marbleModeEnabled && raceState?.raceFinished && marbleState.currentBets.length > 0 && screen === 'race') {
+      const resolved = resolveBets(marbleState.currentBets, drivers, raceState);
+      setResolvedBets(resolved);
+      setScreen('race-results');
+      return;
+    }
+
     // Record race results for season mode
     if (gameMode === 'season' && seasonState && raceState) {
       const finishOrder = raceState.finishOrder;
@@ -186,9 +306,17 @@ function App() {
 
       setSeasonState(updatedSeason);
 
+      // Increment race number for marble mode
+      setCurrentRaceNumber(prev => prev + 1);
+
       // Check if season is complete
       if (updatedSeason.isComplete) {
-        setScreen('season-complete');
+        // If marble mode, show marble tally first
+        if (marbleModeEnabled) {
+          setScreen('marble-tally');
+        } else {
+          setScreen('season-complete');
+        }
         return;
       }
     }
@@ -243,12 +371,30 @@ function App() {
     // Update local track info state
     setTrackInfo(engine.getTrackInfo());
 
-    // Go straight to countdown for next race
-    setShowCountdown(true);
+    // If marble mode, go to betting. Otherwise go straight to countdown
+    if (marbleModeEnabled) {
+      setMarbleState(prev => ({
+        ...prev,
+        raceBudget: 100,
+        currentBets: [],
+      }));
+      setScreen('betting');
+    } else {
+      setShowCountdown(true);
+    }
   };
 
   const handleNewSeason = () => {
     setSeasonState(null);
+    // Reset marble mode state for new season
+    setMarbleState({
+      bankroll: 0,
+      raceBudget: 100,
+      currentBets: [],
+      seasonHistory: [],
+    });
+    setResolvedBets([]);
+    setCurrentRaceNumber(1);
     setScreen('season-setup');
   };
 
@@ -286,6 +432,53 @@ function App() {
         drivers={drivers}
         onNewSeason={handleNewSeason}
         onMainMenu={handleBackToMainMenu}
+      />
+    );
+  }
+
+  // Show marble mode betting interface
+  if (screen === 'betting') {
+    return (
+      <BettingInterface
+        drivers={engine.getDrivers()}
+        raceBudget={marbleState.raceBudget}
+        currentBets={marbleState.currentBets}
+        onPlaceBet={handlePlaceBet}
+        onRemoveBet={handleRemoveBet}
+        onConfirmBets={handleConfirmBets}
+        trackName={trackInfo?.name || 'Unknown Track'}
+        raceNumber={currentRaceNumber}
+        totalRaces={gameMode === 'season' ? (seasonState?.totalRaces || 1) : 1}
+        bankroll={marbleState.bankroll}
+      />
+    );
+  }
+
+  // Show marble mode race results
+  if (screen === 'race-results') {
+    const totalWagered = resolvedBets.reduce((sum, b) => sum + b.amount, 0);
+    const totalWon = resolvedBets.reduce((sum, b) => sum + b.payout, 0);
+    const newBankroll = marbleState.bankroll + (totalWon - totalWagered);
+    return (
+      <RaceResults
+        resolvedBets={resolvedBets}
+        onContinue={handleRaceResultsContinue}
+        raceNumber={currentRaceNumber}
+        totalRaces={gameMode === 'season' ? (seasonState?.totalRaces || 1) : 1}
+        newBankroll={newBankroll}
+      />
+    );
+  }
+
+  // Show marble mode season tally
+  if (screen === 'marble-tally') {
+    return (
+      <SeasonTally
+        finalBankroll={marbleState.bankroll}
+        seasonHistory={marbleState.seasonHistory}
+        onNewSeason={() => {
+          handleNewSeason();
+        }}
       />
     );
   }
@@ -412,6 +605,7 @@ function App() {
           favoriteKingdomId={favoriteKingdomId}
           rivalKingdomId={rivalKingdomId}
           raceEvents={raceEvents}
+          activeBets={marbleModeEnabled ? marbleState.currentBets : undefined}
         />
       </div>
     );

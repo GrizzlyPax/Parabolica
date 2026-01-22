@@ -117,6 +117,21 @@
   color: #888;
 }
 
+/* Marble Mode special styling */
+.mode-card.marble {
+  border-color: #4c3a6b;
+  background: linear-gradient(135deg, #1a1a1a 0%, #1f1825 100%);
+}
+
+.mode-card.marble:hover {
+  border-color: #7c5da3;
+  background: linear-gradient(135deg, #222 0%, #2a2030 100%);
+}
+
+.mode-card.marble .mode-icon {
+  background: linear-gradient(135deg, #1a1520 0%, #251a2e 100%);
+  border-color: #4c3a6b;
+}
 
 .main-menu-footer {
   margin-top: 2.5rem;

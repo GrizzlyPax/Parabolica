@@ -10,54 +10,55 @@ export interface Team {
 }
 
 // The 40 Teams of Parabolica
+// Colors chosen for: vibrancy on dark backgrounds, instant recognition, sporty energy
 export const ALL_TEAMS: Team[] = [
   // Creatures
-  { id: 'ink-bloom', name: 'Ink Bloom', emoji: '🐙', color: '#8B5DBB', description: 'They write their own finish line' },
-  { id: 'midnight-bandits', name: 'Midnight Bandits', emoji: '🦝', color: '#7A7A7A', description: 'Gone before you see them' },
-  { id: 'the-climbers', name: 'The Climbers', emoji: '🐐', color: '#8C7A5E', description: 'Always finding a way up' },
-  { id: 'loose-serpents', name: 'Loose Serpents', emoji: '🐍', color: '#4EAB77', description: 'Slipping through every gap' },
-  { id: 'late-watch', name: 'Late Watch', emoji: '🦉', color: '#7C7F9B', description: 'Patience is a strategy' },
-  { id: 'slow-panic', name: 'Slow Panic', emoji: '🐌', color: '#AFA4D3', description: 'Inevitable, eventually' },
-  { id: 'sudden-hares', name: 'Sudden Hares', emoji: '🐇', color: '#D4918E', description: 'Blink and they\'re gone' },
-  { id: 'ceiling-club', name: 'Ceiling Club', emoji: '🦇', color: '#6A6A8E', description: 'Upside down and loving it' },
-  { id: 'drain-dwellers', name: 'Drain Dwellers', emoji: '🐊', color: '#5A9E6B', description: 'From the depths, they emerge' },
-  { id: 'deep-listeners', name: 'Deep Listeners', emoji: '🐋', color: '#4C7EB9', description: 'The track speaks to them' },
+  { id: 'ink-bloom', name: 'Ink Bloom', emoji: '🐙', color: '#A855F7', description: 'They write their own finish line' },           // Vivid purple
+  { id: 'midnight-bandits', name: 'Midnight Bandits', emoji: '🦝', color: '#94A3B8', description: 'Gone before you see them' },     // Slate silver
+  { id: 'the-climbers', name: 'The Climbers', emoji: '🐐', color: '#D97706', description: 'Always finding a way up' },              // Amber orange
+  { id: 'loose-serpents', name: 'Loose Serpents', emoji: '🐍', color: '#10B981', description: 'Slipping through every gap' },       // Emerald green
+  { id: 'late-watch', name: 'Late Watch', emoji: '🦉', color: '#8B5CF6', description: 'Patience is a strategy' },                   // Violet
+  { id: 'slow-panic', name: 'Slow Panic', emoji: '🐌', color: '#C084FC', description: 'Inevitable, eventually' },                   // Orchid purple
+  { id: 'sudden-hares', name: 'Sudden Hares', emoji: '🐇', color: '#FB7185', description: 'Blink and they\'re gone' },              // Coral pink
+  { id: 'ceiling-club', name: 'Ceiling Club', emoji: '🦇', color: '#6366F1', description: 'Upside down and loving it' },            // Indigo
+  { id: 'drain-dwellers', name: 'Drain Dwellers', emoji: '🐊', color: '#22C55E', description: 'From the depths, they emerge' },     // Bright green
+  { id: 'deep-listeners', name: 'Deep Listeners', emoji: '🐋', color: '#3B82F6', description: 'The track speaks to them' },         // Royal blue
 
   // Faces & States
-  { id: 'false-smiles', name: 'False Smiles', emoji: '🤡', color: '#FF5FA2', description: 'The joke is on everyone' },
-  { id: 'no-comment', name: 'No Comment', emoji: '😶', color: '#7A8B99', description: 'Their results speak for themselves' },
-  { id: 'almost-there', name: 'Almost There', emoji: '🫥', color: '#6B7A8A', description: 'Perpetually approaching' },
-  { id: 'minor-problems', name: 'Minor Problems', emoji: '😈', color: '#CC3333', description: 'Small issues, big consequences' },
-  { id: 'soft-errors', name: 'Soft Errors', emoji: '🤖', color: '#7AA2F7', description: 'Failing gracefully since forever' },
-  { id: 'walk-throughs', name: 'Walk-Throughs', emoji: '👻', color: '#9EB3C2', description: 'Here, but not quite' },
-  { id: 'heat-collapse', name: 'Heat Collapse', emoji: '🫠', color: '#FFB347', description: 'Melting under pressure' },
-  { id: 'cold-thoughts', name: 'Cold Thoughts', emoji: '🥶', color: '#8ED6FF', description: 'Calculating every move' },
-  { id: 'the-inspectors', name: 'The Inspectors', emoji: '🧐', color: '#CFAE70', description: 'Scrutinizing every detail' },
-  { id: 'side-effects', name: 'Side Effects', emoji: '🥴', color: '#B47EB3', description: 'Unintended but effective' },
+  { id: 'false-smiles', name: 'False Smiles', emoji: '🤡', color: '#EC4899', description: 'The joke is on everyone' },              // Hot pink
+  { id: 'no-comment', name: 'No Comment', emoji: '😶', color: '#64748B', description: 'Their results speak for themselves' },       // Cool gray
+  { id: 'almost-there', name: 'Almost There', emoji: '🫥', color: '#06B6D4', description: 'Perpetually approaching' },              // Cyan
+  { id: 'minor-problems', name: 'Minor Problems', emoji: '😈', color: '#EF4444', description: 'Small issues, big consequences' },   // Bright red
+  { id: 'soft-errors', name: 'Soft Errors', emoji: '🤖', color: '#60A5FA', description: 'Failing gracefully since forever' },       // Sky blue
+  { id: 'walk-throughs', name: 'Walk-Throughs', emoji: '👻', color: '#E2E8F0', description: 'Here, but not quite' },                // Ghost white
+  { id: 'heat-collapse', name: 'Heat Collapse', emoji: '🫠', color: '#F59E0B', description: 'Melting under pressure' },             // Amber
+  { id: 'cold-thoughts', name: 'Cold Thoughts', emoji: '🥶', color: '#38BDF8', description: 'Calculating every move' },             // Ice blue
+  { id: 'the-inspectors', name: 'The Inspectors', emoji: '🧐', color: '#FBBF24', description: 'Scrutinizing every detail' },        // Gold
+  { id: 'side-effects', name: 'Side Effects', emoji: '🥴', color: '#D946EF', description: 'Unintended but effective' },             // Fuchsia
 
   // Weather & Nature
-  { id: 'loose-weather', name: 'Loose Weather', emoji: '🌪️', color: '#7F8FA6', description: 'Unpredictable conditions' },
-  { id: 'low-visibility', name: 'Low Visibility', emoji: '🌫️', color: '#8899A6', description: 'You won\'t see them coming' },
-  { id: 'power-outage', name: 'Power Outage', emoji: '🌑', color: '#5C5C6C', description: 'Racing in the dark' },
-  { id: 'after-the-incident', name: 'After the Incident', emoji: '🌈', color: '#6EE7B7', description: 'We don\'t talk about it' },
-  { id: 'short-circuit', name: 'Short Circuit', emoji: '⚡', color: '#FACC15', description: 'Shocking performance' },
-  { id: 'overcapacity', name: 'Overcapacity', emoji: '🔥', color: '#E25822', description: 'Running too hot' },
-  { id: 'unmeltables', name: 'Unmeltables', emoji: '🧊', color: '#5BC0BE', description: 'Cool under any pressure' },
-  { id: 'wrong-orbit', name: 'Wrong Orbit', emoji: '🪐', color: '#6B5CA5', description: 'Taking the scenic route' },
-  { id: 'the-undertow', name: 'The Undertow', emoji: '🌊', color: '#4D99C6', description: 'Pulling you back in' },
-  { id: 'dry-forecast', name: 'Dry Forecast', emoji: '🏜️', color: '#D2A679', description: 'Nothing but clear skies' },
+  { id: 'loose-weather', name: 'Loose Weather', emoji: '🌪️', color: '#78716C', description: 'Unpredictable conditions' },          // Stone
+  { id: 'low-visibility', name: 'Low Visibility', emoji: '🌫️', color: '#A8A29E', description: 'You won\'t see them coming' },      // Warm gray
+  { id: 'power-outage', name: 'Power Outage', emoji: '🌑', color: '#475569', description: 'Racing in the dark' },                   // Dark slate
+  { id: 'after-the-incident', name: 'After the Incident', emoji: '🌈', color: '#34D399', description: 'We don\'t talk about it' },  // Mint green
+  { id: 'short-circuit', name: 'Short Circuit', emoji: '⚡', color: '#FDE047', description: 'Shocking performance' },               // Electric yellow
+  { id: 'overcapacity', name: 'Overcapacity', emoji: '🔥', color: '#F97316', description: 'Running too hot' },                      // Flame orange
+  { id: 'unmeltables', name: 'Unmeltables', emoji: '🧊', color: '#22D3EE', description: 'Cool under any pressure' },                // Bright cyan
+  { id: 'wrong-orbit', name: 'Wrong Orbit', emoji: '🪐', color: '#7C3AED', description: 'Taking the scenic route' },                // Deep violet
+  { id: 'the-undertow', name: 'The Undertow', emoji: '🌊', color: '#0EA5E9', description: 'Pulling you back in' },                  // Ocean blue
+  { id: 'dry-forecast', name: 'Dry Forecast', emoji: '🏜️', color: '#EA580C', description: 'Nothing but clear skies' },             // Desert orange
 
   // Objects & Concepts
-  { id: 'reserved-seating', name: 'Reserved Seating', emoji: '🪑', color: '#8C7A6B', description: 'They\'ve saved your spot' },
-  { id: 'overflow-unit', name: 'Overflow Unit', emoji: '🛁', color: '#9FD3C7', description: 'Spilling over with talent' },
-  { id: 'load-bearing', name: 'Load Bearing', emoji: '🧱', color: '#C17A6B', description: 'Holding everything together' },
-  { id: 'unattended-carts', name: 'Unattended Carts', emoji: '🛒', color: '#7D8F9B', description: 'Rolling on their own' },
-  { id: 'held-together', name: 'Held Together', emoji: '📎', color: '#8F9CDF', description: 'Barely, but effectively' },
-  { id: 'access-denied', name: 'Access Denied', emoji: '🔒', color: '#5F8898', description: 'No entry, no problem' },
-  { id: 'controlled-burn', name: 'Controlled Burn', emoji: '🧯', color: '#E63946', description: 'Calculated destruction' },
-  { id: 'misaligned', name: 'Misaligned', emoji: '🧭', color: '#6A9BBD', description: 'Going their own direction' },
-  { id: 'weak-signal', name: 'Weak Signal', emoji: '📡', color: '#00B894', description: 'Barely there, but present' },
-  { id: 'second-reflection', name: 'Second Reflection', emoji: '🪞', color: '#8FA3B0', description: 'Not what you expected' },
+  { id: 'reserved-seating', name: 'Reserved Seating', emoji: '🪑', color: '#B45309', description: 'They\'ve saved your spot' },     // Walnut brown
+  { id: 'overflow-unit', name: 'Overflow Unit', emoji: '🛁', color: '#2DD4BF', description: 'Spilling over with talent' },          // Teal
+  { id: 'load-bearing', name: 'Load Bearing', emoji: '🧱', color: '#DC2626', description: 'Holding everything together' },          // Brick red
+  { id: 'unattended-carts', name: 'Unattended Carts', emoji: '🛒', color: '#0284C7', description: 'Rolling on their own' },         // Steel blue
+  { id: 'held-together', name: 'Held Together', emoji: '📎', color: '#818CF8', description: 'Barely, but effectively' },            // Periwinkle
+  { id: 'access-denied', name: 'Access Denied', emoji: '🔒', color: '#059669', description: 'No entry, no problem' },               // Forest green
+  { id: 'controlled-burn', name: 'Controlled Burn', emoji: '🧯', color: '#E11D48', description: 'Calculated destruction' },         // Crimson
+  { id: 'misaligned', name: 'Misaligned', emoji: '🧭', color: '#14B8A6', description: 'Going their own direction' },                // Teal green
+  { id: 'weak-signal', name: 'Weak Signal', emoji: '📡', color: '#84CC16', description: 'Barely there, but present' },              // Lime green
+  { id: 'second-reflection', name: 'Second Reflection', emoji: '🪞', color: '#CBD5E1', description: 'Not what you expected' },      // Silver
 ];
 
 // Default selection of 10 teams

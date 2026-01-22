@@ -53,7 +53,7 @@ function getRatingColor(rating: number): string {
 }
 
 interface LeagueSetupProps {
-  onStartRace: (favoriteTeamId: string | null, rivalTeamId: string | null) => void;
+  onStartRace: (favoriteTeamId: string | null, rivalTeamId: string | null, prohibitionMode: boolean) => void;
   // Season mode - use specific teams and track
   seasonKingdomIds?: string[];
   seasonTrack?: Track;
@@ -88,6 +88,8 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
   // Team selection for favorites/rivals
   const [chosenTeamId, setChosenTeamId] = useState<string | null>(null);
   const [cursedTeamId, setCursedTeamId] = useState<string | null>(null);
+  // Prohibition mode (no gambling) - defaults to false (gambling enabled)
+  const [prohibitionMode, setProhibitionMode] = useState(false);
 
   const engine = RaceEngine.getInstance();
 
@@ -190,7 +192,7 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
     });
 
     // Pass team IDs directly (powers now affect whole team)
-    onStartRace(chosenTeamId, cursedTeamId);
+    onStartRace(chosenTeamId, cursedTeamId, prohibitionMode);
   };
 
   // Get chosen/cursed team objects for preview
@@ -496,9 +498,20 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
             </span>
           )}
         </div>
-        <button className="start-race-btn" onClick={handleStartRace}>
-          Start Race
-        </button>
+        <div className="footer-controls">
+          <label className="prohibition-toggle">
+            <input
+              type="checkbox"
+              checked={prohibitionMode}
+              onChange={(e) => setProhibitionMode(e.target.checked)}
+            />
+            <span className="prohibition-label">🚫 Prohibition Mode</span>
+            <span className="prohibition-hint">No gambling</span>
+          </label>
+          <button className="start-race-btn" onClick={handleStartRace}>
+            Start Race
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -113,6 +113,13 @@ export interface RaceState {
   finishOrder: number[];  // Driver IDs in order they finished
   winnerFinishTick: number | null;  // Tick when winner crossed the line (triggers final lap)
   winnerLap: number;  // The lap the winner was on when they finished
+  // Unsafety Car state
+  unsafetyCarActive: boolean;
+  unsafetyCarPosition: number;  // Track position 0-1
+  unsafetyCarLap: number;  // Current lap the Unsafety Car is on
+  unsafetyCarLapsRemaining: number;  // Laps until it exits
+  unsafetyCarWaitingForLeader: boolean;  // True while waiting at pit exit for leader
+  unsafetyCarCooldownUntilLap: number;  // Can't deploy again until leader reaches this lap
 }
 
 export interface TickLog {
@@ -199,7 +206,10 @@ export type RaceEventType =
   | 'track_event'      // Track event triggered
   | 'track_event_effect' // Effect from track event applied to driver
   // Tag events
-  | 'tag_activation';  // A driver/car/team tag triggered
+  | 'tag_activation'   // A driver/car/team tag triggered
+  // Unsafety Car events
+  | 'unsafety_car_deployed'  // The Unsafety Car has been deployed
+  | 'unsafety_car_recalled'; // The Unsafety Car is returning to the void
 
 export interface RaceEvent {
   tick: number;
@@ -294,7 +304,7 @@ export const DEFAULT_CONFIG: RaceConfig = {
   pitStopDuration: 60,
   mandatoryPitStops: 2,
   crashProximityThreshold: 0.03,
-  baseCrashChance: 0.0008,  // Reduced from 0.002 to lower pileup frequency
+  baseCrashChance: 0.0003,  // Further reduced for less frequent crashes
   enableCrashes: true,
   enableTireWear: true,
 };
@@ -330,6 +340,13 @@ class RaceEngine {
     finishOrder: [],
     winnerFinishTick: null,
     winnerLap: 0,
+    // Unsafety Car initial state
+    unsafetyCarActive: false,
+    unsafetyCarPosition: 0,
+    unsafetyCarLap: 0,
+    unsafetyCarLapsRemaining: 0,
+    unsafetyCarWaitingForLeader: false,
+    unsafetyCarCooldownUntilLap: 0,
   };
   private tickLogs: TickLog[] = [];
   private raceEvents: RaceEvent[] = [];
@@ -479,6 +496,12 @@ class RaceEngine {
       finishOrder: [],
       winnerFinishTick: null,
       winnerLap: 0,
+      unsafetyCarActive: false,
+      unsafetyCarPosition: 0,
+      unsafetyCarLap: 0,
+      unsafetyCarLapsRemaining: 0,
+      unsafetyCarWaitingForLeader: false,
+      unsafetyCarCooldownUntilLap: 0,
     };
     this.tickLogs = [];
     this.raceEvents = [];
@@ -737,6 +760,12 @@ class RaceEngine {
       finishOrder: [],
       winnerFinishTick: null,
       winnerLap: 0,
+      unsafetyCarActive: false,
+      unsafetyCarPosition: 0,
+      unsafetyCarLap: 0,
+      unsafetyCarLapsRemaining: 0,
+      unsafetyCarWaitingForLeader: false,
+      unsafetyCarCooldownUntilLap: 0,
     };
     this.tickLogs = [];
     this.raceEvents = [];
@@ -1164,6 +1193,14 @@ class RaceEngine {
       return { crashed: false, dnfDriverIds: [], damagedDriverIds: [] };
     }
 
+    // SAFETY CAR: Greatly reduce crash risk - everyone is going slow and single file
+    if (this.isUnderSafetyCar()) {
+      // 95% reduction in crash chance during Safety Car
+      if (Math.random() > 0.05) {
+        return { crashed: false, dnfDriverIds: [], damagedDriverIds: [] };
+      }
+    }
+
     // Base crash chance
     let crashChance = this.config.baseCrashChance;
 
@@ -1315,13 +1352,14 @@ class RaceEngine {
     const event = this.trackInfo.event;
     const racingDrivers = this.drivers.filter(d => d.status === 'racing');
 
-    // Log the event trigger
+    // Log the event trigger - pass event name and flavor text separately, emoji as last param
     this.logEvent(
       'track_event',
       null,
-      `${event.emoji} ${event.name}: ${event.flavorText}`,
+      `${event.name}: ${event.flavorText}`,
       'neutral',
-      1.0
+      1.0,
+      event.emoji
     );
 
     // Sort drivers by position for targeting
@@ -1893,6 +1931,12 @@ class RaceEngine {
           'negative',
           1.0
         );
+
+        // Check for pileup (2+ drivers involved) - deploy Unsafety Car
+        const totalInvolved = result.dnfDriverIds.length + result.damagedDriverIds.length;
+        if (totalInvolved >= 2) {
+          this.deployUnsafetyCar(pair[0].currentLap);
+        }
       }
     }
 
@@ -1921,6 +1965,10 @@ class RaceEngine {
       }
       return driver;
     });
+
+    // === UNSAFETY CAR PROCESSING ===
+    // Process Unsafety Car movement if active
+    this.processUnsafetyCar();
 
     // Track which drivers completed laps or finished this tick
     const lapCompletions: Array<{ driver: Driver; lap: number }> = [];
@@ -2063,7 +2111,10 @@ class RaceEngine {
       // Apply any active power effects (speed boost/penalty)
       const powerMultiplier = this.getSpeedMultiplierForDriver(driver.id);
 
-      const adjustedSpeed = factors.finalSpeed * tireModifier * powerMultiplier;
+      // Apply Unsafety Car speed limit if active and driver is behind it
+      const unsafetyCarLimit = this.getUnsafetyCarSpeedLimit(driver);
+
+      const adjustedSpeed = factors.finalSpeed * tireModifier * powerMultiplier * unsafetyCarLimit;
 
       // Update factors with tire modifier for analytics
       factors.tireModifier = tireModifier;
@@ -2454,6 +2505,334 @@ class RaceEngine {
 
   isRaceRunning(): boolean {
     return this.isRunning;
+  }
+
+  // === UNSAFETY CAR SYSTEM ===
+  // The Unsafety Car emerges from The Void when pileups occur
+
+  private readonly UNSAFETY_CAR_SPEED = 0.0012;  // Very slow so drivers can easily catch up and stay with it
+  private readonly UNSAFETY_CAR_LAPS = 1;  // Stays out for 1 lap
+  // Note: PIT_EXIT_POSITION and PIT_ENTRY_POSITION are defined in the pit stop section above
+
+  private readonly UNSAFETY_CAR_COOLDOWN_LAPS = 3;  // Must wait 3 laps before SC can deploy again
+
+  /**
+   * Deploy the Unsafety Car from the pit exit
+   * Called when a pileup (2+ drivers involved in crash) occurs
+   */
+  private deployUnsafetyCar(crashLap: number): void {
+    // Don't deploy if already active
+    if (this.raceState.unsafetyCarActive) return;
+    // No Unsafety Car on opening lap (lap 0) - too chaotic
+    if (crashLap <= 0) return;
+    // No Unsafety Car in final lap
+    if (crashLap >= this.config.totalLaps - 1) return;
+
+    // Check cooldown - can't deploy if leader hasn't reached cooldown lap yet
+    const leader = this.getLeader();
+    if (leader && leader.currentLap < this.raceState.unsafetyCarCooldownUntilLap) {
+      return;  // Still on cooldown
+    }
+
+    // Deploy at pit exit position
+    // If leader has already passed pit exit, place SC on next lap so it's waiting ahead
+    let deployLap = leader ? leader.currentLap : crashLap;
+    if (leader) {
+      const trackLength = this.config.lapLength;
+      const leaderTrackPos = (leader.position % trackLength) / trackLength;
+      if (leaderTrackPos > this.PIT_EXIT_POSITION) {
+        // Leader already passed the pit exit, so SC waits on the next lap
+        deployLap = leader.currentLap + 1;
+      }
+    }
+
+    this.raceState.unsafetyCarActive = true;
+    this.raceState.unsafetyCarPosition = this.PIT_EXIT_POSITION;
+    this.raceState.unsafetyCarLap = deployLap;
+    this.raceState.unsafetyCarLapsRemaining = this.UNSAFETY_CAR_LAPS;
+    this.raceState.unsafetyCarWaitingForLeader = true;
+
+    // Sentient deployment messages
+    const deployMessages = [
+      'The Unsafety Car stirs... It has been summoned.',
+      'The Unsafety Car awakens. It is displeased.',
+      'From The Void, the Unsafety Car emerges. It hungers.',
+      'The Unsafety Car has noticed the chaos. It approves.',
+      'The Unsafety Car rises. None shall pass.',
+    ];
+    const message = deployMessages[Math.floor(Math.random() * deployMessages.length)];
+
+    this.logEvent(
+      'unsafety_car_deployed',
+      null,
+      message,
+      'neutral',
+      1.0,
+      '🕳️'
+    );
+  }
+
+  /**
+   * Process Unsafety Car movement and field bunching
+   * Called each tick when the Unsafety Car is active
+   */
+  private processUnsafetyCar(): void {
+    if (!this.raceState.unsafetyCarActive) return;
+
+    const leader = this.getLeader();
+    if (!leader) return;
+
+    const trackLength = this.config.lapLength;
+    const leaderTrackPos = (leader.position % trackLength) / trackLength;  // 0-1 position on track
+
+    // If waiting for leader, check if leader has caught up
+    if (this.raceState.unsafetyCarWaitingForLeader) {
+      // Leader catches up when they reach the SC's position (within 2% of a lap)
+      const leaderTotalDistance = leader.currentLap + leaderTrackPos;
+      const unsafetyCarTotalDistance = this.raceState.unsafetyCarLap + this.raceState.unsafetyCarPosition;
+      const catchingThreshold = 0.02;  // 2% of a lap
+
+      // Leader must actually reach the waiting SC before it pulls out
+      if (leaderTotalDistance >= unsafetyCarTotalDistance - catchingThreshold) {
+        this.raceState.unsafetyCarWaitingForLeader = false;
+        this.logEvent(
+          'unsafety_car_deployed',
+          null,
+          'The Unsafety Car pulls out. Follow, if you dare.',
+          'neutral',
+          0.8,
+          '🕳️'
+        );
+      }
+      return;  // Don't move while waiting - SC stays stationary at pit exit
+    }
+
+    // Move the Unsafety Car slowly around the track
+    const newPosition = this.raceState.unsafetyCarPosition + this.UNSAFETY_CAR_SPEED;
+
+    if (newPosition >= 1.0) {
+      // Completed a lap
+      this.raceState.unsafetyCarPosition = newPosition - 1.0;
+      this.raceState.unsafetyCarLap++;
+      this.raceState.unsafetyCarLapsRemaining--;
+
+      // Check if it's time to recall the Unsafety Car
+      if (this.raceState.unsafetyCarLapsRemaining <= 0) {
+        this.recallUnsafetyCar();
+        return;
+      }
+    } else {
+      this.raceState.unsafetyCarPosition = newPosition;
+    }
+
+    // Check if Unsafety Car should exit into pit lane (at pit entry)
+    if (this.raceState.unsafetyCarLapsRemaining <= 0 &&
+        this.raceState.unsafetyCarPosition >= this.PIT_ENTRY_POSITION) {
+      this.recallUnsafetyCar();
+    }
+  }
+
+  /**
+   * Recall the Unsafety Car back to The Void
+   */
+  private recallUnsafetyCar(): void {
+    // Set cooldown - SC can't deploy again until leader reaches this lap
+    const leader = this.getLeader();
+    const currentLeaderLap = leader ? leader.currentLap : this.raceState.unsafetyCarLap;
+    this.raceState.unsafetyCarCooldownUntilLap = currentLeaderLap + this.UNSAFETY_CAR_COOLDOWN_LAPS;
+
+    this.raceState.unsafetyCarActive = false;
+    this.raceState.unsafetyCarPosition = 0;
+    this.raceState.unsafetyCarLap = 0;
+    this.raceState.unsafetyCarLapsRemaining = 0;
+    this.raceState.unsafetyCarWaitingForLeader = false;
+
+    // Sentient recall messages
+    const recallMessages = [
+      'The Unsafety Car retreats to The Void. For now.',
+      'The Unsafety Car grows bored. It departs.',
+      'Satisfied, the Unsafety Car returns to slumber.',
+      'The Unsafety Car vanishes. It will remember this.',
+      'The Void reclaims its champion. Racing resumes.',
+    ];
+    const message = recallMessages[Math.floor(Math.random() * recallMessages.length)];
+
+    this.logEvent(
+      'unsafety_car_recalled',
+      null,
+      message,
+      'neutral',
+      1.0,
+      '🕳️'
+    );
+  }
+
+  /**
+   * Get the current leader (racing driver with most progress)
+   */
+  private getLeader(): Driver | null {
+    const racingDrivers = this.drivers.filter(d => d.status === 'racing');
+    if (racingDrivers.length === 0) return null;
+
+    return racingDrivers.reduce((leader, driver) => {
+      const leaderProgress = leader.currentLap * this.config.lapLength + leader.position;
+      const driverProgress = driver.currentLap * this.config.lapLength + driver.position;
+      return driverProgress > leaderProgress ? driver : leader;
+    });
+  }
+
+  /**
+   * Calculate speed limit under Unsafety Car conditions
+   * Returns a multiplier (0-1) to apply to driver speed, or 1.0 if not affected
+   *
+   * REAL SAFETY CAR BEHAVIOR:
+   * - Drivers race at FULL SPEED until they catch the back of the queue
+   * - Once in the queue, maintain a GAP to the car ahead (not nose-to-tail)
+   * - Lapped cars (not on lead lap) can unlap themselves by passing
+   * - NO overtaking within the queue (except lapped cars unlapping)
+   */
+  getUnsafetyCarSpeedLimit(driver: Driver): number {
+    if (!this.raceState.unsafetyCarActive) return 1.0;
+    if (this.raceState.unsafetyCarWaitingForLeader) return 1.0;  // No limit while SC is waiting
+    if (driver.status !== 'racing') return 1.0;
+
+    const trackLength = this.config.lapLength;
+    const driverTrackPos = (driver.position % trackLength) / trackLength;
+    const driverTotalDistance = driver.currentLap + driverTrackPos;
+    const unsafetyCarTotalDistance = this.raceState.unsafetyCarLap + this.raceState.unsafetyCarPosition;
+
+    // Get the leader to determine lead lap
+    const leader = this.getLeader();
+    const leadLap = leader ? leader.currentLap : this.raceState.unsafetyCarLap;
+
+    // LAPPED CARS CAN UNLAP: If driver is not on lead lap, they can pass at full speed
+    if (driver.currentLap < leadLap) {
+      return 1.0;  // Lapped car - can unlap at full speed
+    }
+
+    // Distance relative to SC: positive = driver is behind SC, negative = driver is ahead
+    const distanceBehindSC = unsafetyCarTotalDistance - driverTotalDistance;
+
+    // If we're ahead of the SC, slow down to let it catch up
+    if (distanceBehindSC <= 0) {
+      return 0.12;  // Very slow - let SC pass
+    }
+
+    // Find the car directly ahead of this driver
+    const racingDrivers = this.drivers.filter(d => d.status === 'racing' && d.id !== driver.id);
+    const driversSortedByProgress = racingDrivers.map(d => {
+      const pos = (d.position % trackLength) / trackLength;
+      return { driver: d, totalDistance: d.currentLap + pos };
+    }).sort((a, b) => b.totalDistance - a.totalDistance);  // Descending (leader first)
+
+    // Find the car immediately ahead of us (on lead lap only - ignore lapped cars)
+    const carAhead = driversSortedByProgress.find(d =>
+      d.totalDistance > driverTotalDistance && d.driver.currentLap >= leadLap
+    );
+
+    // UNIFORM GAP SYSTEM: All cars converge to exactly the same target gap
+    // This creates a perfectly spaced train like a proper safety car lineup
+    const TARGET_GAP = 0.12;  // 12% of a lap - the ideal uniform gap for all cars
+    const SC_CRUISE_SPEED = 0.18;  // Safety car cruise speed - everyone matches this when at target
+    const CATCH_UP_SPEED = 0.28;  // Speed when the whole field is catching up to SC
+
+    // Check if the leader is still catching up to the SC
+    // If so, the ENTIRE field should be in catch-up mode, not just the leader
+    const leaderData = driversSortedByProgress[0];
+    let leaderGapToSC = 0;
+    if (leaderData) {
+      leaderGapToSC = unsafetyCarTotalDistance - leaderData.totalDistance;
+    }
+    const fieldIsCatchingUp = leaderGapToSC > TARGET_GAP * 1.5;  // Leader is > 18% behind SC
+
+    // Get the gap we need to manage (either to car ahead or to SC if we're the leader)
+    let currentGap: number;
+
+    if (carAhead) {
+      currentGap = carAhead.totalDistance - driverTotalDistance;
+
+      // CRITICAL: If the field is still catching up to the SC, don't slow down
+      // just because our gap to car ahead is "correct" - we need to follow the leader!
+      if (fieldIsCatchingUp && currentGap <= TARGET_GAP * 1.5) {
+        // Gap to car ahead is good, but leader is still catching SC
+        // Match leader's catch-up speed so we don't fall behind
+        return CATCH_UP_SPEED;
+      }
+    } else if (distanceBehindSC > 0) {
+      // We're the leader - gap to safety car
+      currentGap = distanceBehindSC;
+    } else {
+      // Something weird - just cruise
+      return SC_CRUISE_SPEED;
+    }
+
+    // PROPORTIONAL SPEED CONTROL: Smoothly adjust speed based on gap error
+    // Gap error = how far off from target we are
+    const gapError = currentGap - TARGET_GAP;
+
+    // If gap is perfect (within 1%), just cruise at SC speed
+    if (Math.abs(gapError) < 0.01) {
+      return SC_CRUISE_SPEED;
+    }
+
+    // If too close (gap < target): slow down
+    // If too far (gap > target): speed up
+    // The further from target, the more we adjust
+
+    if (gapError < 0) {
+      // TOO CLOSE - need to slow down to create space
+      // More negative error = slower speed
+      const closeness = Math.abs(gapError) / TARGET_GAP;  // 0 to 1+ (how close relative to target)
+
+      if (closeness > 0.8) {
+        return 0.04;  // Emergency brake - way too close
+      } else if (closeness > 0.5) {
+        return 0.08;  // Hard brake - quite close
+      } else if (closeness > 0.2) {
+        return 0.12;  // Light brake - a bit close
+      } else {
+        return 0.16;  // Slight slow - almost at target
+      }
+    } else {
+      // TOO FAR - need to speed up to close the gap
+      // GENTLE catch-up speeds - only slightly faster than cruise to prevent bunching
+      const farness = gapError / TARGET_GAP;  // How far relative to target
+
+      if (farness > 2.0) {
+        return 0.24;  // Very far behind - close up (but not too fast!)
+      } else if (farness > 1.0) {
+        return 0.22;  // Pretty far - close up gently
+      } else if (farness > 0.5) {
+        return 0.20;  // Somewhat far - slight increase
+      } else {
+        return 0.19;  // Almost there - barely above cruise
+      }
+    }
+  }
+
+  /**
+   * Check if crashes should be suppressed during Safety Car
+   * Returns true if crash risk should be greatly reduced
+   */
+  isUnderSafetyCar(): boolean {
+    return this.raceState.unsafetyCarActive && !this.raceState.unsafetyCarWaitingForLeader;
+  }
+
+  /**
+   * Get Unsafety Car state for UI rendering
+   */
+  getUnsafetyCarState(): {
+    active: boolean;
+    position: number;
+    lap: number;
+    waitingForLeader: boolean;
+  } {
+    return {
+      active: this.raceState.unsafetyCarActive,
+      position: this.raceState.unsafetyCarPosition,
+      lap: this.raceState.unsafetyCarLap,
+      waitingForLeader: this.raceState.unsafetyCarWaitingForLeader,
+    };
   }
 
   // === ACTIVE EFFECTS SYSTEM ===

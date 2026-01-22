@@ -75,6 +75,8 @@ const IMPACT_EXPLANATIONS: Record<RaceEventType, (event: RaceEvent) => string> =
   track_event: () => `A track event has been triggered! The race dynamics are about to change.`,
   track_event_effect: (e) => `${e.driverName} was affected by a track event! This could impact their race.`,
   tag_activation: (e) => `${e.driverName}'s tag activated! Tags give drivers unique abilities and effects.`,
+  unsafety_car_deployed: () => `The Unsafety Car has awakened. It demands order. None may pass.`,
+  unsafety_car_recalled: () => `The Unsafety Car has grown bored of this realm. It returns to The Void.`,
 };
 
 const EVENT_LABELS: Record<RaceEventType, string> = {
@@ -100,6 +102,8 @@ const EVENT_LABELS: Record<RaceEventType, string> = {
   track_event: 'TRACK',
   track_event_effect: 'EFFECT',
   tag_activation: 'TAG',
+  unsafety_car_deployed: 'USC OUT',
+  unsafety_car_recalled: 'USC IN',
 };
 
 const EVENT_COLORS: Record<RaceEventType, string> = {
@@ -125,6 +129,8 @@ const EVENT_COLORS: Record<RaceEventType, string> = {
   track_event: '#9b59b6',
   track_event_effect: '#8e44ad',
   tag_activation: '#3498db',
+  unsafety_car_deployed: '#8b0000',
+  unsafety_car_recalled: '#2c3e50',
 };
 
 function EventTimeline({ events, filter, onFilterChange }: EventTimelineProps) {

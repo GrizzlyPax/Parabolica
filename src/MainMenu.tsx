@@ -18,20 +18,20 @@ function MainMenu({ onSingleRace, onSeason, onCompendium }: MainMenuProps) {
         </div>
 
         <div className="mode-selection">
-          <button className="mode-card" onClick={onSingleRace}>
-            <div className="mode-icon">🎲</div>
+          <button className="mode-card marble" onClick={onSingleRace}>
+            <div className="mode-icon">🔮</div>
             <div className="mode-info">
-              <h2>Single Race</h2>
-              <p>One race. Random circumstances. Results may vary.</p>
+              <h2>Marble Mode</h2>
+              <p>One race. Place your bets. Results may vary.</p>
             </div>
             <div className="mode-arrow">→</div>
           </button>
 
-          <button className="mode-card" onClick={onSeason}>
+          <button className="mode-card marble" onClick={onSeason}>
             <div className="mode-icon">🏆</div>
             <div className="mode-info">
               <h2>Season Mode</h2>
-              <p>Multiple races. Points accumulate. Someone probably wins.</p>
+              <p>More races, more marbles. Someone probably wins.</p>
             </div>
             <div className="mode-arrow">→</div>
           </button>
@@ -44,6 +44,11 @@ function MainMenu({ onSingleRace, onSeason, onCompendium }: MainMenuProps) {
             </div>
             <div className="mode-arrow">→</div>
           </button>
+        </div>
+
+        <div className="main-menu-hint">
+          <span className="hint-icon">🔮</span>
+          <span className="hint-text">Mister Marbles is watching.</span>
         </div>
 
         <div className="main-menu-footer">

@@ -668,6 +668,51 @@
   }
 }
 
+/* The Unsafety Car - emerges from The Void */
+.unsafety-car {
+  filter: drop-shadow(0 0 8px rgba(138, 0, 0, 0.6));
+}
+
+.unsafety-car-pulse {
+  animation: unsafetyCarPulse 1.5s ease-in-out infinite;
+  transform-origin: center;
+}
+
+@keyframes unsafetyCarPulse {
+  0% {
+    r: 18;
+    opacity: 0.8;
+    stroke: #1a1a2e;
+  }
+  50% {
+    r: 24;
+    opacity: 0.4;
+    stroke: #8b0000;
+  }
+  100% {
+    r: 18;
+    opacity: 0.8;
+    stroke: #1a1a2e;
+  }
+}
+
+.unsafety-car-label {
+  font-family: 'Inconsolata', monospace;
+  text-shadow: 0 0 4px rgba(138, 0, 0, 0.8);
+  animation: unsafetyCarLabelPulse 2s ease-in-out infinite;
+}
+
+@keyframes unsafetyCarLabelPulse {
+  0%, 100% {
+    opacity: 1;
+    fill: #8b0000;
+  }
+  50% {
+    opacity: 0.7;
+    fill: #1a1a2e;
+  }
+}
+
 /* Notification Timeline */
 .notification-timeline {
   display: flex;
@@ -2023,6 +2068,66 @@
     transform: scale(1.15);
     opacity: 1;
   }
+}
+
+/* Marble Mode Bet Indicator */
+.leaderboard-bet-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+  padding: 2px 4px;
+  border-radius: 3px;
+  min-width: 45px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.leaderboard-bet-indicator .bet-types-label {
+  display: flex;
+  gap: 2px;
+}
+
+.leaderboard-bet-indicator .bet-type-tag {
+  font-size: 0.55rem;
+  font-weight: 700;
+  padding: 0 3px;
+  border-radius: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.leaderboard-bet-indicator .bet-type-tag.winning {
+  background: rgba(74, 222, 128, 0.3);
+  color: #4ade80;
+}
+
+.leaderboard-bet-indicator .bet-type-tag.losing {
+  background: rgba(248, 113, 113, 0.2);
+  color: #f87171;
+  opacity: 0.7;
+}
+
+.leaderboard-bet-indicator .bet-amount {
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.leaderboard-bet-indicator.winning {
+  background: rgba(74, 222, 128, 0.1);
+}
+
+.leaderboard-bet-indicator.winning .bet-amount {
+  color: #4ade80;
+  text-shadow: 0 0 4px rgba(74, 222, 128, 0.5);
+}
+
+.leaderboard-bet-indicator.losing {
+  background: rgba(248, 113, 113, 0.1);
+}
+
+.leaderboard-bet-indicator.losing .bet-amount {
+  color: #f87171;
+  text-shadow: 0 0 4px rgba(248, 113, 113, 0.5);
 }
 
 .lh-status {

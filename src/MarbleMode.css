@@ -1,0 +1,1292 @@
+/* ============================================
+   MARBLE MODE STYLES
+   ============================================ */
+
+/* Betting Interface - Redesigned for clear flow */
+.betting-interface {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding: 1.5rem 2rem;
+  background: linear-gradient(180deg, #0a0a0c 0%, #0f0f12 50%, #0a0a0c 100%);
+  color: #e8e8e8;
+}
+
+/* Header - Compact and informative */
+.betting-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #1a1a20;
+}
+
+.race-info {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+}
+
+.race-info .race-number {
+  font-family: 'Inconsolata', monospace;
+  font-size: 0.75rem;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.race-info .track-name {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin: 0;
+  color: #ccc;
+}
+
+.marble-status {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.marble-status > div {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.marble-status .label {
+  font-size: 0.7rem;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.marble-status .value {
+  font-family: 'Inconsolata', monospace;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #d4af37;
+}
+
+.marble-status .race-budget .value {
+  color: #7cb;
+}
+
+/* Narrator Box - Subtle, not blocking */
+.narrator-box {
+  background: rgba(15, 15, 18, 0.8);
+  border: 1px solid #1a1a20;
+  border-left: 2px solid #3a3a4a;
+  padding: 0.6rem 1rem;
+  margin-bottom: 1rem;
+  font-style: italic;
+  font-size: 0.85rem;
+}
+
+.narrator-box .narrator-name {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 0.75rem;
+  color: #666;
+  margin-right: 0.4rem;
+}
+
+.narrator-box .narrator-message {
+  color: #888;
+}
+
+.narrator-box.results {
+  border-left-color: #6a6a7a;
+}
+
+.narrator-box.final {
+  border-left-color: #d4af37;
+  background: rgba(30, 28, 20, 0.9);
+}
+
+/* ============================================
+   BETTING CONTENT - New Flow-Based Layout
+   ============================================ */
+
+.betting-content {
+  display: grid;
+  /* Driver picker is narrower, bet builder is dominant, slip is compact */
+  grid-template-columns: minmax(240px, 280px) minmax(360px, 1fr) minmax(220px, 260px);
+  gap: 1rem;
+  flex: 1;
+  align-items: start;
+}
+
+/* Flow arrows between panels */
+.betting-content::before,
+.betting-content::after {
+  display: none; /* We'll use panel styling for flow instead */
+}
+
+/* Panel Base Styles */
+.driver-grid,
+.bet-builder,
+.current-bets {
+  border-radius: 8px;
+  height: fit-content;
+  max-height: calc(100vh - 220px);
+}
+
+/* ============================================
+   PANEL 1: DRIVER PICKER (Left - Browse)
+   ============================================ */
+
+.driver-grid {
+  background: rgba(12, 12, 14, 0.8);
+  border: 1px solid #1a1a22;
+  padding: 0.75rem;
+  overflow-y: auto;
+}
+
+.driver-grid h3 {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 0.7rem;
+  color: #555;
+  margin: 0 0 0.6rem 0;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.driver-grid h3::after {
+  content: '→';
+  color: #333;
+  font-size: 0.8rem;
+}
+
+.drivers-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.5rem;
+}
+
+.drivers-list.tiered {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+/* Driver Tiers - Compact */
+.driver-tier {
+  border-radius: 4px;
+  padding: 0.5rem;
+  background: rgba(18, 18, 22, 0.6);
+}
+
+.tier-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.tier-label {
+  font-family: 'Inconsolata', monospace;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.tier-desc {
+  font-size: 0.6rem;
+  color: #444;
+  font-style: italic;
+}
+
+.tier-drivers {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.25rem;
+}
+
+/* Tier Colors */
+.driver-tier.favorites {
+  border-left: 2px solid #22c55e;
+  background: rgba(34, 197, 94, 0.03);
+}
+
+.driver-tier.favorites .tier-label {
+  color: #22c55e;
+}
+
+.driver-tier.contenders {
+  border-left: 2px solid #eab308;
+  background: rgba(234, 179, 8, 0.03);
+}
+
+.driver-tier.contenders .tier-label {
+  color: #eab308;
+}
+
+.driver-tier.longshots {
+  border-left: 2px solid #f97316;
+  background: rgba(249, 115, 22, 0.03);
+}
+
+.driver-tier.longshots .tier-label {
+  color: #f97316;
+}
+
+.driver-tier.wildcards {
+  border-left: 2px solid #a855f7;
+  background: rgba(168, 85, 247, 0.03);
+}
+
+.driver-tier.wildcards .tier-label {
+  color: #a855f7;
+}
+
+/* Driver Option - Odds-forward */
+.driver-option {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.5rem;
+  background: rgba(20, 20, 24, 0.8);
+  border: 1px solid #222;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.driver-option:hover {
+  background: rgba(35, 35, 42, 0.9);
+  border-color: #333;
+}
+
+.driver-option.selected {
+  background: rgba(50, 48, 40, 0.9);
+  border-color: #d4af37;
+  box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.3);
+}
+
+.driver-option.has-bet {
+  position: relative;
+}
+
+.driver-option.has-bet::after {
+  content: '✓';
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 14px;
+  height: 14px;
+  background: #d4af37;
+  border-radius: 50%;
+  font-size: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #000;
+  font-weight: bold;
+}
+
+.driver-option .driver-emoji {
+  font-size: 0.9rem;
+}
+
+.driver-option .driver-name {
+  flex: 1;
+  font-size: 0.7rem;
+  color: #999;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Odds are the star - make them pop */
+.driver-option .driver-odds {
+  font-family: 'Inconsolata', monospace;
+  font-size: 0.8rem;
+  font-weight: 700;
+  min-width: 32px;
+  text-align: right;
+}
+
+.driver-option.tier-favorite .driver-odds { color: #22c55e; }
+.driver-option.tier-contender .driver-odds { color: #eab308; }
+.driver-option.tier-longshot .driver-odds { color: #f97316; }
+.driver-option.tier-wildcard .driver-odds { color: #a855f7; }
+
+.driver-option.tier-favorite:hover { border-color: rgba(34, 197, 94, 0.4); }
+.driver-option.tier-contender:hover { border-color: rgba(234, 179, 8, 0.4); }
+.driver-option.tier-longshot:hover { border-color: rgba(249, 115, 22, 0.4); }
+.driver-option.tier-wildcard:hover { border-color: rgba(168, 85, 247, 0.4); }
+
+/* ============================================
+   PANEL 2: BET BUILDER (Center - The Action)
+   ============================================ */
+
+.bet-builder {
+  background: linear-gradient(180deg, rgba(20, 18, 15, 0.95) 0%, rgba(15, 14, 12, 0.95) 100%);
+  border: 2px solid #2a2520;
+  border-radius: 8px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  /* Visual prominence */
+  box-shadow:
+    0 0 0 1px rgba(212, 175, 55, 0.1),
+    0 4px 20px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+/* Empty State */
+.no-driver-selected {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2rem;
+  text-align: center;
+}
+
+.no-driver-selected p {
+  color: #555;
+  font-style: italic;
+  margin: 0 0 0.5rem 0;
+}
+
+.no-driver-selected .hint {
+  font-size: 0.75rem;
+  color: #444;
+}
+
+.mister-marbles-btn {
+  margin-top: 1.5rem;
+  padding: 0.75rem 1.25rem;
+  background: linear-gradient(135deg, #2a1f3d 0%, #1f1a2e 100%);
+  border: 1px solid #4c3a6b;
+  border-radius: 8px;
+  color: #a88fd4;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mister-marbles-btn:hover {
+  background: linear-gradient(135deg, #3a2f4d 0%, #2f2a3e 100%);
+  border-color: #7c5da3;
+  color: #c8b0e8;
+  box-shadow: 0 0 15px rgba(168, 143, 212, 0.2);
+}
+
+.mister-marbles-btn:active {
+  transform: scale(0.98);
+}
+
+/* Selected Driver - Big and Bold */
+.selected-driver-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: rgba(30, 28, 22, 0.8);
+  border: 1px solid #3a3530;
+  border-radius: 6px;
+}
+
+.selected-driver-info .emoji {
+  font-size: 2.5rem;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.selected-driver-info .name {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #e8e8e8;
+  flex: 1;
+}
+
+.selected-driver-info .driver-tier-badge {
+  font-family: 'Inconsolata', monospace;
+  font-size: 0.7rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Bet Type Selector - Scannable Cards */
+.bet-type-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.bet-type-selector h4 {
+  font-family: 'Inconsolata', monospace;
+  font-size: 0.7rem;
+  color: #555;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.bet-types {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.4rem;
+}
+
+/* Second row spans 2 columns for finishes and dnf */
+.bet-types .bet-type:nth-child(4),
+.bet-types .bet-type:nth-child(5) {
+  grid-column: span 1;
+}
+
+.bet-type {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.5rem 0.25rem;
+  background: rgba(25, 24, 22, 0.9);
+  border: 1px solid #2a2a2a;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.bet-type:hover {
+  background: rgba(40, 38, 32, 0.9);
+  border-color: #3a3a3a;
+}
+
+.bet-type.selected {
+  background: rgba(50, 45, 30, 0.95);
+  border-color: #d4af37;
+  box-shadow: 0 0 12px rgba(212, 175, 55, 0.2);
+}
+
+.bet-type .type-label {
+  font-size: 0.75rem;
+  color: #aaa;
+  margin-bottom: 0.15rem;
+}
+
+.bet-type.selected .type-label {
+  color: #e8e8e8;
+}
+
+.bet-type .type-odds {
+  font-family: 'Inconsolata', monospace;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #d4af37;
+}
+
+.bet-type .type-count {
+  font-size: 0.65rem;
+  color: #666;
+}
+
+.bet-type.at-limit {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.bet-type.at-limit .type-odds {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.bet-type.at-limit:hover {
+  background: rgba(25, 24, 22, 0.9);
+  border-color: #2a2a2a;
+}
+
+/* Amount Controls - Clean and Clear */
+.bet-amount-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.bet-amount-selector h4 {
+  font-family: 'Inconsolata', monospace;
+  font-size: 0.7rem;
+  color: #555;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.amount-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(20, 20, 22, 0.8);
+  border: 1px solid #2a2a2a;
+  border-radius: 6px;
+  padding: 0.5rem;
+}
+
+.amount-controls button {
+  padding: 0.4rem 0.7rem;
+  background: rgba(40, 40, 45, 0.8);
+  border: 1px solid #3a3a3a;
+  border-radius: 4px;
+  color: #888;
+  cursor: pointer;
+  font-family: 'Inconsolata', monospace;
+  font-size: 0.85rem;
+  transition: all 0.1s ease;
+}
+
+.amount-controls button:hover {
+  background: rgba(60, 60, 65, 0.9);
+  color: #ccc;
+}
+
+.amount-controls button:active {
+  transform: scale(0.95);
+}
+
+.amount-display {
+  flex: 1;
+  text-align: center;
+  font-family: 'Inconsolata', monospace;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #d4af37;
+}
+
+.quick-amounts {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.quick-amounts button {
+  flex: 1;
+  padding: 0.5rem;
+  background: rgba(25, 25, 28, 0.8);
+  border: 1px solid #2a2a2a;
+  border-radius: 4px;
+  color: #666;
+  cursor: pointer;
+  font-family: 'Inconsolata', monospace;
+  font-size: 0.8rem;
+  transition: all 0.1s ease;
+}
+
+.quick-amounts button:hover {
+  background: rgba(45, 45, 48, 0.9);
+  color: #aaa;
+  border-color: #3a3a3a;
+}
+
+/* Potential Payout - Formula Display */
+.potential-payout {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem 0.5rem;
+  background: linear-gradient(135deg, rgba(50, 45, 25, 0.8) 0%, rgba(40, 35, 20, 0.8) 100%);
+  border: 1px solid #4a4530;
+  border-radius: 6px;
+}
+
+.potential-payout .payout-breakdown {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 0.35rem;
+  font-family: 'Inconsolata', monospace;
+}
+
+.potential-payout .payout-part {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.potential-payout .payout-label {
+  font-size: 0.6rem;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.potential-payout .payout-bet {
+  font-size: 1rem;
+  color: #ccc;
+  padding: 0.2rem 0.4rem;
+  background: rgba(100, 100, 100, 0.15);
+  border-radius: 3px;
+}
+
+.potential-payout .payout-times {
+  font-size: 0.85rem;
+  color: #444;
+  margin-top: 0.25rem;
+}
+
+.potential-payout .payout-base {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #9c9;
+  padding: 0.2rem 0.4rem;
+  background: rgba(100, 150, 100, 0.2);
+  border-radius: 3px;
+}
+
+.potential-payout .payout-driver {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #99c;
+  padding: 0.2rem 0.4rem;
+  background: rgba(100, 100, 150, 0.2);
+  border-radius: 3px;
+}
+
+.potential-payout .payout-result {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(100, 90, 60, 0.3);
+}
+
+.potential-payout .payout-equals {
+  font-family: 'Inconsolata', monospace;
+  font-size: 1rem;
+  color: #555;
+}
+
+.potential-payout .payout-value {
+  font-family: 'Inconsolata', monospace;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #d4af37;
+  text-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+}
+
+/* PLACE BET BUTTON - Dominant Action */
+.place-bet-btn {
+  padding: 1rem 1.5rem;
+  background: linear-gradient(180deg, #5a5030 0%, #4a4025 50%, #3a3020 100%);
+  border: 2px solid #7a7040;
+  border-radius: 6px;
+  color: #d4af37;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.place-bet-btn:hover:not(:disabled) {
+  background: linear-gradient(180deg, #6a6040 0%, #5a5035 50%, #4a4030 100%);
+  border-color: #9a9050;
+  box-shadow:
+    0 4px 15px rgba(212, 175, 55, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
+}
+
+.place-bet-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.place-bet-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  background: #2a2a2a;
+  border-color: #3a3a3a;
+  color: #555;
+}
+
+/* ============================================
+   PANEL 3: BET SLIP (Right - Your Ticket)
+   ============================================ */
+
+.current-bets {
+  background: rgba(12, 12, 14, 0.8);
+  border: 1px solid #1a1a22;
+  border-radius: 8px;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.current-bets h3 {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 0.7rem;
+  color: #555;
+  margin: 0 0 0.5rem 0;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.current-bets h3 .bet-count {
+  background: #d4af37;
+  color: #000;
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 0.1rem 0.4rem;
+  border-radius: 10px;
+  font-family: 'Inconsolata', monospace;
+}
+
+.no-bets {
+  color: #444;
+  font-style: italic;
+  font-size: 0.8rem;
+  text-align: center;
+  padding: 2rem 1rem;
+}
+
+.bets-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  flex: 1;
+}
+
+/* Individual Bet Item - Reactive Card */
+.bet-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.6rem 0.7rem;
+  background: rgba(22, 22, 26, 0.9);
+  border: 1px solid #252528;
+  border-left: 3px solid #d4af37;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  animation: betSlideIn 0.2s ease-out;
+}
+
+@keyframes betSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.bet-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.bet-driver {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #ccc;
+}
+
+.remove-bet {
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid #333;
+  border-radius: 3px;
+  color: #555;
+  cursor: pointer;
+  font-size: 0.8rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.1s ease;
+}
+
+.remove-bet:hover {
+  background: rgba(180, 60, 60, 0.3);
+  border-color: #a55;
+  color: #e88;
+}
+
+.bet-item-details {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.bet-type-label {
+  font-size: 0.7rem;
+  color: #666;
+  text-transform: uppercase;
+}
+
+.bet-item-payout {
+  display: flex;
+  align-items: baseline;
+  gap: 0.3rem;
+}
+
+.bet-amount {
+  font-family: 'Inconsolata', monospace;
+  font-size: 0.75rem;
+  color: #888;
+}
+
+.bet-arrow {
+  color: #444;
+  font-size: 0.7rem;
+}
+
+.bet-potential {
+  font-family: 'Inconsolata', monospace;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #d4af37;
+}
+
+/* Bets Total - Summary Footer */
+.bets-total {
+  margin-top: auto;
+  padding-top: 0.6rem;
+  border-top: 1px solid #252528;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.bets-total-label {
+  font-size: 0.7rem;
+  color: #555;
+  text-transform: uppercase;
+}
+
+.bets-total-value {
+  font-family: 'Inconsolata', monospace;
+  font-size: 0.9rem;
+  color: #aaa;
+}
+
+/* Potential Total */
+.bets-potential-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.4rem;
+  padding: 0.5rem;
+  background: rgba(40, 35, 20, 0.5);
+  border-radius: 4px;
+}
+
+.bets-potential-total .label {
+  font-size: 0.7rem;
+  color: #888;
+}
+
+.bets-potential-total .value {
+  font-family: 'Inconsolata', monospace;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #d4af37;
+}
+
+/* ============================================
+   BETTING FOOTER
+   ============================================ */
+
+.betting-footer {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #1a1a20;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 1rem;
+}
+
+.betting-footer-hint {
+  font-size: 0.75rem;
+  color: #444;
+  font-style: italic;
+}
+
+.confirm-bets-btn {
+  padding: 0.85rem 2.5rem;
+  background: linear-gradient(180deg, #2a3530 0%, #1a2520 100%);
+  border: 1px solid #3a4540;
+  border-radius: 6px;
+  color: #7cb;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 1px;
+}
+
+.confirm-bets-btn:hover {
+  background: linear-gradient(180deg, #3a4540 0%, #2a3530 100%);
+  box-shadow: 0 0 15px rgba(100, 200, 180, 0.2);
+}
+
+.confirm-bets-btn.has-bets {
+  background: linear-gradient(180deg, #304035 0%, #203025 100%);
+  border-color: #4a5a50;
+}
+
+/* ============================================
+   RACE RESULTS STYLES
+   ============================================ */
+
+.race-results {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  padding: 3rem 2rem;
+  background: linear-gradient(135deg, #0a0a0a 0%, #111111 50%, #0a0a0a 100%);
+  color: #e8e8e8;
+}
+
+.race-results h2 {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+}
+
+.race-results .narrator-box {
+  max-width: 600px;
+  width: 100%;
+  margin-bottom: 2rem;
+}
+
+.results-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: 600px;
+  width: 100%;
+  margin-bottom: 2rem;
+}
+
+.result-item {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  gap: 1rem;
+  align-items: center;
+  padding: 0.8rem 1rem;
+  background: rgba(20, 20, 25, 0.8);
+  border: 1px solid #333;
+  border-radius: 4px;
+}
+
+.result-item.won {
+  border-left: 3px solid #4a8;
+  background: rgba(20, 30, 25, 0.8);
+}
+
+.result-item.lost {
+  border-left: 3px solid #844;
+  opacity: 0.7;
+}
+
+.result-driver {
+  font-size: 0.95rem;
+}
+
+.result-type {
+  color: #888;
+  font-size: 0.85rem;
+}
+
+.result-position {
+  font-family: 'Inconsolata', monospace;
+  color: #aaa;
+}
+
+.result-outcome .win {
+  font-family: 'Inconsolata', monospace;
+  color: #6c8;
+  font-weight: 600;
+}
+
+.result-outcome .loss {
+  font-family: 'Inconsolata', monospace;
+  color: #a66;
+}
+
+.no-bets-placed {
+  color: #666;
+  font-style: italic;
+  margin-bottom: 2rem;
+}
+
+.results-summary {
+  max-width: 400px;
+  width: 100%;
+  background: rgba(20, 20, 25, 0.8);
+  border: 1px solid #333;
+  border-radius: 6px;
+  padding: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  font-family: 'Inconsolata', monospace;
+}
+
+.summary-row.net {
+  border-top: 1px solid #333;
+  margin-top: 0.5rem;
+  padding-top: 1rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.summary-row.net.positive {
+  color: #6c8;
+}
+
+.summary-row.net.negative {
+  color: #c66;
+}
+
+.summary-row.bankroll {
+  border-top: 1px solid #333;
+  margin-top: 0.5rem;
+  padding-top: 0.75rem;
+  color: #d4af37;
+  font-size: 1.2rem;
+}
+
+.continue-btn {
+  padding: 1rem 3rem;
+  background: linear-gradient(135deg, #3a3530 0%, #2a2520 100%);
+  border: 1px solid #4a4540;
+  border-radius: 6px;
+  color: #d4af37;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.continue-btn:hover {
+  background: linear-gradient(135deg, #4a4540 0%, #3a3530 100%);
+  box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+}
+
+/* ============================================
+   SEASON TALLY STYLES
+   ============================================ */
+
+.season-tally {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  padding: 3rem 2rem;
+  background: linear-gradient(135deg, #0a0808 0%, #121210 50%, #0a0808 100%);
+  color: #e8e8e8;
+}
+
+.season-tally h1 {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 2.2rem;
+  letter-spacing: 3px;
+  margin-bottom: 1.5rem;
+}
+
+.season-tally .narrator-box {
+  max-width: 600px;
+  width: 100%;
+  margin-bottom: 2rem;
+}
+
+.final-score {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 2.5rem;
+}
+
+.final-score .score-value {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 4rem;
+  font-weight: 700;
+  color: #d4af37;
+  text-shadow: 0 0 30px rgba(212, 175, 55, 0.5);
+}
+
+.final-score .score-label {
+  font-family: 'Inconsolata', monospace;
+  font-size: 1rem;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+}
+
+.season-stats {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background: rgba(20, 20, 25, 0.6);
+  border: 1px solid #333;
+  border-radius: 6px;
+  min-width: 100px;
+}
+
+.stat .stat-value {
+  font-family: 'Inconsolata', monospace;
+  font-size: 1.4rem;
+  color: #ccc;
+}
+
+.stat .stat-label {
+  font-size: 0.7rem;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-top: 0.25rem;
+}
+
+.race-history {
+  max-width: 500px;
+  width: 100%;
+  margin-bottom: 2rem;
+}
+
+.race-history h3 {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 1rem;
+  color: #888;
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.history-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.6rem 0.8rem;
+  background: rgba(20, 20, 25, 0.6);
+  border: 1px solid #2a2a2a;
+  border-radius: 4px;
+  margin-bottom: 0.4rem;
+}
+
+.history-row .race-track {
+  font-size: 0.9rem;
+}
+
+.history-row .race-bets {
+  color: #666;
+  font-size: 0.8rem;
+}
+
+.history-row .race-net {
+  font-family: 'Inconsolata', monospace;
+  font-size: 0.9rem;
+}
+
+.history-row.positive .race-net {
+  color: #6c8;
+}
+
+.history-row.negative .race-net {
+  color: #c66;
+}
+
+.new-season-btn {
+  padding: 1rem 3rem;
+  background: linear-gradient(135deg, #4a4530 0%, #3a3520 100%);
+  border: 1px solid #6a6530;
+  border-radius: 6px;
+  color: #d4af37;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.new-season-btn:hover {
+  background: linear-gradient(135deg, #5a5540 0%, #4a4530 100%);
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+}
+
+/* ============================================
+   TIMING TOWER BET INDICATOR
+   ============================================ */
+
+.bet-indicator {
+  font-family: 'Inconsolata', monospace;
+  font-size: 0.7rem;
+  padding: 0.1rem 0.3rem;
+  border-radius: 2px;
+  margin-left: 0.25rem;
+}
+
+.bet-indicator.winning {
+  background: rgba(100, 200, 130, 0.2);
+  color: #6c8;
+}
+
+.bet-indicator.losing {
+  background: rgba(200, 100, 100, 0.2);
+  color: #c66;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 1000px) {
+  .betting-content {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .driver-grid {
+    max-height: 300px;
+  }
+
+  .tier-drivers {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .current-bets {
+    max-height: 200px;
+  }
+}

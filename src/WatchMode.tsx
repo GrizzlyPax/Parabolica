@@ -1,6 +1,7 @@
 import { Driver, RaceConfig, RaceState, TrackInfo, TireCompound, RaceEvent } from './RaceEngine';
 import { ticksToShortTime, formatGap } from './utils/raceTime';
 import { useMemo, useRef, useEffect, useState } from 'react';
+import { Bet, calculateLiveBetStatus } from './MarbleMode';
 import './WatchMode.css';
 
 export interface PowerActivation {
@@ -19,6 +20,7 @@ interface WatchModeProps {
   rivalKingdomId?: string | null;
   powerActivation?: PowerActivation | null;
   raceEvents?: RaceEvent[];  // For track event notifications
+  activeBets?: Bet[];  // Marble Mode: current bets to display in timing tower
 }
 
 // Modular notification system for race events
@@ -223,7 +225,7 @@ const TRACK_THEMES: Record<string, { bg: string; trackColor: string; accent: str
 
 const DEFAULT_THEME = { bg: 'linear-gradient(135deg, #0d0d0d 0%, #1a1018 50%, #0d0d0d 100%)', trackColor: '#2a2535', accent: '#3a3545' };
 
-function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, favoriteKingdomId, rivalKingdomId, powerActivation, raceEvents }: WatchModeProps) {
+function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, favoriteKingdomId, rivalKingdomId, powerActivation, raceEvents, activeBets }: WatchModeProps) {
   const trackLength = config.lapLength;
   const totalLaps = config.totalLaps;
 
@@ -507,14 +509,48 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, favorite
       const latestEvent = trackEventNotifications[trackEventNotifications.length - 1];
       lastTrackEventTickRef.current = latestEvent.tick;
 
-      // Show notification with the event details
+      // Parse description format: "Event Name: Flavor text"
+      const desc = latestEvent.description;
+      const colonIndex = desc.indexOf(':');
+      const eventName = colonIndex > 0 ? desc.substring(0, colonIndex).trim() : desc;
+      const flavorText = colonIndex > 0 ? desc.substring(colonIndex + 1).trim() : '';
+
       addNotification(
         'track_event',
-        'TRACK EVENT!',
-        latestEvent.description,
-        latestEvent.emoji || '🏁',
+        eventName,
+        flavorText,
+        latestEvent.emoji,
         undefined,
-        15000 // Track events stay longer for visibility
+        10000
+      );
+    }
+  }, [raceEvents]);
+
+  // Track seen Unsafety Car events
+  const lastUnsafetyCarTickRef = useRef<number>(0);
+
+  // Detect Unsafety Car deployment/recall and show notifications
+  useEffect(() => {
+    if (!raceEvents || raceEvents.length === 0) return;
+
+    // Find unsafety_car events we haven't notified about
+    const unsafetyCarEvents = raceEvents.filter(
+      e => (e.type === 'unsafety_car_deployed' || e.type === 'unsafety_car_recalled') &&
+           e.tick > lastUnsafetyCarTickRef.current
+    );
+
+    if (unsafetyCarEvents.length > 0) {
+      const latestEvent = unsafetyCarEvents[unsafetyCarEvents.length - 1];
+      lastUnsafetyCarTickRef.current = latestEvent.tick;
+
+      const isDeployment = latestEvent.type === 'unsafety_car_deployed';
+      addNotification(
+        'track_event',  // Use track_event type for styling
+        isDeployment ? 'THE VOID OPENS' : 'THE VOID CLOSES',
+        latestEvent.description,
+        '🕳️',
+        undefined,
+        isDeployment ? 15000 : 8000  // Longer duration for deployment
       );
     }
   }, [raceEvents]);
@@ -913,9 +949,30 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, favorite
   // Only show badges for positions not yet locked by finishers
   const getPositionRank = (driverId: number): number | null => {
     const activeDrivers = drivers.filter(d => d.status === 'racing' || d.status === 'pitting');
+
+    // Helper to calculate effective position (accounts for pit lane virtual position)
+    const getEffectivePosition = (driver: Driver): number => {
+      if (driver.status !== 'pitting') {
+        return driver.position;
+      }
+      // Pit lane maps: entry (85%) -> start/finish (100%/0% at 50% progress) -> exit (15%)
+      const pitProgress = driver.pitProgress;
+      if (pitProgress <= 0.5) {
+        // First half: 85% -> 100% of lap
+        const progressRatio = pitProgress / 0.5;
+        const positionRatio = 0.85 + (progressRatio * 0.15);
+        return Math.floor(positionRatio * trackLength);
+      } else {
+        // Second half: 0% -> 15% of lap
+        const progressRatio = (pitProgress - 0.5) / 0.5;
+        const positionRatio = progressRatio * 0.15;
+        return Math.floor(positionRatio * trackLength);
+      }
+    };
+
     const sorted = [...activeDrivers].sort((a, b) => {
-      const aDist = a.currentLap * trackLength + a.position;
-      const bDist = b.currentLap * trackLength + b.position;
+      const aDist = a.currentLap * trackLength + getEffectivePosition(a);
+      const bDist = b.currentLap * trackLength + getEffectivePosition(b);
       return bDist - aDist;
     });
     const idx = sorted.findIndex(d => d.id === driverId);
@@ -1051,6 +1108,15 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, favorite
     const path = generatePitLanePath(entry, exit);
     return { entry, exit, path };
   }, [pathsReady]);
+
+  // Calculate Unsafety Car position on track
+  const unsafetyCarPosition = useMemo(() => {
+    if (!pathsReady || !trackPathRef.current) return null;
+    if (!raceState.unsafetyCarActive) return null;
+
+    const point = getPointAlongPath(trackPathRef.current, raceState.unsafetyCarPosition);
+    return { x: point.x, y: point.y };
+  }, [pathsReady, raceState.unsafetyCarActive, raceState.unsafetyCarPosition]);
 
   // Calculate pit lane positions for pitting drivers
   const pitPositions = useMemo(() => {
@@ -1611,6 +1677,39 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, favorite
                     return null;
                   })()}
                 </span>
+                {/* Marble Mode bet indicator */}
+                {activeBets && activeBets.length > 0 && (() => {
+                  const betStatus = calculateLiveBetStatus(driver.id, index + 1, activeBets, isDNF);
+                  if (betStatus.status === 'none') return null;
+
+                  // Get short labels for bet types
+                  const getBetLabel = (type: string) => {
+                    switch (type) {
+                      case 'win': return 'WIN';
+                      case 'podium': return 'PODIUM';
+                      case 'points': return 'POINTS';
+                      case 'finishes': return 'FINISH';
+                      case 'dnf': return 'DNF';
+                      default: return '';
+                    }
+                  };
+
+                  // Show each bet's type and status
+                  return (
+                    <span className={`leaderboard-bet-indicator ${betStatus.status}`}>
+                      <span className="bet-types-label">
+                        {betStatus.bets.map((b, i) => (
+                          <span key={i} className={`bet-type-tag ${b.isWinning ? 'winning' : 'losing'}`}>
+                            {getBetLabel(b.type)}
+                          </span>
+                        ))}
+                      </span>
+                      <span className="bet-amount">
+                        {betStatus.status === 'winning' ? '+' : ''}{betStatus.totalPotential}ṁ
+                      </span>
+                    </span>
+                  );
+                })()}
               </div>
             );
           })}
@@ -2005,6 +2104,52 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, favorite
               </g>
             );
           })}
+
+          {/* The Unsafety Car - emerges from The Void during pileups */}
+          {unsafetyCarPosition && (
+            <g className="unsafety-car" transform={`translate(${unsafetyCarPosition.x}, ${unsafetyCarPosition.y})`}>
+              {/* Ominous pulsing void ring */}
+              <circle
+                cx={0}
+                cy={0}
+                r="18"
+                className="unsafety-car-pulse"
+                fill="none"
+                stroke="#1a1a2e"
+                strokeWidth="3"
+              />
+              {/* White background circle */}
+              <circle
+                cx={0}
+                cy={0}
+                r={14}
+                fill="#ffffff"
+                stroke="#1a1a2e"
+                strokeWidth={3}
+              />
+              {/* The Void emoji */}
+              <text
+                x={0}
+                y={1}
+                textAnchor="middle"
+                dominantBaseline="middle"
+                style={{ fontSize: '14px' }}
+              >
+                🕳️
+              </text>
+              {/* "USC" indicator above */}
+              <text
+                x={0}
+                y={-22}
+                textAnchor="middle"
+                dominantBaseline="middle"
+                className="unsafety-car-label"
+                style={{ fontSize: '9px', fontWeight: 'bold', fill: '#8b0000' }}
+              >
+                USC
+              </text>
+            </g>
+          )}
 
           {/* Crash/blowout highlight effects on track */}
           {crashPositions.map((pos) => (

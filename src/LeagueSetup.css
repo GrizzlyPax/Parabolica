@@ -967,6 +967,52 @@
   font-family: 'Times New Roman', Times, Georgia, serif;
 }
 
+.footer-controls {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.prohibition-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  user-select: none;
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+  transition: background 0.15s ease;
+}
+
+.prohibition-toggle:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.prohibition-toggle input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #888;
+  cursor: pointer;
+}
+
+.prohibition-label {
+  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-size: 0.9rem;
+  color: #888;
+  font-weight: 600;
+}
+
+.prohibition-hint {
+  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-size: 0.75rem;
+  color: #555;
+  font-style: italic;
+}
+
+.prohibition-toggle:has(input:checked) .prohibition-label {
+  color: #aaa;
+}
+
 .start-race-btn {
   padding: 0.85rem 1.75rem;
   background: #333;
@@ -985,6 +1031,42 @@
 .start-race-btn:hover {
   background: #444;
   border-color: #666;
+}
+
+/* Marble Mode Toggle */
+.marble-mode-toggle {
+  margin-bottom: 1rem;
+}
+
+.toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.toggle-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #8b5cf6;
+  cursor: pointer;
+}
+
+.toggle-text {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #c9c9c9;
+}
+
+.toggle-desc {
+  font-size: 0.75rem;
+  color: #888;
+  font-style: italic;
+}
+
+.toggle-label:hover .toggle-text {
+  color: #fff;
 }
 
 @media (max-width: 768px) {
