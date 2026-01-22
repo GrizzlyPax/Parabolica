@@ -18,7 +18,7 @@
 }
 
 .main-menu-title {
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 3.5rem;
   font-weight: 700;
   color: #fff;
@@ -36,7 +36,7 @@
 }
 
 .main-menu-subtitle {
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   color: #777;
   font-size: 1.1rem;
   font-style: italic;
@@ -90,7 +90,7 @@
 }
 
 .mode-info h2 {
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   margin: 0 0 0.35rem 0;
   color: #fff;
   font-size: 1.3rem;
@@ -98,7 +98,7 @@
 }
 
 .mode-info p {
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   margin: 0;
   color: #888;
   font-size: 0.95rem;
@@ -139,7 +139,7 @@
 }
 
 .version {
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   color: #444;
   font-size: 0.85rem;
   font-style: italic;
@@ -171,7 +171,7 @@
 }
 
 .mm-text {
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   color: #666;
   font-size: 0.95rem;
   font-style: italic;

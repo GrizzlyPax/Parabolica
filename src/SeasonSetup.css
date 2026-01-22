@@ -10,7 +10,7 @@
 }
 
 .season-setup .back-btn {
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   background: transparent;
   border: 1px solid #444;
   color: #888;
@@ -33,7 +33,7 @@
 }
 
 .season-setup-header h1 {
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 2.5rem;
   font-weight: 700;
   color: #fff;
@@ -51,7 +51,7 @@
 }
 
 .season-setup-header p {
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   color: #777;
   margin: 0;
   font-size: 1rem;
@@ -67,7 +67,7 @@
 }
 
 .setup-section h2 {
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   color: #fff;
   font-size: 1.1rem;
   font-weight: 700;
@@ -75,7 +75,7 @@
 }
 
 .setup-hint {
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   color: #666;
   font-size: 0.85rem;
   font-style: italic;
@@ -112,7 +112,7 @@
 }
 
 .count-number {
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 1.8rem;
   font-weight: bold;
   color: #fff;
@@ -123,7 +123,7 @@
 }
 
 .count-label {
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 0.75rem;
   color: #666;
   text-transform: uppercase;
@@ -149,13 +149,13 @@
 }
 
 .points-item .position {
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 0.7rem;
   color: #888;
 }
 
 .points-item .points {
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 0.85rem;
   color: #fff;
   font-weight: bold;
@@ -208,7 +208,7 @@
 }
 
 .summary-stat .stat-value {
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   display: block;
   font-size: 2rem;
   font-weight: bold;
@@ -216,7 +216,7 @@
 }
 
 .summary-stat .stat-label {
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 0.75rem;
   color: #777;
   text-transform: uppercase;
@@ -224,7 +224,7 @@
 }
 
 .start-season-btn {
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   width: 100%;
   background: #333;
   border: 2px solid #555;
@@ -273,7 +273,7 @@
 }
 
 .setup-tab {
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   flex: 1;
   background: transparent;
   border: none;
@@ -323,7 +323,7 @@
 }
 
 .action-btn {
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   background: transparent;
   border: 1px solid #444;
   border-radius: 3px;
@@ -422,14 +422,14 @@
 }
 
 .selection-name {
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 0.95rem;
   font-weight: 600;
   color: #fff;
 }
 
 .selection-desc {
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 0.75rem;
   color: #777;
   font-style: italic;
@@ -446,7 +446,7 @@
 }
 
 .track-stat {
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 0.65rem;
   color: #666;
   background: #1a1a1a;

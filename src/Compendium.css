@@ -29,7 +29,7 @@
 }
 
 .compendium-header h1 {
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 2.5rem;
   color: #e8e8e8;
   margin: 0 0 0.5rem 0;
@@ -115,7 +115,7 @@
 }
 
 .collapsible-title {
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-weight: 500;
 }
 
@@ -176,7 +176,7 @@
   font-size: 0.75rem;
   color: #777;
   text-align: right;
-  font-family: 'Courier New', monospace;
+  font-family: 'Courier New', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
 }
 
 .compact-value.formula {
@@ -249,7 +249,7 @@
 }
 
 .section-title {
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 1.4rem;
   color: #ddd;
   margin: 0 0 0.5rem 0;
@@ -310,7 +310,7 @@
 }
 
 .card-name {
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 1rem;
   font-weight: 600;
   color: #ddd;
@@ -360,7 +360,7 @@
 .detail-value {
   font-size: 0.75rem;
   color: #aaa;
-  font-family: 'Courier New', monospace;
+  font-family: 'Courier New', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
 }
 
 .detail-value.positive {
@@ -428,7 +428,7 @@
 }
 
 .mechanic-card h3 {
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 1rem;
   color: #ddd;
   margin: 0 0 0.75rem 0;

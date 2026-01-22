@@ -23,7 +23,7 @@
 }
 
 .watch-header h1 {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 1.6rem;
   font-weight: 600;
   color: #e8e8e8;
@@ -52,7 +52,7 @@
   display: flex;
   align-items: center;
   gap: 1rem;
-  font-family: 'Crimson Text', Georgia, serif;
+  font-family: 'Crimson Text', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 0.85rem;
   color: #888;
 }
@@ -79,20 +79,20 @@
 }
 
 .lap-indicator {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 14px;
   letter-spacing: 2px;
 }
 
 .weather-indicator {
-  font-family: 'Crimson Text', Georgia, serif;
+  font-family: 'Crimson Text', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 12px;
   letter-spacing: 1px;
   opacity: 0.8;
 }
 
 .watch-timer {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 1.5rem;
   color: #cccccc;
   padding: 0.5rem 1rem;
@@ -102,7 +102,7 @@
 }
 
 .watch-finished {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 1rem;
   color: #a8d8a8;
   padding: 0.5rem 1rem;
@@ -141,7 +141,7 @@
 }
 
 .track-label {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 10px;
   fill: #666666;
   letter-spacing: 2px;
@@ -165,7 +165,7 @@
 }
 
 .pit-label {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 11px;
   font-weight: bold;
   letter-spacing: 2px;
@@ -308,7 +308,7 @@
 }
 
 .finish-label {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 9px;
   font-weight: 600;
   letter-spacing: 2px;
@@ -333,7 +333,7 @@
 }
 
 .podium-number {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 10px;
   font-weight: 700;
   fill: #1a1a1a;
@@ -396,7 +396,7 @@
 }
 
 .finish-label-below {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 0.9rem;
   font-weight: 600;
   color: #a8d8a8;
@@ -471,7 +471,7 @@
 }
 
 .podium-number-below {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 1rem;
   font-weight: 700;
   color: #1a1a1a;
@@ -498,7 +498,7 @@
 }
 
 .pit-label {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 10px;
   letter-spacing: 2px;
 }
@@ -514,7 +514,7 @@
 
 /* Pit Entry/Exit markers */
 .pit-markers text {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-weight: 600;
 }
 
@@ -697,7 +697,7 @@
 }
 
 .unsafety-car-label {
-  font-family: 'Inconsolata', monospace;
+  font-family: 'Inconsolata', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   text-shadow: 0 0 4px rgba(138, 0, 0, 0.8);
   animation: unsafetyCarLabelPulse 2s ease-in-out infinite;
 }
@@ -727,7 +727,7 @@
 }
 
 .timeline-header {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 0.85rem;
   font-weight: 600;
   color: #888888;
@@ -780,7 +780,7 @@
 }
 
 .timeline-title {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 0.85rem;
   font-weight: 600;
   letter-spacing: 1px;
@@ -788,7 +788,7 @@
 }
 
 .timeline-message {
-  font-family: 'Crimson Text', Georgia, serif;
+  font-family: 'Crimson Text', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 0.95rem;
   color: #9a9aaa;
   line-height: 1.3;
@@ -796,7 +796,7 @@
 }
 
 .timeline-empty {
-  font-family: 'Crimson Text', Georgia, serif;
+  font-family: 'Crimson Text', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 0.9rem;
   color: #5a5a6a;
   font-style: italic;
@@ -895,7 +895,7 @@
 }
 
 .race-feed-label {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 0.65rem;
   font-weight: 600;
   color: #888;
@@ -969,7 +969,7 @@
 }
 
 .feed-text {
-  font-family: 'Crimson Text', Georgia, serif;
+  font-family: 'Crimson Text', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 0.95rem;
   color: #d0d0d0;
   font-weight: 500;
@@ -992,7 +992,7 @@
 }
 
 .feed-empty {
-  font-family: 'Crimson Text', Georgia, serif;
+  font-family: 'Crimson Text', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 0.9rem;
   color: #5a5a6a;
   font-style: italic;
@@ -1134,7 +1134,7 @@
 }
 
 .lap-label {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 0.7rem;
   font-weight: 600;
   color: #666;
@@ -1143,21 +1143,21 @@
 }
 
 .lap-current {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 1.6rem;
   font-weight: 700;
   color: #e8e8e8;
 }
 
 .lap-separator {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 1.2rem;
   color: #555;
   margin: 0 0.1rem;
 }
 
 .lap-total {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 1.1rem;
   font-weight: 500;
   color: #888;
@@ -1169,7 +1169,7 @@
   gap: 0.35rem;
   align-items: center;
   padding: 0.25rem 0.5rem;
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 0.65rem;
   color: #707070;
   letter-spacing: 1px;
@@ -1249,7 +1249,7 @@
 
 .leaderboard-leader,
 .leaderboard-gap {
-  font-family: 'Crimson Text', Georgia, serif;
+  font-family: 'Crimson Text', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 0.7rem;
   color: #8a8a9a;
   text-align: right;
@@ -1257,7 +1257,7 @@
 
 .leaderboard-lap-time,
 .leaderboard-best-time {
-  font-family: 'Crimson Text', Georgia, serif;
+  font-family: 'Crimson Text', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 0.7rem;
   color: #8a8a9a;
   text-align: right;
@@ -1318,7 +1318,7 @@
 }
 
 .leaderboard-pos {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-weight: 600;
   font-size: 0.75rem;
   color: #b0b0b0;
@@ -1423,7 +1423,7 @@
 .hover-rating-value {
   font-weight: 700;
   font-size: 1rem;
-  font-family: 'Courier New', monospace;
+  font-family: 'Courier New', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   text-shadow: 0 0 8px currentColor;
 }
 
@@ -1457,7 +1457,7 @@
 .hover-card-rating {
   font-weight: 700;
   font-size: 1rem;
-  font-family: 'Courier New', monospace;
+  font-family: 'Courier New', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   text-shadow: 0 0 8px currentColor;
 }
 
@@ -1511,7 +1511,7 @@
   font-size: 0.7rem;
   color: #aaa;
   text-align: right;
-  font-family: 'Crimson Text', Georgia, serif;
+  font-family: 'Crimson Text', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
 }
 
 /* Tags Section */
@@ -1594,12 +1594,12 @@
 
 .stint-laps {
   color: #888;
-  font-family: 'Crimson Text', Georgia, serif;
+  font-family: 'Crimson Text', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
 }
 
 .stint-pace {
   color: #bbb;
-  font-family: 'Crimson Text', Georgia, serif;
+  font-family: 'Crimson Text', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   text-align: right;
 }
 
@@ -1658,7 +1658,7 @@
 }
 
 .finish-modal-header h2 {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 1.8rem;
   font-weight: 700;
   color: #e8e8e8;
@@ -1773,7 +1773,7 @@
 }
 
 .podium-name {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 0.9rem;
   font-weight: 600;
   margin-bottom: 0.5rem;
@@ -1807,7 +1807,7 @@
 }
 
 .podium-num {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 1.5rem;
   font-weight: 700;
   color: #1a1a1a;
@@ -1835,7 +1835,7 @@
 }
 
 .finisher-pos {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 0.7rem;
   color: #888;
 }
@@ -1866,7 +1866,7 @@
 }
 
 .finisher-more {
-  font-family: 'Crimson Text', Georgia, serif;
+  font-family: 'Crimson Text', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 0.8rem;
   color: #666;
   font-style: italic;
@@ -1875,7 +1875,7 @@
 
 /* Next Race Button */
 .next-race-btn {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 1.1rem;
   font-weight: 600;
   letter-spacing: 2px;
@@ -2079,7 +2079,7 @@
   padding: 2px 4px;
   border-radius: 3px;
   min-width: 45px;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'JetBrains Mono', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
 }
 
 .leaderboard-bet-indicator .bet-types-label {
@@ -2187,7 +2187,7 @@
 .dropdown-rating-value {
   font-weight: 700;
   font-size: 1rem;
-  font-family: 'Courier New', monospace;
+  font-family: 'Courier New', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   text-shadow: 0 0 8px currentColor;
 }
 

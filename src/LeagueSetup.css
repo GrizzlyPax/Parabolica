@@ -4,7 +4,7 @@
   max-width: 1400px;
   margin: 0 auto;
   color: #ccc;
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   background: #111;
 }
 
@@ -18,7 +18,7 @@
 }
 
 .setup-header h1 {
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 3rem;
   font-weight: 700;
   color: #fff;
@@ -28,7 +28,7 @@
 }
 
 .setup-header .subtitle {
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   color: #777;
   font-style: italic;
   font-size: 1rem;
@@ -51,7 +51,7 @@
   border: none;
   border-right: 1px solid #333;
   color: #777;
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 0.95rem;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -83,7 +83,7 @@
 }
 
 .panel-header h2 {
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   color: #fff;
   margin: 0;
   font-weight: 700;
@@ -96,7 +96,7 @@
   border: 1px solid #444;
   color: #888;
   border-radius: 3px;
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -108,7 +108,7 @@
 }
 
 .season-track-note {
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 0.8rem;
   color: #888;
   font-style: italic;
@@ -165,14 +165,14 @@
 }
 
 .kingdom-name {
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 1.1rem;
   margin: 0 0 0.15rem 0;
   font-weight: 700;
 }
 
 .kingdom-desc {
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   color: #777;
   font-size: 0.8rem;
   margin: 0;
@@ -222,21 +222,21 @@
 }
 
 .car-name {
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 0.85rem;
   color: #ddd;
   font-weight: 600;
 }
 
 .car-rating {
-  font-family: 'Courier New', monospace;
+  font-family: 'Courier New', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 0.9rem;
   font-weight: 700;
   text-shadow: 0 0 8px currentColor;
 }
 
 .car-quirk {
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 0.7rem;
   color: #666;
   font-style: italic;
@@ -262,7 +262,7 @@
   font-size: 0.65rem;
   color: #666;
   font-weight: 600;
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
 }
 
 .stat-divider {
@@ -340,7 +340,7 @@
 }
 
 .driver-name {
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-weight: 600;
   font-size: 0.9rem;
   color: #ddd;
@@ -348,7 +348,7 @@
 }
 
 .driver-rating {
-  font-family: 'Courier New', monospace;
+  font-family: 'Courier New', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 0.9rem;
   font-weight: 700;
   text-shadow: 0 0 8px currentColor;
@@ -438,7 +438,7 @@
 }
 
 .driver-slot {
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 0.65rem;
   color: #555;
   text-transform: uppercase;
@@ -461,7 +461,7 @@
   font-size: 0.65rem;
   color: #666;
   font-weight: 600;
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
 }
 
 /* Driver selection buttons */
@@ -474,7 +474,7 @@
 .selection-btn {
   padding: 0.3rem 0.6rem;
   font-size: 0.7rem;
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   border-radius: 3px;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -542,7 +542,7 @@
 }
 
 .driver-details-expanded .driver-backstory {
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 0.85rem;
   color: #888;
   font-style: italic;
@@ -551,7 +551,7 @@
 }
 
 .driver-details-expanded .driver-quirk {
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 0.8rem;
   color: #aaa;
 }
@@ -576,7 +576,7 @@
   font-size: 0.75rem;
   color: #888;
   text-align: right;
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
 }
 
 .driver-details {
@@ -586,7 +586,7 @@
 }
 
 .driver-backstory {
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 0.85rem;
   color: #888;
   font-style: italic;
@@ -595,7 +595,7 @@
 }
 
 .driver-quirk {
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 0.8rem;
   color: #aaa;
 }
@@ -621,7 +621,7 @@
 }
 
 .track-name {
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   color: #fff;
   font-size: 1.4rem;
   margin: 0;
@@ -629,7 +629,7 @@
 }
 
 .track-description {
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   color: #888;
   font-style: italic;
   margin-bottom: 1.25rem;
@@ -652,7 +652,7 @@
 }
 
 .track-stat-label {
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   display: block;
   font-size: 0.65rem;
   color: #666;
@@ -661,7 +661,7 @@
 }
 
 .track-stat-value {
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 1rem;
   color: #ddd;
   font-weight: 600;
@@ -675,7 +675,7 @@
 }
 
 .track-rules h4 {
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   color: #ddd;
   margin: 0 0 0.6rem 0;
   font-size: 0.85rem;
@@ -693,14 +693,14 @@
 }
 
 .rule-name {
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   color: #ddd;
   font-weight: 600;
   font-size: 0.85rem;
 }
 
 .rule-desc {
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   color: #777;
   font-size: 0.8rem;
   font-style: italic;
@@ -747,7 +747,7 @@
 }
 
 .picker-name {
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   flex: 1;
   font-size: 0.8rem;
   color: #ccc;
@@ -770,7 +770,7 @@
 }
 
 .track-event h4 {
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   color: #ddd;
   margin: 0 0 0.6rem 0;
   font-size: 1rem;
@@ -778,7 +778,7 @@
 }
 
 .event-description {
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   color: #aaa;
   font-size: 0.85rem;
   margin: 0 0 0.4rem 0;
@@ -786,7 +786,7 @@
 }
 
 .event-flavor {
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   color: #666;
   font-size: 0.8rem;
   font-style: italic;
@@ -803,7 +803,7 @@
 }
 
 .active-cards-section h3 {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   color: #a8d8a8;
   margin: 0 0 1rem 0;
   font-size: 1rem;
@@ -817,7 +817,7 @@
 }
 
 .deck-section h3 {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   color: #8a8a8a;
   margin: 0 0 1rem 0;
   letter-spacing: 1px;
@@ -870,7 +870,7 @@
   font-size: 0.7rem;
   text-transform: uppercase;
   font-weight: 600;
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   letter-spacing: 1px;
 }
 
@@ -878,7 +878,7 @@
   font-size: 0.7rem;
   color: #7a7a7a;
   text-transform: uppercase;
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
 }
 
 .card-desc {
@@ -917,7 +917,7 @@
   border: 1px solid #555555;
   color: #d0d0d0;
   border-radius: 3px;
-  font-family: 'Crimson Text', Georgia, serif;
+  font-family: 'Crimson Text', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -933,7 +933,7 @@
   border: 1px solid #7a4a4a;
   color: #d8a8a8;
   border-radius: 3px;
-  font-family: 'Crimson Text', Georgia, serif;
+  font-family: 'Crimson Text', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -964,7 +964,7 @@
   color: #777;
   font-size: 0.85rem;
   flex-wrap: wrap;
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
 }
 
 .footer-controls {
@@ -996,14 +996,14 @@
 }
 
 .prohibition-label {
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 0.9rem;
   color: #888;
   font-weight: 600;
 }
 
 .prohibition-hint {
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 0.75rem;
   color: #555;
   font-style: italic;
@@ -1018,7 +1018,7 @@
   background: #333;
   border: 2px solid #555;
   color: #fff;
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 1rem;
   font-weight: 700;
   border-radius: 4px;

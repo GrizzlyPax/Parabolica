@@ -29,7 +29,7 @@
 }
 
 .race-info .race-number {
-  font-family: 'Inconsolata', monospace;
+  font-family: 'Inconsolata', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 0.75rem;
   color: #555;
   text-transform: uppercase;
@@ -37,7 +37,7 @@
 }
 
 .race-info .track-name {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 1.4rem;
   font-weight: 600;
   margin: 0;
@@ -63,7 +63,7 @@
 }
 
 .marble-status .value {
-  font-family: 'Inconsolata', monospace;
+  font-family: 'Inconsolata', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 1.1rem;
   font-weight: 600;
   color: #d4af37;
@@ -85,7 +85,7 @@
 }
 
 .narrator-box .narrator-name {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 0.75rem;
   color: #666;
   margin-right: 0.4rem;
@@ -144,7 +144,7 @@
 }
 
 .driver-grid h3 {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 0.7rem;
   color: #555;
   margin: 0 0 0.6rem 0;
@@ -190,7 +190,7 @@
 }
 
 .tier-label {
-  font-family: 'Inconsolata', monospace;
+  font-family: 'Inconsolata', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 0.65rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -306,7 +306,7 @@
 
 /* Odds are the star - make them pop */
 .driver-option .driver-odds {
-  font-family: 'Inconsolata', monospace;
+  font-family: 'Inconsolata', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 0.8rem;
   font-weight: 700;
   min-width: 32px;
@@ -371,7 +371,7 @@
   border: 1px solid #4c3a6b;
   border-radius: 8px;
   color: #a88fd4;
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 0.85rem;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -405,7 +405,7 @@
 }
 
 .selected-driver-info .name {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 1.3rem;
   font-weight: 600;
   color: #e8e8e8;
@@ -413,7 +413,7 @@
 }
 
 .selected-driver-info .driver-tier-badge {
-  font-family: 'Inconsolata', monospace;
+  font-family: 'Inconsolata', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 0.7rem;
   padding: 0.2rem 0.5rem;
   border-radius: 3px;
@@ -429,7 +429,7 @@
 }
 
 .bet-type-selector h4 {
-  font-family: 'Inconsolata', monospace;
+  font-family: 'Inconsolata', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 0.7rem;
   color: #555;
   margin: 0;
@@ -483,7 +483,7 @@
 }
 
 .bet-type .type-odds {
-  font-family: 'Inconsolata', monospace;
+  font-family: 'Inconsolata', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 1.4rem;
   font-weight: 700;
   color: #d4af37;
@@ -517,7 +517,7 @@
 }
 
 .bet-amount-selector h4 {
-  font-family: 'Inconsolata', monospace;
+  font-family: 'Inconsolata', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 0.7rem;
   color: #555;
   margin: 0;
@@ -542,7 +542,7 @@
   border-radius: 4px;
   color: #888;
   cursor: pointer;
-  font-family: 'Inconsolata', monospace;
+  font-family: 'Inconsolata', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 0.85rem;
   transition: all 0.1s ease;
 }
@@ -559,7 +559,7 @@
 .amount-display {
   flex: 1;
   text-align: center;
-  font-family: 'Inconsolata', monospace;
+  font-family: 'Inconsolata', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 1.6rem;
   font-weight: 700;
   color: #d4af37;
@@ -578,7 +578,7 @@
   border-radius: 4px;
   color: #666;
   cursor: pointer;
-  font-family: 'Inconsolata', monospace;
+  font-family: 'Inconsolata', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 0.8rem;
   transition: all 0.1s ease;
 }
@@ -605,7 +605,7 @@
   justify-content: center;
   align-items: flex-start;
   gap: 0.35rem;
-  font-family: 'Inconsolata', monospace;
+  font-family: 'Inconsolata', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
 }
 
 .potential-payout .payout-part {
@@ -665,13 +665,13 @@
 }
 
 .potential-payout .payout-equals {
-  font-family: 'Inconsolata', monospace;
+  font-family: 'Inconsolata', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 1rem;
   color: #555;
 }
 
 .potential-payout .payout-value {
-  font-family: 'Inconsolata', monospace;
+  font-family: 'Inconsolata', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 1.4rem;
   font-weight: 700;
   color: #d4af37;
@@ -685,7 +685,7 @@
   border: 2px solid #7a7040;
   border-radius: 6px;
   color: #d4af37;
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 1.1rem;
   font-weight: 600;
   letter-spacing: 1px;
@@ -733,7 +733,7 @@
 }
 
 .current-bets h3 {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 0.7rem;
   color: #555;
   margin: 0 0 0.5rem 0;
@@ -751,7 +751,7 @@
   font-weight: 700;
   padding: 0.1rem 0.4rem;
   border-radius: 10px;
-  font-family: 'Inconsolata', monospace;
+  font-family: 'Inconsolata', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
 }
 
 .no-bets {
@@ -848,7 +848,7 @@
 }
 
 .bet-amount {
-  font-family: 'Inconsolata', monospace;
+  font-family: 'Inconsolata', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 0.75rem;
   color: #888;
 }
@@ -859,7 +859,7 @@
 }
 
 .bet-potential {
-  font-family: 'Inconsolata', monospace;
+  font-family: 'Inconsolata', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 0.9rem;
   font-weight: 600;
   color: #d4af37;
@@ -882,7 +882,7 @@
 }
 
 .bets-total-value {
-  font-family: 'Inconsolata', monospace;
+  font-family: 'Inconsolata', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 0.9rem;
   color: #aaa;
 }
@@ -904,7 +904,7 @@
 }
 
 .bets-potential-total .value {
-  font-family: 'Inconsolata', monospace;
+  font-family: 'Inconsolata', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 1rem;
   font-weight: 600;
   color: #d4af37;
@@ -936,7 +936,7 @@
   border: 1px solid #3a4540;
   border-radius: 6px;
   color: #7cb;
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 1rem;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -968,7 +968,7 @@
 }
 
 .race-results h2 {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 1.8rem;
   margin-bottom: 1.5rem;
 }
@@ -1019,18 +1019,18 @@
 }
 
 .result-position {
-  font-family: 'Inconsolata', monospace;
+  font-family: 'Inconsolata', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   color: #aaa;
 }
 
 .result-outcome .win {
-  font-family: 'Inconsolata', monospace;
+  font-family: 'Inconsolata', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   color: #6c8;
   font-weight: 600;
 }
 
 .result-outcome .loss {
-  font-family: 'Inconsolata', monospace;
+  font-family: 'Inconsolata', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   color: #a66;
 }
 
@@ -1054,7 +1054,7 @@
   display: flex;
   justify-content: space-between;
   padding: 0.5rem 0;
-  font-family: 'Inconsolata', monospace;
+  font-family: 'Inconsolata', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
 }
 
 .summary-row.net {
@@ -1087,7 +1087,7 @@
   border: 1px solid #4a4540;
   border-radius: 6px;
   color: #d4af37;
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 1.1rem;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -1113,7 +1113,7 @@
 }
 
 .season-tally h1 {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 2.2rem;
   letter-spacing: 3px;
   margin-bottom: 1.5rem;
@@ -1133,7 +1133,7 @@
 }
 
 .final-score .score-value {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 4rem;
   font-weight: 700;
   color: #d4af37;
@@ -1141,7 +1141,7 @@
 }
 
 .final-score .score-label {
-  font-family: 'Inconsolata', monospace;
+  font-family: 'Inconsolata', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 1rem;
   color: #888;
   text-transform: uppercase;
@@ -1168,7 +1168,7 @@
 }
 
 .stat .stat-value {
-  font-family: 'Inconsolata', monospace;
+  font-family: 'Inconsolata', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 1.4rem;
   color: #ccc;
 }
@@ -1188,7 +1188,7 @@
 }
 
 .race-history h3 {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 1rem;
   color: #888;
   margin-bottom: 1rem;
@@ -1217,7 +1217,7 @@
 }
 
 .history-row .race-net {
-  font-family: 'Inconsolata', monospace;
+  font-family: 'Inconsolata', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 0.9rem;
 }
 
@@ -1235,7 +1235,7 @@
   border: 1px solid #6a6530;
   border-radius: 6px;
   color: #d4af37;
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 1.2rem;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -1251,7 +1251,7 @@
    ============================================ */
 
 .bet-indicator {
-  font-family: 'Inconsolata', monospace;
+  font-family: 'Inconsolata', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 0.7rem;
   padding: 0.1rem 0.3rem;
   border-radius: 2px;
