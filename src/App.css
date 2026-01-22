@@ -789,6 +789,60 @@ body, button, input, select, textarea {
   }
 }
 
+/* Mobile phone breakpoint - touch targets and global improvements */
+@media (max-width: 640px) {
+  /* All buttons should have minimum touch target */
+  .control-btn,
+  .back-btn,
+  .view-btn,
+  .speed-btn {
+    min-height: 44px;
+    padding: 0.6rem 1rem;
+  }
+
+  /* Speed control buttons in a row */
+  .speed-control {
+    margin-left: 0;
+  }
+
+  .speed-btn {
+    padding: 0.5rem 0.7rem;
+    min-height: 44px;
+  }
+
+  /* Detail view header - stack on mobile */
+  .detail-header {
+    padding: 0.5rem 1rem;
+  }
+
+  .header-left .track-name {
+    font-size: 1rem;
+  }
+
+  .race-timer {
+    font-size: 1rem;
+  }
+
+  /* Detail content */
+  .detail-content {
+    padding: 1rem;
+    gap: 1rem;
+  }
+
+  .detail-section {
+    padding: 0.75rem;
+  }
+
+  .detail-section h3 {
+    font-size: 0.75rem;
+  }
+
+  /* Season view */
+  .season-view-content {
+    padding: 1rem;
+  }
+}
+
 /* ========================================
    SPEED CONTROL
    ======================================== */

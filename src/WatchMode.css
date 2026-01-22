@@ -1940,6 +1940,114 @@
   }
 }
 
+/* Mobile phone breakpoint */
+@media (max-width: 640px) {
+  .watch-mode {
+    padding: 1rem;
+  }
+
+  .watch-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .watch-header .back-btn {
+    padding: 0.6rem 1rem;
+    min-height: 44px; /* Touch target */
+  }
+
+  .watch-header .track-title {
+    font-size: 1.3rem;
+  }
+
+  .watch-header .lap-counter {
+    font-size: 0.9rem;
+  }
+
+  .watch-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .watch-controls button {
+    padding: 0.6rem 0.8rem;
+    min-height: 44px; /* Touch target */
+    font-size: 0.75rem;
+  }
+
+  /* Track */
+  .oval-track-container {
+    min-width: 280px;
+  }
+
+  /* Leaderboard - simplified */
+  .leaderboard-row {
+    padding: 0.4rem 0.5rem;
+    min-height: 36px;
+  }
+
+  .leaderboard-row .position {
+    font-size: 0.8rem;
+    min-width: 24px;
+  }
+
+  .leaderboard-row .emoji {
+    font-size: 1rem;
+  }
+
+  .leaderboard-row .name {
+    font-size: 0.75rem;
+  }
+
+  .leaderboard-row .gap,
+  .leaderboard-row .last-lap,
+  .leaderboard-row .best-lap {
+    display: none; /* Hide extra columns on mobile */
+  }
+
+  /* Notification timeline - hide on very small screens */
+  .notification-timeline {
+    display: none;
+  }
+
+  /* Finish modal */
+  .finish-modal {
+    padding: 1rem;
+    margin: 0.5rem;
+    max-width: calc(100vw - 1rem);
+  }
+
+  .finish-modal h2 {
+    font-size: 1.3rem;
+  }
+
+  .podium-section {
+    gap: 0.5rem;
+  }
+
+  .podium-emoji {
+    font-size: 2rem;
+  }
+
+  .podium-spot.podium-1 .podium-emoji {
+    font-size: 2.5rem;
+  }
+
+  .podium-name {
+    font-size: 0.8rem;
+  }
+
+  /* Continue button */
+  .finish-modal .continue-btn,
+  .finish-modal .next-race-btn {
+    width: 100%;
+    padding: 1rem;
+    min-height: 48px;
+  }
+}
+
 /* Track Event Effects - Similar to crash pop-ups but with expanding rings */
 .track-event-popup {
   pointer-events: none;

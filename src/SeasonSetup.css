@@ -479,3 +479,135 @@
   opacity: 0.4;
   cursor: not-allowed;
 }
+
+/* Mobile phone breakpoint */
+@media (max-width: 640px) {
+  .season-setup {
+    padding: 1.5rem 1rem;
+  }
+
+  .season-setup .back-btn {
+    margin-bottom: 1.5rem;
+    min-height: 44px; /* Touch target */
+  }
+
+  .season-setup-header h1 {
+    font-size: 1.8rem;
+    gap: 0.5rem;
+  }
+
+  .header-emoji {
+    font-size: 1.4rem;
+  }
+
+  .setup-section {
+    padding: 1rem;
+  }
+
+  .setup-section h2 {
+    font-size: 1rem;
+  }
+
+  /* Race count buttons */
+  .race-count-options {
+    gap: 0.5rem;
+  }
+
+  .race-count-btn {
+    padding: 0.75rem 0.5rem;
+    min-height: 60px; /* Touch target */
+  }
+
+  .count-number {
+    font-size: 1.5rem;
+  }
+
+  .count-label {
+    font-size: 0.65rem;
+  }
+
+  /* Points grid - 3 columns on mobile */
+  .points-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.3rem;
+  }
+
+  .points-item {
+    padding: 0.35rem;
+  }
+
+  .points-item .position {
+    font-size: 0.6rem;
+  }
+
+  .points-item .points {
+    font-size: 0.75rem;
+  }
+
+  /* Tabs */
+  .setup-tabs {
+    flex-wrap: wrap;
+  }
+
+  .setup-tab {
+    padding: 0.6rem 0.75rem;
+    font-size: 0.8rem;
+    min-height: 44px; /* Touch target */
+  }
+
+  /* Selection header */
+  .selection-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .selection-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .action-btn {
+    min-height: 36px; /* Touch target */
+  }
+
+  /* Selection grid - single column */
+  .selection-grid {
+    max-height: 300px;
+  }
+
+  .kingdoms-grid,
+  .tracks-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .selection-card {
+    min-height: 56px; /* Touch target */
+  }
+
+  .selection-emoji {
+    font-size: 1.3rem;
+  }
+
+  .selection-name {
+    font-size: 0.9rem;
+  }
+
+  /* Summary */
+  .summary-stats {
+    gap: 1.5rem;
+  }
+
+  .summary-stat .stat-value {
+    font-size: 1.6rem;
+  }
+
+  .summary-stat .stat-label {
+    font-size: 0.7rem;
+  }
+
+  .start-season-btn {
+    padding: 0.85rem 1.5rem;
+    font-size: 1rem;
+    min-height: 48px; /* Touch target */
+  }
+}

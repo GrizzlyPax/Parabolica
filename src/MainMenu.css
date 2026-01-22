@@ -205,3 +205,64 @@
     transform: rotate(-15deg);
   }
 }
+
+/* Mobile phone breakpoint */
+@media (max-width: 640px) {
+  .main-menu {
+    padding: 1.5rem 1rem;
+  }
+
+  .main-menu-header {
+    margin-bottom: 2rem;
+  }
+
+  .main-menu-title {
+    font-size: 2.2rem;
+    gap: 0.5rem;
+  }
+
+  .main-menu-subtitle {
+    font-size: 0.95rem;
+  }
+
+  .mode-selection {
+    gap: 0.6rem;
+  }
+
+  .mode-card {
+    padding: 1rem;
+    gap: 1rem;
+    min-height: 72px; /* Touch target friendly */
+  }
+
+  .mode-icon {
+    width: 48px;
+    height: 48px;
+    font-size: 2rem;
+  }
+
+  .mode-info h2 {
+    font-size: 1.1rem;
+  }
+
+  .mode-info p {
+    font-size: 0.85rem;
+  }
+
+  .mode-arrow {
+    font-size: 1rem;
+  }
+
+  .main-menu-footer {
+    margin-top: 2rem;
+  }
+
+  /* Mister Marbles floater */
+  .mister-marbles-float {
+    top: 1rem;
+  }
+
+  .mm-text {
+    font-size: 0.85rem;
+  }
+}

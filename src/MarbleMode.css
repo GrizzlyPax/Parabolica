@@ -1280,3 +1280,179 @@
     grid-template-columns: repeat(3, 1fr);
   }
 }
+
+/* Mobile phone breakpoint */
+@media (max-width: 640px) {
+  .betting-interface {
+    padding: 1rem;
+  }
+
+  .betting-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .race-info .track-name {
+    font-size: 1.2rem;
+  }
+
+  .marble-status {
+    gap: 1rem;
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .marble-status .value {
+    font-size: 1rem;
+  }
+
+  .narrator-box {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+  }
+
+  /* Driver grid - 2 columns on mobile */
+  .tier-drivers {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .driver-option {
+    padding: 0.5rem;
+    min-height: 44px; /* Touch target */
+  }
+
+  .driver-option .driver-name {
+    font-size: 0.65rem;
+  }
+
+  /* Bet builder */
+  .bet-builder {
+    padding: 1rem;
+  }
+
+  .selected-driver-info .emoji {
+    font-size: 2rem;
+  }
+
+  .selected-driver-info .name {
+    font-size: 1.1rem;
+  }
+
+  /* Bet types - 2 columns on mobile */
+  .bet-types {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .bet-type {
+    padding: 0.6rem 0.4rem;
+    min-height: 44px; /* Touch target */
+  }
+
+  .bet-type .type-odds {
+    font-size: 1.2rem;
+  }
+
+  /* Amount controls */
+  .amount-display {
+    font-size: 1.4rem;
+  }
+
+  .amount-controls button {
+    padding: 0.5rem 0.8rem;
+    min-height: 44px; /* Touch target */
+  }
+
+  .quick-amounts button {
+    padding: 0.6rem;
+    min-height: 44px; /* Touch target */
+  }
+
+  /* Place bet button - larger on mobile */
+  .place-bet-btn {
+    padding: 1rem;
+    font-size: 1rem;
+    width: 100%;
+  }
+
+  /* Current bets panel */
+  .bet-item {
+    padding: 0.75rem;
+  }
+
+  .remove-bet {
+    width: 24px;
+    height: 24px;
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  /* Footer */
+  .betting-footer {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .confirm-bets-btn {
+    width: 100%;
+    padding: 1rem;
+  }
+
+  /* Results screen */
+  .race-results {
+    padding: 2rem 1rem;
+  }
+
+  .race-results h2 {
+    font-size: 1.4rem;
+  }
+
+  .result-item {
+    grid-template-columns: 1fr auto;
+    gap: 0.5rem;
+  }
+
+  .result-type,
+  .result-position {
+    font-size: 0.75rem;
+  }
+
+  .continue-btn {
+    width: 100%;
+    padding: 1rem;
+  }
+
+  /* Season tally */
+  .season-tally {
+    padding: 2rem 1rem;
+  }
+
+  .season-tally h1 {
+    font-size: 1.6rem;
+    letter-spacing: 2px;
+  }
+
+  .final-score .score-value {
+    font-size: 3rem;
+  }
+
+  .season-stats {
+    gap: 0.75rem;
+  }
+
+  .stat {
+    padding: 0.75rem 1rem;
+    min-width: 80px;
+  }
+
+  .new-season-btn {
+    width: 100%;
+    padding: 1rem;
+  }
+
+  /* Mister Marbles button */
+  .mister-marbles-btn {
+    width: 100%;
+    padding: 1rem;
+  }
+}
