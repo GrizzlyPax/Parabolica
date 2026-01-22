@@ -6,6 +6,11 @@
   box-sizing: border-box;
 }
 
+/* Eliminate 300ms touch delay on mobile */
+a, button, input, select, textarea, [role="button"] {
+  touch-action: manipulation;
+}
+
 body {
   background: #111;
   min-height: 100vh;
