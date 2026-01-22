@@ -353,10 +353,10 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, powerAct
       '',
     ];
 
-    // Podium
-    if (sortedFinished[0]) lines.push(`🥇 ${sortedFinished[0].emoji} ${sortedFinished[0].name}`);
-    if (sortedFinished[1]) lines.push(`🥈 ${sortedFinished[1].emoji} ${sortedFinished[1].name}`);
-    if (sortedFinished[2]) lines.push(`🥉 ${sortedFinished[2].emoji} ${sortedFinished[2].name}`);
+    // Winner only
+    if (sortedFinished[0]) {
+      lines.push(`🏆 ${sortedFinished[0].emoji} ${sortedFinished[0].name}`);
+    }
 
     // Betting results (if any bets were placed)
     if (activeBets && activeBets.length > 0) {
@@ -364,27 +364,22 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, powerAct
       const totalWagered = resolved.reduce((sum, b) => sum + b.amount, 0);
       const totalPayout = resolved.reduce((sum, b) => sum + b.payout, 0);
       const netChange = totalPayout - totalWagered;
-      const wins = resolved.filter(b => b.won).length;
-      const losses = resolved.filter(b => !b.won).length;
 
       lines.push('');
       // Show win/loss boxes like Wordle
       const resultBoxes = resolved.map(b => b.won ? '🟩' : '🟥').join('');
       lines.push(resultBoxes);
-      const netEmoji = netChange >= 0 ? '📈' : '📉';
-      lines.push(`${netEmoji} ${netChange >= 0 ? '+' : ''}${netChange} marbles (${wins}W/${losses}L)`);
+      lines.push(`🔮 ${netChange >= 0 ? '+' : ''}${netChange} marbles`);
+    }
+
+    // DNF count
+    if (dnfCount > 0) {
+      lines.push('');
+      lines.push(`💀 ${dnfCount} eliminations`);
     }
 
     lines.push('');
-
-    // Stats line
-    const statsLine: string[] = [];
-    if (dnfCount > 0) statsLine.push(`💀 ${dnfCount}`);
-    statsLine.push(`🔄 ${totalLaps} laps`);
-    lines.push(statsLine.join(' • '));
-
-    lines.push('');
-    lines.push('playparabolica.com');
+    lines.push('🔮 playparabolica.com');
 
     return lines.join('\n');
   };

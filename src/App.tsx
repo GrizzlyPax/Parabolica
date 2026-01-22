@@ -10,7 +10,7 @@ import WatchMode from './WatchMode';
 import Compendium from './Compendium';
 import { BettingInterface, RaceResults, SeasonTally, Bet, ResolvedBet, MarbleState, SeasonRaceResult, resolveBets } from './MarbleMode';
 import { generateTrack, getTracksByIds, getDynamicEventDescription, Track } from './generators/tracks';
-import { SeasonState, createInitialSeasonState, updateSeasonWithRaceResult } from './types/season';
+import { SeasonState, createInitialSeasonState, updateSeasonWithRaceResult, getSeasonStandings } from './types/season';
 import './App.css';
 
 type AppScreen = 'main-menu' | 'setup' | 'season-setup' | 'betting' | 'race' | 'race-results' | 'season-complete' | 'marble-tally' | 'compendium';
@@ -480,10 +480,17 @@ function App() {
 
   // Show marble mode season tally
   if (screen === 'marble-tally') {
+    // Get season champion info
+    const standings = seasonState ? getSeasonStandings(seasonState) : [];
+    const championId = standings[0]?.driverId;
+    const champion = championId ? drivers.find(d => d.id === championId) : null;
+
     return (
       <SeasonTally
         finalBankroll={marbleState.bankroll}
         seasonHistory={marbleState.seasonHistory}
+        totalRaces={seasonState?.totalRaces ?? marbleState.seasonHistory.length}
+        champion={champion ? { name: champion.name, emoji: champion.emoji } : null}
         onNewSeason={() => {
           handleNewSeason();
         }}

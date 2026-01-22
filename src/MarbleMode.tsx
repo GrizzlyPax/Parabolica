@@ -1078,12 +1078,16 @@ export function RaceResults({
 interface SeasonTallyProps {
   finalBankroll: number;
   seasonHistory: SeasonRaceResult[];
+  totalRaces: number;
+  champion: { name: string; emoji: string } | null;
   onNewSeason: () => void;
 }
 
 export function SeasonTally({
   finalBankroll,
   seasonHistory,
+  totalRaces,
+  champion,
   onNewSeason,
 }: SeasonTallyProps) {
   const totalWagered = seasonHistory.reduce((sum, r) => sum + r.totalWagered, 0);
@@ -1123,9 +1127,11 @@ export function SeasonTally({
 
     const lines: string[] = [
       '🏁 PARABOLICA 🏁',
+      `Season Complete (${totalRaces} races)`,
       '',
       raceBoxes,
       '',
+      ...(champion ? [`🏆 ${champion.emoji} ${champion.name}`] : []),
       `🔮 ${netChange >= 0 ? '+' : ''}${netChange.toLocaleString()} marbles`,
       ...(eliminations > 0 ? [`💀 ${eliminations} eliminations witnessed`] : []),
       '',
