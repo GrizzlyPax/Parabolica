@@ -871,6 +871,12 @@ class RaceEngine {
     if (!this.config.enableTireWear) return false;
     if (driver.status !== 'racing') return false;
 
+    // SAFETY CAR: Greatly reduce blowout risk - low speeds = less tire stress
+    if (this.isUnderSafetyCar()) {
+      // 98% reduction - blowouts almost never happen at SC pace
+      if (Math.random() > 0.02) return false;
+    }
+
     const tire = driver.tireState;
     const compound = TIRE_COMPOUNDS[tire.compound];
 
@@ -902,8 +908,14 @@ class RaceEngine {
   private checkMechanicalFailure(driver: Driver): boolean {
     if (driver.status !== 'racing') return false;
 
-    // Base mechanical failure chance per tick (very rare)
-    const baseMechanicalChance = 0.00015; // ~0.015% per tick, roughly 1-2% chance over full race
+    // SAFETY CAR: Greatly reduce mechanical failures - cars under less stress
+    if (this.isUnderSafetyCar()) {
+      // 95% reduction during SC
+      if (Math.random() > 0.05) return false;
+    }
+
+    // Base mechanical failure chance per tick
+    const baseMechanicalChance = 0.0004; // ~0.04% per tick - noticeable but not dominant
 
     // Car reliability reduces failure chance
     // 1 star = 0.6x protection (40% more failures)
@@ -1891,7 +1903,7 @@ class RaceEngine {
     // Apply crash results to drivers
     this.drivers = this.drivers.map(driver => {
       if (crashedThisTick.has(driver.id)) {
-        this.logEvent('dnf', driver, 'Retired from the race due to crash damage', 'negative', 0.9);
+        this.logEvent('dnf', driver, 'Retired from the race due to crash damage', 'negative', 0.9, '💥');
         return {
           ...driver,
           status: 'dnf' as DriverStatus,
@@ -1904,7 +1916,7 @@ class RaceEngine {
         };
       }
       if (damagedThisTick.has(driver.id) && !driver.isDamaged) {
-        this.logEvent('crash', driver, 'Survived the crash but car is damaged (-15% speed)', 'negative', 0.6);
+        this.logEvent('crash', driver, 'Survived the crash but car is damaged (-15% speed)', 'negative', 0.6, '💥');
         return {
           ...driver,
           isDamaged: true,
@@ -2084,7 +2096,7 @@ class RaceEngine {
       // Check for tire blowout (uses new probability-based system)
       if (this.checkTireBlowout(driver)) {
         const compoundName = driver.tireState.compound.charAt(0).toUpperCase() + driver.tireState.compound.slice(1);
-        this.logEvent('tire_failure', driver, `${compoundName} tire blowout! Pushed too hard on worn rubber`, 'negative', 1.0);
+        this.logEvent('tire_failure', driver, `${compoundName} tire blowout! Pushed too hard on worn rubber`, 'negative', 1.0, '💨');
         return {
           ...driver,
           status: 'dnf' as DriverStatus,
@@ -2094,7 +2106,7 @@ class RaceEngine {
 
       // Check for mechanical failure (affected by car reliability and driver luck)
       if (this.checkMechanicalFailure(driver)) {
-        this.logEvent('mechanical_failure', driver, `Mechanical failure! Engine gave out`, 'negative', 1.0);
+        this.logEvent('mechanical_failure', driver, `Mechanical failure! Engine gave out`, 'negative', 1.0, '⚙️');
         return {
           ...driver,
           status: 'dnf' as DriverStatus,
@@ -2408,7 +2420,7 @@ class RaceEngine {
   // === UNSAFETY CAR SYSTEM ===
   // The Unsafety Car emerges from The Void when pileups occur
 
-  private readonly UNSAFETY_CAR_SPEED = 0.0012;  // Very slow so drivers can easily catch up and stay with it
+  private readonly UNSAFETY_CAR_SPEED = 0.0035;  // Brisk pace - SC periods should feel like a pause, not a crawl
   private readonly UNSAFETY_CAR_LAPS = 1;  // Stays out for 1 lap
   // Note: PIT_EXIT_POSITION and PIT_ENTRY_POSITION are defined in the pit stop section above
 
@@ -2629,10 +2641,10 @@ class RaceEngine {
     );
 
     // UNIFORM GAP SYSTEM: All cars converge to exactly the same target gap
-    // This creates a perfectly spaced train like a proper safety car lineup
-    const TARGET_GAP = 0.12;  // 12% of a lap - the ideal uniform gap for all cars
-    const SC_CRUISE_SPEED = 0.18;  // Safety car cruise speed - everyone matches this when at target
-    const CATCH_UP_SPEED = 0.28;  // Speed when the whole field is catching up to SC
+    // This creates a properly spaced train like a real safety car lineup
+    const TARGET_GAP = 0.16;  // 16% of a lap - wider gaps prevent visual bunching
+    const SC_CRUISE_SPEED = 0.50;  // Safety car cruise speed - ~50% race pace
+    const CATCH_UP_SPEED = 0.65;  // Speed when the whole field is catching up to SC
 
     // Check if the leader is still catching up to the SC
     // If so, the ENTIRE field should be in catch-up mode, not just the leader
@@ -2683,13 +2695,13 @@ class RaceEngine {
       const closeness = Math.abs(gapError) / TARGET_GAP;  // 0 to 1+ (how close relative to target)
 
       if (closeness > 0.8) {
-        return 0.04;  // Emergency brake - way too close
+        return 0.10;  // Emergency brake - way too close
       } else if (closeness > 0.5) {
-        return 0.08;  // Hard brake - quite close
+        return 0.18;  // Hard brake - quite close
       } else if (closeness > 0.2) {
-        return 0.12;  // Light brake - a bit close
+        return 0.28;  // Light brake - a bit close
       } else {
-        return 0.16;  // Slight slow - almost at target
+        return 0.35;  // Slight slow - almost at target
       }
     } else {
       // TOO FAR - need to speed up to close the gap
@@ -2697,13 +2709,13 @@ class RaceEngine {
       const farness = gapError / TARGET_GAP;  // How far relative to target
 
       if (farness > 2.0) {
-        return 0.24;  // Very far behind - close up (but not too fast!)
+        return 0.60;  // Very far behind - close up
       } else if (farness > 1.0) {
-        return 0.22;  // Pretty far - close up gently
+        return 0.58;  // Pretty far - close up gently
       } else if (farness > 0.5) {
-        return 0.20;  // Somewhat far - slight increase
+        return 0.55;  // Somewhat far - slight increase
       } else {
-        return 0.19;  // Almost there - barely above cruise
+        return 0.52;  // Almost there - just above cruise
       }
     }
   }

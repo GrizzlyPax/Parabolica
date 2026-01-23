@@ -506,6 +506,35 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, powerAct
       });
     }
 
+    // Handle mechanical failures
+    const mechanicalDrivers = dnfDrivers.filter(d => d.dnfInfo?.reason === 'mechanical');
+    const newlyMechanical = mechanicalDrivers.filter(d => !seenCrashesRef.current.has(d.id));
+
+    if (newlyMechanical.length > 0) {
+      newlyMechanical.forEach(d => seenCrashesRef.current.add(d.id));
+
+      newlyMechanical.forEach(driver => {
+        const lapProgress = driver.position / trackLength;
+        const point = getPointAlongPath(trackPathRef.current, lapProgress);
+        const currentTick = raceState.totalTicks;
+
+        addNotification(
+          'crash',  // Uses crash notification type for styling
+          'MECHANICAL!',
+          `${driver.emoji} ${driver.name} - engine failure!`,
+          '⚙️',
+          [{ id: driver.id, name: driver.name, emoji: driver.emoji }]
+        );
+
+        const newMechPos: CrashPosition = { x: point.x, y: point.y, tick: currentTick + driver.id + 1000, type: 'blowout' };
+        setCrashPositions(prev => [...prev, newMechPos]);
+
+        setTimeout(() => {
+          setCrashPositions(prev => prev.filter(p => p.tick !== currentTick + driver.id + 1000));
+        }, 10000);
+      });
+    }
+
     // Detect slow pit stops - drivers currently pitting with slow stop flag
     const slowPitStopDrivers = drivers.filter(
       d => d.status === 'pitting' && d.currentPitIsSlowStop && !seenSlowPitStopsRef.current.has(d.id)
@@ -1773,7 +1802,9 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, powerAct
 
                     // For DNF drivers, show what caused it
                     if (isDNF && driver.dnfInfo) {
-                      const dnfEmoji = driver.dnfInfo.reason === 'tire_failure' ? '💨' : '💥';
+                      const dnfEmoji = driver.dnfInfo.reason === 'tire_failure' ? '💨'
+                        : driver.dnfInfo.reason === 'mechanical' ? '⚙️'
+                        : '💥';
                       return <span className="status-icon status-icon-dnf">{dnfEmoji}</span>;
                     }
 
@@ -2163,7 +2194,9 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, powerAct
 
           {/* DNF drivers - crashed/blown out position, faded */}
           {dnfPositions.map(({ driver, x, y }) => {
-            const isBlowout = driver.dnfInfo?.reason === 'tire_failure';
+            const dnfEmoji = driver.dnfInfo?.reason === 'tire_failure' ? '💨'
+              : driver.dnfInfo?.reason === 'mechanical' ? '⚙️'
+              : '💥';
             return (
               <g key={driver.id} className="driver-marker dnf">
                 {/* Driver badge circle - slot-based styling, faded */}
@@ -2187,14 +2220,14 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, powerAct
                 >
                   {driver.emoji}
                 </text>
-                {/* DNF indicator - different for blowout vs crash */}
+                {/* DNF indicator - different for blowout, mechanical, crash */}
                 <text
                   x={x}
                   y={y - 12}
                   textAnchor="middle"
                   style={{ fontSize: '10px' }}
                 >
-                  {isBlowout ? '💨' : '💥'}
+                  {dnfEmoji}
                 </text>
               </g>
             );
