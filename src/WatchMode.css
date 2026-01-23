@@ -93,16 +93,6 @@
   opacity: 0.8;
 }
 
-.watch-timer {
-  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
-  font-size: 1.5rem;
-  color: #cccccc;
-  padding: 0.5rem 1rem;
-  background: rgba(20, 20, 20, 0.6);
-  border: 1px solid #333333;
-  border-radius: 4px;
-}
-
 .watch-finished {
   font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
   font-size: 1rem;

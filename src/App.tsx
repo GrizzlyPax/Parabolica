@@ -48,7 +48,7 @@ function App() {
   const [marbleModeEnabled, setMarbleModeEnabled] = useState(false);
   const [marbleState, setMarbleState] = useState<MarbleState>({
     bankroll: 0,
-    raceBudget: 100,
+    raceBudget: 500,
     currentBets: [],
     seasonHistory: [],
   });
@@ -91,7 +91,7 @@ function App() {
     setMarbleModeEnabled(true);
     setMarbleState({
       bankroll: 0,
-      raceBudget: 100,
+      raceBudget: 500,
       currentBets: [],
       seasonHistory: [],
     });
@@ -105,7 +105,7 @@ function App() {
     setMarbleModeEnabled(true);
     setMarbleState({
       bankroll: 0,
-      raceBudget: 100,
+      raceBudget: 500,
       currentBets: [],
       seasonHistory: [],
     });
@@ -150,7 +150,7 @@ function App() {
       // Reset current bets and give 100 marbles for this race
       setMarbleState(prev => ({
         ...prev,
-        raceBudget: 100,
+        raceBudget: 500,
         currentBets: [],
       }));
       setScreen('betting');
@@ -231,7 +231,7 @@ function App() {
     setMarbleModeEnabled(false);
     setMarbleState({
       bankroll: 0,
-      raceBudget: 100,
+      raceBudget: 500,
       currentBets: [],
       seasonHistory: [],
     });
@@ -383,7 +383,7 @@ function App() {
     if (marbleModeEnabled) {
       setMarbleState(prev => ({
         ...prev,
-        raceBudget: 100,
+        raceBudget: 500,
         currentBets: [],
       }));
       setScreen('betting');
@@ -397,7 +397,7 @@ function App() {
     // Reset marble mode state for new season
     setMarbleState({
       bankroll: 0,
-      raceBudget: 100,
+      raceBudget: 500,
       currentBets: [],
       seasonHistory: [],
     });

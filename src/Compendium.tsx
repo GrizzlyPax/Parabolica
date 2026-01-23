@@ -121,8 +121,79 @@ function CollapsibleSection({
   );
 }
 
+// Password gate responses
+const WRONG_PASSWORD_RESPONSES = [
+  "No.",
+  "Incorrect.",
+  "The machine does not recognize you.",
+  "Access denied.",
+  "That's not it.",
+  "Try again. Or don't.",
+  "The void stares back.",
+  "Wrong.",
+];
+
+const CORRECT_PASSWORD_RESPONSES = [
+  "...Fine.",
+  "Enter, if you must.",
+  "The secrets reveal themselves.",
+  "Access granted. The machine sighs.",
+  "You shouldn't be here. But okay.",
+];
+
 function Compendium({ onBack }: CompendiumProps) {
   const [activeTab, setActiveTab] = useState<TabId>('mechanics');
+  const [isUnlocked, setIsUnlocked] = useState(() =>
+    localStorage.getItem('compendium_unlocked') === 'true'
+  );
+  const [passwordInput, setPasswordInput] = useState('');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  const handlePasswordSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (passwordInput.toLowerCase().trim() === 'goodjob') {
+      localStorage.setItem('compendium_unlocked', 'true');
+      setSuccessMessage(CORRECT_PASSWORD_RESPONSES[Math.floor(Math.random() * CORRECT_PASSWORD_RESPONSES.length)]);
+      setTimeout(() => setIsUnlocked(true), 1200);
+    } else {
+      setErrorMessage(WRONG_PASSWORD_RESPONSES[Math.floor(Math.random() * WRONG_PASSWORD_RESPONSES.length)]);
+      setPasswordInput('');
+    }
+  };
+
+  // Password gate screen
+  if (!isUnlocked) {
+    return (
+      <div className="compendium">
+        <div className="compendium-header">
+          <button className="back-btn" onClick={onBack}>← Back</button>
+          <h1>🔒 Compendium</h1>
+          <p className="compendium-subtitle">The Compendium is sealed.</p>
+        </div>
+        <div className="password-gate">
+          <div className="gate-icon">🔐</div>
+          <p className="gate-message">You shouldn't be here.</p>
+          <form onSubmit={handlePasswordSubmit} className="password-form">
+            <input
+              type="password"
+              value={passwordInput}
+              onChange={(e) => {
+                setPasswordInput(e.target.value);
+                setErrorMessage(null);
+              }}
+              placeholder="Enter password..."
+              className="password-input"
+              autoFocus
+            />
+            <button type="submit" className="password-submit">Enter</button>
+          </form>
+          {errorMessage && <p className="gate-error">{errorMessage}</p>}
+          {successMessage && <p className="gate-success">{successMessage}</p>}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="compendium">

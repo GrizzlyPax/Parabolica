@@ -117,3 +117,38 @@
   from { transform: scale(1); }
   to { transform: scale(1.05); }
 }
+
+/* Mobile responsive */
+@media (max-width: 480px) {
+  .countdown-content {
+    padding: 2rem 1.5rem;
+    margin: 1rem;
+  }
+
+  .track-emoji-large {
+    font-size: 3.5rem;
+  }
+
+  .track-name-large {
+    font-size: 1.75rem;
+  }
+
+  .lights-array {
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .light-column {
+    padding: 0.4rem;
+    gap: 0.3rem;
+  }
+
+  .light {
+    width: 28px;
+    height: 28px;
+  }
+
+  .go-text {
+    font-size: 1.5rem;
+  }
+}

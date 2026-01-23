@@ -26,7 +26,7 @@ export interface ResolvedBet extends Bet {
 
 export interface MarbleState {
   bankroll: number;  // Total marbles accumulated
-  raceBudget: number;  // 100 marbles given each race
+  raceBudget: number;  // 500 marbles given each race
   currentBets: Bet[];
   seasonHistory: SeasonRaceResult[];
 }
@@ -47,20 +47,20 @@ export interface SeasonRaceResult {
 const MISTER_MARBLES = {
   // Greetings at start of betting
   greetings: [
-    "Here's your 100 Marbles.",
-    "100 Marbles. Spend them wisely. Or don't.",
-    "Your allocation has arrived. 100 Marbles.",
-    "The Void provides. 100 Marbles.",
-    "Another race, another 100 Marbles to lose.",
+    "Here's your 500 Marbles.",
+    "500 Marbles. Spend them wisely. Or don't.",
+    "Your allocation has arrived. 500 Marbles.",
+    "The Void provides. 500 Marbles.",
+    "Another race, another 500 Marbles to lose.",
   ],
 
-  // When player is broke but gets their 100
+  // When player is broke but gets their 500
   brokeGreetings: [
-    "You're out of Marbles. Here's 100 more.",
-    "Zero Marbles. How interesting. Here's 100.",
-    "Starting from nothing again. 100 Marbles.",
-    "The simulation takes pity. 100 Marbles.",
-    "Back to baseline. 100 Marbles.",
+    "You're out of Marbles. Here's 500 more.",
+    "Zero Marbles. How interesting. Here's 500.",
+    "Starting from nothing again. 500 Marbles.",
+    "The simulation takes pity. 500 Marbles.",
+    "Back to baseline. 500 Marbles.",
   ],
 
   // When placing bets
@@ -463,7 +463,7 @@ export function BettingInterface({
 }: BettingInterfaceProps) {
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
   const [selectedBetType, setSelectedBetType] = useState<BetType>('podium');
-  const [betAmount, setBetAmount] = useState(10);
+  const [betAmount, setBetAmount] = useState(50);
   const [narratorMessage, setNarratorMessage] = useState('');
 
   // Pre-compute rankings once (O(n log n)) instead of per-driver (O(n² log n))
@@ -719,12 +719,16 @@ export function BettingInterface({
           <h2 className="track-name">{trackName}</h2>
         </div>
         <div className="marble-status">
-          <div className="bankroll">
-            <span className="label">Bank</span>
-            <span className="value">{bankroll.toLocaleString()}</span>
+          <div className="stat-item given">
+            <span className="label">Given</span>
+            <span className="value">{(500 * raceNumber).toLocaleString()}</span>
           </div>
-          <div className="race-budget">
-            <span className="label">Budget</span>
+          <div className={`stat-item profit ${bankroll >= 0 ? 'positive' : 'negative'}`}>
+            <span className="label">Profit</span>
+            <span className="value">{bankroll >= 0 ? '+' : ''}{bankroll.toLocaleString()}</span>
+          </div>
+          <div className="stat-item budget">
+            <span className="label">Race ṁ</span>
             <span className="value">{remaining}</span>
           </div>
         </div>
@@ -815,18 +819,16 @@ export function BettingInterface({
 
                     {/* Amount & Place Bet */}
                     <div className="inline-bet-actions">
-                      <div className="amount-row">
-                        <button onClick={() => setBetAmount(Math.max(1, betAmount - 10))}>−10</button>
-                        <button onClick={() => setBetAmount(Math.max(1, betAmount - 1))}>−1</button>
+                      <div className="amount-row simplified">
+                        <button className="dec" onClick={() => setBetAmount(1)}>Min</button>
+                        <button className="dec" onClick={() => setBetAmount(Math.max(1, betAmount - 100))}>−100</button>
+                        <button className="dec" onClick={() => setBetAmount(Math.max(1, betAmount - 50))}>−50</button>
+                        <button className="dec" onClick={() => setBetAmount(Math.max(1, betAmount - 10))}>−10</button>
                         <span className="amount-value">{betAmount}ṁ</span>
-                        <button onClick={() => setBetAmount(Math.min(remaining, betAmount + 1))}>+1</button>
-                        <button onClick={() => setBetAmount(Math.min(remaining, betAmount + 10))}>+10</button>
-                      </div>
-                      <div className="quick-row">
-                        <button onClick={() => setBetAmount(Math.min(remaining, 10))}>10</button>
-                        <button onClick={() => setBetAmount(Math.min(remaining, 25))}>25</button>
-                        <button onClick={() => setBetAmount(Math.min(remaining, 50))}>50</button>
-                        <button onClick={() => setBetAmount(remaining)}>All</button>
+                        <button className="inc" onClick={() => setBetAmount(Math.min(remaining, betAmount + 10))}>+10</button>
+                        <button className="inc" onClick={() => setBetAmount(Math.min(remaining, betAmount + 50))}>+50</button>
+                        <button className="inc" onClick={() => setBetAmount(Math.min(remaining, betAmount + 100))}>+100</button>
+                        <button className="inc" onClick={() => setBetAmount(remaining)}>All</button>
                       </div>
                       <button
                         className="place-bet-inline"

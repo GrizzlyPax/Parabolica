@@ -7,9 +7,26 @@ interface RaceStartCountdownProps {
   trackEmoji?: string;
 }
 
+// Generative "lights out" messages
+const LIGHTS_OUT_MESSAGES = [
+  "LIGHTS OUT AND AWAY WE GO!",
+  "Commence.",
+  "Giddyup.",
+  "Ooops, there they go.",
+  "The simulation begins.",
+  "They're off.",
+  "And so it begins...",
+  "Go.",
+  "It has started.",
+  "The marbles roll.",
+];
+
 function RaceStartCountdown({ onCountdownComplete, trackName, trackEmoji }: RaceStartCountdownProps) {
   const [phase, setPhase] = useState<'intro' | 'lights' | 'go' | 'done'>('intro');
   const [lightsOn, setLightsOn] = useState(0);
+  const [goMessage] = useState(() =>
+    LIGHTS_OUT_MESSAGES[Math.floor(Math.random() * LIGHTS_OUT_MESSAGES.length)]
+  );
 
   // Store callback in a ref to avoid dependency issues
   const onCompleteRef = useRef(onCountdownComplete);
@@ -93,17 +110,12 @@ function RaceStartCountdown({ onCountdownComplete, trackName, trackEmoji }: Race
                 </div>
               ))}
             </div>
-            <p className="lights-text">
-              {lightsOn === 0 && 'Ready...'}
-              {lightsOn > 0 && lightsOn < 5 && `${lightsOn}...`}
-              {lightsOn === 5 && 'Lights out in...'}
-            </p>
           </div>
         )}
 
         {phase === 'go' && (
           <div className="go-phase">
-            <span className="go-text">LIGHTS OUT AND AWAY WE GO!</span>
+            <span className="go-text">{goMessage}</span>
           </div>
         )}
       </div>

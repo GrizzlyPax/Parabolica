@@ -1236,7 +1236,6 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, powerAct
         ) : (
           <h1>The Eldritch Grand Prix</h1>
         )}
-        <div className="watch-timer">{ticksToShortTime(raceState.totalTicks)}</div>
         {raceState.raceFinished && <span className="watch-finished">RACE COMPLETE</span>}
       </div>
 
