@@ -15,12 +15,9 @@ function MainMenu({ onSingleRace, onSeason, onCompendium }: MainMenuProps) {
   const [compendiumError, setCompendiumError] = useState<string | null>(null);
   const [compendiumSuccess, setCompendiumSuccess] = useState<string | null>(null);
 
-  const isCompendiumUnlocked = localStorage.getItem('compendium_unlocked') === 'true';
-
   const handleCompendiumSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (compendiumPassword.toLowerCase().trim() === 'goodjob') {
-      localStorage.setItem('compendium_unlocked', 'true');
       const responses = [
         "...Fine.",
         "Enter, if you must.",
@@ -46,14 +43,10 @@ function MainMenu({ onSingleRace, onSeason, onCompendium }: MainMenuProps) {
   };
 
   const handleCompendiumClick = () => {
-    if (isCompendiumUnlocked) {
-      onCompendium();
-    } else {
-      setActiveModal('compendium');
-      setCompendiumPassword('');
-      setCompendiumError(null);
-      setCompendiumSuccess(null);
-    }
+    setActiveModal('compendium');
+    setCompendiumPassword('');
+    setCompendiumError(null);
+    setCompendiumSuccess(null);
   };
 
   return (
@@ -67,19 +60,6 @@ function MainMenu({ onSingleRace, onSeason, onCompendium }: MainMenuProps) {
         </div>
 
         <div className="mode-selection">
-          {/* Big Leagues - Coming Soon */}
-          <button className="mode-card coming-soon yellow" onClick={() => setActiveModal('big-leagues')}>
-            <div className="mode-icon">⏳</div>
-            <div className="mode-info">
-              <h2>The Big Leagues</h2>
-              <p className="coming-soon-desc">
-                <span className="ancient-dots">· · · ⟡ · · ·</span>
-              </p>
-              <p className="coming-soon-whisper">ᵗʰᵉ ᵉᵗᵉʳⁿᵃˡ ʳᵃᶜᵉ</p>
-            </div>
-            <div className="mode-arrow">⏳</div>
-          </button>
-
           <button className="mode-card active green" onClick={onSingleRace}>
             <div className="mode-icon">🏎️</div>
             <div className="mode-info">
@@ -98,9 +78,22 @@ function MainMenu({ onSingleRace, onSeason, onCompendium }: MainMenuProps) {
             <div className="mode-arrow">→</div>
           </button>
 
+          {/* Big Leagues - Coming Soon */}
+          <button className="mode-card coming-soon yellow" onClick={() => setActiveModal('big-leagues')}>
+            <div className="mode-icon">🌐</div>
+            <div className="mode-info">
+              <h2>The Big Leagues</h2>
+              <p className="coming-soon-desc">
+                <span className="ancient-dots">· · · ⟡ · · ·</span>
+              </p>
+              <p className="coming-soon-whisper">ᵗʰᵉ ᵉᵗᵉʳⁿᵃˡ ʳᵃᶜᵉ</p>
+            </div>
+            <div className="mode-arrow">→</div>
+          </button>
+
           {/* Commissionary Mode - Locked */}
           <button className="mode-card coming-soon yellow" onClick={() => setActiveModal('commissioner')}>
-            <div className="mode-icon">⏳</div>
+            <div className="mode-icon">🎤</div>
             <div className="mode-info">
               <h2>Commissionary Mode</h2>
               <p className="coming-soon-desc">
@@ -108,26 +101,19 @@ function MainMenu({ onSingleRace, onSeason, onCompendium }: MainMenuProps) {
               </p>
               <p className="coming-soon-whisper">ⁿᵒᵗ ʸᵉᵗ</p>
             </div>
-            <div className="mode-arrow">⏳</div>
+            <div className="mode-arrow">→</div>
           </button>
 
           {/* Compendium - Password Protected */}
-          <button className="mode-card compendium purple" onClick={handleCompendiumClick}>
+          <button className="mode-card type-compendium purple" onClick={handleCompendiumClick}>
             <div className="mode-icon">👁️</div>
             <div className="mode-info">
               <h2>Compendium</h2>
-              {isCompendiumUnlocked ? (
-                <p>The forbidden texts. Handle with care.</p>
-              ) : (
-                <>
-                  <p className="compendium-desc">
-                    <span className="redacted">████████ ███████████</span>
-                  </p>
-                  <p className="compendium-whisper">ᶠᵒʳᵇⁱᵈᵈᵉⁿ ᵏⁿᵒʷˡᵉᵈᵍᵉ</p>
-                </>
-              )}
+              <p className="compendium-desc">
+                <span className="redacted">████████</span> <span className="compendium-whisper-inline">ᶠᵒʳᵇⁱᵈᵈᵉⁿ</span>
+              </p>
             </div>
-            <div className="mode-arrow">{isCompendiumUnlocked ? '→' : '🔮'}</div>
+            <div className="mode-arrow">→</div>
           </button>
         </div>
 

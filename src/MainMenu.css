@@ -142,7 +142,7 @@
 }
 
 .mode-card.active.green .mode-info h2 {
-  color: #7ac090;
+  color: #fff;
 }
 
 .mode-card.active.green .mode-arrow {
@@ -151,8 +151,8 @@
 
 /* Coming Soon - Yellow */
 .mode-card.coming-soon.yellow {
-  border-color: #5a4a20;
-  background: linear-gradient(135deg, #12100a 0%, #1a1810 100%);
+  border-color: #3a3218;
+  background: linear-gradient(135deg, #0a0908 0%, #12110c 100%);
   position: relative;
   overflow: hidden;
 }
@@ -172,8 +172,8 @@
 }
 
 .mode-card.coming-soon.yellow:hover {
-  border-color: #7a6a30;
-  background: linear-gradient(135deg, #1a1810 0%, #252015 100%);
+  border-color: #4a4220;
+  background: linear-gradient(135deg, #12110c 0%, #1a1810 100%);
 }
 
 .mode-card.coming-soon.yellow .mode-icon {
@@ -189,7 +189,7 @@
 }
 
 .mode-card.coming-soon.yellow .mode-info h2 {
-  color: #b0a060;
+  color: #8a7a48;
 }
 
 .mode-card.coming-soon.yellow .coming-soon-desc {
@@ -216,14 +216,14 @@
 }
 
 /* Compendium - Purple */
-.mode-card.compendium.purple {
+.mode-card.type-compendium.purple {
   border-color: #3a2a5a;
   background: linear-gradient(135deg, #0d0a12 0%, #18121a 100%);
   position: relative;
   overflow: hidden;
 }
 
-.mode-card.compendium.purple::before {
+.mode-card.type-compendium.purple::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -237,25 +237,25 @@
   pointer-events: none;
 }
 
-.mode-card.compendium.purple:hover {
+.mode-card.type-compendium.purple:hover {
   border-color: #5a3a7a;
   background: linear-gradient(135deg, #12101a 0%, #201520 100%);
 }
 
-.mode-card.compendium.purple .mode-icon {
+.mode-card.type-compendium.purple .mode-icon {
   background: linear-gradient(135deg, #0a0812 0%, #15101a 100%);
   border-color: #3a2a5a;
 }
 
-.mode-card.compendium.purple .mode-info h2 {
-  color: #a080c0;
+.mode-card.type-compendium.purple .mode-info h2 {
+  color: #fff;
 }
 
-.mode-card.compendium.purple .compendium-desc {
+.mode-card.type-compendium.purple .compendium-desc {
   margin: 0;
 }
 
-.mode-card.compendium.purple .redacted {
+.mode-card.type-compendium.purple .redacted {
   color: #2a2030;
   font-family: monospace;
   letter-spacing: 1px;
@@ -263,7 +263,7 @@
   user-select: none;
 }
 
-.mode-card.compendium.purple .compendium-whisper {
+.mode-card.type-compendium.purple .compendium-whisper {
   color: #5a3a6a;
   font-size: 0.65rem;
   margin: 0.3rem 0 0 0;
@@ -271,7 +271,13 @@
   animation: whisper 3s ease-in-out infinite;
 }
 
-.mode-card.compendium.purple .mode-arrow {
+.mode-card.type-compendium.purple .compendium-whisper-inline {
+  color: #6a4a7a;
+  font-size: 0.75rem;
+  letter-spacing: 1px;
+}
+
+.mode-card.type-compendium.purple .mode-arrow {
   color: #6a4a8a;
 }
 
