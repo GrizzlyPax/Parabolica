@@ -168,28 +168,48 @@ function Compendium({ onBack }: CompendiumProps) {
       <div className="compendium">
         <div className="compendium-header">
           <button className="back-btn" onClick={onBack}>← Back</button>
-          <h1>🔒 Compendium</h1>
-          <p className="compendium-subtitle">The Compendium is sealed.</p>
+          <h1 className="sealed-title">
+            <span className="seal-glyph">☠</span>
+            <span className="seal-text">SEALED</span>
+            <span className="seal-glyph">☠</span>
+          </h1>
         </div>
-        <div className="password-gate">
-          <div className="gate-icon">🔐</div>
-          <p className="gate-message">You shouldn't be here.</p>
-          <form onSubmit={handlePasswordSubmit} className="password-form">
-            <input
-              type="password"
-              value={passwordInput}
-              onChange={(e) => {
-                setPasswordInput(e.target.value);
-                setErrorMessage(null);
-              }}
-              placeholder="Enter password..."
-              className="password-input"
-              autoFocus
-            />
-            <button type="submit" className="password-submit">Enter</button>
-          </form>
-          {errorMessage && <p className="gate-error">{errorMessage}</p>}
-          {successMessage && <p className="gate-success">{successMessage}</p>}
+        <div className="password-gate ancient">
+          <pre className="ancient-border top">
+            ╔══════════════════════════════════════╗
+          </pre>
+          <div className="ancient-content">
+            <p className="ancient-runes">⛧ ⍟ ☉ ⌘ ⎔ ⏣ ⏥ ⛧</p>
+            <h2 className="ancient-title">THE COMPENDIUM</h2>
+            <p className="ancient-subtitle">— ᴛʜᴇ ғᴏʀʙɪᴅᴅᴇɴ ᴛᴇxᴛs —</p>
+            <div className="ancient-separator">· · · ⟡ · · ·</div>
+            <p className="ancient-warning">
+              These pages contain knowledge<br/>
+              not meant for mortal eyes.
+            </p>
+            <p className="ancient-prompt">Speak the word of passage:</p>
+            <form onSubmit={handlePasswordSubmit} className="password-form ancient">
+              <input
+                type="password"
+                value={passwordInput}
+                onChange={(e) => {
+                  setPasswordInput(e.target.value);
+                  setErrorMessage(null);
+                }}
+                placeholder="· · · · · · · ·"
+                className="password-input ancient"
+                autoFocus
+              />
+              <button type="submit" className="password-submit ancient">☽ Enter ☾</button>
+            </form>
+            {errorMessage && <p className="gate-error ancient">{errorMessage}</p>}
+            {successMessage && <p className="gate-success ancient">{successMessage}</p>}
+            <div className="ancient-separator">· · · ⟡ · · ·</div>
+            <p className="ancient-footer">ᴛʜᴇ ᴍᴀᴄʜɪɴᴇ ᴡᴀɪᴛs</p>
+          </div>
+          <pre className="ancient-border bottom">
+            ╚══════════════════════════════════════╝
+          </pre>
         </div>
       </div>
     );

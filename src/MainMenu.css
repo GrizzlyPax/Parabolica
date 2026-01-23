@@ -141,6 +141,74 @@
   border-color: #4c3a6b;
 }
 
+/* Forbidden Compendium styling */
+.mode-card.forbidden {
+  border-color: #3a2020;
+  background: linear-gradient(135deg, #0d0d0d 0%, #1a1212 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.mode-card.forbidden::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 10px,
+    rgba(80, 20, 20, 0.03) 10px,
+    rgba(80, 20, 20, 0.03) 20px
+  );
+  pointer-events: none;
+}
+
+.mode-card.forbidden:hover {
+  border-color: #5a3030;
+  background: linear-gradient(135deg, #121212 0%, #201515 100%);
+}
+
+.mode-card.forbidden .mode-icon {
+  background: linear-gradient(135deg, #1a1010 0%, #251515 100%);
+  border-color: #3a2020;
+  opacity: 0.8;
+}
+
+.mode-card.forbidden .forbidden-text {
+  text-decoration: line-through;
+  text-decoration-color: #5a3030;
+  opacity: 0.7;
+}
+
+.mode-card.forbidden .forbidden-desc {
+  margin: 0;
+}
+
+.mode-card.forbidden .redacted {
+  color: #2a2020;
+  font-family: monospace;
+  letter-spacing: 1px;
+  font-size: 0.7rem;
+  user-select: none;
+}
+
+.mode-card.forbidden .forbidden-whisper {
+  color: #5a3a3a;
+  font-size: 0.65rem;
+  margin: 0.3rem 0 0 0;
+  letter-spacing: 2px;
+  animation: whisper 3s ease-in-out infinite;
+}
+
+@keyframes whisper {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+
+.mode-card.forbidden .mode-arrow {
+  opacity: 0.5;
+}
+
 .main-menu-footer {
   margin-top: 2.5rem;
   text-align: center;

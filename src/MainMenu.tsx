@@ -36,13 +36,16 @@ function MainMenu({ onSingleRace, onSeason, onCompendium }: MainMenuProps) {
             <div className="mode-arrow">→</div>
           </button>
 
-          <button className="mode-card" onClick={onCompendium}>
-            <div className="mode-icon">📜</div>
+          <button className="mode-card forbidden" onClick={onCompendium}>
+            <div className="mode-icon">🔒</div>
             <div className="mode-info">
-              <h2>Compendium</h2>
-              <p>All the systems, tags, and mechanics. The fine print.</p>
+              <h2><span className="forbidden-text">Compendium</span></h2>
+              <p className="forbidden-desc">
+                <span className="redacted">████████ ███████████</span>
+              </p>
+              <p className="forbidden-whisper">ᶠᵒʳᵇⁱᵈᵈᵉⁿ ᵏⁿᵒʷˡᵉᵈᵍᵉ</p>
             </div>
-            <div className="mode-arrow">→</div>
+            <div className="mode-arrow">⛔</div>
           </button>
         </div>
 

@@ -599,81 +599,165 @@
   }
 }
 
-/* Password Gate */
-.password-gate {
+/* Password Gate - Ancient Theme */
+.sealed-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  font-family: 'Times New Roman', Times, Georgia, serif;
+}
+
+.seal-glyph {
+  font-size: 1.5rem;
+  color: #5a3030;
+  animation: flicker 2s ease-in-out infinite;
+}
+
+.seal-text {
+  color: #8a5050;
+  letter-spacing: 0.5rem;
+  font-size: 2rem;
+}
+
+@keyframes flicker {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+.password-gate.ancient {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 4rem 2rem;
+  padding: 2rem;
   text-align: center;
+  max-width: 450px;
+  margin: 0 auto;
 }
 
-.gate-icon {
-  font-size: 5rem;
-  margin-bottom: 1.5rem;
-  animation: pulse-lock 2s ease-in-out infinite;
+.ancient-border {
+  font-family: monospace;
+  color: #3a3030;
+  font-size: 0.9rem;
+  margin: 0;
+  letter-spacing: 0;
+  line-height: 1;
 }
 
-@keyframes pulse-lock {
-  0%, 100% { opacity: 0.6; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.05); }
+.ancient-content {
+  padding: 2rem 1.5rem;
 }
 
-.gate-message {
+.ancient-runes {
+  color: #5a4040;
   font-size: 1.2rem;
-  color: #888;
-  margin-bottom: 2rem;
+  letter-spacing: 0.5rem;
+  margin: 0 0 1.5rem 0;
+  animation: pulse-runes 3s ease-in-out infinite;
+}
+
+@keyframes pulse-runes {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+
+.ancient-title {
+  font-family: 'Times New Roman', Times, Georgia, serif;
+  color: #a08070;
+  font-size: 1.8rem;
+  letter-spacing: 0.3rem;
+  margin: 0 0 0.5rem 0;
+  text-shadow: 0 0 20px rgba(160, 128, 112, 0.3);
+}
+
+.ancient-subtitle {
+  color: #6a5a50;
+  font-size: 0.85rem;
+  letter-spacing: 0.2rem;
+  margin: 0 0 1rem 0;
+}
+
+.ancient-separator {
+  color: #4a3a30;
+  font-size: 1rem;
+  letter-spacing: 0.3rem;
+  margin: 1rem 0;
+}
+
+.ancient-warning {
+  color: #7a6a60;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin: 0 0 1.5rem 0;
   font-style: italic;
 }
 
-.password-form {
+.ancient-prompt {
+  color: #8a7a70;
+  font-size: 0.9rem;
+  margin: 0 0 1rem 0;
+  letter-spacing: 0.1rem;
+}
+
+.password-form.ancient {
   display: flex;
-  gap: 0.5rem;
+  flex-direction: column;
+  gap: 0.75rem;
   margin-bottom: 1rem;
+  width: 100%;
+  max-width: 280px;
 }
 
-.password-input {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid #333;
-  color: #ccc;
+.password-input.ancient {
+  background: rgba(40, 30, 25, 0.8);
+  border: 1px solid #3a3030;
+  color: #a09080;
   padding: 0.75rem 1rem;
-  border-radius: 4px;
+  border-radius: 0;
   font-size: 1rem;
-  width: 200px;
+  width: 100%;
   text-align: center;
+  font-family: monospace;
+  letter-spacing: 0.3rem;
 }
 
-.password-input:focus {
+.password-input.ancient:focus {
   outline: none;
-  border-color: #666;
+  border-color: #5a4040;
+  box-shadow: 0 0 10px rgba(90, 64, 64, 0.3);
 }
 
-.password-input::placeholder {
-  color: #555;
+.password-input.ancient::placeholder {
+  color: #4a4040;
+  letter-spacing: 0.2rem;
 }
 
-.password-submit {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid #444;
-  color: #aaa;
+.password-submit.ancient {
+  background: rgba(50, 35, 30, 0.9);
+  border: 1px solid #4a3a30;
+  color: #a09080;
   padding: 0.75rem 1.5rem;
-  border-radius: 4px;
+  border-radius: 0;
   cursor: pointer;
-  font-size: 1rem;
+  font-size: 0.9rem;
   transition: all 0.2s ease;
+  font-family: 'Times New Roman', Times, Georgia, serif;
+  letter-spacing: 0.2rem;
 }
 
-.password-submit:hover {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: #666;
-  color: #fff;
+.password-submit.ancient:hover {
+  background: rgba(70, 50, 40, 0.95);
+  border-color: #6a5040;
+  color: #c0b0a0;
+  text-shadow: 0 0 10px rgba(192, 176, 160, 0.3);
 }
 
-.gate-error {
-  color: #e74c3c;
-  font-size: 1rem;
-  margin-top: 1rem;
+.gate-error.ancient {
+  color: #8a4040;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+  font-style: italic;
   animation: shake 0.3s ease;
 }
 
@@ -683,14 +767,23 @@
   75% { transform: translateX(5px); }
 }
 
-.gate-success {
-  color: #2ecc71;
-  font-size: 1rem;
-  margin-top: 1rem;
-  animation: fadeIn 0.3s ease;
+.gate-success.ancient {
+  color: #6a8a60;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+  font-style: italic;
+  animation: reveal 0.5s ease;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+@keyframes reveal {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.ancient-footer {
+  color: #5a4a40;
+  font-size: 0.75rem;
+  letter-spacing: 0.15rem;
+  margin: 0;
+  animation: pulse-runes 4s ease-in-out infinite;
 }
