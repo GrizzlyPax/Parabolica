@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { DRIVER_TAGS, CAR_TAGS, TEAM_TAGS, Tag } from './data/tags';
 import { ALL_TRACKS, TrackEventTrigger, TrackEventEffect } from './generators/tracks';
 import { DEFAULT_CONFIG } from './RaceEngine';
+import SimLab from './simlab/SimLab';
 import './Compendium.css';
 
 // Helper to format trigger descriptions
@@ -90,7 +91,7 @@ interface CompendiumProps {
   onBack: () => void;
 }
 
-type TabId = 'mechanics' | 'events' | 'tags' | 'tracks';
+type TabId = 'mechanics' | 'events' | 'tags' | 'tracks' | 'simlab';
 
 // Collapsible section component
 function CollapsibleSection({
@@ -156,6 +157,12 @@ function Compendium({ onBack }: CompendiumProps) {
           onClick={() => setActiveTab('tracks')}
         >
           🏁 Tracks
+        </button>
+        <button
+          className={`tab-btn ${activeTab === 'simlab' ? 'active' : ''}`}
+          onClick={() => setActiveTab('simlab')}
+        >
+          🔬 Sim Lab
         </button>
       </div>
 
@@ -474,6 +481,10 @@ function Compendium({ onBack }: CompendiumProps) {
               </div>
             </CollapsibleSection>
           </div>
+        )}
+
+        {activeTab === 'simlab' && (
+          <SimLab />
         )}
       </div>
     </div>

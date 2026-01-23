@@ -2774,6 +2774,40 @@ class RaceEngine {
 
     return effect.isProtected;
   }
+
+  // === HEADLESS SIMULATION METHODS (for Web Worker / Monte Carlo) ===
+
+  /**
+   * Create a new independent RaceEngine instance (not the singleton).
+   * Used for parallel headless simulation in Web Workers.
+   */
+  static createForWorker(): RaceEngine {
+    // Bypass singleton pattern - directly instantiate
+    const engine = new RaceEngine();
+    return engine;
+  }
+
+  /**
+   * Run a complete race synchronously (for headless simulation).
+   * Does not use setInterval - calls tick() directly in a loop.
+   * Returns the final state when race is complete.
+   */
+  runHeadless(): { drivers: Driver[]; raceState: RaceState; events: RaceEvent[] } {
+    // Reset to fresh state
+    this.reset();
+
+    // Run until race finishes (with safety limit to prevent infinite loops)
+    const maxTicks = 100000;
+    while (!this.raceState.raceFinished && this.raceState.totalTicks < maxTicks) {
+      this.tick();
+    }
+
+    return {
+      drivers: this.getDrivers(),
+      raceState: { ...this.raceState },
+      events: [...this.raceEvents],
+    };
+  }
 }
 
 export default RaceEngine;
