@@ -68,28 +68,28 @@ function MainMenu({ onSingleRace, onSeason, onCompendium }: MainMenuProps) {
 
         <div className="mode-selection">
           {/* Big Leagues - Coming Soon */}
-          <button className="mode-card ancient-locked" onClick={() => setActiveModal('big-leagues')}>
-            <div className="mode-icon">🌐</div>
+          <button className="mode-card coming-soon yellow" onClick={() => setActiveModal('big-leagues')}>
+            <div className="mode-icon">⏳</div>
             <div className="mode-info">
-              <h2><span className="ancient-text">The Big Leagues</span></h2>
-              <p className="ancient-desc">
+              <h2>The Big Leagues</h2>
+              <p className="coming-soon-desc">
                 <span className="ancient-dots">· · · ⟡ · · ·</span>
               </p>
-              <p className="ancient-whisper">ᵗʰᵉ ᵉᵗᵉʳⁿᵃˡ ʳᵃᶜᵉ</p>
+              <p className="coming-soon-whisper">ᵗʰᵉ ᵉᵗᵉʳⁿᵃˡ ʳᵃᶜᵉ</p>
             </div>
-            <div className="mode-arrow ancient">⏳</div>
+            <div className="mode-arrow">⏳</div>
           </button>
 
-          <button className="mode-card marble" onClick={onSingleRace}>
+          <button className="mode-card active green" onClick={onSingleRace}>
             <div className="mode-icon">🏎️</div>
             <div className="mode-info">
-              <h2>Single Race</h2>
+              <h2>Race Mode</h2>
               <p>One race. Pick your winners. Results may vary.</p>
             </div>
             <div className="mode-arrow">→</div>
           </button>
 
-          <button className="mode-card marble" onClick={onSeason}>
+          <button className="mode-card active green" onClick={onSeason}>
             <div className="mode-icon">🏆</div>
             <div className="mode-info">
               <h2>Season Mode</h2>
@@ -98,36 +98,36 @@ function MainMenu({ onSingleRace, onSeason, onCompendium }: MainMenuProps) {
             <div className="mode-arrow">→</div>
           </button>
 
-          {/* Commissioner Mode - Locked */}
-          <button className="mode-card forbidden" onClick={() => setActiveModal('commissioner')}>
-            <div className="mode-icon">⚙️</div>
+          {/* Commissionary Mode - Locked */}
+          <button className="mode-card coming-soon yellow" onClick={() => setActiveModal('commissioner')}>
+            <div className="mode-icon">⏳</div>
             <div className="mode-info">
-              <h2><span className="forbidden-text">Commissioner</span></h2>
-              <p className="forbidden-desc">
-                <span className="redacted">███ ████████</span>
+              <h2>Commissionary Mode</h2>
+              <p className="coming-soon-desc">
+                <span className="ancient-dots">· · · ⟡ · · ·</span>
               </p>
-              <p className="forbidden-whisper">ⁿᵒᵗ ʸᵉᵗ</p>
+              <p className="coming-soon-whisper">ⁿᵒᵗ ʸᵉᵗ</p>
             </div>
-            <div className="mode-arrow">⛔</div>
+            <div className="mode-arrow">⏳</div>
           </button>
 
           {/* Compendium - Password Protected */}
-          <button className="mode-card forbidden" onClick={handleCompendiumClick}>
-            <div className="mode-icon">{isCompendiumUnlocked ? '📜' : '🔒'}</div>
+          <button className="mode-card compendium purple" onClick={handleCompendiumClick}>
+            <div className="mode-icon">👁️</div>
             <div className="mode-info">
-              <h2><span className={isCompendiumUnlocked ? '' : 'forbidden-text'}>Compendium</span></h2>
+              <h2>Compendium</h2>
               {isCompendiumUnlocked ? (
                 <p>The forbidden texts. Handle with care.</p>
               ) : (
                 <>
-                  <p className="forbidden-desc">
+                  <p className="compendium-desc">
                     <span className="redacted">████████ ███████████</span>
                   </p>
-                  <p className="forbidden-whisper">ᶠᵒʳᵇⁱᵈᵈᵉⁿ ᵏⁿᵒʷˡᵉᵈᵍᵉ</p>
+                  <p className="compendium-whisper">ᶠᵒʳᵇⁱᵈᵈᵉⁿ ᵏⁿᵒʷˡᵉᵈᵍᵉ</p>
                 </>
               )}
             </div>
-            <div className="mode-arrow">{isCompendiumUnlocked ? '→' : '⛔'}</div>
+            <div className="mode-arrow">{isCompendiumUnlocked ? '→' : '🔮'}</div>
           </button>
         </div>
 
@@ -176,7 +176,7 @@ function MainMenu({ onSingleRace, onSeason, onCompendium }: MainMenuProps) {
               {activeModal === 'commissioner' && (
                 <>
                   <p className="ancient-runes">☠ ⚙ ☠</p>
-                  <h2 className="ancient-title">COMMISSIONER</h2>
+                  <h2 className="ancient-title">COMMISSIONARY MODE</h2>
                   <p className="ancient-subtitle">— ᴛʜᴇ ᴄᴏɴᴛʀᴏʟs —</p>
                   <div className="ancient-separator">· · · ⟡ · · ·</div>
                   <p className="ancient-message">

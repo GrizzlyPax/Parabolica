@@ -125,99 +125,39 @@
   color: #888;
 }
 
-/* Marble Mode special styling */
-.mode-card.marble {
-  border-color: #4c3a6b;
-  background: linear-gradient(135deg, #1a1a1a 0%, #1f1825 100%);
+/* Active modes - Green */
+.mode-card.active.green {
+  border-color: #2a5a3a;
+  background: linear-gradient(135deg, #0d1a10 0%, #152518 100%);
 }
 
-.mode-card.marble:hover {
-  border-color: #7c5da3;
-  background: linear-gradient(135deg, #222 0%, #2a2030 100%);
+.mode-card.active.green:hover {
+  border-color: #3a7a4a;
+  background: linear-gradient(135deg, #122015 0%, #1a3020 100%);
 }
 
-.mode-card.marble .mode-icon {
-  background: linear-gradient(135deg, #1a1520 0%, #251a2e 100%);
-  border-color: #4c3a6b;
+.mode-card.active.green .mode-icon {
+  background: linear-gradient(135deg, #0a150c 0%, #152518 100%);
+  border-color: #2a5a3a;
 }
 
-/* Forbidden Compendium styling */
-.mode-card.forbidden {
-  border-color: #3a2020;
-  background: linear-gradient(135deg, #0d0d0d 0%, #1a1212 100%);
+.mode-card.active.green .mode-info h2 {
+  color: #7ac090;
+}
+
+.mode-card.active.green .mode-arrow {
+  color: #5a9a6a;
+}
+
+/* Coming Soon - Yellow */
+.mode-card.coming-soon.yellow {
+  border-color: #5a4a20;
+  background: linear-gradient(135deg, #12100a 0%, #1a1810 100%);
   position: relative;
   overflow: hidden;
 }
 
-.mode-card.forbidden::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: repeating-linear-gradient(
-    45deg,
-    transparent,
-    transparent 10px,
-    rgba(80, 20, 20, 0.03) 10px,
-    rgba(80, 20, 20, 0.03) 20px
-  );
-  pointer-events: none;
-}
-
-.mode-card.forbidden:hover {
-  border-color: #5a3030;
-  background: linear-gradient(135deg, #121212 0%, #201515 100%);
-}
-
-.mode-card.forbidden .mode-icon {
-  background: linear-gradient(135deg, #1a1010 0%, #251515 100%);
-  border-color: #3a2020;
-  opacity: 0.8;
-}
-
-.mode-card.forbidden .forbidden-text {
-  text-decoration: line-through;
-  text-decoration-color: #5a3030;
-  opacity: 0.7;
-}
-
-.mode-card.forbidden .forbidden-desc {
-  margin: 0;
-}
-
-.mode-card.forbidden .redacted {
-  color: #2a2020;
-  font-family: monospace;
-  letter-spacing: 1px;
-  font-size: 0.7rem;
-  user-select: none;
-}
-
-.mode-card.forbidden .forbidden-whisper {
-  color: #5a3a3a;
-  font-size: 0.65rem;
-  margin: 0.3rem 0 0 0;
-  letter-spacing: 2px;
-  animation: whisper 3s ease-in-out infinite;
-}
-
-@keyframes whisper {
-  0%, 100% { opacity: 0.4; }
-  50% { opacity: 0.8; }
-}
-
-.mode-card.forbidden .mode-arrow {
-  opacity: 0.5;
-}
-
-/* Big Leagues - Ancient/Coming Soon styling */
-.mode-card.ancient-locked {
-  border-color: #2a3040;
-  background: linear-gradient(135deg, #0a0c10 0%, #101520 100%);
-  position: relative;
-  overflow: hidden;
-}
-
-.mode-card.ancient-locked::before {
+.mode-card.coming-soon.yellow::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -225,20 +165,20 @@
     -45deg,
     transparent,
     transparent 15px,
-    rgba(60, 80, 120, 0.03) 15px,
-    rgba(60, 80, 120, 0.03) 30px
+    rgba(120, 100, 40, 0.03) 15px,
+    rgba(120, 100, 40, 0.03) 30px
   );
   pointer-events: none;
 }
 
-.mode-card.ancient-locked:hover {
-  border-color: #3a4560;
-  background: linear-gradient(135deg, #10121a 0%, #151a28 100%);
+.mode-card.coming-soon.yellow:hover {
+  border-color: #7a6a30;
+  background: linear-gradient(135deg, #1a1810 0%, #252015 100%);
 }
 
-.mode-card.ancient-locked .mode-icon {
-  background: linear-gradient(135deg, #0a0c12 0%, #151a25 100%);
-  border-color: #2a3040;
+.mode-card.coming-soon.yellow .mode-icon {
+  background: linear-gradient(135deg, #100e08 0%, #1a1810 100%);
+  border-color: #5a4a20;
   opacity: 0.7;
   animation: pulse-glow 3s ease-in-out infinite;
 }
@@ -248,32 +188,100 @@
   50% { opacity: 0.8; }
 }
 
-.mode-card.ancient-locked .ancient-text {
-  color: #6a7a9a;
-  letter-spacing: 1px;
+.mode-card.coming-soon.yellow .mode-info h2 {
+  color: #b0a060;
 }
 
-.mode-card.ancient-locked .ancient-desc {
+.mode-card.coming-soon.yellow .coming-soon-desc {
   margin: 0;
 }
 
-.mode-card.ancient-locked .ancient-dots {
-  color: #3a4a6a;
+.mode-card.coming-soon.yellow .ancient-dots {
+  color: #4a4020;
   font-size: 0.75rem;
   letter-spacing: 2px;
 }
 
-.mode-card.ancient-locked .ancient-whisper {
-  color: #4a5a7a;
+.mode-card.coming-soon.yellow .coming-soon-whisper {
+  color: #6a5a30;
   font-size: 0.65rem;
   margin: 0.3rem 0 0 0;
   letter-spacing: 2px;
   animation: whisper 3s ease-in-out infinite;
 }
 
-.mode-card.ancient-locked .mode-arrow {
-  opacity: 0.4;
-  color: #4a5a7a;
+.mode-card.coming-soon.yellow .mode-arrow {
+  opacity: 0.5;
+  color: #6a5a30;
+}
+
+/* Compendium - Purple */
+.mode-card.compendium.purple {
+  border-color: #3a2a5a;
+  background: linear-gradient(135deg, #0d0a12 0%, #18121a 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.mode-card.compendium.purple::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 10px,
+    rgba(80, 40, 120, 0.03) 10px,
+    rgba(80, 40, 120, 0.03) 20px
+  );
+  pointer-events: none;
+}
+
+.mode-card.compendium.purple:hover {
+  border-color: #5a3a7a;
+  background: linear-gradient(135deg, #12101a 0%, #201520 100%);
+}
+
+.mode-card.compendium.purple .mode-icon {
+  background: linear-gradient(135deg, #0a0812 0%, #15101a 100%);
+  border-color: #3a2a5a;
+}
+
+.mode-card.compendium.purple .mode-info h2 {
+  color: #a080c0;
+}
+
+.mode-card.compendium.purple .compendium-desc {
+  margin: 0;
+}
+
+.mode-card.compendium.purple .redacted {
+  color: #2a2030;
+  font-family: monospace;
+  letter-spacing: 1px;
+  font-size: 0.7rem;
+  user-select: none;
+}
+
+.mode-card.compendium.purple .compendium-whisper {
+  color: #5a3a6a;
+  font-size: 0.65rem;
+  margin: 0.3rem 0 0 0;
+  letter-spacing: 2px;
+  animation: whisper 3s ease-in-out infinite;
+}
+
+.mode-card.compendium.purple .mode-arrow {
+  color: #6a4a8a;
+}
+
+@keyframes whisper {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+
+.mode-card.forbidden .mode-arrow {
+  opacity: 0.5;
 }
 
 /* Ancient Modal */
