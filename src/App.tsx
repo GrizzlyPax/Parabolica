@@ -213,11 +213,15 @@ function App() {
       currentBets: [],
     }));
 
-    // Check if this is the last race of the season
-    if (gameMode === 'season' && seasonState?.isComplete) {
+    // Check what to do next based on game mode
+    if (gameMode === 'single') {
+      // Single race: go back to main menu
+      handleBackToMainMenu();
+    } else if (gameMode === 'season' && seasonState?.isComplete) {
+      // Season complete: show final tally
       setScreen('marble-tally');
     } else {
-      // Proceed to next race setup
+      // Season continues: proceed to next race
       handleNextRace();
     }
   };

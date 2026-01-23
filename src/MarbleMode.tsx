@@ -1013,6 +1013,7 @@ export function RaceResults({
     }
   };
 
+  const isSingleRace = totalRaces === 1;
   const isLastRace = raceNumber === totalRaces;
 
   return (
@@ -1067,7 +1068,7 @@ export function RaceResults({
       </div>
 
       <button className="continue-btn" onClick={onContinue}>
-        {isLastRace ? 'View Final Tally' : 'Next Race'}
+        {isSingleRace ? 'Back to Menu' : isLastRace ? 'View Final Tally' : 'Next Race'}
       </button>
     </div>
   );
