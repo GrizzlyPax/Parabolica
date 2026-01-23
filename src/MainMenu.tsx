@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import './MainMenu.css';
 
 interface MainMenuProps {
@@ -6,7 +7,55 @@ interface MainMenuProps {
   onCompendium: () => void;
 }
 
+type LockedModal = 'none' | 'big-leagues' | 'commissioner' | 'compendium';
+
 function MainMenu({ onSingleRace, onSeason, onCompendium }: MainMenuProps) {
+  const [activeModal, setActiveModal] = useState<LockedModal>('none');
+  const [compendiumPassword, setCompendiumPassword] = useState('');
+  const [compendiumError, setCompendiumError] = useState<string | null>(null);
+  const [compendiumSuccess, setCompendiumSuccess] = useState<string | null>(null);
+
+  const isCompendiumUnlocked = localStorage.getItem('compendium_unlocked') === 'true';
+
+  const handleCompendiumSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (compendiumPassword.toLowerCase().trim() === 'goodjob') {
+      localStorage.setItem('compendium_unlocked', 'true');
+      const responses = [
+        "...Fine.",
+        "Enter, if you must.",
+        "The secrets reveal themselves.",
+        "The machine sighs.",
+      ];
+      setCompendiumSuccess(responses[Math.floor(Math.random() * responses.length)]);
+      setTimeout(() => {
+        setActiveModal('none');
+        onCompendium();
+      }, 1000);
+    } else {
+      const errors = [
+        "No.",
+        "Incorrect.",
+        "The machine does not recognize you.",
+        "Wrong.",
+        "Try again. Or don't.",
+      ];
+      setCompendiumError(errors[Math.floor(Math.random() * errors.length)]);
+      setCompendiumPassword('');
+    }
+  };
+
+  const handleCompendiumClick = () => {
+    if (isCompendiumUnlocked) {
+      onCompendium();
+    } else {
+      setActiveModal('compendium');
+      setCompendiumPassword('');
+      setCompendiumError(null);
+      setCompendiumSuccess(null);
+    }
+  };
+
   return (
     <div className="main-menu">
       <div className="main-menu-content">
@@ -18,6 +67,19 @@ function MainMenu({ onSingleRace, onSeason, onCompendium }: MainMenuProps) {
         </div>
 
         <div className="mode-selection">
+          {/* Big Leagues - Coming Soon */}
+          <button className="mode-card ancient-locked" onClick={() => setActiveModal('big-leagues')}>
+            <div className="mode-icon">🌐</div>
+            <div className="mode-info">
+              <h2><span className="ancient-text">The Big Leagues</span></h2>
+              <p className="ancient-desc">
+                <span className="ancient-dots">· · · ⟡ · · ·</span>
+              </p>
+              <p className="ancient-whisper">ᵗʰᵉ ᵉᵗᵉʳⁿᵃˡ ʳᵃᶜᵉ</p>
+            </div>
+            <div className="mode-arrow ancient">⏳</div>
+          </button>
+
           <button className="mode-card marble" onClick={onSingleRace}>
             <div className="mode-icon">🏎️</div>
             <div className="mode-info">
@@ -36,16 +98,36 @@ function MainMenu({ onSingleRace, onSeason, onCompendium }: MainMenuProps) {
             <div className="mode-arrow">→</div>
           </button>
 
-          <button className="mode-card forbidden" onClick={onCompendium}>
-            <div className="mode-icon">🔒</div>
+          {/* Commissioner Mode - Locked */}
+          <button className="mode-card forbidden" onClick={() => setActiveModal('commissioner')}>
+            <div className="mode-icon">⚙️</div>
             <div className="mode-info">
-              <h2><span className="forbidden-text">Compendium</span></h2>
+              <h2><span className="forbidden-text">Commissioner</span></h2>
               <p className="forbidden-desc">
-                <span className="redacted">████████ ███████████</span>
+                <span className="redacted">███ ████████</span>
               </p>
-              <p className="forbidden-whisper">ᶠᵒʳᵇⁱᵈᵈᵉⁿ ᵏⁿᵒʷˡᵉᵈᵍᵉ</p>
+              <p className="forbidden-whisper">ⁿᵒᵗ ʸᵉᵗ</p>
             </div>
             <div className="mode-arrow">⛔</div>
+          </button>
+
+          {/* Compendium - Password Protected */}
+          <button className="mode-card forbidden" onClick={handleCompendiumClick}>
+            <div className="mode-icon">{isCompendiumUnlocked ? '📜' : '🔒'}</div>
+            <div className="mode-info">
+              <h2><span className={isCompendiumUnlocked ? '' : 'forbidden-text'}>Compendium</span></h2>
+              {isCompendiumUnlocked ? (
+                <p>The forbidden texts. Handle with care.</p>
+              ) : (
+                <>
+                  <p className="forbidden-desc">
+                    <span className="redacted">████████ ███████████</span>
+                  </p>
+                  <p className="forbidden-whisper">ᶠᵒʳᵇⁱᵈᵈᵉⁿ ᵏⁿᵒʷˡᵉᵈᵍᵉ</p>
+                </>
+              )}
+            </div>
+            <div className="mode-arrow">{isCompendiumUnlocked ? '→' : '⛔'}</div>
           </button>
         </div>
 
@@ -60,6 +142,93 @@ function MainMenu({ onSingleRace, onSeason, onCompendium }: MainMenuProps) {
           <span className="version">v1.0</span>
         </div>
       </div>
+
+      {/* Ancient Modal Overlay */}
+      {activeModal !== 'none' && (
+        <div className="ancient-modal-overlay" onClick={() => setActiveModal('none')}>
+          <div className="ancient-modal" onClick={e => e.stopPropagation()}>
+            <button className="ancient-modal-close" onClick={() => setActiveModal('none')}>✕</button>
+
+            <pre className="ancient-border">╔══════════════════════════════════════╗</pre>
+
+            <div className="ancient-modal-content">
+              {activeModal === 'big-leagues' && (
+                <>
+                  <p className="ancient-runes">⛧ ◈ ☉ ◇ ⛧</p>
+                  <h2 className="ancient-title">THE BIG LEAGUES</h2>
+                  <p className="ancient-subtitle">— ᴛʜᴇ ᴇᴛᴇʀɴᴀʟ ʀᴀᴄᴇ —</p>
+                  <div className="ancient-separator">· · · ⟡ · · ·</div>
+                  <p className="ancient-message">
+                    The great machine stirs.<br/>
+                    The eternal race approaches.<br/>
+                    <br/>
+                    Soon, the circuits will open<br/>
+                    to all who dare witness.
+                  </p>
+                  <div className="ancient-separator">· · · ⟡ · · ·</div>
+                  <p className="ancient-status">
+                    ⏳ ᴛʜᴇ ғᴏᴜɴᴅᴀᴛɪᴏɴs ᴀʀᴇ ʙᴇɪɴɢ ʟᴀɪᴅ ⏳
+                  </p>
+                  <p className="ancient-footer-text">ᴘᴀᴛɪᴇɴᴄᴇ, ᴍᴏʀᴛᴀʟ</p>
+                </>
+              )}
+
+              {activeModal === 'commissioner' && (
+                <>
+                  <p className="ancient-runes">☠ ⚙ ☠</p>
+                  <h2 className="ancient-title">COMMISSIONER</h2>
+                  <p className="ancient-subtitle">— ᴛʜᴇ ᴄᴏɴᴛʀᴏʟs —</p>
+                  <div className="ancient-separator">· · · ⟡ · · ·</div>
+                  <p className="ancient-message">
+                    These controls are not<br/>
+                    meant for your hands.<br/>
+                    <br/>
+                    Not yet.
+                  </p>
+                  <div className="ancient-separator">· · · ⟡ · · ·</div>
+                  <p className="ancient-warning-text">ʏᴏᴜ ᴀʀᴇ ɴᴏᴛ ʀᴇᴀᴅʏ.</p>
+                  <p className="ancient-footer-text">ᴛʜᴇ ᴍᴀᴄʜɪɴᴇ ᴋɴᴏᴡs</p>
+                </>
+              )}
+
+              {activeModal === 'compendium' && (
+                <>
+                  <p className="ancient-runes">⛧ ⍟ ☉ ⌘ ⛧</p>
+                  <h2 className="ancient-title">THE COMPENDIUM</h2>
+                  <p className="ancient-subtitle">— ᴛʜᴇ ғᴏʀʙɪᴅᴅᴇɴ ᴛᴇxᴛs —</p>
+                  <div className="ancient-separator">· · · ⟡ · · ·</div>
+                  <p className="ancient-message">
+                    The Compendium opens<br/>
+                    to those who know<br/>
+                    the true words.
+                  </p>
+                  <p className="ancient-prompt">Speak:</p>
+                  <form onSubmit={handleCompendiumSubmit} className="ancient-form">
+                    <input
+                      type="password"
+                      value={compendiumPassword}
+                      onChange={(e) => {
+                        setCompendiumPassword(e.target.value);
+                        setCompendiumError(null);
+                      }}
+                      placeholder="· · · · · · · ·"
+                      className="ancient-input"
+                      autoFocus
+                    />
+                    <button type="submit" className="ancient-submit">☽ Enter ☾</button>
+                  </form>
+                  {compendiumError && <p className="ancient-error">{compendiumError}</p>}
+                  {compendiumSuccess && <p className="ancient-success">{compendiumSuccess}</p>}
+                  <div className="ancient-separator">· · · ⟡ · · ·</div>
+                  <p className="ancient-footer-text">ᴛʜᴇ ᴍᴀᴄʜɪɴᴇ ᴡᴀɪᴛs</p>
+                </>
+              )}
+            </div>
+
+            <pre className="ancient-border">╚══════════════════════════════════════╝</pre>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
