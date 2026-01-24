@@ -373,8 +373,9 @@
 }
 
 .wordle-selection-grid.teams-grid {
-  grid-template-columns: repeat(auto-fit, minmax(var(--card-min), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(var(--card-standard-min), var(--card-standard-max)));
   gap: var(--space-sm);
+  justify-content: center;
 }
 
 /* Team groups container */
@@ -401,17 +402,36 @@
   border-color: rgba(201, 162, 39, 0.3);
 }
 
-/* Teams grid for unified TeamCell component - auto-fit for fluid columns */
+/* Teams grid for unified TeamCell component */
 .season-setup .teams-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(var(--card-min), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(var(--card-standard-min), var(--card-standard-max)));
   gap: var(--space-sm);
   max-width: var(--container-menu);
   margin: 0 auto;
+  justify-content: center;
+}
+
+/* Desktop: larger team cards */
+@media (min-width: 900px) {
+  .wordle-selection-grid.teams-grid,
+  .season-setup .teams-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 200px));
+    gap: var(--space-md);
+  }
+}
+
+@media (min-width: 1200px) {
+  .wordle-selection-grid.teams-grid,
+  .season-setup .teams-grid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 240px));
+    gap: var(--space-lg);
+  }
 }
 
 .wordle-selection-grid.tracks-grid {
-  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(var(--card-compact-min), var(--card-compact-max)));
+  justify-content: center;
 }
 
 /* Team cells - matching single race mode */
@@ -503,7 +523,7 @@
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 
-/* Track cells */
+/* Track cells - compact, square */
 .wordle-selection-cell {
   aspect-ratio: 1;
   display: flex;

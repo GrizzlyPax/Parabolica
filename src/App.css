@@ -30,9 +30,24 @@
   --container-menu: min(100% - 2rem, 1200px);
   --container-narrow: min(100% - 2rem, 800px);
 
-  /* Card sizing for auto-fit grids */
-  --card-min: 100px;
-  --card-max: 140px;
+  /* Card sizing tiers - content-aware sizing
+     Each tier has min (floor for usability) and max (ceiling to prevent bloat) */
+
+  /* Compact: Track cards, simple emoji + short text */
+  --card-compact-min: 70px;
+  --card-compact-max: 100px;
+
+  /* Standard: Team cards with flip, moderate info density */
+  --card-standard-min: 130px;
+  --card-standard-max: 170px;
+
+  /* Dense: Driver betting cards, stats, bet controls, multiple rows */
+  --card-dense-min: 150px;
+  --card-dense-max: 200px;
+
+  /* Legacy fallback */
+  --card-min: var(--card-standard-min);
+  --card-max: var(--card-standard-max);
 }
 
 * {

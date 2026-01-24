@@ -204,19 +204,39 @@
 }
 
 .league-setup.betting-style .wordle-grid.teams-grid {
-  grid-template-columns: repeat(auto-fit, minmax(var(--card-min), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(var(--card-standard-min), var(--card-standard-max)));
   gap: var(--space-sm);
+  justify-content: center;
 }
 
 /* Teams grid for unified TeamCell component */
 .league-setup.betting-style .teams-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(var(--card-min), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(var(--card-standard-min), var(--card-standard-max)));
   gap: var(--space-sm);
+  justify-content: center;
+}
+
+/* Desktop: larger team cards */
+@media (min-width: 900px) {
+  .league-setup.betting-style .wordle-grid.teams-grid,
+  .league-setup.betting-style .teams-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 200px));
+    gap: var(--space-md);
+  }
+}
+
+@media (min-width: 1200px) {
+  .league-setup.betting-style .wordle-grid.teams-grid,
+  .league-setup.betting-style .teams-grid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 240px));
+    gap: var(--space-lg);
+  }
 }
 
 .league-setup.betting-style .wordle-grid.tracks-grid {
-  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(var(--card-compact-min), var(--card-compact-max)));
+  justify-content: center;
 }
 
 /* Wordle cell - team or track */
@@ -296,6 +316,11 @@
 .league-setup.betting-style .wordle-cell.team-cell.historic.selected {
   border-color: color-mix(in srgb, var(--team-color) 70%, #c9a227);
   box-shadow: 0 0 20px color-mix(in srgb, var(--team-color) 40%, rgba(201, 162, 39, 0.3));
+}
+
+/* Track cells - compact, square */
+.league-setup.betting-style .wordle-cell.track-cell {
+  /* Grid handles sizing via minmax */
 }
 
 .league-setup.betting-style .wordle-cell.track-cell.selected {

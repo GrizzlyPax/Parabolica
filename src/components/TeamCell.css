@@ -6,6 +6,7 @@
 .team-cell-wrapper {
   aspect-ratio: 1;
   perspective: 1000px;
+  /* No max-width - let grid handle sizing */
 }
 
 .team-cell-unified {

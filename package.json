@@ -6,7 +6,10 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "release": "npm version patch -m 'v%s' && git push --follow-tags",
+    "release:minor": "npm version minor -m 'v%s' && git push --follow-tags",
+    "release:major": "npm version major -m 'v%s' && git push --follow-tags"
   },
   "dependencies": {
     "react": "^18.3.1",
