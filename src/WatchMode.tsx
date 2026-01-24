@@ -2069,7 +2069,6 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, powerAct
                   fill={driver.color}
                   stroke={driver.accentColor || '#fff'}
                   strokeWidth={3}
-                  strokeDasharray={driver.driverSlot === 2 ? '4 2' : undefined}
                 />
                 <text
                   x={0}
@@ -2159,7 +2158,6 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, powerAct
                 fill={driver.color}
                 stroke={driver.accentColor || '#fff'}
                 strokeWidth={3}
-                strokeDasharray={driver.driverSlot === 2 ? '4 2' : undefined}
                 opacity={0.7}
               />
               <text
@@ -2209,7 +2207,6 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, powerAct
                   fill={driver.color}
                   stroke={driver.accentColor || '#fff'}
                   strokeWidth={3}
-                  strokeDasharray={driver.driverSlot === 2 ? '4 2' : undefined}
                   opacity={0.3}
                 />
                 <text

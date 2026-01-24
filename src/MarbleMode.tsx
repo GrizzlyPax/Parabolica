@@ -1,6 +1,27 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Driver, RaceState } from './RaceEngine';
 import './MarbleMode.css';
+
+// ============================================
+// COLOR HELPERS
+// ============================================
+
+// Calculate relative luminance of a color (0 = dark, 1 = light)
+function getLuminance(hexColor: string): number {
+  const hex = hexColor.replace('#', '');
+  const r = parseInt(hex.substring(0, 2), 16) / 255;
+  const g = parseInt(hex.substring(2, 4), 16) / 255;
+  const b = parseInt(hex.substring(4, 6), 16) / 255;
+
+  // sRGB luminance formula
+  const toLinear = (c: number) => c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  return 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
+}
+
+// Check if a color is considered "light" (luminance > 0.4)
+function isLightColor(hexColor: string): boolean {
+  return getLuminance(hexColor) > 0.4;
+}
 
 // ============================================
 // MARBLE MODE TYPES
@@ -377,16 +398,20 @@ export function calculateDriverOdds(driver: Driver, rank: number, _totalDrivers:
   // Finishes modifier: inverse of DNF (reliable drivers = lower modifier)
   const finishesMod = 0.8 + dnfLikelihood * 1.5;  // Reliable: 0.8×, unreliable: up to 2.3×
 
-  // Add slight randomness (+/- 10%) to make it feel less deterministic
-  const jitter = () => 0.9 + Math.random() * 0.2;
+  // Deterministic jitter based on driver rank to avoid resorting on re-render
+  // Uses rank as seed for consistent +/- 10% variation
+  const jitter = (seed: number) => {
+    const hash = ((rank * 31 + seed) % 20) / 100;
+    return 0.9 + hash;
+  };
 
-  // Final odds = Base × Driver Modifier (with jitter)
+  // Final odds = Base × Driver Modifier (with stable jitter)
   return {
-    win: Math.round(BASE_MULTIPLIERS.win * driverMod * jitter() * 10) / 10,
-    podium: Math.round(BASE_MULTIPLIERS.podium * driverMod * jitter() * 10) / 10,
-    points: Math.round(BASE_MULTIPLIERS.points * driverMod * jitter() * 10) / 10,
-    finishes: Math.round(BASE_MULTIPLIERS.finishes * finishesMod * jitter() * 10) / 10,
-    dnf: Math.round(BASE_MULTIPLIERS.dnf * dnfMod * jitter() * 10) / 10,
+    win: Math.round(BASE_MULTIPLIERS.win * driverMod * jitter(1) * 10) / 10,
+    podium: Math.round(BASE_MULTIPLIERS.podium * driverMod * jitter(2) * 10) / 10,
+    points: Math.round(BASE_MULTIPLIERS.points * driverMod * jitter(3) * 10) / 10,
+    finishes: Math.round(BASE_MULTIPLIERS.finishes * finishesMod * jitter(4) * 10) / 10,
+    dnf: Math.round(BASE_MULTIPLIERS.dnf * dnfMod * jitter(5) * 10) / 10,
   };
 }
 
@@ -446,7 +471,6 @@ interface BettingInterfaceProps {
   trackName: string;
   raceNumber: number;
   totalRaces: number;
-  bankroll: number;
 }
 
 export function BettingInterface({
@@ -459,12 +483,36 @@ export function BettingInterface({
   trackName,
   raceNumber,
   totalRaces,
-  bankroll,
 }: BettingInterfaceProps) {
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
   const [selectedBetType, setSelectedBetType] = useState<BetType>('podium');
-  const [betAmount, setBetAmount] = useState(50);
-  const [narratorMessage, setNarratorMessage] = useState('');
+  const [betAmounts, setBetAmounts] = useState<Map<number, number>>(new Map());
+  const [flippedCards, setFlippedCards] = useState<Set<number>>(new Set());
+
+  // Get bet amount for a specific driver (default 50)
+  const getBetAmount = (driverId: number) => betAmounts.get(driverId) ?? 50;
+
+  // Set bet amount for a specific driver
+  const setDriverBetAmount = (driverId: number, amount: number) => {
+    setBetAmounts(prev => {
+      const next = new Map(prev);
+      next.set(driverId, amount);
+      return next;
+    });
+  };
+
+  // Toggle card flip
+  const toggleCardFlip = useCallback((driverId: number) => {
+    setFlippedCards(prev => {
+      const next = new Set(prev);
+      if (next.has(driverId)) {
+        next.delete(driverId);
+      } else {
+        next.add(driverId);
+      }
+      return next;
+    });
+  }, []);
 
   // Pre-compute rankings once (O(n log n)) instead of per-driver (O(n² log n))
   const driverRankings = useMemo(() => computeDriverRankings(drivers), [drivers]);
@@ -521,8 +569,27 @@ export function BettingInterface({
     return tiers;
   }, [sortedDrivers]);
 
-  const getDriverTierByOdds = (driver: Driver): 'favorite' | 'contender' | 'longshot' | 'wildcard' => {
-    return driverTiers.get(driver.id) ?? 'wildcard';
+  // Group drivers by tier for display
+  const driversByTier = useMemo(() => {
+    const groups: Record<'favorite' | 'contender' | 'longshot' | 'wildcard', Driver[]> = {
+      favorite: [],
+      contender: [],
+      longshot: [],
+      wildcard: [],
+    };
+    sortedDrivers.forEach(driver => {
+      const tier = driverTiers.get(driver.id) ?? 'wildcard';
+      groups[tier].push(driver);
+    });
+    return groups;
+  }, [sortedDrivers, driverTiers]);
+
+  // Tier display info
+  const tierInfo: Record<'favorite' | 'contender' | 'longshot' | 'wildcard', string> = {
+    favorite: 'Contenders',
+    contender: 'Quality',
+    longshot: 'Midfield',
+    wildcard: 'Backmarkers',
   };
 
   // Memoize driver ratings so they don't re-randomize on every render
@@ -549,49 +616,47 @@ export function BettingInterface({
   const totalWagered = currentBets.reduce((sum, b) => sum + b.amount, 0);
   const remaining = raceBudget - totalWagered;
 
-  // Set initial narrator message
-  useEffect(() => {
-    const isBroke = bankroll === 0;
-    setNarratorMessage(
-      isBroke
-        ? getMisterMarblesQuote('brokeGreetings')
-        : getMisterMarblesQuote('greetings')
-    );
-  }, [bankroll]);
+  const handlePlaceBet = (driver?: Driver) => {
+    const targetDriver = driver || selectedDriver;
+    if (!targetDriver) return;
 
-  const handlePlaceBet = () => {
-    if (!selectedDriver || betAmount <= 0 || betAmount > remaining) return;
+    const amount = getBetAmount(targetDriver.id);
+    if (amount <= 0 || amount > remaining) return;
 
     // Prevent multiple bets on the same driver
-    if (currentBets.some(b => b.driverId === selectedDriver.id)) return;
+    if (currentBets.some(b => b.driverId === targetDriver.id)) return;
 
     // Prevent exceeding bet type limits
     if (isBetTypeAtLimit(selectedBetType)) return;
 
-    const odds = driverOdds.get(selectedDriver.id);
+    const odds = driverOdds.get(targetDriver.id);
     if (!odds) return;
 
     const bet: Omit<Bet, 'id'> = {
-      driverId: selectedDriver.id,
-      driverName: selectedDriver.name,
-      driverEmoji: selectedDriver.emoji,
+      driverId: targetDriver.id,
+      driverName: targetDriver.name,
+      driverEmoji: targetDriver.emoji,
       type: selectedBetType,
-      amount: betAmount,
+      amount: amount,
       odds: odds[selectedBetType],
     };
 
     onPlaceBet(bet);
 
-    if (odds[selectedBetType] > 15) {
-      setNarratorMessage(getMisterMarblesQuote('longshot'));
-    } else if (odds[selectedBetType] < 3) {
-      setNarratorMessage(getMisterMarblesQuote('favorite'));
-    } else {
-      setNarratorMessage(getMisterMarblesQuote('betPlaced'));
-    }
+    // Unflip the card after placing bet
+    setFlippedCards(prev => {
+      const next = new Set(prev);
+      next.delete(targetDriver.id);
+      return next;
+    });
 
-    // Reset for next bet
-    setBetAmount(Math.min(10, remaining - betAmount));
+    // Clear bet amount for this driver
+    setBetAmounts(prev => {
+      const next = new Map(prev);
+      next.delete(targetDriver.id);
+      return next;
+    });
+
     setSelectedDriver(null);
   };
 
@@ -653,16 +718,6 @@ export function BettingInterface({
       }
     }
 
-    // Mister Marbles commentary
-    const quotes = [
-      "The marbles have spoken.",
-      "I saw this in a vision. Or a fever dream. Same thing.",
-      "Trust the process. I certainly don't.",
-      "These picks are guaranteed.* (*Not a guarantee)",
-      "My third eye picked these. The other two were busy.",
-      "Fortune favors the bold. And the confused.",
-    ];
-    setNarratorMessage(quotes[Math.floor(Math.random() * quotes.length)]);
     setSelectedDriver(null);
   };
 
@@ -673,16 +728,6 @@ export function BettingInterface({
       case 'points': return 'Points';
       case 'finishes': return 'Finishes';
       case 'dnf': return 'DNF';
-    }
-  };
-
-  const getBetTypeDesc = (type: BetType): string => {
-    switch (type) {
-      case 'win': return 'P1';
-      case 'podium': return 'Top 3';
-      case 'points': return 'Top 10';
-      case 'finishes': return 'Complete';
-      case 'dnf': return 'Crash';
     }
   };
 
@@ -707,9 +752,6 @@ export function BettingInterface({
     return getBetCountByType(type) >= getBetTypeLimit(type);
   };
 
-  // Find the index of selected driver for inline bet panel positioning
-  const selectedDriverIndex = selectedDriver ? sortedDrivers.findIndex(d => d.id === selectedDriver.id) : -1;
-
   return (
     <div className="betting-interface wordle-style">
       {/* Header - Compact */}
@@ -718,186 +760,213 @@ export function BettingInterface({
           <span className="race-number">Race {raceNumber}/{totalRaces}</span>
           <h2 className="track-name">{trackName}</h2>
         </div>
-        <div className="marble-status">
-          <div className="stat-item given">
-            <span className="label">Given</span>
-            <span className="value">{(500 * raceNumber).toLocaleString()}</span>
-          </div>
-          <div className={`stat-item profit ${bankroll >= 0 ? 'positive' : 'negative'}`}>
-            <span className="label">Profit</span>
-            <span className="value">{bankroll >= 0 ? '+' : ''}{bankroll.toLocaleString()}</span>
-          </div>
-          <div className="stat-item budget">
-            <span className="label">Race ṁ</span>
-            <span className="value">{remaining}</span>
-          </div>
-        </div>
       </div>
 
-      {/* Narrator - Prominent */}
-      <div className="narrator-box">
-        <span className="narrator-name">🔮 Mister Marbles</span>
-        <span className="narrator-message">"{narratorMessage}"</span>
-        <span className="betting-tip">Better drivers, worse odds. The chaos doesn't care about your favorites.</span>
+      {/* Betting Instructions */}
+      <div className="betting-instructions">
+        <h1 className="betting-title">Place Your Bets</h1>
+        <p className="betting-desc">
+          Tap a driver to bet. Better drivers have worse payouts.
+        </p>
       </div>
 
       {/* Main Grid Area */}
       <div className="wordle-main">
-        {/* Driver Grid - Wordle Style */}
+        {/* Driver Grid - Grouped by Tier */}
         <div className="wordle-grid">
-          {sortedDrivers.map((driver, index) => {
-            const odds = driverOdds.get(driver.id);
-            const isSelected = selectedDriver?.id === driver.id;
-            const hasBet = currentBets.some(b => b.driverId === driver.id);
-            const tier = getDriverTierByOdds(driver);
-
-            // Check if bet panel should appear after this driver
-            const showBetPanelAfter = selectedDriver && selectedDriverIndex === index;
+          {(['favorite', 'contender', 'longshot', 'wildcard'] as const).map(tierKey => {
+            const tierDrivers = driversByTier[tierKey];
+            if (tierDrivers.length === 0) return null;
 
             return (
-              <div key={driver.id} className="wordle-cell-wrapper">
-                <button
-                  className={`wordle-cell tier-${tier} ${isSelected ? 'selected' : ''} ${hasBet ? 'has-bet' : ''}`}
-                  onClick={() => setSelectedDriver(isSelected ? null : driver)}
-                  disabled={hasBet}
-                  style={{
-                    '--team-color': driver.color,
-                    '--team-accent': driver.accentColor || '#fff',
-                  } as React.CSSProperties}
-                >
-                  <span className="cell-badge" data-slot={driver.driverSlot || 1}>{driver.emoji}</span>
-                  <span className="cell-odds">{odds?.win.toFixed(1)}x</span>
-                  {hasBet && <span className="cell-check">✓</span>}
-                </button>
+              <div key={tierKey} className={`tier-group tier-${tierKey}`}>
+                <div className="tier-group-header">
+                  <span className="tier-group-label">{tierInfo[tierKey]}</span>
+                </div>
+                <div className="tier-group-cards">
+                {tierDrivers.map((driver) => {
+                  const isSelected = selectedDriver?.id === driver.id;
+                  const driverBet = currentBets.find(b => b.driverId === driver.id);
+                  const hasBet = !!driverBet;
+                  const primaryIsLight = isLightColor(driver.color);
+                  const isFlipped = flippedCards.has(driver.id);
+                  const odds = driverOdds.get(driver.id);
+                  const driverRating = driverRatings.get(driver.id);
+                  const carRating = carRatings.get(driver.id);
 
-                {/* Inline Bet Panel - appears below selected driver */}
-                {showBetPanelAfter && (
-                  <div className="inline-bet-panel">
-                    <div className="inline-bet-header">
-                      <span className="inline-driver-name">{selectedDriver.emoji} {selectedDriver.name}</span>
-                      <button className="inline-close" onClick={() => setSelectedDriver(null)}>×</button>
-                    </div>
+                  // Bet types for card back - all positive outcomes!
+                  const betTypes: { key: BetType; label: string; limit: number }[] = [
+                    { key: 'win', label: 'WIN', limit: 1 },
+                    { key: 'podium', label: 'PODIUM', limit: 3 },
+                    { key: 'points', label: 'POINTS', limit: 10 },
+                    { key: 'finishes', label: 'FINISH', limit: drivers.length },
+                  ];
+                  const driverBetAmount = getBetAmount(driver.id);
 
-                    {/* Driver Vibes - Opaque ratings */}
-                    <div className="driver-vibes">
-                      <div className="vibe-ratings">
-                        <div className="vibe-item">
-                          <span className="vibe-label">Driver:</span>
-                          <span className={`vibe-value tier-${driverRatings.get(selectedDriver.id)?.tier}`}>
-                            {driverRatings.get(selectedDriver.id)?.label}
-                          </span>
-                        </div>
-                        <div className="vibe-item">
-                          <span className="vibe-label">Car:</span>
-                          <span className={`vibe-value tier-${carRatings.get(selectedDriver.id)?.tier}`}>
-                            {carRatings.get(selectedDriver.id)?.label}
-                          </span>
-                        </div>
-                      </div>
-                      {selectedDriver.quirk && (
-                        <div className="driver-quirk">
-                          <span className="quirk-tag">⚡ {selectedDriver.quirk}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Bet Type Pills */}
-                    <div className="bet-type-pills">
-                      {(['win', 'podium', 'points', 'finishes', 'dnf'] as BetType[]).map(type => {
-                        const typeOdds = driverOdds.get(selectedDriver.id)?.[type] ?? 0;
-                        const atLimit = isBetTypeAtLimit(type);
-                        return (
-                          <button
-                            key={type}
-                            className={`bet-pill ${selectedBetType === type ? 'selected' : ''} ${atLimit ? 'disabled' : ''}`}
-                            onClick={() => !atLimit && setSelectedBetType(type)}
-                            disabled={atLimit}
-                          >
-                            <span className="pill-label">{getBetTypeLabel(type)}</span>
-                            <span className="pill-desc">{getBetTypeDesc(type)}</span>
-                            <span className="pill-odds">{atLimit ? '—' : `${typeOdds.toFixed(1)}x`}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    {/* Amount & Place Bet */}
-                    <div className="inline-bet-actions">
-                      <div className="amount-row simplified">
-                        <button className="dec" onClick={() => setBetAmount(1)}>Min</button>
-                        <button className="dec" onClick={() => setBetAmount(Math.max(1, betAmount - 100))}>−100</button>
-                        <button className="dec" onClick={() => setBetAmount(Math.max(1, betAmount - 50))}>−50</button>
-                        <button className="dec" onClick={() => setBetAmount(Math.max(1, betAmount - 10))}>−10</button>
-                        <span className="amount-value">{betAmount}ṁ</span>
-                        <button className="inc" onClick={() => setBetAmount(Math.min(remaining, betAmount + 10))}>+10</button>
-                        <button className="inc" onClick={() => setBetAmount(Math.min(remaining, betAmount + 50))}>+50</button>
-                        <button className="inc" onClick={() => setBetAmount(Math.min(remaining, betAmount + 100))}>+100</button>
-                        <button className="inc" onClick={() => setBetAmount(remaining)}>All</button>
-                      </div>
+                  return (
+                    <div key={driver.id} className={`wordle-cell-wrapper ${isFlipped && !hasBet ? 'flipped' : ''}`}>
                       <button
-                        className="place-bet-inline"
-                        onClick={handlePlaceBet}
-                        disabled={remaining <= 0 || betAmount <= 0}
+                        className={`wordle-cell tier-${tierKey} ${isSelected ? 'selected' : ''} ${hasBet ? 'has-bet' : ''} ${primaryIsLight ? 'light-primary' : 'dark-primary'}`}
+                        onClick={() => {
+                          if (hasBet) return; // Cards with bets don't flip
+                          if (!isFlipped) {
+                            // Flip to back
+                            toggleCardFlip(driver.id);
+                            setSelectedDriver(driver);
+                          }
+                          // Flipping back is handled by card-back onClick
+                        }}
+                        style={{
+                          '--team-color': driver.color,
+                          '--team-accent': driver.accentColor || '#fff',
+                        } as React.CSSProperties}
                       >
-                        Place {betAmount}ṁ → {Math.floor(betAmount * (driverOdds.get(selectedDriver.id)?.[selectedBetType] ?? 0))}ṁ
+                        {/* Front of card */}
+                        <div className="card-front">
+                          <span className="cell-badge" data-slot={driver.driverSlot || 1}>{driver.emoji}</span>
+                          <span className="cell-name">{driver.name}</span>
+                        </div>
+
+                        {/* Bet overlay - shows when bet is placed */}
+                        {hasBet && driverBet && (
+                          <div className="bet-overlay">
+                            <span className="bet-overlay-badge">{driver.emoji}</span>
+                            <div className="bet-overlay-details">
+                              <span className="bet-overlay-type">{getBetTypeLabel(driverBet.type)}</span>
+                              <div className="bet-overlay-amounts">
+                                <span className="bet-overlay-wager">{driverBet.amount}ṁ</span>
+                                <span className="bet-overlay-arrow">→</span>
+                                <span className="bet-overlay-winnings">+{Math.floor(driverBet.amount * driverBet.odds)}ṁ</span>
+                              </div>
+                            </div>
+                            <button
+                              className="bet-overlay-undo"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onRemoveBet(driverBet.id);
+                              }}
+                            >
+                              Remove Bet
+                            </button>
+                          </div>
+                        )}
+
+                        {/* Back of card - compact betting UI */}
+                        {!hasBet && (
+                          <div className="card-back" onClick={(e) => {
+                            // Only flip back if clicking the background, not buttons
+                            if (!(e.target as HTMLElement).closest('.back-bet-btn, .back-amount-btn, .back-place-bet')) {
+                              toggleCardFlip(driver.id);
+                            }
+                          }}>
+                            <div className="back-header">
+                              <span className="back-badge">{driver.emoji}</span>
+                              <span className="back-name">{driver.name}</span>
+                              <div className="back-ratings">
+                                <div className={`rating-ball tier-${driverRating?.tier}`} title={driverRating?.label}>
+                                  👤
+                                </div>
+                                <div className={`rating-ball tier-${carRating?.tier}`} title={carRating?.label}>
+                                  🏎️
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Bet type buttons */}
+                            <div className="back-bet-types">
+                              {betTypes.map(({ key, label, limit }) => {
+                                const typeOdds = odds?.[key] ?? 0;
+                                const currentCount = getBetCountByType(key);
+                                const atLimit = currentCount >= limit;
+                                return (
+                                  <div
+                                    key={key}
+                                    className={`back-bet-btn ${selectedBetType === key && isSelected ? 'selected' : ''} ${atLimit ? 'disabled' : ''}`}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (!atLimit) {
+                                        setSelectedDriver(driver);
+                                        setSelectedBetType(key);
+                                      }
+                                    }}
+                                  >
+                                    <span className="bet-label">{label}</span>
+                                    {atLimit ? (
+                                      <span className="bet-limit">{currentCount}/{limit}</span>
+                                    ) : (
+                                      <span className="bet-odds payout">+{Math.floor(driverBetAmount * typeOdds)}ṁ</span>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+
+                            {/* Amount controls */}
+                            <div className="back-amount">
+                              <div className="back-amount-controls">
+                                <div
+                                  className="back-amount-btn dec"
+                                  onClick={(e) => { e.stopPropagation(); setDriverBetAmount(driver.id, Math.max(1, driverBetAmount - 10)); }}
+                                >−</div>
+                                <span className="back-amount-value">{driverBetAmount}ṁ</span>
+                                <div
+                                  className="back-amount-btn inc"
+                                  onClick={(e) => { e.stopPropagation(); setDriverBetAmount(driver.id, Math.min(remaining, driverBetAmount + 10)); }}
+                                >+</div>
+                              </div>
+                            </div>
+
+                            {/* Place bet button */}
+                            <button
+                              className="back-place-bet"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handlePlaceBet(driver);
+                              }}
+                              disabled={remaining <= 0 || driverBetAmount <= 0 || driverBetAmount > remaining}
+                            >
+                              Place Bet
+                            </button>
+                          </div>
+                        )}
                       </button>
                     </div>
-                  </div>
-                )}
+                  );
+                })}
+                </div>
               </div>
             );
           })}
         </div>
 
-        {/* Bottom Section - Mister Marbles + Current Bets */}
-        <div className="wordle-bottom">
-          {/* Mister Marbles Button - Always Visible */}
-          {remaining > 0 && (
-            <button className="mister-marbles-btn" onClick={handleMisterMarblesDecides}>
-              🔮 Let Mister Marbles Decide ({remaining}ṁ)
-            </button>
-          )}
-
-          {/* Current Bets Summary */}
-          {currentBets.length > 0 && (
-            <div className="bets-summary">
-              <div className="bets-chips">
-                {currentBets.map(bet => {
-                  const betDriver = drivers.find(d => d.id === bet.driverId);
-                  return (
-                    <div
-                      key={bet.id}
-                      className="bet-chip"
-                      style={{
-                        '--team-color': betDriver?.color || '#333',
-                        '--team-accent': betDriver?.accentColor || '#fff',
-                      } as React.CSSProperties}
-                    >
-                      <span className="chip-badge" data-slot={betDriver?.driverSlot || 1}>{bet.driverEmoji}</span>
-                      <span className="chip-type">{getBetTypeLabel(bet.type)}</span>
-                      <span className="chip-amount">{bet.amount}→{Math.floor(bet.amount * bet.odds)}</span>
-                      <button className="chip-remove" onClick={() => onRemoveBet(bet.id)}>×</button>
-                    </div>
-                  );
-                })}
-              </div>
-              <div className="bets-totals">
-                <span className="total-wagered">{totalWagered}ṁ wagered</span>
-                <span className="total-potential">→ {currentBets.reduce((sum, b) => sum + Math.floor(b.amount * b.odds), 0)}ṁ max</span>
-              </div>
-            </div>
-          )}
-        </div>
       </div>
 
-      {/* Footer - Start Race */}
-      <div className="betting-footer">
-        <button
-          className={`confirm-bets-btn ${currentBets.length > 0 ? 'has-bets' : ''}`}
-          onClick={onConfirmBets}
-        >
-          {currentBets.length > 0 ? `Start Race (${currentBets.length} bet${currentBets.length > 1 ? 's' : ''})` : 'Skip Betting'}
-        </button>
+      {/* Sticky Footer - Quick Bet, Stats, Start Race */}
+      <div className="betting-footer-sticky">
+        <div className="footer-left">
+          {currentBets.length > 0 ? (
+            <button className="quick-bet-btn remove-bets" onClick={() => currentBets.forEach(b => onRemoveBet(b.id))}>
+              ✕ Remove All Bets
+            </button>
+          ) : remaining > 0 ? (
+            <button className="quick-bet-btn" onClick={handleMisterMarblesDecides}>
+              🎲 Quick Bet
+            </button>
+          ) : null}
+        </div>
+        <div className="footer-stats">
+          <span className="footer-stat bet-total">{totalWagered}ṁ bet</span>
+          <span className="footer-stat potential-total">+{currentBets.reduce((sum, b) => sum + Math.floor(b.amount * b.odds), 0)}ṁ potential</span>
+          <span className="footer-stat remaining-total">{remaining}ṁ left</span>
+        </div>
+        <div className="footer-right">
+          <button
+            className={`confirm-bets-btn ${currentBets.length > 0 ? 'has-bets' : ''}`}
+            onClick={onConfirmBets}
+          >
+            {currentBets.length > 0 ? `Start Race` : 'Skip Betting'}
+          </button>
+        </div>
       </div>
     </div>
   );

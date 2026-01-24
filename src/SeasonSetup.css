@@ -1,11 +1,12 @@
 .season-setup {
   min-height: 100vh;
-  background: #111;
-  padding: 2rem;
+  background: linear-gradient(180deg, #0a0a0c 0%, #0d0d0f 50%, #0a0a0c 100%);
+  padding: 1.5rem;
+  padding-bottom: 100px; /* Account for sticky footer */
 }
 
 .season-setup-content {
-  max-width: 700px;
+  max-width: 800px;
   margin: 0 auto;
 }
 
@@ -223,18 +224,34 @@
   letter-spacing: 1px;
 }
 
+/* Sticky Footer for Season Setup */
+.season-setup .setup-summary {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  max-width: 800px;
+  margin: 0 auto;
+  background: linear-gradient(180deg, rgba(15, 15, 18, 0.98) 0%, rgba(10, 10, 12, 0.99) 100%);
+  border-top: 1px solid #2a2a30;
+  backdrop-filter: blur(10px);
+  z-index: 100;
+  padding: 0.75rem 1rem;
+  border-radius: 0;
+}
+
 .start-season-btn {
   font-family: var(--font-display), var(--font-emoji);
   width: 100%;
-  background: #333;
-  border: 2px solid #555;
-  border-radius: 4px;
-  padding: 1rem 2rem;
-  color: #fff;
+  background: linear-gradient(180deg, #2a3530 0%, #1a2520 100%);
+  border: 1px solid #3a4540;
+  border-radius: 6px;
+  padding: 0.75rem 1.5rem;
+  color: #7cb;
   font-size: 1.1rem;
-  font-weight: bold;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -244,12 +261,12 @@
 }
 
 .start-season-btn:hover {
-  background: #444;
-  border-color: #666;
+  background: linear-gradient(180deg, #3a4540 0%, #2a3530 100%);
+  box-shadow: 0 0 15px rgba(100, 200, 180, 0.2);
 }
 
 .start-season-btn:active {
-  background: #3a3a3a;
+  background: linear-gradient(180deg, #304035 0%, #203025 100%);
 }
 
 .btn-arrow {
@@ -356,16 +373,40 @@
 }
 
 .wordle-selection-grid.teams-grid {
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 0.6rem;
+}
+
+/* Team groups container */
+.season-setup .team-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.season-setup .team-group-label {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #aaa;
+  margin: 0 0 0.5rem 0;
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid #333;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.season-setup .team-group.historic .team-group-label {
+  color: #c9a227;
+  border-color: rgba(201, 162, 39, 0.3);
 }
 
 /* Teams grid for unified TeamCell component */
 .season-setup .teams-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 0.6rem;
-  max-width: 700px;
+  max-width: 800px;
   margin: 0 auto;
 }
 
@@ -927,6 +968,11 @@
     font-size: 0.75rem;
   }
 
+  /* Team group labels mobile */
+  .season-setup .team-group-label {
+    font-size: 1.1rem;
+  }
+
   /* Wordle selection - tighter on mobile */
   .wordle-selection {
     padding: 0.5rem;
@@ -934,13 +980,13 @@
 
   .wordle-selection-grid.teams-grid,
   .wordle-selection-grid.tracks-grid {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 0.35rem;
   }
 
   /* TeamCell unified component responsive */
   .season-setup .teams-grid {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 0.35rem;
   }
 
@@ -994,8 +1040,8 @@
   }
 
   .start-season-btn {
-    padding: 0.75rem 1rem;
-    font-size: 0.95rem;
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
     min-height: 48px; /* Touch target */
   }
 
@@ -1009,6 +1055,6 @@
   .wordle-selection-grid.teams-grid,
   .wordle-selection-grid.tracks-grid,
   .season-setup .teams-grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
   }
 }

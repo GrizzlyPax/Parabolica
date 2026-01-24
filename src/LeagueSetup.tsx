@@ -4,7 +4,6 @@ import { Track, CURRENT_TRACKS, HISTORIC_TRACKS, getDynamicEventDescription, gen
 import { generateCarsForKingdoms, GeneratedCar } from './generators/cars';
 import { getTeamsByIds, getRandomTeams, Team, CURRENT_TEAMS } from './data/teams';
 import RaceEngine from './RaceEngine';
-import Tooltip from './components/Tooltip';
 import TeamCell from './components/TeamCell';
 import './LeagueSetup.css';
 
@@ -136,10 +135,7 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
     seasonTrack || generateTrack()
   );
 
-  const [selectedDriver, setSelectedDriver] = useState<GeneratedDriver | null>(null);
   const [activeTab, setActiveTab] = useState<'roster' | 'track'>('roster');
-  // Prohibition mode (no gambling) - defaults to false (gambling enabled)
-  const [prohibitionMode, setProhibitionMode] = useState(false);
   // Debounce reroll to prevent rapid re-generation on mobile
   const [isRerolling, setIsRerolling] = useState(false);
   const rerollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -192,8 +188,6 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
     const teamIds = newTeams.map(t => t.id);
     setRoster(generateRosterFromTeams(teamIds));
     setCars(generateCarsForKingdoms(teamIds));
-    setSelectedDriver(null);
-
     // Re-enable after cooldown
     rerollTimeoutRef.current = setTimeout(() => {
       setIsRerolling(false);
@@ -251,18 +245,25 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
       totalLaps: track.laps,
     });
 
-    onStartRace(prohibitionMode);
+    onStartRace(false);
   };
 
   return (
     <div className="league-setup betting-style">
-      {/* Narrator Box - mirrors betting screen */}
-      <div className="narrator-box">
-        <span className="narrator-name">🏁 Race Director</span>
-        <span className="narrator-message">
-          "{activeTeams.length} teams assembled. {roster.length} drivers ready. {track.funEmoji} {track.name} awaits."
-        </span>
-        <span className="setup-tip">Tap a team to see their drivers and car details.</span>
+      {/* Header - Compact */}
+      <div className="setup-header-bar">
+        <div className="race-info">
+          <span className="race-number">{isSeasonMode ? 'Season Mode' : 'Single Race'}</span>
+          <h2 className="track-name">{track.funEmoji} {track.name}</h2>
+        </div>
+      </div>
+
+      {/* Setup Instructions */}
+      <div className="setup-instructions">
+        <h1 className="setup-title">Review Your Grid</h1>
+        <p className="setup-desc">
+          Tap a team to see their drivers and car. {activeTeams.length} teams, {roster.length} drivers.
+        </p>
       </div>
 
       {/* Tabs */}
@@ -279,13 +280,15 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
         >
           Track
         </button>
-        <button
-          className={`reroll-btn ${isRerolling ? 'disabled' : ''}`}
-          onClick={handleSummonAgain}
-          disabled={isRerolling}
-        >
-          🎲 Reroll
-        </button>
+{isSeasonMode && (
+          <button
+            className={`reroll-btn ${isRerolling ? 'disabled' : ''}`}
+            onClick={handleSummonAgain}
+            disabled={isRerolling}
+          >
+            🎲 Reroll
+          </button>
+        )}
       </div>
 
       {/* Main Content Area */}
@@ -296,40 +299,74 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
           const currentActiveTeams = activeTeams.filter(t => currentTeamIds.has(t.id));
           const historicActiveTeams = activeTeams.filter(t => !currentTeamIds.has(t.id));
 
+          // Sort both groups alphabetically by name
+          const sortedCurrentTeams = [...currentActiveTeams].sort((a, b) => a.name.localeCompare(b.name));
+          const sortedHistoricTeams = [...historicActiveTeams].sort((a, b) => a.name.localeCompare(b.name));
+
           return (
             <div className="team-groups">
-              {currentActiveTeams.length > 0 && (
+              {sortedCurrentTeams.length > 0 && (
                 <div className="team-group">
-                  <h3 className="team-group-label">🏎️ Current Grid ({currentActiveTeams.length})</h3>
+                  <h3 className="team-group-label">🏎️ Current Grid ({sortedCurrentTeams.length})</h3>
                   <div className="teams-grid">
-                    {currentActiveTeams.map(team => {
-                      const isSelected = selectedDriver?.kingdomId === team.id;
+                    {sortedCurrentTeams.map(team => {
                       const drivers = getTeamDrivers(team.id);
+                      const car = cars.get(team.id);
+                      const carRating = carRatings.get(team.id);
                       return (
                         <TeamCell
                           key={team.id}
                           team={team}
-                          isSelected={isSelected}
-                          onClick={() => setSelectedDriver(isSelected ? null : drivers[0])}
+                          isSelected={false}
+                          onClick={() => {}}
+                          car={car ? {
+                            name: car.name,
+                            rating: carRating?.label,
+                            ratingTier: carRating?.tier,
+                          } : undefined}
+                          drivers={drivers.map(d => {
+                            const rating = driverRatings.get(d.id);
+                            return {
+                              name: d.fullName,
+                              slot: d.driverSlot,
+                              rating: rating?.label,
+                              ratingTier: rating?.tier,
+                            };
+                          })}
                         />
                       );
                     })}
                   </div>
                 </div>
               )}
-              {historicActiveTeams.length > 0 && (
+              {sortedHistoricTeams.length > 0 && (
                 <div className="team-group historic">
-                  <h3 className="team-group-label">📜 Legendary Teams ({historicActiveTeams.length})</h3>
+                  <h3 className="team-group-label">📜 Legendary Teams ({sortedHistoricTeams.length})</h3>
                   <div className="teams-grid">
-                    {historicActiveTeams.map(team => {
-                      const isSelected = selectedDriver?.kingdomId === team.id;
+                    {sortedHistoricTeams.map(team => {
                       const drivers = getTeamDrivers(team.id);
+                      const car = cars.get(team.id);
+                      const carRating = carRatings.get(team.id);
                       return (
                         <TeamCell
                           key={team.id}
                           team={team}
-                          isSelected={isSelected}
-                          onClick={() => setSelectedDriver(isSelected ? null : drivers[0])}
+                          isSelected={false}
+                          onClick={() => {}}
+                          car={car ? {
+                            name: car.name,
+                            rating: carRating?.label,
+                            ratingTier: carRating?.tier,
+                          } : undefined}
+                          drivers={drivers.map(d => {
+                            const rating = driverRatings.get(d.id);
+                            return {
+                              name: d.fullName,
+                              slot: d.driverSlot,
+                              rating: rating?.label,
+                              ratingTier: rating?.tier,
+                            };
+                          })}
                         />
                       );
                     })}
@@ -394,83 +431,6 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
           </div>
         )}
 
-        {/* Expanded Team Detail Panel - shows below grid when a team is selected */}
-        {selectedDriver && activeTab === 'roster' && (() => {
-          const team = activeTeams.find(t => t.id === selectedDriver.kingdomId);
-          const carRating = team ? carRatings.get(team.id) : null;
-          const drivers = team ? getTeamDrivers(team.id) : [];
-          if (!team) return null;
-          return (
-            <div className="inline-detail-panel">
-              <div className="detail-team-header">
-                <span className="detail-emoji">{team.emoji}</span>
-                <div className="detail-team-info">
-                  <h3 style={{ color: team.color }}>{team.name}</h3>
-                  <p className="detail-desc">{team.description}</p>
-                </div>
-                <button className="detail-close" onClick={() => setSelectedDriver(null)}>×</button>
-              </div>
-
-              {/* Car vibes */}
-              {(() => {
-                const car = cars.get(team.id);
-                return car && (
-                  <div className="detail-car">
-                    <span className="detail-car-name">🏎️ {car.name}</span>
-                    <span className={`detail-car-rating tier-${carRating?.tier}`}>
-                      {carRating?.label}
-                    </span>
-                    {car.carTag && (
-                      <Tooltip content={car.carTag.description}>
-                        <span className="tag-chip">{car.carTag.emoji} {car.carTag.name}</span>
-                      </Tooltip>
-                    )}
-                  </div>
-                );
-              })()}
-
-              {/* Drivers */}
-              <div className="detail-drivers">
-                {drivers.map(driver => {
-                  const driverRating = driverRatings.get(driver.id);
-                  return (
-                    <div key={driver.id} className="detail-driver">
-                      <div className="driver-main-info">
-                        <span className="driver-slot-badge" data-slot={driver.driverSlot}>
-                          #{driver.driverSlot}
-                        </span>
-                        <span className="driver-fullname">{driver.fullName}</span>
-                        <span className={`driver-vibe tier-${driverRating?.tier}`}>
-                          {driverRating?.label}
-                        </span>
-                      </div>
-                      {driver.tag && (
-                        <Tooltip content={driver.tag.description}>
-                          <span className="tag-chip">{driver.tag.emoji} {driver.tag.name}</span>
-                        </Tooltip>
-                      )}
-                      {driver.quirk && (
-                        <p className="driver-quirk-text">⚡ {driver.quirk}</p>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Team tag */}
-              {cars.get(team.id)?.teamTag && (
-                <div className="detail-team-tag">
-                  <Tooltip content={cars.get(team.id)!.teamTag!.description}>
-                    <span className="tag-chip">
-                      {cars.get(team.id)!.teamTag!.emoji} {cars.get(team.id)!.teamTag!.name}
-                    </span>
-                  </Tooltip>
-                </div>
-              )}
-            </div>
-          );
-        })()}
-
         {/* Track Detail - shows below grid when on track tab */}
         {activeTab === 'track' && (
           <div className="inline-detail-panel track-detail">
@@ -496,17 +456,9 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
         )}
       </div>
 
-      {/* Bottom Actions - mirrors betting screen */}
-      <div className="setup-actions">
-        <label className="prohibition-checkbox">
-          <input
-            type="checkbox"
-            checked={prohibitionMode}
-            onChange={(e) => setProhibitionMode(e.target.checked)}
-          />
-          <span>🚫 No Betting</span>
-        </label>
-        <button className="place-bets-btn" onClick={handleStartRace}>
+      {/* Sticky Footer */}
+      <div className="setup-footer-sticky">
+        <button className="confirm-bets-btn has-bets" onClick={handleStartRace}>
           Place Your Bets →
         </button>
       </div>

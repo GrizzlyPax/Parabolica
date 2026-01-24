@@ -462,7 +462,6 @@ function App() {
         trackName={trackInfo?.name || 'Unknown Track'}
         raceNumber={currentRaceNumber}
         totalRaces={gameMode === 'season' ? (seasonState?.totalRaces || 1) : 1}
-        bankroll={marbleState.bankroll}
       />
     );
   }

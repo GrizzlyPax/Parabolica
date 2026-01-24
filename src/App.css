@@ -24,7 +24,7 @@ a, button, input, select, textarea, [role="button"] {
 }
 
 body {
-  background: #111;
+  background: #0a0a0c;
   min-height: 100vh;
   font-family: var(--font-body), var(--font-emoji);
   font-size: 16px;

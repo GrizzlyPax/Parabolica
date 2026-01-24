@@ -229,7 +229,7 @@ function SeasonSetup({ onStartSeason, onBack }: SeasonSetupProps) {
               <div className="team-group">
                 <h3 className="team-group-label">🏎️ Current Grid ({CURRENT_TEAMS.length})</h3>
                 <div className="teams-grid">
-                  {CURRENT_TEAMS.map(team => (
+                  {[...CURRENT_TEAMS].sort((a, b) => a.name.localeCompare(b.name)).map(team => (
                     <TeamCell
                       key={team.id}
                       team={team}
@@ -244,7 +244,7 @@ function SeasonSetup({ onStartSeason, onBack }: SeasonSetupProps) {
               <div className="team-group historic">
                 <h3 className="team-group-label">📜 Legendary Teams ({HISTORIC_TEAMS.length})</h3>
                 <div className="teams-grid">
-                  {HISTORIC_TEAMS.map(team => (
+                  {[...HISTORIC_TEAMS].sort((a, b) => a.name.localeCompare(b.name)).map(team => (
                     <TeamCell
                       key={team.id}
                       team={team}

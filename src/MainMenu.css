@@ -1,14 +1,14 @@
 .main-menu {
   min-height: 100vh;
-  background: #111;
+  background: linear-gradient(180deg, #0a0a0c 0%, #0d0d0f 50%, #0a0a0c 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2rem;
+  padding: 1.5rem;
 }
 
 .main-menu-content {
-  max-width: 550px;
+  max-width: 600px;
   width: 100%;
 }
 
