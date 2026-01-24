@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import './MainMenu.css';
+import { version } from '../package.json';
 
 interface MainMenuProps {
   onSingleRace: () => void;
@@ -125,7 +126,7 @@ function MainMenu({ onSingleRace, onSeason, onCompendium }: MainMenuProps) {
         </div>
 
         <div className="main-menu-footer">
-          <span className="version">v0.2.0</span>
+          <span className="version">v{version}</span>
         </div>
       </div>
 
