@@ -944,13 +944,13 @@ export function BettingInterface({
       {/* Sticky Footer - Quick Bet, Stats, Start Race */}
       <div className="betting-footer-sticky">
         <div className="footer-left">
-          {currentBets.length > 0 ? (
-            <button className="quick-bet-btn remove-bets" onClick={() => currentBets.forEach(b => onRemoveBet(b.id))}>
-              ✕ Remove All Bets
-            </button>
-          ) : remaining > 0 ? (
+          {remaining > 0 ? (
             <button className="quick-bet-btn" onClick={handleMisterMarblesDecides}>
               🎲 Quick Bet
+            </button>
+          ) : currentBets.length > 0 ? (
+            <button className="quick-bet-btn remove-bets" onClick={() => currentBets.forEach(b => onRemoveBet(b.id))}>
+              ✕ Remove All Bets
             </button>
           ) : null}
         </div>
