@@ -815,25 +815,6 @@
   margin-top: auto;
 }
 
-.league-setup.betting-style .prohibition-checkbox {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-  font-size: 0.85rem;
-  color: #888;
-}
-
-.league-setup.betting-style .prohibition-checkbox input {
-  width: 18px;
-  height: 18px;
-  cursor: pointer;
-}
-
-.league-setup.betting-style .prohibition-checkbox:hover {
-  color: #aaa;
-}
-
 .league-setup.betting-style .place-bets-btn {
   padding: 0.75rem 1.5rem;
   background: linear-gradient(180deg, #2a3530 0%, #1a2520 100%);
@@ -2097,34 +2078,6 @@
   flex-shrink: 0;
 }
 
-.setup-footer-sticky .prohibition-toggle {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-  padding: 0.5rem 0.75rem;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid #2a2a30;
-  border-radius: 6px;
-  font-family: var(--font-display);
-  font-size: 0.9rem;
-  color: #888;
-  transition: all 0.15s ease;
-}
-
-.setup-footer-sticky .prohibition-toggle:hover {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: #3a3a40;
-  color: #aaa;
-}
-
-.setup-footer-sticky .prohibition-toggle input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-  accent-color: #888;
-  cursor: pointer;
-}
-
 .setup-footer-sticky .confirm-bets-btn {
   padding: 0.75rem 1.5rem;
   background: linear-gradient(180deg, #2a3530 0%, #1a2520 100%);
@@ -2181,46 +2134,6 @@
   display: flex;
   align-items: center;
   gap: 1.5rem;
-}
-
-.prohibition-toggle {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-  user-select: none;
-  padding: 0.5rem 0.75rem;
-  border-radius: 4px;
-  transition: background 0.15s ease;
-}
-
-.prohibition-toggle:hover {
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.prohibition-toggle input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-  accent-color: #888;
-  cursor: pointer;
-}
-
-.prohibition-label {
-  font-family: var(--font-body), var(--font-emoji);
-  font-size: 0.9rem;
-  color: #888;
-  font-weight: 600;
-}
-
-.prohibition-hint {
-  font-family: var(--font-body), var(--font-emoji);
-  font-size: 0.75rem;
-  color: #555;
-  font-style: italic;
-}
-
-.prohibition-toggle:has(input:checked) .prohibition-label {
-  color: #aaa;
 }
 
 .start-race-btn {
@@ -2322,11 +2235,6 @@
   .setup-footer-sticky {
     padding: 0.5rem 0.75rem;
     gap: 0.5rem;
-  }
-
-  .setup-footer-sticky .prohibition-toggle {
-    padding: 0.4rem 0.6rem;
-    font-size: 0.8rem;
   }
 
   .setup-footer-sticky .confirm-bets-btn {
@@ -2487,15 +2395,6 @@
   .league-setup.betting-style .setup-actions {
     padding: 0.75rem;
     gap: 0.75rem;
-  }
-
-  .league-setup.betting-style .prohibition-checkbox {
-    font-size: 0.75rem;
-  }
-
-  .league-setup.betting-style .prohibition-checkbox input {
-    width: 16px;
-    height: 16px;
   }
 
   .league-setup.betting-style .place-bets-btn {

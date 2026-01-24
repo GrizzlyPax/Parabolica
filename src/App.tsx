@@ -132,7 +132,7 @@ function App() {
     setScreen('setup');
   };
 
-  const handleStartRace = (prohibitionMode: boolean) => {
+  const handleStartRace = () => {
     setTrackInfo(engine.getTrackInfo());
 
     // Initialize season state with driver IDs if this is a season and not yet initialized
@@ -141,24 +141,16 @@ function App() {
       setSeasonState(createInitialSeasonState(seasonState.totalRaces, driverIds));
     }
 
-    // Prohibition mode disables marble mode (gambling)
-    const gamblingEnabled = !prohibitionMode;
-    setMarbleModeEnabled(gamblingEnabled);
+    // Marble mode (betting) is always enabled
+    setMarbleModeEnabled(true);
 
-    // If marble mode is enabled, go to betting first
-    if (gamblingEnabled) {
-      // Reset current bets and give 100 marbles for this race
-      setMarbleState(prev => ({
-        ...prev,
-        raceBudget: 500,
-        currentBets: [],
-      }));
-      setScreen('betting');
-    } else {
-      setScreen('race');
-      // Show countdown instead of auto-starting
-      setShowCountdown(true);
-    }
+    // Reset current bets and give 500 marbles for this race
+    setMarbleState(prev => ({
+      ...prev,
+      raceBudget: 500,
+      currentBets: [],
+    }));
+    setScreen('betting');
   };
 
   const handleCountdownComplete = useCallback(() => {

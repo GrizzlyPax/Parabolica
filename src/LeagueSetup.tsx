@@ -105,7 +105,7 @@ function getCarTier(car: GeneratedCar): RatingTier {
 }
 
 interface LeagueSetupProps {
-  onStartRace: (prohibitionMode: boolean) => void;
+  onStartRace: () => void;
   // Season mode - use specific teams and track
   seasonKingdomIds?: string[];
   seasonTrack?: Track;
@@ -245,7 +245,7 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
       totalLaps: track.laps,
     });
 
-    onStartRace(false);
+    onStartRace();
   };
 
   return (
