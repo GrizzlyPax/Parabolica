@@ -14,6 +14,7 @@ export interface GeneratedDriver {
   teamName: string;
   kingdomId: string;      // Reference to team (legacy name kept for compatibility)
   color: string;
+  accentColor: string;    // Secondary/accent team color
   driverSlot: DriverSlot; // 1 = primary driver, 2 = secondary driver
   stats: DriverStats;
   backstory: string;
@@ -160,6 +161,7 @@ export function generateDriverForTeam(
     teamName: team.name,
     kingdomId: team.id,  // Legacy field name
     color: team.color,
+    accentColor: team.accentColor,
     driverSlot: slot,
     stats: generateStats(),
     backstory,

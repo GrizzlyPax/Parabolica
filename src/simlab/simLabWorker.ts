@@ -329,7 +329,7 @@ function aggregateRaceResult(
     }
 
     // Track track_event_effect - these are the actual effects on drivers
-    if (event.type === 'track_event_effect') {
+    if (event.type === 'track_event_effect' && track.event) {
       const eventId = `track_${track.event.id}`;
 
       // Get or create accumulator for this track event
@@ -510,17 +510,17 @@ function aggregateRaceResult(
     trackAcc = {
       trackId: track.id,
       trackName: track.name,
-      trackEmoji: track.emoji,
+      trackEmoji: track.funEmoji,
       racesRun: 0,
       totalDNFs: 0,
       dnfBreakdown: { crash: 0, mechanical: 0, tire_failure: 0 },
       totalFinishers: 0,
       totalLeadChanges: 0,
       totalTicks: 0,
-      eventName: track.event.name,
-      eventEmoji: track.event.emoji,
-      eventDescription: track.event.description,
-      eventFlavorText: track.event.flavorText,
+      eventName: track.event?.name ?? 'No Event',
+      eventEmoji: track.event?.emoji ?? '',
+      eventDescription: track.event?.description ?? '',
+      eventFlavorText: track.event?.flavorText ?? '',
     };
     acc.trackAccumulators.set(track.id, trackAcc);
   }
@@ -654,17 +654,18 @@ async function runSimulation(config: SimLabConfig, variables?: SimVariables, _la
         id: track.id,
         name: track.name,
         emoji: track.emoji,
+        funEmoji: track.funEmoji,
         description: track.description ?? '',
         laps: track.laps,
-        event: {
+        event: track.event ? {
           id: track.event.id,
           name: track.event.name,
           emoji: track.event.emoji,
           description: track.event.description,
           flavorText: track.event.flavorText,
-        },
-        eventTrigger: track.event.trigger,
-        eventEffect: track.event.effect,
+        } : undefined,
+        eventTrigger: track.event?.trigger,
+        eventEffect: track.event?.effect,
       });
 
       // Run the race headlessly

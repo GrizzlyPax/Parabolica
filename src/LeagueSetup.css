@@ -9,7 +9,7 @@
   max-width: 800px;
   margin: 0 auto;
   color: #ccc;
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-body), var(--font-emoji);
   background: #111;
   display: flex;
   flex-direction: column;
@@ -27,8 +27,8 @@
 }
 
 .league-setup.betting-style .narrator-box .narrator-name {
-  font-family: 'Cinzel', Georgia, serif;
-  font-size: 0.9rem;
+  font-family: var(--font-display);
+  font-size: 1rem;
   color: #8fd4a8;
   display: block;
   margin-bottom: 0.4rem;
@@ -39,7 +39,7 @@
 .league-setup.betting-style .narrator-box .narrator-message {
   color: #c8d8c0;
   font-style: italic;
-  font-size: 1rem;
+  font-size: 1.1rem;
   line-height: 1.4;
   display: block;
 }
@@ -49,7 +49,7 @@
   margin-top: 0.75rem;
   padding-top: 0.6rem;
   border-top: 1px solid rgba(93, 163, 124, 0.3);
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   font-style: normal;
   color: #8a9880;
   letter-spacing: 0.5px;
@@ -66,13 +66,13 @@
 
 .league-setup.betting-style .setup-tab {
   flex: 1;
-  padding: 0.6rem 1rem;
+  padding: 0.7rem 1rem;
   background: #1a1a1a;
   border: 1px solid #333;
   border-radius: 4px;
   color: #777;
-  font-family: 'Cinzel', Georgia, serif;
-  font-size: 0.85rem;
+  font-family: var(--font-display);
+  font-size: 1rem;
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -89,13 +89,13 @@
 }
 
 .league-setup.betting-style .reroll-btn {
-  padding: 0.6rem 1rem;
+  padding: 0.7rem 1rem;
   background: transparent;
   border: 1px solid #444;
   color: #888;
   border-radius: 4px;
-  font-family: 'Cinzel', Georgia, serif;
-  font-size: 0.85rem;
+  font-family: var(--font-display);
+  font-size: 1rem;
   cursor: pointer;
   transition: all 0.15s ease;
   white-space: nowrap;
@@ -115,6 +115,27 @@
   gap: 1rem;
 }
 
+/* Team Groups */
+.league-setup.betting-style .team-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.league-setup.betting-style .team-group-label {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  color: #aaa;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid #333;
+}
+
+.league-setup.betting-style .team-group.historic .team-group-label {
+  color: #c9a227;
+}
+
 /* Wordle-style grid for teams and tracks */
 .league-setup.betting-style .wordle-grid {
   display: grid;
@@ -122,7 +143,15 @@
 }
 
 .league-setup.betting-style .wordle-grid.teams-grid {
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.6rem;
+}
+
+/* Teams grid for unified TeamCell component */
+.league-setup.betting-style .teams-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.6rem;
 }
 
 .league-setup.betting-style .wordle-grid.tracks-grid {
@@ -136,8 +165,8 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.15rem;
-  padding: 0.4rem;
+  gap: 0.35rem;
+  padding: 0.5rem;
   border: 2px solid #2a2a30;
   border-radius: 6px;
   background: rgba(20, 20, 24, 0.9);
@@ -183,6 +212,31 @@
   z-index: 2;
 }
 
+/* Historic team cells - gold/sepia tinting */
+.league-setup.betting-style .wordle-cell.team-cell.historic {
+  border-color: color-mix(in srgb, var(--team-color) 50%, #4a4535);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--team-color) 15%, rgba(50, 45, 35, 0.95)) 0%,
+    rgba(35, 32, 28, 0.95) 100%
+  );
+}
+
+.league-setup.betting-style .wordle-cell.team-cell.historic:hover {
+  border-color: color-mix(in srgb, var(--team-color) 60%, #6a6555);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--team-color) 25%, rgba(65, 58, 45, 0.98)) 0%,
+    rgba(50, 45, 38, 0.98) 100%
+  );
+  box-shadow: 0 0 12px color-mix(in srgb, var(--team-color) 30%, rgba(201, 162, 39, 0.2));
+}
+
+.league-setup.betting-style .wordle-cell.team-cell.historic.selected {
+  border-color: color-mix(in srgb, var(--team-color) 70%, #c9a227);
+  box-shadow: 0 0 20px color-mix(in srgb, var(--team-color) 40%, rgba(201, 162, 39, 0.3));
+}
+
 .league-setup.betting-style .wordle-cell.track-cell.selected {
   border-color: #4a8;
   background: rgba(40, 60, 50, 0.6);
@@ -190,26 +244,62 @@
 }
 
 .league-setup.betting-style .wordle-cell .cell-emoji {
-  font-size: 1.4rem;
+  font-size: 2.2rem;
   line-height: 1;
 }
 
+/* Team marble badge - circular team color with emoji */
+.league-setup.betting-style .wordle-cell .team-badge {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  line-height: 1;
+  background: var(--team-color);
+  border: 5px solid var(--team-accent, #fff);
+  box-shadow:
+    0 3px 10px rgba(0, 0, 0, 0.4),
+    inset 0 2px 6px rgba(255, 255, 255, 0.25),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.25);
+  flex-shrink: 0;
+}
+
+/* Light primary teams: use darker text and accents */
+.league-setup.betting-style .wordle-cell.team-cell.light-primary .cell-name {
+  color: var(--team-color);
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.8),
+    0 0 8px rgba(0, 0, 0, 0.5);
+}
+
+/* Dark primary teams: use lighter accent for visibility */
+.league-setup.betting-style .wordle-cell.team-cell.dark-primary .cell-name {
+  color: var(--team-accent);
+  text-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.9),
+    0 0 10px rgba(0, 0, 0, 0.6);
+}
+
 .league-setup.betting-style .wordle-cell .cell-name {
-  font-family: 'Cinzel', Georgia, serif;
-  font-size: 0.55rem;
-  font-weight: 600;
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 700;
   text-align: center;
-  line-height: 1.2;
+  line-height: 1.15;
   max-width: 100%;
   word-wrap: break-word;
   overflow-wrap: break-word;
+  hyphens: auto;
 }
 
 .league-setup.betting-style .wordle-cell .cell-car-vibe {
-  font-family: 'Cinzel', Georgia, serif;
-  font-size: 0.45rem;
+  font-family: var(--font-display);
+  font-size: 0.6rem;
   font-weight: 500;
-  margin-top: 0.05rem;
+  margin-top: 0.1rem;
 }
 
 .league-setup.betting-style .wordle-cell .cell-laps {
@@ -232,10 +322,175 @@
   justify-content: center;
   color: #000;
   font-weight: bold;
+  /* Outline for visibility on light/dark backgrounds */
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 
 .league-setup.betting-style .wordle-cell.track-cell .cell-check {
   background: #4a8;
+}
+
+/* Track List View */
+.league-setup.betting-style .track-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.league-setup.betting-style .track-list-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.8rem;
+  border: 2px solid #3a3a45;
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(40, 40, 50, 0.95) 0%, rgba(30, 30, 38, 0.95) 100%);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+  position: relative;
+}
+
+.league-setup.betting-style .track-list-item:hover {
+  border-color: #5a5a65;
+  background: linear-gradient(135deg, rgba(55, 55, 65, 0.98) 0%, rgba(40, 40, 50, 0.98) 100%);
+  box-shadow: 0 0 12px rgba(100, 100, 120, 0.3);
+}
+
+.league-setup.betting-style .track-list-item.selected {
+  border-color: #5c9;
+  background: linear-gradient(135deg, rgba(50, 80, 65, 0.95) 0%, rgba(35, 60, 50, 0.95) 100%);
+  box-shadow: 0 0 16px rgba(85, 204, 153, 0.35);
+}
+
+.league-setup.betting-style .track-list-item .track-emojis {
+  font-size: 1.5rem;
+  min-width: 3.5rem;
+  text-align: center;
+}
+
+.league-setup.betting-style .track-list-item .track-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.league-setup.betting-style .track-list-item .track-name {
+  font-family: var(--font-body);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #eee;
+}
+
+.league-setup.betting-style .track-list-item .track-desc {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: #999;
+  font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.league-setup.betting-style .track-list-item .track-laps {
+  font-family: 'Inconsolata', monospace;
+  font-size: 0.85rem;
+  color: #888;
+  padding: 0.2rem 0.4rem;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+}
+
+.league-setup.betting-style .track-list-item .track-check {
+  position: absolute;
+  top: 50%;
+  right: 0.6rem;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  background: #5c9;
+  border-radius: 50%;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #000;
+  font-weight: bold;
+}
+
+/* Track List Groups */
+.league-setup.betting-style .track-list-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-height: 450px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.league-setup.betting-style .track-list-group .track-group-label {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  color: #aaa;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid #333;
+}
+
+.league-setup.betting-style .track-list-group.historic .track-group-label {
+  color: #c9a227;
+}
+
+.league-setup.betting-style .track-list-groups .track-list {
+  max-height: none;
+  overflow-y: visible;
+}
+
+/* Historic track list items */
+.league-setup.betting-style .track-list-item.historic {
+  border-color: #4a4535;
+  background: linear-gradient(135deg, rgba(50, 45, 35, 0.95) 0%, rgba(35, 32, 28, 0.95) 100%);
+}
+
+.league-setup.betting-style .track-list-item.historic:hover {
+  border-color: #6a6555;
+  background: linear-gradient(135deg, rgba(65, 58, 45, 0.98) 0%, rgba(50, 45, 38, 0.98) 100%);
+  box-shadow: 0 0 12px rgba(201, 162, 39, 0.2);
+}
+
+.league-setup.betting-style .track-list-item.historic.selected {
+  border-color: #c9a227;
+  background: linear-gradient(135deg, rgba(70, 60, 40, 0.95) 0%, rgba(50, 45, 35, 0.95) 100%);
+  box-shadow: 0 0 16px rgba(201, 162, 39, 0.35);
+}
+
+.league-setup.betting-style .track-list-item.historic .track-check {
+  background: #c9a227;
+}
+
+/* Track list scrollbar */
+.league-setup.betting-style .track-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.league-setup.betting-style .track-list::-webkit-scrollbar-track {
+  background: #111;
+  border-radius: 3px;
+}
+
+.league-setup.betting-style .track-list::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 3px;
+}
+
+.league-setup.betting-style .track-list::-webkit-scrollbar-thumb:hover {
+  background: #444;
 }
 
 /* Cell actions (star/skull) */
@@ -317,14 +572,14 @@
 }
 
 .league-setup.betting-style .detail-team-info h3 {
-  font-family: 'Cinzel', Georgia, serif;
-  font-size: 1.1rem;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
   font-weight: 600;
   margin: 0;
 }
 
 .league-setup.betting-style .detail-team-info .detail-desc {
-  font-size: 0.8rem;
+  font-size: 0.95rem;
   color: #777;
   font-style: italic;
   margin: 0.25rem 0 0 0;
@@ -365,14 +620,14 @@
 }
 
 .league-setup.betting-style .detail-car-name {
-  font-family: 'Cinzel', Georgia, serif;
-  font-size: 0.9rem;
+  font-family: var(--font-display);
+  font-size: 1rem;
   color: #ccc;
 }
 
 .league-setup.betting-style .detail-car-rating {
-  font-family: 'Cinzel', Georgia, serif;
-  font-size: 0.85rem;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
   font-weight: 600;
 }
 
@@ -416,21 +671,21 @@
 }
 
 .league-setup.betting-style .driver-fullname {
-  font-family: 'Cinzel', Georgia, serif;
-  font-size: 0.9rem;
+  font-family: var(--font-display);
+  font-size: 1rem;
   color: #ddd;
   font-weight: 600;
 }
 
 .league-setup.betting-style .driver-vibe {
-  font-family: 'Cinzel', Georgia, serif;
-  font-size: 0.8rem;
+  font-family: var(--font-display);
+  font-size: 0.9rem;
   font-weight: 500;
 }
 
 .league-setup.betting-style .driver-quirk-text {
   width: 100%;
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   color: #888;
   font-style: italic;
   margin: 0.25rem 0 0 0;
@@ -459,7 +714,7 @@
   background: rgba(30, 35, 30, 0.6);
   border: 1px solid #3a4030;
   border-radius: 12px;
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   color: #8a9;
 }
 
@@ -474,14 +729,14 @@
 }
 
 .league-setup.betting-style .track-event-box .event-title {
-  font-family: 'Cinzel', Georgia, serif;
-  font-size: 0.9rem;
+  font-family: var(--font-display);
+  font-size: 1rem;
   color: #ddd;
   font-weight: 600;
 }
 
 .league-setup.betting-style .track-event-box .event-desc {
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   color: #888;
   font-style: italic;
 }
@@ -523,7 +778,7 @@
   background: linear-gradient(135deg, #2a3a28 0%, #1a2a18 100%);
   border: 2px solid #4a6a48;
   color: #8fc88a;
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: var(--font-display);
   font-size: 1.1rem;
   font-weight: 700;
   border-radius: 6px;
@@ -546,11 +801,11 @@
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  padding: 0.2rem 0.5rem;
+  padding: 0.25rem 0.6rem;
   background: rgba(200, 160, 80, 0.1);
   border: 1px solid rgba(200, 160, 80, 0.3);
   border-radius: 12px;
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   color: #c8a050;
   cursor: help;
 }
@@ -565,7 +820,7 @@
   max-width: 1400px;
   margin: 0 auto;
   color: #ccc;
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-body), var(--font-emoji);
   background: #111;
 }
 
@@ -579,7 +834,7 @@
 }
 
 .setup-header h1 {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-body), var(--font-emoji);
   font-size: 3rem;
   font-weight: 700;
   color: #fff;
@@ -589,7 +844,7 @@
 }
 
 .setup-header .subtitle {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-body), var(--font-emoji);
   color: #777;
   font-style: italic;
   font-size: 1rem;
@@ -612,7 +867,7 @@
   border: none;
   border-right: 1px solid #333;
   color: #777;
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-body), var(--font-emoji);
   font-size: 0.95rem;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -644,7 +899,7 @@
 }
 
 .panel-header h2 {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-body), var(--font-emoji);
   color: #fff;
   margin: 0;
   font-weight: 700;
@@ -657,7 +912,7 @@
   border: 1px solid #444;
   color: #888;
   border-radius: 3px;
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-body), var(--font-emoji);
   font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -669,7 +924,7 @@
 }
 
 .season-track-note {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-body), var(--font-emoji);
   font-size: 0.8rem;
   color: #888;
   font-style: italic;
@@ -753,7 +1008,7 @@
 }
 
 .lineup-cell .cell-name {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: var(--font-display);
   font-size: 0.55rem;
   font-weight: 600;
   text-align: center;
@@ -764,7 +1019,7 @@
 }
 
 .lineup-cell .cell-car-vibe {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: var(--font-display);
   font-size: 0.45rem;
   font-weight: 500;
   margin-top: 0.05rem;
@@ -851,7 +1106,7 @@
 }
 
 .detail-team-info h3 {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: var(--font-display);
   font-size: 1.1rem;
   font-weight: 600;
   margin: 0;
@@ -898,13 +1153,13 @@
 }
 
 .detail-car-name {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: var(--font-display);
   font-size: 0.9rem;
   color: #ccc;
 }
 
 .detail-car-rating {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: var(--font-display);
   font-size: 0.85rem;
   font-weight: 600;
 }
@@ -949,14 +1204,14 @@
 }
 
 .driver-fullname {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: var(--font-display);
   font-size: 0.9rem;
   color: #ddd;
   font-weight: 600;
 }
 
 .driver-vibe {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: var(--font-display);
   font-size: 0.8rem;
   font-weight: 500;
 }
@@ -1033,14 +1288,14 @@
 }
 
 .kingdom-name {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-body), var(--font-emoji);
   font-size: 1.1rem;
   margin: 0 0 0.15rem 0;
   font-weight: 700;
 }
 
 .kingdom-desc {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-body), var(--font-emoji);
   color: #777;
   font-size: 0.8rem;
   margin: 0;
@@ -1090,21 +1345,21 @@
 }
 
 .car-name {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-body), var(--font-emoji);
   font-size: 0.85rem;
   color: #ddd;
   font-weight: 600;
 }
 
 .car-rating {
-  font-family: 'Courier New', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-mono), var(--font-emoji);
   font-size: 0.9rem;
   font-weight: 700;
   text-shadow: 0 0 8px currentColor;
 }
 
 .car-quirk {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-body), var(--font-emoji);
   font-size: 0.7rem;
   color: #666;
   font-style: italic;
@@ -1130,7 +1385,7 @@
   font-size: 0.65rem;
   color: #666;
   font-weight: 600;
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-body), var(--font-emoji);
 }
 
 .stat-divider {
@@ -1208,7 +1463,7 @@
 }
 
 .driver-name {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-body), var(--font-emoji);
   font-weight: 600;
   font-size: 0.9rem;
   color: #ddd;
@@ -1216,7 +1471,7 @@
 }
 
 .driver-rating {
-  font-family: 'Courier New', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-mono), var(--font-emoji);
   font-size: 0.9rem;
   font-weight: 700;
   text-shadow: 0 0 8px currentColor;
@@ -1306,7 +1561,7 @@
 }
 
 .driver-slot {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-body), var(--font-emoji);
   font-size: 0.65rem;
   color: #555;
   text-transform: uppercase;
@@ -1329,7 +1584,7 @@
   font-size: 0.65rem;
   color: #666;
   font-weight: 600;
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-body), var(--font-emoji);
 }
 
 /* Driver selection buttons */
@@ -1342,7 +1597,7 @@
 .selection-btn {
   padding: 0.3rem 0.6rem;
   font-size: 0.7rem;
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-body), var(--font-emoji);
   border-radius: 3px;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -1356,7 +1611,7 @@
 }
 
 .driver-details-expanded .driver-backstory {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-body), var(--font-emoji);
   font-size: 0.85rem;
   color: #888;
   font-style: italic;
@@ -1365,7 +1620,7 @@
 }
 
 .driver-details-expanded .driver-quirk {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-body), var(--font-emoji);
   font-size: 0.8rem;
   color: #aaa;
 }
@@ -1390,7 +1645,7 @@
   font-size: 0.75rem;
   color: #888;
   text-align: right;
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-body), var(--font-emoji);
 }
 
 .driver-details {
@@ -1400,7 +1655,7 @@
 }
 
 .driver-backstory {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-body), var(--font-emoji);
   font-size: 0.85rem;
   color: #888;
   font-style: italic;
@@ -1409,7 +1664,7 @@
 }
 
 .driver-quirk {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-body), var(--font-emoji);
   font-size: 0.8rem;
   color: #aaa;
 }
@@ -1435,7 +1690,7 @@
 }
 
 .track-name {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-body), var(--font-emoji);
   color: #fff;
   font-size: 1.4rem;
   margin: 0;
@@ -1443,7 +1698,7 @@
 }
 
 .track-description {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-body), var(--font-emoji);
   color: #888;
   font-style: italic;
   margin-bottom: 1.25rem;
@@ -1466,7 +1721,7 @@
 }
 
 .track-stat-label {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-body), var(--font-emoji);
   display: block;
   font-size: 0.65rem;
   color: #666;
@@ -1475,7 +1730,7 @@
 }
 
 .track-stat-value {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-body), var(--font-emoji);
   font-size: 1rem;
   color: #ddd;
   font-weight: 600;
@@ -1489,7 +1744,7 @@
 }
 
 .track-rules h4 {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-body), var(--font-emoji);
   color: #ddd;
   margin: 0 0 0.6rem 0;
   font-size: 0.85rem;
@@ -1507,14 +1762,14 @@
 }
 
 .rule-name {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-body), var(--font-emoji);
   color: #ddd;
   font-weight: 600;
   font-size: 0.85rem;
 }
 
 .rule-desc {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-body), var(--font-emoji);
   color: #777;
   font-size: 0.8rem;
   font-style: italic;
@@ -1561,7 +1816,7 @@
 }
 
 .picker-name {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-body), var(--font-emoji);
   flex: 1;
   font-size: 0.8rem;
   color: #ccc;
@@ -1584,7 +1839,7 @@
 }
 
 .track-event h4 {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-body), var(--font-emoji);
   color: #ddd;
   margin: 0 0 0.6rem 0;
   font-size: 1rem;
@@ -1592,7 +1847,7 @@
 }
 
 .event-description {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-body), var(--font-emoji);
   color: #aaa;
   font-size: 0.85rem;
   margin: 0 0 0.4rem 0;
@@ -1600,7 +1855,7 @@
 }
 
 .event-flavor {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-body), var(--font-emoji);
   color: #666;
   font-size: 0.8rem;
   font-style: italic;
@@ -1617,7 +1872,7 @@
 }
 
 .active-cards-section h3 {
-  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-display), var(--font-emoji);
   color: #a8d8a8;
   margin: 0 0 1rem 0;
   font-size: 1rem;
@@ -1631,7 +1886,7 @@
 }
 
 .deck-section h3 {
-  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-display), var(--font-emoji);
   color: #8a8a8a;
   margin: 0 0 1rem 0;
   letter-spacing: 1px;
@@ -1684,7 +1939,7 @@
   font-size: 0.7rem;
   text-transform: uppercase;
   font-weight: 600;
-  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-display), var(--font-emoji);
   letter-spacing: 1px;
 }
 
@@ -1692,7 +1947,7 @@
   font-size: 0.7rem;
   color: #7a7a7a;
   text-transform: uppercase;
-  font-family: 'Cinzel', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-display), var(--font-emoji);
 }
 
 .card-desc {
@@ -1731,7 +1986,7 @@
   border: 1px solid #555555;
   color: #d0d0d0;
   border-radius: 3px;
-  font-family: 'Crimson Text', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-body), var(--font-emoji);
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -1747,7 +2002,7 @@
   border: 1px solid #7a4a4a;
   color: #d8a8a8;
   border-radius: 3px;
-  font-family: 'Crimson Text', Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-body), var(--font-emoji);
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -1778,7 +2033,7 @@
   color: #777;
   font-size: 0.85rem;
   flex-wrap: wrap;
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-body), var(--font-emoji);
 }
 
 .footer-controls {
@@ -1810,14 +2065,14 @@
 }
 
 .prohibition-label {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-body), var(--font-emoji);
   font-size: 0.9rem;
   color: #888;
   font-weight: 600;
 }
 
 .prohibition-hint {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-body), var(--font-emoji);
   font-size: 0.75rem;
   color: #555;
   font-style: italic;
@@ -1832,7 +2087,7 @@
   background: #333;
   border: 2px solid #555;
   color: #fff;
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-body), var(--font-emoji);
   font-size: 1rem;
   font-weight: 700;
   border-radius: 4px;
@@ -1923,29 +2178,56 @@
     font-size: 0.75rem;
   }
 
+  .league-setup.betting-style .team-groups {
+    gap: 1rem;
+  }
+
+  .league-setup.betting-style .team-group-label {
+    font-size: 0.75rem;
+    margin-bottom: 0.4rem;
+  }
+
   .league-setup.betting-style .wordle-grid.teams-grid,
+  .league-setup.betting-style .teams-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.4rem;
+  }
+
   .league-setup.betting-style .wordle-grid.tracks-grid {
     grid-template-columns: repeat(4, 1fr);
     gap: 0.35rem;
   }
 
   .league-setup.betting-style .wordle-cell {
-    padding: 0.3rem;
+    padding: 0.35rem;
     border-radius: 4px;
     border-width: 1.5px;
+    gap: 0.25rem;
   }
 
   .league-setup.betting-style .wordle-cell .cell-emoji {
+    font-size: 1.5rem;
+  }
+
+  .league-setup.betting-style .wordle-cell .team-badge {
+    width: 40px;
+    height: 40px;
     font-size: 1.2rem;
+    border-width: 3px;
   }
 
   .league-setup.betting-style .wordle-cell .cell-name {
-    font-size: 0.5rem;
+    font-size: 0.85rem;
+    line-height: 1.1;
+  }
+
+  .league-setup.betting-style .wordle-cell .cell-name {
+    font-size: 0.55rem;
     line-height: 1.1;
   }
 
   .league-setup.betting-style .wordle-cell .cell-car-vibe {
-    font-size: 0.4rem;
+    font-size: 0.45rem;
   }
 
   .league-setup.betting-style .wordle-cell .cell-laps {
@@ -2054,6 +2336,10 @@
 
 @media (max-width: 360px) {
   .league-setup.betting-style .wordle-grid.teams-grid,
+  .league-setup.betting-style .teams-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
   .league-setup.betting-style .wordle-grid.tracks-grid {
     grid-template-columns: repeat(3, 1fr);
   }

@@ -167,7 +167,7 @@ export function getKingdomById(id: string): Kingdom | undefined {
 }
 
 // Get a random selection of N divine stables
-export function getRandomKingdoms(count: number = 10): Kingdom[] {
+export function getRandomKingdoms(count: number = 11): Kingdom[] {
   const shuffled = [...ALL_KINGDOMS].sort(() => Math.random() - 0.5);
   return shuffled.slice(0, count);
 }

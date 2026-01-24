@@ -10,7 +10,7 @@
 }
 
 .season-setup .back-btn {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-display), var(--font-emoji);
   background: transparent;
   border: 1px solid #444;
   color: #888;
@@ -33,7 +33,7 @@
 }
 
 .season-setup-header h1 {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-display), var(--font-emoji);
   font-size: 2.5rem;
   font-weight: 700;
   color: #fff;
@@ -51,7 +51,7 @@
 }
 
 .season-setup-header p {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-display), var(--font-emoji);
   color: #777;
   margin: 0;
   font-size: 1rem;
@@ -67,17 +67,17 @@
 }
 
 .setup-section h2 {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-display), var(--font-emoji);
   color: #fff;
-  font-size: 1.1rem;
+  font-size: 1.25rem;
   font-weight: 700;
   margin: 0 0 0.25rem 0;
 }
 
 .setup-hint {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-display), var(--font-emoji);
   color: #666;
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   font-style: italic;
   margin: 0 0 1rem 0;
 }
@@ -112,7 +112,7 @@
 }
 
 .count-number {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-display), var(--font-emoji);
   font-size: 1.8rem;
   font-weight: bold;
   color: #fff;
@@ -123,7 +123,7 @@
 }
 
 .count-label {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-display), var(--font-emoji);
   font-size: 0.75rem;
   color: #666;
   text-transform: uppercase;
@@ -149,13 +149,13 @@
 }
 
 .points-item .position {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-display), var(--font-emoji);
   font-size: 0.7rem;
   color: #888;
 }
 
 .points-item .points {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-display), var(--font-emoji);
   font-size: 0.85rem;
   color: #fff;
   font-weight: bold;
@@ -208,7 +208,7 @@
 }
 
 .summary-stat .stat-value {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-display), var(--font-emoji);
   display: block;
   font-size: 2rem;
   font-weight: bold;
@@ -216,15 +216,15 @@
 }
 
 .summary-stat .stat-label {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
-  font-size: 0.75rem;
+  font-family: var(--font-display), var(--font-emoji);
+  font-size: 0.85rem;
   color: #777;
   text-transform: uppercase;
   letter-spacing: 1px;
 }
 
 .start-season-btn {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-display), var(--font-emoji);
   width: 100%;
   background: #333;
   border: 2px solid #555;
@@ -273,14 +273,14 @@
 }
 
 .setup-tab {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-display), var(--font-emoji);
   flex: 1;
   background: transparent;
   border: none;
   border-right: 1px solid #333;
   padding: 0.75rem 1rem;
   color: #777;
-  font-size: 0.9rem;
+  font-size: 1.05rem;
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -323,13 +323,13 @@
 }
 
 .action-btn {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-display), var(--font-emoji);
   background: transparent;
   border: 1px solid #444;
   border-radius: 3px;
-  padding: 0.4rem 0.65rem;
+  padding: 0.45rem 0.75rem;
   color: #888;
-  font-size: 0.8rem;
+  font-size: 0.95rem;
   cursor: pointer;
   transition: all 0.15s ease;
   white-space: nowrap;
@@ -356,75 +356,95 @@
 }
 
 .wordle-selection-grid.teams-grid {
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.6rem;
+}
+
+/* Teams grid for unified TeamCell component */
+.season-setup .teams-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.6rem;
+  max-width: 700px;
+  margin: 0 auto;
 }
 
 .wordle-selection-grid.tracks-grid {
   grid-template-columns: repeat(5, 1fr);
 }
 
-/* Wordle-style Cell */
-.wordle-selection-cell {
+/* Team cells - matching single race mode */
+.season-setup .wordle-cell {
   aspect-ratio: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.15rem;
-  padding: 0.4rem;
+  gap: 0.25rem;
+  padding: 0.6rem;
   border: 2px solid #2a2a30;
-  border-radius: 6px;
+  border-radius: 8px;
   background: rgba(20, 20, 24, 0.9);
   cursor: pointer;
   transition: all 0.15s ease;
   position: relative;
 }
 
-.wordle-selection-cell:hover {
+.season-setup .wordle-cell.team-cell {
+  border-color: var(--team-color, #2a2a30);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--team-color) 15%, #14141a) 0%,
+    rgba(20, 20, 24, 0.95) 100%
+  );
+}
+
+.season-setup .wordle-cell.team-cell:hover {
+  border-color: var(--team-color, #4a4a50);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--team-color) 25%, #14141a) 0%,
+    rgba(30, 30, 34, 0.95) 100%
+  );
+  box-shadow: 0 0 12px color-mix(in srgb, var(--team-color) 30%, transparent);
   transform: scale(1.05);
-  border-color: #4a4a50;
   z-index: 1;
 }
 
-.wordle-selection-cell.selected {
+.season-setup .wordle-cell.team-cell.selected {
   border-color: var(--team-color, #666);
-  background: rgba(40, 40, 45, 0.95);
-  box-shadow: 0 0 12px rgba(255, 255, 255, 0.1);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--team-color) 30%, #14141a) 0%,
+    rgba(35, 35, 40, 0.98) 100%
+  );
+  box-shadow: 0 0 20px color-mix(in srgb, var(--team-color) 40%, transparent);
+  transform: scale(1.05);
+  z-index: 2;
 }
 
-.wordle-selection-cell .cell-emoji {
-  font-size: 1.5rem;
+.season-setup .wordle-cell .cell-emoji {
+  font-size: 2.2rem;
   line-height: 1;
 }
 
-.wordle-selection-cell .cell-name {
-  font-family: 'Times New Roman', Times, Georgia, serif;
-  font-size: 0.65rem;
-  color: #888;
+.season-setup .wordle-cell .cell-name {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
   text-align: center;
   line-height: 1.1;
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  /* Text shadow for contrast on all team colors */
+  text-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.9),
+    0 0 10px rgba(0, 0, 0, 0.6);
 }
 
-.wordle-selection-cell.selected .cell-name {
-  color: #fff;
-  font-weight: 600;
-}
-
-.wordle-selection-cell .cell-laps {
-  font-family: 'Inconsolata', monospace;
-  font-size: 0.6rem;
-  color: #555;
-}
-
-.wordle-selection-cell.selected .cell-laps {
-  color: #888;
-}
-
-.wordle-selection-cell .cell-check {
+.season-setup .wordle-cell .cell-check {
   position: absolute;
   top: 3px;
   right: 3px;
@@ -438,10 +458,321 @@
   justify-content: center;
   color: #000;
   font-weight: bold;
+  /* Outline for visibility on light/dark backgrounds */
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 
-.wordle-selection-cell.track-cell .cell-check {
+/* Track cells */
+.wordle-selection-cell {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  padding: 0.4rem;
+  border: 2px solid #3a3a45;
+  border-radius: 6px;
+  background: linear-gradient(135deg, rgba(40, 40, 50, 0.95) 0%, rgba(30, 30, 38, 0.95) 100%);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+}
+
+.wordle-selection-cell:hover {
+  transform: scale(1.05);
+  border-color: #5a5a65;
+  background: linear-gradient(135deg, rgba(55, 55, 65, 0.98) 0%, rgba(40, 40, 50, 0.98) 100%);
+  box-shadow: 0 0 12px rgba(100, 100, 120, 0.3);
+  z-index: 1;
+}
+
+.wordle-selection-cell.selected {
+  border-color: #5c9;
+  background: linear-gradient(135deg, rgba(50, 80, 65, 0.95) 0%, rgba(35, 60, 50, 0.95) 100%);
+  box-shadow: 0 0 16px rgba(85, 204, 153, 0.35);
+}
+
+.wordle-selection-cell .cell-emoji {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.wordle-selection-cell .cell-name {
+  font-family: var(--font-body);
+  font-size: 0.6rem;
+  color: #ccc;
+  text-align: center;
+  line-height: 1.1;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wordle-selection-cell.selected .cell-name {
+  color: #fff;
+  font-weight: 600;
+}
+
+.wordle-selection-cell .cell-flag {
+  font-size: 0.9rem;
+  line-height: 1;
+  opacity: 0.7;
+}
+
+.wordle-selection-cell.selected .cell-flag {
+  opacity: 1;
+}
+
+.wordle-selection-cell.selected .cell-laps {
+  color: #888;
+}
+
+.wordle-selection-cell .cell-check {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 14px;
+  height: 14px;
   background: #4a8;
+  border-radius: 50%;
+  font-size: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #000;
+  font-weight: bold;
+}
+
+/* Track Groups */
+.track-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.track-group-label {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  color: #aaa;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid #333;
+}
+
+.track-group.historic .track-group-label {
+  color: #c9a227;
+}
+
+.track-group.historic .wordle-selection-cell {
+  border-color: #4a4535;
+  background: linear-gradient(135deg, rgba(50, 45, 35, 0.95) 0%, rgba(35, 32, 28, 0.95) 100%);
+}
+
+.track-group.historic .wordle-selection-cell:hover {
+  border-color: #6a6555;
+  background: linear-gradient(135deg, rgba(65, 58, 45, 0.98) 0%, rgba(50, 45, 38, 0.98) 100%);
+  box-shadow: 0 0 12px rgba(201, 162, 39, 0.2);
+}
+
+.track-group.historic .wordle-selection-cell.selected {
+  border-color: #c9a227;
+  background: linear-gradient(135deg, rgba(70, 60, 40, 0.95) 0%, rgba(50, 45, 35, 0.95) 100%);
+  box-shadow: 0 0 16px rgba(201, 162, 39, 0.35);
+}
+
+.track-group.historic .wordle-selection-cell .cell-check {
+  background: #c9a227;
+}
+
+/* Historic team cells - gold tint overlay */
+.track-group.historic .wordle-cell.team-cell {
+  border-color: color-mix(in srgb, var(--team-color) 50%, #6a5a35);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--team-color) 12%, rgba(50, 45, 35, 0.95)) 0%,
+    rgba(35, 32, 28, 0.95) 100%
+  );
+}
+
+.track-group.historic .wordle-cell.team-cell:hover {
+  border-color: color-mix(in srgb, var(--team-color) 60%, #8a7a55);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--team-color) 20%, rgba(65, 58, 45, 0.98)) 0%,
+    rgba(50, 45, 38, 0.98) 100%
+  );
+  box-shadow: 0 0 12px color-mix(in srgb, var(--team-color) 30%, rgba(201, 162, 39, 0.3));
+}
+
+.track-group.historic .wordle-cell.team-cell.selected {
+  border-color: color-mix(in srgb, var(--team-color) 70%, #c9a227);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--team-color) 25%, rgba(70, 60, 40, 0.95)) 0%,
+    rgba(50, 45, 35, 0.98) 100%
+  );
+  box-shadow: 0 0 16px color-mix(in srgb, var(--team-color) 40%, rgba(201, 162, 39, 0.4));
+}
+
+.track-group.historic .wordle-cell.team-cell .cell-check {
+  background: color-mix(in srgb, var(--team-color) 60%, #c9a227);
+}
+
+/* Track List View (Season Mode) */
+.track-list-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.track-list-group .track-group-label {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  color: #aaa;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid #333;
+}
+
+.track-list-group.historic .track-group-label {
+  color: #c9a227;
+}
+
+.season-setup .track-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  max-height: 350px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.season-setup .track-list-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.7rem;
+  border: 2px solid #3a3a45;
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(40, 40, 50, 0.95) 0%, rgba(30, 30, 38, 0.95) 100%);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+  position: relative;
+}
+
+.season-setup .track-list-item:hover {
+  border-color: #5a5a65;
+  background: linear-gradient(135deg, rgba(55, 55, 65, 0.98) 0%, rgba(40, 40, 50, 0.98) 100%);
+  box-shadow: 0 0 12px rgba(100, 100, 120, 0.3);
+}
+
+.season-setup .track-list-item.selected {
+  border-color: #5c9;
+  background: linear-gradient(135deg, rgba(50, 80, 65, 0.95) 0%, rgba(35, 60, 50, 0.95) 100%);
+  box-shadow: 0 0 16px rgba(85, 204, 153, 0.35);
+}
+
+/* Historic track list items */
+.season-setup .track-list-item.historic {
+  border-color: #4a4535;
+  background: linear-gradient(135deg, rgba(50, 45, 35, 0.95) 0%, rgba(35, 32, 28, 0.95) 100%);
+}
+
+.season-setup .track-list-item.historic:hover {
+  border-color: #6a6555;
+  background: linear-gradient(135deg, rgba(65, 58, 45, 0.98) 0%, rgba(50, 45, 38, 0.98) 100%);
+  box-shadow: 0 0 12px rgba(201, 162, 39, 0.2);
+}
+
+.season-setup .track-list-item.historic.selected {
+  border-color: #c9a227;
+  background: linear-gradient(135deg, rgba(70, 60, 40, 0.95) 0%, rgba(50, 45, 35, 0.95) 100%);
+  box-shadow: 0 0 16px rgba(201, 162, 39, 0.35);
+}
+
+.season-setup .track-list-item.historic .track-check {
+  background: #c9a227;
+}
+
+.season-setup .track-list-item .track-emojis {
+  font-size: 1.5rem;
+  min-width: 3.5rem;
+  text-align: center;
+}
+
+.season-setup .track-list-item .track-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.season-setup .track-list-item .track-name {
+  font-family: var(--font-body);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #eee;
+}
+
+.season-setup .track-list-item .track-desc {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: #888;
+  font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.season-setup .track-list-item .track-laps {
+  font-family: 'Inconsolata', monospace;
+  font-size: 0.85rem;
+  color: #888;
+  padding: 0.15rem 0.35rem;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+}
+
+.season-setup .track-list-item .track-check {
+  position: absolute;
+  top: 50%;
+  right: 0.5rem;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  background: #5c9;
+  border-radius: 50%;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #000;
+  font-weight: bold;
+}
+
+/* Track list scrollbar */
+.season-setup .track-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.season-setup .track-list::-webkit-scrollbar-track {
+  background: #111;
+  border-radius: 3px;
+}
+
+.season-setup .track-list::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 3px;
+}
+
+.season-setup .track-list::-webkit-scrollbar-thumb:hover {
+  background: #444;
 }
 
 /* Scrollbar styling */
@@ -607,16 +938,25 @@
     gap: 0.35rem;
   }
 
+  /* TeamCell unified component responsive */
+  .season-setup .teams-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.35rem;
+  }
+
+  .season-setup .wordle-cell,
   .wordle-selection-cell {
     padding: 0.3rem;
     border-radius: 4px;
     border-width: 1.5px;
   }
 
+  .season-setup .wordle-cell .cell-emoji,
   .wordle-selection-cell .cell-emoji {
     font-size: 1.2rem;
   }
 
+  .season-setup .wordle-cell .cell-name,
   .wordle-selection-cell .cell-name {
     font-size: 0.55rem;
   }
@@ -625,6 +965,7 @@
     font-size: 0.5rem;
   }
 
+  .season-setup .wordle-cell .cell-check,
   .wordle-selection-cell .cell-check {
     width: 12px;
     height: 12px;
@@ -666,7 +1007,8 @@
 /* Extra small screens */
 @media (max-width: 360px) {
   .wordle-selection-grid.teams-grid,
-  .wordle-selection-grid.tracks-grid {
+  .wordle-selection-grid.tracks-grid,
+  .season-setup .teams-grid {
     grid-template-columns: repeat(3, 1fr);
   }
 }

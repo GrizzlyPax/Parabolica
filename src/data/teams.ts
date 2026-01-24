@@ -1,68 +1,217 @@
-// Parabolica - Absurdist Racing Teams
-// Blaseball-inspired chaos on wheels
+// Parabolica - F1-Inspired Racing Teams
+// Punny names with distinct aesthetics
 
 export interface Team {
   id: string;
   name: string;
   emoji: string;
-  color: string;
-  description: string;
+  color: string;        // Primary color
+  accentColor: string;  // Secondary/accent color
+  description: string;  // Aesthetic vibe
+  isHistoric?: boolean; // Historic teams (unlockable)
+  tags?: string[];      // Team-specific tag IDs (to be assigned)
 }
 
-// The 40 Teams of Parabolica
-// Colors chosen for: vibrancy on dark backgrounds, instant recognition, sporty energy
-export const ALL_TEAMS: Team[] = [
-  // Creatures
-  { id: 'ink-bloom', name: 'Ink Bloom', emoji: '🐙', color: '#A855F7', description: 'They write their own finish line' },           // Vivid purple
-  { id: 'midnight-bandits', name: 'Midnight Bandits', emoji: '🦝', color: '#94A3B8', description: 'Gone before you see them' },     // Slate silver
-  { id: 'the-climbers', name: 'The Climbers', emoji: '🐐', color: '#D97706', description: 'Always finding a way up' },              // Amber orange
-  { id: 'loose-serpents', name: 'Loose Serpents', emoji: '🐍', color: '#10B981', description: 'Slipping through every gap' },       // Emerald green
-  { id: 'late-watch', name: 'Late Watch', emoji: '🦉', color: '#8B5CF6', description: 'Patience is a strategy' },                   // Violet
-  { id: 'slow-panic', name: 'Slow Panic', emoji: '🐌', color: '#C084FC', description: 'Inevitable, eventually' },                   // Orchid purple
-  { id: 'sudden-hares', name: 'Sudden Hares', emoji: '🐇', color: '#FB7185', description: 'Blink and they\'re gone' },              // Coral pink
-  { id: 'ceiling-club', name: 'Ceiling Club', emoji: '🦇', color: '#6366F1', description: 'Upside down and loving it' },            // Indigo
-  { id: 'drain-dwellers', name: 'Drain Dwellers', emoji: '🐊', color: '#22C55E', description: 'From the depths, they emerge' },     // Bright green
-  { id: 'deep-listeners', name: 'Deep Listeners', emoji: '🐋', color: '#3B82F6', description: 'The track speaks to them' },         // Royal blue
-
-  // Faces & States
-  { id: 'false-smiles', name: 'False Smiles', emoji: '🤡', color: '#EC4899', description: 'The joke is on everyone' },              // Hot pink
-  { id: 'no-comment', name: 'No Comment', emoji: '😶', color: '#64748B', description: 'Their results speak for themselves' },       // Cool gray
-  { id: 'almost-there', name: 'Almost There', emoji: '🫥', color: '#06B6D4', description: 'Perpetually approaching' },              // Cyan
-  { id: 'minor-problems', name: 'Minor Problems', emoji: '😈', color: '#EF4444', description: 'Small issues, big consequences' },   // Bright red
-  { id: 'soft-errors', name: 'Soft Errors', emoji: '🤖', color: '#60A5FA', description: 'Failing gracefully since forever' },       // Sky blue
-  { id: 'walk-throughs', name: 'Walk-Throughs', emoji: '👻', color: '#E2E8F0', description: 'Here, but not quite' },                // Ghost white
-  { id: 'heat-collapse', name: 'Heat Collapse', emoji: '🫠', color: '#F59E0B', description: 'Melting under pressure' },             // Amber
-  { id: 'cold-thoughts', name: 'Cold Thoughts', emoji: '🥶', color: '#38BDF8', description: 'Calculating every move' },             // Ice blue
-  { id: 'the-inspectors', name: 'The Inspectors', emoji: '🧐', color: '#FBBF24', description: 'Scrutinizing every detail' },        // Gold
-  { id: 'side-effects', name: 'Side Effects', emoji: '🥴', color: '#D946EF', description: 'Unintended but effective' },             // Fuchsia
-
-  // Weather & Nature
-  { id: 'loose-weather', name: 'Loose Weather', emoji: '🌪️', color: '#78716C', description: 'Unpredictable conditions' },          // Stone
-  { id: 'low-visibility', name: 'Low Visibility', emoji: '🌫️', color: '#A8A29E', description: 'You won\'t see them coming' },      // Warm gray
-  { id: 'power-outage', name: 'Power Outage', emoji: '🌑', color: '#475569', description: 'Racing in the dark' },                   // Dark slate
-  { id: 'after-the-incident', name: 'After the Incident', emoji: '🌈', color: '#34D399', description: 'We don\'t talk about it' },  // Mint green
-  { id: 'short-circuit', name: 'Short Circuit', emoji: '⚡', color: '#FDE047', description: 'Shocking performance' },               // Electric yellow
-  { id: 'overcapacity', name: 'Overcapacity', emoji: '🔥', color: '#F97316', description: 'Running too hot' },                      // Flame orange
-  { id: 'unmeltables', name: 'Unmeltables', emoji: '🧊', color: '#22D3EE', description: 'Cool under any pressure' },                // Bright cyan
-  { id: 'wrong-orbit', name: 'Wrong Orbit', emoji: '🪐', color: '#7C3AED', description: 'Taking the scenic route' },                // Deep violet
-  { id: 'the-undertow', name: 'The Undertow', emoji: '🌊', color: '#0EA5E9', description: 'Pulling you back in' },                  // Ocean blue
-  { id: 'dry-forecast', name: 'Dry Forecast', emoji: '🏜️', color: '#EA580C', description: 'Nothing but clear skies' },             // Desert orange
-
-  // Objects & Concepts
-  { id: 'reserved-seating', name: 'Reserved Seating', emoji: '🪑', color: '#B45309', description: 'They\'ve saved your spot' },     // Walnut brown
-  { id: 'overflow-unit', name: 'Overflow Unit', emoji: '🛁', color: '#2DD4BF', description: 'Spilling over with talent' },          // Teal
-  { id: 'load-bearing', name: 'Load Bearing', emoji: '🧱', color: '#DC2626', description: 'Holding everything together' },          // Brick red
-  { id: 'unattended-carts', name: 'Unattended Carts', emoji: '🛒', color: '#0284C7', description: 'Rolling on their own' },         // Steel blue
-  { id: 'held-together', name: 'Held Together', emoji: '📎', color: '#818CF8', description: 'Barely, but effectively' },            // Periwinkle
-  { id: 'access-denied', name: 'Access Denied', emoji: '🔒', color: '#059669', description: 'No entry, no problem' },               // Forest green
-  { id: 'controlled-burn', name: 'Controlled Burn', emoji: '🧯', color: '#E11D48', description: 'Calculated destruction' },         // Crimson
-  { id: 'misaligned', name: 'Misaligned', emoji: '🧭', color: '#14B8A6', description: 'Going their own direction' },                // Teal green
-  { id: 'weak-signal', name: 'Weak Signal', emoji: '📡', color: '#84CC16', description: 'Barely there, but present' },              // Lime green
-  { id: 'second-reflection', name: 'Second Reflection', emoji: '🪞', color: '#CBD5E1', description: 'Not what you expected' },      // Silver
+// Current Teams (11) - The main grid
+export const CURRENT_TEAMS: Team[] = [
+  {
+    id: 'for-rory',
+    name: 'For Rory',
+    emoji: '🐴',
+    color: '#E63946',
+    accentColor: '#FFB800',
+    description: 'Horse girls in velvet ribbons, barn coat glamour, equestrian prep with hay in their hair.',
+  },
+  {
+    id: 'breadbowl',
+    name: 'Breadbowl',
+    emoji: '🍞',
+    color: '#3671C6',
+    accentColor: '#E63946',
+    description: 'Sourdough starters with names, carb worship, "she\'s been fermenting for six years."',
+  },
+  {
+    id: 'mcelodeon',
+    name: 'Mcelodeon',
+    emoji: '📼',
+    color: '#FF8000',
+    accentColor: '#3671C6',  // 90s Nickelodeon blue - Saturday morning vibes
+    description: '90s Nickelodeon slime energy, orange VHS tapes, Saturday morning chaos.',
+  },
+  {
+    id: 'haazmat',
+    name: 'Haazmat',
+    emoji: '🥽',
+    color: '#FFFFFF',
+    accentColor: '#E63946',
+    description: 'Mad scientists, safety goggles, "what\'s that smell," controlled chaos, garage lab explosions.',
+  },
+  {
+    id: 'daddyslacks',
+    name: 'Daddyslacks',
+    emoji: '👖',
+    color: '#CFA540',        // Brighter gold - dad's championship ring vibes
+    accentColor: '#C0C0C0',  // Silver - dad's watch band
+    description: 'Cargo shorts, thermostat police, grill sergeants, New Balance pilgrimage.',
+  },
+  {
+    id: 'asteroid-martian',
+    name: 'Asteroid Martian',
+    emoji: '☄️',
+    color: '#005C38',
+    accentColor: '#D9FF00',
+    description: 'Space camp dropouts, tinfoil couture, "the government knows" energy.',
+  },
+  {
+    id: 'furbabies',
+    name: 'Furbabies',
+    emoji: '🐾',
+    color: '#27F4D2',
+    accentColor: '#C0C0C0',  // Silver - fancy pet collar bling
+    description: 'Pet stroller pushers, matching outfits, "my child has four legs" bumper stickers.',
+  },
+  {
+    id: 'haudy',
+    name: 'Haüdy',
+    emoji: '👢',
+    color: '#FF4500',        // Lava red - hot molten cowboy energy
+    accentColor: '#E8E8E8',  // Off-white silver - bolo tie hardware
+    description: 'Cowboy techno, ranch raves, bolo ties with LED lights, yeehaw engineering.',
+  },
+  {
+    id: 'allpine',
+    name: 'Allpine',
+    emoji: '🌲',
+    color: '#FF87BC',
+    accentColor: '#3671C6',
+    description: 'Flannel layering, coffee snobs, "it\'s just misting," REI membership as personality, Sasquatch agnostic.',
+  },
+  {
+    id: 'lacing-wools',
+    name: 'Lacing Wools',
+    emoji: '🧶',
+    color: '#FFFFFF',        // Pure white - the yarn before dyeing
+    accentColor: '#3671C6',  // Breadbowl blue - knitting needles
+    description: 'Knitting circles, yarn hoarders, "I made this," Ravelry drama, grandma energy with an edge.',
+  },
+  {
+    id: 'gilliams',
+    name: 'Gilliams',
+    emoji: '🐟',
+    color: '#00A3E0',
+    accentColor: '#FFFFFF',
+    description: 'Aquarium nerds, "actually that\'s a cichlid," fish tank pilgrimages, gill breathers in a land world.',
+  },
 ];
 
-// Default selection of 10 teams
-export const TEAMS = ALL_TEAMS.slice(0, 10);
+// Historic Teams (11) - Unlockable legends
+export const HISTORIC_TEAMS: Team[] = [
+  {
+    id: 'prawn',
+    name: 'Prawn',
+    emoji: '🍤',
+    color: '#D9FF00',
+    accentColor: '#FFFFFF',
+    description: 'Cocktail sauce sommeliers, shrimp ring elegance, "actually, it\'s prawn."',
+    isHistoric: true,
+  },
+  {
+    id: 'flotus',
+    name: 'Flotus',
+    emoji: '💅🏼',
+    color: '#FFB800',
+    accentColor: '#E63946',  // Power red - political energy
+    description: 'Pantsuit power, motorcade waves, diplomatic smiles hiding chaos.',
+    isHistoric: true,
+  },
+  {
+    id: 'sqyrrell',
+    name: 'Sqyrrell',
+    emoji: '🐿️',
+    color: '#002E5B',
+    accentColor: '#FFFFFF',
+    description: 'Autumn hoarders, "I buried it somewhere," acorn-based economy.',
+    isHistoric: true,
+  },
+  {
+    id: 'calamardi',
+    name: 'Calamardi',
+    emoji: '🦑',
+    color: '#1E1E1E',
+    accentColor: '#FFB800',
+    description: 'Deep sea ink, tentacle melodrama, perpetual underdogs who embrace the void.',
+    isHistoric: true,
+  },
+  {
+    id: 'baguetton',
+    name: 'Baguetton',
+    emoji: '🥖',
+    color: '#00B89F',
+    accentColor: '#FFF500',
+    description: 'French bread purists, Breadbowl\'s chic Parisian aunt, crust discourse.',
+    isHistoric: true,
+  },
+  {
+    id: 'wrenchault',
+    name: 'Wrenchault',
+    emoji: '🔧',
+    color: '#FFF500',
+    accentColor: '#3671C6',  // Garage blue - tool brand vibes
+    description: 'Grease-stained hands, "I can fix her," garage goblins, torque specs as love language.',
+    isHistoric: true,
+  },
+  {
+    id: 'bracing-pointe',
+    name: 'Bracing Pointe',
+    emoji: '🩰',
+    color: '#FF87BC',
+    accentColor: '#FFFFFF',
+    description: 'Ballet moms, recital warfare, "she\'s been dancing since she was three," tutu tyrants.',
+    isHistoric: true,
+  },
+  {
+    id: 'sow-blur',
+    name: 'Sow Blur',
+    emoji: '🐷',
+    color: '#0054A0',
+    accentColor: '#FFFFFF',
+    description: 'Pig farmers, county fair chaos, mud season enthusiasts, "that\'ll do" energy.',
+    isHistoric: true,
+  },
+  {
+    id: 'alphalpha-camo',
+    name: 'Alphalpha Camo',
+    emoji: '🌱',
+    color: '#900000',
+    accentColor: '#FFFFFF',
+    description: 'Sprout snackers, farm kids, 4-H devotees, "it\'s actually very nutritious."',
+    isHistoric: true,
+  },
+  {
+    id: 'toy-quota',
+    name: 'Toy Quota',
+    emoji: '🎁',
+    color: '#C0C0C0',
+    accentColor: '#E63946',
+    description: 'Gift wrappers, holiday stress, "I have a system," Black Friday strategists.',
+    isHistoric: true,
+  },
+  {
+    id: 'jazz-guitar',
+    name: 'Jazz Guitar',
+    emoji: '🎸',
+    color: '#006633',
+    accentColor: '#FFB800',
+    description: 'Smooth jazz dads, open mic courage, "anyway here\'s Wonderwall" but sophisticated.',
+    isHistoric: true,
+  },
+];
+
+// All teams combined
+export const ALL_TEAMS: Team[] = [...CURRENT_TEAMS, ...HISTORIC_TEAMS];
+
+// Default selection - just current teams (11 for standard grid)
+export const TEAMS = CURRENT_TEAMS;
 
 // Driver slot within a team (1 = primary, 2 = secondary)
 export type DriverSlot = 1 | 2;
@@ -71,10 +220,26 @@ export function getTeamById(id: string): Team | undefined {
   return ALL_TEAMS.find(t => t.id === id);
 }
 
-// Get a random selection of N teams
-export function getRandomTeams(count: number = 10): Team[] {
+// Get current teams only (for standard races)
+export function getCurrentTeams(): Team[] {
+  return CURRENT_TEAMS;
+}
+
+// Get historic teams only (for special modes)
+export function getHistoricTeams(): Team[] {
+  return HISTORIC_TEAMS;
+}
+
+// Get a random selection of N teams from current teams
+export function getRandomTeams(count: number = 11): Team[] {
+  const shuffled = [...CURRENT_TEAMS].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, Math.min(count, CURRENT_TEAMS.length));
+}
+
+// Get a random selection including historic teams
+export function getRandomTeamsIncludingHistoric(count: number = 11): Team[] {
   const shuffled = [...ALL_TEAMS].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, count);
+  return shuffled.slice(0, Math.min(count, ALL_TEAMS.length));
 }
 
 // Get teams by their IDs

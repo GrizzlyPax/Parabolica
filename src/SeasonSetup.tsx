@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
-import { ALL_TEAMS, getRandomTeams } from './data/teams';
-import { ALL_TRACKS, getRandomTracks } from './generators/tracks';
+import { ALL_TEAMS, CURRENT_TEAMS, HISTORIC_TEAMS, getRandomTeams } from './data/teams';
+import { ALL_TRACKS, CURRENT_TRACKS, HISTORIC_TRACKS, getRandomTracks } from './generators/tracks';
+import TeamCell from './components/TeamCell';
 import './SeasonSetup.css';
 
 interface SeasonSetupProps {
@@ -18,7 +19,7 @@ function SeasonSetup({ onStartSeason, onBack }: SeasonSetupProps) {
 
   // Team selection - default to random 10
   const [selectedTeamIds, setSelectedTeamIds] = useState<Set<string>>(() => {
-    const random10 = getRandomTeams(10);
+    const random10 = getRandomTeams(11);
     return new Set(random10.map(t => t.id));
   });
 
@@ -62,7 +63,7 @@ function SeasonSetup({ onStartSeason, onBack }: SeasonSetupProps) {
   };
 
   const randomizeTeams = () => {
-    const random = getRandomTeams(10);
+    const random = getRandomTeams(11);
     setSelectedTeamIds(new Set(random.map(t => t.id)));
   };
 
@@ -216,7 +217,7 @@ function SeasonSetup({ onStartSeason, onBack }: SeasonSetupProps) {
               </div>
               <div className="selection-actions">
                 <button className="action-btn" onClick={randomizeTeams}>
-                  🎲 Random 10
+                  🎲 Random 11
                 </button>
                 <button className="action-btn" onClick={selectAllTeams}>
                   ✓ All 20
@@ -224,35 +225,43 @@ function SeasonSetup({ onStartSeason, onBack }: SeasonSetupProps) {
               </div>
             </div>
 
-            <div className="wordle-selection-grid teams-grid">
-              {ALL_TEAMS.map(team => {
-                const isSelected = selectedTeamIds.has(team.id);
-                // Get short name - first word or "The X" becomes just "X"
-                const shortName = team.name.startsWith('The ')
-                  ? team.name.slice(4).split(' ')[0]
-                  : team.name.split(' ')[0];
-                return (
-                  <button
-                    key={team.id}
-                    className={`wordle-selection-cell ${isSelected ? 'selected' : ''}`}
-                    onClick={() => toggleTeam(team.id)}
-                    style={{ '--team-color': team.color } as React.CSSProperties}
-                  >
-                    <span className="cell-emoji">{team.emoji}</span>
-                    <span className="cell-name" style={{ color: isSelected ? team.color : undefined }}>
-                      {shortName}
-                    </span>
-                    {isSelected && <span className="cell-check">✓</span>}
-                  </button>
-                );
-              })}
+            <div className="team-groups">
+              <div className="team-group">
+                <h3 className="team-group-label">🏎️ Current Grid ({CURRENT_TEAMS.length})</h3>
+                <div className="teams-grid">
+                  {CURRENT_TEAMS.map(team => (
+                    <TeamCell
+                      key={team.id}
+                      team={team}
+                      isSelected={selectedTeamIds.has(team.id)}
+                      onClick={() => toggleTeam(team.id)}
+                      showCheckmark={true}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <div className="team-group historic">
+                <h3 className="team-group-label">📜 Legendary Teams ({HISTORIC_TEAMS.length})</h3>
+                <div className="teams-grid">
+                  {HISTORIC_TEAMS.map(team => (
+                    <TeamCell
+                      key={team.id}
+                      team={team}
+                      isSelected={selectedTeamIds.has(team.id)}
+                      onClick={() => toggleTeam(team.id)}
+                      showCheckmark={true}
+                    />
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         )}
 
-        {/* Tracks Tab - Wordle Grid Style */}
+        {/* Tracks Tab - List View */}
         {activeTab === 'tracks' && (
-          <div className="setup-section selection-section wordle-selection">
+          <div className="setup-section selection-section">
             <div className="selection-header">
               <div>
                 <h2>Select Race Calendar</h2>
@@ -270,26 +279,66 @@ function SeasonSetup({ onStartSeason, onBack }: SeasonSetupProps) {
               </div>
             </div>
 
-            <div className="wordle-selection-grid tracks-grid">
-              {ALL_TRACKS.map(track => {
-                const isSelected = selectedTrackIds.has(track.id);
-                // Get short name - first word or "The X" becomes just "X"
-                const shortName = track.name.startsWith('The ')
-                  ? track.name.slice(4).split(' ')[0]
-                  : track.name.split(' ')[0];
-                return (
-                  <button
-                    key={track.id}
-                    className={`wordle-selection-cell track-cell ${isSelected ? 'selected' : ''}`}
-                    onClick={() => toggleTrack(track.id)}
-                  >
-                    <span className="cell-emoji">{track.emoji}</span>
-                    <span className="cell-name">{shortName}</span>
-                    <span className="cell-laps">{track.laps}L</span>
-                    {isSelected && <span className="cell-check">✓</span>}
-                  </button>
-                );
-              })}
+            <div className="track-list-groups">
+              <div className="track-list-group">
+                <h3 className="track-group-label">🏁 Current Season ({CURRENT_TRACKS.length})</h3>
+                <div className="track-list">
+                  {[...CURRENT_TRACKS]
+                    .sort((a, b) => {
+                      const aSelected = selectedTrackIds.has(a.id) ? 0 : 1;
+                      const bSelected = selectedTrackIds.has(b.id) ? 0 : 1;
+                      return aSelected - bSelected;
+                    })
+                    .map(track => {
+                      const isSelected = selectedTrackIds.has(track.id);
+                      return (
+                        <button
+                          key={track.id}
+                          className={`track-list-item ${isSelected ? 'selected' : ''}`}
+                          onClick={() => toggleTrack(track.id)}
+                        >
+                          <span className="track-emojis">{track.funEmoji} {track.emoji}</span>
+                          <span className="track-info">
+                            <span className="track-name">{track.name}</span>
+                            <span className="track-desc">{track.description}</span>
+                          </span>
+                          <span className="track-laps">{track.laps}L</span>
+                          {isSelected && <span className="track-check">✓</span>}
+                        </button>
+                      );
+                    })}
+                </div>
+              </div>
+
+              <div className="track-list-group historic">
+                <h3 className="track-group-label">📜 Historic Circuits ({HISTORIC_TRACKS.length})</h3>
+                <div className="track-list">
+                  {[...HISTORIC_TRACKS]
+                    .sort((a, b) => {
+                      const aSelected = selectedTrackIds.has(a.id) ? 0 : 1;
+                      const bSelected = selectedTrackIds.has(b.id) ? 0 : 1;
+                      return aSelected - bSelected;
+                    })
+                    .map(track => {
+                      const isSelected = selectedTrackIds.has(track.id);
+                      return (
+                        <button
+                          key={track.id}
+                          className={`track-list-item historic ${isSelected ? 'selected' : ''}`}
+                          onClick={() => toggleTrack(track.id)}
+                        >
+                          <span className="track-emojis">{track.funEmoji} {track.emoji}</span>
+                          <span className="track-info">
+                            <span className="track-name">{track.name}</span>
+                            <span className="track-desc">{track.description}</span>
+                          </span>
+                          <span className="track-laps">{track.laps}L</span>
+                          {isSelected && <span className="track-check">✓</span>}
+                        </button>
+                      );
+                    })}
+                </div>
+              </div>
             </div>
           </div>
         )}

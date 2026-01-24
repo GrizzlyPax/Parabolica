@@ -1,5 +1,17 @@
 /* Fonts loaded via index.html <link> for faster initial render */
 
+/* Racing-inspired font stack */
+:root {
+  /* Headlines & Display - Barlow Condensed for that racing poster feel */
+  --font-display: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  /* Body text - Inter for readability */
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  /* Numbers & Data - Inconsolata for tabular data */
+  --font-mono: 'Inconsolata', 'Consolas', 'Monaco', monospace;
+  /* Emoji fallback */
+  --font-emoji: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji';
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -14,14 +26,16 @@ a, button, input, select, textarea, [role="button"] {
 body {
   background: #111;
   min-height: 100vh;
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-body), var(--font-emoji);
   font-size: 16px;
   color: #ccc;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Use Noto Color Emoji for consistent cross-platform emoji rendering */
+/* Global font settings */
 body, button, input, select, textarea {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji', sans-serif;
+  font-family: var(--font-body), var(--font-emoji);
 }
 
 /* ========================================
@@ -95,7 +109,7 @@ body, button, input, select, textarea {
 }
 
 .header-left .track-name {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-display), var(--font-emoji);
   font-size: 1.1rem;
   color: #fff;
   font-weight: 600;
@@ -123,7 +137,7 @@ body, button, input, select, textarea {
 }
 
 .race-timer {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-display), var(--font-emoji);
   font-size: 1.25rem;
   color: #fff;
   font-weight: 600;
@@ -149,7 +163,7 @@ body, button, input, select, textarea {
 }
 
 .detail-section h3 {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-display), var(--font-emoji);
   font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -287,7 +301,7 @@ body, button, input, select, textarea {
   border: none;
   border-right: 1px solid #333;
   color: #777;
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-display), var(--font-emoji);
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -322,7 +336,7 @@ body, button, input, select, textarea {
 }
 
 .panel-header h1 {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-display), var(--font-emoji);
   font-size: 1.5rem;
   font-weight: 700;
   color: #fff;
@@ -335,7 +349,7 @@ body, button, input, select, textarea {
   border: 1px solid #444;
   color: #888;
   border-radius: 3px;
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-display), var(--font-emoji);
   font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -353,7 +367,7 @@ body, button, input, select, textarea {
 }
 
 .status-time {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-display), var(--font-emoji);
   font-size: 1.25rem;
   color: #fff;
   font-weight: 600;
@@ -365,7 +379,7 @@ body, button, input, select, textarea {
   border: 1px solid #555;
   border-radius: 3px;
   color: #aaa;
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-display), var(--font-emoji);
   font-size: 0.8rem;
   letter-spacing: 1px;
   animation: pulse 1.5s ease-in-out infinite;
@@ -389,7 +403,7 @@ body, button, input, select, textarea {
 .control-btn {
   padding: 0.6rem 1.25rem;
   font-size: 0.85rem;
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-display), var(--font-emoji);
   font-weight: 600;
   border: 1px solid;
   border-radius: 3px;
@@ -454,7 +468,7 @@ body, button, input, select, textarea {
   gap: 0.4rem;
   padding: 0.5rem 0.75rem;
   background: #111;
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-display), var(--font-emoji);
   font-size: 0.65rem;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -491,7 +505,7 @@ body, button, input, select, textarea {
 }
 
 .standing-row-compact .col-pos {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-display), var(--font-emoji);
   font-weight: 600;
   color: #fff;
 }
@@ -528,7 +542,7 @@ body, button, input, select, textarea {
 .standing-row-compact .col-lastlap,
 .standing-row-compact .col-bestlap {
   color: #777;
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-display), var(--font-emoji);
   font-size: 0.75rem;
 }
 
@@ -549,7 +563,7 @@ body, button, input, select, textarea {
 }
 
 .track-section h3 {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-display), var(--font-emoji);
   font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -575,7 +589,7 @@ body, button, input, select, textarea {
 }
 
 .track-pos {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-display), var(--font-emoji);
   font-size: 0.7rem;
   font-weight: 600;
   color: #fff;
@@ -643,7 +657,7 @@ body, button, input, select, textarea {
 }
 
 .summary-winner .winner-label {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-display), var(--font-emoji);
   display: block;
   font-size: 0.7rem;
   text-transform: uppercase;
@@ -652,13 +666,13 @@ body, button, input, select, textarea {
 }
 
 .summary-winner .winner-name {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-display), var(--font-emoji);
   font-size: 1.3rem;
   font-weight: 600;
 }
 
 .summary-winner .winner-time {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-display), var(--font-emoji);
   font-size: 1.1rem;
   color: #aaa;
 }
@@ -670,7 +684,7 @@ body, button, input, select, textarea {
 }
 
 .summary-narrative p {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-display), var(--font-emoji);
   margin: 0;
   font-size: 0.9rem;
   color: #aaa;
@@ -703,7 +717,7 @@ body, button, input, select, textarea {
   font-size: 1.5rem;
   font-weight: 600;
   color: #fff;
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-display), var(--font-emoji);
 }
 
 .race-stats-bar .stat-label {
@@ -711,7 +725,7 @@ body, button, input, select, textarea {
   text-transform: uppercase;
   letter-spacing: 1px;
   color: #666;
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-display), var(--font-emoji);
 }
 
 /* ========================================
@@ -831,7 +845,7 @@ body, button, input, select, textarea {
   border: none;
   border-right: 1px solid #333;
   color: #666;
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-display), var(--font-emoji);
   font-size: 0.7rem;
   cursor: pointer;
   transition: all 0.15s ease;

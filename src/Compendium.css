@@ -29,7 +29,7 @@
 }
 
 .compendium-header h1 {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-display), var(--font-emoji);
   font-size: 2.5rem;
   color: #e8e8e8;
   margin: 0 0 0.5rem 0;
@@ -115,7 +115,7 @@
 }
 
 .collapsible-title {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-display), var(--font-emoji);
   font-weight: 500;
 }
 
@@ -176,7 +176,7 @@
   font-size: 0.75rem;
   color: #777;
   text-align: right;
-  font-family: 'Courier New', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-mono), var(--font-emoji);
 }
 
 .compact-value.formula {
@@ -249,7 +249,7 @@
 }
 
 .section-title {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-display), var(--font-emoji);
   font-size: 1.4rem;
   color: #ddd;
   margin: 0 0 0.5rem 0;
@@ -310,7 +310,7 @@
 }
 
 .card-name {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-display), var(--font-emoji);
   font-size: 1rem;
   font-weight: 600;
   color: #ddd;
@@ -360,7 +360,7 @@
 .detail-value {
   font-size: 0.75rem;
   color: #aaa;
-  font-family: 'Courier New', monospace, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-mono), var(--font-emoji);
 }
 
 .detail-value.positive {
@@ -428,7 +428,7 @@
 }
 
 .mechanic-card h3 {
-  font-family: 'Times New Roman', Times, Georgia, serif, 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
+  font-family: var(--font-display), var(--font-emoji);
   font-size: 1rem;
   color: #ddd;
   margin: 0 0 0.75rem 0;
@@ -605,7 +605,7 @@
   align-items: center;
   justify-content: center;
   gap: 1rem;
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: var(--font-display);
 }
 
 .seal-glyph {
@@ -663,7 +663,7 @@
 }
 
 .ancient-title {
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: var(--font-display);
   color: #a08070;
   font-size: 1.8rem;
   letter-spacing: 0.3rem;
@@ -742,7 +742,7 @@
   cursor: pointer;
   font-size: 0.9rem;
   transition: all 0.2s ease;
-  font-family: 'Times New Roman', Times, Georgia, serif;
+  font-family: var(--font-display);
   letter-spacing: 0.2rem;
 }
 

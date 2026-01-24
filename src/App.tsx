@@ -312,7 +312,7 @@ function App() {
         finishOrder,
         dnfDrivers,
         trackInfo?.name || 'Unknown Track',
-        trackInfo?.emoji || '🏁',
+        trackInfo?.funEmoji || '🏁',
         fastestLapDriverId
       );
 
@@ -353,6 +353,7 @@ function App() {
       id: newTrack.id,
       name: newTrack.name,
       emoji: newTrack.emoji,
+      funEmoji: newTrack.funEmoji,
       description: newTrack.description,
       laps: newTrack.laps,
       layout: {
@@ -362,16 +363,16 @@ function App() {
         straightEnd: newTrack.layout.straightEnd,
         totalLength: newTrack.layout.totalLength,
       },
-      event: {
+      event: newTrack.event ? {
         id: newTrack.event.id,
         name: newTrack.event.name,
         emoji: newTrack.event.emoji,
         description: getDynamicEventDescription(newTrack.event, newTrack.laps),
         flavorText: newTrack.event.flavorText,
-      },
+      } : undefined,
       // Full event data for engine processing
-      eventTrigger: newTrack.event.trigger,
-      eventEffect: newTrack.event.effect,
+      eventTrigger: newTrack.event?.trigger,
+      eventEffect: newTrack.event?.effect,
     });
 
     // Apply new track settings
@@ -601,7 +602,7 @@ function App() {
           <RaceStartCountdown
             onCountdownComplete={handleCountdownComplete}
             trackName={trackInfo?.name}
-            trackEmoji={trackInfo?.emoji}
+            trackEmoji={trackInfo?.funEmoji}
           />
         )}
 

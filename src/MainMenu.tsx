@@ -125,7 +125,7 @@ function MainMenu({ onSingleRace, onSeason, onCompendium }: MainMenuProps) {
         </div>
 
         <div className="main-menu-footer">
-          <span className="version">v1.0</span>
+          <span className="version">v0.2.0</span>
         </div>
       </div>
 

@@ -1,4 +1,4 @@
-// Parabolica Track System - absurdist racing venues
+// Parabolica Track System - F1-Inspired Racing Venues
 
 // ============================================
 // TRACK LAYOUT SYSTEM
@@ -56,10 +56,12 @@ export interface Track {
   name: string;
   description: string;
   emoji: string;
+  funEmoji: string;      // Fun/theme emoji
   length: number;
   laps: number;
   layout: TrackLayout;
-  event: TrackEvent;
+  event?: TrackEvent;    // Optional - to be assigned per track
+  isHistoric?: boolean;  // Historic tracks (unlockable)
 }
 
 // ============================================
@@ -120,391 +122,363 @@ const LAYOUTS: Record<string, TrackLayout> = {
 };
 
 // ============================================
-// THE 20 ABSURDIST TRACKS
+// CURRENT SEASON TRACKS (24)
+// F1-Inspired with punny names and aesthetics
 // ============================================
 
-export const ALL_TRACKS: Track[] = [
-  // 1. Parking Structure - Slippery when wet
+export const CURRENT_TRACKS: Track[] = [
+  // 1. Bahrain - Venhir
   {
-    id: 'parking-structure',
-    name: 'The Parking Structure',
-    description: 'Level 4. The elevator is broken.',
-    emoji: '🅿️',
-    length: 800,
-    laps: 15,
-    layout: LAYOUTS.rectangle,
-    event: {
-      id: 'sprinklers',
-      name: 'Sprinklers',
-      emoji: '💦',
-      description: '20%: 3 random slip (-20% crash resist)',
-      flavorText: 'SPRINKLERS ACTIVATE! The floor is slick!',
-      trigger: { type: 'random', chance: 20 },
-      effect: { type: 'apply_tag', triggerTag: 'slippery-surface', targets: 'random', count: 3, duration: 2 },
-    },
-  },
-  // 2. Loading Zone - Stragglers get blocked
-  {
-    id: 'loading-zone',
-    name: 'Loading Zone',
-    description: 'No parking any time. Results may vary.',
-    emoji: '🚛',
-    length: 700,
-    laps: 16,
-    layout: LAYOUTS.oval,
-    event: {
-      id: 'forklift-traffic',
-      name: 'Forklift Traffic',
-      emoji: '🚜',
-      description: 'Every 4 laps: Bottom 3 slowed (-6%)',
-      flavorText: 'FORKLIFT CROSSING! Stragglers get held up!',
-      trigger: { type: 'interval', every: 4 },
-      effect: { type: 'apply_tag', triggerTag: 'headwind', targets: 'bottom', count: 3, duration: 2 },
-    },
-  },
-  // 3. The Roundabout - Random drivers lose visibility
-  {
-    id: 'roundabout',
-    name: 'The Roundabout',
-    description: 'Nobody knows who has right of way.',
-    emoji: '🔄',
-    length: 780,
-    laps: 17,
-    layout: LAYOUTS.stadium,
-    event: {
-      id: 'fog-rolls-in',
-      name: 'Fog Rolls In',
-      emoji: '🌫️',
-      description: '15%: 4 random get fog (-15% crash resist)',
-      flavorText: 'FOG ROLLS IN! Some drivers lose visibility!',
-      trigger: { type: 'random', chance: 15 },
-      effect: { type: 'apply_tag', triggerTag: 'low-visibility', targets: 'random', count: 4, duration: 2 },
-    },
-  },
-  // 4. Office Park - Meetings make drivers lose focus
-  {
-    id: 'office-park',
-    name: 'Office Park Circuit',
-    description: 'Between buildings C and D. Mind the speed bumps.',
-    emoji: '🏢',
+    id: 'venhir',
+    name: 'Venhir',
+    description: 'Fangs gleaming under the lights, dentist chairs in every garage, open wide for inspection, floss mandatory.',
+    emoji: '🇧🇭',
+    funEmoji: '🦷',
     length: 850,
     laps: 15,
-    layout: LAYOUTS.oval,
-    event: {
-      id: 'meeting-overrun',
-      name: 'Meeting Overrun',
-      emoji: '📋',
-      description: 'Every 5 laps: 2 random distracted (-4% speed)',
-      flavorText: 'MEETING OVERRUN! Someone is late getting back!',
-      trigger: { type: 'interval', every: 5 },
-      effect: { type: 'apply_tag', triggerTag: 'distracted', targets: 'random', count: 2, duration: 2 },
-    },
+    layout: LAYOUTS.diamond,
   },
-  // 5. Construction Zone - Dust affects random drivers
+  // 2. Saudi Arabia - Cheddah
   {
-    id: 'construction-zone',
-    name: 'Active Construction',
-    description: 'Work has been ongoing for several years.',
-    emoji: '🚧',
-    length: 750,
-    laps: 17,
-    layout: LAYOUTS.triangle,
-    event: {
-      id: 'dust-cloud',
-      name: 'Dust Cloud',
-      emoji: '💨',
-      description: '18%: 3 random get dust (-12% crash resist)',
-      flavorText: 'DUST CLOUD! A truck kicks up debris!',
-      trigger: { type: 'random', chance: 18 },
-      effect: { type: 'apply_tag', triggerTag: 'dust-cloud', targets: 'random', count: 3, duration: 1 },
-    },
-  },
-  // 6. The Mall - Leaders overheat from pushing
-  {
-    id: 'the-mall',
-    name: 'The Mall',
-    description: 'Past the food court, near the defunct Sears.',
-    emoji: '🛒',
+    id: 'cheddah',
+    name: 'Cheddah',
+    description: 'Cheese caves as far as the eye can see, wheels aging in silence, the sharpest place on earth, brie breezes.',
+    emoji: '🇸🇦',
+    funEmoji: '🧀',
     length: 900,
     laps: 14,
     layout: LAYOUTS.rectangle,
-    event: {
-      id: 'ac-breakdown',
-      name: 'AC Breakdown',
-      emoji: '🥵',
-      description: 'Every 4 laps: Top 3 overheat (-8% speed)',
-      flavorText: 'AC BREAKS DOWN! The leaders are feeling the heat!',
-      trigger: { type: 'interval', every: 4 },
-      effect: { type: 'apply_tag', triggerTag: 'cooling-issues', targets: 'top', count: 3, duration: 2 },
-    },
   },
-  // 7. Airport Terminal - Random pit delays
+  // 3. Australia - All Bird Park
   {
-    id: 'airport-terminal',
-    name: 'Departures Level',
-    description: 'Flight delayed. Racing continues.',
-    emoji: '✈️',
+    id: 'all-bird-park',
+    name: 'All Bird Park',
+    description: 'Feathers everywhere, constant squawking, birds judging your racing line, someone\'s cracker got stolen.',
+    emoji: '🇦🇺',
+    funEmoji: '🦜',
     length: 820,
     laps: 16,
-    layout: LAYOUTS.oval,
-    event: {
-      id: 'gate-change',
-      name: 'Gate Change',
-      emoji: '🛬',
-      description: '15%: 3 random get pit delay (+25%)',
-      flavorText: 'GATE CHANGE! Some crews are out of position!',
-      trigger: { type: 'random', chance: 15 },
-      effect: { type: 'apply_tag', triggerTag: 'pit-congestion', targets: 'random', count: 3, duration: 2 },
-    },
+    layout: LAYOUTS.stadium,
   },
-  // 8. The Warehouse - Random debris hazard
+  // 4. Japan - Choo-Choo-Ka
   {
-    id: 'warehouse',
-    name: 'The Warehouse',
-    description: 'Aisle 7. Product location unknown.',
-    emoji: '📦',
+    id: 'choo-choo-ka',
+    name: 'Choo-Choo-Ka',
+    description: 'Train heaven, steam galore, where all your ticket-punching dreams come true, eternal platform announcements.',
+    emoji: '🇯🇵',
+    funEmoji: '🚂',
+    length: 880,
+    laps: 15,
+    layout: LAYOUTS.diamond,
+  },
+  // 5. China - Fang High
+  {
+    id: 'fang-high',
+    name: 'Fang High',
+    description: 'Lockers full of capes, prom is at midnight, the cafeteria only serves red, yearbook photos won\'t develop.',
+    emoji: '🇨🇳',
+    funEmoji: '🧛',
+    length: 850,
+    laps: 15,
+    layout: LAYOUTS.oval,
+  },
+  // 6. Miami - Spyami
+  {
+    id: 'spyami',
+    name: 'Spyami',
+    description: 'Trench coats in the shadows, dead drops in the pit lane, everyone\'s got a handler, the walls have ears.',
+    emoji: '🇺🇸',
+    funEmoji: '🕵️‍♂️',
+    length: 800,
+    laps: 16,
+    layout: LAYOUTS.rectangle,
+  },
+  // 7. Imola - Grimola
+  {
+    id: 'grimola',
+    name: 'Grimola',
+    description: 'Fog rolling through the chicanes, skulls grinning from the grandstands, beautiful but haunted, don\'t look back.',
+    emoji: '🇮🇹',
+    funEmoji: '💀',
+    length: 780,
+    laps: 17,
+    layout: LAYOUTS.triangle,
+  },
+  // 8. Monaco - Monacoco
+  {
+    id: 'monacoco',
+    name: 'Monacoco',
+    description: 'Chocolate waterfalls, cocoa fog in the streets, everything melts eventually, sweet sweet surrender.',
+    emoji: '🇲🇨',
+    funEmoji: '🍫',
+    length: 700,
+    laps: 18,
+    layout: LAYOUTS.rectangle,
+  },
+  // 9. Spain - Cattylosers
+  {
+    id: 'cattylosers',
+    name: 'Cattylosers',
+    description: 'Scratching posts for miles, hairball alley, where trophies go to fall, eternal hissing in the distance.',
+    emoji: '🇪🇸',
+    funEmoji: '🐱',
+    length: 820,
+    laps: 16,
+    layout: LAYOUTS.stadium,
+  },
+  // 10. Canada - Mini-Vanada
+  {
+    id: 'mini-vanada',
+    name: 'Mini-Vanada',
+    description: 'Sliding doors and Cheerios in the seats, snack distribution from the front, "don\'t make me turn this around."',
+    emoji: '🇨🇦',
+    funEmoji: '🚙',
+    length: 800,
+    laps: 16,
+    layout: LAYOUTS.oval,
+  },
+  // 11. Austria - Eelburg
+  {
+    id: 'eelburg',
+    name: 'Eelburg',
+    description: 'Electric eels in the walls, everything\'s buzzing, don\'t touch the barriers, shockingly fast.',
+    emoji: '🇦🇹',
+    funEmoji: '⚡️',
     length: 720,
     laps: 18,
     layout: LAYOUTS.triangle,
-    event: {
-      id: 'falling-boxes',
-      name: 'Falling Boxes',
-      emoji: '📦',
-      description: '12%: 2 random hit debris (-25% crash resist)',
-      flavorText: 'FALLING BOXES! Watch your head!',
-      trigger: { type: 'random', chance: 12 },
-      effect: { type: 'apply_tag', triggerTag: 'debris-hazard', targets: 'random', count: 2, duration: 1 },
-    },
   },
-  // 9. Server Room - Leaders throttle from heat
+  // 12. Great Britain - Silverclone
   {
-    id: 'server-room',
-    name: 'Server Room B',
-    description: 'Temperature controlled. The hum is normal.',
-    emoji: '🖥️',
-    length: 800,
+    id: 'silverclone',
+    name: 'Silverclone',
+    description: 'Robots everywhere, uncanny valley vibes, everyone looks familiar, are you the original or the copy?',
+    emoji: '🇬🇧',
+    funEmoji: '🤖',
+    length: 880,
     laps: 15,
-    layout: LAYOUTS.diamond,
-    event: {
-      id: 'thermal-throttle',
-      name: 'Thermal Throttle',
-      emoji: '🌡️',
-      description: 'Every 5 laps: Top 4 overheat (-8% speed)',
-      flavorText: 'THERMAL THROTTLE! The leaders are overheating!',
-      trigger: { type: 'interval', every: 5 },
-      effect: { type: 'apply_tag', triggerTag: 'cooling-issues', targets: 'top', count: 4, duration: 2 },
-    },
-  },
-  // 10. The Waiting Room - Last place gets desperate
-  {
-    id: 'waiting-room',
-    name: 'The Waiting Room',
-    description: 'Now serving: eventually.',
-    emoji: '🪑',
-    length: 800,
-    laps: 16,
     layout: LAYOUTS.stadium,
-    event: {
-      id: 'number-called',
-      name: 'Number Called',
-      emoji: '🎫',
-      description: '15%: Last 2 push hard (+10% speed, +crash risk)',
-      flavorText: 'NUMBER CALLED! Back of the pack gets desperate!',
-      trigger: { type: 'random', chance: 15 },
-      effect: { type: 'apply_tag', triggerTag: 'desperate-push', targets: 'last', count: 2, duration: 2 },
-    },
   },
-  // 11. Expressway - Random drivers catch slipstream
+  // 13. Belgium - Spa Frankenstein
   {
-    id: 'expressway',
-    name: 'Express Lane',
-    description: '10 items or less. Nobody counts.',
-    emoji: '🛣️',
-    length: 680,
-    laps: 20,
-    layout: LAYOUTS.oval,
-    event: {
-      id: 'drafting-zone',
-      name: 'Drafting Zone',
-      emoji: '🌀',
-      description: '20%: 3 random catch slipstream (+5% speed)',
-      flavorText: 'DRAFTING ZONE! Some drivers find clean air!',
-      trigger: { type: 'random', chance: 20 },
-      effect: { type: 'apply_tag', triggerTag: 'slipstream-boost', targets: 'random', count: 3, duration: 2 },
-    },
-  },
-  // 12. The Buffet - Stragglers get energy boost
-  {
-    id: 'buffet',
-    name: 'The Buffet',
-    description: 'All you can eat. Results may vary.',
-    emoji: '🍽️',
-    length: 680,
-    laps: 20,
-    layout: LAYOUTS.stadium,
-    event: {
-      id: 'fresh-tray',
-      name: 'Fresh Tray',
-      emoji: '🍕',
-      description: 'Every 4 laps: Bottom 4 boosted (+8% speed)',
-      flavorText: 'FRESH TRAY OUT! Stragglers find new energy!',
-      trigger: { type: 'interval', every: 4 },
-      effect: { type: 'apply_tag', triggerTag: 'adrenaline-surge', targets: 'bottom', count: 4, duration: 2 },
-    },
-  },
-  // 13. Basement Level - Random visibility loss
-  {
-    id: 'basement',
-    name: 'Basement Level',
-    description: 'The lights flicker. This is normal.',
-    emoji: '🔦',
-    length: 850,
-    laps: 15,
-    layout: LAYOUTS.rectangle,
-    event: {
-      id: 'power-flicker',
-      name: 'Power Flicker',
-      emoji: '💡',
-      description: '15%: 4 random lose visibility (-15% crash resist)',
-      flavorText: 'POWER FLICKER! The lights go out!',
-      trigger: { type: 'random', chance: 15 },
-      effect: { type: 'apply_tag', triggerTag: 'low-visibility', targets: 'random', count: 4, duration: 2 },
-    },
-  },
-  // 14. Breakroom - Random drivers get energized
-  {
-    id: 'breakroom',
-    name: 'The Breakroom',
-    description: 'The coffee is questionable.',
-    emoji: '☕',
-    length: 800,
-    laps: 16,
-    layout: LAYOUTS.diamond,
-    event: {
-      id: 'coffee-kick',
-      name: 'Coffee Kick',
-      emoji: '☕',
-      description: '18%: 2 random get focused (+6% speed, +10% consistency)',
-      flavorText: 'COFFEE KICKS IN! Someone is locked in!',
-      trigger: { type: 'random', chance: 18 },
-      effect: { type: 'apply_tag', triggerTag: 'in-the-zone', targets: 'random', count: 2, duration: 3 },
-    },
-  },
-  // 15. Fire Station - Leader gets urgency boost
-  {
-    id: 'fire-station',
-    name: 'Fire Station',
-    description: 'This is only a test. Probably.',
-    emoji: '🚒',
-    length: 770,
-    laps: 16,
-    layout: LAYOUTS.oval,
-    event: {
-      id: 'emergency-call',
-      name: 'Emergency Call',
-      emoji: '🚨',
-      description: 'Every 4 laps: Leader boosted (+8% speed)',
-      flavorText: 'EMERGENCY CALL! The leader pushes harder!',
-      trigger: { type: 'interval', every: 4 },
-      effect: { type: 'apply_tag', triggerTag: 'adrenaline-surge', targets: 'leader', count: 1, duration: 2 },
-    },
-  },
-  // 16. Rush Hour - Random slippery surface
-  {
-    id: 'rush-hour',
-    name: 'Rush Hour',
-    description: 'Everyone is late.',
-    emoji: '⏰',
-    length: 850,
-    laps: 15,
-    layout: LAYOUTS.diamond,
-    event: {
-      id: 'fender-bender',
-      name: 'Fender Bender',
-      emoji: '🚗',
-      description: '12%: 2 random hit slick (+crash risk, -consistency)',
-      flavorText: 'FENDER BENDER! Debris on track!',
-      trigger: { type: 'random', chance: 12 },
-      effect: { type: 'apply_tag', triggerTag: 'slippery-surface', targets: 'random', count: 2, duration: 1 },
-    },
-  },
-  // 17. Night Shift - Stragglers get second wind
-  {
-    id: 'night-shift',
-    name: 'Night Shift',
-    description: 'The fluorescent lights never stop.',
-    emoji: '🌙',
-    length: 780,
-    laps: 17,
-    layout: LAYOUTS.stadium,
-    event: {
-      id: 'second-wind',
-      name: 'Second Wind',
-      emoji: '💨',
-      description: 'Every 5 laps: Bottom 3 boosted (+8% speed)',
-      flavorText: 'SECOND WIND! The back-markers find new life!',
-      trigger: { type: 'interval', every: 5 },
-      effect: { type: 'apply_tag', triggerTag: 'adrenaline-surge', targets: 'bottom', count: 3, duration: 2 },
-    },
-  },
-  // 18. Bike Lane - Random distraction
-  {
-    id: 'bike-lane',
-    name: 'The Bike Lane',
-    description: 'Shared space. Mind the pedestrians.',
-    emoji: '🚲',
-    length: 770,
-    laps: 16,
-    layout: LAYOUTS.triangle,
-    event: {
-      id: 'pedestrian-crossing',
-      name: 'Pedestrian Crossing',
-      emoji: '🚶',
-      description: '18%: 2 random distracted (-4% speed)',
-      flavorText: 'PEDESTRIAN CROSSING! Some drivers hesitate!',
-      trigger: { type: 'random', chance: 18 },
-      effect: { type: 'apply_tag', triggerTag: 'distracted', targets: 'random', count: 2, duration: 1 },
-    },
-  },
-  // 19. DMV - Random pit equipment issues
-  {
-    id: 'dmv',
-    name: 'The DMV',
-    description: 'Take a number. Wait.',
-    emoji: '📝',
+    id: 'spa-frankenstein',
+    name: 'Spa Frankenstein',
+    description: 'Frankenstein runs a surprisingly lovely spa here, hot springs and lightning therapy, monster hospitality, bolts on the house.',
+    emoji: '🇧🇪',
+    funEmoji: '🧟‍♂️',
     length: 950,
     laps: 14,
-    layout: LAYOUTS.rectangle,
-    event: {
-      id: 'system-glitch',
-      name: 'System Glitch',
-      emoji: '🖥️',
-      description: 'Every 4 laps: 3 random get pit delay (+40%)',
-      flavorText: 'SYSTEM GLITCH! Some equipment malfunctions!',
-      trigger: { type: 'interval', every: 4 },
-      effect: { type: 'apply_tag', triggerTag: 'equipment-malfunction', targets: 'random', count: 3, duration: 2 },
-    },
+    layout: LAYOUTS.diamond,
   },
-  // 20. Lost and Found - Random drivers get rattled
+  // 14. Hungary - Tonguearoring
   {
-    id: 'lost-and-found',
-    name: 'Lost and Found',
-    description: 'Unclaimed items will be donated.',
-    emoji: '🔍',
+    id: 'tonguearoring',
+    name: 'Tonguearoring',
+    description: 'Flavor country, everything is a taste test, suspiciously sticky grandstands, lick at your own risk.',
+    emoji: '🇭🇺',
+    funEmoji: '👅',
     length: 780,
     laps: 17,
     layout: LAYOUTS.oval,
-    event: {
-      id: 'near-miss',
-      name: 'Near Miss',
-      emoji: '😰',
-      description: '15%: 2 random rattled (-7% speed, safer)',
-      flavorText: 'NEAR MISS! Some drivers back off to regroup!',
-      trigger: { type: 'random', chance: 15 },
-      effect: { type: 'apply_tag', triggerTag: 'rattled', targets: 'random', count: 2, duration: 2 },
-    },
+  },
+  // 15. Netherlands - Sandforts
+  {
+    id: 'sandforts',
+    name: 'Sandforts',
+    description: 'Moats around every corner, bucket and spade engineering, tides come in without warning, your castle will fall.',
+    emoji: '🇳🇱',
+    funEmoji: '🏖️',
+    length: 760,
+    laps: 17,
+    layout: LAYOUTS.stadium,
+  },
+  // 16. Italy - Monsta
+  {
+    id: 'monsta',
+    name: 'Monsta',
+    description: 'Something roaring in the temple, speed demons welcome, the creature under the track hungers, feed it laps.',
+    emoji: '🇮🇹',
+    funEmoji: '🧌',
+    length: 900,
+    laps: 14,
+    layout: LAYOUTS.oval,
+  },
+  // 17. Azerbaijan - Snapbaku
+  {
+    id: 'snapbaku',
+    name: 'Snapbaku',
+    description: 'Hats flying everywhere, brims bent just right, backwards cap energy, fitted or nothing.',
+    emoji: '🇦🇿',
+    funEmoji: '🧢',
+    length: 920,
+    laps: 14,
+    layout: LAYOUTS.rectangle,
+  },
+  // 18. Singapore - Subpoena Day
+  {
+    id: 'subpoena-day',
+    name: 'Subpoena Day',
+    description: 'Court is in session, gavels banging, everyone\'s serving papers, the verdict is always dramatic.',
+    emoji: '🇸🇬',
+    funEmoji: '👩‍⚖️',
+    length: 850,
+    laps: 15,
+    layout: LAYOUTS.rectangle,
+  },
+  // 19. Austin - MOTA
+  {
+    id: 'mota',
+    name: 'MOTA',
+    description: 'Castle on a hill, drawbridge pit entry, jousting but faster, someone brought a trebuchet.',
+    emoji: '🇺🇸',
+    funEmoji: '🏰',
+    length: 880,
+    laps: 15,
+    layout: LAYOUTS.diamond,
+  },
+  // 20. Mexico - T-Rex & Co.
+  {
+    id: 't-rex-and-co',
+    name: 'T-Rex & Co.',
+    description: 'Family business since the Jurassic, tiny arms big dreams, the siblings run this town, meteor-proof since \'65.',
+    emoji: '🇲🇽',
+    funEmoji: '🦖',
+    length: 800,
+    laps: 16,
+    layout: LAYOUTS.stadium,
+  },
+  // 21. Brazil - Winter Igloos
+  {
+    id: 'winter-igloos',
+    name: 'Winter Igloos',
+    description: 'Frozen paradise, penguins in the paddock, everything\'s chill, ice sculptures judging you.',
+    emoji: '🇧🇷',
+    funEmoji: '🧊',
+    length: 780,
+    laps: 17,
+    layout: LAYOUTS.triangle,
+  },
+  // 22. Las Vegas - Las PEMDAS
+  {
+    id: 'las-pemdas',
+    name: 'Las PEMDAS',
+    description: 'Please excuse my dear aunt Sally, parentheses everywhere, order of operations strictly enforced, show your work.',
+    emoji: '🇺🇸',
+    funEmoji: '🧮',
+    length: 920,
+    laps: 14,
+    layout: LAYOUTS.rectangle,
+  },
+  // 23. Qatar - Rainbowha
+  {
+    id: 'rainbowha',
+    name: 'Rainbowha',
+    description: 'Unicorns grazing in the infield, glitter in the air vents, manes flowing at 200mph, sparkle mandatory.',
+    emoji: '🇶🇦',
+    funEmoji: '🦄',
+    length: 850,
+    laps: 15,
+    layout: LAYOUTS.oval,
+  },
+  // 24. Abu Dhabi - Yas Christina!
+  {
+    id: 'yas-christina',
+    name: 'Yas Christina!',
+    description: 'Dance floor pit stops, someone\'s always spinning, heels on the podium, the crowd moves as one.',
+    emoji: '🇦🇪',
+    funEmoji: '💃',
+    length: 880,
+    laps: 15,
+    layout: LAYOUTS.diamond,
   },
 ];
+
+// ============================================
+// HISTORIC TRACKS (10)
+// ============================================
+
+export const HISTORIC_TRACKS: Track[] = [
+  {
+    id: 'bendy-500',
+    name: 'Bendy 500',
+    description: 'Contortionists in every corner, limbo under the checkered flag, stretch before entry, flexibility required.',
+    emoji: '🇺🇸',
+    funEmoji: '🤸',
+    length: 850,
+    laps: 15,
+    layout: LAYOUTS.oval,
+    isHistoric: true,
+  },
+  {
+    id: 'hamburgring',
+    name: 'Hamburgring',
+    description: 'Patties sizzling in the paddock, ketchup or mustard wars, the grill never closes, medium rare only.',
+    emoji: '🇩🇪',
+    funEmoji: '🍔',
+    length: 950,
+    laps: 14,
+    layout: LAYOUTS.diamond,
+    isHistoric: true,
+  },
+  {
+    id: 'bachenheim',
+    name: 'Bachenheim',
+    description: 'Orchestras in the grandstands, engines tuned to concert pitch, classical gas, the conductor sets the pace.',
+    emoji: '🇩🇪',
+    funEmoji: '🎻',
+    length: 800,
+    laps: 16,
+    layout: LAYOUTS.stadium,
+    isHistoric: true,
+  },
+  {
+    id: 'paul-the-guard',
+    name: 'Paul-the-Guard',
+    description: 'Security everywhere, badge checks at every corner, "papers please," Paul sees all.',
+    emoji: '🇫🇷',
+    funEmoji: '👮‍♂️',
+    length: 880,
+    laps: 15,
+    layout: LAYOUTS.rectangle,
+    isHistoric: true,
+  },
+  {
+    id: 'see-change',
+    name: 'See Change?',
+    description: 'Coins rolling through the paddock, interest rates posted at every turn, the bank always wins, exact change only.',
+    emoji: '🇲🇾',
+    funEmoji: '🪙',
+    length: 870,
+    laps: 15,
+    layout: LAYOUTS.diamond,
+    isHistoric: true,
+  },
+  {
+    id: 'pielami',
+    name: 'Pielami',
+    description: 'Crusts flaking in the wind, filling debates that never end, lattice or solid top discourse, à la mode mandatory.',
+    emoji: '🇿🇦',
+    funEmoji: '🥧',
+    length: 780,
+    laps: 17,
+    layout: LAYOUTS.triangle,
+    isHistoric: true,
+  },
+  {
+    id: 'portimouse',
+    name: 'Portimouse',
+    description: 'Tiny paws on tiny wheels, cheese at every checkpoint, squeaking through the chicanes, the cat is always watching.',
+    emoji: '🇵🇹',
+    funEmoji: '🐭',
+    length: 820,
+    laps: 16,
+    layout: LAYOUTS.stadium,
+    isHistoric: true,
+  },
+];
+
+// All tracks combined
+export const ALL_TRACKS: Track[] = [...CURRENT_TRACKS, ...HISTORIC_TRACKS];
 
 // ============================================
 // HELPER FUNCTIONS
@@ -598,15 +572,30 @@ export function getTracksByIds(ids: string[]): Track[] {
   return ids.map(id => getTrackById(id)).filter((t): t is Track => t !== undefined);
 }
 
+// Get current tracks only (for standard seasons)
+export function getCurrentTracks(): Track[] {
+  return CURRENT_TRACKS;
+}
+
+// Get historic tracks only (for special modes)
+export function getHistoricTracks(): Track[] {
+  return HISTORIC_TRACKS;
+}
+
 export function getRandomTracks(count: number): Track[] {
+  const shuffled = [...CURRENT_TRACKS].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, Math.min(count, CURRENT_TRACKS.length));
+}
+
+export function getRandomTracksIncludingHistoric(count: number): Track[] {
   const shuffled = [...ALL_TRACKS].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, count);
+  return shuffled.slice(0, Math.min(count, ALL_TRACKS.length));
 }
 
 export function generateTrack(): Track {
-  return ALL_TRACKS[Math.floor(Math.random() * ALL_TRACKS.length)];
+  return CURRENT_TRACKS[Math.floor(Math.random() * CURRENT_TRACKS.length)];
 }
 
 export function generateSeason(numTracks: number = 5): Track[] {
-  return getRandomTracks(Math.min(numTracks, ALL_TRACKS.length));
+  return getRandomTracks(Math.min(numTracks, CURRENT_TRACKS.length));
 }

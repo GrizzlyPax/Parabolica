@@ -335,7 +335,7 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, powerAct
 
   // Generate shareable race summary (Wordle-style)
   const generateShareText = (): string => {
-    const trackEmoji = trackInfo?.emoji || '🏁';
+    const trackEmoji = trackInfo?.funEmoji || '🏁';
 
     // Get sorted finished drivers
     const sortedFinished = drivers
@@ -1249,15 +1249,15 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, powerAct
       <div className="watch-header">
         {trackInfo ? (
           <div className="track-title">
-            <span className="track-title-emoji">{trackInfo.emoji}</span>
+            <span className="track-title-emoji">{trackInfo.funEmoji}</span>
             <div className="track-title-info">
-              <h1>{trackInfo.name}</h1>
+              <h1>{trackInfo.name} {trackInfo.emoji}</h1>
               <div className="track-subtitle">
-                {trackInfo.event && (
-                  <>
-                    <span className="header-event">{trackInfo.event.emoji} {trackInfo.event.name}</span>
-                    <span className="header-event-desc">{trackInfo.event.description}</span>
-                  </>
+                <span className="header-description">{trackInfo.description}</span>
+                {trackInfo.event ? (
+                  <span className="header-event">{trackInfo.event.emoji} {trackInfo.event.name}</span>
+                ) : (
+                  <span className="header-event header-event-placeholder">[No active event]</span>
                 )}
               </div>
             </div>
@@ -1584,8 +1584,7 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, powerAct
                   data-slot={driver.driverSlot || 1}
                   style={{
                     '--team-color': driver.color,
-                    '--team-color-light': getColorVariants(driver.color).light,
-                    '--team-color-dark': getColorVariants(driver.color).dark,
+                    '--team-accent': driver.accentColor || '#fff',
                   } as React.CSSProperties}
                 >
                   {driver.emoji}
@@ -2068,8 +2067,9 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, powerAct
                   r={10}
                   className={`driver-badge-circle ${hasPowerEffect ? 'power-pulse' : ''}`}
                   fill={driver.color}
-                  stroke={driver.driverSlot === 2 ? getColorVariants(driver.color).dark : getColorVariants(driver.color).light}
-                  strokeWidth={2}
+                  stroke={driver.accentColor || '#fff'}
+                  strokeWidth={3}
+                  strokeDasharray={driver.driverSlot === 2 ? '4 2' : undefined}
                 />
                 <text
                   x={0}
@@ -2157,8 +2157,9 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, powerAct
                 r={10}
                 className="driver-badge-circle"
                 fill={driver.color}
-                stroke={driver.driverSlot === 2 ? getColorVariants(driver.color).dark : getColorVariants(driver.color).light}
-                strokeWidth={2}
+                stroke={driver.accentColor || '#fff'}
+                strokeWidth={3}
+                strokeDasharray={driver.driverSlot === 2 ? '4 2' : undefined}
                 opacity={0.7}
               />
               <text
@@ -2206,8 +2207,9 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, powerAct
                   r={10}
                   className="driver-badge-circle"
                   fill={driver.color}
-                  stroke={driver.driverSlot === 2 ? getColorVariants(driver.color).dark : getColorVariants(driver.color).light}
-                  strokeWidth={2}
+                  stroke={driver.accentColor || '#fff'}
+                  strokeWidth={3}
+                  strokeDasharray={driver.driverSlot === 2 ? '4 2' : undefined}
                   opacity={0.3}
                 />
                 <text

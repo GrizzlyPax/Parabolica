@@ -39,7 +39,7 @@
 }
 
 .betting-interface.wordle-style .race-info .track-name {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: var(--font-display);
   font-size: 1.2rem;
   font-weight: 600;
   margin: 0;
@@ -101,7 +101,7 @@
 }
 
 .betting-interface.wordle-style .narrator-box .narrator-name {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: var(--font-display);
   font-size: 0.9rem;
   color: #a88fd4;
   display: block;
@@ -198,10 +198,28 @@
   transform: none;
 }
 
-/* Cell content */
-.wordle-cell .cell-emoji {
-  font-size: 1.5rem;
+/* Cell content - marble badge */
+.wordle-cell .cell-badge {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
   line-height: 1;
+  background: var(--team-color, #333);
+  border: 4px solid var(--team-accent, #fff);
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.4),
+    inset 0 2px 4px rgba(255, 255, 255, 0.2),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.2);
+  flex-shrink: 0;
+}
+
+/* Driver 2 has dashed border to distinguish from Driver 1 */
+.wordle-cell .cell-badge[data-slot="2"] {
+  border-style: dashed;
 }
 
 .wordle-cell .cell-odds {
@@ -298,7 +316,7 @@
 }
 
 .inline-driver-name {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: var(--font-display);
   font-size: 1rem;
   font-weight: 600;
   color: #e8e8e8;
@@ -358,7 +376,7 @@
 }
 
 .vibe-value {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: var(--font-display);
   font-size: 0.9rem;
   font-weight: 600;
   letter-spacing: 0.5px;
@@ -540,7 +558,7 @@
   border: 2px solid #7a7040;
   border-radius: 6px;
   color: #d4af37;
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: var(--font-display);
   font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
@@ -583,7 +601,7 @@
   border: 1px solid #4c3a6b;
   border-radius: 8px;
   color: #a88fd4;
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: var(--font-display);
   font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -624,8 +642,24 @@
   font-size: 0.75rem;
 }
 
-.bet-chip .chip-emoji {
-  font-size: 0.9rem;
+.bet-chip .chip-badge {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  line-height: 1;
+  background: var(--team-color, #333);
+  border: 2px solid var(--team-accent, #fff);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  flex-shrink: 0;
+}
+
+/* Driver 2 has dashed border to distinguish from Driver 1 */
+.bet-chip .chip-badge[data-slot="2"] {
+  border-style: dashed;
 }
 
 .bet-chip .chip-type {
@@ -697,7 +731,7 @@
   border: 1px solid #3a4540;
   border-radius: 6px;
   color: #7cb;
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: var(--font-display);
   font-size: 1rem;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -789,8 +823,11 @@
     border-width: 1.5px;
   }
 
-  .wordle-cell .cell-emoji {
-    font-size: 1.2rem;
+  .wordle-cell .cell-badge {
+    width: 32px;
+    height: 32px;
+    font-size: 1rem;
+    border-width: 3px;
   }
 
   .wordle-cell .cell-odds {
@@ -910,8 +947,11 @@
     font-size: 0.7rem;
   }
 
-  .bet-chip .chip-emoji {
-    font-size: 0.8rem;
+  .bet-chip .chip-badge {
+    width: 18px;
+    height: 18px;
+    font-size: 0.6rem;
+    border-width: 1.5px;
   }
 
   .bet-chip .chip-remove {
@@ -951,7 +991,7 @@
 }
 
 .race-results h2 {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: var(--font-display);
   font-size: 1.8rem;
   margin-bottom: 1.5rem;
 }
@@ -969,7 +1009,7 @@
 }
 
 .race-results .narrator-box .narrator-name {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: var(--font-display);
   font-size: 0.75rem;
   color: #666;
   margin-right: 0.4rem;
@@ -1087,7 +1127,7 @@
   border: 1px solid #4a4540;
   border-radius: 6px;
   color: #d4af37;
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: var(--font-display);
   font-size: 1.1rem;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -1113,7 +1153,7 @@
 }
 
 .season-tally h1 {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: var(--font-display);
   font-size: 2.2rem;
   letter-spacing: 3px;
   margin-bottom: 1.5rem;
@@ -1132,7 +1172,7 @@
 }
 
 .season-tally .narrator-box .narrator-name {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: var(--font-display);
   font-size: 0.75rem;
   color: #666;
   margin-right: 0.4rem;
@@ -1150,7 +1190,7 @@
 }
 
 .final-score .score-value {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: var(--font-display);
   font-size: 4rem;
   font-weight: 700;
   color: #d4af37;
@@ -1205,7 +1245,7 @@
 }
 
 .race-history h3 {
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: var(--font-display);
   font-size: 1rem;
   color: #888;
   margin-bottom: 1rem;
@@ -1252,7 +1292,7 @@
   border: 1px solid #6a6530;
   border-radius: 6px;
   color: #d4af37;
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: var(--font-display);
   font-size: 1.2rem;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -1278,7 +1318,7 @@
   border: 1px solid #405530;
   border-radius: 6px;
   color: #90c090;
-  font-family: 'Cinzel', Georgia, serif;
+  font-family: var(--font-display);
   font-size: 1.2rem;
   cursor: pointer;
   transition: all 0.2s ease;

@@ -30,6 +30,7 @@ export interface Driver {
   emoji: string;          // Kingdom emoji avatar
   position: number;
   color: string;
+  accentColor?: string;   // Secondary/accent team color
   stats: DriverStats;
   currentLap: number;
   lapTimes: number[];     // Time (in ticks) for each completed lap
@@ -217,6 +218,7 @@ export interface TrackInfo {
   id: string;
   name: string;
   emoji: string;
+  funEmoji: string;  // Theme/fun emoji for the track
   description: string;
   laps: number;
   // Layout info for rendering
@@ -489,6 +491,7 @@ class RaceEngine {
     shortName: string;
     emoji: string;
     color: string;
+    accentColor?: string;
     stats: DriverStats;
     firstName?: string;
     lastName?: string;
@@ -514,6 +517,7 @@ class RaceEngine {
         emoji: d.emoji,
         position: 0,
         color: d.color,
+        accentColor: d.accentColor,
         stats: { ...d.stats },
         currentLap: 0,
         lapTimes: [],

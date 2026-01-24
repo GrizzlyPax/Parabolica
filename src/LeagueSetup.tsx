@@ -1,10 +1,11 @@
 import { useState, useMemo, useRef, useCallback } from 'react';
 import { generateRosterFromTeams, GeneratedDriver } from './generators/drivers';
-import { Track, ALL_TRACKS, getDynamicEventDescription, generateTrack } from './generators/tracks';
+import { Track, CURRENT_TRACKS, HISTORIC_TRACKS, getDynamicEventDescription, generateTrack } from './generators/tracks';
 import { generateCarsForKingdoms, GeneratedCar } from './generators/cars';
-import { getTeamsByIds, getRandomTeams, Team } from './data/teams';
+import { getTeamsByIds, getRandomTeams, Team, CURRENT_TEAMS } from './data/teams';
 import RaceEngine from './RaceEngine';
 import Tooltip from './components/Tooltip';
+import TeamCell from './components/TeamCell';
 import './LeagueSetup.css';
 
 // ============================================
@@ -115,9 +116,9 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
   // Determine if we're in season mode
   const isSeasonMode = !!seasonKingdomIds && seasonKingdomIds.length > 0;
 
-  // Get the active teams (either season-selected or random 10 for single race)
+  // Get the active teams (either season-selected or random 11 for single race)
   const [activeTeams, setActiveTeams] = useState<Team[]>(() =>
-    isSeasonMode ? getTeamsByIds(seasonKingdomIds!) : getRandomTeams(10)
+    isSeasonMode ? getTeamsByIds(seasonKingdomIds!) : getRandomTeams(11)
   );
 
   // Generate roster based on active teams
@@ -183,7 +184,7 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
     // In season mode, only reroll drivers and cars (teams and track are fixed)
     let newTeams = activeTeams;
     if (!isSeasonMode) {
-      newTeams = getRandomTeams(10);
+      newTeams = getRandomTeams(11);
       setActiveTeams(newTeams);
       setTrack(generateTrack());
     }
@@ -222,6 +223,7 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
       id: track.id,
       name: track.name,
       emoji: track.emoji,
+      funEmoji: track.funEmoji,
       description: track.description,
       laps: track.laps,
       layout: {
@@ -231,16 +233,16 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
         straightEnd: track.layout.straightEnd,
         totalLength: track.layout.totalLength,
       },
-      event: {
+      event: track.event ? {
         id: track.event.id,
         name: track.event.name,
         emoji: track.event.emoji,
         description: getDynamicEventDescription(track.event, track.laps),
         flavorText: track.event.flavorText,
-      },
+      } : undefined,
       // Full event data for engine processing
-      eventTrigger: track.event.trigger,
-      eventEffect: track.event.effect,
+      eventTrigger: track.event?.trigger,
+      eventEffect: track.event?.effect,
     });
 
     // Apply track settings
@@ -258,7 +260,7 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
       <div className="narrator-box">
         <span className="narrator-name">🏁 Race Director</span>
         <span className="narrator-message">
-          "{activeTeams.length} teams assembled. {roster.length} drivers ready. {track.emoji} {track.name} awaits."
+          "{activeTeams.length} teams assembled. {roster.length} drivers ready. {track.funEmoji} {track.name} awaits."
         </span>
         <span className="setup-tip">Tap a team to see their drivers and car details.</span>
       </div>
@@ -288,57 +290,107 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
 
       {/* Main Content Area */}
       <div className="setup-main">
-        {activeTab === 'roster' && (
-          <div className="wordle-grid teams-grid">
-            {activeTeams.map(team => {
-              const carRating = carRatings.get(team.id) || null;
-              const isSelected = selectedDriver?.kingdomId === team.id;
-              const drivers = getTeamDrivers(team.id);
-              const displayName = team.name.startsWith('The ')
-                ? team.name.slice(4)
-                : team.name;
+        {activeTab === 'roster' && (() => {
+          // Split active teams into current and historic groups
+          const currentTeamIds = new Set(CURRENT_TEAMS.map(t => t.id));
+          const currentActiveTeams = activeTeams.filter(t => currentTeamIds.has(t.id));
+          const historicActiveTeams = activeTeams.filter(t => !currentTeamIds.has(t.id));
 
-              return (
-                <button
-                  key={team.id}
-                  className={`wordle-cell team-cell ${isSelected ? 'selected' : ''}`}
-                  onClick={() => setSelectedDriver(isSelected ? null : drivers[0])}
-                  style={{ '--team-color': team.color } as React.CSSProperties}
-                >
-                  <span className="cell-emoji">{team.emoji}</span>
-                  <span className="cell-name" style={{ color: team.color }}>{displayName}</span>
-                  {carRating && (
-                    <span className={`cell-car-vibe tier-${carRating.tier}`}>
-                      {carRating.label}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        )}
+          return (
+            <div className="team-groups">
+              {currentActiveTeams.length > 0 && (
+                <div className="team-group">
+                  <h3 className="team-group-label">🏎️ Current Grid ({currentActiveTeams.length})</h3>
+                  <div className="teams-grid">
+                    {currentActiveTeams.map(team => {
+                      const isSelected = selectedDriver?.kingdomId === team.id;
+                      const drivers = getTeamDrivers(team.id);
+                      return (
+                        <TeamCell
+                          key={team.id}
+                          team={team}
+                          isSelected={isSelected}
+                          onClick={() => setSelectedDriver(isSelected ? null : drivers[0])}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+              {historicActiveTeams.length > 0 && (
+                <div className="team-group historic">
+                  <h3 className="team-group-label">📜 Legendary Teams ({historicActiveTeams.length})</h3>
+                  <div className="teams-grid">
+                    {historicActiveTeams.map(team => {
+                      const isSelected = selectedDriver?.kingdomId === team.id;
+                      const drivers = getTeamDrivers(team.id);
+                      return (
+                        <TeamCell
+                          key={team.id}
+                          team={team}
+                          isSelected={isSelected}
+                          onClick={() => setSelectedDriver(isSelected ? null : drivers[0])}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
         {activeTab === 'track' && (
-          <div className="wordle-grid tracks-grid">
-            {ALL_TRACKS.map(t => {
-              const isSelected = track.id === t.id;
-              const shortName = t.name.startsWith('The ')
-                ? t.name.slice(4).split(' ')[0]
-                : t.name.split(' ')[0];
-              return (
-                <button
-                  key={t.id}
-                  className={`wordle-cell track-cell ${isSelected ? 'selected' : ''}`}
-                  onClick={() => !isSeasonMode && setTrack(t)}
-                  disabled={isSeasonMode}
-                >
-                  <span className="cell-emoji">{t.emoji}</span>
-                  <span className="cell-name">{shortName}</span>
-                  <span className="cell-laps">{t.laps}L</span>
-                  {isSelected && <span className="cell-check">✓</span>}
-                </button>
-              );
-            })}
+          <div className="track-list-groups">
+            <div className="track-list-group">
+              <h3 className="track-group-label">🏁 Current Season ({CURRENT_TRACKS.length})</h3>
+              <div className="track-list">
+                {CURRENT_TRACKS.map(t => {
+                  const isSelected = track.id === t.id;
+                  return (
+                    <button
+                      key={t.id}
+                      className={`track-list-item ${isSelected ? 'selected' : ''}`}
+                      onClick={() => !isSeasonMode && setTrack(t)}
+                      disabled={isSeasonMode}
+                    >
+                      <span className="track-emojis">{t.funEmoji} {t.emoji}</span>
+                      <span className="track-info">
+                        <span className="track-name">{t.name}</span>
+                        <span className="track-desc">{t.description}</span>
+                      </span>
+                      <span className="track-laps">{t.laps}L</span>
+                      {isSelected && <span className="track-check">✓</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="track-list-group historic">
+              <h3 className="track-group-label">📜 Historic Circuits ({HISTORIC_TRACKS.length})</h3>
+              <div className="track-list">
+                {HISTORIC_TRACKS.map(t => {
+                  const isSelected = track.id === t.id;
+                  return (
+                    <button
+                      key={t.id}
+                      className={`track-list-item historic ${isSelected ? 'selected' : ''}`}
+                      onClick={() => !isSeasonMode && setTrack(t)}
+                      disabled={isSeasonMode}
+                    >
+                      <span className="track-emojis">{t.funEmoji} {t.emoji}</span>
+                      <span className="track-info">
+                        <span className="track-name">{t.name}</span>
+                        <span className="track-desc">{t.description}</span>
+                      </span>
+                      <span className="track-laps">{t.laps}L</span>
+                      {isSelected && <span className="track-check">✓</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         )}
 
@@ -423,9 +475,9 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
         {activeTab === 'track' && (
           <div className="inline-detail-panel track-detail">
             <div className="detail-team-header">
-              <span className="detail-emoji">{track.emoji}</span>
+              <span className="detail-emoji">{track.funEmoji}</span>
               <div className="detail-team-info">
-                <h3>{track.name}</h3>
+                <h3>{track.name} {track.emoji}</h3>
                 <p className="detail-desc">{track.description}</p>
               </div>
             </div>
@@ -434,10 +486,12 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
               <span className="track-stat-pill">{track.laps} laps</span>
               <span className="track-stat-pill">{track.length} units</span>
             </div>
-            <div className="track-event-box">
-              <span className="event-title">{track.event.emoji} {track.event.name}</span>
-              <span className="event-desc">{getDynamicEventDescription(track.event, track.laps)}</span>
-            </div>
+            {track.event && (
+              <div className="track-event-box">
+                <span className="event-title">{track.event.emoji} {track.event.name}</span>
+                <span className="event-desc">{getDynamicEventDescription(track.event, track.laps)}</span>
+              </div>
+            )}
           </div>
         )}
       </div>

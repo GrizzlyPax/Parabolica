@@ -316,18 +316,24 @@ function Compendium({ onBack }: CompendiumProps) {
 
         {activeTab === 'events' && (
           <div className="events-section">
-            <CollapsibleSection title="Track Events" icon="🌍" count={ALL_TRACKS.length} defaultOpen={true}>
+            <CollapsibleSection title="Track Events" icon="🌍" count={ALL_TRACKS.filter(t => t.event).length} defaultOpen={true}>
               <div className="compact-list">
-                {ALL_TRACKS.map(track => (
-                  <div key={track.event.id} className="compact-row expandable">
-                    <span className="compact-label">
-                      <span className="item-emoji">{track.event.emoji}</span>
-                      {track.event.name}
-                      <span className="item-source">{track.emoji} {track.name}</span>
-                    </span>
-                    <span className="compact-value">{formatTrigger(track.event.trigger)} → {formatEffect(track.event.effect)}</span>
+                {ALL_TRACKS.filter(t => t.event).length === 0 ? (
+                  <div className="compact-row">
+                    <span className="compact-label">No track events configured yet</span>
                   </div>
-                ))}
+                ) : (
+                  ALL_TRACKS.filter(t => t.event).map(track => (
+                    <div key={track.event!.id} className="compact-row expandable">
+                      <span className="compact-label">
+                        <span className="item-emoji">{track.event!.emoji}</span>
+                        {track.event!.name}
+                        <span className="item-source">{track.funEmoji} {track.name}</span>
+                      </span>
+                      <span className="compact-value">{formatTrigger(track.event!.trigger)} → {formatEffect(track.event!.effect)}</span>
+                    </div>
+                  ))
+                )}
               </div>
             </CollapsibleSection>
 
@@ -446,11 +452,11 @@ function Compendium({ onBack }: CompendiumProps) {
                 {ALL_TRACKS.map(track => (
                   <div key={track.id} className="compact-row expandable">
                     <span className="compact-label">
-                      <span className="item-emoji">{track.emoji}</span>
+                      <span className="item-emoji">{track.funEmoji}</span>
                       {track.name}
                       <span className="item-trigger">{track.laps} laps</span>
                     </span>
-                    <span className="compact-value">{track.event.emoji} {track.event.name}</span>
+                    <span className="compact-value">{track.event ? `${track.event.emoji} ${track.event.name}` : 'No event'}</span>
                   </div>
                 ))}
               </div>

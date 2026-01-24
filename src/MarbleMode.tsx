@@ -760,8 +760,12 @@ export function BettingInterface({
                   className={`wordle-cell tier-${tier} ${isSelected ? 'selected' : ''} ${hasBet ? 'has-bet' : ''}`}
                   onClick={() => setSelectedDriver(isSelected ? null : driver)}
                   disabled={hasBet}
+                  style={{
+                    '--team-color': driver.color,
+                    '--team-accent': driver.accentColor || '#fff',
+                  } as React.CSSProperties}
                 >
-                  <span className="cell-emoji">{driver.emoji}</span>
+                  <span className="cell-badge" data-slot={driver.driverSlot || 1}>{driver.emoji}</span>
                   <span className="cell-odds">{odds?.win.toFixed(1)}x</span>
                   {hasBet && <span className="cell-check">✓</span>}
                 </button>
@@ -858,14 +862,24 @@ export function BettingInterface({
           {currentBets.length > 0 && (
             <div className="bets-summary">
               <div className="bets-chips">
-                {currentBets.map(bet => (
-                  <div key={bet.id} className="bet-chip">
-                    <span className="chip-emoji">{bet.driverEmoji}</span>
-                    <span className="chip-type">{getBetTypeLabel(bet.type)}</span>
-                    <span className="chip-amount">{bet.amount}→{Math.floor(bet.amount * bet.odds)}</span>
-                    <button className="chip-remove" onClick={() => onRemoveBet(bet.id)}>×</button>
-                  </div>
-                ))}
+                {currentBets.map(bet => {
+                  const betDriver = drivers.find(d => d.id === bet.driverId);
+                  return (
+                    <div
+                      key={bet.id}
+                      className="bet-chip"
+                      style={{
+                        '--team-color': betDriver?.color || '#333',
+                        '--team-accent': betDriver?.accentColor || '#fff',
+                      } as React.CSSProperties}
+                    >
+                      <span className="chip-badge" data-slot={betDriver?.driverSlot || 1}>{bet.driverEmoji}</span>
+                      <span className="chip-type">{getBetTypeLabel(bet.type)}</span>
+                      <span className="chip-amount">{bet.amount}→{Math.floor(bet.amount * bet.odds)}</span>
+                      <button className="chip-remove" onClick={() => onRemoveBet(bet.id)}>×</button>
+                    </div>
+                  );
+                })}
               </div>
               <div className="bets-totals">
                 <span className="total-wagered">{totalWagered}ṁ wagered</span>
