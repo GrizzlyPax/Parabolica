@@ -1,4 +1,5 @@
 import { Tag } from './data/tags';
+import { SimVariables, CANON_VARIABLES } from './simlab/types';
 
 export interface DriverStats {
   baseSpeed: number;      // Base speed multiplier (0.85 - 1.15)
@@ -75,7 +76,6 @@ export interface TickFactors {
   consistencyEffect: number;
   luckBonus: number;
   enduranceFactor: number;
-  chaosModifier: number;  // Any chaos effects applied
   tireModifier: number;   // Tire performance impact (1.0 = neutral, <1 = degraded)
   carPowerModifier: number;  // Car power multiplier (from car stats)
   carGripModifier: number;   // Car grip multiplier (affects consistency)
@@ -89,7 +89,6 @@ export interface RaceConfig {
   tickInterval: number;           // Ms between ticks
   baseSpeedMin: number;           // Minimum base speed per tick
   baseSpeedMax: number;           // Maximum base speed per tick
-  chaosLevel: number;             // 0-1, how much randomness affects things
   consistencyWeight: number;      // How much consistency stat matters
   luckWeight: number;             // How much luck stat matters
   enduranceDecay: number;         // How much endurance matters per lap
@@ -175,8 +174,6 @@ export interface PitStopInfo {
 // Event types for the analytics system
 export type RaceEventType =
   | 'luck_trigger'     // Luck bonus activated (luckBonus > 1)
-  | 'chaos_boost'      // Positive chaos event
-  | 'chaos_penalty'    // Negative chaos event
   | 'endurance_decay'  // Endurance dropped below threshold
   | 'lap_complete'     // Driver finished a lap
   | 'lead_change'      // New race leader
@@ -277,7 +274,6 @@ export const DEFAULT_CONFIG: RaceConfig = {
   tickInterval: 100,
   baseSpeedMin: 3,
   baseSpeedMax: 12,
-  chaosLevel: 0.3,
   consistencyWeight: 0.5,
   luckWeight: 0.3,
   enduranceDecay: 0.1,
@@ -348,6 +344,9 @@ class RaceEngine {
   private activeTagEffects: Map<number, { tagId: string; speedModifier: number; consistencyModifier: number; luckModifier: number; expiresAtTick: number | null }[]> = new Map();
   private tagActivatedThisRace: Set<string> = new Set();  // "driverId-tagId" to track one-time activations
 
+  // Simulation variable overrides (for Sim Lab tuning)
+  private simVars: SimVariables | null = null;
+
   private constructor() {
     this.initializeDrivers();
   }
@@ -357,6 +356,67 @@ class RaceEngine {
       RaceEngine.instance = new RaceEngine();
     }
     return RaceEngine.instance;
+  }
+
+  // === SIM VARIABLE HELPERS ===
+  // These methods return overridden values from simVars or fall back to hardcoded defaults
+
+  private getTireCompound(compound: TireCompound): TireCompoundProperties {
+    if (this.simVars) {
+      const v = this.simVars.tires[compound];
+      return {
+        speedBonus: v.speedBonus,
+        wearRate: v.wearRate,
+        criticalAt: v.criticalAt,
+        cliffSeverity: v.cliffSeverity,
+        blowoutRisk: v.blowoutRisk,
+      };
+    }
+    return TIRE_COMPOUNDS[compound];
+  }
+
+  private getCrashVars() {
+    if (this.simVars) return this.simVars.crashes;
+    return CANON_VARIABLES.crashes;
+  }
+
+  private getMechanicalVars() {
+    if (this.simVars) return this.simVars.mechanical;
+    return CANON_VARIABLES.mechanical;
+  }
+
+  // @ts-expect-error - Will be used for pit stop overrides
+  private getPitVars() {
+    if (this.simVars) return this.simVars.pits;
+    return CANON_VARIABLES.pits;
+  }
+
+  // @ts-expect-error - Will be used for performance overrides
+  private getPerformanceVars() {
+    if (this.simVars) return this.simVars.performance;
+    return CANON_VARIABLES.performance;
+  }
+
+  // @ts-expect-error - Will be used for car stat overrides
+  private getCarStatVars() {
+    if (this.simVars) return this.simVars.carStats;
+    return CANON_VARIABLES.carStats;
+  }
+
+  private getTireVars() {
+    if (this.simVars) return this.simVars.tires;
+    return CANON_VARIABLES.tires;
+  }
+
+  private getBlowoutVars() {
+    if (this.simVars) return this.simVars.blowouts;
+    return CANON_VARIABLES.blowouts;
+  }
+
+  // @ts-expect-error - Will be used for safety car overrides
+  private getSafetyCarVars() {
+    if (this.simVars) return this.simVars.safetyCar;
+    return CANON_VARIABLES.safetyCar;
   }
 
   private initializeDrivers(): void {
@@ -734,7 +794,7 @@ class RaceEngine {
   }
 
   private calculateSpeed(driver: Driver): TickFactors {
-    const { baseSpeedMin, baseSpeedMax, chaosLevel, consistencyWeight, enduranceDecay } = this.config;
+    const { baseSpeedMin, baseSpeedMax, consistencyWeight, enduranceDecay } = this.config;
 
     // Base random roll
     const baseRoll = Math.random();
@@ -779,20 +839,6 @@ class RaceEngine {
     const actualPenalty = baseEndurancePenalty * (2 - enduranceResistance); // 0.85-1.15 stat
     const enduranceFactor = Math.max(0.85, 1 - actualPenalty); // Cap at 15% max penalty
 
-    // Chaos modifier: TIME-BASED events (same chance for everyone)
-    let chaosModifier = 1;
-    if (this.config.enableRandomEvents && Math.random() < this.config.randomEventChance) {
-      // Random event! 50/50 good or bad
-      const eventRoll = Math.random();
-      if (eventRoll < 0.5) {
-        // Bad event - 5-25% slowdown based on chaos level
-        chaosModifier = 1 - (0.05 + chaosLevel * Math.random() * 0.2);
-      } else {
-        // Good event - 5-25% boost based on chaos level
-        chaosModifier = 1 + (0.05 + chaosLevel * Math.random() * 0.2);
-      }
-    }
-
     // Track event speed modifier (from active effects like speed_boost/speed_penalty)
     const trackEventModifier = this.getActiveSpeedModifier(driver.id);
 
@@ -804,7 +850,7 @@ class RaceEngine {
     const adjustedConsistencyEffect = consistencyEffect * tagConsistencyModifier;
 
     // Calculate final speed (car modifiers already incorporated into statsModifier and consistencyEffect)
-    const finalSpeed = baseSpeed * statsModifier * adjustedConsistencyEffect * luckBonus * enduranceFactor * chaosModifier * trackEventModifier * tagSpeedModifier;
+    const finalSpeed = baseSpeed * statsModifier * adjustedConsistencyEffect * luckBonus * enduranceFactor * trackEventModifier * tagSpeedModifier;
 
     return {
       baseRoll,
@@ -812,7 +858,6 @@ class RaceEngine {
       consistencyEffect,
       luckBonus,
       enduranceFactor,
-      chaosModifier,
       tireModifier: 1, // Placeholder, updated after tire calculation in tick()
       carPowerModifier,
       carGripModifier,
@@ -827,19 +872,20 @@ class RaceEngine {
     if (!this.config.enableTireWear) return 1;
 
     const tire = driver.tireState;
-    const compound = TIRE_COMPOUNDS[tire.compound];
+    const compound = this.getTireCompound(tire.compound);
+    const tireVars = this.getTireVars();
 
     // Fresh tire bonus from compound
     let modifier = compound.speedBonus;
 
-    // Gradual degradation before cliff (gentle loss from 40% to critical)
-    const precliffStart = 40;
+    // Gradual degradation before cliff (gentle loss from precliffStart to critical)
+    const precliffStart = tireVars.precliffStart;
     if (tire.wear > precliffStart && tire.wear < compound.criticalAt) {
       const wearInPrecliff = tire.wear - precliffStart;
       const precliffRange = compound.criticalAt - precliffStart;
       const precliffProgress = wearInPrecliff / precliffRange;
-      // Lose up to 5% speed gradually before cliff
-      modifier -= precliffProgress * 0.05;
+      // Lose up to precliffMaxPenalty speed gradually before cliff
+      modifier -= precliffProgress * tireVars.precliffMaxPenalty;
     }
 
     // THE CLIFF: Compound-specific steep performance drop after critical wear
@@ -849,21 +895,18 @@ class RaceEngine {
       const cliffProgress = Math.min(1, wearBeyondCritical / remainingRange);
 
       // Cliff severity determines how harsh the drop is
-      // Soft (0.8): Loses up to 32% speed (0.8 * 0.4)
-      // Medium (0.5): Loses up to 20% speed (0.5 * 0.4)
-      // Hard (0.3): Loses up to 12% speed (0.3 * 0.4)
-      const cliffPenalty = Math.pow(cliffProgress, 1.5) * compound.cliffSeverity * 0.4;
+      const cliffPenalty = Math.pow(cliffProgress, tireVars.cliffExponent) * compound.cliffSeverity * tireVars.cliffMultiplier;
       modifier -= cliffPenalty;
 
       // Additional flat penalty once in cliff zone
-      modifier -= 0.05; // 5% immediate penalty for being past critical
+      modifier -= tireVars.flatPenalty;
     }
 
     // Apply damage penalty if car is damaged
     modifier *= driver.damageSpeedPenalty;
 
-    // Floor at 60% speed (allows for truly punishing degradation)
-    return Math.max(0.60, modifier);
+    // Floor at minSpeedFloor (allows for truly punishing degradation)
+    return Math.max(tireVars.minSpeedFloor, modifier);
   }
 
   // Check if a driver's tires blow out this tick (returns true if blowout occurs)
@@ -871,14 +914,15 @@ class RaceEngine {
     if (!this.config.enableTireWear) return false;
     if (driver.status !== 'racing') return false;
 
+    const blowoutVars = this.getBlowoutVars();
+
     // SAFETY CAR: Greatly reduce blowout risk - low speeds = less tire stress
     if (this.isUnderSafetyCar()) {
-      // 98% reduction - blowouts almost never happen at SC pace
-      if (Math.random() > 0.02) return false;
+      if (Math.random() > blowoutVars.safetyCarReduction) return false;
     }
 
     const tire = driver.tireState;
-    const compound = TIRE_COMPOUNDS[tire.compound];
+    const compound = this.getTireCompound(tire.compound);
 
     // No risk until past critical wear
     if (tire.wear < compound.criticalAt) return false;
@@ -888,46 +932,43 @@ class RaceEngine {
     const remainingRange = 100 - compound.criticalAt;
     const riskProgress = wearBeyondCritical / remainingRange;
 
-    // Risk scales exponentially: starts at base risk, can reach 5x at 100% wear
-    const riskMultiplier = 1 + Math.pow(riskProgress, 2) * 4;
+    // Risk scales exponentially: starts at base risk, can reach riskMultiplier at 100% wear
+    const riskMultiplier = 1 + Math.pow(riskProgress, blowoutVars.riskExponent) * blowoutVars.riskMultiplier;
     const blowoutChance = compound.blowoutRisk * riskMultiplier;
 
-    // Aggressive drivers have higher blowout risk (up to 50% more)
+    // Aggressive drivers have higher blowout risk
     const normalizedAggression = (driver.stats.aggression - 0.3) / 0.5; // 0 to 1
-    const finalChance = blowoutChance * (1 + normalizedAggression * 0.5);
+    const finalChance = blowoutChance * (1 + normalizedAggression * blowoutVars.aggressionBonus);
 
     return Math.random() < finalChance;
   }
 
   /**
    * Check for mechanical failure based on car reliability and driver luck
-   * Base chance is very low (0.015% per tick) but can be modified by:
+   * Base chance is very low but can be modified by:
    * - Car reliability (1-5 stars): Low reliability = more failures
    * - Driver luck: Unlucky drivers have worse mechanical fortune
    */
   private checkMechanicalFailure(driver: Driver): boolean {
     if (driver.status !== 'racing') return false;
 
+    const mechVars = this.getMechanicalVars();
+    const crashVars = this.getCrashVars();
+
     // SAFETY CAR: Greatly reduce mechanical failures - cars under less stress
     if (this.isUnderSafetyCar()) {
-      // 95% reduction during SC
-      if (Math.random() > 0.05) return false;
+      if (Math.random() > crashVars.safetyCarsReduction) return false;
     }
 
     // Base mechanical failure chance per tick
-    const baseMechanicalChance = 0.0004; // ~0.04% per tick - noticeable but not dominant
+    const baseMechanicalChance = mechVars.baseFailureChance;
 
     // Car reliability reduces failure chance
-    // 1 star = 0.6x protection (40% more failures)
-    // 3 stars = 1.0x (baseline)
-    // 5 stars = 1.4x protection (28% fewer failures)
     const carReliability = driver.carStats?.reliability ?? 3;
-    const reliabilityProtection = 0.4 + carReliability * 0.2; // 0.6, 0.8, 1.0, 1.2, 1.4
+    const reliabilityProtection = mechVars.reliabilityBase + carReliability * mechVars.reliabilityPerStar;
 
     // Driver luck also affects mechanical fortune
-    // Low luck (0.3) = 1.2x more likely to fail
-    // High luck (0.8) = 0.8x less likely to fail
-    const luckFactor = 1.4 - driver.stats.luck * 0.75; // 1.175 to 0.8
+    const luckFactor = mechVars.luckBase - driver.stats.luck * mechVars.luckMultiplier;
 
     // Final chance: base / reliability * luck factor
     const finalChance = (baseMechanicalChance / reliabilityProtection) * luckFactor;
@@ -938,31 +979,24 @@ class RaceEngine {
   private calculateTireWear(driver: Driver): number {
     if (!this.config.enableTireWear) return 0;
 
-    const compound = TIRE_COMPOUNDS[driver.tireState.compound];
+    const compound = this.getTireCompound(driver.tireState.compound);
+    const tireVars = this.getTireVars();
 
     // Calculate wear rate relative to total race distance
-    // Goal: Soft tires should hit critical (~70%) at ~25% race distance
-    // So after full race on softs, they'd be at 280% wear (4x the target)
-    // This means you MUST pit or face disaster
     const totalRaceDistance = this.config.totalLaps * this.config.lapLength;
     const distancePerTick = driver.lastTickSpeed || 10;
 
     // Base wear per tick = (100 / expected ticks to hit 100%) * compound rate
-    // For softs with wearRate 4.0: hit critical (70%) at 25% of race = 100/25 = 4% per % of race
-    // Expected ticks to complete race = totalRaceDistance / avgSpeed
     const expectedTicksForRace = totalRaceDistance / distancePerTick;
     const baseWearPerTick = 100 / expectedTicksForRace;
 
     // Compound wear rate determines how fast they degrade relative to race distance
-    // Soft (4.0): 100% wear at ~25% race distance
-    // Medium (2.8): 100% wear at ~36% race distance
-    // Hard (2.2): 100% wear at ~45% race distance
     const compoundWear = baseWearPerTick * compound.wearRate;
 
-    // High aggression = pushes tires harder = more wear (up to 40% extra)
+    // High aggression = pushes tires harder = more wear
     // Aggression ranges from 0.3 to 0.8, so normalize it
     const normalizedAggression = (driver.stats.aggression - 0.3) / 0.5; // 0 to 1
-    const aggressionFactor = 1 + normalizedAggression * 0.4;
+    const aggressionFactor = 1 + normalizedAggression * tireVars.aggressionWearMultiplier;
 
     return compoundWear * aggressionFactor;
   }
@@ -988,7 +1022,7 @@ class RaceEngine {
       return false;
     }
 
-    const compound = TIRE_COMPOUNDS[driver.tireState.compound];
+    const compound = this.getTireCompound(driver.tireState.compound);
     const wearPercent = driver.tireState.wear;
     const pitStopsDone = driver.pitStops.length;
     const mandatoryStops = this.config.mandatoryPitStops;
@@ -1147,6 +1181,7 @@ class RaceEngine {
 
   private processCrashRisk(pair: [Driver, Driver]): { crashed: boolean; dnfDriverIds: number[]; damagedDriverIds: number[] } {
     const [d1, d2] = pair;
+    const crashVars = this.getCrashVars();
 
     // Check if either driver has divine protection
     if (this.isDriverProtected(d1.id) || this.isDriverProtected(d2.id)) {
@@ -1155,24 +1190,23 @@ class RaceEngine {
 
     // SAFETY CAR: Greatly reduce crash risk - everyone is going slow and single file
     if (this.isUnderSafetyCar()) {
-      // 95% reduction in crash chance during Safety Car
-      if (Math.random() > 0.05) {
+      if (Math.random() > crashVars.safetyCarsReduction) {
         return { crashed: false, dnfDriverIds: [], damagedDriverIds: [] };
       }
     }
 
-    // Base crash chance
-    let crashChance = this.config.baseCrashChance;
+    // Base crash chance (from simVars if set, otherwise config)
+    let crashChance = this.simVars ? crashVars.baseCrashChance : this.config.baseCrashChance;
 
     // Modifiers
     const avgConsistency = (d1.stats.consistency + d2.stats.consistency) / 2;
-    crashChance *= (1 + (0.5 - avgConsistency)); // Low consistency = higher risk
+    crashChance *= (1 + (crashVars.consistencyFactor - avgConsistency)); // Low consistency = higher risk
 
     const avgTireWear = (d1.tireState.wear + d2.tireState.wear) / 2;
-    crashChance *= (1 + avgTireWear / 200); // Worn tires = higher risk
+    crashChance *= (1 + avgTireWear / crashVars.tireWearFactor); // Worn tires = higher risk
 
     const avgLuck = (d1.stats.luck + d2.stats.luck) / 2;
-    crashChance *= (1 - avgLuck * 0.3); // Luck can save you
+    crashChance *= (1 - avgLuck * crashVars.luckReduction); // Luck can save you
 
     // Random roll
     if (Math.random() < crashChance) {
@@ -1180,9 +1214,9 @@ class RaceEngine {
       const dnfDriverIds: number[] = [];
       const damagedDriverIds: number[] = [];
 
-      // Initial collision - 40% survival chance each (more forgiving)
+      // Initial collision - survival chance each
       for (const driver of [d1, d2]) {
-        if (Math.random() < 0.4) {
+        if (Math.random() < crashVars.initialSurvivalChance) {
           // Survives with damage
           damagedDriverIds.push(driver.id);
         } else {
@@ -1197,22 +1231,22 @@ class RaceEngine {
         dnfDriverIds.push(unlucky);
       }
 
-      // Check for pileup - other nearby drivers (reduced severity)
-      // Smaller proximity window and lower catch chance
+      // Check for pileup - other nearby drivers
+      const proximityThreshold = this.simVars ? crashVars.crashProximityThreshold : this.config.crashProximityThreshold;
       const nearbyDrivers = this.drivers.filter(d =>
         d.status === 'racing' &&
         d.id !== d1.id &&
         d.id !== d2.id &&
         d.currentLap === d1.currentLap &&
-        Math.abs(d.position - d1.position) / this.config.lapLength < 0.03
+        Math.abs(d.position - d1.position) / this.config.lapLength < proximityThreshold
       );
 
       // Only check up to 2 nearby drivers for pileup
       const pileupCandidates = nearbyDrivers.slice(0, 2);
 
       for (const nearby of pileupCandidates) {
-        if (Math.random() < 0.25) { // 25% chance to get caught (was 40%)
-          if (Math.random() < 0.5) { // 50% survive with damage (was 20%)
+        if (Math.random() < crashVars.pileupParticipationChance) {
+          if (Math.random() < crashVars.pileupSurvivalChance) {
             damagedDriverIds.push(nearby.id);
           } else {
             dnfDriverIds.push(nearby.id);
@@ -1224,7 +1258,7 @@ class RaceEngine {
     }
 
     // Close call event (tension builder)
-    if (Math.random() < crashChance * 10) {
+    if (Math.random() < crashChance * crashVars.secondaryAccidentMultiplier) {
       this.logEvent(
         'close_call',
         d1,
@@ -2086,11 +2120,12 @@ class RaceEngine {
       // Calculate tire wear
       const wearIncrease = this.calculateTireWear(driver);
       const newTireWear = Math.min(100, driver.tireState.wear + wearIncrease);
-      const compound = TIRE_COMPOUNDS[driver.tireState.compound];
+      const compound = this.getTireCompound(driver.tireState.compound);
 
       // Tire warning event when entering critical zone
       if (newTireWear >= compound.criticalAt && driver.tireState.wear < compound.criticalAt) {
-        this.logEvent('tire_warning', driver, `${compound === TIRE_COMPOUNDS.soft ? 'Softs' : compound === TIRE_COMPOUNDS.medium ? 'Mediums' : 'Hards'} are falling off the cliff! ${Math.floor(newTireWear)}% worn`, 'negative', 0.7);
+        const compoundName = driver.tireState.compound === 'soft' ? 'Softs' : driver.tireState.compound === 'medium' ? 'Mediums' : 'Hards';
+        this.logEvent('tire_warning', driver, `${compoundName} are falling off the cliff! ${Math.floor(newTireWear)}% worn`, 'negative', 0.7);
       }
 
       // Check for tire blowout (uses new probability-based system)
@@ -2123,26 +2158,6 @@ class RaceEngine {
           `Fortune smiled with a ${bonus}% speed boost`,
           'positive',
           (factors.luckBonus - 1) / 0.3
-        );
-      }
-
-      if (factors.chaosModifier > 1) {
-        const boost = ((factors.chaosModifier - 1) * 100).toFixed(0);
-        this.logEvent(
-          'chaos_boost',
-          driver,
-          `The void blessed them with ${boost}% extra speed`,
-          'positive',
-          (factors.chaosModifier - 1) / 0.5
-        );
-      } else if (factors.chaosModifier < 1 && factors.chaosModifier !== 1) {
-        const penalty = ((1 - factors.chaosModifier) * 100).toFixed(0);
-        this.logEvent(
-          'chaos_penalty',
-          driver,
-          `Cosmic interference caused ${penalty}% slowdown`,
-          'negative',
-          (1 - factors.chaosModifier) / 0.5
         );
       }
 
@@ -2780,10 +2795,14 @@ class RaceEngine {
   /**
    * Create a new independent RaceEngine instance (not the singleton).
    * Used for parallel headless simulation in Web Workers.
+   * @param simVars Optional simulation variable overrides for tuning
    */
-  static createForWorker(): RaceEngine {
+  static createForWorker(simVars?: SimVariables): RaceEngine {
     // Bypass singleton pattern - directly instantiate
     const engine = new RaceEngine();
+    if (simVars) {
+      engine.simVars = simVars;
+    }
     return engine;
   }
 

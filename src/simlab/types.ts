@@ -5,7 +5,6 @@
 
 export interface SimLabConfig {
   batchSize: number;           // 100, 250, 500, 1000
-  chaosLevel: number;          // 0-1 (from RaceConfig)
   trackSelection: 'random' | 'all';  // Track selection mode
   // Note: totalLaps removed - uses track's hardcoded lap count
 }
@@ -14,7 +13,7 @@ export interface SimLabConfig {
 
 // Main thread -> Worker
 export type WorkerInMessage =
-  | { type: 'START'; config: SimLabConfig }
+  | { type: 'START'; config: SimLabConfig; variables?: SimVariables; label?: 'canon' | 'heretic' }
   | { type: 'ABORT' };
 
 // Worker -> Main thread
@@ -302,3 +301,226 @@ export interface DriverWithTags {
 
 // Points system (standard F1-style)
 export const POINTS_SYSTEM = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1];
+
+// === SIM VARIABLES (TUNABLE CONSTANTS) ===
+// These represent the actual hardcoded values in RaceEngine that can be overridden
+
+export interface TireCompoundConfig {
+  speedBonus: number;      // Multiplier (1.08 = +8% for soft)
+  wearRate: number;        // Higher = faster degradation
+  criticalAt: number;      // Wear % when cliff starts (70 for soft)
+  cliffSeverity: number;   // How harsh the cliff is (0.85 for soft)
+  blowoutRisk: number;     // Base blowout chance per tick
+}
+
+export interface SimVariables {
+  // === TIRE SYSTEM ===
+  tires: {
+    soft: TireCompoundConfig;
+    medium: TireCompoundConfig;
+    hard: TireCompoundConfig;
+    // Degradation curve
+    precliffStart: number;        // When pre-cliff penalty starts (40)
+    precliffMaxPenalty: number;   // Max speed loss before critical (0.05 = 5%)
+    cliffExponent: number;        // Exponential curve steepness (1.5)
+    cliffMultiplier: number;      // Cliff severity multiplier (0.4)
+    flatPenalty: number;          // Immediate penalty at critical (0.05)
+    minSpeedFloor: number;        // Minimum speed multiplier (0.60)
+    // Wear factors
+    aggressionWearMultiplier: number; // How much aggression affects wear (0.4)
+  };
+
+  // === CRASH SYSTEM ===
+  crashes: {
+    baseCrashChance: number;          // Base probability when in proximity (0.0003)
+    crashProximityThreshold: number;  // How close = crash risk (0.03 = 3% of lap)
+    crashGracePeriod: number;         // Ticks before crashes can happen (50)
+    // Survival rates
+    initialSurvivalChance: number;    // Chance to survive initial collision (0.40)
+    pileupParticipationChance: number; // Chance to join pileup (0.25)
+    pileupSurvivalChance: number;     // Chance to survive pileup with damage (0.50)
+    secondaryAccidentMultiplier: number; // Multiplier for secondary crash (10)
+    // Modifiers
+    consistencyFactor: number;        // How much low consistency increases risk (0.5)
+    tireWearFactor: number;           // Tire wear crash modifier (200 divisor)
+    luckReduction: number;            // Max luck crash reduction (0.3 = 30%)
+    safetyCarsReduction: number;      // SC crash reduction (0.05 = 95% reduction)
+  };
+
+  // === MECHANICAL FAILURE ===
+  mechanical: {
+    baseFailureChance: number;        // Base mechanical failure per tick (0.0004)
+    reliabilityBase: number;          // Base reliability protection (0.4)
+    reliabilityPerStar: number;       // Added protection per star (0.2)
+    luckBase: number;                 // Base luck factor (1.4)
+    luckMultiplier: number;           // Luck reduction multiplier (0.75)
+  };
+
+  // === PIT SYSTEM ===
+  pits: {
+    basePitDuration: number;          // Base pit stop ticks (60)
+    slowStopMultiplier: number;       // Slow stop time multiplier (1.5)
+    quickStopMultiplier: number;      // Quick stop time multiplier (0.75)
+    // Pit crew formulas
+    slowStopBase: number;             // Base slow stop chance (0.42)
+    slowStopPerStar: number;          // Slow stop reduction per star (0.07)
+    quickStopBase: number;            // Base quick stop chance (0.03)
+    quickStopPerStar: number;         // Quick stop bonus per star (0.05)
+    // Pit window
+    basePitChance: number;            // Base pit decision chance (0.20)
+    wearPitBonus: number;             // Additional chance from wear (0.30)
+    luckPitAdjustment: number;        // Luck pit timing adjustment (0.4)
+  };
+
+  // === PERFORMANCE FACTORS ===
+  performance: {
+    // Luck system
+    luckProcChance: number;           // Chance for luck boost per tick (0.03)
+    luckMinBoostBase: number;         // Base min boost (0.05)
+    luckMinBoostPerStat: number;      // Min boost per luck point (0.125)
+    luckMaxBoostBase: number;         // Base max boost (0.15)
+    luckMaxBoostPerStat: number;      // Max boost per luck point (0.1875)
+    // Endurance
+    enduranceDecay: number;           // Base fatigue rate (0.1)
+    enduranceMaxPenalty: number;      // Max fatigue penalty (0.15 = 15%)
+    endurancePenaltyMultiplier: number; // Endurance penalty factor (0.5)
+    // Damage
+    damageSpeedPenalty: number;       // Speed multiplier when damaged (0.85)
+  };
+
+  // === CAR STAT FORMULAS ===
+  carStats: {
+    powerBase: number;                // Base power multiplier (0.88)
+    powerPerStar: number;             // Power added per star (0.04)
+    gripBase: number;                 // Base grip multiplier (0.775)
+    gripPerStar: number;              // Grip added per star (0.075)
+    reliabilityBase: number;          // Base reliability (0.4)
+    reliabilityPerStar: number;       // Reliability per star (0.2)
+    tireManagementBase: number;       // Base tire management (0.775)
+    tireManagementPerStar: number;    // Tire management per star (0.075)
+    pitCrewBase: number;              // Base pit crew (0.48)
+    pitCrewPerStar: number;           // Pit crew per star reduction (0.08)
+  };
+
+  // === SAFETY CAR ===
+  safetyCar: {
+    targetGap: number;                // Target spacing between cars (0.16)
+    cruiseSpeed: number;              // Normal SC speed (0.50)
+    catchUpSpeed: number;             // Speed when catching up (0.65)
+    unsafetyCarSpeed: number;         // Unsafety car per-tick speed (0.0035)
+  };
+
+  // === BLOWOUT SYSTEM ===
+  blowouts: {
+    riskExponent: number;             // Exponential curve (2)
+    riskMultiplier: number;           // Max risk multiplier (4)
+    aggressionBonus: number;          // Aggression blowout risk (0.5)
+    safetyCarReduction: number;       // SC blowout reduction (0.02 = 98% reduction)
+  };
+}
+
+// Default "Canon" values - the current hardcoded constants
+export const CANON_VARIABLES: SimVariables = {
+  tires: {
+    soft: { speedBonus: 1.08, wearRate: 4.0, criticalAt: 70, cliffSeverity: 0.85, blowoutRisk: 0.0015 },
+    medium: { speedBonus: 1.00, wearRate: 2.8, criticalAt: 75, cliffSeverity: 0.5, blowoutRisk: 0.0008 },
+    hard: { speedBonus: 0.94, wearRate: 2.2, criticalAt: 80, cliffSeverity: 0.3, blowoutRisk: 0.0003 },
+    precliffStart: 40,
+    precliffMaxPenalty: 0.05,
+    cliffExponent: 1.5,
+    cliffMultiplier: 0.4,
+    flatPenalty: 0.05,
+    minSpeedFloor: 0.60,
+    aggressionWearMultiplier: 0.4,
+  },
+  crashes: {
+    baseCrashChance: 0.0003,
+    crashProximityThreshold: 0.03,
+    crashGracePeriod: 50,
+    initialSurvivalChance: 0.40,
+    pileupParticipationChance: 0.25,
+    pileupSurvivalChance: 0.50,
+    secondaryAccidentMultiplier: 10,
+    consistencyFactor: 0.5,
+    tireWearFactor: 200,
+    luckReduction: 0.3,
+    safetyCarsReduction: 0.05,
+  },
+  mechanical: {
+    baseFailureChance: 0.0004,
+    reliabilityBase: 0.4,
+    reliabilityPerStar: 0.2,
+    luckBase: 1.4,
+    luckMultiplier: 0.75,
+  },
+  pits: {
+    basePitDuration: 60,
+    slowStopMultiplier: 1.5,
+    quickStopMultiplier: 0.75,
+    slowStopBase: 0.42,
+    slowStopPerStar: 0.07,
+    quickStopBase: 0.03,
+    quickStopPerStar: 0.05,
+    basePitChance: 0.20,
+    wearPitBonus: 0.30,
+    luckPitAdjustment: 0.4,
+  },
+  performance: {
+    luckProcChance: 0.03,
+    luckMinBoostBase: 0.05,
+    luckMinBoostPerStat: 0.125,
+    luckMaxBoostBase: 0.15,
+    luckMaxBoostPerStat: 0.1875,
+    enduranceDecay: 0.1,
+    enduranceMaxPenalty: 0.15,
+    endurancePenaltyMultiplier: 0.5,
+    damageSpeedPenalty: 0.85,
+  },
+  carStats: {
+    powerBase: 0.88,
+    powerPerStar: 0.04,
+    gripBase: 0.775,
+    gripPerStar: 0.075,
+    reliabilityBase: 0.4,
+    reliabilityPerStar: 0.2,
+    tireManagementBase: 0.775,
+    tireManagementPerStar: 0.075,
+    pitCrewBase: 0.48,
+    pitCrewPerStar: 0.08,
+  },
+  safetyCar: {
+    targetGap: 0.16,
+    cruiseSpeed: 0.50,
+    catchUpSpeed: 0.65,
+    unsafetyCarSpeed: 0.0035,
+  },
+  blowouts: {
+    riskExponent: 2,
+    riskMultiplier: 4,
+    aggressionBonus: 0.5,
+    safetyCarReduction: 0.02,
+  },
+};
+
+// Helper to deep clone variables
+export function cloneVariables(vars: SimVariables): SimVariables {
+  return JSON.parse(JSON.stringify(vars));
+}
+
+// === COMPARISON RESULTS ===
+// Results from running Canon vs Heretic side by side
+
+export interface ComparisonResults {
+  canon: SimLabResults;
+  heretic: SimLabResults;
+  hereticVariables: SimVariables;  // What was changed
+  variablesDiff: VariablesDiff[];  // Summary of what changed
+}
+
+export interface VariablesDiff {
+  path: string;           // e.g., "tires.soft.wearRate"
+  label: string;          // Human-readable label
+  canonValue: number;
+  hereticValue: number;
+  percentChange: number;  // (heretic - canon) / canon * 100
+}

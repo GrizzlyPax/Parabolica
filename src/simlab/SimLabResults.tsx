@@ -1,21 +1,29 @@
 import { useState } from 'react';
-import type { SimLabResults as Results, TagPerformance } from './types';
+import type { SimLabResults as Results, TagPerformance, ComparisonResults } from './types';
 import { StatBucketChart, StatImpactTable, PieChart, TagImpactTable, StatMetric, StatImpactRow } from './SimLabCharts';
-import { ALL_TAGS, type Tag } from '../data/tags';
+import { ALL_TAGS } from '../data/tags';
 
 type ResultsTab = 'overview' | 'stats' | 'tags' | 'dnf' | 'pits' | 'tracks' | 'events';
 
 interface Props {
   results: Results;
+  comparisonResults?: ComparisonResults;
   onReset: () => void;
   onExportJSON: () => void;
   onExportCSV: () => void;
   copyConfirmed?: boolean;
 }
 
-export default function SimLabResults({ results, onReset, onExportJSON, onExportCSV, copyConfirmed }: Props) {
+export default function SimLabResults({ results, comparisonResults, onReset, onExportJSON, onExportCSV, copyConfirmed }: Props) {
   const [activeTab, setActiveTab] = useState<ResultsTab>('overview');
   const [statMetric, setStatMetric] = useState<StatMetric>('winRate');
+  const [activeDataset, setActiveDataset] = useState<'canon' | 'heretic'>('canon');
+
+  // Get the active results based on toggle
+  const hasComparison = !!comparisonResults && comparisonResults.variablesDiff.length > 0;
+  const activeResults = hasComparison && activeDataset === 'heretic'
+    ? comparisonResults.heretic
+    : results;
 
   const tabLabels: Record<ResultsTab, string> = {
     overview: 'Overview',
@@ -31,8 +39,13 @@ export default function SimLabResults({ results, onReset, onExportJSON, onExport
     <div className="sim-lab-results">
       <div className="results-header">
         <div className="results-summary">
-          <span className="summary-item">{results.totalRaces} races</span>
-          <span className="summary-item">{(results.executionTimeMs / 1000).toFixed(1)}s</span>
+          <span className="summary-item">{activeResults.totalRaces} races</span>
+          <span className="summary-item">{(activeResults.executionTimeMs / 1000).toFixed(1)}s</span>
+          {hasComparison && (
+            <span className="summary-item dataset-label">
+              Viewing: <strong className={activeDataset}>{activeDataset === 'canon' ? 'Canon' : 'Heretic'}</strong>
+            </span>
+          )}
         </div>
         <div className="results-actions">
           <button onClick={onExportCSV}>{copyConfirmed ? 'Copied!' : 'Copy All Data'}</button>
@@ -40,6 +53,39 @@ export default function SimLabResults({ results, onReset, onExportJSON, onExport
           <button onClick={onReset}>New Sim</button>
         </div>
       </div>
+
+      {hasComparison && (
+        <div className="comparison-toggle">
+          <button
+            className={`canon ${activeDataset === 'canon' ? 'active' : ''}`}
+            onClick={() => setActiveDataset('canon')}
+          >
+            Canon
+          </button>
+          <button
+            className={`heretic ${activeDataset === 'heretic' ? 'active' : ''}`}
+            onClick={() => setActiveDataset('heretic')}
+          >
+            Heretic
+          </button>
+        </div>
+      )}
+
+      {hasComparison && comparisonResults.variablesDiff.length > 0 && (
+        <div className="variables-diff-summary">
+          <h4>Variables Changed ({comparisonResults.variablesDiff.length})</h4>
+          <div className="diff-list">
+            {comparisonResults.variablesDiff.map(diff => (
+              <div key={diff.path} className="diff-item">
+                <span className="diff-item-label">{diff.label}</span>
+                <span className={`diff-item-change ${diff.percentChange >= 0 ? 'positive' : 'negative'}`}>
+                  {diff.percentChange >= 0 ? '+' : ''}{diff.percentChange.toFixed(0)}%
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="results-tabs">
         {(Object.keys(tabLabels) as ResultsTab[]).map(tab => (
@@ -54,19 +100,25 @@ export default function SimLabResults({ results, onReset, onExportJSON, onExport
       </div>
 
       <div className="results-content">
-        {activeTab === 'overview' && <OverviewTab results={results} />}
+        {activeTab === 'overview' && (
+          <OverviewTab
+            results={activeResults}
+            comparisonResults={hasComparison ? comparisonResults : undefined}
+            activeDataset={activeDataset}
+          />
+        )}
         {activeTab === 'stats' && (
           <StatsTab
-            results={results}
+            results={activeResults}
             metric={statMetric}
             onMetricChange={setStatMetric}
           />
         )}
-        {activeTab === 'tags' && <TagsTab results={results} />}
-        {activeTab === 'dnf' && <DNFTab results={results} />}
-        {activeTab === 'pits' && <PitsTab results={results} />}
-        {activeTab === 'tracks' && <TracksTab results={results} />}
-        {activeTab === 'events' && <EventsTab results={results} />}
+        {activeTab === 'tags' && <TagsTab results={activeResults} />}
+        {activeTab === 'dnf' && <DNFTab results={activeResults} />}
+        {activeTab === 'pits' && <PitsTab results={activeResults} />}
+        {activeTab === 'tracks' && <TracksTab results={activeResults} />}
+        {activeTab === 'events' && <EventsTab results={activeResults} />}
       </div>
     </div>
   );
@@ -74,7 +126,15 @@ export default function SimLabResults({ results, onReset, onExportJSON, onExport
 
 // === TAB COMPONENTS ===
 
-function OverviewTab({ results }: { results: Results }) {
+function OverviewTab({
+  results,
+  comparisonResults,
+  activeDataset,
+}: {
+  results: Results;
+  comparisonResults?: ComparisonResults;
+  activeDataset: 'canon' | 'heretic';
+}) {
   const dnfRate = results.dnfResults.totalDriverRaces > 0
     ? (results.dnfResults.totalDNFs / results.dnfResults.totalDriverRaces) * 100
     : 0;
@@ -83,41 +143,137 @@ function OverviewTab({ results }: { results: Results }) {
     ? results.pitStopResults.totalPitStops / results.pitStopResults.totalRaces / 20 // 20 drivers
     : 0;
 
+  const scRate = results.totalRaces > 0
+    ? (results.dnfResults.safetyCars.racesWithSafetyCar / results.totalRaces) * 100
+    : 0;
+
+  // Calculate comparison values if available
+  const hasComparison = !!comparisonResults;
+  let canonDnfRate = 0, hereticDnfRate = 0;
+  let canonScRate = 0, hereticScRate = 0;
+  let canonAvgPits = 0, hereticAvgPits = 0;
+  let canonCrashRate = 0, hereticCrashRate = 0;
+
+  if (hasComparison) {
+    const c = comparisonResults.canon;
+    const h = comparisonResults.heretic;
+
+    canonDnfRate = c.dnfResults.totalDriverRaces > 0
+      ? (c.dnfResults.totalDNFs / c.dnfResults.totalDriverRaces) * 100 : 0;
+    hereticDnfRate = h.dnfResults.totalDriverRaces > 0
+      ? (h.dnfResults.totalDNFs / h.dnfResults.totalDriverRaces) * 100 : 0;
+
+    canonScRate = c.totalRaces > 0
+      ? (c.dnfResults.safetyCars.racesWithSafetyCar / c.totalRaces) * 100 : 0;
+    hereticScRate = h.totalRaces > 0
+      ? (h.dnfResults.safetyCars.racesWithSafetyCar / h.totalRaces) * 100 : 0;
+
+    canonAvgPits = c.pitStopResults.totalRaces > 0
+      ? c.pitStopResults.totalPitStops / c.pitStopResults.totalRaces / 20 : 0;
+    hereticAvgPits = h.pitStopResults.totalRaces > 0
+      ? h.pitStopResults.totalPitStops / h.pitStopResults.totalRaces / 20 : 0;
+
+    canonCrashRate = c.dnfResults.totalDriverRaces > 0
+      ? (c.dnfResults.byReason.crash / c.dnfResults.totalDriverRaces) * 100 : 0;
+    hereticCrashRate = h.dnfResults.totalDriverRaces > 0
+      ? (h.dnfResults.byReason.crash / h.dnfResults.totalDriverRaces) * 100 : 0;
+  }
+
+  const formatDelta = (delta: number, suffix = '%') => {
+    const sign = delta >= 0 ? '+' : '';
+    return `${sign}${delta.toFixed(1)}${suffix}`;
+  };
+
+  const getDeltaClass = (delta: number) => delta >= 0 ? 'positive' : 'negative';
+
   return (
     <div className="tab-overview">
-      <div className="overview-grid">
-        <div className="overview-card">
-          <span className="overview-label">Total Races</span>
-          <span className="overview-value">{results.totalRaces}</span>
+      {hasComparison ? (
+        <>
+          <div className="comparison-overview">
+            <h4>Canon vs Heretic Comparison</h4>
+            <div className="comparison-table">
+              <div className="comparison-table-header">
+                <span className="comp-col-label">Metric</span>
+                <span className="comp-col-canon">Canon</span>
+                <span className="comp-col-heretic">Heretic</span>
+                <span className="comp-col-delta">Delta</span>
+              </div>
+              <div className="comparison-table-row">
+                <span className="comp-col-label">DNF Rate</span>
+                <span className="comp-col-canon">{canonDnfRate.toFixed(1)}%</span>
+                <span className="comp-col-heretic">{hereticDnfRate.toFixed(1)}%</span>
+                <span className={`comp-col-delta ${getDeltaClass(hereticDnfRate - canonDnfRate)}`}>
+                  {formatDelta(hereticDnfRate - canonDnfRate)}
+                </span>
+              </div>
+              <div className="comparison-table-row">
+                <span className="comp-col-label">Crash Rate</span>
+                <span className="comp-col-canon">{canonCrashRate.toFixed(1)}%</span>
+                <span className="comp-col-heretic">{hereticCrashRate.toFixed(1)}%</span>
+                <span className={`comp-col-delta ${getDeltaClass(hereticCrashRate - canonCrashRate)}`}>
+                  {formatDelta(hereticCrashRate - canonCrashRate)}
+                </span>
+              </div>
+              <div className="comparison-table-row">
+                <span className="comp-col-label">Safety Car %</span>
+                <span className="comp-col-canon">{canonScRate.toFixed(1)}%</span>
+                <span className="comp-col-heretic">{hereticScRate.toFixed(1)}%</span>
+                <span className={`comp-col-delta ${getDeltaClass(hereticScRate - canonScRate)}`}>
+                  {formatDelta(hereticScRate - canonScRate)}
+                </span>
+              </div>
+              <div className="comparison-table-row">
+                <span className="comp-col-label">Avg Pit Stops</span>
+                <span className="comp-col-canon">{canonAvgPits.toFixed(2)}</span>
+                <span className="comp-col-heretic">{hereticAvgPits.toFixed(2)}</span>
+                <span className={`comp-col-delta ${getDeltaClass(hereticAvgPits - canonAvgPits)}`}>
+                  {formatDelta(hereticAvgPits - canonAvgPits, '')}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="overview-section">
+            <h4>Currently Viewing: <span className={activeDataset}>{activeDataset === 'canon' ? 'Canon' : 'Heretic'}</span></h4>
+            <p className="viewing-note">Use the toggle above to switch between Canon and Heretic data in all tabs.</p>
+          </div>
+        </>
+      ) : (
+        <div className="overview-grid">
+          <div className="overview-card">
+            <span className="overview-label">Total Races</span>
+            <span className="overview-value">{results.totalRaces}</span>
+          </div>
+          <div className="overview-card">
+            <span className="overview-label">Driver-Races</span>
+            <span className="overview-value">{results.totalDriverRaces.toLocaleString()}</span>
+          </div>
+          <div className="overview-card">
+            <span className="overview-label">DNF Rate</span>
+            <span className="overview-value">{Math.round(dnfRate)}%</span>
+          </div>
+          <div className="overview-card">
+            <span className="overview-label">Avg Pit Stops</span>
+            <span className="overview-value">{avgPitStops.toFixed(1)}</span>
+          </div>
+          <div className="overview-card">
+            <span className="overview-label">Safety Car %</span>
+            <span className="overview-value">{Math.round(scRate)}%</span>
+          </div>
+          <div className="overview-card">
+            <span className="overview-label">Races/Second</span>
+            <span className="overview-value">
+              {(results.totalRaces / (results.executionTimeMs / 1000)).toFixed(0)}
+            </span>
+          </div>
         </div>
-        <div className="overview-card">
-          <span className="overview-label">Driver-Races</span>
-          <span className="overview-value">{results.totalDriverRaces.toLocaleString()}</span>
-        </div>
-        <div className="overview-card">
-          <span className="overview-label">DNF Rate</span>
-          <span className="overview-value">{Math.round(dnfRate)}%</span>
-        </div>
-        <div className="overview-card">
-          <span className="overview-label">Avg Pit Stops</span>
-          <span className="overview-value">{avgPitStops.toFixed(1)}</span>
-        </div>
-        <div className="overview-card">
-          <span className="overview-label">Execution Time</span>
-          <span className="overview-value">{(results.executionTimeMs / 1000).toFixed(1)}s</span>
-        </div>
-        <div className="overview-card">
-          <span className="overview-label">Races/Second</span>
-          <span className="overview-value">
-            {(results.totalRaces / (results.executionTimeMs / 1000)).toFixed(0)}
-          </span>
-        </div>
-      </div>
+      )}
 
       <div className="overview-section">
         <h4>Configuration</h4>
         <p>
-          {results.config.batchSize} races | {Math.round(results.config.chaosLevel * 100)}% chaos | {results.config.trackSelection} tracks
+          {results.config.batchSize} races | {results.config.trackSelection} tracks
         </p>
       </div>
 

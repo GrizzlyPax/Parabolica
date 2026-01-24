@@ -2051,3 +2051,715 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
+
+/* === VARIABLES EDITOR === */
+
+.simlab-variables {
+  max-width: 900px;
+}
+
+.variables-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #333;
+}
+
+.variables-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #fff;
+}
+
+.variables-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.total-changes {
+  color: #a855f7;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.reset-btn {
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: 1px solid #444;
+  color: #888;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.reset-btn:hover:not(:disabled) {
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.reset-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.variables-intro {
+  color: #888;
+  font-size: 0.9rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: #1a1a1a;
+  border-radius: 8px;
+  border-left: 3px solid #a855f7;
+}
+
+.variables-intro strong {
+  color: #a855f7;
+}
+
+.variables-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Collapsible Section */
+.collapsible-section {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.section-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 1rem;
+  cursor: pointer;
+  text-align: left;
+}
+
+.section-header:hover {
+  background: #252525;
+}
+
+.section-title {
+  flex: 1;
+  font-weight: 500;
+}
+
+.changed-badge {
+  font-size: 0.75rem;
+  color: #a855f7;
+  background: rgba(168, 85, 247, 0.15);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+}
+
+.section-toggle {
+  color: #666;
+  font-size: 0.75rem;
+}
+
+.section-content {
+  padding: 1rem;
+  border-top: 1px solid #333;
+  background: #0f0f0f;
+}
+
+/* Tire Compounds Grid */
+.tire-compounds {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.tire-compound-panel {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 6px;
+  padding: 0.75rem;
+}
+
+.tire-compound-panel h4 {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.9rem;
+  color: #fff;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #333;
+}
+
+.tire-general {
+  border-top: 1px solid #333;
+  padding-top: 1rem;
+}
+
+.tire-general h4 {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.9rem;
+  color: #888;
+}
+
+/* Variable Row */
+.variable-row {
+  display: grid;
+  grid-template-columns: 1fr 90px 100px 60px;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  border-radius: 4px;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+
+.variable-row:hover {
+  background: #1a1a1a;
+}
+
+.variable-row.changed {
+  background: rgba(168, 85, 247, 0.08);
+}
+
+.variable-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.variable-label {
+  font-size: 0.85rem;
+  color: #ccc;
+  font-weight: 500;
+}
+
+.variable-desc {
+  font-size: 0.7rem;
+  color: #555;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.variable-canon,
+.variable-heretic {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  text-align: right;
+}
+
+.canon-label,
+.heretic-label {
+  font-size: 0.6rem;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.canon-value {
+  font-size: 0.85rem;
+  color: #888;
+  font-family: monospace;
+}
+
+.heretic-input {
+  width: 100%;
+  padding: 0.3rem 0.5rem;
+  background: #252525;
+  border: 1px solid #444;
+  color: #fff;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-family: monospace;
+  text-align: right;
+}
+
+.heretic-input:focus {
+  outline: none;
+  border-color: #a855f7;
+}
+
+.variable-row.changed .heretic-input {
+  border-color: #a855f7;
+  background: rgba(168, 85, 247, 0.1);
+}
+
+.variable-delta {
+  text-align: right;
+}
+
+.delta-value {
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.delta-value.positive {
+  color: #22c55e;
+}
+
+.delta-value.negative {
+  color: #ef4444;
+}
+
+/* Responsive for tire compounds */
+@media (max-width: 800px) {
+  .tire-compounds {
+    grid-template-columns: 1fr;
+  }
+
+  .variable-row {
+    grid-template-columns: 1fr 70px 80px 50px;
+    gap: 0.5rem;
+  }
+}
+
+/* === COMPARISON PROGRESS === */
+
+.comparison-progress {
+  max-width: 600px;
+}
+
+.comparison-progress-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.comparison-progress-header h3 {
+  margin: 0 0 0.5rem 0;
+  color: #fff;
+  font-size: 1.1rem;
+}
+
+.comparison-progress-header p {
+  margin: 0;
+  color: #888;
+  font-size: 0.9rem;
+}
+
+.comparison-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.comparison-bar-section {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.comparison-bar-section.canon {
+  border-left: 3px solid #22c55e;
+}
+
+.comparison-bar-section.heretic {
+  border-left: 3px solid #a855f7;
+}
+
+.comparison-bar-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.comparison-bar-label span:first-child {
+  font-weight: 500;
+  color: #fff;
+}
+
+.comparison-bar-label .percent {
+  color: #22c55e;
+  font-weight: 600;
+}
+
+.comparison-bar-section.heretic .comparison-bar-label .percent {
+  color: #a855f7;
+}
+
+.comparison-bar-track {
+  height: 8px;
+  background: #333;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.comparison-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.comparison-bar-section.canon .comparison-bar-fill {
+  background: linear-gradient(90deg, #22c55e, #16a34a);
+}
+
+.comparison-bar-section.heretic .comparison-bar-fill {
+  background: linear-gradient(90deg, #a855f7, #7c3aed);
+}
+
+.comparison-track-info {
+  text-align: center;
+  color: #666;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+}
+
+/* Solo mode (canon only, no comparison) */
+.comparison-bar-section.solo {
+  border-left-color: #3b82f6;
+}
+
+.comparison-bar-section.solo .comparison-bar-fill {
+  background: linear-gradient(90deg, #3b82f6, #2563eb);
+}
+
+.comparison-bar-section.solo .comparison-bar-label .percent {
+  color: #3b82f6;
+}
+
+/* === COMPARISON RESULTS === */
+
+.comparison-toggle {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+  background: #1a1a1a;
+  padding: 0.25rem;
+  border-radius: 6px;
+  width: fit-content;
+}
+
+.comparison-toggle button {
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: none;
+  color: #888;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.15s;
+}
+
+.comparison-toggle button:hover {
+  color: #fff;
+}
+
+.comparison-toggle button.active {
+  background: #333;
+  color: #fff;
+}
+
+.comparison-toggle button.canon.active {
+  background: #22c55e;
+  color: #000;
+}
+
+.comparison-toggle button.heretic.active {
+  background: #a855f7;
+  color: #fff;
+}
+
+/* Comparison value displays */
+.comparison-value {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.canon-val {
+  color: #22c55e;
+}
+
+.heretic-val {
+  color: #a855f7;
+}
+
+.comparison-delta {
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.comparison-delta.positive {
+  color: #22c55e;
+}
+
+.comparison-delta.negative {
+  color: #ef4444;
+}
+
+/* Variables diff summary */
+.variables-diff-summary {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.variables-diff-summary h4 {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.9rem;
+  color: #888;
+}
+
+.diff-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.diff-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.6rem;
+  background: rgba(168, 85, 247, 0.1);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  border-radius: 4px;
+  font-size: 0.8rem;
+}
+
+.diff-item-label {
+  color: #ccc;
+}
+
+.diff-item-change {
+  font-weight: 600;
+}
+
+.diff-item-change.positive {
+  color: #22c55e;
+}
+
+.diff-item-change.negative {
+  color: #ef4444;
+}
+
+/* === UNIFIED SETUP PHASE === */
+
+.simlab-setup-phase {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.simlab-config-section {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.simlab-config-section .config-row {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.simlab-config-section .config-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 150px;
+}
+
+.simlab-config-section .config-group label {
+  font-size: 0.85rem;
+  color: #888;
+}
+
+.simlab-config-section .batch-buttons,
+.simlab-config-section .track-buttons {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.simlab-config-section .batch-buttons button,
+.simlab-config-section .track-buttons button {
+  padding: 0.5rem 0.75rem;
+  background: #252525;
+  border: 1px solid #444;
+  color: #aaa;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.15s;
+}
+
+.simlab-config-section .batch-buttons button:hover,
+.simlab-config-section .track-buttons button:hover {
+  border-color: #666;
+  color: #fff;
+}
+
+.simlab-config-section .batch-buttons button.active,
+.simlab-config-section .track-buttons button.active {
+  background: #22c55e;
+  border-color: #22c55e;
+  color: #000;
+  font-weight: 600;
+}
+
+.simlab-config-section .chaos-slider {
+  width: 150px;
+  height: 6px;
+  -webkit-appearance: none;
+  background: #333;
+  border-radius: 3px;
+}
+
+.simlab-config-section .chaos-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  background: #22c55e;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.setup-actions {
+  display: flex;
+  justify-content: center;
+  padding: 1rem;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 8px;
+  position: sticky;
+  bottom: 0;
+}
+
+.run-btn {
+  padding: 0.75rem 2rem;
+  background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
+  border: none;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+
+.run-btn:hover {
+  transform: scale(1.02);
+}
+
+/* === COMPARISON OVERVIEW TABLE === */
+
+.comparison-overview {
+  background: #1f1f1f;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.comparison-overview h4 {
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+  color: #fff;
+}
+
+.comparison-table {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.comparison-table-header,
+.comparison-table-row {
+  display: grid;
+  grid-template-columns: 1fr 80px 80px 80px;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  align-items: center;
+}
+
+.comparison-table-header {
+  font-size: 0.75rem;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid #333;
+}
+
+.comparison-table-row {
+  background: #252525;
+  border-radius: 4px;
+}
+
+.comparison-table-row:hover {
+  background: #2a2a2a;
+}
+
+.comp-col-label {
+  font-weight: 500;
+  color: #ccc;
+}
+
+.comp-col-canon {
+  text-align: right;
+  color: #22c55e;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.comp-col-heretic {
+  text-align: right;
+  color: #a855f7;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.comp-col-delta {
+  text-align: right;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.comp-col-delta.positive {
+  color: #22c55e;
+}
+
+.comp-col-delta.negative {
+  color: #ef4444;
+}
+
+/* Dataset label in header */
+.dataset-label {
+  color: #888;
+}
+
+.dataset-label strong.canon {
+  color: #22c55e;
+}
+
+.dataset-label strong.heretic {
+  color: #a855f7;
+}
+
+/* Viewing note */
+.overview-section h4 .canon {
+  color: #22c55e;
+}
+
+.overview-section h4 .heretic {
+  color: #a855f7;
+}
+
+.viewing-note {
+  color: #888;
+  font-size: 0.85rem;
+}

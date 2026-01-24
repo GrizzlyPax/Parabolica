@@ -1,86 +1,243 @@
 import { useState, useEffect, useRef } from 'react';
-import SimLabConfig from './SimLabConfig';
-import SimLabProgress from './SimLabProgress';
 import SimLabResults from './SimLabResults';
-import type { SimLabConfig as Config, SimLabResults as Results, WorkerOutMessage } from './types';
+import { SimLabVariables } from './SimLabVariables';
+import type { SimLabConfig as Config, SimLabResults as Results, WorkerOutMessage, SimVariables, ComparisonResults, VariablesDiff } from './types';
+import { CANON_VARIABLES, cloneVariables } from './types';
 import './SimLab.css';
 
-type SimLabPhase = 'config' | 'running' | 'results';
+type SimLabPhase = 'setup' | 'running' | 'results';
+
+// Helper to compute diff between canon and heretic variables
+function computeVariablesDiff(canon: SimVariables, heretic: SimVariables): VariablesDiff[] {
+  const diffs: VariablesDiff[] = [];
+
+  const compare = (path: string, label: string, canonVal: number, hereticVal: number) => {
+    if (Math.abs(canonVal - hereticVal) > 0.0000001) {
+      const percentChange = canonVal !== 0 ? ((hereticVal - canonVal) / canonVal) * 100 : 0;
+      diffs.push({ path, label, canonValue: canonVal, hereticValue: hereticVal, percentChange });
+    }
+  };
+
+  // Tire compounds
+  for (const compound of ['soft', 'medium', 'hard'] as const) {
+    compare(`tires.${compound}.speedBonus`, `${compound} speed`, canon.tires[compound].speedBonus, heretic.tires[compound].speedBonus);
+    compare(`tires.${compound}.wearRate`, `${compound} wear`, canon.tires[compound].wearRate, heretic.tires[compound].wearRate);
+    compare(`tires.${compound}.criticalAt`, `${compound} cliff`, canon.tires[compound].criticalAt, heretic.tires[compound].criticalAt);
+    compare(`tires.${compound}.cliffSeverity`, `${compound} severity`, canon.tires[compound].cliffSeverity, heretic.tires[compound].cliffSeverity);
+    compare(`tires.${compound}.blowoutRisk`, `${compound} blowout`, canon.tires[compound].blowoutRisk, heretic.tires[compound].blowoutRisk);
+  }
+
+  // Tire general
+  compare('tires.precliffStart', 'precliff start', canon.tires.precliffStart, heretic.tires.precliffStart);
+  compare('tires.precliffMaxPenalty', 'precliff penalty', canon.tires.precliffMaxPenalty, heretic.tires.precliffMaxPenalty);
+
+  // Crashes
+  compare('crashes.baseCrashChance', 'crash chance', canon.crashes.baseCrashChance, heretic.crashes.baseCrashChance);
+  compare('crashes.crashProximityThreshold', 'proximity', canon.crashes.crashProximityThreshold, heretic.crashes.crashProximityThreshold);
+  compare('crashes.initialSurvivalChance', 'survival', canon.crashes.initialSurvivalChance, heretic.crashes.initialSurvivalChance);
+
+  // Mechanical
+  compare('mechanical.baseFailureChance', 'mech failure', canon.mechanical.baseFailureChance, heretic.mechanical.baseFailureChance);
+
+  // Pits
+  compare('pits.basePitDuration', 'pit duration', canon.pits.basePitDuration, heretic.pits.basePitDuration);
+  compare('pits.slowStopMultiplier', 'slow stop mult', canon.pits.slowStopMultiplier, heretic.pits.slowStopMultiplier);
+  compare('pits.quickStopMultiplier', 'quick stop mult', canon.pits.quickStopMultiplier, heretic.pits.quickStopMultiplier);
+
+  // Performance
+  compare('performance.luckProcChance', 'luck proc', canon.performance.luckProcChance, heretic.performance.luckProcChance);
+  compare('performance.enduranceDecay', 'endurance decay', canon.performance.enduranceDecay, heretic.performance.enduranceDecay);
+  compare('performance.damageSpeedPenalty', 'damage penalty', canon.performance.damageSpeedPenalty, heretic.performance.damageSpeedPenalty);
+
+  // Blowouts
+  compare('blowouts.riskMultiplier', 'blowout risk mult', canon.blowouts.riskMultiplier, heretic.blowouts.riskMultiplier);
+  compare('blowouts.aggressionBonus', 'aggression blowout', canon.blowouts.aggressionBonus, heretic.blowouts.aggressionBonus);
+
+  return diffs;
+}
 
 export default function SimLab() {
-  const [phase, setPhase] = useState<SimLabPhase>('config');
-  const [progress, setProgress] = useState({ completed: 0, total: 0, currentTrack: '' });
-  const [results, setResults] = useState<Results | null>(null);
+  const [phase, setPhase] = useState<SimLabPhase>('setup');
+
+  // Config state (moved from SimLabConfig)
+  const [batchSize, setBatchSize] = useState(100);
+  const [trackSelection, setTrackSelection] = useState<'random' | 'all'>('all');
+
+  // Heretic variables
+  const [hereticVariables, setHereticVariables] = useState<SimVariables>(cloneVariables(CANON_VARIABLES));
+
+  // Progress tracking for both workers
+  const [canonProgress, setCanonProgress] = useState({ completed: 0, total: 0, currentTrack: '' });
+  const [hereticProgress, setHereticProgress] = useState({ completed: 0, total: 0, currentTrack: '' });
+
+  // Results
+  const [comparisonResults, setComparisonResults] = useState<ComparisonResults | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [copyConfirmed, setCopyConfirmed] = useState(false);
-  const workerRef = useRef<Worker | null>(null);
+
+  // Workers
+  const canonWorkerRef = useRef<Worker | null>(null);
+  const hereticWorkerRef = useRef<Worker | null>(null);
+  const canonResultsRef = useRef<Results | null>(null);
+  const hereticResultsRef = useRef<Results | null>(null);
+
+  // Count how many workers have completed
+  const [completedWorkers, setCompletedWorkers] = useState(0);
+
+  // Track if we're running in comparison mode (both canon and heretic)
+  const [isComparisonMode, setIsComparisonMode] = useState(false);
 
   useEffect(() => {
-    // Create worker on mount
-    workerRef.current = new Worker(
+    // Create workers on mount
+    canonWorkerRef.current = new Worker(
       new URL('./simLabWorker.ts', import.meta.url),
       { type: 'module' }
     );
 
-    workerRef.current.onmessage = (e: MessageEvent<WorkerOutMessage>) => {
+    hereticWorkerRef.current = new Worker(
+      new URL('./simLabWorker.ts', import.meta.url),
+      { type: 'module' }
+    );
+
+    // Canon worker message handler
+    canonWorkerRef.current.onmessage = (e: MessageEvent<WorkerOutMessage>) => {
       switch (e.data.type) {
         case 'PROGRESS':
-          setProgress({
+          setCanonProgress({
             completed: e.data.completed,
             total: e.data.total,
             currentTrack: e.data.currentTrack,
           });
           break;
         case 'COMPLETE':
-          setResults(e.data.results);
-          setPhase('results');
+          canonResultsRef.current = e.data.results;
+          setCompletedWorkers(prev => prev + 1);
           break;
         case 'ERROR':
-          console.error('Sim Lab error:', e.data.message);
-          setError(e.data.message);
-          setPhase('config');
+          console.error('Canon worker error:', e.data.message);
+          setError(`Canon: ${e.data.message}`);
+          setPhase('setup');
           break;
       }
     };
 
-    workerRef.current.onerror = (e) => {
-      console.error('Worker error:', e);
-      setError('Worker crashed unexpectedly');
-      setPhase('config');
+    // Heretic worker message handler
+    hereticWorkerRef.current.onmessage = (e: MessageEvent<WorkerOutMessage>) => {
+      switch (e.data.type) {
+        case 'PROGRESS':
+          setHereticProgress({
+            completed: e.data.completed,
+            total: e.data.total,
+            currentTrack: e.data.currentTrack,
+          });
+          break;
+        case 'COMPLETE':
+          hereticResultsRef.current = e.data.results;
+          setCompletedWorkers(prev => prev + 1);
+          break;
+        case 'ERROR':
+          console.error('Heretic worker error:', e.data.message);
+          setError(`Heretic: ${e.data.message}`);
+          setPhase('setup');
+          break;
+      }
+    };
+
+    canonWorkerRef.current.onerror = (e) => {
+      console.error('Canon worker crashed:', e);
+      setError('Canon worker crashed unexpectedly');
+      setPhase('setup');
+    };
+
+    hereticWorkerRef.current.onerror = (e) => {
+      console.error('Heretic worker crashed:', e);
+      setError('Heretic worker crashed unexpectedly');
+      setPhase('setup');
     };
 
     return () => {
-      workerRef.current?.terminate();
+      canonWorkerRef.current?.terminate();
+      hereticWorkerRef.current?.terminate();
     };
   }, []);
 
-  const handleStartSimulation = (config: Config) => {
+  // When worker(s) complete, build results
+  useEffect(() => {
+    // Comparison mode: wait for both workers
+    if (isComparisonMode && completedWorkers >= 2 && canonResultsRef.current && hereticResultsRef.current) {
+      const comparison: ComparisonResults = {
+        canon: canonResultsRef.current,
+        heretic: hereticResultsRef.current,
+        hereticVariables,
+        variablesDiff: computeVariablesDiff(CANON_VARIABLES, hereticVariables),
+      };
+      setComparisonResults(comparison);
+      setPhase('results');
+      setCompletedWorkers(0);
+    }
+    // Canon-only mode: just need 1 worker
+    else if (!isComparisonMode && completedWorkers >= 1 && canonResultsRef.current) {
+      const comparison: ComparisonResults = {
+        canon: canonResultsRef.current,
+        heretic: canonResultsRef.current, // Same as canon when no changes
+        hereticVariables: CANON_VARIABLES,
+        variablesDiff: [],
+      };
+      setComparisonResults(comparison);
+      setPhase('results');
+      setCompletedWorkers(0);
+    }
+  }, [completedWorkers, hereticVariables, isComparisonMode]);
+
+  const handleStartSimulation = () => {
+    const config: Config = { batchSize, trackSelection };
+    const runComparison = hasChanges;
+
     setError(null);
     setPhase('running');
-    setProgress({ completed: 0, total: config.batchSize, currentTrack: '' });
-    workerRef.current?.postMessage({ type: 'START', config });
+    setCompletedWorkers(0);
+    setIsComparisonMode(runComparison);
+    canonResultsRef.current = null;
+    hereticResultsRef.current = null;
+    setCanonProgress({ completed: 0, total: config.batchSize, currentTrack: '' });
+    setHereticProgress({ completed: 0, total: config.batchSize, currentTrack: '' });
+
+    // Always start canon worker
+    canonWorkerRef.current?.postMessage({ type: 'START', config, label: 'canon' });
+
+    // Only start heretic worker if there are changes to compare
+    if (runComparison) {
+      hereticWorkerRef.current?.postMessage({ type: 'START', config, variables: hereticVariables, label: 'heretic' });
+    }
   };
 
   const handleAbort = () => {
-    workerRef.current?.postMessage({ type: 'ABORT' });
-    setPhase('config');
+    canonWorkerRef.current?.postMessage({ type: 'ABORT' });
+    if (isComparisonMode) {
+      hereticWorkerRef.current?.postMessage({ type: 'ABORT' });
+    }
+    setPhase('setup');
   };
 
   const handleReset = () => {
-    setResults(null);
+    setComparisonResults(null);
     setError(null);
-    setPhase('config');
+    setPhase('setup');
+  };
+
+  const handleResetVariables = () => {
+    setHereticVariables(cloneVariables(CANON_VARIABLES));
   };
 
   const handleExportJSON = () => {
-    if (!results) return;
+    if (!comparisonResults) return;
 
-    const json = JSON.stringify(results, null, 2);
+    const json = JSON.stringify(comparisonResults, null, 2);
     const blob = new Blob([json], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `simlab-results-${results.totalRaces}-races.json`;
+    a.download = `simlab-comparison-${comparisonResults.canon.totalRaces}-races.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -88,19 +245,12 @@ export default function SimLab() {
   };
 
   const handleExportCSV = async () => {
-    if (!results) return;
+    if (!comparisonResults) return;
 
-    const dnfRate = results.dnfResults.totalDriverRaces > 0
-      ? (results.dnfResults.totalDNFs / results.dnfResults.totalDriverRaces) * 100
-      : 0;
-    const avgPitStops = results.pitStopResults.totalRaces > 0
-      ? results.pitStopResults.totalPitStops / results.pitStopResults.totalRaces / 20
-      : 0;
-    const scRate = results.totalRaces > 0
-      ? (results.dnfResults.safetyCars.racesWithSafetyCar / results.totalRaces) * 100
-      : 0;
+    const canon = comparisonResults.canon;
+    const heretic = comparisonResults.heretic;
+    const hasChanges = comparisonResults.variablesDiff.length > 0;
 
-    // Helper to get rate from bucket
     const getBucketRate = (bucket: { entries: number; wins: number; podiums: number; pointsFinishes: number; dnfs: number }, metric: 'win' | 'podium' | 'points' | 'finish') => {
       if (bucket.entries === 0) return 0;
       switch (metric) {
@@ -111,207 +261,143 @@ export default function SimLab() {
       }
     };
 
-    // Build TSV rows (tab-separated for easy paste into sheets)
     const rows: string[] = [];
     const addRow = (...cols: (string | number)[]) => rows.push(cols.join('\t'));
     const addBlank = () => rows.push('');
 
-    // === OVERVIEW ===
-    addRow('OVERVIEW');
-    addRow('Metric', 'Value');
-    addRow('Total Races', results.totalRaces);
-    addRow('Driver-Races', results.totalDriverRaces);
-    addRow('Execution Time (s)', (results.executionTimeMs / 1000).toFixed(1));
-    addRow('Races/Second', (results.totalRaces / (results.executionTimeMs / 1000)).toFixed(0));
-    addBlank();
-
-    // === DNF STATS ===
-    addRow('DNF STATS');
-    addRow('Metric', 'Value', '%');
-    addRow('Total DNFs', results.dnfResults.totalDNFs, `${Math.round(dnfRate)}%`);
-    addRow('DNFs per Race', (results.dnfResults.totalDNFs / results.totalRaces).toFixed(1));
-    addRow('Crash DNFs', results.dnfResults.byReason.crash, `${Math.round((results.dnfResults.byReason.crash / results.dnfResults.totalDNFs) * 100)}%`);
-    addRow('Mechanical DNFs', results.dnfResults.byReason.mechanical, `${Math.round((results.dnfResults.byReason.mechanical / results.dnfResults.totalDNFs) * 100)}%`);
-    addRow('Tire Failure DNFs', results.dnfResults.byReason.tire_failure, `${Math.round((results.dnfResults.byReason.tire_failure / results.dnfResults.totalDNFs) * 100)}%`);
-    addRow('Early Phase (0-33%)', results.dnfResults.byRacePhase.early, `${Math.round((results.dnfResults.byRacePhase.early / results.dnfResults.totalDNFs) * 100)}%`);
-    addRow('Mid Phase (33-67%)', results.dnfResults.byRacePhase.mid, `${Math.round((results.dnfResults.byRacePhase.mid / results.dnfResults.totalDNFs) * 100)}%`);
-    addRow('Late Phase (67-100%)', results.dnfResults.byRacePhase.late, `${Math.round((results.dnfResults.byRacePhase.late / results.dnfResults.totalDNFs) * 100)}%`);
-    addRow('Safety Cars', results.dnfResults.safetyCars.totalDeployments);
-    addRow('Races with SC', results.dnfResults.safetyCars.racesWithSafetyCar, `${Math.round(scRate)}%`);
-    addBlank();
-
-    // === PIT STOP STATS ===
-    addRow('PIT STOP STATS');
-    addRow('Metric', 'Value');
-    addRow('Total Pit Stops', results.pitStopResults.totalPitStops);
-    addRow('Avg per Driver', avgPitStops.toFixed(2));
-    addRow('Winner Avg Pits', results.pitStopResults.winnerRaces > 0
-      ? (results.pitStopResults.winnerTotalPitStops / results.pitStopResults.winnerRaces).toFixed(2)
-      : '0');
-    addRow('Quick Stops', results.pitStopResults.quickStops);
-    addRow('Slow Stops', results.pitStopResults.slowStops);
-    addBlank();
-
-    // === TIRE STATS ===
-    addRow('TIRE STATS');
-    addRow('Compound', 'Usage', 'Stints', 'Avg Laps', 'Blowouts', 'Blowout %');
-    const ts = results.pitStopResults.tireStints;
-    const cu = results.pitStopResults.compoundUsage;
-    addRow('Soft', cu.soft, ts.soft.stintCount, ts.soft.stintCount > 0 ? (ts.soft.totalLaps / ts.soft.stintCount).toFixed(1) : 0, ts.soft.blowouts, ts.soft.stintCount > 0 ? `${((ts.soft.blowouts / ts.soft.stintCount) * 100).toFixed(1)}%` : '0%');
-    addRow('Medium', cu.medium, ts.medium.stintCount, ts.medium.stintCount > 0 ? (ts.medium.totalLaps / ts.medium.stintCount).toFixed(1) : 0, ts.medium.blowouts, ts.medium.stintCount > 0 ? `${((ts.medium.blowouts / ts.medium.stintCount) * 100).toFixed(1)}%` : '0%');
-    addRow('Hard', cu.hard, ts.hard.stintCount, ts.hard.stintCount > 0 ? (ts.hard.totalLaps / ts.hard.stintCount).toFixed(1) : 0, ts.hard.blowouts, ts.hard.stintCount > 0 ? `${((ts.hard.blowouts / ts.hard.stintCount) * 100).toFixed(1)}%` : '0%');
-    addBlank();
-
-    // === STARTING TIRE PERFORMANCE ===
-    addRow('STARTING TIRE PERFORMANCE');
-    addRow('Compound', 'Starts', 'Win %', 'Podium %', 'Points %', 'Finish %');
-    const sp = results.pitStopResults.startingTirePerformance;
-    for (const [name, data] of [['Soft', sp.soft], ['Medium', sp.medium], ['Hard', sp.hard]] as const) {
-      const d = data as typeof sp.soft;
-      addRow(name, d.starts,
-        d.starts > 0 ? `${((d.wins / d.starts) * 100).toFixed(1)}%` : '0%',
-        d.starts > 0 ? `${((d.podiums / d.starts) * 100).toFixed(1)}%` : '0%',
-        d.starts > 0 ? `${((d.pointsFinishes / d.starts) * 100).toFixed(1)}%` : '0%',
-        d.starts > 0 ? `${(((d.starts - d.dnfs) / d.starts) * 100).toFixed(1)}%` : '0%'
-      );
-    }
-    addBlank();
-
-    // === STAT IMPACT (Q1 vs Q5) ===
-    addRow('STAT IMPACT (Q1 vs Q5)');
-    addRow('Stat', 'Q1 Win%', 'Q5 Win%', 'Δ Win', 'Q1 Podium%', 'Q5 Podium%', 'Δ Podium', 'Q1 Points%', 'Q5 Points%', 'Δ Points', 'Q1 Finish%', 'Q5 Finish%', 'Δ Finish');
     const statLabels: Record<string, string> = {
       speed: 'Speed', consistency: 'Consistency', luck: 'Luck',
       acceleration: 'Acceleration', endurance: 'Endurance', aggression: 'Aggression',
       carPower: 'Car Power', carGrip: 'Car Grip', carReliability: 'Car Reliability',
       pitCrew: 'Pit Crew', tireManagement: 'Tire Mgmt'
     };
-    for (const [statName, buckets] of Object.entries(results.statBucketResults)) {
-      const q1 = buckets[0];
-      const q5 = buckets[4];
-      const q1Win = getBucketRate(q1, 'win');
-      const q5Win = getBucketRate(q5, 'win');
-      const q1Pod = getBucketRate(q1, 'podium');
-      const q5Pod = getBucketRate(q5, 'podium');
-      const q1Pts = getBucketRate(q1, 'points');
-      const q5Pts = getBucketRate(q5, 'points');
-      const q1Fin = getBucketRate(q1, 'finish');
-      const q5Fin = getBucketRate(q5, 'finish');
-      addRow(
-        statLabels[statName] || statName,
-        `${q1Win.toFixed(1)}%`, `${q5Win.toFixed(1)}%`, `${(q5Win - q1Win).toFixed(1)}%`,
-        `${q1Pod.toFixed(1)}%`, `${q5Pod.toFixed(1)}%`, `${(q5Pod - q1Pod).toFixed(1)}%`,
-        `${q1Pts.toFixed(1)}%`, `${q5Pts.toFixed(1)}%`, `${(q5Pts - q1Pts).toFixed(1)}%`,
-        `${q1Fin.toFixed(1)}%`, `${q5Fin.toFixed(1)}%`, `${(q5Fin - q1Fin).toFixed(1)}%`
-      );
-    }
-    addBlank();
 
-    // === DRIVER TAGS ===
-    if (results.tagResults.driverTags.length > 0) {
-      addRow('DRIVER TAGS');
-      addRow('Tag', 'Appearances', 'Wins', 'Win %', 'Podiums', 'Podium %', 'Points', 'Points %', 'DNFs', 'Finish %');
-      for (const tag of results.tagResults.driverTags.sort((a, b) => b.appearances - a.appearances)) {
-        const winRate = tag.appearances > 0 ? ((tag.wins / tag.appearances) * 100).toFixed(1) : '0';
-        const podRate = tag.appearances > 0 ? ((tag.podiums / tag.appearances) * 100).toFixed(1) : '0';
-        const ptsRate = tag.appearances > 0 ? ((tag.pointsFinishes / tag.appearances) * 100).toFixed(1) : '0';
-        const finRate = tag.appearances > 0 ? (((tag.appearances - tag.dnfs) / tag.appearances) * 100).toFixed(1) : '0';
-        addRow(`${tag.tagEmoji} ${tag.tagName}`, tag.appearances, tag.wins, `${winRate}%`, tag.podiums, `${podRate}%`, tag.pointsFinishes, `${ptsRate}%`, tag.dnfs, `${finRate}%`);
+    if (hasChanges) {
+      // === COMPARISON FORMAT (Canon vs Heretic) ===
+      addRow('VARIABLES CHANGED');
+      addRow('Variable', 'Canon', 'Heretic', '% Change');
+      for (const diff of comparisonResults.variablesDiff) {
+        addRow(diff.label, diff.canonValue, diff.hereticValue, `${diff.percentChange > 0 ? '+' : ''}${diff.percentChange.toFixed(1)}%`);
+      }
+      addBlank();
+
+      // DNF Stats Comparison
+      addRow('DNF STATS COMPARISON');
+      addRow('Metric', 'Canon', 'Heretic', 'Δ');
+
+      const canonDNFRate = (canon.dnfResults.totalDNFs / canon.dnfResults.totalDriverRaces) * 100;
+      const hereticDNFRate = (heretic.dnfResults.totalDNFs / heretic.dnfResults.totalDriverRaces) * 100;
+      addRow('DNF Rate', `${canonDNFRate.toFixed(1)}%`, `${hereticDNFRate.toFixed(1)}%`, `${(hereticDNFRate - canonDNFRate).toFixed(1)}%`);
+
+      addRow('Total DNFs', canon.dnfResults.totalDNFs, heretic.dnfResults.totalDNFs, heretic.dnfResults.totalDNFs - canon.dnfResults.totalDNFs);
+      addRow('DNFs per Race', (canon.dnfResults.totalDNFs / canon.totalRaces).toFixed(1), (heretic.dnfResults.totalDNFs / heretic.totalRaces).toFixed(1));
+      addRow('Crash DNFs', canon.dnfResults.byReason.crash, heretic.dnfResults.byReason.crash, heretic.dnfResults.byReason.crash - canon.dnfResults.byReason.crash);
+      addRow('Mechanical DNFs', canon.dnfResults.byReason.mechanical, heretic.dnfResults.byReason.mechanical, heretic.dnfResults.byReason.mechanical - canon.dnfResults.byReason.mechanical);
+      addRow('Tire Failure DNFs', canon.dnfResults.byReason.tire_failure, heretic.dnfResults.byReason.tire_failure, heretic.dnfResults.byReason.tire_failure - canon.dnfResults.byReason.tire_failure);
+
+      const canonSCRate = (canon.dnfResults.safetyCars.racesWithSafetyCar / canon.totalRaces) * 100;
+      const hereticSCRate = (heretic.dnfResults.safetyCars.racesWithSafetyCar / heretic.totalRaces) * 100;
+      addRow('Safety Cars', canon.dnfResults.safetyCars.totalDeployments, heretic.dnfResults.safetyCars.totalDeployments, heretic.dnfResults.safetyCars.totalDeployments - canon.dnfResults.safetyCars.totalDeployments);
+      addRow('Safety Car Rate', `${canonSCRate.toFixed(1)}%`, `${hereticSCRate.toFixed(1)}%`, `${(hereticSCRate - canonSCRate).toFixed(1)}%`);
+      addBlank();
+
+      // Pit Stop Stats Comparison
+      addRow('PIT STOP STATS COMPARISON');
+      addRow('Metric', 'Canon', 'Heretic', 'Δ');
+      addRow('Total Pit Stops', canon.pitStopResults.totalPitStops, heretic.pitStopResults.totalPitStops, heretic.pitStopResults.totalPitStops - canon.pitStopResults.totalPitStops);
+
+      const canonAvgPits = canon.pitStopResults.totalPitStops / canon.pitStopResults.totalRaces / 20;
+      const hereticAvgPits = heretic.pitStopResults.totalPitStops / heretic.pitStopResults.totalRaces / 20;
+      addRow('Avg per Driver', canonAvgPits.toFixed(2), hereticAvgPits.toFixed(2), (hereticAvgPits - canonAvgPits).toFixed(2));
+      addRow('Quick Stops', canon.pitStopResults.quickStops, heretic.pitStopResults.quickStops, heretic.pitStopResults.quickStops - canon.pitStopResults.quickStops);
+      addRow('Slow Stops', canon.pitStopResults.slowStops, heretic.pitStopResults.slowStops, heretic.pitStopResults.slowStops - canon.pitStopResults.slowStops);
+      addBlank();
+
+      // Stat Impact Comparison
+      addRow('STAT IMPACT COMPARISON (Q1→Q5 Win% Delta)');
+      addRow('Stat', 'Canon Δ', 'Heretic Δ', 'Difference');
+      for (const [statName, canonBuckets] of Object.entries(canon.statBucketResults)) {
+        const hereticBuckets = heretic.statBucketResults[statName as keyof typeof heretic.statBucketResults];
+        const canonQ1 = getBucketRate(canonBuckets[0], 'win');
+        const canonQ5 = getBucketRate(canonBuckets[4], 'win');
+        const canonDelta = canonQ5 - canonQ1;
+        const hereticQ1 = getBucketRate(hereticBuckets[0], 'win');
+        const hereticQ5 = getBucketRate(hereticBuckets[4], 'win');
+        const hereticDelta = hereticQ5 - hereticQ1;
+        addRow(statLabels[statName] || statName, `${canonDelta.toFixed(1)}%`, `${hereticDelta.toFixed(1)}%`, `${(hereticDelta - canonDelta).toFixed(1)}%`);
+      }
+      addBlank();
+
+      // Detailed stat breakdown for both
+      addRow('CANON STAT DETAIL (Q1 vs Q5)');
+      addRow('Stat', 'Q1 Win%', 'Q5 Win%', 'Δ');
+      for (const [statName, buckets] of Object.entries(canon.statBucketResults)) {
+        const q1Win = getBucketRate(buckets[0], 'win');
+        const q5Win = getBucketRate(buckets[4], 'win');
+        addRow(statLabels[statName] || statName, `${q1Win.toFixed(1)}%`, `${q5Win.toFixed(1)}%`, `${(q5Win - q1Win).toFixed(1)}%`);
+      }
+      addBlank();
+
+      addRow('HERETIC STAT DETAIL (Q1 vs Q5)');
+      addRow('Stat', 'Q1 Win%', 'Q5 Win%', 'Δ');
+      for (const [statName, buckets] of Object.entries(heretic.statBucketResults)) {
+        const q1Win = getBucketRate(buckets[0], 'win');
+        const q5Win = getBucketRate(buckets[4], 'win');
+        addRow(statLabels[statName] || statName, `${q1Win.toFixed(1)}%`, `${q5Win.toFixed(1)}%`, `${(q5Win - q1Win).toFixed(1)}%`);
+      }
+      addBlank();
+    } else {
+      // === SIMPLE FORMAT (Canon only, no comparison) ===
+      const dnfRate = (canon.dnfResults.totalDNFs / canon.dnfResults.totalDriverRaces) * 100;
+      const scRate = (canon.dnfResults.safetyCars.racesWithSafetyCar / canon.totalRaces) * 100;
+      const avgPits = canon.pitStopResults.totalPitStops / canon.pitStopResults.totalRaces / 20;
+
+      addRow('SIMULATION RESULTS');
+      addRow('Metric', 'Value');
+      addRow('Total Races', canon.totalRaces);
+      addRow('Total Driver-Races', canon.totalDriverRaces);
+      addBlank();
+
+      addRow('DNF STATS');
+      addRow('Metric', 'Value');
+      addRow('DNF Rate', `${dnfRate.toFixed(1)}%`);
+      addRow('Total DNFs', canon.dnfResults.totalDNFs);
+      addRow('DNFs per Race', (canon.dnfResults.totalDNFs / canon.totalRaces).toFixed(1));
+      addRow('Crash DNFs', canon.dnfResults.byReason.crash);
+      addRow('Mechanical DNFs', canon.dnfResults.byReason.mechanical);
+      addRow('Tire Failure DNFs', canon.dnfResults.byReason.tire_failure);
+      addRow('Safety Cars', canon.dnfResults.safetyCars.totalDeployments);
+      addRow('Safety Car Rate', `${scRate.toFixed(1)}%`);
+      addBlank();
+
+      addRow('PIT STOP STATS');
+      addRow('Metric', 'Value');
+      addRow('Total Pit Stops', canon.pitStopResults.totalPitStops);
+      addRow('Avg per Driver', avgPits.toFixed(2));
+      addRow('Quick Stops', canon.pitStopResults.quickStops);
+      addRow('Slow Stops', canon.pitStopResults.slowStops);
+      addBlank();
+
+      addRow('STAT IMPACT (Q1 vs Q5 Win Rate)');
+      addRow('Stat', 'Q1 Win%', 'Q5 Win%', 'Δ');
+      for (const [statName, buckets] of Object.entries(canon.statBucketResults)) {
+        const q1Win = getBucketRate(buckets[0], 'win');
+        const q5Win = getBucketRate(buckets[4], 'win');
+        addRow(statLabels[statName] || statName, `${q1Win.toFixed(1)}%`, `${q5Win.toFixed(1)}%`, `${(q5Win - q1Win).toFixed(1)}%`);
       }
       addBlank();
     }
 
-    // === CAR TAGS ===
-    if (results.tagResults.carTags.length > 0) {
-      addRow('CAR TAGS');
-      addRow('Tag', 'Appearances', 'Wins', 'Win %', 'Podiums', 'Podium %', 'Points', 'Points %', 'DNFs', 'Finish %');
-      for (const tag of results.tagResults.carTags.sort((a, b) => b.appearances - a.appearances)) {
-        const winRate = tag.appearances > 0 ? ((tag.wins / tag.appearances) * 100).toFixed(1) : '0';
-        const podRate = tag.appearances > 0 ? ((tag.podiums / tag.appearances) * 100).toFixed(1) : '0';
-        const ptsRate = tag.appearances > 0 ? ((tag.pointsFinishes / tag.appearances) * 100).toFixed(1) : '0';
-        const finRate = tag.appearances > 0 ? (((tag.appearances - tag.dnfs) / tag.appearances) * 100).toFixed(1) : '0';
-        addRow(`${tag.tagEmoji} ${tag.tagName}`, tag.appearances, tag.wins, `${winRate}%`, tag.podiums, `${podRate}%`, tag.pointsFinishes, `${ptsRate}%`, tag.dnfs, `${finRate}%`);
-      }
-      addBlank();
-    }
-
-    // === TEAM TAGS ===
-    if (results.tagResults.teamTags.length > 0) {
-      addRow('TEAM TAGS');
-      addRow('Tag', 'Appearances', 'Wins', 'Win %', 'Podiums', 'Podium %', 'Points', 'Points %', 'DNFs', 'Finish %');
-      for (const tag of results.tagResults.teamTags.sort((a, b) => b.appearances - a.appearances)) {
-        const winRate = tag.appearances > 0 ? ((tag.wins / tag.appearances) * 100).toFixed(1) : '0';
-        const podRate = tag.appearances > 0 ? ((tag.podiums / tag.appearances) * 100).toFixed(1) : '0';
-        const ptsRate = tag.appearances > 0 ? ((tag.pointsFinishes / tag.appearances) * 100).toFixed(1) : '0';
-        const finRate = tag.appearances > 0 ? (((tag.appearances - tag.dnfs) / tag.appearances) * 100).toFixed(1) : '0';
-        addRow(`${tag.tagEmoji} ${tag.tagName}`, tag.appearances, tag.wins, `${winRate}%`, tag.podiums, `${podRate}%`, tag.pointsFinishes, `${ptsRate}%`, tag.dnfs, `${finRate}%`);
-      }
-      addBlank();
-    }
-
-    // === TRACKS ===
-    if (results.trackResults.tracks.length > 0) {
-      addRow('TRACKS');
-      addRow('Track', 'Races', 'DNFs', 'Crash', 'Mechanical', 'Tire Fail', 'Finish %', 'Lead Changes', 'Avg Leads/Race');
-      for (const track of results.trackResults.tracks.sort((a, b) => a.trackName.localeCompare(b.trackName))) {
-        const totalDrivers = track.racesRun * 20;
-        const finishRate = totalDrivers > 0 ? ((track.totalFinishers / totalDrivers) * 100).toFixed(1) : '0';
-        const avgLeads = track.racesRun > 0 ? (track.totalLeadChanges / track.racesRun).toFixed(1) : '0';
-        addRow(
-          `${track.trackEmoji} ${track.trackName}`,
-          track.racesRun,
-          track.totalDNFs,
-          track.dnfBreakdown.crash,
-          track.dnfBreakdown.mechanical,
-          track.dnfBreakdown.tire_failure,
-          `${finishRate}%`,
-          track.totalLeadChanges,
-          avgLeads
-        );
-      }
-      addBlank();
-    }
-
-    // === TRACK EVENTS ===
-    if (results.eventResults.trackEvents.length > 0) {
-      addRow('TRACK EVENTS');
-      addRow('Event', 'Races', 'Triggers', 'Affected', 'Aff Win%', 'Unaff Win%', 'Δ Win', 'Aff Finish%', 'Unaff Finish%', 'Δ Finish');
-      for (const event of results.eventResults.trackEvents.sort((a, b) => b.racesTriggered - a.racesTriggered)) {
-        const affWin = event.affectedDriverRaces > 0 ? ((event.affectedWins / event.affectedDriverRaces) * 100) : 0;
-        const unaffWin = event.unaffectedDriverRaces > 0 ? ((event.unaffectedWins / event.unaffectedDriverRaces) * 100) : 0;
-        const affFin = event.affectedDriverRaces > 0 ? (((event.affectedDriverRaces - event.affectedDNFs) / event.affectedDriverRaces) * 100) : 0;
-        const unaffFin = event.unaffectedDriverRaces > 0 ? (((event.unaffectedDriverRaces - event.unaffectedDNFs) / event.unaffectedDriverRaces) * 100) : 0;
-        addRow(
-          `${event.eventEmoji} ${event.eventName}`,
-          event.racesTriggered,
-          event.totalTriggers,
-          event.affectedDriverRaces,
-          `${affWin.toFixed(1)}%`,
-          `${unaffWin.toFixed(1)}%`,
-          `${(affWin - unaffWin).toFixed(1)}%`,
-          `${affFin.toFixed(1)}%`,
-          `${unaffFin.toFixed(1)}%`,
-          `${(affFin - unaffFin).toFixed(1)}%`
-        );
-      }
-      addBlank();
-    }
-
-    // === CONFIG ===
     addRow('CONFIG');
-    addRow('Setting', 'Value');
-    addRow('Batch Size', results.config.batchSize);
-    addRow('Chaos Level', `${Math.round(results.config.chaosLevel * 100)}%`);
-    addRow('Track Selection', results.config.trackSelection);
+    addRow('Batch Size', canon.config.batchSize);
+    addRow('Track Selection', canon.config.trackSelection);
 
-    // Copy to clipboard
     const tsv = rows.join('\n');
     try {
       await navigator.clipboard.writeText(tsv);
       setCopyConfirmed(true);
       setTimeout(() => setCopyConfirmed(false), 2000);
     } catch {
-      // Fallback: create a temporary textarea
       const textarea = document.createElement('textarea');
       textarea.value = tsv;
       document.body.appendChild(textarea);
@@ -323,11 +409,14 @@ export default function SimLab() {
     }
   };
 
+  // Check if any variables have been changed
+  const hasChanges = computeVariablesDiff(CANON_VARIABLES, hereticVariables).length > 0;
+
   return (
     <div className="sim-lab">
       <div className="sim-lab-header">
         <h2>Sim Lab</h2>
-        <p className="sim-lab-subtitle">Monte Carlo simulation analysis</p>
+        <p className="sim-lab-subtitle">Monte Carlo simulation with Canon vs Heretic comparison</p>
       </div>
 
       {error && (
@@ -337,22 +426,111 @@ export default function SimLab() {
         </div>
       )}
 
-      {phase === 'config' && (
-        <SimLabConfig onStart={handleStartSimulation} />
+      {phase === 'setup' && (
+        <div className="simlab-setup-phase">
+          {/* Simulation Config */}
+          <div className="simlab-config-section">
+            <div className="config-row">
+              <div className="config-group">
+                <label>Simulation Size</label>
+                <div className="batch-buttons">
+                  {[100, 500, 1000, 2000].map(size => (
+                    <button
+                      key={size}
+                      className={batchSize === size ? 'active' : ''}
+                      onClick={() => setBatchSize(size)}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="config-group">
+                <label>Track Selection</label>
+                <div className="track-buttons">
+                  <button
+                    className={trackSelection === 'all' ? 'active' : ''}
+                    onClick={() => setTrackSelection('all')}
+                  >
+                    All Tracks
+                  </button>
+                  <button
+                    className={trackSelection === 'random' ? 'active' : ''}
+                    onClick={() => setTrackSelection('random')}
+                  >
+                    Random
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Variables Editor */}
+          <SimLabVariables
+            hereticVariables={hereticVariables}
+            onVariablesChange={setHereticVariables}
+            onReset={handleResetVariables}
+          />
+
+          {/* Run Button */}
+          <div className="setup-actions">
+            <button className="run-btn" onClick={handleStartSimulation}>
+              {hasChanges ? 'Run Comparison (Canon vs Heretic)' : 'Run Simulation (Canon only)'}
+            </button>
+          </div>
+        </div>
       )}
 
       {phase === 'running' && (
-        <SimLabProgress
-          completed={progress.completed}
-          total={progress.total}
-          currentTrack={progress.currentTrack}
-          onAbort={handleAbort}
-        />
+        <div className="comparison-progress">
+          <div className="comparison-progress-header">
+            <h3>{isComparisonMode ? 'Running Comparison Simulation' : 'Running Simulation'}</h3>
+            <p>{isComparisonMode ? 'Canon and Heretic simulations running in parallel' : 'Running canon simulation'}</p>
+          </div>
+          <div className="comparison-bars">
+            <div className={`comparison-bar-section canon ${!isComparisonMode ? 'solo' : ''}`}>
+              <div className="comparison-bar-label">
+                <span>{isComparisonMode ? 'Canon (Current Rules)' : 'Simulation Progress'}</span>
+                <span className="percent">{Math.round((canonProgress.completed / batchSize) * 100)}%</span>
+              </div>
+              <div className="comparison-bar-track">
+                <div
+                  className="comparison-bar-fill"
+                  style={{ width: `${(canonProgress.completed / batchSize) * 100}%` }}
+                />
+              </div>
+              {canonProgress.currentTrack && (
+                <div className="comparison-track-info">{canonProgress.currentTrack}</div>
+              )}
+            </div>
+            {isComparisonMode && (
+              <div className="comparison-bar-section heretic">
+                <div className="comparison-bar-label">
+                  <span>Heretic (Modified Rules)</span>
+                  <span className="percent">{Math.round((hereticProgress.completed / batchSize) * 100)}%</span>
+                </div>
+                <div className="comparison-bar-track">
+                  <div
+                    className="comparison-bar-fill"
+                    style={{ width: `${(hereticProgress.completed / batchSize) * 100}%` }}
+                  />
+                </div>
+                {hereticProgress.currentTrack && (
+                  <div className="comparison-track-info">{hereticProgress.currentTrack}</div>
+                )}
+              </div>
+            )}
+          </div>
+          <button className="abort-btn" onClick={handleAbort}>
+            Abort Simulation
+          </button>
+        </div>
       )}
 
-      {phase === 'results' && results && (
+      {phase === 'results' && comparisonResults && (
         <SimLabResults
-          results={results}
+          results={comparisonResults.canon}
+          comparisonResults={comparisonResults}
           onReset={handleReset}
           onExportJSON={handleExportJSON}
           onExportCSV={handleExportCSV}

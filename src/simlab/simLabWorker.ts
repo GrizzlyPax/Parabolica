@@ -13,6 +13,7 @@ import type {
   SimLabResults,
   SimLabAccumulators,
   StatBucket,
+  SimVariables,
 } from './types';
 
 // Helper to merge roster with car data (like LeagueSetup does)
@@ -42,7 +43,7 @@ self.onmessage = (e: MessageEvent<WorkerInMessage>) => {
 
   if (e.data.type === 'START') {
     aborted = false;
-    runSimulation(e.data.config);
+    runSimulation(e.data.config, e.data.variables, e.data.label);
   }
 };
 
@@ -609,7 +610,7 @@ function finalizeResults(acc: SimLabAccumulators, config: SimLabConfig, executio
 }
 
 // Main simulation loop
-async function runSimulation(config: SimLabConfig) {
+async function runSimulation(config: SimLabConfig, variables?: SimVariables, _label?: 'canon' | 'heretic') {
   const startTime = performance.now();
 
   try {
@@ -620,8 +621,8 @@ async function runSimulation(config: SimLabConfig) {
       ? ALL_TRACKS
       : ALL_TRACKS; // For 'random', we'll pick randomly each race
 
-    // Create a reusable engine instance
-    const engine = RaceEngine.createForWorker();
+    // Create a reusable engine instance with optional variable overrides
+    const engine = RaceEngine.createForWorker(variables);
 
     for (let i = 0; i < config.batchSize; i++) {
       if (aborted) {
@@ -646,7 +647,6 @@ async function runSimulation(config: SimLabConfig) {
       // Configure engine - use track's lap count
       engine.updateConfig({
         totalLaps: track.laps,
-        chaosLevel: config.chaosLevel,
       });
 
       // Set track info (TrackInfo interface expects separate eventTrigger/eventEffect)
