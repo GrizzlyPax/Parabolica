@@ -26,39 +26,14 @@ function formatTrigger(trigger: TrackEventTrigger): string {
   }
 }
 
-// Helper to format effect descriptions
+// Helper to format effect descriptions - all effects use apply_tag
 function formatEffect(effect: TrackEventEffect): string {
-  switch (effect.type) {
-    case 'progress_loss':
-      return `${effect.targets === 'bottom' ? `Bottom ${effect.count}` : effect.targets === 'all' ? 'All' : `${effect.count} random`} lose progress`;
-    case 'spin':
-      return `${effect.count} driver${effect.count > 1 ? 's' : ''} spin`;
-    case 'gap_compress':
-      return 'Gaps compress';
-    case 'speed_boost':
-      if (effect.targets === 'bottom') return `Bottom ${effect.count} boosted +${effect.amount}%`;
-      if (effect.targets === 'last') return `Last place boosted +${effect.amount}%`;
-      if (effect.targets === 'leader') return `Leader boosted +${effect.amount}%`;
-      return `${effect.count} random boosted +${effect.amount}%`;
-    case 'speed_penalty':
-      if (effect.targets === 'leader') return `Leader slowed -${effect.amount}%`;
-      if (effect.targets === 'top') return `Top ${effect.count} slowed -${effect.amount}%`;
-      return `${effect.count} random slowed -${effect.amount}%`;
-    case 'position_shuffle':
-      return effect.targets === 'midpack' ? 'Midpack shuffles' : 'Positions shuffle';
-    case 'forced_pit':
-      return `${effect.count} forced to pit`;
-    case 'instant_pit':
-      return `${effect.count} get free pit`;
-    case 'crash_risk':
-      return `+${Math.round((effect.modifier - 1) * 100)}% crash risk`;
-    case 'pit_delay':
-      return `Pits +${Math.round((effect.modifier - 1) * 100)}% slower`;
-    case 'swap_positions':
-      return effect.who === 'first_last' ? 'P1 & last swap' : 'Random pair swap';
-    default:
-      return 'Special effect';
-  }
+  const targetDesc = effect.targets === 'leader' ? 'Leader'
+    : effect.targets === 'last' ? `Last ${effect.count}`
+    : effect.targets === 'top' ? `Top ${effect.count}`
+    : effect.targets === 'bottom' ? `Bottom ${effect.count}`
+    : `${effect.count} random`;
+  return `${targetDesc} get ${effect.triggerTag.replace(/-/g, ' ')}`;
 }
 
 // Format tag effects as a compact string

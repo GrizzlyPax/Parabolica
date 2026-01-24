@@ -1,4 +1,4 @@
-import { Tag } from './data/tags';
+import { Tag, getTagById } from './data/tags';
 import { SimVariables, CANON_VARIABLES } from './simlab/types';
 
 export interface DriverStats {
@@ -240,7 +240,7 @@ export interface TrackInfo {
   eventEffect?: TrackEventEffect;
 }
 
-// Track active event state during race
+// Track active event state during race (legacy - kept for API compatibility)
 export interface ActiveTrackEffect {
   effectType: string;
   affectedDriverIds: number[];
@@ -248,6 +248,25 @@ export interface ActiveTrackEffect {
   speedModifier?: number;  // For speed_boost/speed_penalty
   crashRiskModifier?: number;  // For crash_risk
   pitDelayModifier?: number;  // For pit_delay
+}
+
+// === UNIFIED EFFECT SYSTEM ===
+// Both tags and track events create effects through this unified interface
+export interface ActiveEffect {
+  id: string;                    // Unique effect ID
+  source: 'track' | 'tag';       // Where it came from
+  sourceId: string;              // e.g., "fog-rolls-in" or "clutch-performer"
+  sourceName: string;            // Display name
+  sourceEmoji: string;           // For UI
+  affectedDriverIds: number[];   // Which drivers are affected (for track events)
+  expiresAtTick: number | null;  // null = permanent (rest of race)
+
+  // All modifiers (multiplicative except crashResistance which is additive)
+  speedModifier: number;         // 1.0 = no change
+  consistencyModifier: number;   // 1.0 = no change
+  luckModifier: number;          // 1.0 = no change
+  crashResistance: number;       // 0 = no change, +0.3 = 30% less likely, -0.25 = 25% more likely
+  pitSpeedModifier: number;      // 1.0 = no change, 0.75 = 25% faster, 1.5 = 50% slower
 }
 
 type RaceListener = (drivers: Driver[]) => void;
@@ -335,7 +354,12 @@ class RaceEngine {
   private trackInfo: TrackInfo | null = null;
 
   // Track event state
+  // Legacy track effects array (kept for getActiveTrackEffects() API compatibility)
   private activeTrackEffects: ActiveTrackEffect[] = [];
+
+  // === UNIFIED EFFECT STORAGE ===
+  // All effects (from tags and track events) go here
+  private unifiedEffects: Map<number, ActiveEffect[]> = new Map();
   private trackEventTriggeredLaps: Set<number> = new Set();  // Laps where one-time events have triggered
   private lastEventCheckLap: number = 0;  // For interval-based triggers
   private leaderLapCount: Map<number, number> = new Map();  // Track how many laps each driver has led
@@ -788,6 +812,8 @@ class RaceEngine {
     // Reset tag activation state
     this.activeTagEffects = new Map();
     this.tagActivatedThisRace = new Set();
+    // Reset unified effect storage
+    this.unifiedEffects = new Map();
     this.notifyListeners();
     this.notifyStateListeners();
     this.notifyEventListeners();
@@ -821,13 +847,16 @@ class RaceEngine {
 
     // Luck bonus: TIME-BASED proc (same chance for everyone each tick)
     // Driver's luck stat affects the MAGNITUDE of the boost, not the frequency
+    // Tag/effect luck modifiers multiply the effective luck stat
     let luckBonus = 1;
     const luckProcChance = 0.03; // 3% chance per tick for everyone
     if (Math.random() < luckProcChance) {
       // Luck proc! Driver's luck stat determines how big the boost is
+      // Apply luck modifier from tags/effects (e.g., Cursed Chassis has 0.7x luck)
+      const effectiveLuck = driver.stats.luck * this.getTagLuckModifier(driver.id);
       // Low luck (0.3) = 5-15% boost, High luck (0.8) = 15-30% boost
-      const minBoost = 0.05 + driver.stats.luck * 0.125; // 0.0875 to 0.15
-      const maxBoost = 0.15 + driver.stats.luck * 0.1875; // 0.20625 to 0.30
+      const minBoost = 0.05 + effectiveLuck * 0.125; // 0.0875 to 0.15
+      const maxBoost = 0.15 + effectiveLuck * 0.1875; // 0.20625 to 0.30
       luckBonus = 1 + minBoost + Math.random() * (maxBoost - minBoost);
     }
 
@@ -1112,6 +1141,12 @@ class RaceEngine {
       finalDuration = Math.floor(baseDuration * 0.75);
     }
 
+    // Apply pit speed modifier from tags/effects
+    // < 1 = faster pits (e.g., Pit Lane Special 0.75x)
+    // > 1 = slower pits (e.g., track pit_delay event)
+    const pitModifier = this.getTagPitModifier(driver.id);
+    finalDuration = Math.floor(finalDuration * pitModifier);
+
     return { duration: finalDuration, isSlowStop, isQuickStop };
   }
 
@@ -1207,6 +1242,11 @@ class RaceEngine {
 
     const avgLuck = (d1.stats.luck + d2.stats.luck) / 2;
     crashChance *= (1 - avgLuck * crashVars.luckReduction); // Luck can save you
+
+    // Apply crash resistance from tags/effects (additive resistance, capped at -0.5 to +0.5)
+    // Positive resistance = less likely to crash, negative resistance = more likely
+    const avgCrashResistance = (this.getTagCrashResistance(d1.id) + this.getTagCrashResistance(d2.id)) / 2;
+    crashChance *= (1 - avgCrashResistance);
 
     // Random roll
     if (Math.random() < crashChance) {
@@ -1365,8 +1405,7 @@ class RaceEngine {
 
     const getTargets = (
       targets: string,
-      count: number,
-      positions?: [number, number]
+      count: number
     ): Driver[] => {
       switch (targets) {
         case 'bottom':
@@ -1379,320 +1418,53 @@ class RaceEngine {
         case 'leader':
           return sortedDrivers.slice(0, 1);
         case 'last':
-          return sortedDrivers.slice(-1);
-        case 'midpack':
-          if (positions) {
-            return sortedDrivers.slice(positions[0] - 1, positions[1]);
-          }
-          const mid = Math.floor(sortedDrivers.length / 2);
-          return sortedDrivers.slice(mid - 2, mid + 2);
-        case 'all':
-          return racingDrivers;
+          return sortedDrivers.slice(-count);
         default:
           return [];
       }
     };
 
-    const randomInRange = (range: [number, number]): number =>
-      range[0] + Math.random() * (range[1] - range[0]);
+    // All track events now use apply_tag through the unified effect system
+    // Look up the condition tag
+    const tag = getTagById(effect.triggerTag);
+    if (!tag) {
+      console.warn(`Track event references unknown tag: ${effect.triggerTag}`);
+      return;
+    }
 
-    switch (effect.type) {
-      case 'progress_loss': {
-        const targets = getTargets(effect.targets, effect.count);
-        for (const driver of targets) {
-          const loss = randomInRange(effect.amount);
-          const driverIdx = this.drivers.findIndex(d => d.id === driver.id);
-          if (driverIdx !== -1) {
-            this.drivers[driverIdx] = {
-              ...this.drivers[driverIdx],
-              position: Math.max(0, this.drivers[driverIdx].position - loss),
-            };
-            this.logEvent(
-              'track_event_effect',
-              driver,
-              `Lost ground due to ${event.name}`,
-              'negative',
-              0.6,
-              event.emoji
-            );
-          }
-        }
-        break;
-      }
+    // Get target drivers based on effect targets
+    const targets = getTargets(effect.targets, effect.count || 1);
+    const durationTicks = effect.duration * 10;
+    const expiresAt = this.raceState.totalTicks + durationTicks;
+    const targetIds = targets.map(d => d.id);
 
-      case 'spin': {
-        const targets = getTargets(effect.targets, effect.count);
-        for (const driver of targets) {
-          const timeLoss = randomInRange(effect.timeLoss);
-          const driverIdx = this.drivers.findIndex(d => d.id === driver.id);
-          if (driverIdx !== -1) {
-            this.drivers[driverIdx] = {
-              ...this.drivers[driverIdx],
-              position: Math.max(0, this.drivers[driverIdx].position - timeLoss),
-            };
-            this.logEvent(
-              'track_event_effect',
-              driver,
-              `Spun out! Lost significant time`,
-              'negative',
-              0.8,
-              event.emoji
-            );
-          }
-        }
-        break;
+    // Create effect using the tag's effects
+    this.createTrackEffect(
+      `${event.id}-${tag.id}`,
+      `${event.name} (${tag.name})`,
+      tag.emoji,
+      targetIds,
+      expiresAt,
+      {
+        speedModifier: tag.effects.speedModifier,
+        consistencyModifier: tag.effects.consistencyModifier,
+        luckModifier: tag.effects.luckModifier,
+        crashResistance: tag.effects.crashResistance,
+        pitSpeedModifier: tag.effects.pitSpeedModifier,
       }
+    );
 
-      case 'gap_compress': {
-        // Bring back positions together (simulate bunching)
-        const leader = sortedDrivers[0];
-        if (leader) {
-          for (const driver of sortedDrivers.slice(1)) {
-            const driverIdx = this.drivers.findIndex(d => d.id === driver.id);
-            if (driverIdx !== -1 && driver.currentLap === leader.currentLap) {
-              const currentGap = leader.position - driver.position;
-              if (currentGap > effect.within) {
-                // Compress the gap
-                const newPosition = leader.position - effect.within * (1 + Math.random() * 0.5);
-                this.drivers[driverIdx] = {
-                  ...this.drivers[driverIdx],
-                  position: Math.max(0, newPosition),
-                };
-              }
-            }
-          }
-          this.logEvent(
-            'track_event_effect',
-            null,
-            `The pack has bunched up!`,
-            'neutral',
-            0.7,
-            event.emoji
-          );
-        }
-        break;
-      }
-
-      case 'speed_boost': {
-        const targets = getTargets(effect.targets, effect.count);
-        const durationTicks = effect.duration * 10; // duration is in "lap units", convert to ticks approx
-        this.activeTrackEffects.push({
-          effectType: 'speed_boost',
-          affectedDriverIds: targets.map(d => d.id),
-          expiresAtTick: this.raceState.totalTicks + durationTicks,
-          speedModifier: 1 + effect.amount,
-        });
-        for (const driver of targets) {
-          this.logEvent(
-            'track_event_effect',
-            driver,
-            `Gained a speed boost from ${event.name}!`,
-            'positive',
-            0.7,
-            event.emoji
-          );
-        }
-        break;
-      }
-
-      case 'speed_penalty': {
-        const targets = getTargets(effect.targets, effect.count);
-        const durationTicks = effect.duration * 10;
-        this.activeTrackEffects.push({
-          effectType: 'speed_penalty',
-          affectedDriverIds: targets.map(d => d.id),
-          expiresAtTick: this.raceState.totalTicks + durationTicks,
-          speedModifier: 1 - effect.amount,
-        });
-        for (const driver of targets) {
-          this.logEvent(
-            'track_event_effect',
-            driver,
-            `Slowed by ${event.name}`,
-            'negative',
-            0.6,
-            event.emoji
-          );
-        }
-        break;
-      }
-
-      case 'position_shuffle': {
-        const targets = getTargets(effect.targets, 0, effect.positions);
-        if (targets.length >= 2) {
-          // Randomly shuffle positions among targets
-          const positions = targets.map(d => d.position);
-          const shuffledPositions = [...positions].sort(() => Math.random() - 0.5);
-          for (let i = 0; i < targets.length; i++) {
-            const driverIdx = this.drivers.findIndex(d => d.id === targets[i].id);
-            if (driverIdx !== -1) {
-              this.drivers[driverIdx] = {
-                ...this.drivers[driverIdx],
-                position: shuffledPositions[i],
-              };
-            }
-          }
-          this.logEvent(
-            'track_event_effect',
-            null,
-            `Positions shuffled by ${event.name}!`,
-            'neutral',
-            0.8,
-            event.emoji
-          );
-        }
-        break;
-      }
-
-      case 'forced_pit': {
-        const targets = getTargets(effect.targets, effect.count);
-        for (const driver of targets) {
-          const driverIdx = this.drivers.findIndex(d => d.id === driver.id);
-          if (driverIdx !== -1 && this.drivers[driverIdx].status === 'racing') {
-            // Set tire wear to force a pit soon
-            this.drivers[driverIdx] = {
-              ...this.drivers[driverIdx],
-              tireState: {
-                ...this.drivers[driverIdx].tireState,
-                wear: 95, // Nearly destroyed - forces pit
-              },
-            };
-            this.logEvent(
-              'track_event_effect',
-              driver,
-              `Tire damage from ${event.name}! Must pit soon`,
-              'negative',
-              0.8,
-              event.emoji
-            );
-          }
-        }
-        break;
-      }
-
-      case 'instant_pit': {
-        const targets = getTargets(effect.targets, effect.count);
-        for (const driver of targets) {
-          const driverIdx = this.drivers.findIndex(d => d.id === driver.id);
-          if (driverIdx !== -1 && this.drivers[driverIdx].status === 'racing') {
-            // Instantly enter pit
-            this.drivers[driverIdx] = {
-              ...this.drivers[driverIdx],
-              status: 'pitting' as DriverStatus,
-              pitProgress: 0,
-              currentPitDuration: this.config.pitStopDuration,
-            };
-            this.logEvent(
-              'track_event_effect',
-              driver,
-              `Forced into pit lane by ${event.name}!`,
-              'negative',
-              0.9,
-              event.emoji
-            );
-          }
-        }
-        break;
-      }
-
-      case 'crash_risk': {
-        const durationTicks = effect.duration * 10;
-        this.activeTrackEffects.push({
-          effectType: 'crash_risk',
-          affectedDriverIds: racingDrivers.map(d => d.id),
-          expiresAtTick: this.raceState.totalTicks + durationTicks,
-          crashRiskModifier: effect.modifier,
-        });
-        this.logEvent(
-          'track_event_effect',
-          null,
-          `Increased danger on track!`,
-          'negative',
-          0.7,
-          event.emoji
-        );
-        break;
-      }
-
-      case 'swap_positions': {
-        if (effect.who === 'first_last') {
-          const first = sortedDrivers[0];
-          const last = sortedDrivers[sortedDrivers.length - 1];
-          if (first && last) {
-            const firstIdx = this.drivers.findIndex(d => d.id === first.id);
-            const lastIdx = this.drivers.findIndex(d => d.id === last.id);
-            if (firstIdx !== -1 && lastIdx !== -1) {
-              const tempPos = this.drivers[firstIdx].position;
-              const tempLap = this.drivers[firstIdx].currentLap;
-              this.drivers[firstIdx] = {
-                ...this.drivers[firstIdx],
-                position: this.drivers[lastIdx].position,
-                currentLap: this.drivers[lastIdx].currentLap,
-              };
-              this.drivers[lastIdx] = {
-                ...this.drivers[lastIdx],
-                position: tempPos,
-                currentLap: tempLap,
-              };
-              this.logEvent(
-                'track_event_effect',
-                null,
-                `${first.name} and ${last.name} swapped positions!`,
-                'neutral',
-                1.0,
-                event.emoji
-              );
-            }
-          }
-        } else if (effect.who === 'random_pair') {
-          if (sortedDrivers.length >= 2) {
-            const shuffled = [...sortedDrivers].sort(() => Math.random() - 0.5);
-            const d1 = shuffled[0];
-            const d2 = shuffled[1];
-            const idx1 = this.drivers.findIndex(d => d.id === d1.id);
-            const idx2 = this.drivers.findIndex(d => d.id === d2.id);
-            if (idx1 !== -1 && idx2 !== -1) {
-              const tempPos = this.drivers[idx1].position;
-              this.drivers[idx1] = {
-                ...this.drivers[idx1],
-                position: this.drivers[idx2].position,
-              };
-              this.drivers[idx2] = {
-                ...this.drivers[idx2],
-                position: tempPos,
-              };
-              this.logEvent(
-                'track_event_effect',
-                null,
-                `${d1.name} and ${d2.name} swapped positions!`,
-                'neutral',
-                0.8,
-                event.emoji
-              );
-            }
-          }
-        }
-        break;
-      }
-
-      case 'pit_delay': {
-        const durationTicks = effect.duration * 10;
-        this.activeTrackEffects.push({
-          effectType: 'pit_delay',
-          affectedDriverIds: racingDrivers.map(d => d.id),
-          expiresAtTick: this.raceState.totalTicks + durationTicks,
-          pitDelayModifier: effect.modifier,
-        });
-        this.logEvent(
-          'track_event_effect',
-          null,
-          `Pit lane affected by ${event.name}!`,
-          'negative',
-          0.6,
-          event.emoji
-        );
-        break;
-      }
+    // Log the event for each affected driver
+    for (const driver of targets) {
+      this.logEvent(
+        'track_event_effect',
+        driver,
+        tag.activationText || `Affected by ${tag.name}`,
+        tag.effects.speedModifier && tag.effects.speedModifier > 1 ? 'positive' :
+        tag.effects.crashResistance && tag.effects.crashResistance < 0 ? 'negative' : 'neutral',
+        0.7,
+        tag.emoji
+      );
     }
   }
 
@@ -1725,19 +1497,31 @@ class RaceEngine {
   }
 
   /**
-   * Clean up expired track effects
+   * Clean up expired effects from all storage systems
    */
   private cleanupExpiredEffects(): void {
+    // Clean up legacy track effects
     this.activeTrackEffects = this.activeTrackEffects.filter(
       effect => effect.expiresAtTick > this.raceState.totalTicks
     );
-    // Also clean up expired tag effects
+
+    // Clean up legacy tag effects
     for (const [driverId, effects] of this.activeTagEffects.entries()) {
       const activeEffects = effects.filter(e => e.expiresAtTick === null || e.expiresAtTick > this.raceState.totalTicks);
       if (activeEffects.length === 0) {
         this.activeTagEffects.delete(driverId);
       } else {
         this.activeTagEffects.set(driverId, activeEffects);
+      }
+    }
+
+    // Clean up unified effect storage
+    for (const [driverId, effects] of this.unifiedEffects.entries()) {
+      const activeEffects = effects.filter(e => e.expiresAtTick === null || e.expiresAtTick > this.raceState.totalTicks);
+      if (activeEffects.length === 0) {
+        this.unifiedEffects.delete(driverId);
+      } else {
+        this.unifiedEffects.set(driverId, activeEffects);
       }
     }
   }
@@ -1796,16 +1580,20 @@ class RaceEngine {
     const duration = tag.trigger === 'passive' ? null : 200; // ~200 ticks for triggered effects
     const expiresAtTick = duration ? this.raceState.totalTicks + duration : null;
 
-    // Add to active effects
-    const effects = this.activeTagEffects.get(driver.id) || [];
-    effects.push({
+    // Add to unified effect system (includes all modifiers: speed, consistency, luck, crashResistance, pitSpeed)
+    const effect = this.createTagEffect(tag, driver.id, expiresAtTick);
+    this.addEffect(driver.id, effect);
+
+    // Also add to legacy storage for backward compatibility
+    const legacyEffects = this.activeTagEffects.get(driver.id) || [];
+    legacyEffects.push({
       tagId: tag.id,
       speedModifier: tag.effects.speedModifier ?? 1,
       consistencyModifier: tag.effects.consistencyModifier ?? 1,
       luckModifier: tag.effects.luckModifier ?? 1,
       expiresAtTick,
     });
-    this.activeTagEffects.set(driver.id, effects);
+    this.activeTagEffects.set(driver.id, legacyEffects);
 
     // Only log event for non-passive tags (passive tags are always active, no need to announce)
     if (tag.trigger !== 'passive') {
@@ -1842,32 +1630,114 @@ class RaceEngine {
     }
   }
 
-  /**
-   * Get combined tag speed modifier for a driver
-   */
-  private getTagSpeedModifier(driverId: number): number {
-    const effects = this.activeTagEffects.get(driverId);
-    if (!effects || effects.length === 0) return 1;
+  // === UNIFIED EFFECT SYSTEM METHODS ===
 
-    let modifier = 1;
-    for (const effect of effects) {
-      modifier *= effect.speedModifier;
-    }
-    return modifier;
+  /**
+   * Add an effect to a driver using the unified effect system
+   */
+  private addEffect(driverId: number, effect: ActiveEffect): void {
+    const effects = this.unifiedEffects.get(driverId) || [];
+    effects.push(effect);
+    this.unifiedEffects.set(driverId, effects);
   }
 
   /**
-   * Get combined tag consistency modifier for a driver
+   * Create a unified effect from a tag
    */
-  private getTagConsistencyModifier(driverId: number): number {
-    const effects = this.activeTagEffects.get(driverId);
+  private createTagEffect(tag: Tag, driverId: number, expiresAtTick: number | null): ActiveEffect {
+    return {
+      id: `tag-${tag.id}-${driverId}-${this.raceState.totalTicks}`,
+      source: 'tag',
+      sourceId: tag.id,
+      sourceName: tag.name,
+      sourceEmoji: tag.emoji,
+      affectedDriverIds: [driverId],
+      expiresAtTick,
+      speedModifier: tag.effects.speedModifier ?? 1,
+      consistencyModifier: tag.effects.consistencyModifier ?? 1,
+      luckModifier: tag.effects.luckModifier ?? 1,
+      crashResistance: tag.effects.crashResistance ?? 0,
+      pitSpeedModifier: tag.effects.pitSpeedModifier ?? 1,
+    };
+  }
+
+  /**
+   * Create a unified effect from a track event
+   */
+  private createTrackEffect(
+    eventId: string,
+    eventName: string,
+    eventEmoji: string,
+    driverIds: number[],
+    expiresAtTick: number,
+    modifiers: Partial<Pick<ActiveEffect, 'speedModifier' | 'consistencyModifier' | 'luckModifier' | 'crashResistance' | 'pitSpeedModifier'>>
+  ): void {
+    for (const driverId of driverIds) {
+      this.addEffect(driverId, {
+        id: `track-${eventId}-${driverId}-${this.raceState.totalTicks}`,
+        source: 'track',
+        sourceId: eventId,
+        sourceName: eventName,
+        sourceEmoji: eventEmoji,
+        affectedDriverIds: driverIds,
+        expiresAtTick,
+        speedModifier: modifiers.speedModifier ?? 1,
+        consistencyModifier: modifiers.consistencyModifier ?? 1,
+        luckModifier: modifiers.luckModifier ?? 1,
+        crashResistance: modifiers.crashResistance ?? 0,
+        pitSpeedModifier: modifiers.pitSpeedModifier ?? 1,
+      });
+    }
+  }
+
+  /**
+   * Get combined modifier for a driver from all active effects (multiplicative)
+   */
+  private getEffectModifier(driverId: number, modifier: 'speedModifier' | 'consistencyModifier' | 'luckModifier' | 'pitSpeedModifier'): number {
+    const effects = this.unifiedEffects.get(driverId);
     if (!effects || effects.length === 0) return 1;
 
-    let modifier = 1;
+    let result = 1;
     for (const effect of effects) {
-      modifier *= effect.consistencyModifier;
+      result *= effect[modifier];
     }
-    return modifier;
+    return result;
+  }
+
+  /**
+   * Get combined crash resistance for a driver from all active effects (additive)
+   */
+  private getEffectCrashResistance(driverId: number): number {
+    const effects = this.unifiedEffects.get(driverId);
+    if (!effects || effects.length === 0) return 0;
+
+    let result = 0;
+    for (const effect of effects) {
+      result += effect.crashResistance;
+    }
+    // Cap at reasonable bounds (-0.5 to +0.5)
+    return Math.max(-0.5, Math.min(0.5, result));
+  }
+
+  // Legacy getters that now use unified system
+  private getTagSpeedModifier(driverId: number): number {
+    return this.getEffectModifier(driverId, 'speedModifier');
+  }
+
+  private getTagConsistencyModifier(driverId: number): number {
+    return this.getEffectModifier(driverId, 'consistencyModifier');
+  }
+
+  private getTagLuckModifier(driverId: number): number {
+    return this.getEffectModifier(driverId, 'luckModifier');
+  }
+
+  private getTagCrashResistance(driverId: number): number {
+    return this.getEffectCrashResistance(driverId);
+  }
+
+  private getTagPitModifier(driverId: number): number {
+    return this.getEffectModifier(driverId, 'pitSpeedModifier');
   }
 
   private tick(): void {

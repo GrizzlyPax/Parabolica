@@ -272,6 +272,239 @@ export default function SimLab() {
       pitCrew: 'Pit Crew', tireManagement: 'Tire Mgmt'
     };
 
+    // Helper to output all detailed data for a results object
+    const outputDetailedData = (data: typeof canon, prefix: string) => {
+      // Track Performance
+      addRow(`${prefix}TRACK PERFORMANCE`);
+      addRow('Track', 'Races', 'DNFs', 'DNF%', 'Crashes', 'Mechanical', 'Tire Failures', 'Finishers', 'Lead Changes', 'Avg Ticks', 'Event');
+      for (const track of data.trackResults.tracks) {
+        const dnfRate = track.racesRun > 0 ? ((track.totalDNFs / (track.racesRun * 20)) * 100).toFixed(1) : '0.0';
+        const avgTicks = track.racesRun > 0 ? Math.round(track.totalTicks / track.racesRun) : 0;
+        addRow(
+          `${track.trackEmoji} ${track.trackName}`,
+          track.racesRun,
+          track.totalDNFs,
+          `${dnfRate}%`,
+          track.dnfBreakdown.crash,
+          track.dnfBreakdown.mechanical,
+          track.dnfBreakdown.tire_failure,
+          track.totalFinishers,
+          track.totalLeadChanges,
+          avgTicks,
+          `${track.eventEmoji} ${track.eventName}`
+        );
+      }
+      addBlank();
+
+      // Tag Performance
+      addRow(`${prefix}TAG PERFORMANCE - DRIVER TAGS`);
+      addRow('Tag', 'Appearances', 'Wins', 'Win%', 'Podiums', 'Podium%', 'Points', 'DNFs', 'DNF%', 'Avg Position');
+      for (const tag of data.tagResults.driverTags) {
+        const winRate = tag.appearances > 0 ? ((tag.wins / tag.appearances) * 100).toFixed(1) : '0.0';
+        const podiumRate = tag.appearances > 0 ? ((tag.podiums / tag.appearances) * 100).toFixed(1) : '0.0';
+        const dnfRate = tag.appearances > 0 ? ((tag.dnfs / tag.appearances) * 100).toFixed(1) : '0.0';
+        const avgPos = tag.appearances - tag.dnfs > 0 ? (tag.totalFinishPosition / (tag.appearances - tag.dnfs)).toFixed(1) : '-';
+        addRow(
+          `${tag.tagEmoji} ${tag.tagName}`,
+          tag.appearances,
+          tag.wins,
+          `${winRate}%`,
+          tag.podiums,
+          `${podiumRate}%`,
+          tag.pointsFinishes,
+          tag.dnfs,
+          `${dnfRate}%`,
+          avgPos
+        );
+      }
+      addBlank();
+
+      addRow(`${prefix}TAG PERFORMANCE - CAR TAGS`);
+      addRow('Tag', 'Appearances', 'Wins', 'Win%', 'Podiums', 'Podium%', 'Points', 'DNFs', 'DNF%', 'Avg Position');
+      for (const tag of data.tagResults.carTags) {
+        const winRate = tag.appearances > 0 ? ((tag.wins / tag.appearances) * 100).toFixed(1) : '0.0';
+        const podiumRate = tag.appearances > 0 ? ((tag.podiums / tag.appearances) * 100).toFixed(1) : '0.0';
+        const dnfRate = tag.appearances > 0 ? ((tag.dnfs / tag.appearances) * 100).toFixed(1) : '0.0';
+        const avgPos = tag.appearances - tag.dnfs > 0 ? (tag.totalFinishPosition / (tag.appearances - tag.dnfs)).toFixed(1) : '-';
+        addRow(
+          `${tag.tagEmoji} ${tag.tagName}`,
+          tag.appearances,
+          tag.wins,
+          `${winRate}%`,
+          tag.podiums,
+          `${podiumRate}%`,
+          tag.pointsFinishes,
+          tag.dnfs,
+          `${dnfRate}%`,
+          avgPos
+        );
+      }
+      addBlank();
+
+      addRow(`${prefix}TAG PERFORMANCE - TEAM TAGS`);
+      addRow('Tag', 'Appearances', 'Wins', 'Win%', 'Podiums', 'Podium%', 'Points', 'DNFs', 'DNF%', 'Avg Position');
+      for (const tag of data.tagResults.teamTags) {
+        const winRate = tag.appearances > 0 ? ((tag.wins / tag.appearances) * 100).toFixed(1) : '0.0';
+        const podiumRate = tag.appearances > 0 ? ((tag.podiums / tag.appearances) * 100).toFixed(1) : '0.0';
+        const dnfRate = tag.appearances > 0 ? ((tag.dnfs / tag.appearances) * 100).toFixed(1) : '0.0';
+        const avgPos = tag.appearances - tag.dnfs > 0 ? (tag.totalFinishPosition / (tag.appearances - tag.dnfs)).toFixed(1) : '-';
+        addRow(
+          `${tag.tagEmoji} ${tag.tagName}`,
+          tag.appearances,
+          tag.wins,
+          `${winRate}%`,
+          tag.podiums,
+          `${podiumRate}%`,
+          tag.pointsFinishes,
+          tag.dnfs,
+          `${dnfRate}%`,
+          avgPos
+        );
+      }
+      addBlank();
+
+      // Tire Compound Usage
+      addRow(`${prefix}TIRE COMPOUND USAGE`);
+      addRow('Compound', 'Pit Stops', '% of Total');
+      const totalCompoundUsage = data.pitStopResults.compoundUsage.soft + data.pitStopResults.compoundUsage.medium + data.pitStopResults.compoundUsage.hard;
+      addRow('Soft', data.pitStopResults.compoundUsage.soft, totalCompoundUsage > 0 ? `${((data.pitStopResults.compoundUsage.soft / totalCompoundUsage) * 100).toFixed(1)}%` : '0%');
+      addRow('Medium', data.pitStopResults.compoundUsage.medium, totalCompoundUsage > 0 ? `${((data.pitStopResults.compoundUsage.medium / totalCompoundUsage) * 100).toFixed(1)}%` : '0%');
+      addRow('Hard', data.pitStopResults.compoundUsage.hard, totalCompoundUsage > 0 ? `${((data.pitStopResults.compoundUsage.hard / totalCompoundUsage) * 100).toFixed(1)}%` : '0%');
+      addBlank();
+
+      // Tire Stint Analysis
+      addRow(`${prefix}TIRE STINT ANALYSIS`);
+      addRow('Compound', 'Total Laps', 'Stint Count', 'Avg Stint Length', 'Blowouts', 'Blowout Rate');
+      for (const compound of ['soft', 'medium', 'hard'] as const) {
+        const stint = data.pitStopResults.tireStints[compound];
+        const avgStint = stint.stintCount > 0 ? (stint.totalLaps / stint.stintCount).toFixed(1) : '0';
+        const blowoutRate = stint.stintCount > 0 ? ((stint.blowouts / stint.stintCount) * 100).toFixed(2) : '0';
+        addRow(compound.charAt(0).toUpperCase() + compound.slice(1), stint.totalLaps, stint.stintCount, avgStint, stint.blowouts, `${blowoutRate}%`);
+      }
+      addBlank();
+
+      // Starting Tire Performance
+      addRow(`${prefix}STARTING TIRE PERFORMANCE`);
+      addRow('Compound', 'Starts', 'Wins', 'Win%', 'Podiums', 'Podium%', 'Points', 'DNFs', 'DNF%');
+      for (const compound of ['soft', 'medium', 'hard'] as const) {
+        const perf = data.pitStopResults.startingTirePerformance[compound];
+        const winRate = perf.starts > 0 ? ((perf.wins / perf.starts) * 100).toFixed(1) : '0.0';
+        const podiumRate = perf.starts > 0 ? ((perf.podiums / perf.starts) * 100).toFixed(1) : '0.0';
+        const dnfRate = perf.starts > 0 ? ((perf.dnfs / perf.starts) * 100).toFixed(1) : '0.0';
+        addRow(
+          compound.charAt(0).toUpperCase() + compound.slice(1),
+          perf.starts,
+          perf.wins,
+          `${winRate}%`,
+          perf.podiums,
+          `${podiumRate}%`,
+          perf.pointsFinishes,
+          perf.dnfs,
+          `${dnfRate}%`
+        );
+      }
+      addBlank();
+
+      // DNF by Race Phase
+      addRow(`${prefix}DNF BY RACE PHASE`);
+      addRow('Phase', 'DNFs', '% of Total');
+      const totalPhaseDnfs = data.dnfResults.byRacePhase.early + data.dnfResults.byRacePhase.mid + data.dnfResults.byRacePhase.late;
+      addRow('Early (0-33%)', data.dnfResults.byRacePhase.early, totalPhaseDnfs > 0 ? `${((data.dnfResults.byRacePhase.early / totalPhaseDnfs) * 100).toFixed(1)}%` : '0%');
+      addRow('Mid (34-66%)', data.dnfResults.byRacePhase.mid, totalPhaseDnfs > 0 ? `${((data.dnfResults.byRacePhase.mid / totalPhaseDnfs) * 100).toFixed(1)}%` : '0%');
+      addRow('Late (67-100%)', data.dnfResults.byRacePhase.late, totalPhaseDnfs > 0 ? `${((data.dnfResults.byRacePhase.late / totalPhaseDnfs) * 100).toFixed(1)}%` : '0%');
+      addBlank();
+
+      // Winner Pit Stop Analysis
+      addRow(`${prefix}WINNER ANALYSIS`);
+      addRow('Metric', 'Value');
+      addRow('Winner Races', data.pitStopResults.winnerRaces);
+      addRow('Winner Total Pits', data.pitStopResults.winnerTotalPitStops);
+      addRow('Winner Avg Pits', data.pitStopResults.winnerRaces > 0 ? (data.pitStopResults.winnerTotalPitStops / data.pitStopResults.winnerRaces).toFixed(2) : '0');
+      addBlank();
+
+      // Track Events
+      addRow(`${prefix}TRACK EVENTS`);
+      addRow('Event', 'Track', 'Triggers', 'Races', 'Affected Drivers', 'Affected Win%', 'Affected Podium%', 'Affected DNF%', 'Unaffected Win%', 'Unaffected DNF%', '+', '-', '~', 'Description');
+      for (const event of data.eventResults.trackEvents) {
+        const affectedWinRate = event.affectedDriverRaces > 0 ? (event.affectedWins / event.affectedDriverRaces * 100).toFixed(1) : '0.0';
+        const affectedPodiumRate = event.affectedDriverRaces > 0 ? (event.affectedPodiums / event.affectedDriverRaces * 100).toFixed(1) : '0.0';
+        const affectedDNFRate = event.affectedDriverRaces > 0 ? (event.affectedDNFs / event.affectedDriverRaces * 100).toFixed(1) : '0.0';
+        const unaffectedWinRate = event.unaffectedDriverRaces > 0 ? (event.unaffectedWins / event.unaffectedDriverRaces * 100).toFixed(1) : '0.0';
+        const unaffectedDNFRate = event.unaffectedDriverRaces > 0 ? (event.unaffectedDNFs / event.unaffectedDriverRaces * 100).toFixed(1) : '0.0';
+        addRow(
+          `${event.eventEmoji} ${event.eventName}`,
+          event.eventId,
+          event.totalTriggers,
+          event.racesTriggered,
+          event.affectedDriverRaces,
+          `${affectedWinRate}%`,
+          `${affectedPodiumRate}%`,
+          `${affectedDNFRate}%`,
+          `${unaffectedWinRate}%`,
+          `${unaffectedDNFRate}%`,
+          event.positiveImpacts,
+          event.negativeImpacts,
+          event.neutralImpacts,
+          event.description || ''
+        );
+      }
+      addBlank();
+
+      // Tag Events
+      addRow(`${prefix}TAG EVENTS`);
+      addRow('Tag', 'Type', 'Triggers', 'Races', 'Affected Drivers', 'Affected Win%', 'Affected Podium%', 'Affected DNF%', 'Unaffected Win%', 'Unaffected DNF%', '+', '-', '~', 'Description');
+      for (const event of data.eventResults.tagEvents) {
+        const affectedWinRate = event.affectedDriverRaces > 0 ? (event.affectedWins / event.affectedDriverRaces * 100).toFixed(1) : '0.0';
+        const affectedPodiumRate = event.affectedDriverRaces > 0 ? (event.affectedPodiums / event.affectedDriverRaces * 100).toFixed(1) : '0.0';
+        const affectedDNFRate = event.affectedDriverRaces > 0 ? (event.affectedDNFs / event.affectedDriverRaces * 100).toFixed(1) : '0.0';
+        const unaffectedWinRate = event.unaffectedDriverRaces > 0 ? (event.unaffectedWins / event.unaffectedDriverRaces * 100).toFixed(1) : '0.0';
+        const unaffectedDNFRate = event.unaffectedDriverRaces > 0 ? (event.unaffectedDNFs / event.unaffectedDriverRaces * 100).toFixed(1) : '0.0';
+        addRow(
+          `${event.eventEmoji} ${event.eventName}`,
+          event.tagType || 'unknown',
+          event.totalTriggers,
+          event.racesTriggered,
+          event.affectedDriverRaces,
+          `${affectedWinRate}%`,
+          `${affectedPodiumRate}%`,
+          `${affectedDNFRate}%`,
+          `${unaffectedWinRate}%`,
+          `${unaffectedDNFRate}%`,
+          event.positiveImpacts,
+          event.negativeImpacts,
+          event.neutralImpacts,
+          event.description || ''
+        );
+      }
+      addBlank();
+
+      // Full Stat Bucket Breakdown
+      addRow(`${prefix}STAT BUCKETS DETAIL`);
+      addRow('Stat', 'Bucket', 'Entries', 'Wins', 'Win%', 'Podiums', 'Podium%', 'Points', 'DNFs', 'DNF%', 'Avg Position');
+      for (const [statName, buckets] of Object.entries(data.statBucketResults)) {
+        for (const bucket of buckets) {
+          const winRate = bucket.entries > 0 ? ((bucket.wins / bucket.entries) * 100).toFixed(1) : '0.0';
+          const podiumRate = bucket.entries > 0 ? ((bucket.podiums / bucket.entries) * 100).toFixed(1) : '0.0';
+          const dnfRate = bucket.entries > 0 ? ((bucket.dnfs / bucket.entries) * 100).toFixed(1) : '0.0';
+          const avgPos = bucket.entries - bucket.dnfs > 0 ? (bucket.totalFinishPosition / (bucket.entries - bucket.dnfs)).toFixed(1) : '-';
+          addRow(
+            statLabels[statName] || statName,
+            `Q${bucket.bucket}`,
+            bucket.entries,
+            bucket.wins,
+            `${winRate}%`,
+            bucket.podiums,
+            `${podiumRate}%`,
+            bucket.pointsFinishes,
+            bucket.dnfs,
+            `${dnfRate}%`,
+            avgPos
+          );
+        }
+      }
+      addBlank();
+    };
+
     if (hasChanges) {
       // === COMPARISON FORMAT (Canon vs Heretic) ===
       addRow('VARIABLES CHANGED');
@@ -346,6 +579,10 @@ export default function SimLab() {
         addRow(statLabels[statName] || statName, `${q1Win.toFixed(1)}%`, `${q5Win.toFixed(1)}%`, `${(q5Win - q1Win).toFixed(1)}%`);
       }
       addBlank();
+
+      // Full detailed data for both Canon and Heretic
+      outputDetailedData(canon, 'CANON ');
+      outputDetailedData(heretic, 'HERETIC ');
     } else {
       // === SIMPLE FORMAT (Canon only, no comparison) ===
       const dnfRate = (canon.dnfResults.totalDNFs / canon.dnfResults.totalDriverRaces) * 100;
@@ -356,26 +593,10 @@ export default function SimLab() {
       addRow('Metric', 'Value');
       addRow('Total Races', canon.totalRaces);
       addRow('Total Driver-Races', canon.totalDriverRaces);
-      addBlank();
-
-      addRow('DNF STATS');
-      addRow('Metric', 'Value');
       addRow('DNF Rate', `${dnfRate.toFixed(1)}%`);
-      addRow('Total DNFs', canon.dnfResults.totalDNFs);
       addRow('DNFs per Race', (canon.dnfResults.totalDNFs / canon.totalRaces).toFixed(1));
-      addRow('Crash DNFs', canon.dnfResults.byReason.crash);
-      addRow('Mechanical DNFs', canon.dnfResults.byReason.mechanical);
-      addRow('Tire Failure DNFs', canon.dnfResults.byReason.tire_failure);
-      addRow('Safety Cars', canon.dnfResults.safetyCars.totalDeployments);
       addRow('Safety Car Rate', `${scRate.toFixed(1)}%`);
-      addBlank();
-
-      addRow('PIT STOP STATS');
-      addRow('Metric', 'Value');
-      addRow('Total Pit Stops', canon.pitStopResults.totalPitStops);
-      addRow('Avg per Driver', avgPits.toFixed(2));
-      addRow('Quick Stops', canon.pitStopResults.quickStops);
-      addRow('Slow Stops', canon.pitStopResults.slowStops);
+      addRow('Avg Pit Stops', avgPits.toFixed(2));
       addBlank();
 
       addRow('STAT IMPACT (Q1 vs Q5 Win Rate)');
@@ -386,6 +607,9 @@ export default function SimLab() {
         addRow(statLabels[statName] || statName, `${q1Win.toFixed(1)}%`, `${q5Win.toFixed(1)}%`, `${(q5Win - q1Win).toFixed(1)}%`);
       }
       addBlank();
+
+      // Full detailed data
+      outputDetailedData(canon, '');
     }
 
     addRow('CONFIG');

@@ -1,8 +1,8 @@
 // Tag System - Emergent storytelling through persistent modifiers
 // Tags can be assigned to drivers, cars, or teams and affect races
 
-export type TagTarget = 'driver' | 'car' | 'team';
-export type TagTrigger = 'passive' | 'race_start' | 'pit_stop' | 'overtake' | 'crash_proximity' | 'final_lap';
+export type TagTarget = 'driver' | 'car' | 'team' | 'condition';
+export type TagTrigger = 'passive' | 'race_start' | 'pit_stop' | 'overtake' | 'crash_proximity' | 'final_lap' | 'track_event';
 
 export interface Tag {
   id: string;
@@ -160,8 +160,236 @@ export const TEAM_TAGS: Tag[] = [
   },
 ];
 
+// ============ CONDITION TAGS ============
+// These are applied by track events to individual drivers
+// They represent environmental/track conditions affecting performance
+
+export const CONDITION_TAGS: Tag[] = [
+  // === HAZARD CONDITIONS (crash risk) ===
+  {
+    id: 'low-visibility',
+    name: 'Low Visibility',
+    emoji: '🌫️',
+    description: 'Fog, mist, or smoke reducing driver visibility',
+    target: 'condition',
+    trigger: 'track_event',
+    effects: {
+      crashResistance: -0.15,
+      consistencyModifier: 0.92,
+    },
+    activationText: 'is struggling to see the track ahead!',
+  },
+  {
+    id: 'slippery-surface',
+    name: 'Slippery Surface',
+    emoji: '💧',
+    description: 'Oil, water, or debris on the track',
+    target: 'condition',
+    trigger: 'track_event',
+    effects: {
+      crashResistance: -0.20,
+      consistencyModifier: 0.88,
+    },
+    activationText: 'hits a slippery patch!',
+  },
+  {
+    id: 'debris-hazard',
+    name: 'Debris Hazard',
+    emoji: '⚠️',
+    description: 'Track debris creating danger',
+    target: 'condition',
+    trigger: 'track_event',
+    effects: {
+      crashResistance: -0.25,
+    },
+    activationText: 'is navigating through debris!',
+  },
+  {
+    id: 'dust-cloud',
+    name: 'Dust Cloud',
+    emoji: '💨',
+    description: 'Kicked-up dust reducing visibility',
+    target: 'condition',
+    trigger: 'track_event',
+    effects: {
+      crashResistance: -0.12,
+      consistencyModifier: 0.94,
+    },
+    activationText: 'is blinded by dust!',
+  },
+
+  // === SPEED CONDITIONS ===
+  {
+    id: 'adrenaline-surge',
+    name: 'Adrenaline Surge',
+    emoji: '⚡',
+    description: 'A burst of speed from the excitement',
+    target: 'condition',
+    trigger: 'track_event',
+    effects: {
+      speedModifier: 1.08,
+    },
+    activationText: 'gets a burst of adrenaline!',
+  },
+  {
+    id: 'slipstream-boost',
+    name: 'Slipstream Boost',
+    emoji: '🌀',
+    description: 'Caught a powerful slipstream',
+    target: 'condition',
+    trigger: 'track_event',
+    effects: {
+      speedModifier: 1.05,
+    },
+    activationText: 'catches an incredible slipstream!',
+  },
+  {
+    id: 'track-evolution',
+    name: 'Track Evolution',
+    emoji: '📈',
+    description: 'Track grip improving with rubber buildup',
+    target: 'condition',
+    trigger: 'track_event',
+    effects: {
+      speedModifier: 1.04,
+      consistencyModifier: 1.05,
+    },
+    activationText: 'benefits from improved track conditions!',
+  },
+  {
+    id: 'headwind',
+    name: 'Headwind',
+    emoji: '🍃',
+    description: 'Strong headwind reducing straight-line speed',
+    target: 'condition',
+    trigger: 'track_event',
+    effects: {
+      speedModifier: 0.94,
+    },
+    activationText: 'is fighting against the wind!',
+  },
+  {
+    id: 'cooling-issues',
+    name: 'Cooling Issues',
+    emoji: '🌡️',
+    description: 'High temperatures forcing reduced pace',
+    target: 'condition',
+    trigger: 'track_event',
+    effects: {
+      speedModifier: 0.92,
+      consistencyModifier: 0.95,
+    },
+    activationText: 'is managing overheating!',
+  },
+  {
+    id: 'tire-graining',
+    name: 'Tire Graining',
+    emoji: '🛞',
+    description: 'Temporary loss of tire grip',
+    target: 'condition',
+    trigger: 'track_event',
+    effects: {
+      speedModifier: 0.95,
+      crashResistance: -0.08,
+    },
+    activationText: 'is suffering from tire graining!',
+  },
+
+  // === FOCUS CONDITIONS ===
+  {
+    id: 'distracted',
+    name: 'Distracted',
+    emoji: '😵',
+    description: 'Lost focus, making small mistakes',
+    target: 'condition',
+    trigger: 'track_event',
+    effects: {
+      speedModifier: 0.96,
+      consistencyModifier: 0.90,
+    },
+    activationText: 'loses concentration!',
+  },
+  {
+    id: 'in-the-zone',
+    name: 'In The Zone',
+    emoji: '🎯',
+    description: 'Perfect focus, hitting every apex',
+    target: 'condition',
+    trigger: 'track_event',
+    effects: {
+      speedModifier: 1.06,
+      consistencyModifier: 1.10,
+    },
+    activationText: 'is in the zone!',
+  },
+  {
+    id: 'rattled',
+    name: 'Rattled',
+    emoji: '😰',
+    description: 'Shaken up, driving cautiously',
+    target: 'condition',
+    trigger: 'track_event',
+    effects: {
+      speedModifier: 0.93,
+      crashResistance: 0.15,
+    },
+    activationText: 'is rattled and backing off!',
+  },
+  {
+    id: 'desperate-push',
+    name: 'Desperate Push',
+    emoji: '🔥',
+    description: 'Nothing to lose, pushing hard',
+    target: 'condition',
+    trigger: 'track_event',
+    effects: {
+      speedModifier: 1.10,
+      crashResistance: -0.20,
+    },
+    activationText: 'throws caution to the wind!',
+  },
+
+  // === PIT CONDITIONS ===
+  {
+    id: 'pit-congestion',
+    name: 'Pit Congestion',
+    emoji: '🚧',
+    description: 'Heavy pit lane traffic',
+    target: 'condition',
+    trigger: 'track_event',
+    effects: {
+      pitSpeedModifier: 1.25,
+    },
+    activationText: 'is stuck in pit lane traffic!',
+  },
+  {
+    id: 'equipment-malfunction',
+    name: 'Equipment Malfunction',
+    emoji: '🔧',
+    description: 'Pit equipment issues causing delays',
+    target: 'condition',
+    trigger: 'track_event',
+    effects: {
+      pitSpeedModifier: 1.40,
+    },
+    activationText: 'has pit equipment problems!',
+  },
+  {
+    id: 'fast-hands',
+    name: 'Fast Hands',
+    emoji: '👐',
+    description: 'Pit crew on fire today',
+    target: 'condition',
+    trigger: 'track_event',
+    effects: {
+      pitSpeedModifier: 0.80,
+    },
+    activationText: 'gets a lightning-fast pit stop!',
+  },
+];
+
 // All tags combined for easy lookup
-export const ALL_TAGS: Tag[] = [...DRIVER_TAGS, ...CAR_TAGS, ...TEAM_TAGS];
+export const ALL_TAGS: Tag[] = [...DRIVER_TAGS, ...CAR_TAGS, ...TEAM_TAGS, ...CONDITION_TAGS];
 
 // Get tag by ID
 export function getTagById(id: string): Tag | undefined {

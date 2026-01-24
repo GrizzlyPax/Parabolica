@@ -32,18 +32,14 @@ export type TrackEventTrigger =
   | { type: 'condition'; condition: string }   // Special condition
   | { type: 'final_laps'; count: number };     // Final N laps
 
-export type TrackEventEffect =
-  | { type: 'progress_loss'; targets: 'bottom' | 'random' | 'all'; count: number; amount: [number, number] }
-  | { type: 'spin'; targets: 'random'; count: number; timeLoss: [number, number] }
-  | { type: 'gap_compress'; within: number }
-  | { type: 'speed_boost'; targets: 'random' | 'leader' | 'last' | 'bottom'; count: number; amount: number; duration: number }
-  | { type: 'speed_penalty'; targets: 'random' | 'leader' | 'top'; count: number; amount: number; duration: number }
-  | { type: 'position_shuffle'; targets: 'midpack' | 'random'; positions: [number, number] }
-  | { type: 'forced_pit'; targets: 'random'; count: number }
-  | { type: 'instant_pit'; targets: 'random'; count: number }
-  | { type: 'crash_risk'; modifier: number; duration: number }
-  | { type: 'swap_positions'; who: 'first_last' | 'random_pair' }
-  | { type: 'pit_delay'; modifier: number; duration: number };
+// All track effects apply condition tags to specific drivers
+export interface TrackEventEffect {
+  type: 'apply_tag';
+  triggerTag: string;
+  targets: 'random' | 'leader' | 'last' | 'top' | 'bottom';
+  count: number;
+  duration: number;
+}
 
 export interface TrackEvent {
   id: string;
@@ -128,7 +124,7 @@ const LAYOUTS: Record<string, TrackLayout> = {
 // ============================================
 
 export const ALL_TRACKS: Track[] = [
-  // 1. Parking Structure
+  // 1. Parking Structure - Slippery when wet
   {
     id: 'parking-structure',
     name: 'The Parking Structure',
@@ -141,13 +137,13 @@ export const ALL_TRACKS: Track[] = [
       id: 'sprinklers',
       name: 'Sprinklers',
       emoji: '💦',
-      description: '20% per lap: Gaps compress',
-      flavorText: 'SPRINKLERS ACTIVATE! The wet floor bunches everyone up!',
+      description: '20%: 3 random slip (-20% crash resist)',
+      flavorText: 'SPRINKLERS ACTIVATE! The floor is slick!',
       trigger: { type: 'random', chance: 20 },
-      effect: { type: 'gap_compress', within: 4 },
+      effect: { type: 'apply_tag', triggerTag: 'slippery-surface', targets: 'random', count: 3, duration: 2 },
     },
   },
-  // 2. Loading Zone
+  // 2. Loading Zone - Stragglers get blocked
   {
     id: 'loading-zone',
     name: 'Loading Zone',
@@ -160,13 +156,13 @@ export const ALL_TRACKS: Track[] = [
       id: 'forklift-traffic',
       name: 'Forklift Traffic',
       emoji: '🚜',
-      description: 'Every 4 laps: Bottom 3 lose progress',
+      description: 'Every 4 laps: Bottom 3 slowed (-6%)',
       flavorText: 'FORKLIFT CROSSING! Stragglers get held up!',
       trigger: { type: 'interval', every: 4 },
-      effect: { type: 'progress_loss', targets: 'bottom', count: 3, amount: [3, 8] },
+      effect: { type: 'apply_tag', triggerTag: 'headwind', targets: 'bottom', count: 3, duration: 2 },
     },
   },
-  // 3. The Roundabout
+  // 3. The Roundabout - Random drivers lose visibility
   {
     id: 'roundabout',
     name: 'The Roundabout',
@@ -179,13 +175,13 @@ export const ALL_TRACKS: Track[] = [
       id: 'fog-rolls-in',
       name: 'Fog Rolls In',
       emoji: '🌫️',
-      description: 'Halfway: +40% crash risk for 2 laps',
-      flavorText: 'FOG ROLLS IN! Visibility drops dramatically!',
-      trigger: { type: 'halfway' },
-      effect: { type: 'crash_risk', modifier: 1.4, duration: 2 },
+      description: '15%: 4 random get fog (-15% crash resist)',
+      flavorText: 'FOG ROLLS IN! Some drivers lose visibility!',
+      trigger: { type: 'random', chance: 15 },
+      effect: { type: 'apply_tag', triggerTag: 'low-visibility', targets: 'random', count: 4, duration: 2 },
     },
   },
-  // 4. Office Park
+  // 4. Office Park - Meetings make drivers lose focus
   {
     id: 'office-park',
     name: 'Office Park Circuit',
@@ -195,16 +191,16 @@ export const ALL_TRACKS: Track[] = [
     laps: 15,
     layout: LAYOUTS.oval,
     event: {
-      id: 'fire-drill',
-      name: 'Fire Drill',
-      emoji: '🔔',
-      description: 'Laps 5 & 10: All drivers slowed 5%',
-      flavorText: 'FIRE DRILL! Everyone must evacuate calmly!',
-      trigger: { type: 'lap', laps: [5, 10] },
-      effect: { type: 'speed_penalty', targets: 'random', count: 20, amount: 5, duration: 1 },
+      id: 'meeting-overrun',
+      name: 'Meeting Overrun',
+      emoji: '📋',
+      description: 'Every 5 laps: 2 random distracted (-4% speed)',
+      flavorText: 'MEETING OVERRUN! Someone is late getting back!',
+      trigger: { type: 'interval', every: 5 },
+      effect: { type: 'apply_tag', triggerTag: 'distracted', targets: 'random', count: 2, duration: 2 },
     },
   },
-  // 5. Construction Zone
+  // 5. Construction Zone - Dust affects random drivers
   {
     id: 'construction-zone',
     name: 'Active Construction',
@@ -217,13 +213,13 @@ export const ALL_TRACKS: Track[] = [
       id: 'dust-cloud',
       name: 'Dust Cloud',
       emoji: '💨',
-      description: '15% per lap: +30% crash risk for 1 lap',
-      flavorText: 'DUST CLOUD! A passing truck kicks up debris!',
-      trigger: { type: 'random', chance: 15 },
-      effect: { type: 'crash_risk', modifier: 1.3, duration: 1 },
+      description: '18%: 3 random get dust (-12% crash resist)',
+      flavorText: 'DUST CLOUD! A truck kicks up debris!',
+      trigger: { type: 'random', chance: 18 },
+      effect: { type: 'apply_tag', triggerTag: 'dust-cloud', targets: 'random', count: 3, duration: 1 },
     },
   },
-  // 6. The Mall
+  // 6. The Mall - Leaders overheat from pushing
   {
     id: 'the-mall',
     name: 'The Mall',
@@ -236,13 +232,13 @@ export const ALL_TRACKS: Track[] = [
       id: 'ac-breakdown',
       name: 'AC Breakdown',
       emoji: '🥵',
-      description: 'Final 3 laps: +25% crash risk',
-      flavorText: 'AC BREAKS DOWN! The heat is getting to everyone!',
-      trigger: { type: 'final_laps', count: 3 },
-      effect: { type: 'crash_risk', modifier: 1.25, duration: 3 },
+      description: 'Every 4 laps: Top 3 overheat (-8% speed)',
+      flavorText: 'AC BREAKS DOWN! The leaders are feeling the heat!',
+      trigger: { type: 'interval', every: 4 },
+      effect: { type: 'apply_tag', triggerTag: 'cooling-issues', targets: 'top', count: 3, duration: 2 },
     },
   },
-  // 7. Airport Terminal
+  // 7. Airport Terminal - Random pit delays
   {
     id: 'airport-terminal',
     name: 'Departures Level',
@@ -252,16 +248,16 @@ export const ALL_TRACKS: Track[] = [
     laps: 16,
     layout: LAYOUTS.oval,
     event: {
-      id: 'runway-closure',
-      name: 'Runway Closure',
+      id: 'gate-change',
+      name: 'Gate Change',
       emoji: '🛬',
-      description: 'Every 5 laps: Pits 40% slower',
-      flavorText: 'RUNWAY CLOSURE! All ground operations delayed!',
-      trigger: { type: 'interval', every: 5 },
-      effect: { type: 'pit_delay', modifier: 1.4, duration: 1 },
+      description: '15%: 3 random get pit delay (+25%)',
+      flavorText: 'GATE CHANGE! Some crews are out of position!',
+      trigger: { type: 'random', chance: 15 },
+      effect: { type: 'apply_tag', triggerTag: 'pit-congestion', targets: 'random', count: 3, duration: 2 },
     },
   },
-  // 8. The Warehouse
+  // 8. The Warehouse - Random debris hazard
   {
     id: 'warehouse',
     name: 'The Warehouse',
@@ -271,16 +267,16 @@ export const ALL_TRACKS: Track[] = [
     laps: 18,
     layout: LAYOUTS.triangle,
     event: {
-      id: 'lights-out',
-      name: 'Lights Out',
-      emoji: '🔦',
-      description: 'Halfway: Midpack positions shuffle',
-      flavorText: 'LIGHTS OUT! Everyone loses their bearings!',
-      trigger: { type: 'halfway' },
-      effect: { type: 'position_shuffle', targets: 'midpack', positions: [7, 14] },
+      id: 'falling-boxes',
+      name: 'Falling Boxes',
+      emoji: '📦',
+      description: '12%: 2 random hit debris (-25% crash resist)',
+      flavorText: 'FALLING BOXES! Watch your head!',
+      trigger: { type: 'random', chance: 12 },
+      effect: { type: 'apply_tag', triggerTag: 'debris-hazard', targets: 'random', count: 2, duration: 1 },
     },
   },
-  // 9. Server Room
+  // 9. Server Room - Leaders throttle from heat
   {
     id: 'server-room',
     name: 'Server Room B',
@@ -293,13 +289,13 @@ export const ALL_TRACKS: Track[] = [
       id: 'thermal-throttle',
       name: 'Thermal Throttle',
       emoji: '🌡️',
-      description: 'Final 2 laps: Top 5 slowed 5%',
+      description: 'Every 5 laps: Top 4 overheat (-8% speed)',
       flavorText: 'THERMAL THROTTLE! The leaders are overheating!',
-      trigger: { type: 'final_laps', count: 2 },
-      effect: { type: 'speed_penalty', targets: 'top', count: 5, amount: 5, duration: 2 },
+      trigger: { type: 'interval', every: 5 },
+      effect: { type: 'apply_tag', triggerTag: 'cooling-issues', targets: 'top', count: 4, duration: 2 },
     },
   },
-  // 10. The Waiting Room
+  // 10. The Waiting Room - Last place gets desperate
   {
     id: 'waiting-room',
     name: 'The Waiting Room',
@@ -312,13 +308,13 @@ export const ALL_TRACKS: Track[] = [
       id: 'number-called',
       name: 'Number Called',
       emoji: '🎫',
-      description: '12% per lap: Last place boosted 6%',
-      flavorText: 'NUMBER CALLED! The back of the line gets attention!',
-      trigger: { type: 'random', chance: 12 },
-      effect: { type: 'speed_boost', targets: 'last', count: 1, amount: 6, duration: 2 },
+      description: '15%: Last 2 push hard (+10% speed, +crash risk)',
+      flavorText: 'NUMBER CALLED! Back of the pack gets desperate!',
+      trigger: { type: 'random', chance: 15 },
+      effect: { type: 'apply_tag', triggerTag: 'desperate-push', targets: 'last', count: 2, duration: 2 },
     },
   },
-  // 11. Expressway
+  // 11. Expressway - Random drivers catch slipstream
   {
     id: 'expressway',
     name: 'Express Lane',
@@ -328,16 +324,16 @@ export const ALL_TRACKS: Track[] = [
     laps: 20,
     layout: LAYOUTS.oval,
     event: {
-      id: 'rain-shower',
-      name: 'Rain Shower',
-      emoji: '🌧️',
-      description: '20% per lap: Gaps compress',
-      flavorText: 'RAIN SHOWER! Everyone slows and bunches up!',
+      id: 'drafting-zone',
+      name: 'Drafting Zone',
+      emoji: '🌀',
+      description: '20%: 3 random catch slipstream (+5% speed)',
+      flavorText: 'DRAFTING ZONE! Some drivers find clean air!',
       trigger: { type: 'random', chance: 20 },
-      effect: { type: 'gap_compress', within: 5 },
+      effect: { type: 'apply_tag', triggerTag: 'slipstream-boost', targets: 'random', count: 3, duration: 2 },
     },
   },
-  // 12. The Buffet
+  // 12. The Buffet - Stragglers get energy boost
   {
     id: 'buffet',
     name: 'The Buffet',
@@ -350,13 +346,13 @@ export const ALL_TRACKS: Track[] = [
       id: 'fresh-tray',
       name: 'Fresh Tray',
       emoji: '🍕',
-      description: 'Every 4 laps: Bottom 5 boosted 5%',
+      description: 'Every 4 laps: Bottom 4 boosted (+8% speed)',
       flavorText: 'FRESH TRAY OUT! Stragglers find new energy!',
       trigger: { type: 'interval', every: 4 },
-      effect: { type: 'speed_boost', targets: 'bottom', count: 5, amount: 5, duration: 2 },
+      effect: { type: 'apply_tag', triggerTag: 'adrenaline-surge', targets: 'bottom', count: 4, duration: 2 },
     },
   },
-  // 13. Basement Level
+  // 13. Basement Level - Random visibility loss
   {
     id: 'basement',
     name: 'Basement Level',
@@ -369,13 +365,13 @@ export const ALL_TRACKS: Track[] = [
       id: 'power-flicker',
       name: 'Power Flicker',
       emoji: '💡',
-      description: 'Final 2 laps: +60% crash risk',
-      flavorText: 'POWER FLICKER! The basement grows unstable!',
-      trigger: { type: 'final_laps', count: 2 },
-      effect: { type: 'crash_risk', modifier: 1.6, duration: 2 },
+      description: '15%: 4 random lose visibility (-15% crash resist)',
+      flavorText: 'POWER FLICKER! The lights go out!',
+      trigger: { type: 'random', chance: 15 },
+      effect: { type: 'apply_tag', triggerTag: 'low-visibility', targets: 'random', count: 4, duration: 2 },
     },
   },
-  // 14. Breakroom
+  // 14. Breakroom - Random drivers get energized
   {
     id: 'breakroom',
     name: 'The Breakroom',
@@ -385,16 +381,16 @@ export const ALL_TRACKS: Track[] = [
     laps: 16,
     layout: LAYOUTS.diamond,
     event: {
-      id: 'coffee-spill',
-      name: 'Coffee Spill',
+      id: 'coffee-kick',
+      name: 'Coffee Kick',
       emoji: '☕',
-      description: '15% per lap: Random driver loses progress',
-      flavorText: 'COFFEE SPILL! Someone hits a slick spot!',
-      trigger: { type: 'random', chance: 15 },
-      effect: { type: 'progress_loss', targets: 'random', count: 1, amount: [5, 12] },
+      description: '18%: 2 random get focused (+6% speed, +10% consistency)',
+      flavorText: 'COFFEE KICKS IN! Someone is locked in!',
+      trigger: { type: 'random', chance: 18 },
+      effect: { type: 'apply_tag', triggerTag: 'in-the-zone', targets: 'random', count: 2, duration: 3 },
     },
   },
-  // 15. Fire Station
+  // 15. Fire Station - Leader gets urgency boost
   {
     id: 'fire-station',
     name: 'Fire Station',
@@ -404,16 +400,16 @@ export const ALL_TRACKS: Track[] = [
     laps: 16,
     layout: LAYOUTS.oval,
     event: {
-      id: 'false-alarm',
-      name: 'False Alarm',
+      id: 'emergency-call',
+      name: 'Emergency Call',
       emoji: '🚨',
-      description: 'Laps 3-5: +35% crash risk',
-      flavorText: 'FALSE ALARM! Everyone panics anyway!',
-      trigger: { type: 'lap', laps: [3, 4, 5] },
-      effect: { type: 'crash_risk', modifier: 1.35, duration: 3 },
+      description: 'Every 4 laps: Leader boosted (+8% speed)',
+      flavorText: 'EMERGENCY CALL! The leader pushes harder!',
+      trigger: { type: 'interval', every: 4 },
+      effect: { type: 'apply_tag', triggerTag: 'adrenaline-surge', targets: 'leader', count: 1, duration: 2 },
     },
   },
-  // 16. Rush Hour
+  // 16. Rush Hour - Random slippery surface
   {
     id: 'rush-hour',
     name: 'Rush Hour',
@@ -423,16 +419,16 @@ export const ALL_TRACKS: Track[] = [
     laps: 15,
     layout: LAYOUTS.diamond,
     event: {
-      id: 'gridlock',
-      name: 'Gridlock',
+      id: 'fender-bender',
+      name: 'Fender Bender',
       emoji: '🚗',
-      description: 'Halfway: Gaps compress tightly',
-      flavorText: 'GRIDLOCK! Traffic brings everyone together!',
-      trigger: { type: 'halfway' },
-      effect: { type: 'gap_compress', within: 3 },
+      description: '12%: 2 random hit slick (+crash risk, -consistency)',
+      flavorText: 'FENDER BENDER! Debris on track!',
+      trigger: { type: 'random', chance: 12 },
+      effect: { type: 'apply_tag', triggerTag: 'slippery-surface', targets: 'random', count: 2, duration: 1 },
     },
   },
-  // 17. Night Shift
+  // 17. Night Shift - Stragglers get second wind
   {
     id: 'night-shift',
     name: 'Night Shift',
@@ -442,16 +438,16 @@ export const ALL_TRACKS: Track[] = [
     laps: 17,
     layout: LAYOUTS.stadium,
     event: {
-      id: 'drowsiness',
-      name: 'Drowsiness',
-      emoji: '😴',
-      description: 'Final 3 laps: All slowed 3%',
-      flavorText: 'DROWSINESS SETS IN! Everyone is getting tired!',
-      trigger: { type: 'final_laps', count: 3 },
-      effect: { type: 'speed_penalty', targets: 'random', count: 20, amount: 3, duration: 3 },
+      id: 'second-wind',
+      name: 'Second Wind',
+      emoji: '💨',
+      description: 'Every 5 laps: Bottom 3 boosted (+8% speed)',
+      flavorText: 'SECOND WIND! The back-markers find new life!',
+      trigger: { type: 'interval', every: 5 },
+      effect: { type: 'apply_tag', triggerTag: 'adrenaline-surge', targets: 'bottom', count: 3, duration: 2 },
     },
   },
-  // 18. Bike Lane
+  // 18. Bike Lane - Random distraction
   {
     id: 'bike-lane',
     name: 'The Bike Lane',
@@ -464,13 +460,13 @@ export const ALL_TRACKS: Track[] = [
       id: 'pedestrian-crossing',
       name: 'Pedestrian Crossing',
       emoji: '🚶',
-      description: '18% per lap: 2 random lose progress',
-      flavorText: 'PEDESTRIAN CROSSING! Brief delay for some!',
+      description: '18%: 2 random distracted (-4% speed)',
+      flavorText: 'PEDESTRIAN CROSSING! Some drivers hesitate!',
       trigger: { type: 'random', chance: 18 },
-      effect: { type: 'progress_loss', targets: 'random', count: 2, amount: [3, 7] },
+      effect: { type: 'apply_tag', triggerTag: 'distracted', targets: 'random', count: 2, duration: 1 },
     },
   },
-  // 19. DMV
+  // 19. DMV - Random pit equipment issues
   {
     id: 'dmv',
     name: 'The DMV',
@@ -480,16 +476,16 @@ export const ALL_TRACKS: Track[] = [
     laps: 14,
     layout: LAYOUTS.rectangle,
     event: {
-      id: 'system-down',
-      name: 'System Down',
+      id: 'system-glitch',
+      name: 'System Glitch',
       emoji: '🖥️',
-      description: 'Laps 5-8: Pits 50% slower',
-      flavorText: 'SYSTEM DOWN! Everything takes longer!',
-      trigger: { type: 'lap', laps: [5, 6, 7, 8] },
-      effect: { type: 'pit_delay', modifier: 1.5, duration: 4 },
+      description: 'Every 4 laps: 3 random get pit delay (+40%)',
+      flavorText: 'SYSTEM GLITCH! Some equipment malfunctions!',
+      trigger: { type: 'interval', every: 4 },
+      effect: { type: 'apply_tag', triggerTag: 'equipment-malfunction', targets: 'random', count: 3, duration: 2 },
     },
   },
-  // 20. Lost and Found
+  // 20. Lost and Found - Random drivers get rattled
   {
     id: 'lost-and-found',
     name: 'Lost and Found',
@@ -499,13 +495,13 @@ export const ALL_TRACKS: Track[] = [
     laps: 17,
     layout: LAYOUTS.oval,
     event: {
-      id: 'lucky-find',
-      name: 'Lucky Find',
-      emoji: '🎁',
-      description: 'Every 4 laps: Last place boosted 8%',
-      flavorText: 'LUCKY FIND! Someone at the back finds something useful!',
-      trigger: { type: 'interval', every: 4 },
-      effect: { type: 'speed_boost', targets: 'last', count: 1, amount: 8, duration: 2 },
+      id: 'near-miss',
+      name: 'Near Miss',
+      emoji: '😰',
+      description: '15%: 2 random rattled (-7% speed, safer)',
+      flavorText: 'NEAR MISS! Some drivers back off to regroup!',
+      trigger: { type: 'random', chance: 15 },
+      effect: { type: 'apply_tag', triggerTag: 'rattled', targets: 'random', count: 2, duration: 2 },
     },
   },
 ];
@@ -586,39 +582,12 @@ function formatLapList(laps: number[], totalLaps: number): string {
 }
 
 function getEffectDescription(effect: TrackEventEffect): string {
-  switch (effect.type) {
-    case 'progress_loss':
-      return `${effect.targets === 'bottom' ? `Bottom ${effect.count}` : effect.targets === 'all' ? 'All' : `${effect.count} random`} lose progress`;
-    case 'spin':
-      return `${effect.count} random drivers spin`;
-    case 'gap_compress':
-      return 'Gaps compress to leader';
-    case 'speed_boost':
-      if (effect.targets === 'bottom') return `Bottom ${effect.count} get speed boost`;
-      if (effect.targets === 'last') return 'Last place gets speed boost';
-      if (effect.targets === 'leader') return 'Leader gets speed boost';
-      return `${effect.count} random get speed boost`;
-    case 'speed_penalty':
-      if (effect.targets === 'leader') return 'Leader gets speed penalty';
-      if (effect.targets === 'top') return `Top ${effect.count} get speed penalty`;
-      return `${effect.count} random get speed penalty`;
-    case 'position_shuffle':
-      return effect.targets === 'midpack' ? 'Midpack shuffles randomly' : 'Positions shuffle randomly';
-    case 'forced_pit':
-      return `${effect.count} random forced to pit`;
-    case 'instant_pit':
-      return `${effect.count} random get instant pit`;
-    case 'crash_risk':
-      const pct = Math.round((effect.modifier - 1) * 100);
-      return `+${pct}% crash risk`;
-    case 'pit_delay':
-      const delayPct = Math.round((effect.modifier - 1) * 100);
-      return `Pit stops take ${delayPct}% longer`;
-    case 'swap_positions':
-      return effect.who === 'first_last' ? 'First and last swap' : 'Random pair swap';
-    default:
-      return 'Special effect';
-  }
+  const targetDesc = effect.targets === 'leader' ? 'Leader'
+    : effect.targets === 'last' ? `Last ${effect.count}`
+    : effect.targets === 'top' ? `Top ${effect.count}`
+    : effect.targets === 'bottom' ? `Bottom ${effect.count}`
+    : `${effect.count} random`;
+  return `${targetDesc} get ${effect.triggerTag} for ${effect.duration} lap${effect.duration > 1 ? 's' : ''}`;
 }
 
 export function getTrackById(id: string): Track | undefined {
