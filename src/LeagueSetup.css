@@ -5,9 +5,9 @@
 
 .league-setup.betting-style {
   min-height: 100vh;
-  padding: 1.5rem;
+  padding: var(--space-lg);
   padding-bottom: 100px; /* Account for sticky footer */
-  max-width: 800px;
+  max-width: var(--container-menu);
   margin: 0 auto;
   color: #ccc;
   font-family: var(--font-body), var(--font-emoji);
@@ -57,7 +57,7 @@
 
 .league-setup.betting-style .setup-title {
   font-family: var(--font-display);
-  font-size: 1.8rem;
+  font-size: var(--text-2xl);
   font-weight: 700;
   color: #e8e8e8;
   letter-spacing: 2px;
@@ -67,11 +67,11 @@
 
 .league-setup.betting-style .setup-desc {
   font-family: var(--font-body);
-  font-size: 0.9rem;
+  font-size: var(--text-base);
   color: #888;
   line-height: 1.5;
-  margin: 0 auto 0.75rem auto;
-  max-width: 500px;
+  margin: 0 auto var(--space-sm) auto;
+  max-width: 600px;
 }
 
 /* Narrator Box - matches betting screen */
@@ -197,26 +197,26 @@
   color: #c9a227;
 }
 
-/* Wordle-style grid for teams and tracks */
+/* Wordle-style grid for teams and tracks - auto-fit for fluid columns */
 .league-setup.betting-style .wordle-grid {
   display: grid;
-  gap: 0.5rem;
+  gap: var(--space-sm);
 }
 
 .league-setup.betting-style .wordle-grid.teams-grid {
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.6rem;
+  grid-template-columns: repeat(auto-fit, minmax(var(--card-min), 1fr));
+  gap: var(--space-sm);
 }
 
 /* Teams grid for unified TeamCell component */
 .league-setup.betting-style .teams-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.6rem;
+  grid-template-columns: repeat(auto-fit, minmax(var(--card-min), 1fr));
+  gap: var(--space-sm);
 }
 
 .league-setup.betting-style .wordle-grid.tracks-grid {
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
 }
 
 /* Wordle cell - team or track */
@@ -2060,13 +2060,13 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 0.75rem;
-  padding: 0.75rem 1rem;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
   background: linear-gradient(180deg, rgba(15, 15, 18, 0.98) 0%, rgba(10, 10, 12, 0.99) 100%);
   border-top: 1px solid #2a2a30;
   backdrop-filter: blur(10px);
   z-index: 100;
-  max-width: 800px;
+  max-width: var(--container-menu);
   margin: 0 auto;
 }
 
@@ -2109,12 +2109,12 @@
   bottom: 0;
   left: 0;
   right: 0;
-  max-width: 800px;
+  max-width: var(--container-menu);
   margin: 0 auto;
   background: linear-gradient(180deg, rgba(15, 15, 18, 0.98) 0%, rgba(10, 10, 12, 0.99) 100%);
   border-top: 1px solid #2a2a30;
   backdrop-filter: blur(10px);
-  padding: 0.75rem 1rem;
+  padding: var(--space-sm) var(--space-md);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -2266,15 +2266,14 @@
     margin-bottom: 0.4rem;
   }
 
+  /* Grid columns handled by auto-fit - just adjust gap */
   .league-setup.betting-style .wordle-grid.teams-grid,
   .league-setup.betting-style .teams-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.4rem;
+    gap: var(--space-xs);
   }
 
   .league-setup.betting-style .wordle-grid.tracks-grid {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 0.35rem;
+    gap: var(--space-xs);
   }
 
   .league-setup.betting-style .wordle-cell {
@@ -2404,16 +2403,7 @@
   }
 }
 
-@media (max-width: 360px) {
-  .league-setup.betting-style .wordle-grid.teams-grid,
-  .league-setup.betting-style .teams-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .league-setup.betting-style .wordle-grid.tracks-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
+/* 360px breakpoint removed - auto-fit grids handle small screens naturally */
 
 /* Legacy responsive styles */
 @media (max-width: 768px) {

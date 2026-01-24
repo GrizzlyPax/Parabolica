@@ -7,8 +7,8 @@
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  padding: 1.5rem;
-  max-width: 800px;
+  padding: var(--space-lg);
+  max-width: var(--container-menu);
   margin: 0 auto;
   background: linear-gradient(180deg, #0a0a0c 0%, #0d0d0f 50%, #0a0a0c 100%);
   color: #e8e8e8;
@@ -172,11 +172,11 @@
 .tier-group.tier-longshot .tier-group-label { color: #eab308; border-color: rgba(234, 179, 8, 0.3); }
 .tier-group.tier-wildcard .tier-group-label { color: #ef4444; border-color: rgba(239, 68, 68, 0.3); }
 
-/* Driver cards grid within tier - matches .teams-grid */
+/* Driver cards grid within tier - auto-fit for fluid columns */
 .tier-group-cards {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.6rem;
+  grid-template-columns: repeat(auto-fit, minmax(var(--card-min), 1fr));
+  gap: var(--space-sm);
 }
 
 /* Wrapper for 3D flip effect - fixed height container */
@@ -1153,13 +1153,13 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0.75rem 1rem;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
   background: linear-gradient(180deg, rgba(15, 15, 18, 0.98) 0%, rgba(10, 10, 12, 0.99) 100%);
   border-top: 1px solid #2a2a30;
   backdrop-filter: blur(10px);
   z-index: 100;
-  max-width: 800px;
+  max-width: var(--container-menu);
   margin: 0 auto;
 }
 
@@ -1318,10 +1318,9 @@
     font-size: 0.8rem;
   }
 
-  /* 2 columns on mobile for tighter grid */
+  /* Grid columns handled by auto-fit - just adjust gap */
   .wordle-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.4rem;
+    gap: var(--space-xs);
   }
 
   .wordle-cell {
@@ -1513,12 +1512,7 @@
   }
 }
 
-/* Extra small screens */
-@media (max-width: 360px) {
-  .wordle-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
+/* 360px breakpoint removed - auto-fit grids handle small screens naturally */
 
 /* ============================================
    RACE RESULTS STYLES

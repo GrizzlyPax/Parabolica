@@ -1,12 +1,12 @@
 .season-setup {
   min-height: 100vh;
   background: linear-gradient(180deg, #0a0a0c 0%, #0d0d0f 50%, #0a0a0c 100%);
-  padding: 1.5rem;
+  padding: var(--space-lg);
   padding-bottom: 100px; /* Account for sticky footer */
 }
 
 .season-setup-content {
-  max-width: 800px;
+  max-width: var(--container-menu);
   margin: 0 auto;
 }
 
@@ -35,14 +35,14 @@
 
 .season-setup-header h1 {
   font-family: var(--font-display), var(--font-emoji);
-  font-size: 2.5rem;
+  font-size: var(--text-2xl);
   font-weight: 700;
   color: #fff;
   margin: 0 0 0.5rem 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.75rem;
+  gap: var(--space-sm);
   text-transform: uppercase;
   letter-spacing: -1px;
 }
@@ -230,13 +230,13 @@
   bottom: 0;
   left: 0;
   right: 0;
-  max-width: 800px;
+  max-width: var(--container-menu);
   margin: 0 auto;
   background: linear-gradient(180deg, rgba(15, 15, 18, 0.98) 0%, rgba(10, 10, 12, 0.99) 100%);
   border-top: 1px solid #2a2a30;
   backdrop-filter: blur(10px);
   z-index: 100;
-  padding: 0.75rem 1rem;
+  padding: var(--space-sm) var(--space-md);
   border-radius: 0;
 }
 
@@ -373,8 +373,8 @@
 }
 
 .wordle-selection-grid.teams-grid {
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.6rem;
+  grid-template-columns: repeat(auto-fit, minmax(var(--card-min), 1fr));
+  gap: var(--space-sm);
 }
 
 /* Team groups container */
@@ -401,17 +401,17 @@
   border-color: rgba(201, 162, 39, 0.3);
 }
 
-/* Teams grid for unified TeamCell component */
+/* Teams grid for unified TeamCell component - auto-fit for fluid columns */
 .season-setup .teams-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.6rem;
-  max-width: 800px;
+  grid-template-columns: repeat(auto-fit, minmax(var(--card-min), 1fr));
+  gap: var(--space-sm);
+  max-width: var(--container-menu);
   margin: 0 auto;
 }
 
 .wordle-selection-grid.tracks-grid {
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
 }
 
 /* Team cells - matching single race mode */
@@ -978,16 +978,15 @@
     padding: 0.5rem;
   }
 
+  /* Grid columns handled by auto-fit - just adjust gap */
   .wordle-selection-grid.teams-grid,
   .wordle-selection-grid.tracks-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.35rem;
+    gap: var(--space-xs);
   }
 
   /* TeamCell unified component responsive */
   .season-setup .teams-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.35rem;
+    gap: var(--space-xs);
   }
 
   .season-setup .wordle-cell,
@@ -1050,11 +1049,4 @@
   }
 }
 
-/* Extra small screens */
-@media (max-width: 360px) {
-  .wordle-selection-grid.teams-grid,
-  .wordle-selection-grid.tracks-grid,
-  .season-setup .teams-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
+/* 360px breakpoint removed - auto-fit grids handle small screens naturally */

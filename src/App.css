@@ -10,6 +10,29 @@
   --font-mono: 'Inconsolata', 'Consolas', 'Monaco', monospace;
   /* Emoji fallback */
   --font-emoji: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji';
+
+  /* Fluid typography scale - scales smoothly between mobile and desktop */
+  --text-xs: clamp(0.7rem, 1.5vw, 0.85rem);
+  --text-sm: clamp(0.8rem, 1.8vw, 0.95rem);
+  --text-base: clamp(0.9rem, 2vw, 1.1rem);
+  --text-lg: clamp(1.1rem, 2.5vw, 1.4rem);
+  --text-xl: clamp(1.3rem, 3vw, 1.8rem);
+  --text-2xl: clamp(1.5rem, 4vw, 2.5rem);
+
+  /* Fluid spacing scale */
+  --space-xs: clamp(0.25rem, 0.5vw, 0.5rem);
+  --space-sm: clamp(0.5rem, 1vw, 0.75rem);
+  --space-md: clamp(0.75rem, 1.5vw, 1.25rem);
+  --space-lg: clamp(1rem, 2vw, 1.75rem);
+  --space-xl: clamp(1.5rem, 3vw, 2.5rem);
+
+  /* Container widths */
+  --container-menu: min(100% - 2rem, 1200px);
+  --container-narrow: min(100% - 2rem, 800px);
+
+  /* Card sizing for auto-fit grids */
+  --card-min: 100px;
+  --card-max: 140px;
 }
 
 * {

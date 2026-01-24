@@ -320,7 +320,7 @@
    RESPONSIVE - smaller screens
    ============================================ */
 
-@media (max-width: 600px) {
+@media (max-width: 640px) {
   .team-cell-unified {
     padding: 0.35rem;
     border-radius: 6px;
