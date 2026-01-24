@@ -667,7 +667,8 @@ export function BettingInterface({
     const availableDrivers = drivers.filter(d => !currentBets.some(b => b.driverId === d.id));
     const shuffledDrivers = [...availableDrivers].sort(() => Math.random() - 0.5);
 
-    const betTypes: BetType[] = ['win', 'podium', 'points', 'finishes', 'dnf'];
+    // Match manual betting UI - only positive outcomes (no DNF bets)
+    const betTypes: BetType[] = ['win', 'podium', 'points', 'finishes'];
     const betsToPlace: Array<Omit<Bet, 'id'>> = [];
 
     // First pass: pick drivers and bet types
