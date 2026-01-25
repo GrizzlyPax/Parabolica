@@ -34,6 +34,7 @@ export interface Driver {
   stats: DriverStats;
   currentLap: number;
   lapTimes: number[];     // Time (in ticks) for each completed lap
+  sectorTimes: number[];  // Cumulative race time (in ticks) at each sector crossing (S1, S2, S3, S1, S2, S3, ...)
   lastTickSpeed: number;  // Speed from the most recent tick (for debug display)
   lastTickFactors: TickFactors | null; // Breakdown of what affected speed
   // Extended info for generated drivers
@@ -352,6 +353,7 @@ class RaceEngine {
   };
   private raceEvents: RaceEvent[] = [];
   private lapStartTick: Map<number, number> = new Map(); // driverId -> tick when current lap started
+  private lastSector: Map<number, number> = new Map(); // driverId -> last sector (0=S1, 1=S2, 2=S3)
   private previousPositions: Map<number, number> = new Map(); // driverId -> previous rank (for overtake detection)
   private trackInfo: TrackInfo | null = null;
 
@@ -458,6 +460,7 @@ class RaceEngine {
         stats: { ...d.stats },
         currentLap: 0,
         lapTimes: [],
+        sectorTimes: [],
         lastTickSpeed: 0,
         lastTickFactors: null,
         // Tire/Pit/Crash initial state
@@ -482,6 +485,7 @@ class RaceEngine {
       };
     });
     this.lapStartTick = new Map(this.drivers.map(d => [d.id, 0]));
+    this.lastSector = new Map(this.drivers.map(d => [d.id, 0]));
   }
 
   // Load a custom roster of generated drivers
@@ -521,6 +525,7 @@ class RaceEngine {
         stats: { ...d.stats },
         currentLap: 0,
         lapTimes: [],
+        sectorTimes: [],
         lastTickSpeed: 0,
         lastTickFactors: null,
         firstName: d.firstName,
@@ -558,6 +563,7 @@ class RaceEngine {
       };
     });
     this.lapStartTick = new Map(this.drivers.map(d => [d.id, 0]));
+    this.lastSector = new Map(this.drivers.map(d => [d.id, 0]));
     this.previousPositions = new Map();
     this.raceState = {
       totalTicks: 0,
@@ -768,6 +774,7 @@ class RaceEngine {
         position: 0,
         currentLap: 0,
         lapTimes: [],
+        sectorTimes: [],
         lastTickSpeed: 0,
         lastTickFactors: null,
         tireState: {
@@ -791,6 +798,7 @@ class RaceEngine {
       };
     });
     this.lapStartTick = new Map(this.drivers.map(d => [d.id, 0]));
+    this.lastSector = new Map(this.drivers.map(d => [d.id, 0]));
     this.previousPositions = new Map();
     this.raceState = {
       totalTicks: 0,
@@ -1870,6 +1878,7 @@ class RaceEngine {
 
         let newLap = driver.currentLap;
         const newLapTimes = [...driver.lapTimes];
+        const newSectorTimes = [...driver.sectorTimes];
 
         if (justCrossedStartFinish) {
           // Crossed start/finish while in pit lane - increment lap
@@ -1878,6 +1887,11 @@ class RaceEngine {
           newLapTimes.push(lapTime);
           newLap = driver.currentLap + 1;
           this.lapStartTick.set(driver.id, this.raceState.totalTicks);
+
+          // Record S3 completion time (crossing start/finish in pit lane)
+          newSectorTimes.push(this.raceState.totalTicks);
+          // Reset sector tracking for new lap
+          this.lastSector.set(driver.id, 0);
 
           // Check if winner has already finished - if so, classify this driver as finished (lapped)
           if (this.raceState.winnerFinishTick !== null && !this.raceState.finishOrder.includes(driver.id)) {
@@ -1922,11 +1936,12 @@ class RaceEngine {
             status: 'racing' as DriverStatus,
             currentLap: newLap,
             lapTimes: newLapTimes,
+            sectorTimes: newSectorTimes,
             position: pitExitPosition,
             pitProgress: 0,
             currentPitDuration: 0,
             currentPitIsSlowStop: false,
-        currentPitIsQuickStop: false,
+            currentPitIsQuickStop: false,
             hasPitted: true,
             usedCompounds: updatedUsedCompounds,
             tireState: { compound: newCompound, wear: 0, lapsOnTires: 0 },
@@ -1934,11 +1949,12 @@ class RaceEngine {
           };
         }
 
-        // Still pitting - update lap if crossed start/finish
+        // Still pitting - update lap/sector if crossed start/finish
         return {
           ...driver,
           currentLap: newLap,
           lapTimes: newLapTimes,
+          sectorTimes: newSectorTimes,
           pitProgress: newPitProgress,
         };
       }
@@ -2046,6 +2062,34 @@ class RaceEngine {
         );
       }
 
+      // === SECTOR TIMING ===
+      // Sectors: S1 (0-33%), S2 (33-66%), S3 (66-100%)
+      // Record cumulative race time when crossing sector boundaries
+      const newSectorTimes = [...driver.sectorTimes];
+      const lapLength = this.config.lapLength;
+      const positionInLap = newPosition % lapLength;
+      const lapProgress = positionInLap / lapLength;
+
+      // Determine current sector (0=S1, 1=S2, 2=S3)
+      const currentSector = lapProgress < 0.333 ? 0 : lapProgress < 0.666 ? 1 : 2;
+      const prevSector = this.lastSector.get(driver.id) ?? 0;
+
+      // Check for sector crossing (moving forward through sectors within a lap)
+      // S1->S2: crossed 33% boundary
+      // S2->S3: crossed 66% boundary
+      // S3->S1: handled separately in lap completion (crossed 100%/0% boundary)
+      if (prevSector === 0 && currentSector === 1) {
+        // Crossed into S2 - record S1 time (cumulative race time at S1 completion)
+        newSectorTimes.push(this.raceState.totalTicks);
+      } else if (prevSector === 1 && currentSector === 2) {
+        // Crossed into S3 - record S2 time
+        newSectorTimes.push(this.raceState.totalTicks);
+      }
+      // Note: S3 completion (crossing start/finish) is recorded below in lap completion
+
+      // Update last sector for next tick
+      this.lastSector.set(driver.id, currentSector);
+
       // Check for lap completion
       if (newPosition >= this.config.lapLength) {
         newLap++;
@@ -2053,6 +2097,11 @@ class RaceEngine {
         const lapTime = this.raceState.totalTicks - lapStartTick;
         newLapTimes.push(lapTime);
         this.lapStartTick.set(driver.id, this.raceState.totalTicks);
+
+        // Record S3 completion time (crossing start/finish line)
+        newSectorTimes.push(this.raceState.totalTicks);
+        // Reset sector tracking for new lap
+        this.lastSector.set(driver.id, 0);
 
         // Check if driver finished the race
         if (newLap >= this.config.totalLaps) {
@@ -2072,6 +2121,7 @@ class RaceEngine {
         position: newPosition,
         currentLap: newLap,
         lapTimes: newLapTimes,
+        sectorTimes: newSectorTimes,
         lastTickSpeed: adjustedSpeed,
         lastTickFactors: factors,
         tireState: {

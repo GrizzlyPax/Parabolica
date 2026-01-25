@@ -173,6 +173,18 @@ function TrackMap({
     return getPointAlongPath(trackPathRef.current, 0);
   }, [pathsReady]);
 
+  // Calculate sector boundary positions (S1/S2 at 33%, S2/S3 at 66%)
+  const sectorMarkers = useMemo(() => {
+    if (!pathsReady || !trackPathRef.current) return [];
+    return [
+      { position: 0.333, label: 'S1' },
+      { position: 0.666, label: 'S2' },
+    ].map(sector => ({
+      ...sector,
+      point: getPointAlongPath(trackPathRef.current, sector.position),
+    }));
+  }, [pathsReady]);
+
   // Calculate Safety Carl's position
   const safetyCarlPosition = useMemo(() => {
     if (!unsafetyCarActive || !pathsReady || !trackPathRef.current) return null;
@@ -240,6 +252,33 @@ function TrackMap({
           </>
         )}
 
+        {/* Sector boundary markers */}
+        {sectorMarkers.map(({ label, point }) => (
+          <g key={label} transform={`translate(${point.x}, ${point.y})`}>
+            {/* Sector line across track */}
+            <line
+              x1={-10}
+              y1={-10}
+              x2={10}
+              y2={10}
+              stroke="#666"
+              strokeWidth={2}
+              strokeDasharray="4 2"
+            />
+            {/* Sector label */}
+            <text
+              x={14}
+              y={-8}
+              fill="#888"
+              fontSize="9"
+              fontWeight="600"
+              className="sector-label"
+            >
+              {label}
+            </text>
+          </g>
+        ))}
+
         {/* Start/Finish line */}
         {startFinish && (
           <g transform={`translate(${startFinish.x}, ${startFinish.y})`}>
@@ -251,6 +290,17 @@ function TrackMap({
               fill="url(#checkered)"
               opacity={0.8}
             />
+            {/* S3/Finish label */}
+            <text
+              x={14}
+              y={-14}
+              fill="#888"
+              fontSize="9"
+              fontWeight="600"
+              className="sector-label"
+            >
+              S3
+            </text>
           </g>
         )}
 
@@ -300,7 +350,7 @@ function TrackMap({
               className="safety-carl-emoji"
               style={{ fontSize: '14px' }}
             >
-              👨‍💼
+              🧍‍♂️
             </text>
             {/* SC label above */}
             <text

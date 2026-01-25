@@ -32,17 +32,23 @@ function getDriverCode(driver: Driver): string {
   return surname.slice(0, 3).toUpperCase().replace(/[^A-Z]/g, '');
 }
 
-// Position column (P)
+// Position column (P) - shows yellow P badge when pitting
 export const COLUMN_POSITION: ColumnConfig = {
   id: 'position',
   header: 'P',
   width: '28px',
   align: 'center',
-  render: (_driver: Driver, ctx: RowContext) => (
-    <span className={`position-number ${ctx.isFinished ? 'finished' : ''} ${ctx.isDNF ? 'dnf' : ''}`}>
-      {ctx.isDNF ? 'DNF' : ctx.displayPosition}
-    </span>
-  ),
+  render: (_driver: Driver, ctx: RowContext) => {
+    // Show pit indicator when driver is in pits
+    if (ctx.isPitting) {
+      return <span className="position-number pitting">P</span>;
+    }
+    return (
+      <span className={`position-number ${ctx.isFinished ? 'finished' : ''} ${ctx.isDNF ? 'dnf' : ''}`}>
+        {ctx.isDNF ? 'DNF' : ctx.displayPosition}
+      </span>
+    );
+  },
 };
 
 // Team stripe column (4px color bar)
@@ -86,7 +92,7 @@ export const COLUMN_TEAM_MARBLE: ColumnConfig = {
 export const COLUMN_DRIVER_CODE: ColumnConfig = {
   id: 'driverCode',
   header: 'Driver',
-  width: 'minmax(50px, 1fr)',
+  width: '52px', // Fixed width - just 3 letters
   align: 'left',
   render: (driver: Driver, ctx: RowContext) => (
     <span
@@ -102,7 +108,7 @@ export const COLUMN_DRIVER_CODE: ColumnConfig = {
 export const COLUMN_DRIVER_FULL_NAME: ColumnConfig = {
   id: 'driverFullName',
   header: 'Driver',
-  width: 'minmax(100px, 1.5fr)',
+  width: 'minmax(90px, 140px)', // Tighter max width
   align: 'left',
   render: (driver: Driver, ctx: RowContext) => (
     <span
@@ -131,7 +137,7 @@ export const COLUMN_DELTA_POS: ColumnConfig = {
 export const COLUMN_GAP_AHEAD: ColumnConfig = {
   id: 'gapAhead',
   header: 'Gap',
-  width: '52px',
+  width: 'minmax(52px, 1fr)', // Flexible to fill space
   align: 'right',
   render: (_driver: Driver, ctx: RowContext) => (
     <span className="gap-value gap-ahead">{ctx.intervalGap}</span>
@@ -142,7 +148,7 @@ export const COLUMN_GAP_AHEAD: ColumnConfig = {
 export const COLUMN_GAP_LEADER: ColumnConfig = {
   id: 'gapLeader',
   header: 'Leader',
-  width: '52px',
+  width: 'minmax(52px, 1fr)', // Flexible to fill space
   align: 'right',
   render: (_driver: Driver, ctx: RowContext) => (
     <span className="gap-value gap-leader">{ctx.leaderGap}</span>
@@ -153,7 +159,7 @@ export const COLUMN_GAP_LEADER: ColumnConfig = {
 export const COLUMN_LAST_LAP: ColumnConfig = {
   id: 'lastLap',
   header: 'Last',
-  width: '56px',
+  width: 'minmax(56px, 1fr)', // Flexible to fill space
   align: 'right',
   render: (_driver: Driver, ctx: RowContext) => (
     <LapTime time={ctx.lastLapTime} className={ctx.lastLapClass} />
@@ -164,7 +170,7 @@ export const COLUMN_LAST_LAP: ColumnConfig = {
 export const COLUMN_BEST_LAP: ColumnConfig = {
   id: 'bestLap',
   header: 'Best',
-  width: '56px',
+  width: 'minmax(56px, 1fr)', // Flexible to fill space
   align: 'right',
   render: (_driver: Driver, ctx: RowContext) => (
     <LapTime time={ctx.bestLapTime} className={ctx.bestLapClass} />
@@ -250,30 +256,28 @@ export const COLUMN_TIRE_HISTORY: ColumnConfig = {
 // ============================================
 
 // Track View: Minimal columns, NO horizontal scroll
-// P | Marble | Code | ± | Gap | Leader | Last
+// P | Marble | Code | Gap | Leader | Last
 export const TRACK_COLUMNS: ColumnConfig[] = [
   COLUMN_POSITION,
   COLUMN_TEAM_MARBLE,
   COLUMN_DRIVER_CODE,
-  COLUMN_DELTA_POS,
   COLUMN_GAP_AHEAD,
   COLUMN_GAP_LEADER,
   COLUMN_LAST_LAP,
 ];
 
 // Detail View: Full data with tire history chart (like F1)
-// P | Marble | Full Name | ± | Gap | Leader | Last | TireHistory | Status | Bet
+// P | Marble | Full Name | Gap | Leader | Last | TireHistory | Status
+// Note: Bet info is shown in the "Your Bets" section below track, not in the tower
 export const DETAIL_COLUMNS: ColumnConfig[] = [
   COLUMN_POSITION,
   COLUMN_TEAM_MARBLE,
   COLUMN_DRIVER_FULL_NAME,
-  COLUMN_DELTA_POS,
   COLUMN_GAP_AHEAD,
   COLUMN_GAP_LEADER,
   COLUMN_LAST_LAP,
   COLUMN_TIRE_HISTORY,
   COLUMN_STATUS,
-  COLUMN_BET_INDICATOR,
 ];
 
 // Generate grid-template-columns CSS from column config

@@ -94,7 +94,7 @@ body, button, input, select, textarea {
 }
 
 .panel-left {
-  background: #111;
+  background: #000;
   border-right: 1px solid #333;
   display: flex;
   flex-direction: column;
@@ -102,7 +102,7 @@ body, button, input, select, textarea {
 }
 
 .panel-right {
-  background: #0d0d0d;
+  background: #000;
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -116,7 +116,7 @@ body, button, input, select, textarea {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: #111;
+  background: #000;
 }
 
 .detail-header {
@@ -127,7 +127,7 @@ body, button, input, select, textarea {
   align-items: center;
   justify-content: space-between;
   padding: 0.75rem 1.5rem;
-  background: #0d0d0d;
+  background: #000;
   border-bottom: 1px solid #333;
 }
 
@@ -195,7 +195,7 @@ body, button, input, select, textarea {
 }
 
 .detail-section {
-  background: #1a1a1a;
+  background: #000;
   border: 1px solid #333;
   border-radius: 4px;
   padding: 1rem;
@@ -218,7 +218,7 @@ body, button, input, select, textarea {
 }
 
 .summary-section {
-  background: #1f1f1f;
+  background: #000;
   border-color: #444;
 }
 
@@ -244,7 +244,7 @@ body, button, input, select, textarea {
   flex-direction: row;
   justify-content: space-between;
   padding: 0.5rem;
-  background: #111;
+  background: #000;
   border-radius: 4px;
 }
 
@@ -312,7 +312,7 @@ body, button, input, select, textarea {
   align-items: center;
   gap: 1.5rem;
   padding: 1rem 2rem;
-  background: #0d0d0d;
+  background: #000;
   border-bottom: 1px solid #333;
 }
 
@@ -328,7 +328,7 @@ body, button, input, select, textarea {
 
 .view-toggle {
   display: flex;
-  background: #1a1a1a;
+  background: #000;
   border: 1px solid #333;
   border-radius: 4px;
   overflow: hidden;
@@ -414,7 +414,7 @@ body, button, input, select, textarea {
 
 .status-finished {
   padding: 0.3rem 0.75rem;
-  background: #1a1a1a;
+  background: #000;
   border: 1px solid #555;
   border-radius: 3px;
   color: #aaa;
@@ -494,7 +494,7 @@ body, button, input, select, textarea {
    ======================================== */
 
 .standings-compact {
-  background: #1a1a1a;
+  background: #000;
   border: 1px solid #333;
   border-radius: 4px;
   display: flex;
@@ -506,7 +506,7 @@ body, button, input, select, textarea {
   grid-template-columns: 40px 1fr 65px 50px 60px 60px;
   gap: 0.4rem;
   padding: 0.5rem 0.75rem;
-  background: #111;
+  background: #000;
   font-family: var(--font-display), var(--font-emoji);
   font-size: 0.65rem;
   text-transform: uppercase;
@@ -532,7 +532,7 @@ body, button, input, select, textarea {
 }
 
 .standing-row-compact:hover {
-  background: #1f1f1f;
+  background: #000;
 }
 
 .standing-row-compact:last-child {
@@ -540,7 +540,7 @@ body, button, input, select, textarea {
 }
 
 .standing-row-compact.finished {
-  background: #1f1f1f;
+  background: #000;
 }
 
 .standing-row-compact .col-pos {
@@ -595,7 +595,7 @@ body, button, input, select, textarea {
    ======================================== */
 
 .track-section {
-  background: #1a1a1a;
+  background: #000;
   border: 1px solid #333;
   border-radius: 4px;
   padding: 1rem;
@@ -645,7 +645,7 @@ body, button, input, select, textarea {
 .track-bar {
   flex: 1;
   height: 12px;
-  background: #111;
+  background: #000;
   border: 1px solid #333;
   border-radius: 2px;
   position: relative;
@@ -672,7 +672,7 @@ body, button, input, select, textarea {
    ======================================== */
 
 .race-summary-compact {
-  background: #1f1f1f;
+  background: #000;
   border: 2px solid #444;
   border-radius: 4px;
   padding: 1rem;
@@ -740,7 +740,7 @@ body, button, input, select, textarea {
   grid-template-columns: repeat(4, 1fr);
   gap: 0.75rem;
   padding: 0.75rem;
-  background: #1a1a1a;
+  background: #000;
   border: 1px solid #333;
   border-radius: 4px;
 }
@@ -871,7 +871,7 @@ body, button, input, select, textarea {
 
 .speed-control {
   display: flex;
-  background: #1a1a1a;
+  background: #000;
   border: 1px solid #333;
   border-radius: 4px;
   overflow: hidden;
@@ -912,7 +912,7 @@ body, button, input, select, textarea {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: #111;
+  background: #000;
 }
 
 .season-view-content {

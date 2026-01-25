@@ -14,6 +14,16 @@ import {
 } from './components/race';
 import './WatchMode.css';
 
+// Suffixes to ignore when extracting surname
+const NAME_SUFFIXES = new Set(['JR', 'JR.', 'SR', 'SR.', 'II', 'III', 'IV', 'V']);
+
+// Helper to extract surname for alphabetical sorting
+function getSurname(driver: Driver): string {
+  const parts = driver.name.split(' ').filter(p => p.length > 0);
+  const filteredParts = parts.filter(p => !NAME_SUFFIXES.has(p.toUpperCase()));
+  return (filteredParts[filteredParts.length - 1] || parts[parts.length - 1] || '').toUpperCase();
+}
+
 export interface PowerActivation {
   power: { name: string; emoji: string; description: string; category: 'blessing' | 'curse' | 'god' };
   targetName?: string;
@@ -771,6 +781,14 @@ function WatchMode({
     }
   }, [raceState.totalTicks]);
 
+  // Track total sector crossings - recomputed every tick to catch mutations
+  // When any driver crosses a sector, this value changes, triggering the sort update
+  const totalSectorCrossings = useMemo(
+    () => drivers.reduce((sum, d) => sum + (d.sectorTimes?.length || 0), 0),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [drivers, raceState.totalTicks] // totalTicks ensures we recompute even if drivers array is mutated in place
+  );
+
   // Update frozen sorted order only on sector crossings (syncs with gap updates)
   useEffect(() => {
     if (drivers.length === 0) return;
@@ -796,31 +814,25 @@ function WatchMode({
       if (aDNF) return 1;
       if (bDNF) return -1;
 
-      // Racing/pitting drivers by distance
-      const aDistance = a.currentLap * trackLength + a.position;
-      const bDistance = b.currentLap * trackLength + b.position;
-      return bDistance - aDistance;
+      // Racing/pitting drivers by completed sectors ONLY
+      // Use sectorTimes.length as source of truth (no position - that changes every tick)
+      const aSectors = a.sectorTimes?.length || 0;
+      const bSectors = b.sectorTimes?.length || 0;
+      // Sort by sectors (more = higher), then by time at last sector for ties
+      if (bSectors !== aSectors) return bSectors - aSectors;
+      // Same sectors: compare time at last sector (lower = crossed first = ahead)
+      if (aSectors > 0 && bSectors > 0) {
+        const aTime = a.sectorTimes![aSectors - 1];
+        const bTime = b.sectorTimes![bSectors - 1];
+        if (aTime !== bTime) return aTime - bTime;
+      }
+      // Final fallback: surname for equal times (race start)
+      return getSurname(a).localeCompare(getSurname(b));
     });
-
-    // Find the leader to check sector crossing
-    const racingDrivers = drivers.filter(d => d.status === 'racing' || d.status === 'pitting');
-    if (racingDrivers.length === 0) {
-      // All drivers finished or DNF - update immediately
-      setFrozenSortedDrivers(newSortedDrivers);
-      return;
-    }
-
-    const leader = racingDrivers.reduce((prev, curr) => {
-      const prevDist = prev.currentLap * trackLength + prev.position;
-      const currDist = curr.currentLap * trackLength + curr.position;
-      return currDist > prevDist ? curr : prev;
-    });
-
-    const leaderGlobalSector = getSector(leader.position) + (leader.currentLap * NUM_SECTORS);
 
     // Update frozen order when:
     // 1. It's empty (race start)
-    // 2. Leader crossed a sector boundary
+    // 2. ANY driver crossed a sector boundary (total sectors changed)
     // 3. A driver finishes (finish order changed)
     // 4. A driver DNFs
     const hasNewFinisher = newSortedDrivers.some(d => d.status === 'finished') &&
@@ -831,13 +843,13 @@ function WatchMode({
        newSortedDrivers.filter(d => d.status === 'dnf').length !== frozenSortedDrivers.filter(d => d.status === 'dnf').length);
 
     if (frozenSortedDrivers.length === 0 ||
-        leaderGlobalSector !== lastSortUpdateSectorRef.current ||
+        totalSectorCrossings !== lastSortUpdateSectorRef.current ||
         hasNewFinisher ||
         hasNewDNF) {
       setFrozenSortedDrivers(newSortedDrivers);
-      lastSortUpdateSectorRef.current = leaderGlobalSector;
+      lastSortUpdateSectorRef.current = totalSectorCrossings;
     }
-  }, [drivers, trackLength, raceState.finishOrder, frozenSortedDrivers.length]);
+  }, [drivers, totalSectorCrossings, raceState.finishOrder, frozenSortedDrivers.length]);
 
   // Position deltas - only update when a driver completes a lap
   // Compare position at end of current lap vs position at end of previous lap
@@ -906,8 +918,10 @@ function WatchMode({
     if (racingDrivers.length === 0) return;
 
     const leader = racingDrivers.reduce((prev, curr) => {
-      const prevDist = prev.currentLap * trackLength + prev.position;
-      const currDist = curr.currentLap * trackLength + curr.position;
+      const prevSectors = prev.sectorTimes?.length || 0;
+      const currSectors = curr.sectorTimes?.length || 0;
+      const prevDist = prevSectors * (trackLength / 3) + prev.position;
+      const currDist = currSectors * (trackLength / 3) + curr.position;
       return currDist > prevDist ? curr : prev;
     });
 
@@ -946,8 +960,10 @@ function WatchMode({
 
     // Find the leader's lap for milestone checks
     const leader = racingDrivers.reduce((prev, curr) => {
-      const prevDist = prev.currentLap * trackLength + prev.position;
-      const currDist = curr.currentLap * trackLength + curr.position;
+      const prevSectors = prev.sectorTimes?.length || 0;
+      const currSectors = curr.sectorTimes?.length || 0;
+      const prevDist = prevSectors * (trackLength / 3) + prev.position;
+      const currDist = currSectors * (trackLength / 3) + curr.position;
       return currDist > prevDist ? curr : prev;
     });
     const leaderLap = leader.currentLap;
@@ -1063,9 +1079,13 @@ function WatchMode({
     if (aDNF) return 1;
     if (bDNF) return -1;
 
-    // Racing/pitting drivers by distance
-    const aDistance = a.currentLap * trackLength + a.position;
-    const bDistance = b.currentLap * trackLength + b.position;
+    // Racing/pitting drivers by completed sectors + position
+    const aSectors = a.sectorTimes?.length || 0;
+    const bSectors = b.sectorTimes?.length || 0;
+    const aDistance = aSectors * (trackLength / 3) + a.position;
+    const bDistance = bSectors * (trackLength / 3) + b.position;
+    // Tiebreaker by surname for alphabetical ordering at race start
+    if (aDistance === bDistance) return getSurname(a).localeCompare(getSurname(b));
     return bDistance - aDistance;
   });
 

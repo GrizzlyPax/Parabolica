@@ -1,6 +1,6 @@
 .season-setup {
   min-height: 100vh;
-  background: linear-gradient(180deg, #0a0a0c 0%, #0d0d0f 50%, #0a0a0c 100%);
+  background: #000;
   padding: var(--space-lg);
   padding-bottom: 100px; /* Account for sticky footer */
 }
@@ -60,7 +60,7 @@
 }
 
 .setup-section {
-  background: #1a1a1a;
+  background: #000;
   border: 1px solid #333;
   border-radius: 4px;
   padding: 1.25rem;
@@ -90,7 +90,7 @@
 
 .race-count-btn {
   flex: 1;
-  background: #111;
+  background: #000;
   border: 2px solid #333;
   border-radius: 4px;
   padding: 1rem 0.75rem;
@@ -104,7 +104,7 @@
 
 .race-count-btn:hover {
   border-color: #555;
-  background: #1a1a1a;
+  background: #000;
 }
 
 .race-count-btn.selected {
@@ -139,7 +139,7 @@
 }
 
 .points-item {
-  background: #111;
+  background: #000;
   border: 1px solid #333;
   border-radius: 3px;
   padding: 0.4rem;
@@ -163,7 +163,7 @@
 }
 
 .points-item.gold {
-  background: #1a1a1a;
+  background: #000;
   border-color: #555;
 }
 
@@ -172,7 +172,7 @@
 }
 
 .points-item.silver {
-  background: #1a1a1a;
+  background: #000;
   border-color: #444;
 }
 
@@ -181,7 +181,7 @@
 }
 
 .points-item.bronze {
-  background: #1a1a1a;
+  background: #000;
   border-color: #444;
 }
 
@@ -191,7 +191,7 @@
 
 /* Summary */
 .setup-summary {
-  background: #1a1a1a;
+  background: #000;
   border: 2px solid #444;
   border-radius: 4px;
   padding: 1.25rem;
@@ -283,7 +283,7 @@
   display: flex;
   gap: 0;
   margin-bottom: 1rem;
-  background: #1a1a1a;
+  background: #000;
   border: 1px solid #333;
   border-radius: 4px;
   overflow: hidden;
@@ -823,7 +823,7 @@
 }
 
 .season-setup .track-list::-webkit-scrollbar-track {
-  background: #111;
+  background: #000;
   border-radius: 3px;
 }
 
@@ -842,7 +842,7 @@
 }
 
 .wordle-selection-grid::-webkit-scrollbar-track {
-  background: #111;
+  background: #000;
   border-radius: 3px;
 }
 

@@ -13,8 +13,9 @@
 
 /* Lap Time */
 .lap-time {
-  font-family: var(--font-mono), var(--font-emoji);
+  font-family: var(--font-display), var(--font-emoji);
   font-size: var(--text-xs);
+  font-weight: 600;
   color: #888;
   white-space: nowrap;
 }
@@ -197,7 +198,7 @@
 }
 
 .pit-marker::after {
-  content: 'H';
+  content: 'P';
   position: absolute;
   top: -12px;
   left: 50%;

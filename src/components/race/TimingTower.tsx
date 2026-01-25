@@ -3,19 +3,29 @@
 import { useMemo } from 'react';
 import DriverRow from './DriverRow';
 import { getGridTemplate } from './columns';
-import { formatGap } from '../../utils/raceTime';
+import { formatGap, formatLapGap } from '../../utils/raceTime';
 import { calculateLiveBetStatus } from '../../MarbleMode';
 import type { TimingTowerProps, RowContext, BetInfo, LapTimeClass } from './types';
 import type { Driver } from '../../RaceEngine';
 import './TimingTower.css';
 import './components.css';
 
+// Suffixes to ignore when extracting surname
+const NAME_SUFFIXES = new Set(['JR', 'JR.', 'SR', 'SR.', 'II', 'III', 'IV', 'V']);
+
+// Helper to extract surname for alphabetical sorting
+function getSurname(driver: Driver): string {
+  const parts = driver.name.split(' ').filter(p => p.length > 0);
+  const filteredParts = parts.filter(p => !NAME_SUFFIXES.has(p.toUpperCase()));
+  return (filteredParts[filteredParts.length - 1] || parts[parts.length - 1] || '').toUpperCase();
+}
+
 function TimingTower({
   drivers,
   columns,
   raceState,
   totalLaps,
-  lapLength: _lapLength, // Reserved for future gap calculation refinement
+  lapLength: _lapLength, // No longer used - pure sector-based timing
   activeBets = [],
   focusedDriverIds = new Set(),
   onDriverClick,
@@ -27,7 +37,12 @@ function TimingTower({
 }: TimingTowerProps) {
   const { finishOrder } = raceState;
 
-  // Sort drivers by position
+  // Total sector crossings - used as dependency to force re-sort when any driver crosses a sector
+  // This catches cases where driver objects are mutated but array reference stays same
+  const totalSectorCrossings = drivers.reduce((sum, d) => sum + (d.sectorTimes?.length || 0), 0);
+
+  // Sort drivers by completed sectors (more sectors = higher position)
+  // Order only changes when sector boundaries are crossed
   const sortedDrivers = useMemo(() => {
     // Finished drivers sorted by finish order
     const finished = drivers
@@ -38,21 +53,36 @@ function TimingTower({
         return aIdx - bIdx;
       });
 
-    // DNF drivers sorted by when they DNF'd (further = better)
+    // DNF drivers sorted by sectors completed when they DNF'd
     const dnf = drivers
       .filter(d => d.status === 'dnf')
-      .sort((a, b) => b.position - a.position);
+      .sort((a, b) => {
+        const aSectors = a.sectorTimes?.length || 0;
+        const bSectors = b.sectorTimes?.length || 0;
+        if (bSectors !== aSectors) return bSectors - aSectors;
+        return getSurname(a).localeCompare(getSurname(b));
+      });
 
-    // Racing drivers sorted by position
+    // Racing drivers sorted by sectors completed, then by time at last sector
+    // If same sectors, whoever crossed that sector FIRST is ahead
     const racing = drivers
       .filter(d => d.status !== 'finished' && d.status !== 'dnf')
-      .sort((a, b) => b.position - a.position);
+      .sort((a, b) => {
+        const aSectors = a.sectorTimes?.length || 0;
+        const bSectors = b.sectorTimes?.length || 0;
+        if (bSectors !== aSectors) return bSectors - aSectors;
+        // Same sectors: compare time at last sector (lower = crossed first = ahead)
+        if (aSectors > 0 && bSectors > 0) {
+          const aTime = a.sectorTimes![aSectors - 1];
+          const bTime = b.sectorTimes![bSectors - 1];
+          if (aTime !== bTime) return aTime - bTime;
+        }
+        // Final fallback: surname for equal times (race start)
+        return getSurname(a).localeCompare(getSurname(b));
+      });
 
     return [...finished, ...racing, ...dnf];
-  }, [drivers, finishOrder]);
-
-  // Calculate leader gap reference
-  const leaderPosition = sortedDrivers[0]?.position || 0;
+  }, [drivers, finishOrder, totalSectorCrossings]);
 
   // Generate row context for each driver
   const getRowContext = (driver: Driver, index: number): RowContext => {
@@ -75,24 +105,76 @@ function TimingTower({
     // Position delta
     const positionDelta = positionDeltas?.get(driver.id);
 
-    // Gap calculations
-    let intervalGap = '';
-    let leaderGap = '';
+    // Gap calculations - SECTOR-based checkpoint timing
+    // Gap = time difference at the DRIVER's last completed sector
+    // sectorTimes format: [S1_L1, S2_L1, S3_L1, S1_L2, S2_L2, S3_L2, ...]
+    let intervalGap = '-';
+    let leaderGap = '-';
+
+    // Helper: Get sector count (how many sector crossings)
+    const getSectorCount = (d: Driver): number => d.sectorTimes?.length || 0;
+
+    // Helper: Get time at a specific sector index
+    const getTimeAtSector = (d: Driver, sectorIdx: number): number | null => {
+      const sectors = d.sectorTimes || [];
+      if (sectorIdx < 0 || sectorIdx >= sectors.length) return null;
+      return sectors[sectorIdx]; // sectorTimes stores cumulative race time
+    };
 
     if (index === 0) {
-      intervalGap = '-';
       leaderGap = 'Leader';
-    } else if (!isFinished && !isDNF) {
+    } else if (isFinished) {
+      // Keep defaults
+    } else if (isDNF) {
+      leaderGap = 'DNF';
+    } else {
+      const leader = sortedDrivers[0];
       const prevDriver = sortedDrivers[index - 1];
-      const gapToPrev = prevDriver ? (prevDriver.position - driver.position) : 0;
-      const gapToLeader = leaderPosition - driver.position;
 
-      // Convert distance to approximate time gap (based on average speed)
-      const avgSpeed = driver.stats?.baseSpeed || 1;
-      const ticksPerUnit = 1 / avgSpeed;
+      // Use driver's completed sectors as the checkpoint
+      const driverSectors = getSectorCount(driver);
+      const leaderSectors = getSectorCount(leader);
 
-      intervalGap = formatGap(gapToPrev * ticksPerUnit * 10);
-      leaderGap = formatGap(gapToLeader * ticksPerUnit * 10);
+      // Pure sector-based lapping detection (no position data)
+      // Lapped = leader is 1 lap (3 sectors) + 1 sector ahead = 4+ sectors
+      // Formula: lapsDown = floor((sectorDiff - 1) / 3)
+      // Examples: 4 sectors ahead = 1 lap down, 7 sectors = 2 laps down
+      const sectorDiff = leaderSectors - driverSectors;
+      const lapsDown = Math.max(0, Math.floor((sectorDiff - 1) / 3));
+
+      if (lapsDown >= 1) {
+        leaderGap = formatLapGap(lapsDown);
+      } else if (driverSectors > 0) {
+        // Driver has completed at least 1 sector - compare at that checkpoint
+        const checkpointIdx = driverSectors - 1; // Last sector the driver crossed
+        const driverTime = getTimeAtSector(driver, checkpointIdx);
+        const leaderTime = getTimeAtSector(leader, checkpointIdx);
+
+        if (driverTime !== null && leaderTime !== null) {
+          leaderGap = formatGap(driverTime - leaderTime);
+        }
+        // else keep "-" (leader hasn't reached this checkpoint yet - rare edge case)
+      }
+      // else no sectors completed yet - keep "-"
+
+      // Interval to car ahead (same pure sector logic)
+      if (prevDriver) {
+        const prevSectors = getSectorCount(prevDriver);
+        const prevSectorDiff = prevSectors - driverSectors;
+        const lapsDownToPrev = Math.max(0, Math.floor((prevSectorDiff - 1) / 3));
+
+        if (lapsDownToPrev >= 1) {
+          intervalGap = formatLapGap(lapsDownToPrev);
+        } else if (driverSectors > 0) {
+          const checkpointIdx = driverSectors - 1;
+          const driverTime = getTimeAtSector(driver, checkpointIdx);
+          const prevTime = getTimeAtSector(prevDriver, checkpointIdx);
+
+          if (driverTime !== null && prevTime !== null) {
+            intervalGap = formatGap(driverTime - prevTime);
+          }
+        }
+      }
     }
 
     // Lap times
@@ -165,20 +247,10 @@ function TimingTower({
   // Grid template from columns
   const gridTemplate = getGridTemplate(columns);
 
-  // Calculate current lap for header
-  const currentLap = Math.max(1, ...sortedDrivers.map(d => d.currentLap + 1));
-
   const hasFocus = focusedDriverIds.size > 0;
 
   return (
     <div className={`timing-tower ${className} ${hasFocus ? 'has-focus' : ''}`}>
-      {/* Lap header */}
-      <div className="timing-tower-lap">
-        <span className="lap-current">{currentLap}</span>
-        <span className="lap-divider">/</span>
-        <span className="lap-total">{totalLaps}</span>
-      </div>
-
       {/* Column headers */}
       <div
         className="timing-tower-header"

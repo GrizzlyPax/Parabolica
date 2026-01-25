@@ -31,7 +31,7 @@
 }
 
 .header-menu-btn:hover {
-  background: #111;
+  background: #000;
   border-color: #444;
   color: #fff;
 }
@@ -227,7 +227,7 @@
 }
 
 .control-btn:hover:not(:disabled) {
-  background: #111;
+  background: #000;
   border-color: #444;
   color: #fff;
 }
@@ -285,12 +285,12 @@
 }
 
 .speed-btn:hover {
-  background: #111;
+  background: #000;
   color: #ccc;
 }
 
 .speed-btn.active {
-  background: #1a1a1a;
+  background: #000;
   color: #fff;
 }
 

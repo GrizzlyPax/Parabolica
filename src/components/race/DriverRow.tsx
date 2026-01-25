@@ -4,22 +4,13 @@
 import type { DriverRowProps } from './types';
 
 function DriverRow({ driver, columns, context, gridTemplate, isFocused, onClick }: DriverRowProps) {
-  const { isFinished, isDNF, isPitting, lastLapTime, bestLapTime } = context;
+  const { isFinished, isDNF, isPitting } = context;
 
   // Build style with grid template and team color for focus glow
   const rowStyle: React.CSSProperties = {
     gridTemplateColumns: gridTemplate,
     '--team-color': driver.color,
   } as React.CSSProperties;
-
-  // Format lap time for display
-  const formatTime = (ticks: number | null): string => {
-    if (ticks === null) return '-';
-    const totalSeconds = ticks / 10;
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    return `${minutes}:${seconds.toFixed(1).padStart(4, '0')}`;
-  };
 
   return (
     <div className={`timing-row-container ${isFocused ? 'expanded' : ''}`}>
@@ -48,35 +39,16 @@ function DriverRow({ driver, columns, context, gridTemplate, isFocused, onClick 
       </div>
 
       {/* Expanded details section - only shown when focused */}
+      {/* Simple: full name + current tire, no redundant info */}
       {isFocused && (
         <div className="timing-row-expanded" style={{ '--team-color': driver.color } as React.CSSProperties}>
           <div className="expanded-content">
-            <div className="expanded-name">
-              <span className="expanded-emoji">{driver.emoji}</span>
-              <span className="expanded-full-name" style={{ color: driver.color }}>{driver.name}</span>
-            </div>
-            <div className="expanded-stats">
-              <div className="expanded-stat">
-                <span className="stat-label">Lap</span>
-                <span className="stat-value">{context.currentLap}/{context.totalLaps}</span>
-              </div>
-              <div className="expanded-stat">
-                <span className="stat-label">Last</span>
-                <span className="stat-value">{formatTime(lastLapTime)}</span>
-              </div>
-              <div className="expanded-stat">
-                <span className="stat-label">Best</span>
-                <span className="stat-value">{formatTime(bestLapTime)}</span>
-              </div>
-              {driver.tireState && (
-                <div className="expanded-stat">
-                  <span className="stat-label">Tire</span>
-                  <span className="stat-value tire-compound" data-compound={driver.tireState.compound}>
-                    {driver.tireState.compound.charAt(0).toUpperCase()}
-                  </span>
-                </div>
-              )}
-            </div>
+            <span className="expanded-full-name" style={{ color: driver.color }}>{driver.name}</span>
+            {driver.tireState && (
+              <span className="expanded-tire" data-compound={driver.tireState.compound}>
+                {driver.tireState.compound.charAt(0).toUpperCase()}
+              </span>
+            )}
           </div>
         </div>
       )}

@@ -1720,7 +1720,7 @@
 
 .stat-bar-container {
   height: 6px;
-  background: #1a1a2a;
+  background: #000;
   border-radius: 3px;
   overflow: hidden;
 }
@@ -2956,9 +2956,9 @@
   }
 
   .watch-content.view-track .timing-section {
-    width: 380px;
-    min-width: 340px;
-    max-width: 420px;
+    width: 420px;
+    min-width: 380px;
+    max-width: 480px;
     overflow-y: auto;
     flex-shrink: 0;
     order: 1; /* Timing on LEFT */
@@ -2977,8 +2977,8 @@
 /* Track View: Large desktop (1200px+) */
 @media (min-width: 1200px) {
   .watch-content.view-track .timing-section {
-    width: 440px;
-    max-width: 500px;
+    width: 500px;
+    max-width: 560px;
   }
 }
 

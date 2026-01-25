@@ -18,6 +18,7 @@ export function ticksToTime(ticks: number): string {
 
 /**
  * Convert ticks to a short time string for compact displays
+ * Note: Sim resolution is 100ms (tenths), so we only show one decimal place
  */
 export function ticksToShortTime(ticks: number): string {
   const totalSeconds = (ticks * TICK_INTERVAL_MS) / 1000;
@@ -25,9 +26,9 @@ export function ticksToShortTime(ticks: number): string {
   const seconds = totalSeconds % 60;
 
   if (minutes > 0) {
-    return `${minutes}:${seconds.toFixed(2).padStart(5, '0')}`;
+    return `${minutes}:${seconds.toFixed(1).padStart(4, '0')}`;
   }
-  return `${seconds.toFixed(2)}s`;
+  return `${seconds.toFixed(1)}s`;
 }
 
 /**
@@ -48,16 +49,27 @@ export function speedToDisplay(speedPerTick: number): string {
 
 /**
  * Format a time gap between two tick counts
+ * Note: Sim resolution is 100ms (tenths), so we only show one decimal place
  */
 export function formatGap(ticksDifference: number): string {
   const secondsDiff = (ticksDifference * TICK_INTERVAL_MS) / 1000;
-  if (secondsDiff < 0.1) {
-    return '-';
+  // Show +0.0s for very small gaps so users know there IS data
+  // (previously showed "-" which looked like missing data)
+  if (secondsDiff < 60) {
+    return `+${secondsDiff.toFixed(1)}s`;
   }
-  if (secondsDiff < 1) {
-    return `+${secondsDiff.toFixed(2)}s`;
-  }
-  return `+${secondsDiff.toFixed(1)}s`;
+  // Over 60 seconds: format as minutes
+  const minutes = Math.floor(secondsDiff / 60);
+  const seconds = secondsDiff % 60;
+  return `+${minutes}:${seconds.toFixed(1).padStart(4, '0')}`;
+}
+
+/**
+ * Format a lap gap (e.g., "+1 LAP", "+2 LAPS")
+ */
+export function formatLapGap(lapsDown: number): string {
+  if (lapsDown <= 0) return '-';
+  return `+${lapsDown} LAP${lapsDown > 1 ? 'S' : ''}`;
 }
 
 /**
