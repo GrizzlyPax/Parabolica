@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './MainMenu.css';
 import { version } from '../package.json';
 
@@ -8,46 +8,43 @@ interface MainMenuProps {
   onCompendium: () => void;
 }
 
-type LockedModal = 'none' | 'big-leagues' | 'commissioner' | 'compendium';
-
 function MainMenu({ onSingleRace, onSeason, onCompendium }: MainMenuProps) {
-  const [activeModal, setActiveModal] = useState<LockedModal>('none');
-  const [compendiumPassword, setCompendiumPassword] = useState('');
-  const [compendiumError, setCompendiumError] = useState<string | null>(null);
-  const [compendiumSuccess, setCompendiumSuccess] = useState<string | null>(null);
+  const [lockedFeedback, setLockedFeedback] = useState<'parabolica' | 'feeder' | null>(null);
+  const [raceControlFlipped, setRaceControlFlipped] = useState(false);
+  const [password, setPassword] = useState('');
+  const [passwordError, setPasswordError] = useState(false);
 
-  const handleCompendiumSubmit = (e: React.FormEvent) => {
+  // Clear locked feedback after animation
+  useEffect(() => {
+    if (lockedFeedback) {
+      const timer = setTimeout(() => setLockedFeedback(null), 1200);
+      return () => clearTimeout(timer);
+    }
+  }, [lockedFeedback]);
+
+  const handleLockedClick = (mode: 'parabolica' | 'feeder') => {
+    setLockedFeedback(mode);
+  };
+
+  const handleRaceControlClick = () => {
+    setRaceControlFlipped(true);
+    setPassword('');
+    setPasswordError(false);
+  };
+
+  const handlePasswordSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (compendiumPassword.toLowerCase().trim() === 'goodjob') {
-      const responses = [
-        "...Fine.",
-        "Enter, if you must.",
-        "The secrets reveal themselves.",
-        "The machine sighs.",
-      ];
-      setCompendiumSuccess(responses[Math.floor(Math.random() * responses.length)]);
-      setTimeout(() => {
-        setActiveModal('none');
-        onCompendium();
-      }, 1000);
+    if (password.toLowerCase().trim() === 'goodjob') {
+      onCompendium();
     } else {
-      const errors = [
-        "No.",
-        "Incorrect.",
-        "The machine does not recognize you.",
-        "Wrong.",
-        "Try again. Or don't.",
-      ];
-      setCompendiumError(errors[Math.floor(Math.random() * errors.length)]);
-      setCompendiumPassword('');
+      setPasswordError(true);
+      setPassword('');
     }
   };
 
-  const handleCompendiumClick = () => {
-    setActiveModal('compendium');
-    setCompendiumPassword('');
-    setCompendiumError(null);
-    setCompendiumSuccess(null);
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPassword(e.target.value);
+    setPasswordError(false);
   };
 
   return (
@@ -60,162 +57,136 @@ function MainMenu({ onSingleRace, onSeason, onCompendium }: MainMenuProps) {
           <p className="main-menu-subtitle">Racing, where everything is fine.</p>
         </div>
 
-        <div className="mode-selection">
-          <button className="mode-card active green" onClick={onSingleRace}>
-            <div className="mode-icon">🏎️</div>
-            <div className="mode-info">
-              <h2>Race Mode</h2>
-              <p>One race. Pick your winners. Results may vary.</p>
-            </div>
-            <div className="mode-arrow">→</div>
-          </button>
-
-          <button className="mode-card active green" onClick={onSeason}>
-            <div className="mode-icon">🏆</div>
-            <div className="mode-info">
-              <h2>Season Mode</h2>
-              <p>More races, more marbles. Someone probably wins.</p>
-            </div>
-            <div className="mode-arrow">→</div>
-          </button>
-
-          {/* Big Leagues - Coming Soon */}
-          <button className="mode-card coming-soon yellow" onClick={() => setActiveModal('big-leagues')}>
-            <div className="mode-icon">🌐</div>
-            <div className="mode-info">
-              <h2>The Big Leagues</h2>
-              <p className="coming-soon-desc">
-                <span className="ancient-dots">· · · ⟡ · · ·</span>
-              </p>
-              <p className="coming-soon-whisper">ᵗʰᵉ ᵉᵗᵉʳⁿᵃˡ ʳᵃᶜᵉ</p>
-            </div>
-            <div className="mode-arrow">→</div>
-          </button>
-
-          {/* Commissionary Mode - Locked */}
-          <button className="mode-card coming-soon yellow" onClick={() => setActiveModal('commissioner')}>
-            <div className="mode-icon">🎤</div>
-            <div className="mode-info">
-              <h2>Commissionary Mode</h2>
-              <p className="coming-soon-desc">
-                <span className="ancient-dots">· · · ⟡ · · ·</span>
-              </p>
-              <p className="coming-soon-whisper">ⁿᵒᵗ ʸᵉᵗ</p>
-            </div>
-            <div className="mode-arrow">→</div>
-          </button>
-
-          {/* Compendium - Password Protected */}
-          <button className="mode-card type-compendium purple" onClick={handleCompendiumClick}>
-            <div className="mode-icon">👁️</div>
-            <div className="mode-info">
-              <h2>Compendium</h2>
-              <p className="compendium-desc">
-                <span className="redacted">████████</span> <span className="compendium-whisper-inline">ᶠᵒʳᵇⁱᵈᵈᵉⁿ</span>
-              </p>
-            </div>
-            <div className="mode-arrow">→</div>
-          </button>
+        {/* Marble counter strip */}
+        <div className="marble-counter-strip">
+          <div className="marble"></div>
+          <div className="marble"></div>
+          <div className="marble"></div>
+          <div className="marble"></div>
         </div>
 
-        <div className="mister-marbles-float">
-          <span className="mister-marbles-message">
-            <span className="mm-icon">🔮</span>
-            <span className="mm-text">Mister Marbles is watching.</span>
-          </span>
+        <div className="mode-selection">
+          {/* Quick Race - Green/Live */}
+          <button className="mode-card tier-green" onClick={onSingleRace}>
+            <div className="mode-card-header">
+              <div className="mode-icon">🏎️</div>
+              <div className="mode-title-row">
+                <div className="mode-info">
+                  <h2>Quick Race</h2>
+                </div>
+                <span className="status-pill live">Live</span>
+              </div>
+            </div>
+            <div className="mode-info">
+              <p>Jump straight into a one-off race with a fresh grid and zero setup friction.</p>
+            </div>
+          </button>
+
+          {/* Full Season - Green/Live */}
+          <button className="mode-card tier-green" onClick={onSeason}>
+            <div className="mode-card-header">
+              <div className="mode-icon">🏆</div>
+              <div className="mode-title-row">
+                <div className="mode-info">
+                  <h2>Full Season</h2>
+                </div>
+                <span className="status-pill live">Live</span>
+              </div>
+            </div>
+            <div className="mode-info">
+              <p>Run a full championship, follow the standings, and watch rivalries and momentum build.</p>
+            </div>
+          </button>
+
+          {/* Parabolica 1 - Gold/Locked */}
+          <button
+            className={`mode-card tier-gold ${lockedFeedback === 'parabolica' ? 'locked-shake' : ''}`}
+            onClick={() => handleLockedClick('parabolica')}
+          >
+            <div className="mode-card-header">
+              <div className="mode-icon">🏁</div>
+              <div className="mode-title-row">
+                <div className="mode-info">
+                  <h2>Parabolica 1</h2>
+                </div>
+                <span className={`status-pill ${lockedFeedback === 'parabolica' ? 'locked-flash' : 'locked'}`}>
+                  {lockedFeedback === 'parabolica' ? 'Locked!' : 'Locked'}
+                </span>
+              </div>
+            </div>
+            <div className="mode-info">
+              <p>The flagship series. Real stakes. Real marbles.</p>
+            </div>
+          </button>
+
+          {/* Feeder Series - Gold/Locked */}
+          <button
+            className={`mode-card tier-gold ${lockedFeedback === 'feeder' ? 'locked-shake' : ''}`}
+            onClick={() => handleLockedClick('feeder')}
+          >
+            <div className="mode-card-header">
+              <div className="mode-icon">🛞</div>
+              <div className="mode-title-row">
+                <div className="mode-info">
+                  <h2>Feeder Series</h2>
+                </div>
+                <span className={`status-pill ${lockedFeedback === 'feeder' ? 'locked-flash' : 'locked'}`}>
+                  {lockedFeedback === 'feeder' ? 'Locked!' : 'Locked'}
+                </span>
+              </div>
+            </div>
+            <div className="mode-info">
+              <p>Run your own leagues. Win marbles. Lose friends.</p>
+            </div>
+          </button>
+
+          {/* Race Control - Purple/Secret - Flip Card */}
+          <div className={`flip-card ${raceControlFlipped ? 'flipped' : ''}`}>
+            <div className="flip-card-inner">
+              {/* Front */}
+              <button className="mode-card tier-purple flip-card-front" onClick={handleRaceControlClick}>
+                <div className="mode-card-header">
+                  <div className="mode-icon">🎛️</div>
+                  <div className="mode-title-row">
+                    <div className="mode-info">
+                      <h2>Race Control</h2>
+                    </div>
+                    <span className="status-pill secret">Secret</span>
+                  </div>
+                </div>
+                <div className="mode-info">
+                  <p>For those who want to look a little closer.</p>
+                </div>
+              </button>
+
+              {/* Back - Password Form */}
+              <div
+                className="mode-card tier-purple flip-card-back"
+                onClick={() => setRaceControlFlipped(false)}
+              >
+                <div className="password-form-content" onClick={(e) => e.stopPropagation()}>
+                  <div className="password-icon">🎛️</div>
+                  <form onSubmit={handlePasswordSubmit} className="password-form">
+                    <input
+                      type="password"
+                      value={password}
+                      onChange={handlePasswordChange}
+                      placeholder="Enter code"
+                      className={`password-input ${passwordError ? 'error' : ''}`}
+                      autoFocus
+                    />
+                    <button type="submit" className="password-submit">Enter</button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className="main-menu-footer">
           <span className="version">v{version}</span>
         </div>
       </div>
-
-      {/* Ancient Modal Overlay */}
-      {activeModal !== 'none' && (
-        <div className="ancient-modal-overlay" onClick={() => setActiveModal('none')}>
-          <div className="ancient-modal" onClick={e => e.stopPropagation()}>
-            <button className="ancient-modal-close" onClick={() => setActiveModal('none')}>✕</button>
-
-            <pre className="ancient-border">╔══════════════════════════════════════╗</pre>
-
-            <div className="ancient-modal-content">
-              {activeModal === 'big-leagues' && (
-                <>
-                  <p className="ancient-runes">⛧ ◈ ☉ ◇ ⛧</p>
-                  <h2 className="ancient-title">THE BIG LEAGUES</h2>
-                  <p className="ancient-subtitle">— ᴛʜᴇ ᴇᴛᴇʀɴᴀʟ ʀᴀᴄᴇ —</p>
-                  <div className="ancient-separator">· · · ⟡ · · ·</div>
-                  <p className="ancient-message">
-                    The great machine stirs.<br/>
-                    The eternal race approaches.<br/>
-                    <br/>
-                    Soon, the circuits will open<br/>
-                    to all who dare witness.
-                  </p>
-                  <div className="ancient-separator">· · · ⟡ · · ·</div>
-                  <p className="ancient-status">
-                    ⏳ ᴛʜᴇ ғᴏᴜɴᴅᴀᴛɪᴏɴs ᴀʀᴇ ʙᴇɪɴɢ ʟᴀɪᴅ ⏳
-                  </p>
-                  <p className="ancient-footer-text">ᴘᴀᴛɪᴇɴᴄᴇ, ᴍᴏʀᴛᴀʟ</p>
-                </>
-              )}
-
-              {activeModal === 'commissioner' && (
-                <>
-                  <p className="ancient-runes">☠ ⚙ ☠</p>
-                  <h2 className="ancient-title">COMMISSIONARY MODE</h2>
-                  <p className="ancient-subtitle">— ᴛʜᴇ ᴄᴏɴᴛʀᴏʟs —</p>
-                  <div className="ancient-separator">· · · ⟡ · · ·</div>
-                  <p className="ancient-message">
-                    These controls are not<br/>
-                    meant for your hands.<br/>
-                    <br/>
-                    Not yet.
-                  </p>
-                  <div className="ancient-separator">· · · ⟡ · · ·</div>
-                  <p className="ancient-warning-text">ʏᴏᴜ ᴀʀᴇ ɴᴏᴛ ʀᴇᴀᴅʏ.</p>
-                  <p className="ancient-footer-text">ᴛʜᴇ ᴍᴀᴄʜɪɴᴇ ᴋɴᴏᴡs</p>
-                </>
-              )}
-
-              {activeModal === 'compendium' && (
-                <>
-                  <p className="ancient-runes">⛧ ⍟ ☉ ⌘ ⛧</p>
-                  <h2 className="ancient-title">THE COMPENDIUM</h2>
-                  <p className="ancient-subtitle">— ᴛʜᴇ ғᴏʀʙɪᴅᴅᴇɴ ᴛᴇxᴛs —</p>
-                  <div className="ancient-separator">· · · ⟡ · · ·</div>
-                  <p className="ancient-message">
-                    The Compendium opens<br/>
-                    to those who know<br/>
-                    the true words.
-                  </p>
-                  <p className="ancient-prompt">Speak:</p>
-                  <form onSubmit={handleCompendiumSubmit} className="ancient-form">
-                    <input
-                      type="password"
-                      value={compendiumPassword}
-                      onChange={(e) => {
-                        setCompendiumPassword(e.target.value);
-                        setCompendiumError(null);
-                      }}
-                      placeholder="· · · · · · · ·"
-                      className="ancient-input"
-                      autoFocus
-                    />
-                    <button type="submit" className="ancient-submit">☽ Enter ☾</button>
-                  </form>
-                  {compendiumError && <p className="ancient-error">{compendiumError}</p>}
-                  {compendiumSuccess && <p className="ancient-success">{compendiumSuccess}</p>}
-                  <div className="ancient-separator">· · · ⟡ · · ·</div>
-                  <p className="ancient-footer-text">ᴛʜᴇ ᴍᴀᴄʜɪɴᴇ ᴡᴀɪᴛs</p>
-                </>
-              )}
-            </div>
-
-            <pre className="ancient-border">╚══════════════════════════════════════╝</pre>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
