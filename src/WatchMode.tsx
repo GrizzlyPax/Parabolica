@@ -1,7 +1,17 @@
-import { Driver, RaceConfig, RaceState, TrackInfo, TireCompound, RaceEvent } from './RaceEngine';
-import { ticksToShortTime, formatGap } from './utils/raceTime';
+import { Driver, RaceConfig, RaceState, TrackInfo, RaceEvent } from './RaceEngine';
 import { useMemo, useRef, useEffect, useState } from 'react';
-import { Bet, calculateLiveBetStatus, resolveBets } from './MarbleMode';
+import { Bet, resolveBets } from './MarbleMode';
+import {
+  UniversalHeader,
+  NavPanel,
+  TimingTower,
+  TrackMap,
+  TRACK_COLUMNS,
+  DETAIL_COLUMNS,
+  type RaceView,
+  type RaceSpeed,
+  type SessionState,
+} from './components/race';
 import './WatchMode.css';
 
 export interface PowerActivation {
@@ -19,6 +29,13 @@ interface WatchModeProps {
   powerActivation?: PowerActivation | null;
   raceEvents?: RaceEvent[];  // For track event notifications
   activeBets?: Bet[];  // Marble Mode: current bets to display in timing tower
+  // Race controls
+  isRunning?: boolean;
+  raceSpeed?: RaceSpeed;
+  onStart?: () => void;
+  onStop?: () => void;
+  onReset?: () => void;
+  onSpeedChange?: (speed: RaceSpeed) => void;
 }
 
 // Modular notification system for race events
@@ -36,22 +53,6 @@ export interface RaceNotification {
   color?: string; // Optional team color for styling
 }
 
-// Crash/blowout position for SVG effects (separate from notifications)
-interface CrashPosition {
-  x: number;
-  y: number;
-  tick: number;
-  type: 'crash' | 'blowout';  // Different visual for tire blowouts
-}
-
-// Track event effect on a driver (shows emoji pop-up on track)
-interface TrackEventEffect {
-  driverId: number;
-  emoji: string;
-  impact: 'positive' | 'negative' | 'neutral';
-  tick: number;
-}
-
 // Status effect for timing tower (persists longer than visual pop-up)
 interface StatusEffect {
   driverId: number;
@@ -59,12 +60,65 @@ interface StatusEffect {
   expiresAtTick: number;
 }
 
-// Tire compound colors
-const TIRE_COLORS: Record<string, string> = {
-  soft: '#e74c3c',
-  medium: '#f1c40f',
-  hard: '#ecf0f1',
+// Bet type labels for displaying what kind of bet
+const BET_TYPE_LABELS: Record<string, string> = {
+  win: 'WIN',
+  podium: 'PODIUM',
+  points: 'POINTS',
+  finishes: 'FINISH',
+  dnf: 'DNF',
 };
+
+// Helper to get 3-letter driver code from name
+function getDriverCode(name: string): string {
+  const parts = name.split(' ').filter(p => p.length > 0);
+  const suffixes = new Set(['JR', 'JR.', 'SR', 'SR.', 'II', 'III', 'IV', 'V']);
+  const filteredParts = parts.filter(p => !suffixes.has(p.toUpperCase()));
+  const surname = filteredParts[filteredParts.length - 1] || parts[parts.length - 1] || '';
+  return surname.slice(0, 3).toUpperCase().replace(/[^A-Z]/g, '');
+}
+
+// Determine if a bet is currently winning, losing, or impossible (DNF'd)
+type BetStatus = 'winning' | 'losing' | 'dnf' | 'pending';
+function getBetStatus(
+  bet: Bet,
+  driver: Driver | undefined,
+  sortedDrivers: Driver[],
+  raceFinished: boolean
+): BetStatus {
+  if (!driver) return 'pending';
+
+  // Driver DNF'd - check if bet is impossible or fulfilled
+  if (driver.status === 'dnf') {
+    // DNF bet wins if driver DNF'd
+    if (bet.type === 'dnf') return 'winning';
+    // All other bets are impossible if driver DNF'd
+    return 'dnf';
+  }
+
+  // Get current position (1-indexed)
+  const currentPosition = sortedDrivers.findIndex(d => d.id === driver.id) + 1;
+  if (currentPosition === 0) return 'pending';
+
+  // Determine if currently in winning position
+  switch (bet.type) {
+    case 'win':
+      return currentPosition === 1 ? 'winning' : 'losing';
+    case 'podium':
+      return currentPosition <= 3 ? 'winning' : 'losing';
+    case 'points':
+      return currentPosition <= 10 ? 'winning' : 'losing';
+    case 'finishes':
+      // If race finished and driver finished, they won
+      // During race, assume they'll finish unless DNF
+      return raceFinished ? 'winning' : 'pending';
+    case 'dnf':
+      // DNF bet only wins if driver DNF's
+      return raceFinished ? 'losing' : 'pending';
+    default:
+      return 'pending';
+  }
+}
 
 // Generate light and dark variants of a hex color
 function getColorVariants(hexColor: string): { light: string; dark: string } {
@@ -92,80 +146,8 @@ function getColorVariants(hexColor: string): { light: string; dark: string } {
   };
 }
 
-// Calculate driver overall rating (50-99)
-function calculateDriverRating(driver: Driver): number {
-  // Driver stats normalized to 0-1 scale
-  const speedNorm = (driver.stats.baseSpeed - 0.85) / 0.30;        // 0.85-1.15 range
-  const consistencyNorm = (driver.stats.consistency - 0.3) / 0.50; // 0.3-0.8 range
-  const luckNorm = (driver.stats.luck - 0.3) / 0.50;               // 0.3-0.8 range
-  const accelNorm = (driver.stats.acceleration - 0.85) / 0.30;     // 0.85-1.15 range
-  const enduranceNorm = (driver.stats.endurance - 0.85) / 0.30;    // 0.85-1.15 range
-  const aggressionNorm = (driver.stats.aggression - 0.3) / 0.50;   // 0.3-0.8 range (middle is best)
-
-  // Driver weighted average (speed and consistency matter most)
-  const driverScore = (
-    speedNorm * 0.25 +
-    consistencyNorm * 0.20 +
-    accelNorm * 0.15 +
-    enduranceNorm * 0.15 +
-    luckNorm * 0.15 +
-    (1 - Math.abs(aggressionNorm - 0.5) * 2) * 0.10  // Aggression: middle values are optimal
-  );
-
-  // Scale to 50-99 range (like FIFA/EA sports - nobody is below 50)
-  return Math.round(50 + driverScore * 49);
-}
-
-// Calculate car overall rating (50-99)
-function calculateCarRating(driver: Driver): number {
-  if (!driver.carStats) return 50;
-
-  // Car stats normalized to 0-1 scale (1-5 stars)
-  const carPower = (driver.carStats.power - 1) / 4;
-  const carGrip = (driver.carStats.grip - 1) / 4;
-  const carReliability = (driver.carStats.reliability - 1) / 4;
-
-  // Car weighted average (power matters most for pace)
-  const carScore = (
-    carPower * 0.45 +
-    carGrip * 0.35 +
-    carReliability * 0.20
-  );
-
-  // Scale to 50-99 range
-  return Math.round(50 + carScore * 49);
-}
-
-// Get color for overall rating (F1 style: red < yellow < green < purple)
-function getOverallRatingColor(rating: number): string {
-  if (rating >= 90) return '#a855f7';  // Purple - elite
-  if (rating >= 80) return '#22c55e';  // Green - great
-  if (rating >= 70) return '#eab308';  // Yellow - good
-  return '#ef4444';                     // Red - below average
-}
-
 // Default fallback track path (oval) if no layout provided
 const DEFAULT_TRACK_PATH = 'M 150 60 L 450 60 Q 550 60, 550 150 Q 550 240, 450 240 L 150 240 Q 50 240, 50 150 Q 50 60, 150 60 Z';
-
-// Pit lane entry/exit positions along track (as percentage 0-1)
-const PIT_ENTRY_POSITION = 0.85; // Near end of lap
-const PIT_EXIT_POSITION = 0.15;  // Early in next lap
-
-// Generate a pit lane path that connects entry point to exit point
-// This creates a shortcut through the infield
-function generatePitLanePath(entry: { x: number; y: number }, exit: { x: number; y: number }): string {
-  // Create a curved path from entry to exit through the center area
-  const midX = (entry.x + exit.x) / 2;
-  const midY = (entry.y + exit.y) / 2;
-  // Curve inward toward center of track
-  const controlX = 300; // Center X
-  const controlY = 150; // Center Y
-  // Offset control point slightly toward the midpoint
-  const cx = midX * 0.4 + controlX * 0.6;
-  const cy = midY * 0.4 + controlY * 0.6;
-
-  return `M ${entry.x} ${entry.y} Q ${cx} ${cy}, ${exit.x} ${exit.y}`;
-}
 
 // Get a point along an SVG path at a given percentage (0-1)
 function getPointAlongPath(pathElement: SVGPathElement | null, percentage: number): { x: number; y: number } {
@@ -173,26 +155,6 @@ function getPointAlongPath(pathElement: SVGPathElement | null, percentage: numbe
   const length = pathElement.getTotalLength();
   const point = pathElement.getPointAtLength(percentage * length);
   return { x: point.x, y: point.y };
-}
-
-// Get perpendicular offset direction at a point on the path
-function getPerpendicularOffset(pathElement: SVGPathElement | null, percentage: number): { dx: number; dy: number } {
-  if (!pathElement) return { dx: 0, dy: 1 };
-  const length = pathElement.getTotalLength();
-  const pos = percentage * length;
-
-  // Get two points slightly apart to calculate tangent
-  const delta = 2;
-  const p1 = pathElement.getPointAtLength(Math.max(0, pos - delta));
-  const p2 = pathElement.getPointAtLength(Math.min(length, pos + delta));
-
-  // Tangent vector
-  const tx = p2.x - p1.x;
-  const ty = p2.y - p1.y;
-  const tLen = Math.sqrt(tx * tx + ty * ty) || 1;
-
-  // Perpendicular (rotate 90 degrees)
-  return { dx: -ty / tLen, dy: tx / tLen };
 }
 
 // Map track emojis to background themes
@@ -223,18 +185,29 @@ const TRACK_THEMES: Record<string, { bg: string; trackColor: string; accent: str
 
 const DEFAULT_THEME = { bg: 'linear-gradient(135deg, #0d0d0d 0%, #1a1018 50%, #0d0d0d 100%)', trackColor: '#2a2535', accent: '#3a3545' };
 
-function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, powerActivation, raceEvents, activeBets }: WatchModeProps) {
+function WatchMode({
+  drivers,
+  config,
+  raceState,
+  trackInfo,
+  onNextRace,
+  powerActivation,
+  raceEvents,
+  activeBets,
+  // Race controls
+  isRunning = false,
+  raceSpeed = 1,
+  onStart,
+  onStop,
+  onReset,
+  onSpeedChange,
+}: WatchModeProps) {
   const trackLength = config.lapLength;
   const totalLaps = config.totalLaps;
 
   // Refs for SVG path elements (used for positioning drivers)
   const trackPathRef = useRef<SVGPathElement>(null);
-  const pitPathRef = useRef<SVGPathElement>(null);
   const [pathsReady, setPathsReady] = useState(false);
-
-  // Smoothed visual positions for drivers (separate from actual game position)
-  const smoothedPositionsRef = useRef<Map<number, { x: number; y: number; targetX: number; targetY: number }>>(new Map());
-  const SMOOTHING_FACTOR = 0.15; // Lower = smoother but more lag
 
   // Track which drivers were pitting in the previous frame (to detect pit exit)
   const previouslyPittingRef = useRef<Set<number>>(new Set());
@@ -258,32 +231,65 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, powerAct
   const lastTrackEventTickRef = useRef<number>(-1); // Track last track event tick to avoid duplicates
   const seenTagActivationsRef = useRef<Set<string>>(new Set()); // Track which tag activations we've shown
 
-  // Crash positions for SVG effects only (visual on track)
-  const [crashPositions, setCrashPositions] = useState<CrashPosition[]>([]);
-
-  // Track event effects on drivers (emoji pop-ups on track - short duration)
-  const [trackEventEffects, setTrackEventEffects] = useState<TrackEventEffect[]>([]);
-  const seenTrackEventEffectsRef = useRef<Set<string>>(new Set()); // Track which effects we've shown
-
   // Status effects for timing tower (longer duration - persists for ~1 lap)
   const [statusEffects, setStatusEffects] = useState<StatusEffect[]>([]);
 
-  // Active power effect for visual display on track (now tracks kingdom for team effects)
-  const [activePowerEffect, setActivePowerEffect] = useState<{
-    targetKingdomId: string | null;
-    category: 'blessing' | 'curse' | 'god';
-    expiresAt: number;
-  } | null>(null);
-
-  // Driver card state - click to expand (not hover)
-  const [expandedDriverId, setExpandedDriverId] = useState<number | null>(null);
-  const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number } | null>(null);
-  const [hoveredTireDriverId, setHoveredTireDriverId] = useState<number | null>(null);
-  const [hoveredTagId, setHoveredTagId] = useState<string | null>(null);
-  const [tagTooltipPosition, setTagTooltipPosition] = useState<{ top: number; left: number } | null>(null);
-
   // Share button state
   const [shareCopied, setShareCopied] = useState(false);
+
+  // Multi-view system - different "lenses" over the same race state
+  // New view system: track (map + tower), detail (full tower), standings (points)
+  const [activeView, setActiveView] = useState<RaceView>('track');
+  // Multi-driver focus - allow up to 10 focused drivers (click to toggle)
+  const [focusedDriverIds, setFocusedDriverIds] = useState<Set<number>>(new Set());
+  const [navPanelOpen, setNavPanelOpen] = useState(false);
+
+  // Auto-focus bet drivers at race start (only once)
+  const betsInitializedRef = useRef(false);
+  useEffect(() => {
+    if (!betsInitializedRef.current && activeBets && activeBets.length > 0) {
+      const betDriverIds = activeBets.map(bet => bet.driverId);
+      setFocusedDriverIds(new Set(betDriverIds));
+      betsInitializedRef.current = true;
+    }
+  }, [activeBets]);
+
+  // Auto-unfocus DNF'd drivers (they can manually re-focus if wanted)
+  const unfocusedDnfDriversRef = useRef<Set<number>>(new Set());
+  useEffect(() => {
+    const dnfDriverIds = drivers
+      .filter(d => d.status === 'dnf')
+      .map(d => d.id);
+
+    // Check if any newly DNF'd drivers are focused
+    const newDnfFocused = dnfDriverIds.filter(
+      id => focusedDriverIds.has(id) && !unfocusedDnfDriversRef.current.has(id)
+    );
+
+    if (newDnfFocused.length > 0) {
+      setFocusedDriverIds(prev => {
+        const next = new Set(prev);
+        newDnfFocused.forEach(id => next.delete(id));
+        return next;
+      });
+      // Track that we've unfocused these drivers
+      newDnfFocused.forEach(id => unfocusedDnfDriversRef.current.add(id));
+    }
+  }, [drivers, focusedDriverIds]);
+
+  // Helper to toggle a driver's focus state
+  const toggleDriverFocus = (driverId: number) => {
+    setFocusedDriverIds(prev => {
+      const next = new Set(prev);
+      if (next.has(driverId)) {
+        next.delete(driverId);
+      } else if (next.size < 10) {
+        // Max 10 focused drivers
+        next.add(driverId);
+      }
+      return next;
+    });
+  };
 
   // Sector-based gap tracking (like F1 timing)
   // Gaps only update when a driver crosses a sector boundary
@@ -297,6 +303,42 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, powerAct
   // Frozen sorted order - only updates on sector crossings to match gap updates
   const [frozenSortedDrivers, setFrozenSortedDrivers] = useState<Driver[]>([]);
   const lastSortUpdateSectorRef = useRef<number>(-1);
+
+  // Position deltas - only update when a driver completes a lap
+  // Tracks: { driverId -> { lastLap: number, positionAtLapEnd: number } }
+  const driverLapPositionsRef = useRef<Map<number, { lastLap: number; positionAtLapEnd: number }>>(new Map());
+  // Store delta AND the lap at which it should disappear (showUntilLap)
+  const [positionDeltas, setPositionDeltas] = useState<Map<number, { delta: number; showUntilLap: number }>>(new Map());
+
+  // Swipe navigation for mobile - track touch start position
+  const touchStartRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const SWIPE_THRESHOLD = 50; // Minimum distance in pixels to trigger view change
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartRef.current = {
+      x: e.touches[0].clientX,
+      y: e.touches[0].clientY,
+    };
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    const deltaX = e.changedTouches[0].clientX - touchStartRef.current.x;
+    const deltaY = e.changedTouches[0].clientY - touchStartRef.current.y;
+
+    // Only trigger if horizontal swipe is dominant (not vertical scrolling)
+    if (Math.abs(deltaX) > SWIPE_THRESHOLD && Math.abs(deltaX) > Math.abs(deltaY)) {
+      const views: RaceView[] = ['track', 'detail', 'standings'];
+      const currentIdx = views.indexOf(activeView);
+
+      if (deltaX > 0 && currentIdx > 0) {
+        // Swipe right → previous view
+        setActiveView(views[currentIdx - 1]);
+      } else if (deltaX < 0 && currentIdx < views.length - 1) {
+        // Swipe left → next view
+        setActiveView(views[currentIdx + 1]);
+      }
+    }
+  };
 
   // Helper to get current sector (0-5) from position
   const getSector = (position: number): number => {
@@ -314,23 +356,37 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, powerAct
     color?: string // Optional team color
   ) => {
     const now = Date.now();
-    const newNotification: RaceNotification = {
-      id: notificationIdRef.current++,
-      type,
-      title,
-      message,
-      emoji,
-      tick: raceState.totalTicks,
-      expiresAt: now + durationMs,
-      drivers: involvedDrivers,
-      color,
-    };
-    setNotifications(prev => [newNotification, ...prev].slice(0, 15)); // Keep last 15
+    const currentTick = raceState.totalTicks;
 
-    // Auto-remove after duration
-    setTimeout(() => {
-      setNotifications(prev => prev.filter(n => n.id !== newNotification.id));
-    }, durationMs);
+    // Deduplicate: skip if same title/type exists within last 100 ticks or 2 seconds
+    setNotifications(prev => {
+      const isDuplicate = prev.some(n =>
+        n.title === title &&
+        n.type === type &&
+        (Math.abs(n.tick - currentTick) < 100 || (now - (n.expiresAt - 12000)) < 2000)
+      );
+
+      if (isDuplicate) return prev; // Skip duplicate
+
+      const newNotification: RaceNotification = {
+        id: notificationIdRef.current++,
+        type,
+        title,
+        message,
+        emoji,
+        tick: currentTick,
+        expiresAt: now + durationMs,
+        drivers: involvedDrivers,
+        color,
+      };
+
+      // Auto-remove after duration
+      setTimeout(() => {
+        setNotifications(p => p.filter(n => n.id !== newNotification.id));
+      }, durationMs);
+
+      return [newNotification, ...prev].slice(0, 15); // Keep last 15
+    });
   };
 
   // Generate shareable race summary (Wordle-style)
@@ -417,8 +473,9 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, powerAct
     }
   };
 
-  // Get track path from layout or use default
+  // Get track path and pit lane path from layout
   const trackPath = trackInfo?.layout?.trackPath || DEFAULT_TRACK_PATH;
+  const pitLanePath = trackInfo?.layout?.pitLanePath;
 
   // Signal when paths are mounted
   useEffect(() => {
@@ -468,13 +525,6 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, powerAct
           '💥',
           newlyCrashed.map(d => ({ id: d.id, name: d.name, emoji: d.emoji }))
         );
-
-        const newCrashPos: CrashPosition = { x: avgX, y: avgY, tick: currentTick, type: 'crash' };
-        setCrashPositions(prev => [...prev, newCrashPos]);
-
-        setTimeout(() => {
-          setCrashPositions(prev => prev.filter(p => p.tick !== currentTick));
-        }, 10000);
       }
 
       lastCrashTickRef.current = currentTick;
@@ -485,10 +535,6 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, powerAct
       newlyBlownOut.forEach(d => seenCrashesRef.current.add(d.id));
 
       newlyBlownOut.forEach(driver => {
-        const lapProgress = driver.position / trackLength;
-        const point = getPointAlongPath(trackPathRef.current, lapProgress);
-        const currentTick = raceState.totalTicks;
-
         addNotification(
           'crash',  // Still uses crash notification type for styling
           'BLOWOUT!',
@@ -496,13 +542,6 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, powerAct
           '💨',  // Different emoji for blowout
           [{ id: driver.id, name: driver.name, emoji: driver.emoji }]
         );
-
-        const newBlowoutPos: CrashPosition = { x: point.x, y: point.y, tick: currentTick + driver.id, type: 'blowout' };
-        setCrashPositions(prev => [...prev, newBlowoutPos]);
-
-        setTimeout(() => {
-          setCrashPositions(prev => prev.filter(p => p.tick !== currentTick + driver.id));
-        }, 10000);
       });
     }
 
@@ -514,10 +553,6 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, powerAct
       newlyMechanical.forEach(d => seenCrashesRef.current.add(d.id));
 
       newlyMechanical.forEach(driver => {
-        const lapProgress = driver.position / trackLength;
-        const point = getPointAlongPath(trackPathRef.current, lapProgress);
-        const currentTick = raceState.totalTicks;
-
         addNotification(
           'crash',  // Uses crash notification type for styling
           'MECHANICAL!',
@@ -525,13 +560,6 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, powerAct
           '⚙️',
           [{ id: driver.id, name: driver.name, emoji: driver.emoji }]
         );
-
-        const newMechPos: CrashPosition = { x: point.x, y: point.y, tick: currentTick + driver.id + 1000, type: 'blowout' };
-        setCrashPositions(prev => [...prev, newMechPos]);
-
-        setTimeout(() => {
-          setCrashPositions(prev => prev.filter(p => p.tick !== currentTick + driver.id + 1000));
-        }, 10000);
       });
     }
 
@@ -587,7 +615,6 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, powerAct
       seenCrashesRef.current.clear();
       seenSlowPitStopsRef.current.clear(); // Reset slow pit stop tracking
       seenQuickPitStopsRef.current.clear(); // Reset quick pit stop tracking
-      setCrashPositions([]);
       setNotifications([]);
       lastCrashTickRef.current = -1;
       previousLeaderRef.current = null;
@@ -598,11 +625,12 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, powerAct
       lastLapTriggeredRef.current = false;
       leaderSectorRef.current = -1;
       winnerAnnouncedRef.current = false;
-      smoothedPositionsRef.current.clear(); // Reset visual smoothing
       previouslyPittingRef.current.clear(); // Reset pit tracking
       raceStartGraceRef.current = true; // Reset grace period for new race
       lastSortUpdateSectorRef.current = -1; // Reset frozen sort tracking
       setFrozenSortedDrivers([]); // Clear frozen order
+      driverLapPositionsRef.current.clear(); // Reset position tracking for deltas
+      setPositionDeltas(new Map()); // Clear any displayed deltas
     } else if (raceState.totalTicks > 30) {
       // After 30 ticks (~3 seconds), disable grace period
       raceStartGraceRef.current = false;
@@ -669,50 +697,31 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, powerAct
     }
   }, [raceEvents]);
 
-  // Detect track event effects on individual drivers and show emoji pop-ups
+  // Track seen effects for deduplication
+  const seenTrackEffectsRef = useRef<Set<string>>(new Set());
+
+  // Detect track event effects on individual drivers and add to status effects
   useEffect(() => {
     if (!raceEvents || raceEvents.length === 0) return;
 
     // Find track_event_effect events for individual drivers
     const newEffects = raceEvents.filter(e => {
       if (e.type !== 'track_event_effect') return false;
-      if (e.driverId < 0) return false; // Skip events without a specific driver (driverId is -1 when null)
+      if (e.driverId < 0) return false;
       const key = `${e.tick}-${e.driverId}`;
-      if (seenTrackEventEffectsRef.current.has(key)) return false;
+      if (seenTrackEffectsRef.current.has(key)) return false;
+      seenTrackEffectsRef.current.add(key);
       return true;
     });
 
     if (newEffects.length > 0) {
-      const effectsToAdd: TrackEventEffect[] = newEffects.map(e => {
-        const key = `${e.tick}-${e.driverId}`;
-        seenTrackEventEffectsRef.current.add(key);
-        // Use the emoji from the event directly (now passed from RaceEngine)
-        return {
-          driverId: e.driverId,
-          emoji: e.emoji || trackInfo?.event?.emoji || '⚡',
-          impact: e.impact,
-          tick: e.tick,
-        };
-      });
-
-      setTrackEventEffects(prev => [...prev, ...effectsToAdd]);
-
-      // Also add to status effects (persists longer for timing tower)
-      // Status effects last for ~500 ticks (roughly 1 lap worth)
+      // Add to status effects (persists for timing tower display)
       const statusToAdd: StatusEffect[] = newEffects.map(e => ({
         driverId: e.driverId,
         emoji: e.emoji || trackInfo?.event?.emoji || '⚡',
         expiresAtTick: raceState.totalTicks + 500,
       }));
       setStatusEffects(prev => [...prev, ...statusToAdd]);
-
-      // Remove track visual effects after 10 seconds (matches CSS animation duration)
-      setTimeout(() => {
-        const ticksToRemove = new Set(effectsToAdd.map(e => `${e.tick}-${e.driverId}`));
-        setTrackEventEffects(prev =>
-          prev.filter(e => !ticksToRemove.has(`${e.tick}-${e.driverId}`))
-        );
-      }, 10000);
     }
   }, [raceEvents, trackInfo, raceState.totalTicks]);
 
@@ -744,24 +753,6 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, powerAct
         driver ? [{ id: driver.id, name: driver.name, emoji: driver.emoji }] : undefined,
         10000 // 10 seconds duration
       );
-
-      // Also show emoji effect on track for the driver
-      if (driver && event.driverId >= 0) {
-        const effectToAdd: TrackEventEffect = {
-          driverId: event.driverId,
-          emoji: event.emoji || '🏷️',
-          impact: 'neutral', // Tags are neutral visual effects
-          tick: event.tick,
-        };
-        setTrackEventEffects(prev => [...prev, effectToAdd]);
-
-        // Remove visual effect after 8 seconds
-        setTimeout(() => {
-          setTrackEventEffects(prev =>
-            prev.filter(e => !(e.tick === event.tick && e.driverId === event.driverId))
-          );
-        }, 8000);
-      }
     }
   }, [raceEvents, drivers]);
 
@@ -774,9 +765,8 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, powerAct
   useEffect(() => {
     if (raceState.totalTicks === 0) {
       lastTrackEventTickRef.current = -1;
-      setTrackEventEffects([]);
       setStatusEffects([]);
-      seenTrackEventEffectsRef.current.clear();
+      seenTrackEffectsRef.current.clear();
       seenTagActivationsRef.current.clear();
     }
   }, [raceState.totalTicks]);
@@ -848,6 +838,64 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, powerAct
       lastSortUpdateSectorRef.current = leaderGlobalSector;
     }
   }, [drivers, trackLength, raceState.finishOrder, frozenSortedDrivers.length]);
+
+  // Position deltas - only update when a driver completes a lap
+  // Compare position at end of current lap vs position at end of previous lap
+  // Delta persists for the FULL next lap, then clears
+  useEffect(() => {
+    if (frozenSortedDrivers.length === 0) return;
+
+    const newDeltas = new Map<number, { delta: number; showUntilLap: number }>();
+    const deltasToRemove: number[] = [];
+
+    frozenSortedDrivers.forEach((driver, currentPosition) => {
+      const prevData = driverLapPositionsRef.current.get(driver.id);
+      const currentDeltaInfo = positionDeltas.get(driver.id);
+
+      // Clear delta if driver DNFed
+      if (driver.status === 'dnf' && currentDeltaInfo) {
+        deltasToRemove.push(driver.id);
+        return; // Skip further processing for DNF drivers
+      }
+
+      // Check if an existing delta should be cleared (driver completed their showUntilLap)
+      if (currentDeltaInfo && driver.currentLap >= currentDeltaInfo.showUntilLap) {
+        deltasToRemove.push(driver.id);
+      }
+
+      // Check if this driver has completed a new lap
+      if (prevData && driver.currentLap > prevData.lastLap) {
+        // Driver completed a lap - calculate delta
+        // Positive = gained positions (moved up in standings), Negative = lost positions
+        const delta = prevData.positionAtLapEnd - currentPosition;
+        if (delta !== 0) {
+          // Show delta until they complete their NEXT lap
+          newDeltas.set(driver.id, {
+            delta,
+            showUntilLap: driver.currentLap + 1,
+          });
+        }
+      }
+
+      // Update tracking for this driver's current lap
+      driverLapPositionsRef.current.set(driver.id, {
+        lastLap: driver.currentLap,
+        positionAtLapEnd: currentPosition,
+      });
+    });
+
+    // Only update state if there are changes
+    if (newDeltas.size > 0 || deltasToRemove.length > 0) {
+      setPositionDeltas(prev => {
+        const updated = new Map(prev);
+        // Remove expired deltas
+        deltasToRemove.forEach(id => updated.delete(id));
+        // Add new deltas
+        newDeltas.forEach((info, id) => updated.set(id, info));
+        return updated;
+      });
+    }
+  }, [frozenSortedDrivers, positionDeltas]);
 
   // Detect lead changes - only trigger on sector crossings to avoid spam
   useEffect(() => {
@@ -988,20 +1036,6 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, powerAct
       undefined,
       8000
     );
-
-    // Set visual effect on track
-    setActivePowerEffect({
-      targetKingdomId: null,
-      category: powerActivation.power.category,
-      expiresAt: Date.now() + 3000, // Visual effect lasts 3 seconds
-    });
-
-    // Clear the effect after duration
-    const timer = setTimeout(() => {
-      setActivePowerEffect(null);
-    }, 3000);
-
-    return () => clearTimeout(timer);
   }, [powerActivation]);
 
   // Get theme based on track emoji
@@ -1039,203 +1073,38 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, powerAct
   // Fall back to realtime if frozen is empty (during initialization)
   const sortedDrivers = frozenSortedDrivers.length > 0 ? frozenSortedDrivers : realtimeSortedDrivers;
 
+  // Derived values for TimingTower
+  const fastestLapOverall = useMemo(() => {
+    const allLapTimes = drivers.flatMap(d => d.lapTimes || []);
+    return allLapTimes.length > 0 ? Math.min(...allLapTimes) : null;
+  }, [drivers]);
+
+  // Convert statusEffects array to Map for TimingTower
+  const statusEffectsMap = useMemo(() => {
+    const map = new Map<number, string>();
+    for (const effect of statusEffects) {
+      map.set(effect.driverId, effect.emoji);
+    }
+    return map;
+  }, [statusEffects]);
+
+  // Transform positionDeltas to just delta values for TimingTower
+  const positionDeltasForTower = useMemo(() => {
+    const map = new Map<number, number>();
+    positionDeltas.forEach((info, id) => {
+      map.set(id, info.delta);
+    });
+    return map;
+  }, [positionDeltas]);
+
   // Separate drivers by status
   const pittingDrivers = drivers.filter(d => d.status === 'pitting');
-  const racingDrivers = drivers.filter(d => d.status === 'racing');
   const finishedDrivers = drivers.filter(d => d.status === 'finished');
-  const dnfDrivers = drivers.filter(d => d.status === 'dnf');
 
   // Sort finished drivers by finish order
   const sortedFinished = [...finishedDrivers].sort((a, b) => {
     return raceState.finishOrder.indexOf(a.id) - raceState.finishOrder.indexOf(b.id);
   });
-
-  // How many podium positions are already locked?
-  const lockedPositions = Math.min(sortedFinished.length, 3);
-
-  // Get position rank for a driver (1, 2, 3, or null for top 3 badges)
-  // Only show badges for positions not yet locked by finishers
-  const getPositionRank = (driverId: number): number | null => {
-    const activeDrivers = drivers.filter(d => d.status === 'racing' || d.status === 'pitting');
-
-    // Helper to calculate effective position (accounts for pit lane virtual position)
-    const getEffectivePosition = (driver: Driver): number => {
-      if (driver.status !== 'pitting') {
-        return driver.position;
-      }
-      // Pit lane maps: entry (85%) -> start/finish (100%/0% at 50% progress) -> exit (15%)
-      const pitProgress = driver.pitProgress;
-      if (pitProgress <= 0.5) {
-        // First half: 85% -> 100% of lap
-        const progressRatio = pitProgress / 0.5;
-        const positionRatio = 0.85 + (progressRatio * 0.15);
-        return Math.floor(positionRatio * trackLength);
-      } else {
-        // Second half: 0% -> 15% of lap
-        const progressRatio = (pitProgress - 0.5) / 0.5;
-        const positionRatio = progressRatio * 0.15;
-        return Math.floor(positionRatio * trackLength);
-      }
-    };
-
-    const sorted = [...activeDrivers].sort((a, b) => {
-      const aDist = a.currentLap * trackLength + getEffectivePosition(a);
-      const bDist = b.currentLap * trackLength + getEffectivePosition(b);
-      return bDist - aDist;
-    });
-    const idx = sorted.findIndex(d => d.id === driverId);
-    // Only show badge if this position hasn't been locked yet
-    const wouldBePosition = idx + 1 + lockedPositions;
-    return idx >= 0 && wouldBePosition <= 3 ? wouldBePosition : null;
-  };
-
-  // Calculate driver positions along the track path (racing only, not finished)
-  // Uses proximity-based lane offsets to prevent overlapping
-  // Also applies position smoothing for less jerky visual movement
-  const driverPositions = useMemo(() => {
-    if (!pathsReady || !trackPathRef.current) return [];
-
-    // Sort drivers by their total race distance for proximity calculation
-    const sortedByDistance = [...racingDrivers].sort((a, b) => {
-      const aDist = a.currentLap * trackLength + a.position;
-      const bDist = b.currentLap * trackLength + b.position;
-      return bDist - aDist; // Descending (leader first)
-    });
-
-    // Wider proximity and lane settings for 20 drivers
-    const PROXIMITY_THRESHOLD = trackLength * 0.06; // 6% of track = close
-    const LANE_OFFSET = 12; // Pixels between lanes
-    const MAX_LANES = 5; // Cap at 5 lanes to stay on track
-
-    return racingDrivers.map((driver) => {
-      // Normalize position to track length to prevent visual glitches when
-      // speed boosts push position beyond trackLength before lap counting
-      const normalizedPosition = ((driver.position % trackLength) + trackLength) % trackLength;
-      const lapProgress = normalizedPosition / trackLength;
-      const point = getPointAlongPath(trackPathRef.current, lapProgress);
-      const perp = getPerpendicularOffset(trackPathRef.current, lapProgress);
-
-      const driverTrackPos = driver.position;
-
-      // Find all drivers within proximity (considering lap differences)
-      const nearbyDrivers = sortedByDistance.filter(other => {
-        if (other.id === driver.id) return false;
-        const otherPos = other.position;
-
-        // Check proximity on current track position
-        const diff = Math.abs(driverTrackPos - otherPos);
-        const wrapDiff = Math.min(diff, trackLength - diff);
-
-        // Also check if they're on same lap or adjacent
-        const lapDiff = Math.abs(driver.currentLap - other.currentLap);
-
-        return wrapDiff < PROXIMITY_THRESHOLD && lapDiff <= 1;
-      });
-
-      // Assign lane based on race position among nearby drivers
-      let laneOffset = 0;
-      if (nearbyDrivers.length > 0) {
-        // Sort group by total distance (race position)
-        const group = [...nearbyDrivers, driver].sort((a, b) => {
-          const aDist = a.currentLap * trackLength + a.position;
-          const bDist = b.currentLap * trackLength + b.position;
-          return bDist - aDist; // Leader first
-        });
-
-        const laneIndex = group.findIndex(d => d.id === driver.id);
-        const totalInGroup = Math.min(group.length, MAX_LANES);
-
-        // Distribute across lanes, capped to stay on track
-        const effectiveLaneIndex = Math.min(laneIndex, MAX_LANES - 1);
-        laneOffset = (effectiveLaneIndex - (totalInGroup - 1) / 2) * LANE_OFFSET;
-      }
-
-      // Add a small consistent offset based on driver ID to prevent exact overlaps
-      // This creates a "stagger" effect even when drivers are at exact same position
-      const idOffset = ((driver.id % 7) - 3) * 2;
-
-      // Target position (where driver should be)
-      const targetX = point.x + perp.dx * (laneOffset + idOffset);
-      const targetY = point.y + perp.dy * (laneOffset + idOffset);
-
-      // Get or initialize smoothed position
-      let smoothed = smoothedPositionsRef.current.get(driver.id);
-
-      // During race start grace period, snap to positions instantly (no smoothing)
-      // This prevents erratic "bounding" as positions stabilize
-      const isGracePeriod = raceStartGraceRef.current;
-
-      // Check if this driver just exited the pits (was pitting, now racing)
-      const justExitedPit = previouslyPittingRef.current.has(driver.id);
-
-      // Check for large position jumps (lap crossing, speed boosts, etc.)
-      // If the target moved more than 100px, snap instead of interpolate
-      const distanceToTarget = smoothed
-        ? Math.sqrt((targetX - smoothed.x) ** 2 + (targetY - smoothed.y) ** 2)
-        : Infinity;
-      const shouldSnap = distanceToTarget > 100;
-
-      if (!smoothed || isGracePeriod || justExitedPit || shouldSnap) {
-        // First time, grace period, exited pit, or large jump - snap to target position
-        // This prevents visual glitches from interpolating across the track
-        smoothed = { x: targetX, y: targetY, targetX, targetY };
-        smoothedPositionsRef.current.set(driver.id, smoothed);
-      } else {
-        // Interpolate toward target position
-        smoothed.x += (targetX - smoothed.x) * SMOOTHING_FACTOR;
-        smoothed.y += (targetY - smoothed.y) * SMOOTHING_FACTOR;
-        smoothed.targetX = targetX;
-        smoothed.targetY = targetY;
-      }
-
-      return {
-        driver,
-        x: smoothed.x,
-        y: smoothed.y,
-      };
-    });
-  }, [racingDrivers, trackLength, pathsReady, SMOOTHING_FACTOR]);
-
-  // Calculate DNF positions
-  const dnfPositions = useMemo(() => {
-    if (!pathsReady || !trackPathRef.current) return [];
-
-    return dnfDrivers.map((driver) => {
-      const lapProgress = driver.position / trackLength;
-      const point = getPointAlongPath(trackPathRef.current, lapProgress);
-      return { driver, x: point.x, y: point.y };
-    });
-  }, [dnfDrivers, trackLength, pathsReady]);
-
-  // Calculate pit entry/exit marker positions on track
-  const pitMarkers = useMemo(() => {
-    if (!pathsReady || !trackPathRef.current) return { entry: { x: 0, y: 0 }, exit: { x: 0, y: 0 }, path: '' };
-
-    const entry = getPointAlongPath(trackPathRef.current, PIT_ENTRY_POSITION);
-    const exit = getPointAlongPath(trackPathRef.current, PIT_EXIT_POSITION);
-    const path = generatePitLanePath(entry, exit);
-    return { entry, exit, path };
-  }, [pathsReady]);
-
-  // Calculate Unsafety Car position on track
-  const unsafetyCarPosition = useMemo(() => {
-    if (!pathsReady || !trackPathRef.current) return null;
-    if (!raceState.unsafetyCarActive) return null;
-
-    const point = getPointAlongPath(trackPathRef.current, raceState.unsafetyCarPosition);
-    return { x: point.x, y: point.y };
-  }, [pathsReady, raceState.unsafetyCarActive, raceState.unsafetyCarPosition]);
-
-  // Calculate pit lane positions for pitting drivers
-  const pitPositions = useMemo(() => {
-    if (!pathsReady || !pitPathRef.current) return [];
-
-    return pittingDrivers.map((driver) => {
-      const pitProgress = driver.pitProgress || 0;
-      const point = getPointAlongPath(pitPathRef.current, pitProgress);
-      return { driver, x: point.x, y: point.y, progress: pitProgress };
-    });
-  }, [pittingDrivers, pathsReady]);
 
   // Track which drivers are currently pitting for pit exit detection
   // This runs after position calculations to update the ref for next frame
@@ -1244,1138 +1113,236 @@ function WatchMode({ drivers, config, raceState, trackInfo, onNextRace, powerAct
     previouslyPittingRef.current = currentlyPitting;
   }, [pittingDrivers]);
 
+  // Calculate session state for UniversalHeader
+  const getSessionState = (): SessionState => {
+    if (raceState.raceFinished) return 'finished';
+    if (raceState.unsafetyCarActive) return 'safety-car';
+    // Check if leader is on final lap
+    const leaderLap = frozenSortedDrivers[0]?.currentLap || 0;
+    if (leaderLap >= totalLaps - 1) return 'final-lap';
+    return 'racing';
+  };
+
+  // Calculate current lap (leader's lap)
+  const currentLapForHeader = Math.max(1, (frozenSortedDrivers[0]?.currentLap || 0) + 1);
+
   return (
     <div className="watch-mode" style={{ background: theme.bg }}>
-      <div className="watch-header">
-        {trackInfo ? (
-          <div className="track-title">
-            <span className="track-title-emoji">{trackInfo.funEmoji}</span>
-            <div className="track-title-info">
-              <h1>{trackInfo.name} {trackInfo.emoji}</h1>
-              <div className="track-subtitle">
-                <span className="header-description">{trackInfo.description}</span>
-                {trackInfo.event ? (
-                  <span className="header-event">{trackInfo.event.emoji} {trackInfo.event.name}</span>
-                ) : (
-                  <span className="header-event header-event-placeholder">[No active event]</span>
-                )}
-              </div>
-            </div>
-          </div>
-        ) : (
-          <h1>The Eldritch Grand Prix</h1>
-        )}
-        {raceState.raceFinished && <span className="watch-finished">RACE COMPLETE</span>}
-      </div>
+      {/* Universal Header - new navigation system */}
+      <UniversalHeader
+        currentLap={currentLapForHeader}
+        totalLaps={totalLaps}
+        sessionState={getSessionState()}
+        trackName={trackInfo?.name || 'Grand Prix'}
+        trackEmoji={trackInfo?.funEmoji || '🏁'}
+        trackFlagEmoji={trackInfo?.emoji}
+        elapsedTime={raceState.totalTicks}
+        onMenuOpen={() => setNavPanelOpen(true)}
+        // Race controls
+        isRunning={isRunning}
+        raceFinished={raceState.raceFinished}
+        raceSpeed={raceSpeed}
+        onStart={onStart}
+        onStop={onStop}
+        onReset={onReset}
+        onSpeedChange={onSpeedChange}
+      />
 
-      {/* Race Feed - ticker style under header */}
-      <div className="race-feed-container">
-        <div className="race-feed">
-          <span className="race-feed-label">LIVE</span>
-          <div className="race-feed-items">
-            {notifications.slice(0, 6).map((notification) => (
-              <div
-                key={notification.id}
-                className={`feed-item feed-${notification.type}`}
-                style={notification.color ? { '--feed-color': notification.color } as React.CSSProperties : undefined}
-              >
-                <span className="feed-emoji">{notification.emoji}</span>
-                <span className="feed-text">
-                  <span className="feed-title">{notification.title}</span>
-                  {notification.message && <span className="feed-message">{notification.message}</span>}
-                </span>
-              </div>
-            ))}
-            {notifications.length === 0 && (
-              <span className="feed-empty">Awaiting race action...</span>
-            )}
-          </div>
-        </div>
-      </div>
+      {/* Navigation Panel - slide-in from left */}
+      <NavPanel
+        isOpen={navPanelOpen}
+        activeView={activeView}
+        onViewChange={setActiveView}
+        onClose={() => setNavPanelOpen(false)}
+      />
 
-      {/* Main content: Leaderboard left, Track right */}
-      <div className="watch-content">
-        {/* Leaderboard */}
-        <div className="watch-leaderboard">
-          {/* Lap indicator - prominent header */}
-          <div className="leaderboard-lap-header">
-            <span className="lap-label">LAP</span>
-            <span className="lap-current">{Math.max(...sortedDrivers.map(d => Math.min(d.currentLap + 1, totalLaps)))}</span>
-            <span className="lap-separator">/</span>
-            <span className="lap-total">{totalLaps}</span>
-          </div>
-          {/* Column header row */}
-          <div className="leaderboard-header">
-            <span className="lh-pos">P</span>
-            <span className="lh-driver">Driver</span>
-            <span className="lh-leader">Leader</span>
-            <span className="lh-gap">Gap</span>
-            <span className="lh-last">Last</span>
-            <span className="lh-best">Best</span>
-            <span className="lh-tire">Tires</span>
-            <span className="lh-status"></span>
-          </div>
-          {sortedDrivers.map((driver, index) => {
-            const isFinished = driver.status === 'finished';
-            const isDNF = driver.status === 'dnf';
-            const isPitting = driver.status === 'pitting';
-            const finishPos = raceState.finishOrder.indexOf(driver.id);
-            const tireCompound = driver.tireState?.compound || 'medium';
+      {/* Main content: Single scroll container for entire page */}
+      <div
+        className={`watch-content view-${activeView}`}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
+        {/* TRACK VIEW: Tower on left (desktop), track on right. Mobile: tower below track */}
+        {activeView === 'track' && (
+          <>
+            {/* Timing Tower - appears first in DOM for desktop side-by-side (left) */}
+            <section className="dashboard-section timing-section">
+              <TimingTower
+                drivers={sortedDrivers}
+                columns={TRACK_COLUMNS}
+                raceState={raceState}
+                totalLaps={totalLaps}
+                lapLength={trackLength}
+                activeBets={activeBets}
+                focusedDriverIds={focusedDriverIds}
+                onDriverClick={toggleDriverFocus}
+                condensed={false}
+                statusEffects={statusEffectsMap}
+                positionDeltas={positionDeltasForTower}
+                fastestLapOverall={fastestLapOverall ?? undefined}
+                className="timing-tower-track"
+              />
+            </section>
 
-            // Calculate gap to leader and gap to car ahead (interval)
-            // F1-style: gaps only update when driver crosses a sector boundary
-            let leaderGapDisplay = '';
-            let intervalGapDisplay = '';
-
-            // Get or initialize this driver's sector tracking
-            if (!driverSectorsRef.current.has(driver.id)) {
-              driverSectorsRef.current.set(driver.id, { lastSector: -1, leaderGap: '-', intervalGap: '-' });
-            }
-            const sectorData = driverSectorsRef.current.get(driver.id)!;
-            const currentSector = getSector(driver.position) + (driver.currentLap * NUM_SECTORS);
-
-            // Check if driver crossed into a new sector
-            const crossedSector = currentSector !== sectorData.lastSector;
-
-            if (isFinished) {
-              // Finished drivers always show final gaps (not sector-delayed)
-              if (finishPos === 0) {
-                leaderGapDisplay = ticksToShortTime(driver.finishTick || raceState.totalTicks);
-                intervalGapDisplay = '-';
-              } else if (driver.lapsBehind > 0) {
-                leaderGapDisplay = `+${driver.lapsBehind}L`;
-                const carAhead = sortedDrivers[index - 1];
-                if (carAhead && carAhead.finishTick && driver.finishTick) {
-                  intervalGapDisplay = formatGap(driver.finishTick - carAhead.finishTick);
-                } else {
-                  intervalGapDisplay = '-';
+            {/* Track Map - appears second for desktop (right) */}
+            <section className="dashboard-section track-section">
+              <TrackMap
+                trackPath={trackPath}
+                pitLanePath={pitLanePath}
+                trackLength={trackLength}
+                drivers={drivers}
+                focusedDriverIds={
+                  focusedDriverIds.size > 0
+                    ? Array.from(focusedDriverIds)
+                    : (activeBets?.map(b => b.driverId) || [])
                 }
-              } else {
-                const winner = sortedDrivers.find(d => raceState.finishOrder.indexOf(d.id) === 0);
-                if (winner && driver.finishTick && winner.finishTick) {
-                  leaderGapDisplay = formatGap(driver.finishTick - winner.finishTick);
-                }
-                const carAhead = sortedDrivers[index - 1];
-                if (carAhead && carAhead.finishTick && driver.finishTick) {
-                  intervalGapDisplay = formatGap(driver.finishTick - carAhead.finishTick);
-                } else {
-                  intervalGapDisplay = '-';
-                }
-              }
-              // Update stored values for finished drivers
-              sectorData.leaderGap = leaderGapDisplay;
-              sectorData.intervalGap = intervalGapDisplay;
-              sectorData.lastSector = currentSector;
-            } else if (!isDNF) {
-              const leader = sortedDrivers[0];
-              const leaderDist = leader ? leader.currentLap * trackLength + leader.position : 0;
-              const driverDist = driver.currentLap * trackLength + driver.position;
+                highlightedDriverIds={activeBets?.map(b => b.driverId) || []}
+                unsafetyCarActive={raceState.unsafetyCarActive}
+                unsafetyCarPosition={raceState.unsafetyCarPosition}
+              />
 
-              // Check if this driver has crossed their first sector yet
-              const hasFirstSectorTime = sectorData.lastSector >= 0;
-
-              if (index === 0) {
-                // Leader - only show "Leader" after first sector crossing
-                if (crossedSector && currentSector > 0) {
-                  leaderGapDisplay = 'Leader';
-                  intervalGapDisplay = '-';
-                  sectorData.leaderGap = leaderGapDisplay;
-                  sectorData.intervalGap = intervalGapDisplay;
-                  sectorData.lastSector = currentSector;
-                } else if (hasFirstSectorTime) {
-                  // Use stored values
-                  leaderGapDisplay = sectorData.leaderGap;
-                  intervalGapDisplay = sectorData.intervalGap;
-                } else {
-                  // Before first sector - show dashes
-                  leaderGapDisplay = '-';
-                  intervalGapDisplay = '-';
-                }
-              } else if ((crossedSector && currentSector > 0) || (hasFirstSectorTime && crossedSector)) {
-                // Driver crossed a sector boundary - update their gaps
-                if (leader && leader.status !== 'finished') {
-                  // Check if driver is truly lapped:
-                  // A driver is lapped when the leader is on a higher lap AND
-                  // the leader's track position is >= the driver's track position
-                  // (meaning the leader has physically passed them on track)
-                  const lapsBehindLeader = leader.currentLap - driver.currentLap;
-                  const leaderTrackPos = leader.position; // Position within current lap
-                  const driverTrackPos = driver.position;
-                  const isActuallyLapped = lapsBehindLeader > 0 && leaderTrackPos >= driverTrackPos;
-
-                  // Also count full laps behind (if leader is 2+ laps ahead, at least 1 full lap is confirmed)
-                  const confirmedLapsBehind = lapsBehindLeader > 1 ? lapsBehindLeader - 1 : 0;
-                  const displayLapsBehind = isActuallyLapped ? lapsBehindLeader : confirmedLapsBehind;
-
-                  if (displayLapsBehind > 0) {
-                    // Driver is lapped - show lap difference
-                    leaderGapDisplay = `+${displayLapsBehind}L`;
-                  } else {
-                    const distGapToLeader = leaderDist - driverDist;
-                    const estimatedTickGapToLeader = distGapToLeader * 0.8;
-                    if (estimatedTickGapToLeader > 0) {
-                      leaderGapDisplay = formatGap(estimatedTickGapToLeader);
-                    } else {
-                      leaderGapDisplay = '-';
-                    }
-                  }
-
-                  const carAhead = sortedDrivers[index - 1];
-                  if (carAhead && carAhead.status !== 'dnf') {
-                    // Check if driver is truly lapped by car ahead
-                    const lapsBehindCarAhead = carAhead.currentLap - driver.currentLap;
-                    const carAheadTrackPos = carAhead.position;
-                    const isActuallyLappedByCarAhead = lapsBehindCarAhead > 0 && carAheadTrackPos >= driverTrackPos;
-                    const confirmedLapsBehindCarAhead = lapsBehindCarAhead > 1 ? lapsBehindCarAhead - 1 : 0;
-                    const displayLapsBehindCarAhead = isActuallyLappedByCarAhead ? lapsBehindCarAhead : confirmedLapsBehindCarAhead;
-
-                    if (displayLapsBehindCarAhead > 0) {
-                      // Driver is lapped by car ahead - show lap difference
-                      intervalGapDisplay = `+${displayLapsBehindCarAhead}L`;
-                    } else {
-                      const carAheadDist = carAhead.currentLap * trackLength + carAhead.position;
-                      const distGapToAhead = carAheadDist - driverDist;
-                      const estimatedTickGapToAhead = distGapToAhead * 0.8;
-                      if (estimatedTickGapToAhead > 0) {
-                        intervalGapDisplay = formatGap(estimatedTickGapToAhead);
-                      } else {
-                        intervalGapDisplay = '-';
-                      }
-                    }
-                  } else {
-                    intervalGapDisplay = '-';
-                  }
-                } else if (leader && leader.status === 'finished') {
-                  const lapsLeft = config.totalLaps - (driver.currentLap + 1);
-                  leaderGapDisplay = lapsLeft > 0 ? `+${lapsLeft}L` : '';
-                  intervalGapDisplay = '-';
-                }
-
-                // Store the new gap values
-                sectorData.leaderGap = leaderGapDisplay;
-                sectorData.intervalGap = intervalGapDisplay;
-                sectorData.lastSector = currentSector;
-              } else if (hasFirstSectorTime) {
-                // No sector crossing but has previous data - use frozen/stored gaps
-                // IMPORTANT: If stored gap is "Leader" but we're no longer P1, force recalculation
-                // This prevents the "multiple leaders" desync bug when positions change mid-sector
-                if (sectorData.leaderGap === 'Leader' && index > 0) {
-                  // Driver lost lead - recalculate gap immediately
-                  if (leader && leader.status !== 'finished') {
-                    const distGapToLeader = leaderDist - driverDist;
-                    const estimatedTickGapToLeader = distGapToLeader * 0.8;
-                    if (estimatedTickGapToLeader > 0) {
-                      leaderGapDisplay = formatGap(estimatedTickGapToLeader);
-                    } else {
-                      leaderGapDisplay = '-';
-                    }
-                    // Also recalculate interval to car ahead
-                    const carAhead = sortedDrivers[index - 1];
-                    if (carAhead && carAhead.status !== 'dnf') {
-                      const carAheadDist = carAhead.currentLap * trackLength + carAhead.position;
-                      const distGapToAhead = carAheadDist - driverDist;
-                      const estimatedTickGapToAhead = distGapToAhead * 0.8;
-                      if (estimatedTickGapToAhead > 0) {
-                        intervalGapDisplay = formatGap(estimatedTickGapToAhead);
-                      } else {
-                        intervalGapDisplay = '-';
-                      }
-                    } else {
-                      intervalGapDisplay = '-';
-                    }
-                    // Update stored values so they're correct for next render
-                    sectorData.leaderGap = leaderGapDisplay;
-                    sectorData.intervalGap = intervalGapDisplay;
-                  } else {
-                    leaderGapDisplay = '-';
-                    intervalGapDisplay = '-';
-                  }
-                } else {
-                  leaderGapDisplay = sectorData.leaderGap;
-                  intervalGapDisplay = sectorData.intervalGap;
-                }
-              } else {
-                // Before first sector - show dashes
-                leaderGapDisplay = '-';
-                intervalGapDisplay = '-';
-              }
-            }
-
-            // Lap times
-            const lapTimes = driver.lapTimes || [];
-            const lastLapTime = lapTimes.length > 0 ? lapTimes[lapTimes.length - 1] : null;
-            const prevLapTime = lapTimes.length > 1 ? lapTimes[lapTimes.length - 2] : null;
-            const bestLapTime = lapTimes.length > 0 ? Math.min(...lapTimes) : null;
-
-            // Find fastest lap across all drivers
-            const allLapTimes = drivers.flatMap(d => d.lapTimes || []);
-            const fastestLapOverall = allLapTimes.length > 0 ? Math.min(...allLapTimes) : null;
-
-            // Determine last lap color: purple = fastest overall, green = improved, yellow = not improved
-            let lastLapClass = '';
-            if (lastLapTime !== null) {
-              if (fastestLapOverall !== null && lastLapTime === fastestLapOverall) {
-                lastLapClass = 'lap-fastest';
-              } else if (prevLapTime !== null && lastLapTime < prevLapTime) {
-                lastLapClass = 'lap-improved';
-              } else {
-                lastLapClass = 'lap-slower';
-              }
-            }
-
-            // Determine best lap color: purple if it's the overall fastest
-            let bestLapClass = '';
-            if (bestLapTime !== null && fastestLapOverall !== null && bestLapTime === fastestLapOverall) {
-              bestLapClass = 'lap-fastest';
-            }
-
-            // Calculate tire stint data for hover card
-            const pitStops = driver.pitStops || [];
-            const stintData = (() => {
-              const stints: Array<{
-                compound: TireCompound;
-                startLap: number;
-                endLap: number | null;
-                avgPace: number | null;
-                laps: number[];
-              }> = [];
-
-              // First stint starts at lap 0 with starting compound
-              let currentStintStart = 0;
-              let currentCompound = driver.usedCompounds?.[0] || 'medium';
-
-              for (let i = 0; i < pitStops.length; i++) {
-                const stop = pitStops[i];
-                const stintLaps = driver.lapTimes.slice(currentStintStart, stop.lap);
-                stints.push({
-                  compound: stop.tiresBefore,
-                  startLap: currentStintStart + 1,
-                  endLap: stop.lap,
-                  avgPace: stintLaps.length > 0 ? stintLaps.reduce((a, b) => a + b, 0) / stintLaps.length : null,
-                  laps: stintLaps,
-                });
-                currentStintStart = stop.lap;
-                currentCompound = stop.tiresAfter;
-              }
-
-              // Current/final stint
-              const currentStintLaps = driver.lapTimes.slice(currentStintStart);
-              stints.push({
-                compound: currentCompound,
-                startLap: currentStintStart + 1,
-                endLap: isFinished ? driver.currentLap : null,
-                avgPace: currentStintLaps.length > 0 ? currentStintLaps.reduce((a, b) => a + b, 0) / currentStintLaps.length : null,
-                laps: currentStintLaps,
-              });
-
-              return stints;
-            })();
-
-            return (
-              <div
-                key={driver.id}
-                className={`leaderboard-row ${isFinished ? 'finished' : ''} ${isDNF ? 'dnf' : ''} ${isPitting ? 'pitting' : ''}`}
-              >
-                <span className="leaderboard-pos">
-                  {isFinished ? `#${finishPos + 1}` : isDNF ? 'DNF' : `${index + 1}`}
-                </span>
-                <span
-                  className="leaderboard-badge"
-                  data-slot={driver.driverSlot || 1}
-                  style={{
-                    '--team-color': driver.color,
-                    '--team-accent': driver.accentColor || '#fff',
-                  } as React.CSSProperties}
-                >
-                  {driver.emoji}
-                </span>
-                <span
-                  className={`leaderboard-name clickable ${expandedDriverId === driver.id ? 'expanded' : ''}`}
-                  style={{ color: isDNF ? '#666' : driver.color }}
-                  onClick={(e) => {
-                    if (expandedDriverId === driver.id) {
-                      setExpandedDriverId(null);
-                      setDropdownPosition(null);
-                    } else {
-                      const rect = e.currentTarget.getBoundingClientRect();
-                      setExpandedDriverId(driver.id);
-                      setDropdownPosition({ top: rect.bottom + 4, left: rect.left });
-                    }
-                  }}
-                >
-                  {driver.name}
-                </span>
-                {/* Driver Stats Dropdown - click to open, mouseout to close */}
-                {expandedDriverId === driver.id && dropdownPosition && (
-                  <div
-                    className="driver-dropdown"
-                    style={{ top: dropdownPosition.top, left: dropdownPosition.left }}
-                    onMouseLeave={() => { setExpandedDriverId(null); setDropdownPosition(null); }}
-                  >
-                    <div className="driver-dropdown-ratings">
-                      <div className="dropdown-rating-item">
-                        <span className="dropdown-rating-label">Driver</span>
-                        <span
-                          className="dropdown-rating-value"
-                          style={{ color: getOverallRatingColor(calculateDriverRating(driver)) }}
-                        >
-                          {calculateDriverRating(driver)}
-                        </span>
-                      </div>
-                      {driver.carStats && (
-                        <div className="dropdown-rating-item">
-                          <span className="dropdown-rating-label">Car</span>
-                          <span
-                            className="dropdown-rating-value"
-                            style={{ color: getOverallRatingColor(calculateCarRating(driver)) }}
-                          >
-                            {calculateCarRating(driver)}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                    {/* Tags section with hover tooltips */}
-                    <div className="driver-dropdown-tags">
-                      {driver.driverTag && (
-                        <div
-                          className="dropdown-tag"
-                          onMouseEnter={(e) => {
-                            const rect = e.currentTarget.getBoundingClientRect();
-                            setHoveredTagId(`${driver.id}-driver`);
-                            setTagTooltipPosition({ top: rect.top, left: rect.right + 8 });
-                          }}
-                          onMouseLeave={() => { setHoveredTagId(null); setTagTooltipPosition(null); }}
-                        >
-                          <span className="tag-emoji">{driver.driverTag.emoji}</span>
-                          <span className="tag-name">{driver.driverTag.name}</span>
-                          <span className="tag-type">Driver</span>
-                        </div>
-                      )}
-                      {driver.carTag && (
-                        <div
-                          className="dropdown-tag"
-                          onMouseEnter={(e) => {
-                            const rect = e.currentTarget.getBoundingClientRect();
-                            setHoveredTagId(`${driver.id}-car`);
-                            setTagTooltipPosition({ top: rect.top, left: rect.right + 8 });
-                          }}
-                          onMouseLeave={() => { setHoveredTagId(null); setTagTooltipPosition(null); }}
-                        >
-                          <span className="tag-emoji">{driver.carTag.emoji}</span>
-                          <span className="tag-name">{driver.carTag.name}</span>
-                          <span className="tag-type">Car</span>
-                        </div>
-                      )}
-                      {driver.teamTag && (
-                        <div
-                          className="dropdown-tag"
-                          onMouseEnter={(e) => {
-                            const rect = e.currentTarget.getBoundingClientRect();
-                            setHoveredTagId(`${driver.id}-team`);
-                            setTagTooltipPosition({ top: rect.top, left: rect.right + 8 });
-                          }}
-                          onMouseLeave={() => { setHoveredTagId(null); setTagTooltipPosition(null); }}
-                        >
-                          <span className="tag-emoji">{driver.teamTag.emoji}</span>
-                          <span className="tag-name">{driver.teamTag.name}</span>
-                          <span className="tag-type">Team</span>
-                        </div>
-                      )}
-                      {!driver.driverTag && !driver.carTag && !driver.teamTag && (
-                        <span className="no-tags">No active tags</span>
-                      )}
-                    </div>
-                    {/* Tag tooltip - rendered with fixed position */}
-                    {hoveredTagId && tagTooltipPosition && (
-                      <div
-                        className="tag-tooltip"
-                        style={{ top: tagTooltipPosition.top, left: tagTooltipPosition.left }}
-                      >
-                        {hoveredTagId === `${driver.id}-driver` && driver.driverTag && (
-                          <>
-                            <div className="tag-tooltip-header">{driver.driverTag.emoji} {driver.driverTag.name}</div>
-                            <div className="tag-tooltip-desc">{driver.driverTag.description}</div>
-                            <div className="tag-tooltip-trigger">Trigger: {driver.driverTag.trigger}</div>
-                          </>
-                        )}
-                        {hoveredTagId === `${driver.id}-car` && driver.carTag && (
-                          <>
-                            <div className="tag-tooltip-header">{driver.carTag.emoji} {driver.carTag.name}</div>
-                            <div className="tag-tooltip-desc">{driver.carTag.description}</div>
-                            <div className="tag-tooltip-trigger">Trigger: {driver.carTag.trigger}</div>
-                          </>
-                        )}
-                        {hoveredTagId === `${driver.id}-team` && driver.teamTag && (
-                          <>
-                            <div className="tag-tooltip-header">{driver.teamTag.emoji} {driver.teamTag.name}</div>
-                            <div className="tag-tooltip-desc">{driver.teamTag.description}</div>
-                            <div className="tag-tooltip-trigger">Trigger: {driver.teamTag.trigger}</div>
-                          </>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
-                <span className="leaderboard-leader">
-                  {leaderGapDisplay}
-                </span>
-                <span className="leaderboard-gap">
-                  {intervalGapDisplay}
-                </span>
-                <span className={`leaderboard-lap-time ${lastLapClass}`}>
-                  {lastLapTime !== null ? ticksToShortTime(lastLapTime) : '-'}
-                </span>
-                <span className={`leaderboard-best-time ${bestLapClass}`}>
-                  {bestLapTime !== null ? ticksToShortTime(bestLapTime) : '-'}
-                </span>
-                <span
-                  className="leaderboard-tires hoverable"
-                  onMouseEnter={() => setHoveredTireDriverId(driver.id)}
-                  onMouseLeave={() => setHoveredTireDriverId(null)}
-                >
-                  {/* Show tire dots in chronological order: used compounds first, then empty slots */}
-                  {(() => {
-                    const usedCompounds = driver.usedCompounds || [];
-                    const allCompounds: TireCompound[] = ['soft', 'medium', 'hard'];
-                    const unusedCompounds = allCompounds.filter(c => !usedCompounds.includes(c));
-                    // Total 3 slots: filled ones first (in order used), then empty slots for remaining
-                    const slots: Array<{ compound: TireCompound; used: boolean }> = [
-                      ...usedCompounds.map(c => ({ compound: c, used: true })),
-                      ...unusedCompounds.slice(0, 3 - usedCompounds.length).map(c => ({ compound: c, used: false })),
-                    ];
-                    return slots.map((slot, idx) => {
-                      const isCurrent = tireCompound === slot.compound && slot.used;
+              {/* Betting summary overlay */}
+              {activeBets && activeBets.length > 0 && (
+                <div className="track-betting-summary">
+                  <span className="betting-label">Your Bets</span>
+                  <div className="betting-chips">
+                    {activeBets.map(bet => {
+                      const driver = drivers.find(d => d.id === bet.driverId);
+                      const status = getBetStatus(bet, driver, sortedDrivers, raceState.raceFinished);
+                      const potentialWin = Math.floor(bet.amount * bet.odds);
+                      const driverCode = driver ? getDriverCode(driver.name) : '???';
                       return (
                         <span
-                          key={idx}
-                          className={`tire-dot ${slot.used ? 'used' : ''} ${isCurrent ? 'current' : ''}`}
-                          style={{
-                            background: slot.used ? TIRE_COLORS[slot.compound] : 'transparent',
-                            borderColor: slot.used ? TIRE_COLORS[slot.compound] : '#444',
-                          }}
-                        />
-                      );
-                    });
-                  })()}
-                  {/* Tire Stint Hover Card */}
-                  {hoveredTireDriverId === driver.id && (
-                    <div className="hover-card tire-hover-card">
-                      <div className="hover-card-header">
-                        <span>Tire Strategy</span>
-                        <span className="tire-wear-badge">
-                          {driver.tireState.wear.toFixed(0)}% worn
+                          key={bet.id}
+                          className={`bet-chip bet-chip-${status}`}
+                          style={{ '--chip-color': driver?.color } as React.CSSProperties}
+                          title={`${bet.type} bet on ${driver?.name} - Win ${potentialWin}ṁ`}
+                        >
+                          <span className="bet-chip-marble" style={{ background: driver?.color }}>{driver?.emoji}</span>
+                          <span className="bet-chip-code">{driverCode}</span>
+                          <span className="bet-chip-type">{BET_TYPE_LABELS[bet.type] || bet.type.toUpperCase()}</span>
+                          <span className="bet-chip-payout">+{potentialWin}ṁ</span>
+                          {status === 'dnf' && <span className="bet-chip-dnf-overlay">DNF</span>}
                         </span>
-                      </div>
-                      <div className="stint-list">
-                        {stintData.map((stint, idx) => (
-                          <div key={idx} className="stint-row">
-                            <div
-                              className="stint-compound-dot"
-                              style={{ background: TIRE_COLORS[stint.compound] }}
-                            />
-                            <span className="stint-compound-name">
-                              {stint.compound.charAt(0).toUpperCase() + stint.compound.slice(1)}
-                            </span>
-                            <span className="stint-laps">
-                              L{stint.startLap}{stint.endLap ? `-${stint.endLap}` : '+'}
-                            </span>
-                            <span className="stint-pace">
-                              {stint.avgPace !== null ? ticksToShortTime(stint.avgPace) : '-'}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                      {pitStops.length > 0 && (
-                        <div className="pit-stop-summary">
-                          {pitStops.length} pit stop{pitStops.length > 1 ? 's' : ''}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </span>
-                {/* Status column - shows active effects or DNF reason */}
-                <span className="leaderboard-status">
-                  {(() => {
-                    // Check for active status effect on this driver (persists longer)
-                    const activeStatus = statusEffects.find(e => e.driverId === driver.id);
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </section>
+          </>
+        )}
 
-                    // For DNF drivers, show what caused it
-                    if (isDNF && driver.dnfInfo) {
-                      const dnfEmoji = driver.dnfInfo.reason === 'tire_failure' ? '💨'
-                        : driver.dnfInfo.reason === 'mechanical' ? '⚙️'
-                        : '💥';
-                      return <span className="status-icon status-icon-dnf">{dnfEmoji}</span>;
-                    }
+        {/* DETAIL VIEW: Full timing tower, track, then events - all scroll as one */}
+        {activeView === 'detail' && (
+          <>
+            {/* Full Timing Tower */}
+            <section className="dashboard-section timing-section">
+              <TimingTower
+                drivers={sortedDrivers}
+                columns={DETAIL_COLUMNS}
+                raceState={raceState}
+                totalLaps={totalLaps}
+                lapLength={trackLength}
+                activeBets={activeBets}
+                focusedDriverIds={focusedDriverIds}
+                onDriverClick={toggleDriverFocus}
+                condensed={false}
+                statusEffects={statusEffectsMap}
+                positionDeltas={positionDeltasForTower}
+                fastestLapOverall={fastestLapOverall ?? undefined}
+                className="timing-tower-detail"
+              />
+            </section>
 
-                    // Show active status effect emoji (the actual track event emoji)
-                    if (activeStatus) {
-                      return <span className="status-icon">{activeStatus.emoji}</span>;
-                    }
+            {/* Track Map */}
+            <section className="dashboard-section track-section">
+              <TrackMap
+                trackPath={trackPath}
+                pitLanePath={pitLanePath}
+                trackLength={trackLength}
+                drivers={drivers}
+                focusedDriverIds={
+                  focusedDriverIds.size > 0
+                    ? Array.from(focusedDriverIds)
+                    : (activeBets?.map(b => b.driverId) || [])
+                }
+                highlightedDriverIds={activeBets?.map(b => b.driverId) || []}
+                unsafetyCarActive={raceState.unsafetyCarActive}
+                unsafetyCarPosition={raceState.unsafetyCarPosition}
+              />
 
-                    return null;
-                  })()}
-                </span>
-                {/* Marble Mode bet indicator */}
-                {activeBets && activeBets.length > 0 && (() => {
-                  const betStatus = calculateLiveBetStatus(driver.id, index + 1, activeBets, isDNF);
-                  if (betStatus.status === 'none') return null;
+              {/* Betting summary overlay */}
+              {activeBets && activeBets.length > 0 && (
+                <div className="track-betting-summary">
+                  <span className="betting-label">Your Bets</span>
+                  <div className="betting-chips">
+                    {activeBets.map(bet => {
+                      const driver = drivers.find(d => d.id === bet.driverId);
+                      const status = getBetStatus(bet, driver, sortedDrivers, raceState.raceFinished);
+                      const potentialWin = Math.floor(bet.amount * bet.odds);
+                      const driverCode = driver ? getDriverCode(driver.name) : '???';
+                      return (
+                        <span
+                          key={bet.id}
+                          className={`bet-chip bet-chip-${status}`}
+                          style={{ '--chip-color': driver?.color } as React.CSSProperties}
+                          title={`${bet.type} bet on ${driver?.name} - Win ${potentialWin}ṁ`}
+                        >
+                          <span className="bet-chip-marble" style={{ background: driver?.color }}>{driver?.emoji}</span>
+                          <span className="bet-chip-code">{driverCode}</span>
+                          <span className="bet-chip-type">{BET_TYPE_LABELS[bet.type] || bet.type.toUpperCase()}</span>
+                          <span className="bet-chip-payout">+{potentialWin}ṁ</span>
+                          {status === 'dnf' && <span className="bet-chip-dnf-overlay">DNF</span>}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </section>
 
-                  // Get short labels for bet types
-                  const getBetLabel = (type: string) => {
-                    switch (type) {
-                      case 'win': return 'WIN';
-                      case 'podium': return 'PODIUM';
-                      case 'points': return 'POINTS';
-                      case 'finishes': return 'FINISH';
-                      case 'dnf': return 'DNF';
-                      default: return '';
-                    }
-                  };
-
-                  // Show each bet's type and status
-                  return (
-                    <span className={`leaderboard-bet-indicator ${betStatus.status}`}>
-                      <span className="bet-types-label">
-                        {betStatus.bets.map((b, i) => (
-                          <span key={i} className={`bet-type-tag ${b.isWinning ? 'winning' : 'losing'}`}>
-                            {getBetLabel(b.type)}
-                          </span>
-                        ))}
-                      </span>
-                      <span className="bet-amount">
-                        {betStatus.status === 'winning' ? '+' : ''}{betStatus.totalPotential}ṁ
-                      </span>
-                    </span>
-                  );
-                })()}
+            {/* Live Events Feed */}
+            <section className="dashboard-section events-section">
+              <div className="events-header">
+                <span className="events-label">Live Feed</span>
+                <span className="events-count">{notifications.length}</span>
               </div>
-            );
-          })}
-        </div>
-
-        {/* Dynamic Track */}
-        <div className="oval-track-container">
-          <svg viewBox="0 0 600 360" className="oval-track-svg">
-          {/* Track path - outer stroke (wider for more lanes) */}
-          <path
-            d={trackPath}
-            fill="none"
-            stroke={theme.trackColor}
-            strokeWidth="90"
-            className="track-outer"
-          />
-          {/* Track path - inner surface */}
-          <path
-            ref={trackPathRef}
-            d={trackPath}
-            fill="none"
-            stroke={theme.bg.includes('#') ? theme.trackColor : '#1a1520'}
-            strokeWidth="82"
-            opacity="0.7"
-            className="track-surface"
-          />
-          {/* Track center line (racing line) */}
-          <path
-            d={trackPath}
-            fill="none"
-            stroke="rgba(255,255,255,0.08)"
-            strokeWidth="2"
-            strokeDasharray="8 8"
-            className="track-centerline"
-          />
-
-          {/* Start/Finish line - checkered pattern */}
-          {pathsReady && trackPathRef.current && (() => {
-            const startPoint = getPointAlongPath(trackPathRef.current, 0);
-            const checkSize = 4;
-            const rows = 3;
-            const cols = 5;
-            const totalWidth = cols * checkSize;
-            const totalHeight = rows * checkSize;
-            return (
-              <g className="start-finish-line">
-                {/* Background for checkered pattern */}
-                <rect
-                  x={startPoint.x - totalWidth / 2}
-                  y={startPoint.y - totalHeight / 2}
-                  width={totalWidth}
-                  height={totalHeight}
-                  fill="#1a1520"
-                  stroke={theme.accent}
-                  strokeWidth="1"
-                  rx="2"
-                />
-                {/* Checkered pattern */}
-                {Array.from({ length: rows }).map((_, row) =>
-                  Array.from({ length: cols }).map((_, col) => {
-                    const isBlack = (row + col) % 2 === 0;
-                    return (
-                      <rect
-                        key={`check-${row}-${col}`}
-                        x={startPoint.x - totalWidth / 2 + col * checkSize}
-                        y={startPoint.y - totalHeight / 2 + row * checkSize}
-                        width={checkSize}
-                        height={checkSize}
-                        fill={isBlack ? '#1a1520' : '#ffffff'}
-                      />
-                    );
-                  })
-                )}
-                {/* Border around checkered pattern */}
-                <rect
-                  x={startPoint.x - totalWidth / 2}
-                  y={startPoint.y - totalHeight / 2}
-                  width={totalWidth}
-                  height={totalHeight}
-                  fill="none"
-                  stroke={theme.accent}
-                  strokeWidth="1.5"
-                  rx="2"
-                />
-                <text
-                  x={startPoint.x}
-                  y={startPoint.y - 14}
-                  textAnchor="middle"
-                  className="track-label start-finish-label"
-                  fill="#ffffff"
-                >
-                  START/FINISH
-                </text>
-              </g>
-            );
-          })()}
-
-
-          {/* Pit Lane - path from entry to exit with different colored border */}
-          {pathsReady && pitMarkers.path && (
-            <g className="pit-lane">
-              {/* Pit lane outer border */}
-              <path
-                d={pitMarkers.path}
-                fill="none"
-                stroke="#f1c40f"
-                strokeWidth="22"
-                opacity="0.4"
-                strokeLinecap="round"
-              />
-              {/* Pit lane inner surface */}
-              <path
-                ref={pitPathRef}
-                d={pitMarkers.path}
-                fill="none"
-                stroke={theme.trackColor}
-                strokeWidth="18"
-                opacity="0.8"
-                strokeLinecap="round"
-              />
-              {/* PIT label in center of pit lane */}
-              {(() => {
-                const midX = (pitMarkers.entry.x + pitMarkers.exit.x) / 2;
-                const midY = (pitMarkers.entry.y + pitMarkers.exit.y) / 2;
-                const cx = midX * 0.4 + 300 * 0.6;
-                const cy = midY * 0.4 + 150 * 0.6;
-                return (
-                  <text
-                    x={cx}
-                    y={cy + 4}
-                    textAnchor="middle"
-                    className="pit-label"
-                    fill="#f1c40f"
-                    opacity="0.7"
-                  >
-                    PIT
-                  </text>
-                );
-              })()}
-            </g>
-          )}
-
-          {/* Pit Entry/Exit markers on track - simple yellow dots */}
-          {pathsReady && (
-            <g className="pit-markers">
-              <circle
-                cx={pitMarkers.entry.x}
-                cy={pitMarkers.entry.y}
-                r="6"
-                fill="#f1c40f"
-                opacity="0.8"
-              />
-              <circle
-                cx={pitMarkers.exit.x}
-                cy={pitMarkers.exit.y}
-                r="6"
-                fill="#f1c40f"
-                opacity="0.8"
-              />
-            </g>
-          )}
-
-
-          {/* Driver positions - Racing drivers on track */}
-          {driverPositions.map(({ driver, x, y }) => {
-            const rank = getPositionRank(driver.id);
-            const isTop3 = rank !== null;
-            const hasPowerEffect = activePowerEffect && (
-              activePowerEffect.targetKingdomId === driver.kingdomId ||
-              (activePowerEffect.category === 'god' && activePowerEffect.targetKingdomId === null)
-            );
-            const powerCategory = hasPowerEffect ? activePowerEffect?.category : null;
-            const trackEffect = trackEventEffects.find(e => e.driverId === driver.id);
-
-            return (
-              <g
-                key={driver.id}
-                className={`driver-marker ${isTop3 ? 'top3' : ''} ${hasPowerEffect ? `power-effect power-${powerCategory}` : ''}`}
-                transform={`translate(${x}, ${y})`}
-              >
-                {/* Power effect glow ring */}
-                {hasPowerEffect && (
-                  <>
-                    <circle
-                      cx={0}
-                      cy={0}
-                      r="22"
-                      className={`power-glow power-glow-${powerCategory}`}
-                      fill="none"
-                      strokeWidth="4"
-                    />
-                    <circle
-                      cx={0}
-                      cy={0}
-                      r="18"
-                      className={`power-glow-inner power-glow-inner-${powerCategory}`}
-                      fill="none"
-                      strokeWidth="2"
-                    />
-                  </>
-                )}
-                {/* Position ring for top 3 (gold/silver/bronze) */}
-                {isTop3 && (
-                  <circle
-                    cx={0}
-                    cy={0}
-                    r="14"
-                    className={`position-ring position-ring-${rank}`}
-                    fill="none"
-                    strokeWidth="3"
-                  />
-                )}
-                {/* Driver badge circle - slot-based styling */}
-                <circle
-                  cx={0}
-                  cy={0}
-                  r={10}
-                  className={`driver-badge-circle ${hasPowerEffect ? 'power-pulse' : ''}`}
-                  fill={driver.color}
-                  stroke={driver.accentColor || '#fff'}
-                  strokeWidth={3}
-                />
-                <text
-                  x={0}
-                  y={0}
-                  textAnchor="middle"
-                  dominantBaseline="middle"
-                  className={`driver-emoji-track ${hasPowerEffect ? 'power-pulse' : ''}`}
-                  style={{ fontSize: '10px' }}
-                >
-                  {driver.emoji}
-                </text>
-                {/* Track event effect pop-up - matches crash style */}
-                {trackEffect && (
-                  <g className={`track-event-popup track-event-${trackEffect.impact}`}>
-                    {/* Expanding rings - same size as crash rings */}
-                    <circle
-                      cx={0}
-                      cy={0}
-                      r="15"
-                      className={`track-event-ring track-event-ring-${trackEffect.impact} track-event-ring-1`}
-                    />
-                    <circle
-                      cx={0}
-                      cy={0}
-                      r="15"
-                      className={`track-event-ring track-event-ring-${trackEffect.impact} track-event-ring-2`}
-                    />
-                    <circle
-                      cx={0}
-                      cy={0}
-                      r="15"
-                      className={`track-event-ring track-event-ring-${trackEffect.impact} track-event-ring-3`}
-                    />
-                    {/* Center flash - same as crash */}
-                    <circle
-                      cx={0}
-                      cy={0}
-                      r="8"
-                      className={`track-event-flash track-event-flash-${trackEffect.impact}`}
-                    />
-                    {/* Event emoji - pops up above driver and fades */}
-                    <text
-                      x={0}
-                      y={-20}
-                      textAnchor="middle"
-                      dominantBaseline="middle"
-                      className="track-event-emoji"
+              <div className="events-list">
+                {notifications.length > 0 ? (
+                  notifications.slice(0, 10).map((notification) => (
+                    <div
+                      key={notification.id}
+                      className={`event-card event-${notification.type}`}
+                      style={notification.color ? { '--event-color': notification.color } as React.CSSProperties : undefined}
                     >
-                      {trackEffect.emoji}
-                    </text>
-                  </g>
+                      <span className="event-emoji">{notification.emoji}</span>
+                      <div className="event-content">
+                        <span className="event-title">{notification.title}</span>
+                        {notification.message && <span className="event-message">{notification.message}</span>}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="events-empty">
+                    <span className="events-empty-icon">📡</span>
+                    <span className="events-empty-text">Awaiting race action...</span>
+                  </div>
                 )}
-              </g>
-            );
-          })}
+              </div>
+            </section>
+          </>
+        )}
 
-          {/* Pitting drivers - on pit lane path */}
-          {pitPositions.map(({ driver, x, y, progress }) => {
-            const rank = getPositionRank(driver.id);
-            const isTop3 = rank !== null;
-            // Progress bar color: red for slow stop, green for quick stop, yellow for normal
-            const progressColor = driver.currentPitIsSlowStop
-              ? '#e74c3c'  // Red for slow stop
-              : driver.currentPitIsQuickStop
-                ? '#2ecc71'  // Green for quick stop
-                : '#f1c40f'; // Yellow for normal
-            return (
-            <g key={driver.id} className={`driver-marker pitting ${isTop3 ? 'top3' : ''}`}>
-              {/* Position ring for top 3 (gold/silver/bronze) */}
-              {isTop3 && (
-                <circle
-                  cx={x}
-                  cy={y}
-                  r="14"
-                  className={`position-ring position-ring-${rank}`}
-                  fill="none"
-                  strokeWidth="3"
-                  opacity={0.7}
-                />
-              )}
-              {/* Driver badge circle - slot-based styling */}
-              <circle
-                cx={x}
-                cy={y}
-                r={10}
-                className="driver-badge-circle"
-                fill={driver.color}
-                stroke={driver.accentColor || '#fff'}
-                strokeWidth={3}
-                opacity={0.7}
-              />
-              <text
-                x={x}
-                y={y}
-                textAnchor="middle"
-                dominantBaseline="middle"
-                className="driver-emoji-track"
-                style={{ fontSize: '9px' }}
-              >
-                {driver.emoji}
-              </text>
-              {/* Pit stop progress indicator */}
-              <rect
-                x={x - 12}
-                y={y + 12}
-                width={24}
-                height={5}
-                fill="#2a2a3a"
-                rx="2"
-              />
-              <rect
-                x={x - 12}
-                y={y + 12}
-                width={24 * progress}
-                height={5}
-                fill={progressColor}
-                rx="2"
-              />
-            </g>
-            );
-          })}
-
-          {/* DNF drivers - crashed/blown out position, faded */}
-          {dnfPositions.map(({ driver, x, y }) => {
-            const dnfEmoji = driver.dnfInfo?.reason === 'tire_failure' ? '💨'
-              : driver.dnfInfo?.reason === 'mechanical' ? '⚙️'
-              : '💥';
-            return (
-              <g key={driver.id} className="driver-marker dnf">
-                {/* Driver badge circle - slot-based styling, faded */}
-                <circle
-                  cx={x}
-                  cy={y}
-                  r={10}
-                  className="driver-badge-circle"
-                  fill={driver.color}
-                  stroke={driver.accentColor || '#fff'}
-                  strokeWidth={3}
-                  opacity={0.3}
-                />
-                <text
-                  x={x}
-                  y={y}
-                  textAnchor="middle"
-                  dominantBaseline="middle"
-                  className="driver-emoji-track dnf"
-                  style={{ fontSize: '9px', opacity: 0.4 }}
-                >
-                  {driver.emoji}
-                </text>
-                {/* DNF indicator - different for blowout, mechanical, crash */}
-                <text
-                  x={x}
-                  y={y - 12}
-                  textAnchor="middle"
-                  style={{ fontSize: '10px' }}
-                >
-                  {dnfEmoji}
-                </text>
-              </g>
-            );
-          })}
-
-          {/* The Unsafety Car - emerges from The Void during pileups */}
-          {unsafetyCarPosition && (
-            <g className="unsafety-car" transform={`translate(${unsafetyCarPosition.x}, ${unsafetyCarPosition.y})`}>
-              {/* Ominous pulsing void ring */}
-              <circle
-                cx={0}
-                cy={0}
-                r="18"
-                className="unsafety-car-pulse"
-                fill="none"
-                stroke="#1a1a2e"
-                strokeWidth="3"
-              />
-              {/* White background circle */}
-              <circle
-                cx={0}
-                cy={0}
-                r={14}
-                fill="#ffffff"
-                stroke="#1a1a2e"
-                strokeWidth={3}
-              />
-              {/* The Void emoji */}
-              <text
-                x={0}
-                y={1}
-                textAnchor="middle"
-                dominantBaseline="middle"
-                style={{ fontSize: '14px' }}
-              >
-                🕳️
-              </text>
-              {/* "USC" indicator above */}
-              <text
-                x={0}
-                y={-22}
-                textAnchor="middle"
-                dominantBaseline="middle"
-                className="unsafety-car-label"
-                style={{ fontSize: '9px', fontWeight: 'bold', fill: '#8b0000' }}
-              >
-                USC
-              </text>
-            </g>
-          )}
-
-          {/* Crash/blowout highlight effects on track */}
-          {crashPositions.map((pos) => (
-            <g key={`crash-${pos.tick}`} className={`crash-highlight ${pos.type === 'blowout' ? 'blowout' : ''}`}>
-              {pos.type === 'crash' ? (
-                <>
-                  {/* Crash: Expanding shockwave rings */}
-                  <circle
-                    cx={pos.x}
-                    cy={pos.y}
-                    r="15"
-                    fill="none"
-                    stroke="#e74c3c"
-                    strokeWidth="3"
-                    className="crash-ring crash-ring-1"
-                  />
-                  <circle
-                    cx={pos.x}
-                    cy={pos.y}
-                    r="15"
-                    fill="none"
-                    stroke="#f39c12"
-                    strokeWidth="2"
-                    className="crash-ring crash-ring-2"
-                  />
-                  <circle
-                    cx={pos.x}
-                    cy={pos.y}
-                    r="15"
-                    fill="none"
-                    stroke="#e74c3c"
-                    strokeWidth="1"
-                    className="crash-ring crash-ring-3"
-                  />
-                  {/* Central flash */}
-                  <circle
-                    cx={pos.x}
-                    cy={pos.y}
-                    r="8"
-                    fill="#e74c3c"
-                    className="crash-flash"
-                  />
-                  {/* Explosion emoji */}
-                  <text
-                    x={pos.x}
-                    y={pos.y + 5}
-                    textAnchor="middle"
-                    dominantBaseline="middle"
-                    className="crash-emoji"
-                  >
-                    💥
-                  </text>
-                </>
-              ) : (
-                <>
-                  {/* Blowout: Smoke/debris effect */}
-                  <circle
-                    cx={pos.x}
-                    cy={pos.y}
-                    r="12"
-                    fill="none"
-                    stroke="#666"
-                    strokeWidth="3"
-                    className="blowout-ring blowout-ring-1"
-                  />
-                  <circle
-                    cx={pos.x}
-                    cy={pos.y}
-                    r="12"
-                    fill="none"
-                    stroke="#888"
-                    strokeWidth="2"
-                    className="blowout-ring blowout-ring-2"
-                  />
-                  {/* Tire debris indicator */}
-                  <circle
-                    cx={pos.x}
-                    cy={pos.y}
-                    r="6"
-                    fill="#333"
-                    className="blowout-center"
-                  />
-                  {/* Smoke puff emoji */}
-                  <text
-                    x={pos.x}
-                    y={pos.y + 5}
-                    textAnchor="middle"
-                    dominantBaseline="middle"
-                    className="blowout-emoji"
-                  >
-                    💨
-                  </text>
-                </>
-              )}
-            </g>
-          ))}
-        </svg>
-
-        </div>
+        {/* STANDINGS VIEW: Points tables and bet status */}
+        {activeView === 'standings' && (
+          <section className="dashboard-section standings-section">
+            <div className="standings-placeholder">
+              <span className="standings-icon">🏆</span>
+              <span className="standings-text">Standings coming soon</span>
+            </div>
+          </section>
+        )}
       </div>
 
       {/* Race Finished Modal Overlay */}

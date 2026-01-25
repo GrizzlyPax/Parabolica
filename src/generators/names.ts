@@ -1,4 +1,6 @@
 // Name generation pools - absurdist Blaseball-inspired names
+// TODO: Consider filtering surnames that produce unfortunate 3-letter codes (e.g., "Associates" -> "ASS")
+//       Could add a blocklist or swap first 3 chars for problematic surnames
 
 export const FIRST_NAMES = [
   // Common mundane names (heavily weighted for balance)

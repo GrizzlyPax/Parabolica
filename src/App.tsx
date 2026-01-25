@@ -597,22 +597,6 @@ function App() {
           />
         )}
 
-        <div className="watch-controls">
-          <button className="back-btn" onClick={handleBackToMainMenu}>← Menu</button>
-          {viewToggle}
-          <div className="race-controls">
-            <button onClick={handleStart} disabled={isRunning || raceState.raceFinished} className="control-btn start">
-              Start
-            </button>
-            <button onClick={handleStop} disabled={!isRunning} className="control-btn stop">
-              Stop
-            </button>
-            <button onClick={handleReset} className="control-btn reset">
-              Reset
-            </button>
-            {speedControl}
-          </div>
-        </div>
         <WatchMode
           drivers={drivers}
           config={config}
@@ -621,6 +605,13 @@ function App() {
           onNextRace={handleNextRace}
           raceEvents={raceEvents}
           activeBets={marbleModeEnabled ? marbleState.currentBets : undefined}
+          // Race controls - now handled by UniversalHeader inside WatchMode
+          isRunning={isRunning}
+          raceSpeed={raceSpeed}
+          onStart={handleStart}
+          onStop={handleStop}
+          onReset={handleReset}
+          onSpeedChange={setRaceSpeed}
         />
       </div>
     );

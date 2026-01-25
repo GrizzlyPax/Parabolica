@@ -1,0 +1,440 @@
+/* ============================================
+   UNIVERSAL HEADER - Race context bar
+   ============================================ */
+
+.universal-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: #000;
+  border-bottom: 1px solid #222;
+}
+
+/* Menu Button */
+.header-menu-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: #000;
+  border: 1px solid #333;
+  border-radius: 6px;
+  color: #ccc;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.header-menu-btn:hover {
+  background: #111;
+  border-color: #444;
+  color: #fff;
+}
+
+.header-menu-btn:active {
+  transform: scale(0.95);
+}
+
+.menu-icon {
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+/* Race Info Container */
+.header-race-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+/* Top Row: Lap + Session State */
+.header-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.lap-counter {
+  font-family: var(--font-display), var(--font-emoji);
+  font-size: 0.9rem;
+  color: #aaa;
+}
+
+.lap-counter strong {
+  font-size: 1.1rem;
+  color: #fff;
+}
+
+/* Session State Indicator */
+.session-state {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--font-display), var(--font-emoji);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--state-color, #888);
+}
+
+.state-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--state-color, #888);
+  box-shadow: 0 0 6px var(--state-color, #888);
+}
+
+/* Racing state: pulsing dot */
+.session-state.state-racing .state-dot {
+  animation: state-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes state-pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 6px var(--state-color); }
+  50% { opacity: 0.6; box-shadow: 0 0 12px var(--state-color); }
+}
+
+/* Final lap: flash */
+.session-state.state-final-lap .state-dot {
+  animation: state-flash 0.5s ease-in-out infinite;
+}
+
+@keyframes state-flash {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* Finished: checkered pattern */
+.session-state.state-finished .state-dot {
+  background: repeating-conic-gradient(
+    #fff 0deg 90deg,
+    #222 90deg 180deg
+  );
+  box-shadow: none;
+}
+
+/* Focus Chip - Shows focused driver */
+.focus-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.5rem;
+  background: rgba(var(--chip-color-rgb, 100, 100, 100), 0.2);
+  border: 1px solid var(--chip-color, #888);
+  border-radius: 4px;
+  color: var(--chip-color, #888);
+  font-family: var(--font-display), var(--font-emoji);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.focus-chip:hover {
+  background: rgba(var(--chip-color-rgb, 100, 100, 100), 0.3);
+  transform: scale(1.02);
+}
+
+.focus-chip-icon {
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+.focus-chip-code {
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.focus-chip-pos {
+  opacity: 0.7;
+  font-size: 0.7rem;
+}
+
+.focus-chip-clear {
+  font-size: 0.65rem;
+  opacity: 0.5;
+  margin-left: 0.15rem;
+}
+
+.focus-chip:hover .focus-chip-clear {
+  opacity: 1;
+  color: #f87171;
+}
+
+/* Bottom Row: Track + Time */
+.header-bottom-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.track-name {
+  font-family: var(--font-body), var(--font-emoji);
+  font-size: 0.8rem;
+  color: #888;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.elapsed-time {
+  font-family: var(--font-mono), var(--font-emoji);
+  font-size: 0.75rem;
+  color: #666;
+  white-space: nowrap;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+/* ============================================
+   RACE CONTROLS
+   ============================================ */
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.control-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: #000;
+  border: 1px solid #333;
+  border-radius: 6px;
+  color: #ccc;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.control-btn:hover:not(:disabled) {
+  background: #111;
+  border-color: #444;
+  color: #fff;
+}
+
+.control-btn:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.control-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.control-btn.control-start {
+  color: #4ade80;
+}
+
+.control-btn.control-start:hover:not(:disabled) {
+  border-color: #4ade80;
+  box-shadow: 0 0 8px rgba(74, 222, 128, 0.3);
+}
+
+.control-btn.control-stop {
+  color: #f59e0b;
+}
+
+.control-btn.control-stop:hover {
+  border-color: #f59e0b;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.3);
+}
+
+.control-btn.control-reset {
+  font-size: 1.1rem;
+}
+
+/* Speed Control */
+.speed-control {
+  display: flex;
+  background: #000;
+  border: 1px solid #333;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.speed-btn {
+  padding: 0.4rem 0.5rem;
+  background: transparent;
+  border: none;
+  color: #888;
+  font-family: var(--font-mono), var(--font-emoji);
+  font-size: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.speed-btn:hover {
+  background: #111;
+  color: #ccc;
+}
+
+.speed-btn.active {
+  background: #1a1a1a;
+  color: #fff;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+/* Hide speed control on mobile, show compact controls */
+@media (max-width: 639px) {
+  .header-controls .speed-control {
+    display: none;
+  }
+
+  .control-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 0.9rem;
+  }
+}
+
+@media (min-width: 640px) {
+  .universal-header {
+    padding: 0.75rem 1rem;
+  }
+
+  .lap-counter {
+    font-size: 1rem;
+  }
+
+  .lap-counter strong {
+    font-size: 1.25rem;
+  }
+
+  .session-state {
+    font-size: 0.8rem;
+  }
+
+  .track-name {
+    font-size: 0.9rem;
+  }
+}
+
+/* Desktop (900px+) */
+@media (min-width: 900px) {
+  .universal-header {
+    padding: 1rem 1.5rem;
+    gap: 1rem;
+  }
+
+  .header-menu-btn {
+    width: 48px;
+    height: 48px;
+  }
+
+  .menu-icon {
+    font-size: 1.5rem;
+  }
+
+  .lap-counter {
+    font-size: 1.2rem;
+  }
+
+  .lap-counter strong {
+    font-size: 1.7rem;
+  }
+
+  .session-state {
+    font-size: 1rem;
+    gap: 0.5rem;
+  }
+
+  .state-dot {
+    width: 10px;
+    height: 10px;
+  }
+
+  .track-name {
+    font-size: 1.1rem;
+  }
+
+  .elapsed-time {
+    font-size: 0.95rem;
+  }
+
+  .control-btn {
+    width: 44px;
+    height: 44px;
+    font-size: 1.2rem;
+  }
+
+  .speed-btn {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+  }
+}
+
+/* Large desktop (1200px+) */
+@media (min-width: 1200px) {
+  .universal-header {
+    padding: 1.1rem 2rem;
+  }
+
+  .header-menu-btn {
+    width: 52px;
+    height: 52px;
+  }
+
+  .menu-icon {
+    font-size: 1.7rem;
+  }
+
+  .lap-counter {
+    font-size: 1.4rem;
+  }
+
+  .lap-counter strong {
+    font-size: 2rem;
+  }
+
+  .session-state {
+    font-size: 1.1rem;
+  }
+
+  .state-dot {
+    width: 12px;
+    height: 12px;
+  }
+
+  .track-name {
+    font-size: 1.25rem;
+  }
+
+  .elapsed-time {
+    font-size: 1.05rem;
+  }
+
+  .control-btn {
+    width: 48px;
+    height: 48px;
+    font-size: 1.3rem;
+  }
+
+  .speed-btn {
+    padding: 0.55rem 0.85rem;
+    font-size: 0.9rem;
+  }
+}

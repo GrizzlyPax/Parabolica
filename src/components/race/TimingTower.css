@@ -1,0 +1,551 @@
+/* ============================================
+   TIMING TOWER - Shared timing display
+   ============================================ */
+
+.timing-tower {
+  display: flex;
+  flex-direction: column;
+  /* No card framing by default - views control appearance */
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  /* No internal scroll - page scrolls as one */
+  overflow: visible;
+  font-family: var(--font-body), var(--font-emoji);
+}
+
+/* Lap Counter - compact */
+.timing-tower-lap {
+  display: flex;
+  align-items: baseline;
+  gap: 0.2rem;
+  padding: 0.4rem 0.5rem;
+  background: #000;
+  border-bottom: none;
+}
+
+.timing-tower-lap .lap-current {
+  font-family: var(--font-display), var(--font-emoji);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #e8e8e8;
+}
+
+.timing-tower-lap .lap-divider {
+  font-family: var(--font-display), var(--font-emoji);
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.timing-tower-lap .lap-total {
+  font-family: var(--font-display), var(--font-emoji);
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #888;
+}
+
+/* Column Headers - compact */
+.timing-tower-header {
+  display: grid;
+  padding: 0.25rem 0.4rem;
+  background: #000;
+  border-bottom: none;
+  font-family: var(--font-display), var(--font-emoji);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #666;
+  gap: 0.25rem;
+}
+
+.timing-header-cell {
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* Body / Rows Container - NO internal scroll, page scrolls as one */
+.timing-tower-body {
+  display: flex;
+  flex-direction: column;
+  /* NO internal scrolling - parent page scrolls */
+  overflow: visible;
+  /* Improve rendering performance during reorders */
+  contain: layout style;
+}
+
+/* Driver Row - compact by default */
+.timing-row {
+  display: grid;
+  padding: 0.2rem 0.4rem;
+  background: #000;
+  border-bottom: none;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  align-items: center;
+  min-height: 28px;
+  gap: 0.25rem;
+}
+
+.timing-row:hover {
+  background: rgba(20, 20, 20, 0.8);
+}
+
+/* Focused row - strong visual priority */
+.timing-row.focused {
+  background: rgba(25, 25, 25, 0.9);
+  border-left: 4px solid var(--team-color, #888);
+  box-shadow:
+    inset 0 0 20px rgba(var(--team-color-rgb, 136, 136, 136), 0.1),
+    0 0 8px rgba(var(--team-color-rgb, 136, 136, 136), 0.15);
+  position: relative;
+  z-index: 2;
+}
+
+/* Dim non-focused rows when any row is focused */
+.timing-tower.has-focus .timing-row:not(.focused) {
+  opacity: 0.7;
+}
+
+.timing-tower.has-focus .timing-row:not(.focused):hover {
+  opacity: 0.85;
+}
+
+/* Status row styles */
+.timing-row.finished {
+  background: rgba(30, 60, 30, 0.15);
+}
+
+.timing-row.dnf {
+  background: rgba(60, 30, 30, 0.15);
+  opacity: 0.7;
+}
+
+.timing-row.pitting {
+  background: rgba(60, 50, 20, 0.2);
+  animation: pit-pulse 1s ease-in-out infinite;
+}
+
+@keyframes pit-pulse {
+  0%, 100% { background: rgba(60, 50, 20, 0.2); }
+  50% { background: rgba(80, 70, 30, 0.3); }
+}
+
+/* Row container - wraps row + expanded section */
+.timing-row-container {
+  display: flex;
+  flex-direction: column;
+  /* Isolate layout calculations to prevent affecting other rows */
+  contain: layout;
+}
+
+/* Cell styles */
+.timing-cell {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Expanded row details - shown when focused */
+.timing-row-expanded {
+  background: rgba(15, 15, 15, 0.95);
+  border-left: 4px solid var(--team-color, #888);
+  padding: 0.5rem 0.6rem 0.5rem 1rem;
+  /* Use transform-based animation to avoid layout shifts */
+  animation: expandIn 0.15s ease-out;
+  will-change: opacity, transform;
+}
+
+@keyframes expandIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.expanded-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.expanded-name {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.expanded-emoji {
+  font-size: 1.2rem;
+}
+
+.expanded-full-name {
+  font-family: var(--font-display), var(--font-emoji);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.expanded-stats {
+  display: flex;
+  gap: 1rem;
+}
+
+.expanded-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.expanded-stat .stat-label {
+  font-family: var(--font-display), var(--font-emoji);
+  font-size: 0.55rem;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.expanded-stat .stat-value {
+  font-family: var(--font-mono), var(--font-emoji);
+  font-size: 0.8rem;
+  color: #bbb;
+}
+
+.expanded-stat .tire-compound {
+  font-weight: 700;
+  padding: 0.1rem 0.4rem;
+  border-radius: 3px;
+}
+
+.expanded-stat .tire-compound[data-compound="soft"] {
+  background: rgba(231, 76, 60, 0.3);
+  color: #e74c3c;
+}
+
+.expanded-stat .tire-compound[data-compound="medium"] {
+  background: rgba(241, 196, 15, 0.3);
+  color: #f1c40f;
+}
+
+.expanded-stat .tire-compound[data-compound="hard"] {
+  background: rgba(236, 240, 241, 0.3);
+  color: #ecf0f1;
+}
+
+/* Desktop expanded row */
+@media (min-width: 900px) {
+  .expanded-emoji {
+    font-size: 1.4rem;
+  }
+
+  .expanded-full-name {
+    font-size: 1rem;
+  }
+
+  .expanded-stat .stat-label {
+    font-size: 0.6rem;
+  }
+
+  .expanded-stat .stat-value {
+    font-size: 0.9rem;
+  }
+}
+
+@media (min-width: 1200px) {
+  .expanded-emoji {
+    font-size: 1.5rem;
+  }
+
+  .expanded-full-name {
+    font-size: 1.1rem;
+  }
+
+  .expanded-stat .stat-label {
+    font-size: 0.65rem;
+  }
+
+  .expanded-stat .stat-value {
+    font-size: 0.95rem;
+  }
+}
+
+/* Position number */
+.position-number {
+  font-family: var(--font-display), var(--font-emoji);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #e8e8e8;
+}
+
+.position-number.finished {
+  color: #4ade80;
+}
+
+.position-number.dnf {
+  color: #f87171;
+  font-size: 0.7rem;
+}
+
+/* Driver code */
+.driver-code {
+  font-family: var(--font-display), var(--font-emoji);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.driver-code.focused {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Gap values */
+.gap-value {
+  font-family: var(--font-mono), var(--font-emoji);
+  font-size: var(--text-xs);
+  color: #888;
+}
+
+.gap-value.gap-leader {
+  color: #666;
+}
+
+/* Tire dots */
+.tire-dots {
+  display: flex;
+  gap: 3px;
+  justify-content: center;
+}
+
+.tire-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1.5px solid;
+  transition: transform 0.15s ease;
+}
+
+.tire-dot.current {
+  transform: scale(1.2);
+  box-shadow: 0 0 4px currentColor;
+}
+
+/* Status icon */
+.status-icon {
+  font-size: 0.85rem;
+}
+
+/* ============================================
+   TRACK VIEW - Left panel, full height
+   ============================================ */
+
+.timing-tower.timing-tower-track {
+  overflow-x: hidden;
+  background: #000;
+}
+
+.timing-tower.timing-tower-track .timing-tower-lap {
+  padding: 0.5rem 0.6rem;
+}
+
+.timing-tower.timing-tower-track .timing-tower-body {
+  /* NO internal scrolling - page scrolls as one */
+  overflow: visible;
+}
+
+/* On very narrow screens (375px portrait), hide only gap to leader */
+@media (max-width: 375px) {
+  .timing-tower.timing-tower-track .col-gapLeader {
+    display: none;
+  }
+}
+
+/* ============================================
+   DETAIL VIEW - Full screen experience
+   ============================================ */
+
+.timing-tower.timing-tower-detail {
+  /* Remove card framing for full-screen feel */
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  /* Allow horizontal scroll if needed for wide tables */
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+}
+
+.timing-tower.timing-tower-detail .timing-tower-lap {
+  background: #000;
+  border-bottom: none;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.timing-tower.timing-tower-detail .timing-tower-header {
+  background: #000;
+  position: sticky;
+  top: 48px; /* After lap counter */
+  z-index: 9;
+  min-width: 500px;
+}
+
+.timing-tower.timing-tower-detail .timing-row {
+  min-width: 500px;
+  min-height: 44px; /* Touch target */
+}
+
+/* Detail view body - no internal scroll */
+.timing-tower.timing-tower-detail .timing-tower-body {
+  /* NO internal scrolling - page scrolls as one */
+  overflow: visible;
+}
+
+/* ============================================
+   RESPONSIVE TYPOGRAPHY
+   Scale up for larger screens - keep rows compact
+   ============================================ */
+
+/* Tablet and up (640px+) */
+@media (min-width: 640px) {
+  .timing-tower-lap {
+    padding: 0.5rem 0.6rem;
+  }
+
+  .timing-tower-lap .lap-current {
+    font-size: 1.4rem;
+  }
+
+  .timing-tower-lap .lap-divider,
+  .timing-tower-lap .lap-total {
+    font-size: 1rem;
+  }
+
+  .timing-tower-header {
+    font-size: 0.65rem;
+    padding: 0.3rem 0.5rem;
+  }
+
+  .timing-row {
+    min-height: 32px;
+    padding: 0.25rem 0.5rem;
+  }
+
+  .position-number {
+    font-size: 0.9rem;
+  }
+
+  .driver-code {
+    font-size: 0.9rem;
+  }
+
+  .driver-full-name {
+    font-size: 0.85rem;
+  }
+
+  .gap-value {
+    font-size: 0.75rem;
+  }
+}
+
+/* Desktop (900px+) */
+@media (min-width: 900px) {
+  .timing-tower-lap {
+    padding: 0.6rem 0.85rem;
+  }
+
+  .timing-tower-lap .lap-current {
+    font-size: 2rem;
+  }
+
+  .timing-tower-lap .lap-divider,
+  .timing-tower-lap .lap-total {
+    font-size: 1.3rem;
+  }
+
+  .timing-tower-header {
+    font-size: 0.85rem;
+    padding: 0.45rem 0.75rem;
+  }
+
+  .timing-row {
+    min-height: 44px;
+    padding: 0.45rem 0.75rem;
+  }
+
+  .position-number {
+    font-size: 1.15rem;
+  }
+
+  .driver-code {
+    font-size: 1.15rem;
+  }
+
+  .driver-full-name {
+    font-size: 1.1rem;
+  }
+
+  .gap-value {
+    font-size: 0.95rem;
+  }
+
+  .status-icon {
+    font-size: 1.1rem;
+  }
+}
+
+/* Large desktop (1200px+) */
+@media (min-width: 1200px) {
+  .timing-tower-lap .lap-current {
+    font-size: 2.4rem;
+  }
+
+  .timing-tower-lap .lap-divider,
+  .timing-tower-lap .lap-total {
+    font-size: 1.5rem;
+  }
+
+  .timing-tower-header {
+    font-size: 0.9rem;
+    padding: 0.5rem 0.9rem;
+  }
+
+  .timing-row {
+    min-height: 48px;
+    padding: 0.5rem 0.9rem;
+  }
+
+  .position-number {
+    font-size: 1.3rem;
+  }
+
+  .driver-code {
+    font-size: 1.3rem;
+  }
+
+  .driver-full-name {
+    font-size: 1.2rem;
+  }
+
+  .gap-value {
+    font-size: 1.05rem;
+  }
+
+  .tire-dot {
+    width: 11px;
+    height: 11px;
+  }
+
+  .status-icon {
+    font-size: 1.2rem;
+  }
+}

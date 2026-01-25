@@ -1,0 +1,305 @@
+/* ============================================
+   RACE COMPONENTS - Shared styles
+   ============================================ */
+
+/* Team Stripe */
+.team-stripe {
+  width: 4px;
+  height: 100%;
+  min-height: 24px;
+  border-radius: 2px 0 0 2px;
+  flex-shrink: 0;
+}
+
+/* Lap Time */
+.lap-time {
+  font-family: var(--font-mono), var(--font-emoji);
+  font-size: var(--text-xs);
+  color: #888;
+  white-space: nowrap;
+}
+
+.lap-time-empty {
+  color: #444;
+}
+
+.lap-time.lap-fastest {
+  color: #bb86fc;
+  font-weight: 600;
+}
+
+.lap-time.lap-improved {
+  color: #2ecc71;
+}
+
+.lap-time.lap-slower {
+  color: #888;
+}
+
+/* Position Delta */
+.position-delta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono), var(--font-emoji);
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 3px;
+  animation: delta-flash 0.3s ease-out;
+}
+
+.position-delta.delta-up {
+  color: #4ade80;
+  background: rgba(74, 222, 128, 0.2);
+}
+
+.position-delta.delta-down {
+  color: #f87171;
+  background: rgba(248, 113, 113, 0.2);
+}
+
+@keyframes delta-flash {
+  0% {
+    opacity: 0;
+    transform: scale(1.3);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Bet Indicator */
+.bet-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: var(--font-mono), var(--font-emoji);
+}
+
+.bet-indicator .bet-types {
+  display: flex;
+  gap: 2px;
+}
+
+.bet-indicator .bet-type-tag {
+  font-size: 0.55rem;
+  font-weight: 700;
+  padding: 0 3px;
+  border-radius: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.bet-indicator .bet-type-tag.winning {
+  background: rgba(74, 222, 128, 0.3);
+  color: #4ade80;
+}
+
+.bet-indicator .bet-type-tag.losing {
+  background: rgba(248, 113, 113, 0.2);
+  color: #f87171;
+  opacity: 0.7;
+}
+
+.bet-indicator .bet-amount {
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.bet-indicator.winning {
+  background: rgba(74, 222, 128, 0.1);
+}
+
+.bet-indicator.winning .bet-amount {
+  color: #4ade80;
+  text-shadow: 0 0 4px rgba(74, 222, 128, 0.5);
+}
+
+.bet-indicator.losing {
+  background: rgba(248, 113, 113, 0.1);
+}
+
+.bet-indicator.losing .bet-amount {
+  color: #f87171;
+  text-shadow: 0 0 4px rgba(248, 113, 113, 0.5);
+}
+
+.bet-indicator.pending .bet-amount {
+  color: #888;
+}
+
+/* Compact bet indicator */
+.bet-indicator-compact {
+  font-family: var(--font-mono), var(--font-emoji);
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.bet-indicator-compact.winning {
+  background: rgba(74, 222, 128, 0.2);
+  color: #4ade80;
+}
+
+.bet-indicator-compact.losing {
+  background: rgba(248, 113, 113, 0.2);
+  color: #f87171;
+}
+
+.bet-indicator-compact.pending {
+  background: rgba(136, 136, 136, 0.2);
+  color: #888;
+}
+
+/* Tire History Chart - F1 style stint visualization */
+.tire-history {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.tire-history-bar {
+  position: relative;
+  width: 100%;
+  height: 10px;
+  background: #222;
+  border-radius: 2px;
+  overflow: hidden;
+  display: flex;
+}
+
+.tire-stint {
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+/* Add subtle separator between stints */
+.tire-stint + .tire-stint {
+  border-left: 1px solid rgba(0, 0, 0, 0.3);
+}
+
+/* Pit stop markers */
+.pit-marker {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  width: 2px;
+  background: #fff;
+  transform: translateX(-50%);
+  opacity: 0.8;
+}
+
+.pit-marker::after {
+  content: 'H';
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-mono), var(--font-emoji);
+  font-size: 8px;
+  font-weight: 700;
+  color: #888;
+}
+
+/* Full Name column */
+.driver-full-name {
+  font-family: var(--font-body), var(--font-emoji);
+  font-size: 0.8rem;
+  color: #ccc;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.driver-full-name.focused {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* ============================================
+   RESPONSIVE DATA TYPOGRAPHY
+   ============================================ */
+
+/* Tablet and up (640px+) */
+@media (min-width: 640px) {
+  .lap-time {
+    font-size: 0.75rem;
+  }
+
+  .bet-indicator .bet-type-tag {
+    font-size: 0.6rem;
+  }
+
+  .bet-indicator .bet-amount {
+    font-size: 0.75rem;
+  }
+
+  .bet-indicator-compact {
+    font-size: 0.75rem;
+  }
+}
+
+/* Desktop (900px+) */
+@media (min-width: 900px) {
+  .lap-time {
+    font-size: 0.95rem;
+  }
+
+  .position-delta {
+    font-size: 0.75rem;
+    padding: 2px 5px;
+  }
+
+  .bet-indicator .bet-type-tag {
+    font-size: 0.65rem;
+  }
+
+  .bet-indicator .bet-amount {
+    font-size: 0.85rem;
+  }
+
+  .bet-indicator-compact {
+    font-size: 0.85rem;
+  }
+
+  .driver-full-name {
+    font-size: 1rem;
+  }
+}
+
+/* Large desktop (1200px+) */
+@media (min-width: 1200px) {
+  .lap-time {
+    font-size: 1.05rem;
+  }
+
+  .position-delta {
+    font-size: 0.85rem;
+    padding: 2px 6px;
+  }
+
+  .bet-indicator .bet-type-tag {
+    font-size: 0.7rem;
+  }
+
+  .bet-indicator .bet-amount {
+    font-size: 0.95rem;
+  }
+
+  .bet-indicator-compact {
+    font-size: 0.95rem;
+  }
+
+  .driver-full-name {
+    font-size: 1.1rem;
+  }
+}

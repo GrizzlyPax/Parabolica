@@ -62,13 +62,14 @@ a, button, input, select, textarea, [role="button"] {
 }
 
 body {
-  background: #0a0a0c;
+  background: #000;
   min-height: 100vh;
   font-family: var(--font-body), var(--font-emoji);
   font-size: 16px;
   color: #ccc;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden; /* Prevent horizontal scroll */
 }
 
 /* Global font settings */

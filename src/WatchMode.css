@@ -1,134 +1,412 @@
 .watch-mode {
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  padding: 1.5rem 2rem;
-  background: linear-gradient(135deg, #0a0a0a 0%, #111111 50%, #0a0a0a 100%);
-  overflow: hidden;
+  min-height: 100vh;
+  padding: 0;
+  background: #000;
+  overflow-x: hidden;
+  /* Allow full page to scroll */
+  overflow-y: auto;
 }
 
+/* Single scroll container - everything scrolls as one page */
 .watch-content {
   display: flex;
+  flex-direction: column;
   flex: 1;
-  gap: 2rem;
-  align-items: stretch;
-  justify-content: center;
-  margin-top: 1rem;
-  min-height: 0; /* Critical for flex child to respect parent's height */
+  /* NO internal scrolling - full page scrolls */
+  overflow: visible;
 }
 
-.watch-header {
-  display: flex;
-  align-items: center;
-  gap: 2rem;
-  margin-bottom: 2rem;
+/* Dashboard sections - stacked vertically, no internal scroll */
+.dashboard-section {
+  background: #000;
+  /* No borders between sections - pure black continuous look */
+  /* Let sections take their natural height */
+  flex-shrink: 0;
 }
 
-.watch-header h1 {
-  font-family: var(--font-display), var(--font-emoji);
-  font-size: 1.6rem;
-  font-weight: 600;
-  color: #e8e8e8;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  margin: 0;
-}
-
-.track-title {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.track-title-emoji {
-  font-size: 2rem;
-}
-
-.track-title-info {
+/* Timing Tower section - NO max-height, NO internal scroll */
+.timing-section {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
 }
 
-.track-subtitle {
+/* Tower renders at full height - no internal scrolling */
+.timing-section .timing-tower {
+  /* Remove any scroll constraints */
+  overflow: visible;
+}
+
+/* Section 2: Track Map */
+.track-section {
+  position: relative;
+  padding: 1rem;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  background: #000;
+}
+
+.track-section .track-map {
+  width: 100%;
+  max-width: 800px;
+}
+
+/* Betting summary below track */
+.track-betting-summary {
+  width: 100%;
+  max-width: 800px;
+  display: flex;
   align-items: flex-start;
-  gap: 0.25rem;
-  font-family: var(--font-body), var(--font-emoji);
-  font-size: 0.85rem;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: #000;
+  border: none;
+  border-radius: 0;
+  margin-top: 0.5rem;
+}
+
+.betting-label {
+  font-family: var(--font-display), var(--font-emoji);
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.betting-chips {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.bet-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.5rem;
+  background: rgba(0, 0, 0, 0.8);
+  border: 1px solid var(--chip-color, #888);
+  border-radius: 4px;
+  font-size: 0.75rem;
+  position: relative;
+  transition: box-shadow 0.3s ease, opacity 0.3s ease;
+}
+
+/* Marble indicator with emoji */
+.bet-chip-marble {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6rem;
+  line-height: 1;
+}
+
+/* 3-letter driver code */
+.bet-chip-code {
+  font-family: var(--font-display), var(--font-emoji);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--chip-color, #888);
+  letter-spacing: 0.5px;
+}
+
+.bet-chip-type {
+  font-family: var(--font-display), var(--font-emoji);
+  font-size: 0.55rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: #888;
+  opacity: 0.8;
+  padding: 1px 4px;
+  background: rgba(100, 100, 100, 0.3);
+  border-radius: 2px;
+}
+
+/* Potential payout in green */
+.bet-chip-payout {
+  font-family: var(--font-mono), var(--font-emoji);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #4ade80;
+}
+
+/* DNF overlay text */
+.bet-chip-dnf-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-12deg);
+  font-family: var(--font-display), var(--font-emoji);
+  font-size: 0.8rem;
+  font-weight: 900;
+  color: #f87171;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+}
+
+/* Winning bet - green pulsing glow */
+.bet-chip-winning {
+  border-color: #4ade80;
+  animation: bet-glow-green 1.5s ease-in-out infinite;
+}
+
+@keyframes bet-glow-green {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(74, 222, 128, 0.4), inset 0 0 4px rgba(74, 222, 128, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 16px rgba(74, 222, 128, 0.6), inset 0 0 8px rgba(74, 222, 128, 0.2);
+  }
+}
+
+.bet-chip-winning .bet-chip-payout {
+  color: #4ade80;
+  text-shadow: 0 0 4px rgba(74, 222, 128, 0.5);
+}
+
+/* Losing bet - red pulsing glow */
+.bet-chip-losing {
+  border-color: #f87171;
+  animation: bet-glow-red 1.5s ease-in-out infinite;
+}
+
+@keyframes bet-glow-red {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(248, 113, 113, 0.3), inset 0 0 4px rgba(248, 113, 113, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 14px rgba(248, 113, 113, 0.5), inset 0 0 6px rgba(248, 113, 113, 0.15);
+  }
+}
+
+.bet-chip-losing .bet-chip-payout {
+  color: #f87171;
+  opacity: 0.7;
+}
+
+/* DNF'd bet - faded out */
+.bet-chip-dnf {
+  opacity: 0.5;
+  border-color: #666;
+}
+
+.bet-chip-dnf .bet-chip-marble {
+  filter: grayscale(0.7);
+}
+
+.bet-chip-dnf .bet-chip-code,
+.bet-chip-dnf .bet-chip-payout {
+  opacity: 0.5;
+}
+
+/* Pending bet - neutral */
+.bet-chip-pending {
+  border-color: var(--chip-color, #888);
+}
+
+.bet-chip-pending .bet-chip-payout {
   color: #888;
 }
 
-.header-description {
-  color: #aaa;
-  font-style: italic;
-  font-size: 0.8rem;
+/* Responsive bet chip sizing */
+@media (min-width: 900px) {
+  .bet-chip {
+    padding: 0.4rem 0.6rem;
+    gap: 0.4rem;
+  }
+
+  .bet-chip-marble {
+    width: 18px;
+    height: 18px;
+  }
+
+  .bet-chip-code {
+    font-size: 0.95rem;
+  }
+
+  .bet-chip-type {
+    font-size: 0.6rem;
+    padding: 2px 5px;
+  }
+
+  .bet-chip-payout {
+    font-size: 0.9rem;
+  }
+
+  .bet-chip-dnf-overlay {
+    font-size: 0.95rem;
+  }
 }
 
-.header-event {
-  color: #c9a227;
-  font-size: 0.75rem;
+@media (min-width: 1200px) {
+  .bet-chip {
+    padding: 0.45rem 0.7rem;
+    gap: 0.45rem;
+  }
+
+  .bet-chip-marble {
+    width: 20px;
+    height: 20px;
+  }
+
+  .bet-chip-code {
+    font-size: 1.05rem;
+  }
+
+  .bet-chip-type {
+    font-size: 0.65rem;
+    padding: 2px 6px;
+  }
+
+  .bet-chip-payout {
+    font-size: 1rem;
+  }
+
+  .bet-chip-dnf-overlay {
+    font-size: 1.05rem;
+  }
 }
 
-.header-event-placeholder {
-  color: #555;
-  font-style: italic;
+/* Section 3: Events Feed */
+.events-section {
+  padding: 1rem;
+  background: #000;
 }
 
-.header-weather {
+.events-header {
   display: flex;
   align-items: center;
-  gap: 0.3rem;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
 }
 
-.header-lap {
-  color: #aaa;
-  letter-spacing: 1px;
-}
-
-.lap-indicator {
+.events-label {
   font-family: var(--font-display), var(--font-emoji);
-  font-size: 14px;
-  letter-spacing: 2px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.weather-indicator {
-  font-family: var(--font-body), var(--font-emoji);
-  font-size: 12px;
-  letter-spacing: 1px;
-  opacity: 0.8;
-}
-
-.watch-finished {
-  font-family: var(--font-display), var(--font-emoji);
-  font-size: 1rem;
-  color: #a8d8a8;
-  padding: 0.5rem 1rem;
-  background: rgba(50, 80, 50, 0.3);
-  border: 1px solid #5a8a5a;
+.events-count {
+  font-family: var(--font-mono), var(--font-emoji);
+  font-size: 0.7rem;
+  color: #666;
+  padding: 0.15rem 0.4rem;
+  background: #000;
   border-radius: 4px;
-  animation: pulse 1.5s ease-in-out infinite;
 }
 
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
+.events-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.event-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: #000;
+  border: none;
+  border-radius: 0;
+  border-left: 3px solid var(--event-color, #888);
+}
+
+.event-emoji {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.event-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.event-title {
+  font-family: var(--font-display), var(--font-emoji);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #e8e8e8;
+}
+
+.event-message {
+  font-size: 0.8rem;
+  color: #888;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Event type colors */
+.event-crash { --event-color: #f87171; }
+.event-lead_change { --event-color: #60a5fa; }
+.event-pit_stop { --event-color: #f59e0b; }
+.event-slow_pit_stop { --event-color: #f97316; }
+.event-quick_pit_stop { --event-color: #22c55e; }
+.event-finish { --event-color: #a78bfa; }
+.event-fastest_lap { --event-color: #bb86fc; }
+.event-milestone { --event-color: #f59e0b; }
+.event-track_event { --event-color: #06b6d4; }
+.event-tag_activation { --event-color: #10b981; }
+
+.events-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 2rem;
+  color: #666;
+}
+
+.events-empty-icon {
+  font-size: 2rem;
+  opacity: 0.5;
+}
+
+.events-empty-text {
+  font-size: 0.85rem;
 }
 
 /* Oval Track */
 .oval-track-container {
   flex: 2;
   max-width: 1200px;
-  min-width: 600px;
-  min-height: 380px;
+  min-width: 0; /* Allow shrinking - no forced overflow */
   position: relative;
+  /* Use aspect-ratio for consistent sizing across devices */
+  aspect-ratio: 5 / 3;
 }
 
 .oval-track-svg {
   width: 100%;
-  height: auto;
-  min-height: 360px;
+  height: 100%;
+  transition: none; /* Instant viewBox changes for smooth camera follow */
+}
+
+/* Focus View: zoomed camera follow */
+.oval-track-container.focus-view-track {
+  flex: 3;
+  max-width: 100%;
+}
+
+.oval-track-svg.focused-zoom {
+  border-radius: 12px;
+  box-shadow: 0 0 30px rgba(100, 80, 160, 0.3);
 }
 
 .track-outer {
@@ -696,9 +974,9 @@
 .notification-timeline {
   display: flex;
   flex-direction: column;
-  background: rgba(15, 15, 15, 0.8);
-  border: 1px solid #2a2a2a;
-  border-radius: 6px;
+  background: #000;
+  border: none;
+  border-radius: 0;
   min-width: 220px;
   max-width: 280px;
   min-height: 0; /* Allow flex shrinking */
@@ -713,8 +991,8 @@
   letter-spacing: 2px;
   text-transform: uppercase;
   padding: 0.6rem 0.75rem;
-  background: rgba(10, 10, 10, 0.6);
-  border-bottom: 1px solid #2a2a2a;
+  background: #000;
+  border-bottom: none;
 }
 
 .timeline-list {
@@ -730,8 +1008,8 @@
   align-items: flex-start;
   gap: 0.5rem;
   padding: 0.5rem;
-  border-radius: 4px;
-  background: rgba(25, 25, 25, 0.5);
+  border-radius: 0;
+  background: #000;
   animation: timelineSlideIn 0.3s ease-out;
 }
 
@@ -866,9 +1144,9 @@
 .race-feed {
   display: flex;
   align-items: center;
-  background: rgba(10, 10, 12, 0.85);
-  border: 1px solid #2a2a2a;
-  border-radius: 4px;
+  background: #000;
+  border: none;
+  border-radius: 0;
   overflow: hidden;
   height: 44px;
 }
@@ -882,11 +1160,11 @@
   white-space: nowrap;
   flex-shrink: 0;
   padding: 0 0.75rem;
-  background: rgba(30, 30, 35, 0.8);
+  background: #000;
   height: 100%;
   display: flex;
   align-items: center;
-  border-right: 1px solid #2a2a2a;
+  border-right: none;
 }
 
 .race-feed-items {
@@ -1090,14 +1368,15 @@
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
-  background: rgba(15, 15, 15, 0.6);
-  border: 1px solid #2a2a2a;
-  border-radius: 6px;
+  background: #000;
+  border: none;
+  border-radius: 0;
   padding: 0.5rem;
-  min-width: 420px;
+  min-width: 0; /* Allow shrinking - no forced overflow */
   max-width: 480px;
   min-height: 0; /* Allow flex shrinking */
   overflow-y: auto;
+  overflow-x: hidden; /* Prevent internal horizontal scroll */
 }
 
 /* Prominent lap indicator at top of leaderboard */
@@ -1107,8 +1386,8 @@
   justify-content: center;
   gap: 0.4rem;
   padding: 0.6rem 0.5rem;
-  background: rgba(30, 30, 35, 0.8);
-  border-radius: 4px;
+  background: #000;
+  border-radius: 0;
   margin-bottom: 0.4rem;
 }
 
@@ -1153,7 +1432,7 @@
   color: #707070;
   letter-spacing: 1px;
   text-transform: uppercase;
-  border-bottom: 1px solid #2a2a2a;
+  border-bottom: none;
   margin-bottom: 0.25rem;
 }
 
@@ -1168,8 +1447,8 @@
   gap: 0.35rem;
   align-items: center;
   padding: 0.25rem 0.5rem;
-  background: rgba(18, 18, 18, 0.4);
-  border-radius: 3px;
+  background: #000;
+  border-radius: 0;
   font-size: 0.8rem;
   transition: background 0.2s ease;
   position: relative;
@@ -1267,6 +1546,8 @@
   color: #b0b0b0;
   text-align: center;
 }
+
+/* Position delta styles now in components/race/components.css */
 
 .leaderboard-name {
   font-weight: 600;
@@ -1998,19 +2279,8 @@
   font-weight: 400;
 }
 
-/* Responsive: stack on smaller screens */
+/* Responsive: tablet and smaller */
 @media (max-width: 900px) {
-  .watch-mode {
-    height: auto;
-    min-height: 100vh;
-    overflow-y: auto;
-  }
-
-  .watch-content {
-    flex-direction: column-reverse;
-    align-items: center;
-  }
-
   .watch-leaderboard {
     max-width: 100%;
     width: 100%;
@@ -2039,27 +2309,7 @@
 /* Mobile phone breakpoint */
 @media (max-width: 640px) {
   .watch-mode {
-    padding: 1rem;
-  }
-
-  .watch-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.75rem;
-    margin-bottom: 1rem;
-  }
-
-  .watch-header .back-btn {
-    padding: 0.6rem 1rem;
-    min-height: 44px; /* Touch target */
-  }
-
-  .watch-header .track-title {
-    font-size: 1.3rem;
-  }
-
-  .watch-header .lap-counter {
-    font-size: 0.9rem;
+    padding: 0; /* Full-screen on mobile */
   }
 
   .watch-controls {
@@ -2511,6 +2761,36 @@
   padding: 0.2rem 0;
 }
 
+/* Focus button in dropdown */
+.dropdown-focus-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  margin-top: 0.5rem;
+  background: rgba(100, 80, 160, 0.3);
+  border: 1px solid rgba(140, 120, 200, 0.4);
+  border-radius: 4px;
+  color: #c8b8e8;
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.dropdown-focus-btn:hover {
+  background: rgba(120, 100, 180, 0.4);
+  border-color: rgba(160, 140, 220, 0.6);
+  color: #e8d8ff;
+}
+
+.dropdown-focus-btn .focus-icon {
+  font-size: 0.9rem;
+}
+
 /* Tag Tooltip (appears on hover within dropdown) */
 .tag-tooltip {
   position: fixed;
@@ -2550,4 +2830,335 @@
   background: rgba(255, 255, 255, 0.05);
   border-radius: 3px;
   display: inline-block;
+}
+
+
+/* ============================================
+   VIEW TAB BAR - Multi-view navigation
+   ============================================ */
+
+.view-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  background: rgba(15, 15, 18, 0.98);
+  border-bottom: 1px solid #2a2a30;
+  margin-bottom: 0.5rem;
+}
+
+.view-tab {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.2rem;
+  min-height: 44px;
+  background: rgba(35, 35, 40, 0.8);
+  border: 1px solid #4a4a54;
+  border-radius: 6px;
+  color: #888;
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.view-tab:hover {
+  background: rgba(50, 50, 58, 0.9);
+  border-color: #5a5a64;
+  color: #bbb;
+}
+
+.view-tab.active {
+  background: linear-gradient(180deg, rgba(60, 80, 100, 0.9) 0%, rgba(40, 55, 70, 0.95) 100%);
+  border-color: #6a8aaa;
+  color: #fff;
+  box-shadow: 0 0 12px rgba(100, 140, 180, 0.2);
+}
+
+.view-tab .tab-icon {
+  font-size: 1.1rem;
+}
+
+.view-tab .tab-label {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Mobile: fixed bottom tab bar */
+@media (max-width: 640px) {
+  .view-tabs {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    margin-bottom: 0;
+    padding: 0.4rem;
+    gap: 0.25rem;
+    justify-content: space-around;
+    border-bottom: none;
+    border-top: 1px solid #2a2a30;
+    backdrop-filter: blur(10px);
+  }
+
+  .view-tab {
+    flex-direction: column;
+    gap: 0.2rem;
+    padding: 0.5rem 0.75rem;
+    min-height: 48px;
+    flex: 1;
+    justify-content: center;
+  }
+
+  .view-tab .tab-icon {
+    font-size: 1.3rem;
+  }
+
+  .view-tab .tab-label {
+    font-size: 0.65rem;
+  }
+
+  /* Account for bottom tab bar */
+  .watch-mode {
+    padding-bottom: 70px;
+  }
+}
+
+/* ============================================
+   VIEW-SPECIFIC LAYOUTS
+   All views scroll as one page - no nested scroll
+   ============================================ */
+
+/* Track View: Mobile - track on top, tower below */
+/* DOM order: timing, track. Use CSS order to show track first on mobile. */
+.watch-content.view-track {
+  flex-direction: column;
+}
+
+.watch-content.view-track .track-section {
+  min-height: 280px;
+  order: 1; /* Track first on mobile */
+}
+
+.watch-content.view-track .timing-section {
+  order: 2; /* Timing below track on mobile */
+}
+
+/* Track View: Desktop (900px+) - side by side: tower LEFT, track RIGHT */
+@media (min-width: 900px) {
+  .watch-content.view-track {
+    flex-direction: row;
+    height: calc(100vh - 80px); /* Account for header */
+  }
+
+  .watch-content.view-track .timing-section {
+    width: 380px;
+    min-width: 340px;
+    max-width: 420px;
+    overflow-y: auto;
+    flex-shrink: 0;
+    order: 1; /* Timing on LEFT */
+  }
+
+  .watch-content.view-track .track-section {
+    flex: 1;
+    min-height: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    order: 2; /* Track on RIGHT */
+  }
+}
+
+/* Track View: Large desktop (1200px+) */
+@media (min-width: 1200px) {
+  .watch-content.view-track .timing-section {
+    width: 440px;
+    max-width: 500px;
+  }
+}
+
+/* Detail View: Tower first, track second, events third */
+.watch-content.view-detail {
+  flex-direction: column;
+}
+
+.watch-content.view-detail .timing-section {
+  /* Full tower - no height constraints */
+}
+
+.watch-content.view-detail .track-section {
+  min-height: 280px;
+}
+
+.watch-content.view-detail .events-section {
+  padding: 1rem;
+}
+
+/* Detail View: Desktop side-by-side option */
+@media (min-width: 1100px) {
+  .watch-content.view-detail {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .watch-content.view-detail .timing-section {
+    width: 50%;
+    min-width: 400px;
+    max-height: calc(100vh - 80px);
+    overflow-y: auto;
+    border-right: 1px solid #222;
+  }
+
+  .watch-content.view-detail .track-section {
+    width: 50%;
+    flex: 1;
+    min-height: 400px;
+  }
+
+  .watch-content.view-detail .events-section {
+    width: 100%;
+  }
+}
+
+/* Standings View: Points tables */
+.watch-content.view-standings {
+  flex-direction: column;
+  padding: 1rem;
+}
+
+.standings-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+}
+
+.standings-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  color: #666;
+}
+
+.standings-icon {
+  font-size: 3rem;
+  opacity: 0.5;
+}
+
+.standings-text {
+  font-family: var(--font-display), var(--font-emoji);
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+
+/* ============================================
+   DESKTOP TYPOGRAPHY SCALING
+   Race feed, timeline, and notifications
+   ============================================ */
+
+@media (min-width: 900px) {
+  /* Race Feed */
+  .race-feed {
+    height: 52px;
+  }
+
+  .race-feed-label {
+    font-size: 0.75rem;
+  }
+
+  .feed-emoji {
+    font-size: 1.25rem;
+  }
+
+  .feed-text {
+    font-size: 1.1rem;
+  }
+
+  /* Notification Timeline */
+  .timeline-emoji {
+    font-size: 1.6rem;
+  }
+
+  .timeline-title {
+    font-size: 0.95rem;
+  }
+
+  .timeline-message {
+    font-size: 1.05rem;
+  }
+
+  /* Events Section */
+  .events-label {
+    font-size: 0.9rem;
+  }
+
+  .event-emoji {
+    font-size: 1.4rem;
+  }
+
+  .event-title {
+    font-size: 0.95rem;
+  }
+
+  .event-message {
+    font-size: 0.9rem;
+  }
+}
+
+@media (min-width: 1200px) {
+  /* Race Feed */
+  .race-feed {
+    height: 58px;
+  }
+
+  .race-feed-label {
+    font-size: 0.8rem;
+  }
+
+  .feed-emoji {
+    font-size: 1.4rem;
+  }
+
+  .feed-text {
+    font-size: 1.2rem;
+  }
+
+  /* Notification Timeline */
+  .timeline-emoji {
+    font-size: 1.8rem;
+  }
+
+  .timeline-title {
+    font-size: 1.05rem;
+  }
+
+  .timeline-message {
+    font-size: 1.15rem;
+  }
+
+  /* Events Section */
+  .events-label {
+    font-size: 1rem;
+  }
+
+  .event-emoji {
+    font-size: 1.5rem;
+  }
+
+  .event-title {
+    font-size: 1.05rem;
+  }
+
+  .event-message {
+    font-size: 1rem;
+  }
 }
