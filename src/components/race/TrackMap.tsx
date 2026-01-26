@@ -1,6 +1,6 @@
 // TrackMap - Simplified track visualization
 // Single thin path, no lanes, marker hierarchy for emphasis
-import { useMemo, useRef, useEffect, useState } from 'react';
+import { useMemo, useCallback, useState } from 'react';
 import type { Driver } from '../../RaceEngine';
 import './TrackMap.css';
 
@@ -31,11 +31,39 @@ interface TrackMapProps {
 }
 
 // Get a point along an SVG path at a given percentage (0-1)
+// Clamps percentage to valid range to prevent SVG errors
 function getPointAlongPath(pathElement: SVGPathElement | null, percentage: number): { x: number; y: number } {
   if (!pathElement) return { x: 300, y: 150 };
+  // Handle NaN, undefined, or out-of-range percentage - default to start of path
+  const safePct = (typeof percentage === 'number' && !isNaN(percentage))
+    ? Math.max(0, Math.min(1, percentage))
+    : 0;
   const length = pathElement.getTotalLength();
-  const point = pathElement.getPointAtLength(percentage * length);
+  const point = pathElement.getPointAtLength(safePct * length);
   return { x: point.x, y: point.y };
+}
+
+// Parse a simple line path (M x1 y1 L x2 y2) and interpolate along it
+// This is simpler and more reliable than creating temp SVG elements
+function getPointAlongLinePath(pathString: string, percentage: number): { x: number; y: number } | null {
+  // Parse "M x1 y1 L x2 y2" format
+  const match = pathString.match(/M\s*(-?[\d.]+)\s+(-?[\d.]+)\s*L\s*(-?[\d.]+)\s+(-?[\d.]+)/i);
+  if (!match) return null;
+
+  const x1 = parseFloat(match[1]);
+  const y1 = parseFloat(match[2]);
+  const x2 = parseFloat(match[3]);
+  const y2 = parseFloat(match[4]);
+
+  // Handle NaN, undefined, or out-of-range percentage - default to start of path
+  const safePct = (typeof percentage === 'number' && !isNaN(percentage))
+    ? Math.max(0, Math.min(1, percentage))
+    : 0;
+
+  return {
+    x: x1 + (x2 - x1) * safePct,
+    y: y1 + (y2 - y1) * safePct,
+  };
 }
 
 function TrackMap({
@@ -49,25 +77,23 @@ function TrackMap({
   unsafetyCarPosition = 0,
   className = '',
 }: TrackMapProps) {
-  // Ref for pit lane path (for positioning pitting drivers)
-  const pitLanePathRef = useRef<SVGPathElement>(null);
+  // Store track path element in state to ensure useMemo re-runs when it's attached
+  // Using state instead of refs ensures React knows about the element
+  const [trackPathEl, setTrackPathEl] = useState<SVGPathElement | null>(null);
+
+  // Callback ref for track path - stores element in state
+  const trackPathRef = useCallback((el: SVGPathElement | null) => {
+    setTrackPathEl(el);
+  }, []);
+
   // Combine focused and highlighted drivers for visibility
   const visibleDriverIds = useMemo(() => {
     return new Set([...focusedDriverIds, ...highlightedDriverIds]);
   }, [focusedDriverIds, highlightedDriverIds]);
-  const trackPathRef = useRef<SVGPathElement>(null);
-  const [pathsReady, setPathsReady] = useState(false);
-
-  // Initialize path reference
-  useEffect(() => {
-    if (trackPathRef.current) {
-      setPathsReady(true);
-    }
-  }, []);
 
   // Calculate driver positions on track
   const driverPositions = useMemo(() => {
-    if (!pathsReady || !trackPathRef.current) return [];
+    if (!trackPathEl) return [];
 
     // Separate by status
     const racing = drivers.filter(d => d.status !== 'finished' && d.status !== 'dnf' && d.status !== 'pitting');
@@ -75,11 +101,19 @@ function TrackMap({
     const dnf = drivers.filter(d => d.status === 'dnf');
     const finished = drivers.filter(d => d.status === 'finished');
 
+    // DEBUG (#135): Log pitting driver details
+    if (pitting.length > 0) {
+      console.log(`[TrackMap] Pitting: ${pitting.length}, pitLanePath: ${pitLanePath ? `"${pitLanePath}"` : 'UNDEFINED'}`);
+      pitting.forEach(d => {
+        console.log(`  [DRIVER] ${d.name}: status="${d.status}", pitProgress=${d.pitProgress}, position=${d.position}`);
+      });
+    }
+
     // Calculate positions for racing drivers
     const racingPositions = racing.map(driver => {
       const normalizedPosition = ((driver.position % trackLength) + trackLength) % trackLength;
       const lapProgress = normalizedPosition / trackLength;
-      const point = getPointAlongPath(trackPathRef.current, lapProgress);
+      const point = getPointAlongPath(trackPathEl, lapProgress);
 
       const isFocused = focusedDriverIds.includes(driver.id);
       const isHighlighted = visibleDriverIds.has(driver.id);
@@ -98,7 +132,7 @@ function TrackMap({
     // DNF drivers at their crash position
     const dnfPositions = dnf.map(driver => {
       const lapProgress = driver.position / trackLength;
-      const point = getPointAlongPath(trackPathRef.current, lapProgress);
+      const point = getPointAlongPath(trackPathEl, lapProgress);
 
       return {
         driver,
@@ -111,19 +145,31 @@ function TrackMap({
       };
     });
 
-    // Pitting drivers - show on pit lane if available, else on track
-    const pittingPositions = pitting.map((driver, index) => {
+    // Pitting drivers - show on pit lane using actual pit progress
+    // Use simple linear interpolation for straight-line pit lanes
+    const pittingPositions = pitting.map((driver) => {
       let point: { x: number; y: number };
 
-      if (pitLanePathRef.current) {
-        // Use pit lane path - spread drivers along it based on pit progress
-        // Estimate progress through pit (0 = just entered, 1 = about to exit)
-        const pitProgress = 0.3 + (index * 0.15); // Spread them out
-        point = getPointAlongPath(pitLanePathRef.current, Math.min(pitProgress, 0.9));
+      if (pitLanePath) {
+        // Use driver's actual pit progress (0 = just entered, 1 = about to exit)
+        // For clockwise tracks, pit entry is on the RIGHT (high x) and exit is on the LEFT (low x)
+        // Since paths are defined left-to-right, we INVERT progress so drivers move right→left
+        const pitLaneProgress = driver.pitProgress ?? 0;
+        const invertedProgress = 1 - pitLaneProgress; // 0→1 becomes 1→0
+        const linePoint = getPointAlongLinePath(pitLanePath, invertedProgress);
+
+        if (linePoint) {
+          point = linePoint;
+          console.log(`[PIT OK] ${driver.name}: progress=${pitLaneProgress.toFixed(2)} → inverted=${invertedProgress.toFixed(2)} → x=${point.x.toFixed(1)}, y=${point.y.toFixed(1)}`);
+        } else {
+          // Fallback if path parsing failed
+          point = getPointAlongPath(trackPathEl, 0);
+          console.warn(`[PIT FALLBACK] ${driver.name}: linePoint was NULL! path="${pitLanePath}"`);
+        }
       } else {
-        // Fallback: show at pit entry area on track
-        const lapProgress = 0.85;
-        point = getPointAlongPath(trackPathRef.current, lapProgress);
+        // Fallback: show at start/finish area on track
+        point = getPointAlongPath(trackPathEl, 0);
+        console.warn(`[PIT NO PATH] ${driver.name}: pitLanePath is undefined`);
       }
 
       return {
@@ -139,7 +185,7 @@ function TrackMap({
 
     // Finished drivers at finish line
     const finishedPositions = finished.map(driver => {
-      const point = getPointAlongPath(trackPathRef.current, 0);
+      const point = getPointAlongPath(trackPathEl, 0);
 
       return {
         driver,
@@ -153,43 +199,34 @@ function TrackMap({
     });
 
     // Order: DNF first (background), then regular, then highlighted, then focused (foreground)
+    // Pitting drivers now included in proper z-order based on focus/highlight status
     const allPositions = [
       ...dnfPositions,
-      ...pittingPositions,
+      ...pittingPositions.filter(p => !p.isFocused && !p.isHighlighted),
       ...finishedPositions.filter(p => !p.isFocused && !p.isHighlighted),
       ...racingPositions.filter(p => !p.isFocused && !p.isHighlighted),
+      ...pittingPositions.filter(p => p.isHighlighted && !p.isFocused),
       ...racingPositions.filter(p => p.isHighlighted && !p.isFocused),
       ...finishedPositions.filter(p => p.isHighlighted && !p.isFocused),
+      ...pittingPositions.filter(p => p.isFocused),
       ...racingPositions.filter(p => p.isFocused),
       ...finishedPositions.filter(p => p.isFocused),
     ];
 
     return allPositions;
-  }, [drivers, trackLength, focusedDriverIds, visibleDriverIds, pathsReady]);
+  }, [drivers, trackLength, focusedDriverIds, visibleDriverIds, trackPathEl, pitLanePath]);
 
   // Calculate start/finish line position
   const startFinish = useMemo(() => {
-    if (!pathsReady || !trackPathRef.current) return null;
-    return getPointAlongPath(trackPathRef.current, 0);
-  }, [pathsReady]);
-
-  // Calculate sector boundary positions (S1/S2 at 33%, S2/S3 at 66%)
-  const sectorMarkers = useMemo(() => {
-    if (!pathsReady || !trackPathRef.current) return [];
-    return [
-      { position: 0.333, label: 'S1' },
-      { position: 0.666, label: 'S2' },
-    ].map(sector => ({
-      ...sector,
-      point: getPointAlongPath(trackPathRef.current, sector.position),
-    }));
-  }, [pathsReady]);
+    if (!trackPathEl) return null;
+    return getPointAlongPath(trackPathEl, 0);
+  }, [trackPathEl]);
 
   // Calculate Safety Carl's position
   const safetyCarlPosition = useMemo(() => {
-    if (!unsafetyCarActive || !pathsReady || !trackPathRef.current) return null;
-    return getPointAlongPath(trackPathRef.current, unsafetyCarPosition);
-  }, [unsafetyCarActive, unsafetyCarPosition, pathsReady]);
+    if (!unsafetyCarActive || !trackPathEl) return null;
+    return getPointAlongPath(trackPathEl, unsafetyCarPosition);
+  }, [unsafetyCarActive, unsafetyCarPosition, trackPathEl]);
 
   return (
     <div className={`track-map ${className}`}>
@@ -218,66 +255,42 @@ function TrackMap({
           className="track-centerline"
         />
 
-        {/* Pit lane path (if provided) */}
+        {/* Pit lane - styled like track but thinner */}
         {pitLanePath && (
           <>
             <path
-              ref={pitLanePathRef}
               d={pitLanePath}
               fill="none"
-              stroke="#2a2a30"
+              stroke="#3a3a40"
               strokeWidth="8"
-              className="pit-lane-outline"
+              strokeLinecap="round"
+              className="pit-lane"
             />
-            <path
-              d={pitLanePath}
-              fill="none"
-              stroke="#3d3d20"
-              strokeWidth="6"
-              className="pit-lane-surface"
-            />
-            {/* PIT label */}
-            <text
-              x={300}
-              y={310}
-              textAnchor="middle"
-              fill="#666"
-              fontSize="10"
-              fontWeight="600"
-              letterSpacing="2"
-              className="pit-label"
-            >
-              PIT
-            </text>
+            {/* DEBUG (#135): Pit lane endpoint markers */}
+            {(() => {
+              const match = pitLanePath.match(/M\s*(-?[\d.]+)\s+(-?[\d.]+)\s*L\s*(-?[\d.]+)\s+(-?[\d.]+)/i);
+              if (match) {
+                const x1 = parseFloat(match[1]);
+                const y1 = parseFloat(match[2]);
+                const x2 = parseFloat(match[3]);
+                const y2 = parseFloat(match[4]);
+                const centerX = (x1 + x2) / 2;
+                const centerY = (y1 + y2) / 2;
+                return (
+                  <>
+                    <circle cx={x1} cy={y1} r={6} fill="#FFFF00" stroke="#000" strokeWidth={2} />
+                    <text x={x1} y={y1 - 12} textAnchor="middle" style={{ fontSize: '9px', fill: '#FFFF00', fontWeight: 'bold' }}>PIT OUT</text>
+                    <circle cx={x2} cy={y2} r={6} fill="#00FF00" stroke="#000" strokeWidth={2} />
+                    <text x={x2} y={y2 - 12} textAnchor="middle" style={{ fontSize: '9px', fill: '#00FF00', fontWeight: 'bold' }}>PIT IN</text>
+                    <circle cx={centerX} cy={centerY} r={8} fill="none" stroke="#00FFFF" strokeWidth={3} />
+                    <text x={centerX} y={centerY + 25} textAnchor="middle" style={{ fontSize: '8px', fill: '#00FFFF', fontWeight: 'bold' }}>CENTER ({centerX.toFixed(0)},{centerY.toFixed(0)})</text>
+                  </>
+                );
+              }
+              return null;
+            })()}
           </>
         )}
-
-        {/* Sector boundary markers */}
-        {sectorMarkers.map(({ label, point }) => (
-          <g key={label} transform={`translate(${point.x}, ${point.y})`}>
-            {/* Sector line across track */}
-            <line
-              x1={-10}
-              y1={-10}
-              x2={10}
-              y2={10}
-              stroke="#666"
-              strokeWidth={2}
-              strokeDasharray="4 2"
-            />
-            {/* Sector label */}
-            <text
-              x={14}
-              y={-8}
-              fill="#888"
-              fontSize="9"
-              fontWeight="600"
-              className="sector-label"
-            >
-              {label}
-            </text>
-          </g>
-        ))}
 
         {/* Start/Finish line */}
         {startFinish && (
@@ -290,17 +303,6 @@ function TrackMap({
               fill="url(#checkered)"
               opacity={0.8}
             />
-            {/* S3/Finish label */}
-            <text
-              x={14}
-              y={-14}
-              fill="#888"
-              fontSize="9"
-              fontWeight="600"
-              className="sector-label"
-            >
-              S3
-            </text>
           </g>
         )}
 
@@ -459,6 +461,29 @@ function TrackMap({
                 >
                   {driver.dnfInfo?.reason === 'tire_failure' ? '💨' : driver.dnfInfo?.reason === 'mechanical' ? '⚙️' : '💥'}
                 </text>
+              )}
+
+              {/* DEBUG (#135): Bright indicator for pitting drivers with coordinates */}
+              {isPitting && (
+                <>
+                  <circle
+                    cx={0}
+                    cy={0}
+                    r={20}
+                    fill="none"
+                    stroke="#FF0000"
+                    strokeWidth={4}
+                    strokeDasharray="5 3"
+                  />
+                  <text
+                    x={0}
+                    y={30}
+                    textAnchor="middle"
+                    style={{ fontSize: '10px', fill: '#FF0000', fontWeight: 'bold' }}
+                  >
+                    PIT ({x.toFixed(0)},{y.toFixed(0)})
+                  </text>
+                </>
               )}
             </g>
           );

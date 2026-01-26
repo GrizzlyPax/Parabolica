@@ -181,38 +181,30 @@
   transition: width 0.3s ease;
 }
 
-/* Add subtle separator between stints */
+/* Pit stop separators - dark tick marks at each pit stop */
 .tire-stint + .tire-stint {
-  border-left: 1px solid rgba(0, 0, 0, 0.3);
+  /* Thin dark gap between stints */
+  box-shadow: inset 2px 0 0 0 rgba(0, 0, 0, 0.7);
 }
 
-/* Pit stop markers */
+/* Pit stop markers - subtle dark ticks */
 .pit-marker {
   position: absolute;
-  top: -2px;
-  bottom: -2px;
+  top: -1px;
+  bottom: -1px;
   width: 2px;
-  background: #fff;
+  background: rgba(0, 0, 0, 0.6);
+  border-left: 1px solid rgba(255, 255, 255, 0.3);
+  border-right: 1px solid rgba(255, 255, 255, 0.3);
   transform: translateX(-50%);
-  opacity: 0.8;
-}
-
-.pit-marker::after {
-  content: 'P';
-  position: absolute;
-  top: -12px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-family: var(--font-mono), var(--font-emoji);
-  font-size: 8px;
-  font-weight: 700;
-  color: #888;
+  z-index: 2;
 }
 
 /* Full Name column */
 .driver-full-name {
-  font-family: var(--font-body), var(--font-emoji);
-  font-size: 0.8rem;
+  font-family: var(--font-display), var(--font-emoji);
+  font-size: 0.85rem;
+  font-weight: 700;
   color: #ccc;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -224,6 +216,17 @@
 .driver-full-name.focused {
   text-decoration: underline;
   text-underline-offset: 2px;
+}
+
+/* Team Name column */
+.team-name {
+  font-family: var(--font-display), var(--font-emoji);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #888;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* ============================================
@@ -273,7 +276,11 @@
   }
 
   .driver-full-name {
-    font-size: 1rem;
+    font-size: 1.05rem;
+  }
+
+  .team-name {
+    font-size: 0.9rem;
   }
 }
 
@@ -301,6 +308,10 @@
   }
 
   .driver-full-name {
-    font-size: 1.1rem;
+    font-size: 1.15rem;
+  }
+
+  .team-name {
+    font-size: 1rem;
   }
 }

@@ -65,58 +65,200 @@ export interface Track {
 }
 
 // ============================================
-// TRACK LAYOUTS (5 shapes)
+// TRACK LAYOUTS - F1-Inspired Circuit Designs
+// Each layout has distinct character with proper corners
+// Pit lane midpoint aligns with start/finish line
 // ============================================
 
 const LAYOUTS: Record<string, TrackLayout> = {
-  oval: {
-    id: 'oval',
-    name: 'Oval',
-    trackPath: 'M 150 60 L 450 60 Q 550 60, 550 150 Q 550 240, 450 240 L 150 240 Q 50 240, 50 150 Q 50 60, 150 60 Z',
-    straightStart: { x: 150, y: 60 },
-    straightEnd: { x: 450, y: 60 },
-    pitLanePath: 'M 430 60 Q 500 80, 520 120 Q 530 160, 500 190',
-    totalLength: 1200,
-    startFinishPosition: 0,
-  },
-  rectangle: {
-    id: 'rectangle',
-    name: 'Rectangle',
-    trackPath: 'M 120 60 L 480 60 Q 540 60, 540 100 L 540 200 Q 540 240, 480 240 L 120 240 Q 60 240, 60 200 L 60 100 Q 60 60, 120 60 Z',
-    straightStart: { x: 120, y: 60 },
-    straightEnd: { x: 480, y: 60 },
-    pitLanePath: 'M 460 60 L 500 80 L 500 180',
-    totalLength: 1300,
-    startFinishPosition: 0,
-  },
-  triangle: {
-    id: 'triangle',
-    name: 'Triangle',
-    trackPath: 'M 150 60 L 450 60 Q 480 60, 490 85 L 350 240 Q 300 270, 250 240 L 110 85 Q 120 60, 150 60 Z',
-    straightStart: { x: 150, y: 60 },
-    straightEnd: { x: 450, y: 60 },
-    pitLanePath: 'M 440 65 Q 470 90, 460 130 L 420 180',
+  // Monaco-style: Tight street circuit, technical corners
+  // Character: Slow, twisty, lots of 90-degree turns
+  street: {
+    id: 'street',
+    name: 'Street Circuit',
+    // S/F at x=300, top straight, clockwise
+    trackPath: `
+      M 300 55
+      L 480 55
+      Q 520 55, 520 95
+      L 520 140
+      Q 520 170, 490 170
+      L 400 170
+      Q 370 170, 370 200
+      L 370 270
+      Q 370 300, 340 300
+      L 260 300
+      Q 230 300, 230 270
+      L 230 200
+      Q 230 170, 200 170
+      L 110 170
+      Q 80 170, 80 140
+      L 80 95
+      Q 80 55, 120 55
+      L 300 55
+      Z
+    `.replace(/\s+/g, ' ').trim(),
+    straightStart: { x: 120, y: 55 },
+    straightEnd: { x: 480, y: 55 },
+    // Pit lane: straight horizontal line below main straight, left to right (entry → exit)
+    pitLanePath: 'M 150 85 L 450 85',
     totalLength: 1100,
     startFinishPosition: 0,
   },
-  diamond: {
-    id: 'diamond',
-    name: 'Diamond',
-    trackPath: 'M 200 50 L 400 50 Q 430 50, 450 80 L 530 150 Q 550 170, 530 190 L 450 260 Q 430 290, 400 290 L 200 290 Q 170 290, 150 260 L 70 190 Q 50 170, 70 150 L 150 80 Q 170 50, 200 50 Z',
-    straightStart: { x: 200, y: 50 },
-    straightEnd: { x: 400, y: 50 },
-    pitLanePath: 'M 380 55 Q 430 70, 470 120 L 500 170',
+
+  // Monza-style: Power circuit with long straights and chicanes
+  // Character: High speed, minimal corners, chicane complexes
+  power: {
+    id: 'power',
+    name: 'Power Circuit',
+    // Long straights with chicanes breaking them up
+    trackPath: `
+      M 300 50
+      L 520 50
+      Q 560 50, 560 90
+      L 560 120
+      Q 560 140, 540 150
+      L 510 165
+      Q 490 175, 510 185
+      L 540 200
+      Q 560 210, 560 230
+      L 560 270
+      Q 560 310, 520 310
+      L 80 310
+      Q 40 310, 40 270
+      L 40 90
+      Q 40 50, 80 50
+      L 300 50
+      Z
+    `.replace(/\s+/g, ' ').trim(),
+    straightStart: { x: 80, y: 50 },
+    straightEnd: { x: 520, y: 50 },
+    pitLanePath: 'M 120 80 L 480 80',
     totalLength: 1400,
     startFinishPosition: 0,
   },
-  stadium: {
-    id: 'stadium',
-    name: 'Stadium',
-    trackPath: 'M 180 80 L 420 80 Q 520 80, 520 150 Q 520 220, 420 220 L 180 220 Q 80 220, 80 150 Q 80 80, 180 80 Z',
-    straightStart: { x: 180, y: 80 },
-    straightEnd: { x: 420, y: 80 },
-    pitLanePath: 'M 400 85 Q 480 100, 490 150 Q 480 200, 420 215',
-    totalLength: 1150,
+
+  // Silverstone-style: Fast flowing with sweeping corners
+  // Character: High-speed sweepers, Maggots/Becketts-style esses
+  flowing: {
+    id: 'flowing',
+    name: 'Flowing Circuit',
+    // Sweeping curves, wide radius turns
+    trackPath: `
+      M 300 60
+      L 450 60
+      Q 530 60, 550 120
+      Q 570 180, 520 220
+      L 450 260
+      Q 400 290, 340 280
+      Q 280 270, 260 290
+      Q 240 310, 200 300
+      L 120 270
+      Q 60 250, 50 190
+      Q 40 130, 80 90
+      Q 120 50, 180 55
+      L 300 60
+      Z
+    `.replace(/\s+/g, ' ').trim(),
+    straightStart: { x: 180, y: 55 },
+    straightEnd: { x: 450, y: 60 },
+    pitLanePath: 'M 180 90 L 420 90',
+    totalLength: 1300,
+    startFinishPosition: 0,
+  },
+
+  // Bahrain/Abu Dhabi-style: Modern tilke circuit
+  // Character: Mix of tight infield and flowing sections
+  modern: {
+    id: 'modern',
+    name: 'Modern Circuit',
+    // Technical infield, flowing outer section
+    trackPath: `
+      M 300 50
+      L 480 50
+      Q 540 50, 540 100
+      L 540 160
+      Q 540 200, 500 200
+      L 420 200
+      Q 380 200, 380 240
+      L 380 280
+      Q 380 310, 340 310
+      L 200 310
+      Q 160 310, 160 280
+      L 160 220
+      Q 160 190, 130 190
+      L 80 190
+      Q 40 190, 40 150
+      L 40 100
+      Q 40 50, 100 50
+      L 300 50
+      Z
+    `.replace(/\s+/g, ' ').trim(),
+    straightStart: { x: 100, y: 50 },
+    straightEnd: { x: 480, y: 50 },
+    pitLanePath: 'M 130 80 L 450 80',
+    totalLength: 1350,
+    startFinishPosition: 0,
+  },
+
+  // Suzuka-style: Figure-8 inspired with famous esses
+  // Character: Flowing esses, crossover feel (simplified)
+  technical: {
+    id: 'technical',
+    name: 'Technical Circuit',
+    // S-curves (esses), tight hairpin, flowing back section
+    trackPath: `
+      M 300 55
+      L 420 55
+      Q 480 55, 500 90
+      Q 520 125, 490 150
+      Q 460 175, 490 200
+      Q 520 225, 500 260
+      Q 480 295, 420 295
+      L 180 295
+      Q 100 295, 80 240
+      Q 60 185, 100 150
+      Q 140 115, 100 80
+      Q 60 45, 120 45
+      L 300 55
+      Z
+    `.replace(/\s+/g, ' ').trim(),
+    straightStart: { x: 120, y: 45 },
+    straightEnd: { x: 420, y: 55 },
+    pitLanePath: 'M 160 85 L 400 85',
+    totalLength: 1250,
+    startFinishPosition: 0,
+  },
+
+  // Spa-style: Long fast circuit with variety
+  // Character: Fast straights, elevation changes implied by corner variety
+  classic: {
+    id: 'classic',
+    name: 'Classic Circuit',
+    // Mix of everything: hairpin, fast kink, chicane, sweeper
+    trackPath: `
+      M 300 45
+      L 500 45
+      Q 560 45, 560 100
+      L 560 150
+      Q 560 180, 530 190
+      Q 500 200, 520 230
+      Q 540 260, 500 290
+      L 350 320
+      Q 300 330, 250 320
+      L 100 290
+      Q 50 280, 50 230
+      L 50 180
+      Q 50 140, 90 130
+      Q 130 120, 110 90
+      Q 90 60, 130 50
+      L 300 45
+      Z
+    `.replace(/\s+/g, ' ').trim(),
+    straightStart: { x: 130, y: 50 },
+    straightEnd: { x: 500, y: 45 },
+    pitLanePath: 'M 150 75 L 470 75',
+    totalLength: 1450,
     startFinishPosition: 0,
   },
 };
@@ -127,7 +269,7 @@ const LAYOUTS: Record<string, TrackLayout> = {
 // ============================================
 
 export const CURRENT_TRACKS: Track[] = [
-  // 1. Bahrain - Venhir
+  // 1. Bahrain - Venhir (Modern tilke-style)
   {
     id: 'venhir',
     name: 'Venhir',
@@ -136,9 +278,9 @@ export const CURRENT_TRACKS: Track[] = [
     funEmoji: '🦷',
     length: 850,
     laps: 15,
-    layout: LAYOUTS.diamond,
+    layout: LAYOUTS.modern,
   },
-  // 2. Saudi Arabia - Cheddah
+  // 2. Saudi Arabia - Cheddah (Street circuit, fast walls)
   {
     id: 'cheddah',
     name: 'Cheddah',
@@ -147,9 +289,9 @@ export const CURRENT_TRACKS: Track[] = [
     funEmoji: '🧀',
     length: 900,
     laps: 14,
-    layout: LAYOUTS.rectangle,
+    layout: LAYOUTS.power,
   },
-  // 3. Australia - All Bird Park
+  // 3. Australia - All Bird Park (Flowing street circuit)
   {
     id: 'all-bird-park',
     name: 'All Bird Park',
@@ -158,9 +300,9 @@ export const CURRENT_TRACKS: Track[] = [
     funEmoji: '🦜',
     length: 820,
     laps: 16,
-    layout: LAYOUTS.stadium,
+    layout: LAYOUTS.flowing,
   },
-  // 4. Japan - Choo-Choo-Ka
+  // 4. Japan - Choo-Choo-Ka (Technical, Suzuka-style)
   {
     id: 'choo-choo-ka',
     name: 'Choo-Choo-Ka',
@@ -169,9 +311,9 @@ export const CURRENT_TRACKS: Track[] = [
     funEmoji: '🚂',
     length: 880,
     laps: 15,
-    layout: LAYOUTS.diamond,
+    layout: LAYOUTS.technical,
   },
-  // 5. China - Fang High
+  // 5. China - Fang High (Modern circuit)
   {
     id: 'fang-high',
     name: 'Fang High',
@@ -180,9 +322,9 @@ export const CURRENT_TRACKS: Track[] = [
     funEmoji: '🧛',
     length: 850,
     laps: 15,
-    layout: LAYOUTS.oval,
+    layout: LAYOUTS.modern,
   },
-  // 6. Miami - Spyami
+  // 6. Miami - Spyami (Street circuit)
   {
     id: 'spyami',
     name: 'Spyami',
@@ -191,9 +333,9 @@ export const CURRENT_TRACKS: Track[] = [
     funEmoji: '🕵️‍♂️',
     length: 800,
     laps: 16,
-    layout: LAYOUTS.rectangle,
+    layout: LAYOUTS.street,
   },
-  // 7. Imola - Grimola
+  // 7. Imola - Grimola (Classic old-school)
   {
     id: 'grimola',
     name: 'Grimola',
@@ -202,9 +344,9 @@ export const CURRENT_TRACKS: Track[] = [
     funEmoji: '💀',
     length: 780,
     laps: 17,
-    layout: LAYOUTS.triangle,
+    layout: LAYOUTS.classic,
   },
-  // 8. Monaco - Monacoco
+  // 8. Monaco - Monacoco (Tight street circuit)
   {
     id: 'monacoco',
     name: 'Monacoco',
@@ -213,9 +355,9 @@ export const CURRENT_TRACKS: Track[] = [
     funEmoji: '🍫',
     length: 700,
     laps: 18,
-    layout: LAYOUTS.rectangle,
+    layout: LAYOUTS.street,
   },
-  // 9. Spain - Cattylosers
+  // 9. Spain - Cattylosers (Technical, flowing)
   {
     id: 'cattylosers',
     name: 'Cattylosers',
@@ -224,9 +366,9 @@ export const CURRENT_TRACKS: Track[] = [
     funEmoji: '🐱',
     length: 820,
     laps: 16,
-    layout: LAYOUTS.stadium,
+    layout: LAYOUTS.technical,
   },
-  // 10. Canada - Mini-Vanada
+  // 10. Canada - Mini-Vanada (Power circuit, walls)
   {
     id: 'mini-vanada',
     name: 'Mini-Vanada',
@@ -235,9 +377,9 @@ export const CURRENT_TRACKS: Track[] = [
     funEmoji: '🚙',
     length: 800,
     laps: 16,
-    layout: LAYOUTS.oval,
+    layout: LAYOUTS.power,
   },
-  // 11. Austria - Eelburg
+  // 11. Austria - Eelburg (Short, fast)
   {
     id: 'eelburg',
     name: 'Eelburg',
@@ -246,9 +388,9 @@ export const CURRENT_TRACKS: Track[] = [
     funEmoji: '⚡️',
     length: 720,
     laps: 18,
-    layout: LAYOUTS.triangle,
+    layout: LAYOUTS.flowing,
   },
-  // 12. Great Britain - Silverclone
+  // 12. Great Britain - Silverclone (Fast flowing, Silverstone-style)
   {
     id: 'silverclone',
     name: 'Silverclone',
@@ -257,9 +399,9 @@ export const CURRENT_TRACKS: Track[] = [
     funEmoji: '🤖',
     length: 880,
     laps: 15,
-    layout: LAYOUTS.stadium,
+    layout: LAYOUTS.flowing,
   },
-  // 13. Belgium - Spa Frankenstein
+  // 13. Belgium - Spa Frankenstein (Classic, long, Spa-style)
   {
     id: 'spa-frankenstein',
     name: 'Spa Frankenstein',
@@ -268,9 +410,9 @@ export const CURRENT_TRACKS: Track[] = [
     funEmoji: '🧟‍♂️',
     length: 950,
     laps: 14,
-    layout: LAYOUTS.diamond,
+    layout: LAYOUTS.classic,
   },
-  // 14. Hungary - Tonguearoring
+  // 14. Hungary - Tonguearoring (Technical, twisty)
   {
     id: 'tonguearoring',
     name: 'Tonguearoring',
@@ -279,9 +421,9 @@ export const CURRENT_TRACKS: Track[] = [
     funEmoji: '👅',
     length: 780,
     laps: 17,
-    layout: LAYOUTS.oval,
+    layout: LAYOUTS.technical,
   },
-  // 15. Netherlands - Sandforts
+  // 15. Netherlands - Sandforts (Modern banked turns)
   {
     id: 'sandforts',
     name: 'Sandforts',
@@ -290,9 +432,9 @@ export const CURRENT_TRACKS: Track[] = [
     funEmoji: '🏖️',
     length: 760,
     laps: 17,
-    layout: LAYOUTS.stadium,
+    layout: LAYOUTS.modern,
   },
-  // 16. Italy - Monsta
+  // 16. Italy - Monsta (Power circuit, Monza-style)
   {
     id: 'monsta',
     name: 'Monsta',
@@ -301,9 +443,9 @@ export const CURRENT_TRACKS: Track[] = [
     funEmoji: '🧌',
     length: 900,
     laps: 14,
-    layout: LAYOUTS.oval,
+    layout: LAYOUTS.power,
   },
-  // 17. Azerbaijan - Snapbaku
+  // 17. Azerbaijan - Snapbaku (Street circuit, long straight)
   {
     id: 'snapbaku',
     name: 'Snapbaku',
@@ -312,9 +454,9 @@ export const CURRENT_TRACKS: Track[] = [
     funEmoji: '🧢',
     length: 920,
     laps: 14,
-    layout: LAYOUTS.rectangle,
+    layout: LAYOUTS.street,
   },
-  // 18. Singapore - Subpoena Day
+  // 18. Singapore - Subpoena Day (Street circuit, night)
   {
     id: 'subpoena-day',
     name: 'Subpoena Day',
@@ -323,9 +465,9 @@ export const CURRENT_TRACKS: Track[] = [
     funEmoji: '👩‍⚖️',
     length: 850,
     laps: 15,
-    layout: LAYOUTS.rectangle,
+    layout: LAYOUTS.street,
   },
-  // 19. Austin - MOTA
+  // 19. Austin - MOTA (Modern, COTA-style)
   {
     id: 'mota',
     name: 'MOTA',
@@ -334,9 +476,9 @@ export const CURRENT_TRACKS: Track[] = [
     funEmoji: '🏰',
     length: 880,
     laps: 15,
-    layout: LAYOUTS.diamond,
+    layout: LAYOUTS.modern,
   },
-  // 20. Mexico - T-Rex & Co.
+  // 20. Mexico - T-Rex & Co. (Flowing, stadium section)
   {
     id: 't-rex-and-co',
     name: 'T-Rex & Co.',
@@ -345,9 +487,9 @@ export const CURRENT_TRACKS: Track[] = [
     funEmoji: '🦖',
     length: 800,
     laps: 16,
-    layout: LAYOUTS.stadium,
+    layout: LAYOUTS.flowing,
   },
-  // 21. Brazil - Winter Igloos
+  // 21. Brazil - Winter Igloos (Classic old-school)
   {
     id: 'winter-igloos',
     name: 'Winter Igloos',
@@ -356,9 +498,9 @@ export const CURRENT_TRACKS: Track[] = [
     funEmoji: '🧊',
     length: 780,
     laps: 17,
-    layout: LAYOUTS.triangle,
+    layout: LAYOUTS.classic,
   },
-  // 22. Las Vegas - Las PEMDAS
+  // 22. Las Vegas - Las PEMDAS (Street circuit, night)
   {
     id: 'las-pemdas',
     name: 'Las PEMDAS',
@@ -367,9 +509,9 @@ export const CURRENT_TRACKS: Track[] = [
     funEmoji: '🧮',
     length: 920,
     laps: 14,
-    layout: LAYOUTS.rectangle,
+    layout: LAYOUTS.power,
   },
-  // 23. Qatar - Rainbowha
+  // 23. Qatar - Rainbowha (Modern, night)
   {
     id: 'rainbowha',
     name: 'Rainbowha',
@@ -378,9 +520,9 @@ export const CURRENT_TRACKS: Track[] = [
     funEmoji: '🦄',
     length: 850,
     laps: 15,
-    layout: LAYOUTS.oval,
+    layout: LAYOUTS.modern,
   },
-  // 24. Abu Dhabi - Yas Christina!
+  // 24. Abu Dhabi - Yas Christina! (Modern, twilight)
   {
     id: 'yas-christina',
     name: 'Yas Christina!',
@@ -389,7 +531,7 @@ export const CURRENT_TRACKS: Track[] = [
     funEmoji: '💃',
     length: 880,
     laps: 15,
-    layout: LAYOUTS.diamond,
+    layout: LAYOUTS.modern,
   },
 ];
 
@@ -406,7 +548,7 @@ export const HISTORIC_TRACKS: Track[] = [
     funEmoji: '🤸',
     length: 850,
     laps: 15,
-    layout: LAYOUTS.oval,
+    layout: LAYOUTS.power, // Indy-style power circuit
     isHistoric: true,
   },
   {
@@ -417,7 +559,7 @@ export const HISTORIC_TRACKS: Track[] = [
     funEmoji: '🍔',
     length: 950,
     laps: 14,
-    layout: LAYOUTS.diamond,
+    layout: LAYOUTS.classic, // Nurburgring-style classic
     isHistoric: true,
   },
   {
@@ -428,7 +570,7 @@ export const HISTORIC_TRACKS: Track[] = [
     funEmoji: '🎻',
     length: 800,
     laps: 16,
-    layout: LAYOUTS.stadium,
+    layout: LAYOUTS.technical, // Hockenheim-style technical
     isHistoric: true,
   },
   {
@@ -439,7 +581,7 @@ export const HISTORIC_TRACKS: Track[] = [
     funEmoji: '👮‍♂️',
     length: 880,
     laps: 15,
-    layout: LAYOUTS.rectangle,
+    layout: LAYOUTS.flowing, // Paul Ricard flowing
     isHistoric: true,
   },
   {
@@ -450,7 +592,7 @@ export const HISTORIC_TRACKS: Track[] = [
     funEmoji: '🪙',
     length: 870,
     laps: 15,
-    layout: LAYOUTS.diamond,
+    layout: LAYOUTS.modern, // Sepang modern
     isHistoric: true,
   },
   {
@@ -461,7 +603,7 @@ export const HISTORIC_TRACKS: Track[] = [
     funEmoji: '🥧',
     length: 780,
     laps: 17,
-    layout: LAYOUTS.triangle,
+    layout: LAYOUTS.flowing, // Kyalami flowing
     isHistoric: true,
   },
   {
@@ -472,7 +614,7 @@ export const HISTORIC_TRACKS: Track[] = [
     funEmoji: '🐭',
     length: 820,
     laps: 16,
-    layout: LAYOUTS.stadium,
+    layout: LAYOUTS.classic, // Portimao classic
     isHistoric: true,
   },
 ];

@@ -32,23 +32,17 @@ function getDriverCode(driver: Driver): string {
   return surname.slice(0, 3).toUpperCase().replace(/[^A-Z]/g, '');
 }
 
-// Position column (P) - shows yellow P badge when pitting
+// Position column (P)
 export const COLUMN_POSITION: ColumnConfig = {
   id: 'position',
   header: 'P',
   width: '28px',
   align: 'center',
-  render: (_driver: Driver, ctx: RowContext) => {
-    // Show pit indicator when driver is in pits
-    if (ctx.isPitting) {
-      return <span className="position-number pitting">P</span>;
-    }
-    return (
-      <span className={`position-number ${ctx.isFinished ? 'finished' : ''} ${ctx.isDNF ? 'dnf' : ''}`}>
-        {ctx.isDNF ? 'DNF' : ctx.displayPosition}
-      </span>
-    );
-  },
+  render: (_driver: Driver, ctx: RowContext) => (
+    <span className={`position-number ${ctx.isFinished ? 'finished' : ''} ${ctx.isDNF ? 'dnf' : ''} ${ctx.isPitting ? 'pitting' : ''}`}>
+      {ctx.isDNF ? 'DNF' : ctx.isPitting ? 'PIT' : ctx.displayPosition}
+    </span>
+  ),
 };
 
 // Team stripe column (4px color bar)
@@ -116,6 +110,19 @@ export const COLUMN_DRIVER_FULL_NAME: ColumnConfig = {
       style={{ color: driver.color }}
     >
       {driver.name}
+    </span>
+  ),
+};
+
+// Team name column (for detail view)
+export const COLUMN_TEAM_NAME: ColumnConfig = {
+  id: 'teamName',
+  header: 'Team',
+  width: 'minmax(80px, 120px)',
+  align: 'left',
+  render: (driver: Driver) => (
+    <span className="team-name" style={{ color: driver.color }}>
+      {driver.teamName || ''}
     </span>
   ),
 };
@@ -267,12 +274,13 @@ export const TRACK_COLUMNS: ColumnConfig[] = [
 ];
 
 // Detail View: Full data with tire history chart (like F1)
-// P | Marble | Full Name | Gap | Leader | Last | TireHistory | Status
+// P | Marble | Full Name | Team | Gap | Leader | Last | TireHistory | Status
 // Note: Bet info is shown in the "Your Bets" section below track, not in the tower
 export const DETAIL_COLUMNS: ColumnConfig[] = [
   COLUMN_POSITION,
   COLUMN_TEAM_MARBLE,
   COLUMN_DRIVER_FULL_NAME,
+  COLUMN_TEAM_NAME,
   COLUMN_GAP_AHEAD,
   COLUMN_GAP_LEADER,
   COLUMN_LAST_LAP,

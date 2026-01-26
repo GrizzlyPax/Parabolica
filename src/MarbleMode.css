@@ -182,10 +182,16 @@
   justify-content: center;
 }
 
-/* Small screens: reduce min to allow 2-up on iOS */
+/* Very small screens (iPhone SE etc): keep 2 columns but smaller */
 @media (max-width: 390px) {
   .tier-group-cards {
-    grid-template-columns: repeat(auto-fill, minmax(130px, 170px));
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.4rem;
+  }
+
+  /* Smaller touch targets acceptable on very small screens */
+  .wordle-cell .back-bet-btn {
+    min-height: 44px;
   }
 }
 
@@ -1347,7 +1353,29 @@
 
   /* betting-title and betting-desc now use clamp() - no override needed */
 
-  /* Grid columns handled by auto-fit - just adjust gap */
+  /* Force 2-column grid on mobile for larger cards */
+  .tier-group-cards {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+
+  /* Flipped cards need more height for bet content */
+  .wordle-cell-wrapper.flipped {
+    aspect-ratio: 0.85; /* Taller than square */
+  }
+
+  /* Bet buttons need 48px touch targets on mobile */
+  .wordle-cell .back-bet-btn {
+    min-height: 48px;
+    padding: 0.4rem 0.2rem;
+  }
+
+  .wordle-cell .back-amount-btn {
+    width: 36px;
+    height: 36px;
+    min-height: 36px;
+  }
+
   .wordle-grid {
     gap: var(--space-xs);
   }

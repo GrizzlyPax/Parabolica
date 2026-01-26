@@ -64,6 +64,7 @@ export interface TimingTowerProps {
   focusedDriverIds?: Set<number>; // Multi-driver focus
   onDriverClick?: (driverId: number) => void;
   condensed?: boolean;
+  expandable?: boolean; // Show expanded row details on focus (default true, false for Detail View)
   statusEffects?: Map<number, string>;
   positionDeltas?: Map<number, number>;
   fastestLapOverall?: number;
@@ -77,6 +78,7 @@ export interface DriverRowProps {
   context: RowContext;
   gridTemplate: string;
   isFocused: boolean;
+  expandable?: boolean; // Show expanded details when focused (default true)
   onClick?: () => void;
 }
 

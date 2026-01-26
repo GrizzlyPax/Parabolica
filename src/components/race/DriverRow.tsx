@@ -3,7 +3,7 @@
 // Expands when focused to show driver details
 import type { DriverRowProps } from './types';
 
-function DriverRow({ driver, columns, context, gridTemplate, isFocused, onClick }: DriverRowProps) {
+function DriverRow({ driver, columns, context, gridTemplate, isFocused, expandable = true, onClick }: DriverRowProps) {
   const { isFinished, isDNF, isPitting } = context;
 
   // Build style with grid template and team color for focus glow
@@ -38,9 +38,9 @@ function DriverRow({ driver, columns, context, gridTemplate, isFocused, onClick 
         ))}
       </div>
 
-      {/* Expanded details section - only shown when focused */}
+      {/* Expanded details section - shown when focused AND expandable */}
       {/* Simple: full name + current tire, no redundant info */}
-      {isFocused && (
+      {isFocused && expandable && (
         <div className="timing-row-expanded" style={{ '--team-color': driver.color } as React.CSSProperties}>
           <div className="expanded-content">
             <span className="expanded-full-name" style={{ color: driver.color }}>{driver.name}</span>

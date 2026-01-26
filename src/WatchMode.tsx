@@ -119,9 +119,8 @@ function getBetStatus(
     case 'points':
       return currentPosition <= 10 ? 'winning' : 'losing';
     case 'finishes':
-      // If race finished and driver finished, they won
-      // During race, assume they'll finish unless DNF
-      return raceFinished ? 'winning' : 'pending';
+      // Driver is still racing = will finish (optimistic until DNF)
+      return 'winning';
     case 'dnf':
       // DNF bet only wins if driver DNF's
       return raceFinished ? 'losing' : 'pending';
@@ -1268,6 +1267,7 @@ function WatchMode({
                 focusedDriverIds={focusedDriverIds}
                 onDriverClick={toggleDriverFocus}
                 condensed={false}
+                expandable={false}
                 statusEffects={statusEffectsMap}
                 positionDeltas={positionDeltasForTower}
                 fastestLapOverall={fastestLapOverall ?? undefined}

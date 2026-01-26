@@ -30,6 +30,7 @@ function TimingTower({
   focusedDriverIds = new Set(),
   onDriverClick,
   condensed: _condensed = false, // Reserved for future styling differences
+  expandable = true, // Show expanded row details on focus
   statusEffects,
   positionDeltas,
   fastestLapOverall,
@@ -279,6 +280,7 @@ function TimingTower({
               context={context}
               gridTemplate={gridTemplate}
               isFocused={focusedDriverIds.has(driver.id)}
+              expandable={expandable}
               onClick={() => onDriverClick?.(driver.id)}
             />
           );

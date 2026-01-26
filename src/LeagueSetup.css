@@ -2291,10 +2291,11 @@
     margin-bottom: 0.4rem;
   }
 
-  /* Grid columns handled by auto-fit - just adjust gap */
+  /* Force 2-column grid on mobile for larger cards */
   .league-setup.betting-style .wordle-grid.teams-grid,
   .league-setup.betting-style .teams-grid {
-    gap: var(--space-xs);
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
   }
 
   .league-setup.betting-style .wordle-grid.tracks-grid {
