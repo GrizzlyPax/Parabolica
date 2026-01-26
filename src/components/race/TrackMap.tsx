@@ -376,7 +376,7 @@ function TrackMap({
                 cy={0}
                 r={radius}
                 fill={driver.color}
-                stroke={isVisible ? (driver.accentColor || '#fff') : '#333'}
+                stroke={driver.accentColor || '#fff'}
                 strokeWidth={strokeWidth}
                 opacity={opacity}
                 className="marker-circle"
