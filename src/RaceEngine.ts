@@ -57,8 +57,11 @@ export interface Driver {
   hasPitted: boolean;
   usedCompounds: TireCompound[];  // Track which compounds have been used (for mandatory variety)
   dnfInfo: DNFInfo | null;
-  pitProgress: number;      // 0-1 during pit stop
-  currentPitDuration: number;   // Duration of current pit stop (set when entering pit)
+  pitProgress: number;      // 0-1 during pit stop (overall progress through pit lane)
+  pitPhase: PitPhase | null;    // Current phase: entry (driving to box), stopped (pit work), exit (driving out)
+  pitBoxPosition: number;       // 0-1 position along pit lane where this driver's pit box is
+  pitWorkProgress: number;      // 0-1 progress through the stationary pit work phase
+  currentPitWorkDuration: number;   // Duration of pit work (stationary part, affected by team stat)
   currentPitIsSlowStop: boolean; // Whether current pit stop is a slow stop
   currentPitIsQuickStop: boolean; // Whether current pit stop is a quick stop
   isDamaged: boolean;       // Survived a crash but with damage
@@ -98,7 +101,8 @@ export interface RaceConfig {
   randomEventChance: number;      // Probability of random event per tick (0-1)
   // Tire/Pit/Crash settings
   tireWearRate: number;           // Base wear per tick (default: 0.02)
-  pitStopDuration: number;        // Base ticks in pit (default: 40)
+  pitLaneSpeedLimit: number;      // Speed in pit lane (units/tick, much slower than racing)
+  pitWorkBaseDuration: number;    // Base ticks for stationary pit work (tire change, etc.)
   mandatoryPitStops: number;      // Required stops (default: 1)
   crashProximityThreshold: number; // Track % for collision risk (default: 0.03)
   baseCrashChance: number;        // Crash probability when in proximity (default: 0.001)
@@ -154,6 +158,9 @@ export const TIRE_COMPOUNDS: Record<TireCompound, TireCompoundProperties> = {
 // === DRIVER STATUS TYPES ===
 
 export type DriverStatus = 'racing' | 'pitting' | 'finished' | 'dnf';
+
+// Pit stop phases: entry (driving to box), stopped (pit work), exit (driving to pit exit)
+export type PitPhase = 'entry' | 'stopped' | 'exit';
 
 export type DNFReason = 'crash' | 'mechanical' | 'tire_failure';
 
@@ -303,7 +310,8 @@ export const DEFAULT_CONFIG: RaceConfig = {
   randomEventChance: 0.05,
   // Tire/Pit/Crash defaults
   tireWearRate: 0.02,
-  pitStopDuration: 60,
+  pitLaneSpeedLimit: 4,        // Units/tick in pit lane (much slower than racing ~7-8)
+  pitWorkBaseDuration: 30,     // Base ticks for stationary pit work
   mandatoryPitStops: 2,
   crashProximityThreshold: 0.03,
   baseCrashChance: 0.0003,  // Further reduced for less frequent crashes
@@ -475,7 +483,10 @@ class RaceEngine {
         usedCompounds: [startingCompound],  // Track starting compound
         dnfInfo: null,
         pitProgress: 0,
-        currentPitDuration: 0,
+        pitPhase: null,
+        pitBoxPosition: 0,  // Will be set after all drivers are created
+        pitWorkProgress: 0,
+        currentPitWorkDuration: 0,
         currentPitIsSlowStop: false,
         currentPitIsQuickStop: false,
         isDamaged: false,
@@ -484,8 +495,18 @@ class RaceEngine {
         finishTick: null,
       };
     });
+    // Assign pit box positions based on driver order (no teams for default drivers)
+    this.assignPitBoxPositions();
     this.lapStartTick = new Map(this.drivers.map(d => [d.id, 0]));
     this.lastSector = new Map(this.drivers.map(d => [d.id, 0]));
+  }
+
+  // Assign pit box positions to all drivers
+  private assignPitBoxPositions(): void {
+    const positions = this.calculatePitBoxPositions(this.drivers);
+    this.drivers.forEach(driver => {
+      driver.pitBoxPosition = positions.get(driver.id) || 0.5;
+    });
   }
 
   // Load a custom roster of generated drivers
@@ -553,7 +574,10 @@ class RaceEngine {
         usedCompounds: [startingCompound],  // Track starting compound
         dnfInfo: null,
         pitProgress: 0,
-        currentPitDuration: 0,
+        pitPhase: null,
+        pitBoxPosition: 0,  // Will be set after all drivers are created
+        pitWorkProgress: 0,
+        currentPitWorkDuration: 0,
         currentPitIsSlowStop: false,
         currentPitIsQuickStop: false,
         isDamaged: false,
@@ -562,6 +586,8 @@ class RaceEngine {
         finishTick: null,
       };
     });
+    // Assign pit box positions based on team names (alphabetically)
+    this.assignPitBoxPositions();
     this.lapStartTick = new Map(this.drivers.map(d => [d.id, 0]));
     this.lastSector = new Map(this.drivers.map(d => [d.id, 0]));
     this.previousPositions = new Map();
@@ -645,6 +671,49 @@ class RaceEngine {
       impact,
       magnitude: Math.min(1, Math.max(0, magnitude)),
     });
+  }
+
+  // Calculate pit box positions for all drivers based on team names (alphabetical)
+  // Returns a map of driver ID to pit box position (0-1 along pit lane)
+  private calculatePitBoxPositions(drivers: Driver[]): Map<number, number> {
+    // Get unique teams sorted alphabetically
+    const teams = [...new Set(drivers.map(d => d.teamName || d.name))].sort();
+
+    // Create a map of team name to index
+    const teamIndex = new Map<string, number>();
+    teams.forEach((team, idx) => teamIndex.set(team, idx));
+
+    // Calculate pit box position for each driver
+    // Pit boxes are distributed between 0.1 and 0.9 of the pit lane
+    // (leaving room at entry/exit)
+    const pitBoxPositions = new Map<number, number>();
+    const totalSlots = drivers.length;
+    const pitBoxStart = 0.15;  // Start 15% into pit lane
+    const pitBoxEnd = 0.85;    // End 85% into pit lane
+    const pitBoxRange = pitBoxEnd - pitBoxStart;
+
+    // Sort drivers by team (alphabetically), then by driver slot
+    const sortedDrivers = [...drivers].sort((a, b) => {
+      const teamA = a.teamName || a.name;
+      const teamB = b.teamName || b.name;
+      if (teamA !== teamB) return teamA.localeCompare(teamB);
+      // Within same team, primary driver (slot 1) comes first
+      return (a.driverSlot || 1) - (b.driverSlot || 1);
+    });
+
+    // Assign pit box positions
+    sortedDrivers.forEach((driver, idx) => {
+      const position = pitBoxStart + (idx / (totalSlots - 1 || 1)) * pitBoxRange;
+      pitBoxPositions.set(driver.id, position);
+    });
+
+    return pitBoxPositions;
+  }
+
+  // Get pit lane distance in track units (used for timing calculations)
+  private getPitLaneDistance(): number {
+    // Pit lane is approximately 30% of the track length
+    return this.config.lapLength * 0.30;
   }
 
   getDrivers(): Driver[] {
@@ -788,7 +857,10 @@ class RaceEngine {
         usedCompounds: [startingCompound],
         dnfInfo: null,
         pitProgress: 0,
-        currentPitDuration: 0,
+        pitPhase: null,
+        // pitBoxPosition preserved from ...d spread
+        pitWorkProgress: 0,
+        currentPitWorkDuration: 0,
         currentPitIsSlowStop: false,
         currentPitIsQuickStop: false,
         isDamaged: false,
@@ -797,6 +869,8 @@ class RaceEngine {
         finishTick: null,
       };
     });
+    // Re-assign pit box positions in case roster changed
+    this.assignPitBoxPositions();
     this.lapStartTick = new Map(this.drivers.map(d => [d.id, 0]));
     this.lastSector = new Map(this.drivers.map(d => [d.id, 0]));
     this.previousPositions = new Map();
@@ -1130,9 +1204,11 @@ class RaceEngine {
     return false;
   }
 
-  private calculatePitDuration(driver: Driver): { duration: number; isSlowStop: boolean; isQuickStop: boolean } {
-    // Fixed base duration - pit stops should be consistent, not based on driver speed
-    const baseDuration = this.config.pitStopDuration;
+  // Calculate pit WORK duration (the stationary part where tires are changed)
+  // This is separate from pit lane driving time which is based on speed limit
+  private calculatePitWorkDuration(driver: Driver): { duration: number; isSlowStop: boolean; isQuickStop: boolean } {
+    // Base duration for pit work (tire change, etc.)
+    const baseDuration = this.config.pitWorkBaseDuration;
 
     // Check for slow/quick pit stop based on team's pit crew stat
     // Pit crew: 1 star = 35% slow / 8% quick, 5 stars = 7% slow / 28% quick
@@ -1146,10 +1222,10 @@ class RaceEngine {
 
     let finalDuration = baseDuration;
     if (isSlowStop) {
-      // Slow stop adds 50% more time
+      // Slow stop adds 50% more time to pit work
       finalDuration = Math.floor(baseDuration * 1.5);
     } else if (isQuickStop) {
-      // Quick stop cuts pit time by 25%
+      // Quick stop cuts pit work time by 25%
       finalDuration = Math.floor(baseDuration * 0.75);
     }
 
@@ -1160,6 +1236,15 @@ class RaceEngine {
     finalDuration = Math.floor(finalDuration * pitModifier);
 
     return { duration: finalDuration, isSlowStop, isQuickStop };
+  }
+
+  // Calculate how much pit lane progress per tick based on speed limit
+  private getPitLaneProgressPerTick(): number {
+    // Pit lane distance is ~30% of track length
+    const pitLaneDistance = this.getPitLaneDistance();
+    // At pit lane speed limit, how much of the pit lane do we cover per tick?
+    // pitProgress goes 0→1 over the full pit lane
+    return this.config.pitLaneSpeedLimit / pitLaneDistance;
   }
 
   private selectNewTires(driver: Driver): TireCompound {
@@ -1864,15 +1949,45 @@ class RaceEngine {
         return { ...driver, status: 'finished' as DriverStatus };
       }
 
-      // === PIT STOP HANDLING ===
+      // === PIT STOP HANDLING (Three-Phase System) ===
+      // Phase 1: Entry - driving to pit box at speed limit
+      // Phase 2: Stopped - stationary pit work (tire change)
+      // Phase 3: Exit - driving from pit box to pit exit at speed limit
       if (driver.status === 'pitting') {
-        // Driver is in pit - advance pit progress using stored duration
-        const pitDuration = driver.currentPitDuration || this.config.pitStopDuration;
-        const newPitProgress = driver.pitProgress + (1 / pitDuration);
+        const pitBoxPos = driver.pitBoxPosition;
+        const progressPerTick = this.getPitLaneProgressPerTick();
+        let newPitProgress = driver.pitProgress;
+        let newPitPhase = driver.pitPhase;
+        let newPitWorkProgress = driver.pitWorkProgress;
 
-        // Pit lane goes from 85% of lap to 15% of next lap
-        // So drivers cross the start/finish line at ~50% pit progress
-        // Check if we just crossed the start/finish threshold
+        // Determine which phase we're in and advance accordingly
+        if (newPitPhase === 'entry') {
+          // Driving to pit box at speed limit
+          newPitProgress += progressPerTick;
+
+          // Check if we've reached the pit box
+          if (newPitProgress >= pitBoxPos) {
+            newPitProgress = pitBoxPos; // Snap to pit box
+            newPitPhase = 'stopped';
+            newPitWorkProgress = 0;
+          }
+        } else if (newPitPhase === 'stopped') {
+          // Stationary at pit box - advance pit work progress
+          const workDuration = driver.currentPitWorkDuration || this.config.pitWorkBaseDuration;
+          newPitWorkProgress += (1 / workDuration);
+
+          // Check if pit work is complete
+          if (newPitWorkProgress >= 1) {
+            newPitWorkProgress = 1;
+            newPitPhase = 'exit';
+          }
+        } else if (newPitPhase === 'exit') {
+          // Driving from pit box to exit at speed limit
+          newPitProgress += progressPerTick;
+        }
+
+        // Track lap/sector crossings
+        // Start/finish line is at ~50% of pit lane (middle)
         const crossingThreshold = 0.5;
         const justCrossedStartFinish = driver.pitProgress < crossingThreshold && newPitProgress >= crossingThreshold;
 
@@ -1906,13 +2021,18 @@ class RaceEngine {
           }
         }
 
-        if (newPitProgress >= 1) {
+        // Check if pit stop is complete (exited pit lane)
+        if (newPitProgress >= 1 && newPitPhase === 'exit') {
           // Exit pit
           const newCompound = this.selectNewTires(driver);
+          const totalPitDuration = this.raceState.totalTicks - (driver.pitStops.length > 0
+            ? driver.pitStops[driver.pitStops.length - 1].tick
+            : this.lapStartTick.get(driver.id) || 0);
+
           const pitStop: PitStopInfo = {
             lap: newLap,
             tick: this.raceState.totalTicks,
-            duration: pitDuration,
+            duration: totalPitDuration,
             tiresBefore: driver.tireState.compound,
             tiresAfter: newCompound,
             wasSlowStop: driver.currentPitIsSlowStop || false,
@@ -1939,7 +2059,9 @@ class RaceEngine {
             sectorTimes: newSectorTimes,
             position: pitExitPosition,
             pitProgress: 0,
-            currentPitDuration: 0,
+            pitPhase: null,
+            pitWorkProgress: 0,
+            currentPitWorkDuration: 0,
             currentPitIsSlowStop: false,
             currentPitIsQuickStop: false,
             hasPitted: true,
@@ -1949,13 +2071,15 @@ class RaceEngine {
           };
         }
 
-        // Still pitting - update lap/sector if crossed start/finish
+        // Still pitting - update state
         return {
           ...driver,
           currentLap: newLap,
           lapTimes: newLapTimes,
           sectorTimes: newSectorTimes,
           pitProgress: newPitProgress,
+          pitPhase: newPitPhase,
+          pitWorkProgress: newPitWorkProgress,
         };
       }
 
@@ -1964,8 +2088,8 @@ class RaceEngine {
         // Evaluate pit_stop tags when entering the pits
         this.evaluateDriverTags(driver, { isPitting: true });
 
-        // Calculate pit duration and slow stop status when entering
-        const { duration, isSlowStop, isQuickStop } = this.calculatePitDuration(driver);
+        // Calculate pit WORK duration (stationary part) and slow/quick status
+        const { duration, isSlowStop, isQuickStop } = this.calculatePitWorkDuration(driver);
 
         this.logEvent('pit_entry', driver, `Entering pit lane for tire change`, 'neutral', 0.4);
 
@@ -1980,7 +2104,9 @@ class RaceEngine {
           ...driver,
           status: 'pitting' as DriverStatus,
           pitProgress: 0,
-          currentPitDuration: duration,
+          pitPhase: 'entry' as PitPhase,
+          pitWorkProgress: 0,
+          currentPitWorkDuration: duration,
           currentPitIsSlowStop: isSlowStop,
           currentPitIsQuickStop: isQuickStop,
         };

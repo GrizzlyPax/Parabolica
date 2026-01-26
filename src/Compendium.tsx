@@ -189,16 +189,20 @@ function Compendium({ onBack }: CompendiumProps) {
             <CollapsibleSection title="Pit Stops" icon="🔧">
               <div className="compact-list">
                 <div className="compact-row">
-                  <span className="compact-label">Base Duration</span>
-                  <span className="compact-value">{DEFAULT_CONFIG.pitStopDuration} ticks</span>
+                  <span className="compact-label">Pit Lane Speed</span>
+                  <span className="compact-value">{DEFAULT_CONFIG.pitLaneSpeedLimit} units/tick</span>
+                </div>
+                <div className="compact-row">
+                  <span className="compact-label">Pit Work Duration</span>
+                  <span className="compact-value">{DEFAULT_CONFIG.pitWorkBaseDuration} ticks</span>
                 </div>
                 <div className="compact-row">
                   <span className="compact-label">Slow Stop</span>
-                  <span className="compact-value negative">+50% time</span>
+                  <span className="compact-value negative">+50% work time</span>
                 </div>
                 <div className="compact-row">
                   <span className="compact-label">Quick Stop</span>
-                  <span className="compact-value positive">-25% time</span>
+                  <span className="compact-value positive">-25% work time</span>
                 </div>
                 <div className="compact-row">
                   <span className="compact-label">Pit Crew Stat</span>

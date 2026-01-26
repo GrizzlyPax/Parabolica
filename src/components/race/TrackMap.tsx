@@ -118,6 +118,7 @@ function TrackMap({
         isHighlighted,
         isDNF: false,
         isPitting: false,
+        isStopped: false,
       };
     });
 
@@ -134,13 +135,15 @@ function TrackMap({
         isHighlighted: visibleDriverIds.has(driver.id),
         isDNF: true,
         isPitting: false,
+        isStopped: false,
       };
     });
 
     // Pitting drivers - show on pit lane using actual pit progress
-    // Use simple linear interpolation for straight-line pit lanes
+    // Three phases: entry (driving to box), stopped (at pit box), exit (driving out)
     const pittingPositions = pitting.map((driver) => {
       let point: { x: number; y: number };
+      const isStopped = driver.pitPhase === 'stopped';
 
       if (pitLanePath) {
         // Use driver's actual pit progress (0 = just entered, 1 = about to exit)
@@ -150,6 +153,10 @@ function TrackMap({
 
         if (linePoint) {
           point = linePoint;
+          // When stopped at pit box, offset Y position to show driver "pulled in"
+          if (isStopped) {
+            point = { x: point.x, y: point.y + 15 }; // Offset into pit box area
+          }
         } else {
           // Fallback if path parsing failed
           point = getPointAlongPath(trackPathEl, 0);
@@ -167,6 +174,7 @@ function TrackMap({
         isHighlighted: visibleDriverIds.has(driver.id),
         isDNF: false,
         isPitting: true,
+        isStopped, // Track if driver is stopped for pit work
       };
     });
 
@@ -182,6 +190,7 @@ function TrackMap({
         isHighlighted: visibleDriverIds.has(driver.id),
         isDNF: false,
         isPitting: false,
+        isStopped: false,
       };
     });
 
