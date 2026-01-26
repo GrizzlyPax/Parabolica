@@ -346,7 +346,7 @@ function TrackMap({
 
           // Marker sizes based on hierarchy
           const radius = isFocused ? 13 : isHighlighted ? 11 : isDNF ? 5 : 7;
-          const strokeWidth = isFocused ? 2.5 : isHighlighted ? 2 : 1;
+          const strokeWidth = isFocused ? 2.5 : isHighlighted ? 2 : 2;
           // Non-visible drivers are dimmed but still visible (0.7 base opacity)
           const opacity = isDNF ? 0.3 : isPitting ? 0.8 : isVisible ? 1 : 0.7;
 
