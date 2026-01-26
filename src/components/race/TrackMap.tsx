@@ -101,14 +101,6 @@ function TrackMap({
     const dnf = drivers.filter(d => d.status === 'dnf');
     const finished = drivers.filter(d => d.status === 'finished');
 
-    // DEBUG (#135): Log pitting driver details
-    if (pitting.length > 0) {
-      console.log(`[TrackMap] Pitting: ${pitting.length}, pitLanePath: ${pitLanePath ? `"${pitLanePath}"` : 'UNDEFINED'}`);
-      pitting.forEach(d => {
-        console.log(`  [DRIVER] ${d.name}: status="${d.status}", pitProgress=${d.pitProgress}, position=${d.position}`);
-      });
-    }
-
     // Calculate positions for racing drivers
     const racingPositions = racing.map(driver => {
       const normalizedPosition = ((driver.position % trackLength) + trackLength) % trackLength;
@@ -152,24 +144,19 @@ function TrackMap({
 
       if (pitLanePath) {
         // Use driver's actual pit progress (0 = just entered, 1 = about to exit)
-        // For clockwise tracks, pit entry is on the RIGHT (high x) and exit is on the LEFT (low x)
-        // Since paths are defined left-to-right, we INVERT progress so drivers move right→left
+        // For clockwise tracks, pit lane runs left→right (same as path definition)
         const pitLaneProgress = driver.pitProgress ?? 0;
-        const invertedProgress = 1 - pitLaneProgress; // 0→1 becomes 1→0
-        const linePoint = getPointAlongLinePath(pitLanePath, invertedProgress);
+        const linePoint = getPointAlongLinePath(pitLanePath, pitLaneProgress);
 
         if (linePoint) {
           point = linePoint;
-          console.log(`[PIT OK] ${driver.name}: progress=${pitLaneProgress.toFixed(2)} → inverted=${invertedProgress.toFixed(2)} → x=${point.x.toFixed(1)}, y=${point.y.toFixed(1)}`);
         } else {
           // Fallback if path parsing failed
           point = getPointAlongPath(trackPathEl, 0);
-          console.warn(`[PIT FALLBACK] ${driver.name}: linePoint was NULL! path="${pitLanePath}"`);
         }
       } else {
         // Fallback: show at start/finish area on track
         point = getPointAlongPath(trackPathEl, 0);
-        console.warn(`[PIT NO PATH] ${driver.name}: pitLanePath is undefined`);
       }
 
       return {
@@ -266,29 +253,6 @@ function TrackMap({
               strokeLinecap="round"
               className="pit-lane"
             />
-            {/* DEBUG (#135): Pit lane endpoint markers */}
-            {(() => {
-              const match = pitLanePath.match(/M\s*(-?[\d.]+)\s+(-?[\d.]+)\s*L\s*(-?[\d.]+)\s+(-?[\d.]+)/i);
-              if (match) {
-                const x1 = parseFloat(match[1]);
-                const y1 = parseFloat(match[2]);
-                const x2 = parseFloat(match[3]);
-                const y2 = parseFloat(match[4]);
-                const centerX = (x1 + x2) / 2;
-                const centerY = (y1 + y2) / 2;
-                return (
-                  <>
-                    <circle cx={x1} cy={y1} r={6} fill="#FFFF00" stroke="#000" strokeWidth={2} />
-                    <text x={x1} y={y1 - 12} textAnchor="middle" style={{ fontSize: '9px', fill: '#FFFF00', fontWeight: 'bold' }}>PIT OUT</text>
-                    <circle cx={x2} cy={y2} r={6} fill="#00FF00" stroke="#000" strokeWidth={2} />
-                    <text x={x2} y={y2 - 12} textAnchor="middle" style={{ fontSize: '9px', fill: '#00FF00', fontWeight: 'bold' }}>PIT IN</text>
-                    <circle cx={centerX} cy={centerY} r={8} fill="none" stroke="#00FFFF" strokeWidth={3} />
-                    <text x={centerX} y={centerY + 25} textAnchor="middle" style={{ fontSize: '8px', fill: '#00FFFF', fontWeight: 'bold' }}>CENTER ({centerX.toFixed(0)},{centerY.toFixed(0)})</text>
-                  </>
-                );
-              }
-              return null;
-            })()}
           </>
         )}
 
@@ -463,28 +427,6 @@ function TrackMap({
                 </text>
               )}
 
-              {/* DEBUG (#135): Bright indicator for pitting drivers with coordinates */}
-              {isPitting && (
-                <>
-                  <circle
-                    cx={0}
-                    cy={0}
-                    r={20}
-                    fill="none"
-                    stroke="#FF0000"
-                    strokeWidth={4}
-                    strokeDasharray="5 3"
-                  />
-                  <text
-                    x={0}
-                    y={30}
-                    textAnchor="middle"
-                    style={{ fontSize: '10px', fill: '#FF0000', fontWeight: 'bold' }}
-                  >
-                    PIT ({x.toFixed(0)},{y.toFixed(0)})
-                  </text>
-                </>
-              )}
             </g>
           );
         })}
