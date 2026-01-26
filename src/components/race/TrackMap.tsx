@@ -95,11 +95,10 @@ function TrackMap({
   const driverPositions = useMemo(() => {
     if (!trackPathEl) return [];
 
-    // Separate by status
-    const racing = drivers.filter(d => d.status !== 'finished' && d.status !== 'dnf' && d.status !== 'pitting');
+    // Separate by status (finished drivers are not shown on track)
+    const racing = drivers.filter(d => d.status === 'racing');
     const pitting = drivers.filter(d => d.status === 'pitting');
     const dnf = drivers.filter(d => d.status === 'dnf');
-    const finished = drivers.filter(d => d.status === 'finished');
 
     // Calculate positions for racing drivers
     const racingPositions = racing.map(driver => {
@@ -178,35 +177,19 @@ function TrackMap({
       };
     });
 
-    // Finished drivers at finish line
-    const finishedPositions = finished.map(driver => {
-      const point = getPointAlongPath(trackPathEl, 0);
-
-      return {
-        driver,
-        x: point.x,
-        y: point.y,
-        isFocused: focusedDriverIds.includes(driver.id),
-        isHighlighted: visibleDriverIds.has(driver.id),
-        isDNF: false,
-        isPitting: false,
-        isStopped: false,
-      };
-    });
+    // Finished drivers are removed from track map (they're done racing)
+    // No need to calculate positions for them
 
     // Order: DNF first (background), then regular, then highlighted, then focused (foreground)
     // Pitting drivers now included in proper z-order based on focus/highlight status
     const allPositions = [
       ...dnfPositions,
       ...pittingPositions.filter(p => !p.isFocused && !p.isHighlighted),
-      ...finishedPositions.filter(p => !p.isFocused && !p.isHighlighted),
       ...racingPositions.filter(p => !p.isFocused && !p.isHighlighted),
       ...pittingPositions.filter(p => p.isHighlighted && !p.isFocused),
       ...racingPositions.filter(p => p.isHighlighted && !p.isFocused),
-      ...finishedPositions.filter(p => p.isHighlighted && !p.isFocused),
       ...pittingPositions.filter(p => p.isFocused),
       ...racingPositions.filter(p => p.isFocused),
-      ...finishedPositions.filter(p => p.isFocused),
     ];
 
     return allPositions;
@@ -231,34 +214,45 @@ function TrackMap({
         preserveAspectRatio="xMidYMid meet"
         className="track-svg"
       >
-        {/* Track outline - thin path */}
+        {/* Track - white edges with black interior */}
+        {/* Outer white stroke (edges) */}
+        <path
+          d={trackPath}
+          fill="none"
+          stroke="#ffffff"
+          strokeWidth="14"
+          strokeOpacity="0.4"
+          className="track-outline-outer"
+        />
+        {/* Inner black stroke (creates empty interior) */}
         <path
           ref={trackPathRef}
           d={trackPath}
           fill="none"
-          stroke="#3a3a40"
-          strokeWidth="12"
+          stroke="#000000"
+          strokeWidth="10"
           className="track-outline"
         />
 
-        {/* Track centerline */}
-        <path
-          d={trackPath}
-          fill="none"
-          stroke="#2a2a30"
-          strokeWidth="1"
-          strokeDasharray="8 8"
-          className="track-centerline"
-        />
-
-        {/* Pit lane - styled like track but thinner */}
+        {/* Pit lane - white edges with black interior */}
         {pitLanePath && (
           <>
+            {/* Outer white stroke (edges) */}
             <path
               d={pitLanePath}
               fill="none"
-              stroke="#3a3a40"
-              strokeWidth="8"
+              stroke="#ffffff"
+              strokeWidth="10"
+              strokeOpacity="0.4"
+              strokeLinecap="round"
+              className="pit-lane-outer"
+            />
+            {/* Inner black stroke (empty interior) */}
+            <path
+              d={pitLanePath}
+              fill="none"
+              stroke="#000000"
+              strokeWidth="6"
               strokeLinecap="round"
               className="pit-lane"
             />
@@ -353,8 +347,8 @@ function TrackMap({
           // Marker sizes based on hierarchy
           const radius = isFocused ? 13 : isHighlighted ? 11 : isDNF ? 5 : 7;
           const strokeWidth = isFocused ? 2.5 : isHighlighted ? 2 : 1;
-          // Non-visible drivers are dimmed but still visible
-          const opacity = isDNF ? 0.2 : isPitting ? 0.5 : isVisible ? 1 : 0.4;
+          // Non-visible drivers are dimmed but still visible (0.7 base opacity)
+          const opacity = isDNF ? 0.3 : isPitting ? 0.8 : isVisible ? 1 : 0.7;
 
           return (
             <g

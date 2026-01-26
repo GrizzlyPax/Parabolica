@@ -17,14 +17,18 @@
   height: 100%;
 }
 
-/* Track path */
-.track-outline {
+/* Track path - white edges, black interior */
+.track-outline,
+.track-outline-outer {
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
-.track-centerline {
-  opacity: 0.5;
+/* Pit lane */
+.pit-lane,
+.pit-lane-outer {
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 /* Driver markers */
@@ -67,14 +71,9 @@
   filter: grayscale(0.5);
 }
 
-/* Pitting markers */
+/* Pitting markers - no animation, just slightly dimmed */
 .driver-marker.pitting .marker-circle {
-  animation: pit-blink 1s ease-in-out infinite;
-}
-
-@keyframes pit-blink {
-  0%, 100% { opacity: 0.7; }
-  50% { opacity: 0.4; }
+  opacity: 0.85;
 }
 
 /* ============================================
