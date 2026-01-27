@@ -109,6 +109,27 @@ function computeVariablesDiff(canon: SimVariables, heretic: SimVariables): Varia
   compare('driverSpeed.baseSpeedMin', 'base speed min', canon.driverSpeed.baseSpeedMin, heretic.driverSpeed.baseSpeedMin);
   compare('driverSpeed.baseSpeedMax', 'base speed max', canon.driverSpeed.baseSpeedMax, heretic.driverSpeed.baseSpeedMax);
 
+  // Betting - Strength Weights
+  compare('betting.strengthWeights.carPower', 'bet: power weight', canon.betting.strengthWeights.carPower, heretic.betting.strengthWeights.carPower);
+  compare('betting.strengthWeights.consistency', 'bet: consistency weight', canon.betting.strengthWeights.consistency, heretic.betting.strengthWeights.consistency);
+  compare('betting.strengthWeights.speed', 'bet: speed weight', canon.betting.strengthWeights.speed, heretic.betting.strengthWeights.speed);
+  compare('betting.strengthWeights.pitCrew', 'bet: pit crew weight', canon.betting.strengthWeights.pitCrew, heretic.betting.strengthWeights.pitCrew);
+  compare('betting.strengthWeights.carGrip', 'bet: grip weight', canon.betting.strengthWeights.carGrip, heretic.betting.strengthWeights.carGrip);
+  compare('betting.strengthWeights.luck', 'bet: luck weight', canon.betting.strengthWeights.luck, heretic.betting.strengthWeights.luck);
+  compare('betting.strengthWeights.carReliability', 'bet: reliability weight', canon.betting.strengthWeights.carReliability, heretic.betting.strengthWeights.carReliability);
+
+  // Betting - Base Multipliers
+  compare('betting.baseMultipliers.win', 'bet: win payout', canon.betting.baseMultipliers.win, heretic.betting.baseMultipliers.win);
+  compare('betting.baseMultipliers.podium', 'bet: podium payout', canon.betting.baseMultipliers.podium, heretic.betting.baseMultipliers.podium);
+  compare('betting.baseMultipliers.points', 'bet: points payout', canon.betting.baseMultipliers.points, heretic.betting.baseMultipliers.points);
+  compare('betting.baseMultipliers.finishes', 'bet: finishes payout', canon.betting.baseMultipliers.finishes, heretic.betting.baseMultipliers.finishes);
+  compare('betting.baseMultipliers.dnf', 'bet: dnf payout', canon.betting.baseMultipliers.dnf, heretic.betting.baseMultipliers.dnf);
+
+  // Betting - Driver Rating Weights
+  compare('betting.driverRatingWeights.consistency', 'rating: consistency', canon.betting.driverRatingWeights.consistency, heretic.betting.driverRatingWeights.consistency);
+  compare('betting.driverRatingWeights.speed', 'rating: speed', canon.betting.driverRatingWeights.speed, heretic.betting.driverRatingWeights.speed);
+  compare('betting.driverRatingWeights.luck', 'rating: luck', canon.betting.driverRatingWeights.luck, heretic.betting.driverRatingWeights.luck);
+
   return diffs;
 }
 

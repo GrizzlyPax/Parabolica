@@ -485,6 +485,36 @@ export interface SimVariables {
     baseSpeedMin: number;             // Minimum base speed per tick (3)
     baseSpeedMax: number;             // Maximum base speed per tick (12)
   };
+
+  // === BETTING ODDS (Marble Mode) ===
+  // Weights calibrated to actual race outcomes - update when balance changes!
+  betting: {
+    // Strength calculation weights (should sum to 1.0)
+    // These determine odds ranking - higher weight = more important for favorites
+    strengthWeights: {
+      carPower: number;       // Car power star rating impact
+      consistency: number;    // Driver consistency stat impact
+      speed: number;          // Driver speed stat impact
+      pitCrew: number;        // Team pit crew rating impact
+      carGrip: number;        // Car grip star rating impact
+      luck: number;           // Driver luck stat impact
+      carReliability: number; // Car reliability star rating impact
+    };
+    // Base payout multipliers per bet type
+    baseMultipliers: {
+      win: number;            // Picking the race winner
+      podium: number;         // Picking a top 3 finish
+      points: number;         // Picking a top 10 finish
+      finishes: number;       // Picking that they finish (no DNF)
+      dnf: number;            // Picking that they DNF
+    };
+    // Driver rating weights for vibe descriptors (should sum to 1.0)
+    driverRatingWeights: {
+      consistency: number;    // How much consistency affects rating
+      speed: number;          // How much speed affects rating
+      luck: number;           // How much luck affects rating
+    };
+  };
 }
 
 // Default "Canon" values - tuned for ~40% Lead Lap, ~22% DNF, compressed field
@@ -573,6 +603,31 @@ export const CANON_VARIABLES: SimVariables = {
     consistencyWeight: 0.35,    // Reduced consistency impact
     baseSpeedMin: 5,            // Tighter speed range (was 3)
     baseSpeedMax: 10,           // Tighter speed range (was 12)
+  },
+  betting: {
+    // Strength weights calibrated to SimLab Q1→Q5 win rate deltas:
+    // Car Power: 7.6%, Consistency: 4.5%, Speed: 4.0%, Pit Crew: 1.4%, Grip: 0.6%, Luck: 0.3%
+    strengthWeights: {
+      carPower: 0.35,       // Strongest predictor (7.6% delta)
+      consistency: 0.22,    // Second strongest (4.5% delta)
+      speed: 0.18,          // Compressed field = less impact (4.0% delta)
+      pitCrew: 0.10,        // Meaningful impact (1.4% delta)
+      carGrip: 0.08,        // Minor impact (0.6% delta)
+      luck: 0.04,           // Almost no impact (0.3% delta)
+      carReliability: 0.03, // Minimal (negative delta actually)
+    },
+    baseMultipliers: {
+      win: 10,              // 10× base for picking the winner
+      podium: 4,            // 4× base for top 3
+      points: 2,            // 2× base for top 10
+      finishes: 1.5,        // 1.5× base for completing the race
+      dnf: 3,               // 3× base for calling a DNF
+    },
+    driverRatingWeights: {
+      consistency: 0.45,    // Consistency matters most for "vibe" rating
+      speed: 0.35,          // Speed still matters but less dominant
+      luck: 0.20,           // Luck adds flavor
+    },
   },
 };
 

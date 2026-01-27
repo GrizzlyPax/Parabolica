@@ -1,0 +1,701 @@
+/* Bet Lab Styles */
+
+.betlab {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  color: #fff;
+}
+
+.betlab-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.betlab-header h1 {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+  background: linear-gradient(135deg, #a855f7, #22c55e);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.betlab-subtitle {
+  color: #888;
+  font-size: 1.1rem;
+}
+
+/* Setup Phase */
+.betlab-setup {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.betlab-config {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+.betlab-config h3 {
+  margin-bottom: 1.5rem;
+  color: #22c55e;
+}
+
+.config-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.config-row label {
+  min-width: 150px;
+  color: #888;
+}
+
+.batch-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.batch-btn {
+  padding: 0.5rem 1rem;
+  background: #252525;
+  border: 1px solid #444;
+  color: #aaa;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.batch-btn:hover {
+  border-color: #666;
+  color: #fff;
+}
+
+.batch-btn.active {
+  background: #22c55e;
+  border-color: #22c55e;
+  color: #000;
+  font-weight: 600;
+}
+
+.config-info {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  background: #252525;
+  border-radius: 6px;
+  color: #888;
+}
+
+.config-info strong {
+  color: #22c55e;
+}
+
+/* Variables Section */
+.betlab-variables {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+.variables-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.variables-header h3 {
+  color: #a855f7;
+}
+
+.reset-btn {
+  padding: 0.5rem 1rem;
+  background: #333;
+  border: 1px solid #555;
+  color: #aaa;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.reset-btn:hover {
+  background: #444;
+  color: #fff;
+}
+
+.variables-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.variable-group {
+  background: #252525;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.variable-group h4 {
+  color: #888;
+  font-size: 0.85rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #333;
+}
+
+.variable-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.variable-row label {
+  min-width: 100px;
+  color: #ccc;
+  font-size: 0.9rem;
+  text-transform: capitalize;
+}
+
+.variable-row input {
+  width: 80px;
+  padding: 0.4rem 0.5rem;
+  background: #1a1a1a;
+  border: 1px solid #444;
+  color: #fff;
+  border-radius: 4px;
+  font-family: monospace;
+  text-align: right;
+}
+
+.variable-row input:focus {
+  outline: none;
+  border-color: #a855f7;
+}
+
+.canon-value {
+  color: #555;
+  font-size: 0.8rem;
+}
+
+.changes-summary {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: rgba(168, 85, 247, 0.1);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  border-radius: 8px;
+}
+
+.changes-summary h4 {
+  color: #a855f7;
+  margin-bottom: 0.75rem;
+}
+
+.changes-summary ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.changes-summary li {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.3rem 0;
+  border-bottom: 1px solid rgba(168, 85, 247, 0.2);
+}
+
+.changes-summary li:last-child {
+  border-bottom: none;
+}
+
+.diff-label {
+  color: #ccc;
+}
+
+.diff-values {
+  color: #a855f7;
+  font-family: monospace;
+}
+
+.diff-percent {
+  margin-left: 0.5rem;
+}
+
+.diff-percent.positive {
+  color: #22c55e;
+}
+
+.diff-percent.negative {
+  color: #ef4444;
+}
+
+/* Actions */
+.betlab-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.start-btn {
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.start-btn.canon-only {
+  background: #22c55e;
+  border: none;
+  color: #000;
+}
+
+.start-btn.canon-only:hover {
+  background: #16a34a;
+  transform: scale(1.02);
+}
+
+.start-btn.compare {
+  background: linear-gradient(135deg, #22c55e, #a855f7);
+  border: none;
+  color: #fff;
+}
+
+.start-btn.compare:hover:not(:disabled) {
+  transform: scale(1.02);
+}
+
+.start-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Running Phase */
+.betlab-running {
+  text-align: center;
+  padding: 3rem;
+  background: #1a1a1a;
+  border-radius: 12px;
+}
+
+.betlab-running h3 {
+  margin-bottom: 2rem;
+}
+
+.progress-section {
+  max-width: 500px;
+  margin: 0 auto 2rem;
+}
+
+.progress-bar-container {
+  margin-bottom: 1.5rem;
+}
+
+.progress-bar-container label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #888;
+  text-align: left;
+}
+
+.progress-bar {
+  height: 20px;
+  background: #252525;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.progress-fill.canon {
+  background: linear-gradient(90deg, #22c55e, #16a34a);
+}
+
+.progress-fill.heretic {
+  background: linear-gradient(90deg, #a855f7, #7c3aed);
+}
+
+.progress-text {
+  display: block;
+  margin-top: 0.5rem;
+  color: #666;
+  font-size: 0.9rem;
+  text-align: left;
+}
+
+.abort-btn {
+  padding: 0.75rem 1.5rem;
+  background: #ef4444;
+  border: none;
+  color: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.abort-btn:hover {
+  background: #dc2626;
+}
+
+/* Results Phase */
+.betlab-results {
+  background: #1a1a1a;
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+.results-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.results-header h2 {
+  color: #22c55e;
+}
+
+.results-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Tabs */
+.results-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid #333;
+  padding-bottom: 0.5rem;
+}
+
+.tab-btn {
+  padding: 0.75rem 1.5rem;
+  background: transparent;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  border-radius: 6px 6px 0 0;
+  transition: all 0.15s;
+}
+
+.tab-btn:hover {
+  color: #fff;
+  background: #252525;
+}
+
+.tab-btn.active {
+  color: #22c55e;
+  background: #252525;
+  border-bottom: 2px solid #22c55e;
+}
+
+/* Overview Cards */
+.overview-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.overview-card {
+  background: #252525;
+  border-radius: 8px;
+  padding: 1rem;
+  text-align: center;
+}
+
+.card-label {
+  display: block;
+  color: #888;
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+}
+
+.card-value {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.card-value.positive {
+  color: #22c55e;
+}
+
+.card-value.negative {
+  color: #ef4444;
+}
+
+/* Tables */
+.comparison-section,
+.variables-changed {
+  margin-bottom: 2rem;
+}
+
+.comparison-section h3,
+.variables-changed h3 {
+  margin-bottom: 1rem;
+  color: #888;
+}
+
+.comparison-table,
+.variables-table,
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.comparison-table th,
+.variables-table th,
+.data-table th {
+  padding: 0.75rem;
+  background: #252525;
+  color: #888;
+  font-weight: 600;
+  text-align: left;
+  border-bottom: 2px solid #333;
+}
+
+.comparison-table td,
+.variables-table td,
+.data-table td {
+  padding: 0.75rem;
+  border-bottom: 1px solid #333;
+}
+
+.comparison-table .canon,
+.data-table .canon {
+  color: #22c55e;
+}
+
+.comparison-table .heretic,
+.data-table .heretic {
+  color: #a855f7;
+}
+
+.comparison-table .positive,
+.variables-table .positive,
+.data-table .positive {
+  color: #22c55e;
+}
+
+.comparison-table .negative,
+.variables-table .negative,
+.data-table .negative {
+  color: #ef4444;
+}
+
+/* Tier badges */
+.tier-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.tier-badge.favorite {
+  background: rgba(168, 85, 247, 0.2);
+  color: #a855f7;
+}
+
+.tier-badge.contender {
+  background: rgba(34, 197, 94, 0.2);
+  color: #22c55e;
+}
+
+.tier-badge.longshot {
+  background: rgba(234, 179, 8, 0.2);
+  color: #eab308;
+}
+
+.tier-badge.wildcard {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+/* Bet type styling */
+.bet-type {
+  font-weight: 600;
+  color: #ccc;
+}
+
+/* Tier insight */
+.tier-insight {
+  margin-top: 2rem;
+  padding: 1rem;
+  background: #252525;
+  border-radius: 8px;
+}
+
+.tier-insight h4 {
+  color: #888;
+  margin-bottom: 0.75rem;
+}
+
+.tier-insight ul {
+  margin: 0;
+  padding-left: 1.5rem;
+}
+
+.tier-insight li {
+  color: #ccc;
+  margin-bottom: 0.5rem;
+}
+
+/* Calibration styling */
+.calibration-explainer {
+  color: #888;
+  margin-bottom: 1.5rem;
+}
+
+.calibration {
+  font-weight: 600;
+}
+
+.calibration-good {
+  color: #22c55e;
+}
+
+.calibration-high {
+  color: #eab308;
+}
+
+.calibration-low {
+  color: #ef4444;
+}
+
+/* Calibration chart */
+.calibration-chart {
+  margin-top: 2rem;
+  padding: 1rem;
+  background: #252525;
+  border-radius: 8px;
+}
+
+.calibration-chart h4 {
+  margin-bottom: 1rem;
+  color: #888;
+}
+
+.chart-bars {
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-end;
+  height: 200px;
+  padding: 1rem;
+}
+
+.chart-bar-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.bar-container {
+  display: flex;
+  gap: 4px;
+  align-items: flex-end;
+  width: 50px;
+}
+
+.bar {
+  width: 20px;
+  border-radius: 4px 4px 0 0;
+  transition: height 0.3s;
+}
+
+.bar.expected {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.bar.actual {
+  background: #22c55e;
+}
+
+.bar-label {
+  color: #888;
+  font-size: 0.8rem;
+}
+
+.chart-legend {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-top: 1rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #888;
+  font-size: 0.85rem;
+}
+
+.legend-item.expected::before {
+  content: '';
+  display: block;
+  width: 12px;
+  height: 12px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+}
+
+.legend-item.actual::before {
+  content: '';
+  display: block;
+  width: 12px;
+  height: 12px;
+  background: #22c55e;
+  border-radius: 2px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .betlab {
+    padding: 1rem;
+  }
+
+  .variables-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .betlab-actions {
+    flex-direction: column;
+  }
+
+  .start-btn {
+    width: 100%;
+  }
+
+  .overview-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .results-tabs {
+    flex-wrap: wrap;
+  }
+
+  .data-table {
+    font-size: 0.8rem;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 0.5rem;
+  }
+}

@@ -177,6 +177,42 @@ function buildVariableList(): VarDef[] {
     vars.push({ category: 'Field Spread', categoryEmoji: '📊', path: `driverSpeed.${v.key}`, label: v.label, description: v.desc, format: v.format, min: v.min, max: v.max, step: v.step });
   }
 
+  // Betting Odds (Marble Mode) - Strength Weights
+  const bettingStrengthVars = [
+    { key: 'carPower', label: 'Car Power Weight', desc: 'How much car power affects odds ranking', format: 'decimal' as const, min: 0, max: 0.5, step: 0.01 },
+    { key: 'consistency', label: 'Consistency Weight', desc: 'How much consistency affects odds ranking', format: 'decimal' as const, min: 0, max: 0.5, step: 0.01 },
+    { key: 'speed', label: 'Speed Weight', desc: 'How much speed affects odds ranking', format: 'decimal' as const, min: 0, max: 0.5, step: 0.01 },
+    { key: 'pitCrew', label: 'Pit Crew Weight', desc: 'How much pit crew affects odds ranking', format: 'decimal' as const, min: 0, max: 0.3, step: 0.01 },
+    { key: 'carGrip', label: 'Car Grip Weight', desc: 'How much car grip affects odds ranking', format: 'decimal' as const, min: 0, max: 0.3, step: 0.01 },
+    { key: 'luck', label: 'Luck Weight', desc: 'How much luck affects odds ranking', format: 'decimal' as const, min: 0, max: 0.3, step: 0.01 },
+    { key: 'carReliability', label: 'Reliability Weight', desc: 'How much car reliability affects odds ranking', format: 'decimal' as const, min: 0, max: 0.3, step: 0.01 },
+  ];
+  for (const v of bettingStrengthVars) {
+    vars.push({ category: 'Betting (Strength)', categoryEmoji: '🎲', path: `betting.strengthWeights.${v.key}`, label: v.label, description: v.desc, format: v.format, min: v.min, max: v.max, step: v.step });
+  }
+
+  // Betting Odds - Base Multipliers
+  const bettingMultiplierVars = [
+    { key: 'win', label: 'Win Base', desc: 'Base payout for picking the winner', format: 'multiplier' as const, min: 5, max: 20, step: 1 },
+    { key: 'podium', label: 'Podium Base', desc: 'Base payout for top 3 finish', format: 'multiplier' as const, min: 2, max: 10, step: 0.5 },
+    { key: 'points', label: 'Points Base', desc: 'Base payout for top 10 finish', format: 'multiplier' as const, min: 1, max: 5, step: 0.25 },
+    { key: 'finishes', label: 'Finishes Base', desc: 'Base payout for completing race', format: 'multiplier' as const, min: 1, max: 3, step: 0.1 },
+    { key: 'dnf', label: 'DNF Base', desc: 'Base payout for calling a DNF', format: 'multiplier' as const, min: 1, max: 8, step: 0.5 },
+  ];
+  for (const v of bettingMultiplierVars) {
+    vars.push({ category: 'Betting (Payouts)', categoryEmoji: '🪙', path: `betting.baseMultipliers.${v.key}`, label: v.label, description: v.desc, format: v.format, min: v.min, max: v.max, step: v.step });
+  }
+
+  // Betting Odds - Driver Rating Weights
+  const bettingRatingVars = [
+    { key: 'consistency', label: 'Rating: Consistency', desc: 'Consistency weight for vibe rating', format: 'decimal' as const, min: 0, max: 0.7, step: 0.05 },
+    { key: 'speed', label: 'Rating: Speed', desc: 'Speed weight for vibe rating', format: 'decimal' as const, min: 0, max: 0.7, step: 0.05 },
+    { key: 'luck', label: 'Rating: Luck', desc: 'Luck weight for vibe rating', format: 'decimal' as const, min: 0, max: 0.5, step: 0.05 },
+  ];
+  for (const v of bettingRatingVars) {
+    vars.push({ category: 'Betting (Rating)', categoryEmoji: '⭐', path: `betting.driverRatingWeights.${v.key}`, label: v.label, description: v.desc, format: v.format, min: v.min, max: v.max, step: v.step });
+  }
+
   return vars;
 }
 

@@ -3,6 +3,7 @@ import { DRIVER_TAGS, CAR_TAGS, TEAM_TAGS, Tag } from './data/tags';
 import { ALL_TRACKS, TrackEventTrigger, TrackEventEffect } from './generators/tracks';
 import { DEFAULT_CONFIG } from './RaceEngine';
 import SimLab from './simlab/SimLab';
+import BetLab from './betlab/BetLab';
 import './Compendium.css';
 
 // Helper to format trigger descriptions
@@ -66,7 +67,7 @@ interface CompendiumProps {
   onBack: () => void;
 }
 
-type TabId = 'mechanics' | 'events' | 'tags' | 'tracks' | 'simlab';
+type TabId = 'mechanics' | 'events' | 'tags' | 'tracks' | 'simlab' | 'betlab';
 
 // Collapsible section component
 function CollapsibleSection({
@@ -138,6 +139,12 @@ function Compendium({ onBack }: CompendiumProps) {
           onClick={() => setActiveTab('simlab')}
         >
           🔬 Sim Lab
+        </button>
+        <button
+          className={`tab-btn ${activeTab === 'betlab' ? 'active' : ''}`}
+          onClick={() => setActiveTab('betlab')}
+        >
+          🎲 Bet Lab
         </button>
       </div>
 
@@ -470,6 +477,10 @@ function Compendium({ onBack }: CompendiumProps) {
 
         {activeTab === 'simlab' && (
           <SimLab />
+        )}
+
+        {activeTab === 'betlab' && (
+          <BetLab />
         )}
       </div>
     </div>
