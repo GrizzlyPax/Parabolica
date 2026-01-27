@@ -477,9 +477,17 @@ export interface SimVariables {
     aggressionBonus: number;          // Aggression blowout risk (0.5)
     safetyCarReduction: number;       // SC blowout reduction (0.02 = 98% reduction)
   };
+
+  // === DRIVER SPEED (Field Compression) ===
+  driverSpeed: {
+    speedStatMultiplier: number;      // How much driver speed stat matters (1.0 = full, 0.5 = half effect)
+    consistencyWeight: number;        // How much consistency reduces variance (0.5)
+    baseSpeedMin: number;             // Minimum base speed per tick (3)
+    baseSpeedMax: number;             // Maximum base speed per tick (12)
+  };
 }
 
-// Default "Canon" values - the current hardcoded constants
+// Default "Canon" values - tuned for ~40% Lead Lap, ~22% DNF, compressed field
 export const CANON_VARIABLES: SimVariables = {
   tires: {
     soft: { speedBonus: 1.08, wearRate: 4.0, criticalAt: 70, cliffSeverity: 0.85, blowoutRisk: 0.0003 },
@@ -494,14 +502,14 @@ export const CANON_VARIABLES: SimVariables = {
     aggressionWearMultiplier: 0.4,
   },
   crashes: {
-    baseCrashChance: 0.0001,
-    crashProximityThreshold: 0.03,
+    baseCrashChance: 0.00008,           // Reduced from 0.0001 for stable DNF rate
+    crashProximityThreshold: 0.025,     // Tighter proximity window
     crashGracePeriod: 50,
     initialSurvivalChance: 0.70,
-    pileupParticipationChance: 0.25,
-    pileupSurvivalChance: 0.50,
+    pileupParticipationChance: 0.15,    // Reduced pileup chaos
+    pileupSurvivalChance: 0.55,         // Slightly better survival
     secondaryAccidentMultiplier: 10,
-    consistencyFactor: 0.5,
+    consistencyFactor: 0.4,             // Reduced consistency crash impact
     tireWearFactor: 200,
     luckReduction: 0.3,
     safetyCarsReduction: 0.05,
@@ -526,10 +534,10 @@ export const CANON_VARIABLES: SimVariables = {
     luckPitAdjustment: 0.4,
   },
   performance: {
-    luckProcChance: 0.03,
-    luckMinBoostBase: 0.05,
+    luckProcChance: 0.025,              // Slightly reduced luck procs
+    luckMinBoostBase: 0.02,             // Reduced luck boost range
     luckMinBoostPerStat: 0.125,
-    luckMaxBoostBase: 0.15,
+    luckMaxBoostBase: 0.08,             // Reduced luck boost range
     luckMaxBoostPerStat: 0.1875,
     enduranceDecay: 0.1,
     enduranceMaxPenalty: 0.15,
@@ -537,16 +545,16 @@ export const CANON_VARIABLES: SimVariables = {
     damageSpeedPenalty: 0.85,
   },
   carStats: {
-    powerBase: 0.88,
-    powerPerStar: 0.04,
-    gripBase: 0.775,
-    gripPerStar: 0.075,
+    powerBase: 0.93,                    // Higher base, less per-star spread
+    powerPerStar: 0.018,
+    gripBase: 0.82,                     // Higher base, less per-star spread
+    gripPerStar: 0.045,
     reliabilityBase: 0.4,
     reliabilityPerStar: 0.2,
-    tireManagementBase: 0.775,
-    tireManagementPerStar: 0.075,
-    pitCrewBase: 0.48,
-    pitCrewPerStar: 0.08,
+    tireManagementBase: 0.8,            // Slightly higher base
+    tireManagementPerStar: 0.06,        // Reduced spread
+    pitCrewBase: 0.5,                   // Slightly higher base
+    pitCrewPerStar: 0.07,               // Reduced spread
   },
   safetyCar: {
     targetGap: 0.16,
@@ -559,6 +567,12 @@ export const CANON_VARIABLES: SimVariables = {
     riskMultiplier: 4,
     aggressionBonus: 0.5,
     safetyCarReduction: 0.02,
+  },
+  driverSpeed: {
+    speedStatMultiplier: 0.12,  // Heavy compression: speed stat has 12% effect (was 100%)
+    consistencyWeight: 0.35,    // Reduced consistency impact
+    baseSpeedMin: 5,            // Tighter speed range (was 3)
+    baseSpeedMax: 10,           // Tighter speed range (was 12)
   },
 };
 

@@ -421,19 +421,16 @@ class RaceEngine {
     return CANON_VARIABLES.mechanical;
   }
 
-  // @ts-expect-error - Will be used for pit stop overrides
   private getPitVars() {
     if (this.simVars) return this.simVars.pits;
     return CANON_VARIABLES.pits;
   }
 
-  // @ts-expect-error - Will be used for performance overrides
   private getPerformanceVars() {
     if (this.simVars) return this.simVars.performance;
     return CANON_VARIABLES.performance;
   }
 
-  // @ts-expect-error - Will be used for car stat overrides
   private getCarStatVars() {
     if (this.simVars) return this.simVars.carStats;
     return CANON_VARIABLES.carStats;
@@ -449,10 +446,14 @@ class RaceEngine {
     return CANON_VARIABLES.blowouts;
   }
 
-  // @ts-expect-error - Will be used for safety car overrides
   private getSafetyCarVars() {
     if (this.simVars) return this.simVars.safetyCar;
     return CANON_VARIABLES.safetyCar;
+  }
+
+  private getDriverSpeedVars() {
+    if (this.simVars) return this.simVars.driverSpeed;
+    return CANON_VARIABLES.driverSpeed;
   }
 
   private initializeDrivers(): void {
@@ -906,23 +907,35 @@ class RaceEngine {
   }
 
   private calculateSpeed(driver: Driver): TickFactors {
-    const { baseSpeedMin, baseSpeedMax, consistencyWeight, enduranceDecay } = this.config;
+    // Get tunable variables from simVars (or CANON defaults)
+    const carStatVars = this.getCarStatVars();
+    const perfVars = this.getPerformanceVars();
+    const speedVars = this.getDriverSpeedVars();
+
+    // Use simVars for base speed range and consistency, fallback to config
+    const baseSpeedMin = speedVars.baseSpeedMin;
+    const baseSpeedMax = speedVars.baseSpeedMax;
+    const consistencyWeight = speedVars.consistencyWeight;
+    const enduranceDecay = this.config.enduranceDecay;
 
     // Base random roll
     const baseRoll = Math.random();
     const baseSpeed = baseSpeedMin + baseRoll * (baseSpeedMax - baseSpeedMin);
 
-    // === CAR STATS ===
-    // Car power affects top speed (1 star = 0.92x, 5 stars = 1.08x)
+    // === CAR STATS (from simVars) ===
+    // Car power affects top speed
     const carPower = driver.carStats?.power ?? 3; // Default to 3 stars if no car
-    const carPowerModifier = 0.88 + carPower * 0.04; // 0.92, 0.96, 1.00, 1.04, 1.08
+    const carPowerModifier = carStatVars.powerBase + carPower * carStatVars.powerPerStar;
 
-    // Car grip affects how much consistency helps (1 star = 0.85x, 5 stars = 1.15x)
+    // Car grip affects how much consistency helps
     const carGrip = driver.carStats?.grip ?? 3;
-    const carGripModifier = 0.775 + carGrip * 0.075; // 0.85, 0.925, 1.00, 1.075, 1.15
+    const carGripModifier = carStatVars.gripBase + carGrip * carStatVars.gripPerStar;
 
     // Stats modifier from driver's baseSpeed stat, multiplied by car power
-    const statsModifier = driver.stats.baseSpeed * carPowerModifier;
+    // Apply speedStatMultiplier to compress/expand the effect of the speed stat
+    // When speedStatMultiplier = 1.0, full effect; when = 0.5, half the stat differential matters
+    const speedStatEffect = 1 + (driver.stats.baseSpeed - 1) * speedVars.speedStatMultiplier;
+    const statsModifier = speedStatEffect * carPowerModifier;
 
     // Consistency effect: high consistency = less variance from the mean
     // Car grip multiplies the effectiveness of driver consistency
@@ -935,24 +948,21 @@ class RaceEngine {
     // Driver's luck stat affects the MAGNITUDE of the boost, not the frequency
     // Tag/effect luck modifiers multiply the effective luck stat
     let luckBonus = 1;
-    const luckProcChance = 0.03; // 3% chance per tick for everyone
-    if (Math.random() < luckProcChance) {
+    if (Math.random() < perfVars.luckProcChance) {
       // Luck proc! Driver's luck stat determines how big the boost is
       // Apply luck modifier from tags/effects (e.g., Cursed Chassis has 0.7x luck)
       const effectiveLuck = driver.stats.luck * this.getTagLuckModifier(driver.id);
-      // Low luck (0.3) = 5-15% boost, High luck (0.8) = 15-30% boost
-      const minBoost = 0.05 + effectiveLuck * 0.125; // 0.0875 to 0.15
-      const maxBoost = 0.15 + effectiveLuck * 0.1875; // 0.20625 to 0.30
+      const minBoost = perfVars.luckMinBoostBase + effectiveLuck * perfVars.luckMinBoostPerStat;
+      const maxBoost = perfVars.luckMaxBoostBase + effectiveLuck * perfVars.luckMaxBoostPerStat;
       luckBonus = 1 + minBoost + Math.random() * (maxBoost - minBoost);
     }
 
-    // Endurance factor: SOFTENED - speed degrades slightly over laps
-    // Max penalty is now 15% instead of 50%
+    // Endurance factor: speed degrades over laps
     const lapProgress = driver.currentLap / this.config.totalLaps;
-    const baseEndurancePenalty = lapProgress * enduranceDecay * 0.5; // Halved base decay
+    const baseEndurancePenalty = lapProgress * enduranceDecay * perfVars.endurancePenaltyMultiplier;
     const enduranceResistance = driver.stats.endurance; // Higher = less penalty
-    const actualPenalty = baseEndurancePenalty * (2 - enduranceResistance); // 0.85-1.15 stat
-    const enduranceFactor = Math.max(0.85, 1 - actualPenalty); // Cap at 15% max penalty
+    const actualPenalty = baseEndurancePenalty * (2 - enduranceResistance);
+    const enduranceFactor = Math.max(1 - perfVars.enduranceMaxPenalty, 1 - actualPenalty);
 
     // Track event speed modifier (from active effects like speed_boost/speed_penalty)
     const trackEventModifier = this.getActiveSpeedModifier(driver.id);
@@ -1207,14 +1217,16 @@ class RaceEngine {
   // Calculate pit WORK duration (the stationary part where tires are changed)
   // This is separate from pit lane driving time which is based on speed limit
   private calculatePitWorkDuration(driver: Driver): { duration: number; isSlowStop: boolean; isQuickStop: boolean } {
+    const pitVars = this.getPitVars();
+
     // Base duration for pit work (tire change, etc.)
-    const baseDuration = this.config.pitWorkBaseDuration;
+    const baseDuration = pitVars.basePitDuration;
 
     // Check for slow/quick pit stop based on team's pit crew stat
     // Pit crew: 1 star = 35% slow / 8% quick, 5 stars = 7% slow / 28% quick
     const pitCrewStat = driver.teamStats?.pitCrew ?? 3;
-    const slowStopChance = 0.42 - pitCrewStat * 0.07; // 35%, 28%, 21%, 14%, 7%
-    const quickStopChance = 0.03 + pitCrewStat * 0.05; // 8%, 13%, 18%, 23%, 28%
+    const slowStopChance = pitVars.slowStopBase - pitCrewStat * pitVars.slowStopPerStar;
+    const quickStopChance = pitVars.quickStopBase + pitCrewStat * pitVars.quickStopPerStar;
 
     const roll = Math.random();
     const isSlowStop = roll < slowStopChance;
@@ -1222,11 +1234,11 @@ class RaceEngine {
 
     let finalDuration = baseDuration;
     if (isSlowStop) {
-      // Slow stop adds 50% more time to pit work
-      finalDuration = Math.floor(baseDuration * 1.5);
+      // Slow stop adds extra time to pit work
+      finalDuration = Math.floor(baseDuration * pitVars.slowStopMultiplier);
     } else if (isQuickStop) {
-      // Quick stop cuts pit work time by 25%
-      finalDuration = Math.floor(baseDuration * 0.75);
+      // Quick stop cuts pit work time
+      finalDuration = Math.floor(baseDuration * pitVars.quickStopMultiplier);
     }
 
     // Apply pit speed modifier from tags/effects
@@ -1278,15 +1290,12 @@ class RaceEngine {
 
   // === CRASH DETECTION METHODS ===
 
-  // Grace period at race start - no crashes for first 50 ticks (5 seconds)
-  // This allows the pack to spread out from the grid
-  private static readonly CRASH_GRACE_PERIOD = 50;
-
   private detectProximityPairs(): Array<[Driver, Driver]> {
     if (!this.config.enableCrashes) return [];
 
     // Grace period at race start - everyone starts bunched up
-    if (this.raceState.totalTicks < RaceEngine.CRASH_GRACE_PERIOD) return [];
+    const crashVars = this.getCrashVars();
+    if (this.raceState.totalTicks < crashVars.crashGracePeriod) return [];
 
     const activeDrivers = this.drivers.filter(d => d.status === 'racing');
     const proximityPairs: Array<[Driver, Driver]> = [];
@@ -2485,7 +2494,6 @@ class RaceEngine {
   // === UNSAFETY CAR SYSTEM ===
   // The Unsafety Car emerges from The Void when pileups occur
 
-  private readonly UNSAFETY_CAR_SPEED = 0.0035;  // Brisk pace - SC periods should feel like a pause, not a crawl
   private readonly UNSAFETY_CAR_LAPS = 1;  // Stays out for 1 lap
   // Note: PIT_EXIT_POSITION and PIT_ENTRY_POSITION are defined in the pit stop section above
 
@@ -2583,7 +2591,8 @@ class RaceEngine {
     }
 
     // Move the Unsafety Car slowly around the track
-    const newPosition = this.raceState.unsafetyCarPosition + this.UNSAFETY_CAR_SPEED;
+    const scVars = this.getSafetyCarVars();
+    const newPosition = this.raceState.unsafetyCarPosition + scVars.unsafetyCarSpeed;
 
     if (newPosition >= 1.0) {
       // Completed a lap
@@ -2707,9 +2716,10 @@ class RaceEngine {
 
     // UNIFORM GAP SYSTEM: All cars converge to exactly the same target gap
     // This creates a properly spaced train like a real safety car lineup
-    const TARGET_GAP = 0.16;  // 16% of a lap - wider gaps prevent visual bunching
-    const SC_CRUISE_SPEED = 0.50;  // Safety car cruise speed - ~50% race pace
-    const CATCH_UP_SPEED = 0.65;  // Speed when the whole field is catching up to SC
+    const scVars = this.getSafetyCarVars();
+    const TARGET_GAP = scVars.targetGap;         // Gap between cars under SC
+    const SC_CRUISE_SPEED = scVars.cruiseSpeed;  // Safety car cruise speed
+    const CATCH_UP_SPEED = scVars.catchUpSpeed;  // Speed when catching up to SC
 
     // Check if the leader is still catching up to the SC
     // If so, the ENTIRE field should be in catch-up mode, not just the leader

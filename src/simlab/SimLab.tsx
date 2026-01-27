@@ -30,28 +30,84 @@ function computeVariablesDiff(canon: SimVariables, heretic: SimVariables): Varia
   // Tire general
   compare('tires.precliffStart', 'precliff start', canon.tires.precliffStart, heretic.tires.precliffStart);
   compare('tires.precliffMaxPenalty', 'precliff penalty', canon.tires.precliffMaxPenalty, heretic.tires.precliffMaxPenalty);
+  compare('tires.cliffExponent', 'cliff exponent', canon.tires.cliffExponent, heretic.tires.cliffExponent);
+  compare('tires.cliffMultiplier', 'cliff multiplier', canon.tires.cliffMultiplier, heretic.tires.cliffMultiplier);
+  compare('tires.flatPenalty', 'flat penalty', canon.tires.flatPenalty, heretic.tires.flatPenalty);
+  compare('tires.minSpeedFloor', 'min speed floor', canon.tires.minSpeedFloor, heretic.tires.minSpeedFloor);
+  compare('tires.aggressionWearMultiplier', 'aggression wear', canon.tires.aggressionWearMultiplier, heretic.tires.aggressionWearMultiplier);
 
   // Crashes
   compare('crashes.baseCrashChance', 'crash chance', canon.crashes.baseCrashChance, heretic.crashes.baseCrashChance);
   compare('crashes.crashProximityThreshold', 'proximity', canon.crashes.crashProximityThreshold, heretic.crashes.crashProximityThreshold);
+  compare('crashes.crashGracePeriod', 'grace period', canon.crashes.crashGracePeriod, heretic.crashes.crashGracePeriod);
   compare('crashes.initialSurvivalChance', 'survival', canon.crashes.initialSurvivalChance, heretic.crashes.initialSurvivalChance);
+  compare('crashes.pileupParticipationChance', 'pileup chance', canon.crashes.pileupParticipationChance, heretic.crashes.pileupParticipationChance);
+  compare('crashes.pileupSurvivalChance', 'pileup survival', canon.crashes.pileupSurvivalChance, heretic.crashes.pileupSurvivalChance);
+  compare('crashes.secondaryAccidentMultiplier', 'secondary mult', canon.crashes.secondaryAccidentMultiplier, heretic.crashes.secondaryAccidentMultiplier);
+  compare('crashes.consistencyFactor', 'consistency factor', canon.crashes.consistencyFactor, heretic.crashes.consistencyFactor);
+  compare('crashes.tireWearFactor', 'tire wear factor', canon.crashes.tireWearFactor, heretic.crashes.tireWearFactor);
+  compare('crashes.luckReduction', 'luck reduction', canon.crashes.luckReduction, heretic.crashes.luckReduction);
+  compare('crashes.safetyCarsReduction', 'SC reduction', canon.crashes.safetyCarsReduction, heretic.crashes.safetyCarsReduction);
 
   // Mechanical
   compare('mechanical.baseFailureChance', 'mech failure', canon.mechanical.baseFailureChance, heretic.mechanical.baseFailureChance);
+  compare('mechanical.reliabilityBase', 'reliability base', canon.mechanical.reliabilityBase, heretic.mechanical.reliabilityBase);
+  compare('mechanical.reliabilityPerStar', 'reliability/star', canon.mechanical.reliabilityPerStar, heretic.mechanical.reliabilityPerStar);
+  compare('mechanical.luckBase', 'mech luck base', canon.mechanical.luckBase, heretic.mechanical.luckBase);
+  compare('mechanical.luckMultiplier', 'mech luck mult', canon.mechanical.luckMultiplier, heretic.mechanical.luckMultiplier);
 
   // Pits
   compare('pits.basePitDuration', 'pit duration', canon.pits.basePitDuration, heretic.pits.basePitDuration);
   compare('pits.slowStopMultiplier', 'slow stop mult', canon.pits.slowStopMultiplier, heretic.pits.slowStopMultiplier);
   compare('pits.quickStopMultiplier', 'quick stop mult', canon.pits.quickStopMultiplier, heretic.pits.quickStopMultiplier);
+  compare('pits.slowStopBase', 'slow stop base', canon.pits.slowStopBase, heretic.pits.slowStopBase);
+  compare('pits.slowStopPerStar', 'slow stop/star', canon.pits.slowStopPerStar, heretic.pits.slowStopPerStar);
+  compare('pits.quickStopBase', 'quick stop base', canon.pits.quickStopBase, heretic.pits.quickStopBase);
+  compare('pits.quickStopPerStar', 'quick stop/star', canon.pits.quickStopPerStar, heretic.pits.quickStopPerStar);
+  compare('pits.basePitChance', 'pit chance', canon.pits.basePitChance, heretic.pits.basePitChance);
+  compare('pits.wearPitBonus', 'wear pit bonus', canon.pits.wearPitBonus, heretic.pits.wearPitBonus);
+  compare('pits.luckPitAdjustment', 'luck pit adjust', canon.pits.luckPitAdjustment, heretic.pits.luckPitAdjustment);
 
   // Performance
   compare('performance.luckProcChance', 'luck proc', canon.performance.luckProcChance, heretic.performance.luckProcChance);
+  compare('performance.luckMinBoostBase', 'luck min base', canon.performance.luckMinBoostBase, heretic.performance.luckMinBoostBase);
+  compare('performance.luckMinBoostPerStat', 'luck min/stat', canon.performance.luckMinBoostPerStat, heretic.performance.luckMinBoostPerStat);
+  compare('performance.luckMaxBoostBase', 'luck max base', canon.performance.luckMaxBoostBase, heretic.performance.luckMaxBoostBase);
+  compare('performance.luckMaxBoostPerStat', 'luck max/stat', canon.performance.luckMaxBoostPerStat, heretic.performance.luckMaxBoostPerStat);
   compare('performance.enduranceDecay', 'endurance decay', canon.performance.enduranceDecay, heretic.performance.enduranceDecay);
+  compare('performance.enduranceMaxPenalty', 'endurance max penalty', canon.performance.enduranceMaxPenalty, heretic.performance.enduranceMaxPenalty);
+  compare('performance.endurancePenaltyMultiplier', 'endurance mult', canon.performance.endurancePenaltyMultiplier, heretic.performance.endurancePenaltyMultiplier);
   compare('performance.damageSpeedPenalty', 'damage penalty', canon.performance.damageSpeedPenalty, heretic.performance.damageSpeedPenalty);
 
+  // Car Stats
+  compare('carStats.powerBase', 'power base', canon.carStats.powerBase, heretic.carStats.powerBase);
+  compare('carStats.powerPerStar', 'power/star', canon.carStats.powerPerStar, heretic.carStats.powerPerStar);
+  compare('carStats.gripBase', 'grip base', canon.carStats.gripBase, heretic.carStats.gripBase);
+  compare('carStats.gripPerStar', 'grip/star', canon.carStats.gripPerStar, heretic.carStats.gripPerStar);
+  compare('carStats.reliabilityBase', 'car rel base', canon.carStats.reliabilityBase, heretic.carStats.reliabilityBase);
+  compare('carStats.reliabilityPerStar', 'car rel/star', canon.carStats.reliabilityPerStar, heretic.carStats.reliabilityPerStar);
+  compare('carStats.tireManagementBase', 'tire mgmt base', canon.carStats.tireManagementBase, heretic.carStats.tireManagementBase);
+  compare('carStats.tireManagementPerStar', 'tire mgmt/star', canon.carStats.tireManagementPerStar, heretic.carStats.tireManagementPerStar);
+  compare('carStats.pitCrewBase', 'pit crew base', canon.carStats.pitCrewBase, heretic.carStats.pitCrewBase);
+  compare('carStats.pitCrewPerStar', 'pit crew/star', canon.carStats.pitCrewPerStar, heretic.carStats.pitCrewPerStar);
+
+  // Safety Car
+  compare('safetyCar.targetGap', 'SC target gap', canon.safetyCar.targetGap, heretic.safetyCar.targetGap);
+  compare('safetyCar.cruiseSpeed', 'SC cruise speed', canon.safetyCar.cruiseSpeed, heretic.safetyCar.cruiseSpeed);
+  compare('safetyCar.catchUpSpeed', 'SC catch up', canon.safetyCar.catchUpSpeed, heretic.safetyCar.catchUpSpeed);
+  compare('safetyCar.unsafetyCarSpeed', 'unsafety speed', canon.safetyCar.unsafetyCarSpeed, heretic.safetyCar.unsafetyCarSpeed);
+
   // Blowouts
+  compare('blowouts.riskExponent', 'blowout exponent', canon.blowouts.riskExponent, heretic.blowouts.riskExponent);
   compare('blowouts.riskMultiplier', 'blowout risk mult', canon.blowouts.riskMultiplier, heretic.blowouts.riskMultiplier);
   compare('blowouts.aggressionBonus', 'aggression blowout', canon.blowouts.aggressionBonus, heretic.blowouts.aggressionBonus);
+  compare('blowouts.safetyCarReduction', 'SC blowout reduce', canon.blowouts.safetyCarReduction, heretic.blowouts.safetyCarReduction);
+
+  // Driver Speed (Field Compression)
+  compare('driverSpeed.speedStatMultiplier', 'speed stat effect', canon.driverSpeed.speedStatMultiplier, heretic.driverSpeed.speedStatMultiplier);
+  compare('driverSpeed.consistencyWeight', 'consistency weight', canon.driverSpeed.consistencyWeight, heretic.driverSpeed.consistencyWeight);
+  compare('driverSpeed.baseSpeedMin', 'base speed min', canon.driverSpeed.baseSpeedMin, heretic.driverSpeed.baseSpeedMin);
+  compare('driverSpeed.baseSpeedMax', 'base speed max', canon.driverSpeed.baseSpeedMax, heretic.driverSpeed.baseSpeedMax);
 
   return diffs;
 }
@@ -202,8 +258,8 @@ export default function SimLab() {
     setCanonProgress({ completed: 0, total: config.batchSize, currentTrack: '' });
     setHereticProgress({ completed: 0, total: config.batchSize, currentTrack: '' });
 
-    // Always start canon worker
-    canonWorkerRef.current?.postMessage({ type: 'START', config, label: 'canon' });
+    // Always start canon worker - pass CANON_VARIABLES so it uses balanced values
+    canonWorkerRef.current?.postMessage({ type: 'START', config, variables: CANON_VARIABLES, label: 'canon' });
 
     // Only start heretic worker if there are changes to compare
     if (runComparison) {

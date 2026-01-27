@@ -147,12 +147,23 @@ function OverviewTab({
     ? (results.dnfResults.safetyCars.totalLapsUnderSC / results.dnfResults.safetyCars.totalRaceLaps) * 100
     : 0;
 
+  // Field spread metrics
+  const leaderMargin = results.fieldSpreadResults.leaderMarginRaces > 0
+    ? results.fieldSpreadResults.leaderMarginTotal / results.fieldSpreadResults.leaderMarginRaces
+    : 0;
+
+  const leadLapPct = results.fieldSpreadResults.totalFinishersForLeadLap > 0
+    ? (results.fieldSpreadResults.leadLapFinishers / results.fieldSpreadResults.totalFinishersForLeadLap) * 100
+    : 0;
+
   // Calculate comparison values if available
   const hasComparison = !!comparisonResults;
   let canonDnfRate = 0, hereticDnfRate = 0;
   let canonScRate = 0, hereticScRate = 0;
   let canonAvgPits = 0, hereticAvgPits = 0;
   let canonCrashRate = 0, hereticCrashRate = 0;
+  let canonLeaderMargin = 0, hereticLeaderMargin = 0;
+  let canonLeadLapPct = 0, hereticLeadLapPct = 0;
 
   if (hasComparison) {
     const c = comparisonResults.canon;
@@ -177,6 +188,17 @@ function OverviewTab({
       ? (c.dnfResults.byReason.crash / c.dnfResults.totalDriverRaces) * 100 : 0;
     hereticCrashRate = h.dnfResults.totalDriverRaces > 0
       ? (h.dnfResults.byReason.crash / h.dnfResults.totalDriverRaces) * 100 : 0;
+
+    // Field spread comparison
+    canonLeaderMargin = c.fieldSpreadResults.leaderMarginRaces > 0
+      ? c.fieldSpreadResults.leaderMarginTotal / c.fieldSpreadResults.leaderMarginRaces : 0;
+    hereticLeaderMargin = h.fieldSpreadResults.leaderMarginRaces > 0
+      ? h.fieldSpreadResults.leaderMarginTotal / h.fieldSpreadResults.leaderMarginRaces : 0;
+
+    canonLeadLapPct = c.fieldSpreadResults.totalFinishersForLeadLap > 0
+      ? (c.fieldSpreadResults.leadLapFinishers / c.fieldSpreadResults.totalFinishersForLeadLap) * 100 : 0;
+    hereticLeadLapPct = h.fieldSpreadResults.totalFinishersForLeadLap > 0
+      ? (h.fieldSpreadResults.leadLapFinishers / h.fieldSpreadResults.totalFinishersForLeadLap) * 100 : 0;
   }
 
   const formatDelta = (delta: number, suffix = '%') => {
@@ -231,6 +253,22 @@ function OverviewTab({
                   {formatDelta(hereticAvgPits - canonAvgPits, '')}
                 </span>
               </div>
+              <div className="comparison-table-row">
+                <span className="comp-col-label">Leader Margin</span>
+                <span className="comp-col-canon">{canonLeaderMargin.toFixed(1)}%</span>
+                <span className="comp-col-heretic">{hereticLeaderMargin.toFixed(1)}%</span>
+                <span className={`comp-col-delta ${getDeltaClass(hereticLeaderMargin - canonLeaderMargin)}`}>
+                  {formatDelta(hereticLeaderMargin - canonLeaderMargin)}
+                </span>
+              </div>
+              <div className="comparison-table-row">
+                <span className="comp-col-label">Lead Lap %</span>
+                <span className="comp-col-canon">{canonLeadLapPct.toFixed(1)}%</span>
+                <span className="comp-col-heretic">{hereticLeadLapPct.toFixed(1)}%</span>
+                <span className={`comp-col-delta ${getDeltaClass(hereticLeadLapPct - canonLeadLapPct)}`}>
+                  {formatDelta(hereticLeadLapPct - canonLeadLapPct)}
+                </span>
+              </div>
             </div>
           </div>
 
@@ -262,10 +300,43 @@ function OverviewTab({
             <span className="overview-value">{scRate.toFixed(1)}%</span>
           </div>
           <div className="overview-card">
-            <span className="overview-label">Races/Second</span>
-            <span className="overview-value">
-              {(results.totalRaces / (results.executionTimeMs / 1000)).toFixed(0)}
-            </span>
+            <span className="overview-label">Leader Margin</span>
+            <span className="overview-value">{leaderMargin.toFixed(1)}%</span>
+          </div>
+          <div className="overview-card">
+            <span className="overview-label">Lead Lap %</span>
+            <span className="overview-value">{leadLapPct.toFixed(0)}%</span>
+          </div>
+        </div>
+      )}
+
+      {results.fieldSpreadResults.winnerCount > 0 && (
+        <div className="overview-section winner-profile">
+          <h4>Winner Stat Profile (avg)</h4>
+          <div className="winner-stats-grid">
+            {(() => {
+              const w = results.fieldSpreadResults;
+              const count = w.winnerCount;
+              const stats = [
+                { label: 'Speed', value: w.winnerStats.speed / count },
+                { label: 'Consistency', value: w.winnerStats.consistency / count },
+                { label: 'Luck', value: w.winnerStats.luck / count },
+                { label: 'Acceleration', value: w.winnerStats.acceleration / count },
+                { label: 'Endurance', value: w.winnerStats.endurance / count },
+                { label: 'Aggression', value: w.winnerStats.aggression / count },
+                { label: 'Car Power', value: w.winnerStats.carPower / count },
+                { label: 'Car Grip', value: w.winnerStats.carGrip / count },
+                { label: 'Car Reliability', value: w.winnerStats.carReliability / count },
+                { label: 'Pit Crew', value: w.winnerStats.pitCrew / count },
+                { label: 'Tire Mgmt', value: w.winnerStats.tireManagement / count },
+              ];
+              return stats.map(s => (
+                <div key={s.label} className="winner-stat-item">
+                  <span className="winner-stat-label">{s.label}</span>
+                  <span className="winner-stat-value">{s.value.toFixed(2)}</span>
+                </div>
+              ));
+            })()}
           </div>
         </div>
       )}
