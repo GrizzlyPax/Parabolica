@@ -47,6 +47,9 @@ export interface SimLabResults {
 
   // Event analysis
   eventResults: EventResults;
+
+  // Field spread analysis
+  fieldSpreadResults: FieldSpreadResults;
 }
 
 // === STAT BUCKET ANALYSIS ===
@@ -200,6 +203,38 @@ export interface EventResults {
   tagEvents: EventPerformance[];
 }
 
+// === FIELD SPREAD ANALYSIS ===
+// How spread out is the field at the finish?
+
+export interface FieldSpreadResults {
+  totalRaces: number;
+  totalFinishers: number;           // Drivers who finished (not DNF)
+
+  // Leader margin (gap from P1 to P2 at finish)
+  leaderMarginTotal: number;        // Sum of P1-P2 gaps as % of lap (for averaging)
+  leaderMarginRaces: number;        // Races where we could calculate (need 2+ finishers)
+
+  // Lead lap finishers
+  leadLapFinishers: number;         // Total drivers finishing on lead lap
+  totalFinishersForLeadLap: number; // Total finishers in races with a leader
+
+  // Winner stat profiles (sum of stat values for winners, to calculate averages)
+  winnerStats: {
+    speed: number;
+    consistency: number;
+    luck: number;
+    acceleration: number;
+    endurance: number;
+    aggression: number;
+    carPower: number;
+    carGrip: number;
+    carReliability: number;
+    pitCrew: number;
+    tireManagement: number;
+  };
+  winnerCount: number;              // For averaging winner stats
+}
+
 // === TRACK ANALYSIS ===
 
 export interface TrackPerformance {
@@ -274,6 +309,29 @@ export interface SimLabAccumulators {
   eventAccumulators: Map<string, EventPerformance>;
   // Track which drivers were affected by events in each race (for performance correlation)
   currentRaceEventEffects: Map<number, { eventId: string; impact: 'positive' | 'negative' | 'neutral' }[]>;
+
+  // Field spread tracking
+  fieldSpread: {
+    totalFinishers: number;
+    leaderMarginTotal: number;      // Sum of P1-P2 gaps as % of lap
+    leaderMarginRaces: number;      // Races with 2+ finishers
+    leadLapFinishers: number;       // Drivers on lead lap
+    totalFinishersForLeadLap: number;
+    winnerStats: {
+      speed: number;
+      consistency: number;
+      luck: number;
+      acceleration: number;
+      endurance: number;
+      aggression: number;
+      carPower: number;
+      carGrip: number;
+      carReliability: number;
+      pitCrew: number;
+      tireManagement: number;
+    };
+    winnerCount: number;
+  };
 }
 
 // Helper type for driver with tags

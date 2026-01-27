@@ -548,6 +548,41 @@ export default function SimLab() {
       addRow('Slow Stops', canon.pitStopResults.slowStops, heretic.pitStopResults.slowStops, heretic.pitStopResults.slowStops - canon.pitStopResults.slowStops);
       addBlank();
 
+      // Field Spread Comparison
+      addRow('FIELD SPREAD COMPARISON');
+      addRow('Metric', 'Canon', 'Heretic', 'Δ');
+
+      const canonLeaderMargin = canon.fieldSpreadResults.leaderMarginRaces > 0
+        ? canon.fieldSpreadResults.leaderMarginTotal / canon.fieldSpreadResults.leaderMarginRaces : 0;
+      const hereticLeaderMargin = heretic.fieldSpreadResults.leaderMarginRaces > 0
+        ? heretic.fieldSpreadResults.leaderMarginTotal / heretic.fieldSpreadResults.leaderMarginRaces : 0;
+      addRow('Leader Margin (% lap)', `${canonLeaderMargin.toFixed(1)}%`, `${hereticLeaderMargin.toFixed(1)}%`, `${(hereticLeaderMargin - canonLeaderMargin).toFixed(1)}%`);
+
+      const canonLeadLapPct = canon.fieldSpreadResults.totalFinishersForLeadLap > 0
+        ? (canon.fieldSpreadResults.leadLapFinishers / canon.fieldSpreadResults.totalFinishersForLeadLap) * 100 : 0;
+      const hereticLeadLapPct = heretic.fieldSpreadResults.totalFinishersForLeadLap > 0
+        ? (heretic.fieldSpreadResults.leadLapFinishers / heretic.fieldSpreadResults.totalFinishersForLeadLap) * 100 : 0;
+      addRow('Lead Lap Finishers %', `${canonLeadLapPct.toFixed(1)}%`, `${hereticLeadLapPct.toFixed(1)}%`, `${(hereticLeadLapPct - canonLeadLapPct).toFixed(1)}%`);
+
+      const canonAvgFinishers = canon.fieldSpreadResults.totalFinishers / canon.totalRaces;
+      const hereticAvgFinishers = heretic.fieldSpreadResults.totalFinishers / heretic.totalRaces;
+      addRow('Avg Finishers/Race', canonAvgFinishers.toFixed(1), hereticAvgFinishers.toFixed(1), (hereticAvgFinishers - canonAvgFinishers).toFixed(1));
+      addBlank();
+
+      // Winner Stats Profile
+      addRow('WINNER STATS PROFILE (Avg)');
+      addRow('Stat', 'Canon Avg', 'Heretic Avg', 'Δ');
+      const cWin = canon.fieldSpreadResults;
+      const hWin = heretic.fieldSpreadResults;
+      if (cWin.winnerCount > 0 && hWin.winnerCount > 0) {
+        addRow('Speed', (cWin.winnerStats.speed / cWin.winnerCount).toFixed(3), (hWin.winnerStats.speed / hWin.winnerCount).toFixed(3));
+        addRow('Consistency', (cWin.winnerStats.consistency / cWin.winnerCount).toFixed(3), (hWin.winnerStats.consistency / hWin.winnerCount).toFixed(3));
+        addRow('Car Power', (cWin.winnerStats.carPower / cWin.winnerCount).toFixed(2), (hWin.winnerStats.carPower / hWin.winnerCount).toFixed(2));
+        addRow('Car Grip', (cWin.winnerStats.carGrip / cWin.winnerCount).toFixed(2), (hWin.winnerStats.carGrip / hWin.winnerCount).toFixed(2));
+        addRow('Aggression', (cWin.winnerStats.aggression / cWin.winnerCount).toFixed(3), (hWin.winnerStats.aggression / hWin.winnerCount).toFixed(3));
+      }
+      addBlank();
+
       // Stat Impact Comparison
       addRow('STAT IMPACT COMPARISON (Q1→Q5 Win% Delta)');
       addRow('Stat', 'Canon Δ', 'Heretic Δ', 'Difference');
@@ -600,6 +635,31 @@ export default function SimLab() {
       addRow('DNFs per Race', (canon.dnfResults.totalDNFs / canon.totalRaces).toFixed(1));
       addRow('SC Lap %', `${scLapRate.toFixed(1)}%`);
       addRow('Avg Pit Stops', avgPits.toFixed(2));
+      addBlank();
+
+      // Field Spread
+      addRow('FIELD SPREAD');
+      addRow('Metric', 'Value');
+      const leaderMargin = canon.fieldSpreadResults.leaderMarginRaces > 0
+        ? canon.fieldSpreadResults.leaderMarginTotal / canon.fieldSpreadResults.leaderMarginRaces : 0;
+      addRow('Leader Margin (% lap)', `${leaderMargin.toFixed(1)}%`);
+      const leadLapPct = canon.fieldSpreadResults.totalFinishersForLeadLap > 0
+        ? (canon.fieldSpreadResults.leadLapFinishers / canon.fieldSpreadResults.totalFinishersForLeadLap) * 100 : 0;
+      addRow('Lead Lap Finishers %', `${leadLapPct.toFixed(1)}%`);
+      addRow('Avg Finishers/Race', (canon.fieldSpreadResults.totalFinishers / canon.totalRaces).toFixed(1));
+      addBlank();
+
+      // Winner Stats Profile
+      addRow('WINNER STATS PROFILE (Avg)');
+      addRow('Stat', 'Value');
+      const win = canon.fieldSpreadResults;
+      if (win.winnerCount > 0) {
+        addRow('Speed', (win.winnerStats.speed / win.winnerCount).toFixed(3));
+        addRow('Consistency', (win.winnerStats.consistency / win.winnerCount).toFixed(3));
+        addRow('Car Power', (win.winnerStats.carPower / win.winnerCount).toFixed(2));
+        addRow('Car Grip', (win.winnerStats.carGrip / win.winnerCount).toFixed(2));
+        addRow('Aggression', (win.winnerStats.aggression / win.winnerCount).toFixed(3));
+      }
       addBlank();
 
       addRow('STAT IMPACT (Q1 vs Q5 Win Rate)');

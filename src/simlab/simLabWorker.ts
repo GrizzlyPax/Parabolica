@@ -118,6 +118,27 @@ function createAccumulators(): SimLabAccumulators {
     trackAccumulators: new Map(),
     eventAccumulators: new Map(),
     currentRaceEventEffects: new Map(),
+    fieldSpread: {
+      totalFinishers: 0,
+      leaderMarginTotal: 0,
+      leaderMarginRaces: 0,
+      leadLapFinishers: 0,
+      totalFinishersForLeadLap: 0,
+      winnerStats: {
+        speed: 0,
+        consistency: 0,
+        luck: 0,
+        acceleration: 0,
+        endurance: 0,
+        aggression: 0,
+        carPower: 0,
+        carGrip: 0,
+        carReliability: 0,
+        pitCrew: 0,
+        tireManagement: 0,
+      },
+      winnerCount: 0,
+    },
   };
 }
 
@@ -538,6 +559,49 @@ function aggregateRaceResult(
   trackAcc.totalFinishers += finishersThisRace;
   trackAcc.totalLeadChanges += raceState.leadChanges;
   trackAcc.totalTicks += raceState.totalTicks;
+
+  // === FIELD SPREAD AGGREGATION ===
+  // Get finishers sorted by position
+  const finishers = drivers
+    .filter(d => d.status === 'finished')
+    .sort((a, b) => finishOrder.indexOf(a.id) - finishOrder.indexOf(b.id));
+
+  acc.fieldSpread.totalFinishers += finishers.length;
+
+  if (finishers.length >= 2) {
+    // Leader margin: gap between P1 and P2 as % of lap
+    const p1 = finishers[0];
+    const p2 = finishers[1];
+    // Position is in distance units, track.length is one lap
+    const gapDistance = p1.position - p2.position;
+    const gapAsPercentOfLap = (gapDistance / track.length) * 100;
+    acc.fieldSpread.leaderMarginTotal += gapAsPercentOfLap;
+    acc.fieldSpread.leaderMarginRaces++;
+  }
+
+  // Lead lap finishers (lapsBehind === 0)
+  if (finishers.length > 0) {
+    const leadLapCount = finishers.filter(d => d.lapsBehind === 0).length;
+    acc.fieldSpread.leadLapFinishers += leadLapCount;
+    acc.fieldSpread.totalFinishersForLeadLap += finishers.length;
+  }
+
+  // Winner stats
+  if (finishers.length > 0) {
+    const winner = finishers[0];
+    acc.fieldSpread.winnerStats.speed += winner.stats.baseSpeed;
+    acc.fieldSpread.winnerStats.consistency += winner.stats.consistency;
+    acc.fieldSpread.winnerStats.luck += winner.stats.luck;
+    acc.fieldSpread.winnerStats.acceleration += winner.stats.acceleration;
+    acc.fieldSpread.winnerStats.endurance += winner.stats.endurance;
+    acc.fieldSpread.winnerStats.aggression += winner.stats.aggression;
+    acc.fieldSpread.winnerStats.carPower += winner.carStats?.power ?? 3;
+    acc.fieldSpread.winnerStats.carGrip += winner.carStats?.grip ?? 3;
+    acc.fieldSpread.winnerStats.carReliability += winner.carStats?.reliability ?? 3;
+    acc.fieldSpread.winnerStats.pitCrew += winner.teamStats?.pitCrew ?? 3;
+    acc.fieldSpread.winnerStats.tireManagement += winner.teamStats?.tireManagement ?? 3;
+    acc.fieldSpread.winnerCount++;
+  }
 }
 
 // Finalize results from accumulators
@@ -600,6 +664,18 @@ function finalizeResults(acc: SimLabAccumulators, config: SimLabConfig, executio
     tagEvents: eventArray.filter(e => e.eventSource === 'tag'),
   };
 
+  // Field spread results
+  const fieldSpreadResults: SimLabResults['fieldSpreadResults'] = {
+    totalRaces: acc.totalRaces,
+    totalFinishers: acc.fieldSpread.totalFinishers,
+    leaderMarginTotal: acc.fieldSpread.leaderMarginTotal,
+    leaderMarginRaces: acc.fieldSpread.leaderMarginRaces,
+    leadLapFinishers: acc.fieldSpread.leadLapFinishers,
+    totalFinishersForLeadLap: acc.fieldSpread.totalFinishersForLeadLap,
+    winnerStats: acc.fieldSpread.winnerStats,
+    winnerCount: acc.fieldSpread.winnerCount,
+  };
+
   return {
     config,
     totalRaces: acc.totalRaces,
@@ -611,6 +687,7 @@ function finalizeResults(acc: SimLabAccumulators, config: SimLabConfig, executio
     pitStopResults,
     trackResults,
     eventResults,
+    fieldSpreadResults,
   };
 }
 
