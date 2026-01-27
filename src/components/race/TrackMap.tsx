@@ -341,14 +341,15 @@ function TrackMap({
 
         {/* Driver markers */}
         {driverPositions.map(({ driver, x, y, isFocused, isHighlighted, isDNF, isPitting }) => {
-          // Only highlighted/focused drivers are fully visible
-          const isVisible = isFocused || isHighlighted;
+          // Only FOCUSED drivers get full treatment (name label, large size)
+          // Highlighted (bet) drivers just get a subtle glow, not full visibility
+          const showNameLabel = isFocused;
 
-          // Marker sizes based on hierarchy
-          const radius = isFocused ? 13 : isHighlighted ? 11 : isDNF ? 5 : 7;
+          // Marker sizes: focused = large, highlighted = medium, normal = small
+          const radius = isFocused ? 13 : isHighlighted ? 9 : isDNF ? 5 : 7;
           const strokeWidth = isFocused ? 2.5 : isHighlighted ? 2 : 2;
-          // Non-visible drivers are dimmed but still visible (0.7 base opacity)
-          const opacity = isDNF ? 0.3 : isPitting ? 0.8 : isVisible ? 1 : 0.7;
+          // Non-focused drivers are dimmed
+          const opacity = isDNF ? 0.3 : isPitting ? 0.8 : isFocused ? 1 : isHighlighted ? 0.9 : 0.7;
 
           return (
             <g
@@ -370,6 +371,20 @@ function TrackMap({
                 />
               )}
 
+              {/* Subtle glow for highlighted (bet) drivers when not focused */}
+              {isHighlighted && !isFocused && (
+                <circle
+                  cx={0}
+                  cy={0}
+                  r={radius + 3}
+                  fill="none"
+                  stroke={driver.color}
+                  strokeWidth={1.5}
+                  opacity={0.3}
+                  className="marker-glow-subtle"
+                />
+              )}
+
               {/* Main marker circle */}
               <circle
                 cx={0}
@@ -382,31 +397,29 @@ function TrackMap({
                 className="marker-circle"
               />
 
-              {/* Emoji inside marker for visible drivers */}
-              {isVisible && !isDNF && (
+              {/* Emoji inside marker for focused drivers only */}
+              {isFocused && !isDNF && (
                 <text
                   x={0}
                   y={1}
                   textAnchor="middle"
                   dominantBaseline="central"
                   className="marker-emoji"
-                  style={{
-                    fontSize: isFocused ? '12px' : '10px',
-                  }}
+                  style={{ fontSize: '12px' }}
                 >
                   {driver.emoji}
                 </text>
               )}
 
-              {/* 3-letter code label above marker for visible drivers */}
-              {isVisible && !isDNF && (
+              {/* 3-letter code label above marker for focused drivers only */}
+              {showNameLabel && !isDNF && (
                 <text
                   x={0}
                   y={-radius - 6}
                   textAnchor="middle"
                   className="marker-label"
                   style={{
-                    fontSize: isFocused ? '10px' : '8px',
+                    fontSize: '10px',
                     fontWeight: 700,
                     fill: driver.color,
                     textShadow: '0 1px 2px rgba(0,0,0,0.8)',
@@ -417,7 +430,7 @@ function TrackMap({
               )}
 
               {/* DNF indicator */}
-              {isDNF && isVisible && (
+              {isDNF && (isFocused || isHighlighted) && (
                 <text
                   x={0}
                   y={0}

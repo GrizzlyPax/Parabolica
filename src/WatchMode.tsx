@@ -300,6 +300,11 @@ function WatchMode({
     });
   };
 
+  // Clear all focused drivers
+  const clearFocus = () => {
+    setFocusedDriverIds(new Set());
+  };
+
   // Sector-based gap tracking (like F1 timing)
   // Gaps only update when a driver crosses a sector boundary
   // 6 sectors = updates at each 1/6 of the track (more frequent than 3)
@@ -1186,6 +1191,11 @@ function WatchMode({
           <>
             {/* Timing Tower - appears first in DOM for desktop side-by-side (left) */}
             <section className="dashboard-section timing-section">
+              {focusedDriverIds.size > 0 && (
+                <button className="clear-focus-btn" onClick={clearFocus}>
+                  Clear Focus ({focusedDriverIds.size})
+                </button>
+              )}
               <TimingTower
                 drivers={sortedDrivers}
                 columns={TRACK_COLUMNS}
@@ -1210,11 +1220,7 @@ function WatchMode({
                 pitLanePath={pitLanePath}
                 trackLength={trackLength}
                 drivers={drivers}
-                focusedDriverIds={
-                  focusedDriverIds.size > 0
-                    ? Array.from(focusedDriverIds)
-                    : (activeBets?.map(b => b.driverId) || [])
-                }
+                focusedDriverIds={Array.from(focusedDriverIds)}
                 highlightedDriverIds={activeBets?.map(b => b.driverId) || []}
                 unsafetyCarActive={raceState.unsafetyCarActive}
                 unsafetyCarPosition={raceState.unsafetyCarPosition}
@@ -1233,9 +1239,10 @@ function WatchMode({
                       return (
                         <span
                           key={bet.id}
-                          className={`bet-chip bet-chip-${status}`}
+                          className={`bet-chip bet-chip-${status} ${focusedDriverIds.has(bet.driverId) ? 'focused' : ''}`}
                           style={{ '--chip-color': driver?.color } as React.CSSProperties}
-                          title={`${bet.type} bet on ${driver?.name} - Win ${potentialWin}ṁ`}
+                          title={`${bet.type} bet on ${driver?.name} - Win ${potentialWin}ṁ (click to focus)`}
+                          onClick={() => toggleDriverFocus(bet.driverId)}
                         >
                           <span className="bet-chip-marble" style={{ background: driver?.color }}>{driver?.emoji}</span>
                           <span className="bet-chip-code">{driverCode}</span>
@@ -1257,6 +1264,11 @@ function WatchMode({
           <>
             {/* Full Timing Tower */}
             <section className="dashboard-section timing-section">
+              {focusedDriverIds.size > 0 && (
+                <button className="clear-focus-btn" onClick={clearFocus}>
+                  Clear Focus ({focusedDriverIds.size})
+                </button>
+              )}
               <TimingTower
                 drivers={sortedDrivers}
                 columns={DETAIL_COLUMNS}
@@ -1282,11 +1294,7 @@ function WatchMode({
                 pitLanePath={pitLanePath}
                 trackLength={trackLength}
                 drivers={drivers}
-                focusedDriverIds={
-                  focusedDriverIds.size > 0
-                    ? Array.from(focusedDriverIds)
-                    : (activeBets?.map(b => b.driverId) || [])
-                }
+                focusedDriverIds={Array.from(focusedDriverIds)}
                 highlightedDriverIds={activeBets?.map(b => b.driverId) || []}
                 unsafetyCarActive={raceState.unsafetyCarActive}
                 unsafetyCarPosition={raceState.unsafetyCarPosition}
@@ -1305,9 +1313,10 @@ function WatchMode({
                       return (
                         <span
                           key={bet.id}
-                          className={`bet-chip bet-chip-${status}`}
+                          className={`bet-chip bet-chip-${status} ${focusedDriverIds.has(bet.driverId) ? 'focused' : ''}`}
                           style={{ '--chip-color': driver?.color } as React.CSSProperties}
-                          title={`${bet.type} bet on ${driver?.name} - Win ${potentialWin}ṁ`}
+                          title={`${bet.type} bet on ${driver?.name} - Win ${potentialWin}ṁ (click to focus)`}
+                          onClick={() => toggleDriverFocus(bet.driverId)}
                         >
                           <span className="bet-chip-marble" style={{ background: driver?.color }}>{driver?.emoji}</span>
                           <span className="bet-chip-code">{driverCode}</span>
