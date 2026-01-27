@@ -528,10 +528,12 @@ export default function SimLab() {
       addRow('Mechanical DNFs', canon.dnfResults.byReason.mechanical, heretic.dnfResults.byReason.mechanical, heretic.dnfResults.byReason.mechanical - canon.dnfResults.byReason.mechanical);
       addRow('Tire Failure DNFs', canon.dnfResults.byReason.tire_failure, heretic.dnfResults.byReason.tire_failure, heretic.dnfResults.byReason.tire_failure - canon.dnfResults.byReason.tire_failure);
 
-      const canonSCRate = (canon.dnfResults.safetyCars.racesWithSafetyCar / canon.totalRaces) * 100;
-      const hereticSCRate = (heretic.dnfResults.safetyCars.racesWithSafetyCar / heretic.totalRaces) * 100;
+      const canonSCLapRate = canon.dnfResults.safetyCars.totalRaceLaps > 0
+        ? (canon.dnfResults.safetyCars.totalLapsUnderSC / canon.dnfResults.safetyCars.totalRaceLaps) * 100 : 0;
+      const hereticSCLapRate = heretic.dnfResults.safetyCars.totalRaceLaps > 0
+        ? (heretic.dnfResults.safetyCars.totalLapsUnderSC / heretic.dnfResults.safetyCars.totalRaceLaps) * 100 : 0;
       addRow('Safety Cars', canon.dnfResults.safetyCars.totalDeployments, heretic.dnfResults.safetyCars.totalDeployments, heretic.dnfResults.safetyCars.totalDeployments - canon.dnfResults.safetyCars.totalDeployments);
-      addRow('Safety Car Rate', `${canonSCRate.toFixed(1)}%`, `${hereticSCRate.toFixed(1)}%`, `${(hereticSCRate - canonSCRate).toFixed(1)}%`);
+      addRow('SC Lap %', `${canonSCLapRate.toFixed(1)}%`, `${hereticSCLapRate.toFixed(1)}%`, `${(hereticSCLapRate - canonSCLapRate).toFixed(1)}%`);
       addBlank();
 
       // Pit Stop Stats Comparison
@@ -586,7 +588,8 @@ export default function SimLab() {
     } else {
       // === SIMPLE FORMAT (Canon only, no comparison) ===
       const dnfRate = (canon.dnfResults.totalDNFs / canon.dnfResults.totalDriverRaces) * 100;
-      const scRate = (canon.dnfResults.safetyCars.racesWithSafetyCar / canon.totalRaces) * 100;
+      const scLapRate = canon.dnfResults.safetyCars.totalRaceLaps > 0
+        ? (canon.dnfResults.safetyCars.totalLapsUnderSC / canon.dnfResults.safetyCars.totalRaceLaps) * 100 : 0;
       const avgPits = canon.pitStopResults.totalPitStops / canon.pitStopResults.totalRaces / 20;
 
       addRow('SIMULATION RESULTS');
@@ -595,7 +598,7 @@ export default function SimLab() {
       addRow('Total Driver-Races', canon.totalDriverRaces);
       addRow('DNF Rate', `${dnfRate.toFixed(1)}%`);
       addRow('DNFs per Race', (canon.dnfResults.totalDNFs / canon.totalRaces).toFixed(1));
-      addRow('Safety Car Rate', `${scRate.toFixed(1)}%`);
+      addRow('SC Lap %', `${scLapRate.toFixed(1)}%`);
       addRow('Avg Pit Stops', avgPits.toFixed(2));
       addBlank();
 

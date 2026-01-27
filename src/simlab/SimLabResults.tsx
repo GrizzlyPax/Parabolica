@@ -143,8 +143,8 @@ function OverviewTab({
     ? results.pitStopResults.totalPitStops / results.pitStopResults.totalRaces / 20 // 20 drivers
     : 0;
 
-  const scRate = results.totalRaces > 0
-    ? (results.dnfResults.safetyCars.racesWithSafetyCar / results.totalRaces) * 100
+  const scRate = results.dnfResults.safetyCars.totalRaceLaps > 0
+    ? (results.dnfResults.safetyCars.totalLapsUnderSC / results.dnfResults.safetyCars.totalRaceLaps) * 100
     : 0;
 
   // Calculate comparison values if available
@@ -163,10 +163,10 @@ function OverviewTab({
     hereticDnfRate = h.dnfResults.totalDriverRaces > 0
       ? (h.dnfResults.totalDNFs / h.dnfResults.totalDriverRaces) * 100 : 0;
 
-    canonScRate = c.totalRaces > 0
-      ? (c.dnfResults.safetyCars.racesWithSafetyCar / c.totalRaces) * 100 : 0;
-    hereticScRate = h.totalRaces > 0
-      ? (h.dnfResults.safetyCars.racesWithSafetyCar / h.totalRaces) * 100 : 0;
+    canonScRate = c.dnfResults.safetyCars.totalRaceLaps > 0
+      ? (c.dnfResults.safetyCars.totalLapsUnderSC / c.dnfResults.safetyCars.totalRaceLaps) * 100 : 0;
+    hereticScRate = h.dnfResults.safetyCars.totalRaceLaps > 0
+      ? (h.dnfResults.safetyCars.totalLapsUnderSC / h.dnfResults.safetyCars.totalRaceLaps) * 100 : 0;
 
     canonAvgPits = c.pitStopResults.totalRaces > 0
       ? c.pitStopResults.totalPitStops / c.pitStopResults.totalRaces / 20 : 0;
@@ -216,7 +216,7 @@ function OverviewTab({
                 </span>
               </div>
               <div className="comparison-table-row">
-                <span className="comp-col-label">Safety Car %</span>
+                <span className="comp-col-label">SC Lap %</span>
                 <span className="comp-col-canon">{canonScRate.toFixed(1)}%</span>
                 <span className="comp-col-heretic">{hereticScRate.toFixed(1)}%</span>
                 <span className={`comp-col-delta ${getDeltaClass(hereticScRate - canonScRate)}`}>
@@ -258,8 +258,8 @@ function OverviewTab({
             <span className="overview-value">{avgPitStops.toFixed(1)}</span>
           </div>
           <div className="overview-card">
-            <span className="overview-label">Safety Car %</span>
-            <span className="overview-value">{Math.round(scRate)}%</span>
+            <span className="overview-label">SC Lap %</span>
+            <span className="overview-value">{scRate.toFixed(1)}%</span>
           </div>
           <div className="overview-card">
             <span className="overview-label">Races/Second</span>
@@ -783,8 +783,8 @@ function DNFTab({ results }: { results: Results }) {
     { label: 'Late (67-100%)', value: dnfResults.byRacePhase.late, color: '#8b5cf6' },
   ];
 
-  const scRate = results.totalRaces > 0
-    ? (dnfResults.safetyCars.racesWithSafetyCar / results.totalRaces) * 100
+  const scLapRate = dnfResults.safetyCars.totalRaceLaps > 0
+    ? (dnfResults.safetyCars.totalLapsUnderSC / dnfResults.safetyCars.totalRaceLaps) * 100
     : 0;
 
   return (
@@ -807,8 +807,8 @@ function DNFTab({ results }: { results: Results }) {
           <span className="dnf-label">Safety Cars</span>
         </div>
         <div className="dnf-stat safety-car">
-          <span className="dnf-value">{Math.round(scRate)}%</span>
-          <span className="dnf-label">Races w/ SC</span>
+          <span className="dnf-value">{scLapRate.toFixed(1)}%</span>
+          <span className="dnf-label">Laps Under SC</span>
         </div>
       </div>
 

@@ -98,7 +98,7 @@ function createAccumulators(): SimLabAccumulators {
     tagAccumulators: new Map(),
     dnfByReason: { crash: 0, mechanical: 0, tire_failure: 0 },
     dnfByPhase: { early: 0, mid: 0, late: 0 },
-    safetyCars: { totalDeployments: 0, racesWithSafetyCar: 0 },
+    safetyCars: { totalDeployments: 0, racesWithSafetyCar: 0, totalLapsUnderSC: 0, totalRaceLaps: 0 },
     pitStopCount: 0,
     slowStopCount: 0,
     quickStopCount: 0,
@@ -504,6 +504,11 @@ function aggregateRaceResult(
     acc.safetyCars.racesWithSafetyCar++;
   }
 
+  // Track total laps and laps under SC
+  // SC stays out for 1 lap per deployment (UNSAFETY_CAR_LAPS constant in RaceEngine)
+  acc.safetyCars.totalRaceLaps += track.laps;
+  acc.safetyCars.totalLapsUnderSC += safetyCarsThisRace; // 1 lap per deployment
+
   // === TRACK AGGREGATION ===
   let trackAcc = acc.trackAccumulators.get(track.id);
   if (!trackAcc) {
@@ -644,9 +649,10 @@ async function runSimulation(config: SimLabConfig, variables?: SimVariables, _la
       // Load roster into engine
       engine.loadGeneratedRoster(rosterWithCars);
 
-      // Configure engine - use track's lap count
+      // Configure engine - use track's lap count AND length
       engine.updateConfig({
         totalLaps: track.laps,
+        lapLength: track.length,
       });
 
       // Set track info (TrackInfo interface expects separate eventTrigger/eventEffect)

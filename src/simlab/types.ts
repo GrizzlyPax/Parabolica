@@ -120,6 +120,8 @@ export interface DNFResults {
   safetyCars: {
     totalDeployments: number;
     racesWithSafetyCar: number;
+    totalLapsUnderSC: number;
+    totalRaceLaps: number;  // For calculating % of laps under SC
   };
 }
 
@@ -241,7 +243,7 @@ export interface SimLabAccumulators {
   dnfByPhase: { early: number; mid: number; late: number };
 
   // Safety car tracking
-  safetyCars: { totalDeployments: number; racesWithSafetyCar: number };
+  safetyCars: { totalDeployments: number; racesWithSafetyCar: number; totalLapsUnderSC: number; totalRaceLaps: number };
 
   // Pit stops
   pitStopCount: number;
