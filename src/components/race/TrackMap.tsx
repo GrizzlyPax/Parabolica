@@ -214,14 +214,14 @@ function TrackMap({
         preserveAspectRatio="xMidYMid meet"
         className="track-svg"
       >
-        {/* Track - white edges with black interior */}
-        {/* Outer white stroke (edges) */}
+        {/* Track - white edges with black interior (yellow during safety car) */}
+        {/* Outer stroke (edges) */}
         <path
           d={trackPath}
           fill="none"
-          stroke="#ffffff"
+          stroke={unsafetyCarActive ? "#FFD700" : "#ffffff"}
           strokeWidth="14"
-          strokeOpacity="0.4"
+          strokeOpacity={unsafetyCarActive ? 0.6 : 0.4}
           className="track-outline-outer"
         />
         {/* Inner black stroke (creates empty interior) */}
@@ -234,16 +234,16 @@ function TrackMap({
           className="track-outline"
         />
 
-        {/* Pit lane - white edges with black interior */}
+        {/* Pit lane - white edges with black interior (yellow during safety car) */}
         {pitLanePath && (
           <>
-            {/* Outer white stroke (edges) */}
+            {/* Outer stroke (edges) */}
             <path
               d={pitLanePath}
               fill="none"
-              stroke="#ffffff"
+              stroke={unsafetyCarActive ? "#FFD700" : "#ffffff"}
               strokeWidth="10"
-              strokeOpacity="0.4"
+              strokeOpacity={unsafetyCarActive ? 0.6 : 0.4}
               strokeLinecap="round"
               className="pit-lane-outer"
             />
