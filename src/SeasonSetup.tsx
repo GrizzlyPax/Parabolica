@@ -126,13 +126,13 @@ function SeasonSetup({ onStartSeason, onBack }: SeasonSetupProps) {
             className={`setup-tab ${activeTab === 'teams' ? 'active' : ''}`}
             onClick={() => setActiveTab('teams')}
           >
-            Teams ({selectedTeams.length}/{ALL_TEAMS.length})
+            Teams
           </button>
           <button
             className={`setup-tab ${activeTab === 'tracks' ? 'active' : ''}`}
             onClick={() => setActiveTab('tracks')}
           >
-            Tracks ({selectedTracks.length}/{ALL_TRACKS.length})
+            Tracks
           </button>
         </div>
 
@@ -227,7 +227,7 @@ function SeasonSetup({ onStartSeason, onBack }: SeasonSetupProps) {
 
             <div className="team-groups">
               <div className="team-group">
-                <h3 className="team-group-label">🏎️ Current Grid ({CURRENT_TEAMS.length})</h3>
+                <h3 className="team-group-label">🏎️ Current Grid</h3>
                 <div className="teams-grid">
                   {[...CURRENT_TEAMS].sort((a, b) => a.name.localeCompare(b.name)).map(team => (
                     <TeamCell
@@ -242,7 +242,7 @@ function SeasonSetup({ onStartSeason, onBack }: SeasonSetupProps) {
               </div>
 
               <div className="team-group historic">
-                <h3 className="team-group-label">📜 Legendary Teams ({HISTORIC_TEAMS.length})</h3>
+                <h3 className="team-group-label">📜 Legendary Teams</h3>
                 <div className="teams-grid">
                   {[...HISTORIC_TEAMS].sort((a, b) => a.name.localeCompare(b.name)).map(team => (
                     <TeamCell

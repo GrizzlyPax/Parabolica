@@ -272,7 +272,7 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
           className={`setup-tab ${activeTab === 'roster' ? 'active' : ''}`}
           onClick={() => setActiveTab('roster')}
         >
-          Teams ({activeTeams.length})
+          Teams
         </button>
         <button
           className={`setup-tab ${activeTab === 'track' ? 'active' : ''}`}
@@ -307,7 +307,7 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
             <div className="team-groups">
               {sortedCurrentTeams.length > 0 && (
                 <div className="team-group">
-                  <h3 className="team-group-label">🏎️ Current Grid ({sortedCurrentTeams.length})</h3>
+                  <h3 className="team-group-label">🏎️ Current Grid</h3>
                   <div className="teams-grid">
                     {sortedCurrentTeams.map(team => {
                       const drivers = getTeamDrivers(team.id);
@@ -341,7 +341,7 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
               )}
               {sortedHistoricTeams.length > 0 && (
                 <div className="team-group historic">
-                  <h3 className="team-group-label">📜 Legendary Teams ({sortedHistoricTeams.length})</h3>
+                  <h3 className="team-group-label">📜 Legendary Teams</h3>
                   <div className="teams-grid">
                     {sortedHistoricTeams.map(team => {
                       const drivers = getTeamDrivers(team.id);
