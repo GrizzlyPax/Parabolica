@@ -1,10 +1,16 @@
 // Single row in the timing tower
 // Renders columns dynamically based on configuration
 // Expands when focused to show driver details
+import { useMemo } from 'react';
 import type { DriverRowProps } from './types';
+import { getDriverRating, getCarRating } from '../../betting/utils';
 
 function DriverRow({ driver, columns, context, gridTemplate, isFocused, expandable = true, onClick }: DriverRowProps) {
   const { isFinished, isDNF, isPitting } = context;
+
+  // Calculate ratings for expanded view (memoized to avoid recalc on every render)
+  const driverRating = useMemo(() => getDriverRating(driver), [driver.stats]);
+  const carRating = useMemo(() => getCarRating(driver), [driver.carStats]);
 
   // Build style with grid template and team color for focus glow
   const rowStyle: React.CSSProperties = {
@@ -39,11 +45,19 @@ function DriverRow({ driver, columns, context, gridTemplate, isFocused, expandab
       </div>
 
       {/* Expanded details section - shown when focused AND expandable */}
-      {/* Simple: full name + current tire, no redundant info */}
+      {/* Full name + skill ratings + current tire */}
       {isFocused && expandable && (
         <div className="timing-row-expanded" style={{ '--team-color': driver.color } as React.CSSProperties}>
           <div className="expanded-content">
             <span className="expanded-full-name" style={{ color: driver.color }}>{driver.name}</span>
+            <div className="expanded-ratings">
+              <div className={`expanded-rating-ball tier-${driverRating.tier}`} title={driverRating.label}>
+                👤
+              </div>
+              <div className={`expanded-rating-ball tier-${carRating.tier}`} title={carRating.label}>
+                🏎️
+              </div>
+            </div>
             {driver.tireState && (
               <span className="expanded-tire" data-compound={driver.tireState.compound}>
                 {driver.tireState.compound.charAt(0).toUpperCase()}

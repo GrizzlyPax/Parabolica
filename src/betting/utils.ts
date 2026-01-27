@@ -10,6 +10,88 @@ import { CANON_VARIABLES, SimVariables } from '../simlab/types';
 
 export type BetType = 'win' | 'podium' | 'points' | 'finishes' | 'dnf';
 
+// Rating system types
+export type RatingTier = 'legendary' | 'elite' | 'solid' | 'hopeless';
+
+export interface RatingDescriptor {
+  tier: RatingTier;
+  label: string;
+}
+
+// Vibe-based rating descriptors
+const DRIVER_DESCRIPTORS: Record<RatingTier, string[]> = {
+  legendary: ['Otherworldly', 'Phenomenal', 'Transcendent', 'Untouchable', 'Generational'],
+  elite: ['Exceptional', 'Dominant', 'Fearsome', 'Formidable', 'Commanding'],
+  solid: ['Capable', 'Steady', 'Respectable', 'Dependable', 'Workmanlike'],
+  hopeless: ['Struggling', 'Erratic', 'Hapless', 'Outmatched', 'Lost'],
+};
+
+const CAR_DESCRIPTORS: Record<RatingTier, string[]> = {
+  legendary: ['Monster', 'Rocket Ship', 'Engineering Marvel', 'Dominant Machine'],
+  elite: ['Powerful', 'Race-Winning', 'Top-Tier', 'Championship-Ready'],
+  solid: ['Competitive', 'Reliable', 'Midfield Weapon', 'Points-Capable'],
+  hopeless: ['Struggling', 'Underpowered', 'Unreliable', 'Backmarker'],
+};
+
+function getRandomDescriptor(descriptors: string[]): string {
+  return descriptors[Math.floor(Math.random() * descriptors.length)];
+}
+
+/**
+ * Calculate a driver's overall rating tier based on their stats
+ * Returns a vibe-based descriptor instead of numbers
+ */
+export function getDriverRating(driver: Driver, simVars?: SimVariables): RatingDescriptor {
+  const w = (simVars ?? CANON_VARIABLES).betting.driverRatingWeights;
+  // Combine driver stats into overall score (0-1 scale)
+  const speedScore = (driver.stats.baseSpeed - 0.85) / 0.30;
+  const consistencyScore = (driver.stats.consistency - 0.3) / 0.50;
+  const luckScore = (driver.stats.luck - 0.3) / 0.50;
+
+  // Weighted average using canon variables (dynamic!)
+  const overall = consistencyScore * w.consistency + speedScore * w.speed + luckScore * w.luck;
+
+  let tier: RatingTier;
+  if (overall >= 0.75) tier = 'legendary';
+  else if (overall >= 0.5) tier = 'elite';
+  else if (overall >= 0.25) tier = 'solid';
+  else tier = 'hopeless';
+
+  return {
+    tier,
+    label: getRandomDescriptor(DRIVER_DESCRIPTORS[tier]),
+  };
+}
+
+/**
+ * Calculate a car's overall rating tier based on its stats
+ * Returns a vibe-based descriptor instead of numbers
+ */
+export function getCarRating(driver: Driver): RatingDescriptor {
+  if (!driver.carStats) {
+    return { tier: 'solid', label: getRandomDescriptor(CAR_DESCRIPTORS.solid) };
+  }
+
+  // Car stats are 1-5 scale, normalize to 0-1
+  const powerScore = (driver.carStats.power - 1) / 4;
+  const gripScore = (driver.carStats.grip - 1) / 4;
+  const reliabilityScore = (driver.carStats.reliability - 1) / 4;
+
+  // Weighted average
+  const overall = powerScore * 0.4 + gripScore * 0.35 + reliabilityScore * 0.25;
+
+  let tier: RatingTier;
+  if (overall >= 0.75) tier = 'legendary';
+  else if (overall >= 0.5) tier = 'elite';
+  else if (overall >= 0.25) tier = 'solid';
+  else tier = 'hopeless';
+
+  return {
+    tier,
+    label: getRandomDescriptor(CAR_DESCRIPTORS[tier]),
+  };
+}
+
 export interface DriverOdds {
   win: number;
   podium: number;
