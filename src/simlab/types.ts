@@ -424,9 +424,9 @@ export interface SimVariables {
 // Default "Canon" values - the current hardcoded constants
 export const CANON_VARIABLES: SimVariables = {
   tires: {
-    soft: { speedBonus: 1.08, wearRate: 4.0, criticalAt: 70, cliffSeverity: 0.85, blowoutRisk: 0.0015 },
-    medium: { speedBonus: 1.00, wearRate: 2.8, criticalAt: 75, cliffSeverity: 0.5, blowoutRisk: 0.0008 },
-    hard: { speedBonus: 0.94, wearRate: 2.2, criticalAt: 80, cliffSeverity: 0.3, blowoutRisk: 0.0003 },
+    soft: { speedBonus: 1.08, wearRate: 4.0, criticalAt: 70, cliffSeverity: 0.85, blowoutRisk: 0.0003 },
+    medium: { speedBonus: 1.00, wearRate: 2.8, criticalAt: 75, cliffSeverity: 0.5, blowoutRisk: 0.0002 },
+    hard: { speedBonus: 0.94, wearRate: 2.2, criticalAt: 80, cliffSeverity: 0.3, blowoutRisk: 0.0001 },
     precliffStart: 40,
     precliffMaxPenalty: 0.05,
     cliffExponent: 1.5,
@@ -436,10 +436,10 @@ export const CANON_VARIABLES: SimVariables = {
     aggressionWearMultiplier: 0.4,
   },
   crashes: {
-    baseCrashChance: 0.0003,
+    baseCrashChance: 0.0001,
     crashProximityThreshold: 0.03,
     crashGracePeriod: 50,
-    initialSurvivalChance: 0.40,
+    initialSurvivalChance: 0.70,
     pileupParticipationChance: 0.25,
     pileupSurvivalChance: 0.50,
     secondaryAccidentMultiplier: 10,
@@ -449,7 +449,7 @@ export const CANON_VARIABLES: SimVariables = {
     safetyCarsReduction: 0.05,
   },
   mechanical: {
-    baseFailureChance: 0.0004,
+    baseFailureChance: 0.00005,
     reliabilityBase: 0.4,
     reliabilityPerStar: 0.2,
     luckBase: 1.4,

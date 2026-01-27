@@ -314,7 +314,7 @@ export const DEFAULT_CONFIG: RaceConfig = {
   pitWorkBaseDuration: 30,     // Base ticks for stationary pit work
   mandatoryPitStops: 2,
   crashProximityThreshold: 0.03,
-  baseCrashChance: 0.0003,  // Further reduced for less frequent crashes
+  baseCrashChance: 0.0001,  // Reduced for realistic ~20% DNF rate
   enableCrashes: true,
   enableTireWear: true,
 };
