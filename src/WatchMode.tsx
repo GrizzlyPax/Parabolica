@@ -12,6 +12,8 @@ import {
   type RaceSpeed,
   type SessionState,
 } from './components/race';
+import RaceFeed from './components/race/RaceFeed';
+import { voiceNotification, voiceBetSwing, type FeedItem, type BetSwing } from './feed/commentary';
 import './WatchMode.css';
 
 // Suffixes to ignore when extracting surname
@@ -221,9 +223,14 @@ function WatchMode({
   // Track which drivers were pitting in the previous frame (to detect pit exit)
   const previouslyPittingRef = useRef<Set<number>>(new Set());
 
-  // Modular notification timeline
-  const [notifications, setNotifications] = useState<RaceNotification[]>([]);
+  // Notification id sequence (notifications are voiced straight into the feed)
   const notificationIdRef = useRef(0);
+  // Persistent narrated feed (does not expire like the old ticker notifications)
+  const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
+  const feedIdRef = useRef(0);
+  const recentNotifKeysRef = useRef<Map<string, { tick: number; time: number }>>(new Map());
+  const betStatusesRef = useRef<Map<string, BetStatus>>(new Map());
+  const betSwingCooldownRef = useRef<Map<string, number>>(new Map());
   const seenCrashesRef = useRef<Set<number>>(new Set());
   const seenSlowPitStopsRef = useRef<Set<number>>(new Set()); // Track drivers who have had slow pit stop notified
   const seenQuickPitStopsRef = useRef<Set<number>>(new Set()); // Track drivers who have had quick pit stop notified
@@ -372,35 +379,54 @@ function WatchMode({
     const now = Date.now();
     const currentTick = raceState.totalTicks;
 
-    // Deduplicate: skip if same title/type exists within last 100 ticks or 2 seconds
-    setNotifications(prev => {
-      const isDuplicate = prev.some(n =>
-        n.title === title &&
-        n.type === type &&
-        (Math.abs(n.tick - currentTick) < 100 || (now - (n.expiresAt - 12000)) < 2000)
-      );
+    // Deduplicate: skip if same title/type fired within last 100 ticks or 2 seconds.
+    // Ref-based (not state-scan) so it's safe under StrictMode double-invocation
+    // and can gate the feed append below as well.
+    const dedupeKey = `${type}:${title}`;
+    const recent = recentNotifKeysRef.current.get(dedupeKey);
+    if (recent && (Math.abs(recent.tick - currentTick) < 100 || now - recent.time < 2000)) {
+      return; // Skip duplicate
+    }
+    recentNotifKeysRef.current.set(dedupeKey, { tick: currentTick, time: now });
 
-      if (isDuplicate) return prev; // Skip duplicate
+    const newNotification: RaceNotification = {
+      id: notificationIdRef.current++,
+      type,
+      title,
+      message,
+      emoji,
+      tick: currentTick,
+      expiresAt: now + durationMs,
+      drivers: involvedDrivers,
+      color,
+    };
 
-      const newNotification: RaceNotification = {
-        id: notificationIdRef.current++,
-        type,
-        title,
-        message,
-        emoji,
-        tick: currentTick,
-        expiresAt: now + durationMs,
-        drivers: involvedDrivers,
-        color,
-      };
-
-      // Auto-remove after duration
-      setTimeout(() => {
-        setNotifications(p => p.filter(n => n.id !== newNotification.id));
-      }, durationMs);
-
-      return [newNotification, ...prev].slice(0, 15); // Keep last 15
+    // Narrate it into the persistent race feed
+    const voiced = voiceNotification(newNotification, {
+      lap: leaderLapForFeed(),
+      totalLaps,
+      trackName: trackInfo?.name ?? '',
+      trackEmoji: trackInfo?.funEmoji ?? '',
     });
+    if (voiced) pushFeedItem(voiced);
+  };
+
+  // Append to the feed, skipping verbatim stutters (e.g., a lead flap
+  // producing the same voiced line twice in a row)
+  const pushFeedItem = (voiced: Omit<FeedItem, 'id'>) => {
+    setFeedItems(prev => {
+      if (prev[0]?.text === voiced.text) return prev;
+      return [{ ...voiced, id: feedIdRef.current++ }, ...prev].slice(0, 80);
+    });
+  };
+
+  // Leader's lap, for stamping feed items
+  const leaderLapForFeed = () => {
+    let lap = 0;
+    for (const d of drivers) {
+      if (d.status !== 'dnf' && d.currentLap > lap) lap = d.currentLap;
+    }
+    return Math.min(Math.max(lap, 1), totalLaps);
   };
 
   // Generate shareable race summary (Wordle-style)
@@ -629,7 +655,11 @@ function WatchMode({
       seenCrashesRef.current.clear();
       seenSlowPitStopsRef.current.clear(); // Reset slow pit stop tracking
       seenQuickPitStopsRef.current.clear(); // Reset quick pit stop tracking
-      setNotifications([]);
+      setFeedItems([]);
+      feedIdRef.current = 0;
+      recentNotifKeysRef.current.clear();
+      betStatusesRef.current.clear();
+      betSwingCooldownRef.current.clear();
       lastCrashTickRef.current = -1;
       previousLeaderRef.current = null;
       notificationIdRef.current = 0;
@@ -944,7 +974,10 @@ function WatchMode({
           'lead_change',
           'LEAD CHANGE',
           `${leader.emoji} ${leader.name} takes the lead!`,
-          '🔄'
+          '🔄',
+          [{ id: leader.id, name: leader.name, emoji: leader.emoji }],
+          12000,
+          leader.color
         );
       }
     }
@@ -1008,7 +1041,10 @@ function WatchMode({
             'fastest_lap',
             'FASTEST LAP',
             `${fastest.driver.emoji} ${fastest.driver.name} sets the pace!`,
-            '⚡'
+            '⚡',
+            [{ id: fastest.driver.id, name: fastest.driver.name, emoji: fastest.driver.emoji }],
+            12000,
+            fastest.driver.color
           );
         }
         fastestLapRef.current = { driverId: fastest.driverId, time: fastest.time };
@@ -1026,8 +1062,9 @@ function WatchMode({
           'CHECKERED FLAG',
           `${winner.emoji} ${winner.name} wins the race!`,
           '🏁',
-          undefined,
-          20000 // Keep winner notification longer
+          [{ id: winner.id, name: winner.name, emoji: winner.emoji }],
+          20000, // Keep winner notification longer
+          winner.color
         );
       }
     }
@@ -1096,6 +1133,56 @@ function WatchMode({
   // Use frozen sorted order for timing tower (synced with sector updates)
   // Fall back to realtime if frozen is empty (during initialization)
   const sortedDrivers = frozenSortedDrivers.length > 0 ? frozenSortedDrivers : realtimeSortedDrivers;
+
+  // Mister Marbles reacts when a bet crosses the money line (issue #55).
+  // DNF swings always post; position swings are rate-limited per bet so a
+  // P3/P4 battle reads as drama, not spam.
+  useEffect(() => {
+    if (!activeBets || activeBets.length === 0) return;
+    const lap = leaderLapForFeed();
+
+    for (const bet of activeBets) {
+      const driver = drivers.find(d => d.id === bet.driverId);
+      const status = getBetStatus(bet, driver, sortedDrivers, raceState.raceFinished);
+      const prev = betStatusesRef.current.get(bet.id);
+      betStatusesRef.current.set(bet.id, status);
+
+      // Lap 1 is a scramble — record statuses but stay quiet
+      if (lap < 2 || raceState.raceFinished) continue;
+      if (!prev || prev === status || status === 'pending') continue;
+
+      let swing: BetSwing;
+      if (status === 'dnf') swing = 'bet_dead';
+      else if (bet.type === 'dnf' && status === 'winning' && driver?.status === 'dnf') swing = 'dnf_bet_hit';
+      else if (status === 'winning') swing = 'now_winning';
+      else swing = 'now_losing';
+
+      const isDnfSwing = swing === 'bet_dead' || swing === 'dnf_bet_hit';
+      const now = Date.now();
+      const lastEmit = betSwingCooldownRef.current.get(bet.id) ?? 0;
+      if (!isDnfSwing && now - lastEmit < 25000) continue;
+      betSwingCooldownRef.current.set(bet.id, now);
+
+      const position = driver && driver.status !== 'dnf'
+        ? sortedDrivers.findIndex(d => d.id === driver.id) + 1
+        : undefined;
+      const voiced = voiceBetSwing(
+        {
+          swing,
+          driverName: bet.driverName,
+          betLabel: BET_TYPE_LABELS[bet.type] ?? bet.type.toUpperCase(),
+          amount: bet.amount,
+          potential: Math.floor(bet.amount * bet.odds),
+          position: position && position > 0 ? position : undefined,
+        },
+        { lap, totalLaps, trackName: trackInfo?.name ?? '', trackEmoji: trackInfo?.funEmoji ?? '' },
+        raceState.totalTicks + bet.id.length,
+        driver?.color
+      );
+      pushFeedItem(voiced);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sortedDrivers, activeBets, raceState.raceFinished]);
 
   // Derived values for TimingTower
   const fastestLapOverall = useMemo(() => {
@@ -1255,6 +1342,9 @@ function WatchMode({
                   </div>
                 </div>
               )}
+
+              {/* The narrator: persistent persona-voiced race feed */}
+              <RaceFeed items={feedItems} className="story-feed-track" />
             </section>
           </>
         )}
@@ -1331,34 +1421,9 @@ function WatchMode({
               )}
             </section>
 
-            {/* Live Events Feed */}
+            {/* Live Events Feed — persistent narrated history */}
             <section className="dashboard-section events-section">
-              <div className="events-header">
-                <span className="events-label">Live Feed</span>
-                <span className="events-count">{notifications.length}</span>
-              </div>
-              <div className="events-list">
-                {notifications.length > 0 ? (
-                  notifications.slice(0, 10).map((notification) => (
-                    <div
-                      key={notification.id}
-                      className={`event-card event-${notification.type}`}
-                      style={notification.color ? { '--event-color': notification.color } as React.CSSProperties : undefined}
-                    >
-                      <span className="event-emoji">{notification.emoji}</span>
-                      <div className="event-content">
-                        <span className="event-title">{notification.title}</span>
-                        {notification.message && <span className="event-message">{notification.message}</span>}
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="events-empty">
-                    <span className="events-empty-icon">📡</span>
-                    <span className="events-empty-text">Awaiting race action...</span>
-                  </div>
-                )}
-              </div>
+              <RaceFeed items={feedItems} className="story-feed-detail" />
             </section>
           </>
         )}
