@@ -186,11 +186,12 @@ export function calculateDriverOdds(
   // Finishes modifier: inverse of DNF (reliable drivers = lower modifier)
   const finishesMod = 0.8 + dnfLikelihood * 1.5;  // Reliable: 0.8×, unreliable: up to 2.3×
 
-  // Deterministic jitter based on driver rank to avoid resorting on re-render
-  // Uses rank as seed for consistent +/- 10% variation
+  // Deterministic jitter based on driver rank to avoid resorting on re-render.
+  // Capped at ±3%: the smallest gap between adjacent rank modifiers is ~6%,
+  // so anything larger lets a worse-ranked driver show shorter odds.
   const jitter = (seed: number) => {
     const hash = ((rank * 31 + seed) % 20) / 100;
-    return 0.9 + hash;
+    return 0.97 + hash * 0.3;
   };
 
   // Final odds = Base × Driver Modifier (with stable jitter)

@@ -19,6 +19,7 @@ Formula 1 race simulation with betting odds system.
 ## Commands
 - `npm run dev` - Start dev server (localhost:5173)
 - `npm run build` - Production build
+- `npm test` - Run vitest suite (betting math + race engine invariants)
 - `gh issue list` - View GitHub issues
 - `gh issue view <number>` - View specific issue
 

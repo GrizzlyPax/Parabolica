@@ -388,7 +388,7 @@ export default function BetLab() {
 
             <div className="config-info">
               <p>
-                {batchSize} races × 20 drivers × 5 bet types = <strong>{(batchSize * 20 * 5).toLocaleString()}</strong> bets
+                {batchSize} races × 22 drivers × 5 bet types = <strong>{(batchSize * 22 * 5).toLocaleString()}</strong> bets
               </p>
             </div>
           </div>

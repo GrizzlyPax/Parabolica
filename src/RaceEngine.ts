@@ -145,15 +145,10 @@ export interface TireCompoundProperties {
   blowoutRisk: number;    // Base blowout chance per tick when past critical (0-1)
 }
 
-export const TIRE_COMPOUNDS: Record<TireCompound, TireCompoundProperties> = {
-  // Soft: Fast but SHORT-LIVED - only ~25% of race distance before critical
-  // wearRate is now relative to race: higher = fewer laps before critical
-  soft:   { speedBonus: 1.08, wearRate: 4.0, criticalAt: 70, cliffSeverity: 0.85, blowoutRisk: 0.0015 },
-  // Medium: Balanced - ~35% of race distance before critical
-  medium: { speedBonus: 1.00, wearRate: 2.8, criticalAt: 75, cliffSeverity: 0.5, blowoutRisk: 0.0008 },
-  // Hard: Slow but durable - ~45% of race distance before critical
-  hard:   { speedBonus: 0.94, wearRate: 2.2, criticalAt: 80, cliffSeverity: 0.3, blowoutRisk: 0.0003 }
-};
+// Tire tuning lives in CANON_VARIABLES (simlab/types.ts) — the single source of
+// truth shared by live races, Sim Lab, and Bet Lab. A stale copy here previously
+// gave live races 5× the blowout risk that the labs calibrated against.
+export const TIRE_COMPOUNDS: Record<TireCompound, TireCompoundProperties> = CANON_VARIABLES.tires;
 
 // === DRIVER STATUS TYPES ===
 

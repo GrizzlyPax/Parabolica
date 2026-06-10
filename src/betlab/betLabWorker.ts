@@ -124,7 +124,7 @@ function aggregateBettingResults(
 
   // For each driver, calculate odds and check all bet types
   for (const driver of drivers) {
-    const rank = rankings.get(driver.id) ?? 20;
+    const rank = rankings.get(driver.id) ?? totalDrivers;
     const tier = getTierForRank(rank, totalDrivers);
     const odds = calculateDriverOdds(driver, rank, totalDrivers, simVars);
 
