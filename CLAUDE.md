@@ -3,15 +3,17 @@
 Formula 1 race simulation with betting odds system.
 
 ## Project Location
-`/Users/pax/race-engine`
+`/Users/pax/parabolica`
 
 ## Structure
 - `src/` - All source code
   - `MarbleMode.tsx` - Main race/betting UI
+  - `WatchMode.tsx` - Live race screen (track/detail/standings views)
   - `Compendium.tsx` - Lab tools navigation (SimLab, BetLab)
   - `simlab/` - Monte Carlo race simulation
   - `betlab/` - Betting odds analysis
   - `betting/utils.ts` - Pure betting calculation utilities
+  - `feed/commentary.ts` - Race feed persona/commentary engine
   - `RaceEngine.ts` - Core race simulation engine
 - `dist/` - Production build output
 - `public/` - Static assets
@@ -28,5 +30,6 @@ Formula 1 race simulation with betting odds system.
 - Web Workers for heavy simulations
 - GitHub: GrizzlyPax/Parabolica
 
-## Known Issues
-- #139: Bet Lab progress bar doesn't update during simulation
+## Docs
+- `docs/ARCHITECTURE_REVIEW.md` - Refactor roadmap (seeded RNG, persistence, engine split)
+- `docs/GAME_DESIGN_PASS.md` - Live-race design roadmap (drama beats, bet settlement, persistence)
