@@ -7,15 +7,16 @@ import WatchMode from './WatchMode';
 import Compendium from './Compendium';
 import FoundingScreen, { FoundingChoices } from './league/ui/FoundingScreen';
 import LeagueScreen from './league/ui/LeagueScreen';
-import { createLeague } from './league/league';
-import { LeagueState } from './league/types';
+import { createLeague, rosterStateAt } from './league/league';
+import { LeagueState, LiveRace } from './league/types';
+import { LIVE_TICK_MS } from './league/settle';
 import { saveLeagueState, loadLeagueState, clearLeagueState } from './storage/persistence';
 import { mulberry32, deriveSeed, randomSeed } from './engine/rng';
-import { generateTrack, getRandomTracks, getDynamicEventDescription, Track } from './generators/tracks';
+import { generateTrack, getRandomTracks, getTrackById, getDynamicEventDescription, Track } from './generators/tracks';
 import { TEAMS } from './data/teams';
 import './App.css';
 
-type AppScreen = 'main-menu' | 'setup' | 'race' | 'compendium' | 'founding' | 'league';
+type AppScreen = 'main-menu' | 'setup' | 'race' | 'compendium' | 'founding' | 'league' | 'broadcast';
 type RaceSpeed = 0.5 | 1 | 2 | 10;
 
 function App() {
@@ -110,6 +111,36 @@ function App() {
     setLeague(null);
     setScreen('main-menu');
   };
+
+  // Join a live broadcast mid-race. The race is deterministic from its seed,
+  // so we rebuild it, fast-forward to the current wall-clock tick, and play
+  // on from there — same race the settle loop would compute headlessly.
+  const handleWatchLive = useCallback((liveLeague: LeagueState, live: LiveRace) => {
+    const race = liveLeague.schedule[live.index];
+    const track = getTrackById(race.trackId);
+    if (!track) return;
+
+    engine.stop();
+    engine.setSeed(race.seed);
+    engine.loadGeneratedRoster(rosterStateAt(liveLeague, live.index));
+    applyTrackToEngine(track);
+    engine.updateConfig({ tickInterval: LIVE_TICK_MS });
+    setRaceSpeed(1);
+    engine.reset();
+    engine.fastForward(Math.floor((Date.now() - live.startedAt) / LIVE_TICK_MS));
+    engine.start();
+
+    setShowCountdown(false);
+    setScreen('broadcast');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [engine]);
+
+  const handleLeaveBroadcast = useCallback(() => {
+    engine.stop();
+    engine.reset();
+    engine.clearSeed();
+    setScreen('league');
+  }, [engine]);
 
   // === Quick Race ===
 
@@ -242,9 +273,29 @@ function App() {
       <LeagueScreen
         league={league}
         onLeagueUpdate={setLeague}
+        onWatchLive={live => handleWatchLive(league, live)}
         onExit={handleBackToMainMenu}
         onDissolve={handleDissolveLeague}
       />
+    );
+  }
+
+  // Commissioner Mode: live broadcast (spectator — no controls, no countdown)
+  if (screen === 'broadcast') {
+    if (!config || !raceState) return null;
+    return (
+      <div className="watch-container">
+        <WatchMode
+          drivers={drivers}
+          config={config}
+          raceState={raceState}
+          trackInfo={trackInfo}
+          raceEvents={raceEvents}
+          onExit={handleLeaveBroadcast}
+          spectator
+          isRunning={isRunning}
+        />
+      </div>
     );
   }
 

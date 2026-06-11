@@ -39,7 +39,10 @@ interface WatchModeProps {
   onNextRace?: () => void;
   powerActivation?: PowerActivation | null;
   raceEvents?: RaceEvent[];  // For track event notifications
-  onExit?: () => void;  // Leave the race (back to main menu)
+  onExit?: () => void;  // Leave the race (back to main menu / league)
+  /** Live broadcast mode: no pause/speed/reset — you're a spectator of
+   * something really happening. Exit reads "Back to League". */
+  spectator?: boolean;
   // Race controls
   isRunning?: boolean;
   raceSpeed?: RaceSpeed;
@@ -145,6 +148,7 @@ function WatchMode({
   powerActivation,
   raceEvents,
   onExit,
+  spectator = false,
   // Race controls
   isRunning = false,
   raceSpeed = 1,
@@ -1112,14 +1116,15 @@ function WatchMode({
         trackFlagEmoji={trackInfo?.emoji}
         elapsedTime={raceState.totalTicks}
         onMenuOpen={() => setNavPanelOpen(true)}
-        // Race controls
+        liveBadge={spectator && !raceState.raceFinished}
+        // Race controls (a live broadcast offers none)
         isRunning={isRunning}
         raceFinished={raceState.raceFinished}
         raceSpeed={raceSpeed}
-        onStart={onStart}
-        onStop={onStop}
-        onReset={onReset}
-        onSpeedChange={onSpeedChange}
+        onStart={spectator ? undefined : onStart}
+        onStop={spectator ? undefined : onStop}
+        onReset={spectator ? undefined : onReset}
+        onSpeedChange={spectator ? undefined : onSpeedChange}
       />
 
       {/* Navigation Panel - slide-in from left */}
@@ -1351,7 +1356,7 @@ function WatchMode({
               </button>
               {onExit && (
                 <button className="share-btn" onClick={onExit}>
-                  🏠 Menu
+                  {spectator ? '⚜️ Back to League' : '🏠 Menu'}
                 </button>
               )}
               {onNextRace && (

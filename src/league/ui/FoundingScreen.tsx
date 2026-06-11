@@ -21,7 +21,7 @@ const MINUTE = 60_000;
 const HOUR = 3_600_000;
 
 const CADENCES = [
-  { label: 'Frantic', emoji: '⚡', detail: 'a race every 2 minutes', ms: 2 * MINUTE },
+  { label: 'Frantic', emoji: '⚡', detail: 'back-to-back broadcasts, non-stop', ms: 2 * MINUTE },
   { label: 'Brisk', emoji: '☕', detail: 'a race every 30 minutes', ms: 30 * MINUTE },
   { label: 'Classic', emoji: '🕰️', detail: 'a race every 3 hours', ms: 3 * HOUR },
 ];

@@ -856,6 +856,19 @@ class RaceEngine {
     this.isRunning = false;
   }
 
+  /**
+   * Synchronously advance the prepared race by `ticks` ticks — joining a live
+   * broadcast mid-race. Call after seed/roster/config are set, then start()
+   * to continue in real time. Determinism makes the join exact: the same seed
+   * replays the same race, so tick N computed now is tick N always.
+   */
+  fastForward(ticks: number): void {
+    const target = Math.max(0, Math.floor(ticks));
+    while (!this.raceState.raceFinished && this.raceState.totalTicks < target) {
+      this.tick();
+    }
+  }
+
   reset(): void {
     this.stop();
     // Reset driver race state without replacing the roster

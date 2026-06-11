@@ -13,7 +13,8 @@ about existing code was verified against source, with locations cited.*
 | 3 — Storage layer + resume current game | ✅ shipped (`src/storage/persistence.ts`, Resume Season card; closes #43; browser-verified) |
 | 4 — League core: schedule + settle | ✅ shipped (`src/league/`: createLeague, settle loop, interventions, event-cap fix, fake-clock tests) |
 | 5 — Gods, demands, smiting | placeholder shipped (`league/gods.ts`: 3 gods' identity + voice; appetite evaluators/smiting still to build) |
-| 6 — League UI shell | ✅ shipped (`league/ui/`: FoundingScreen + LeagueScreen — check-in reel, live countdown settle, standings, calendar, chronicle digests; browser-verified). Hall of Seasons + commentary-voiced digests still pending. |
+| 6 — League UI shell | ✅ shipped (`league/ui/`: FoundingScreen + LeagueScreen — check-in reel, live countdown settle, standings, The Grid, calendar, chronicle digests; browser-verified). Hall of Seasons + commentary-voiced digests still pending. |
+| 6.5 — Live broadcasts | ✅ shipped: races occupy real-time windows (`LIVE_TICK_MS`/tick, broadcasts queue — never overlap). Check in mid-window → 🔴 LIVE card → `engine.fastForward()` joins the race at the true current tick, spectator mode (no controls). Determinism guarantees the live view and headless settle are the same race (under test). The inaugural race airs at founding. |
 | 7 — Interventions UI + decree beat | not started (intervention *engine* shipped in PR 4: `rosterStateAt` + append-only log) |
 
 *Note vs. plan: settle shipped as a pure synchronous function with a progress

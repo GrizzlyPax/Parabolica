@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { createLeague, buildSchedule, rosterStateAt } from './league';
-import { settleLeague, nextRaceAt, isSeasonOver, FULL_EVENT_RETENTION } from './settle';
+import { settleLeague, nextRaceAt, isSeasonOver, FULL_EVENT_RETENTION, LIVE_TICK_MS } from './settle';
 import { LeagueSetupConfig, LeagueState } from './types';
 import { saveLeagueState, loadLeagueState, KeyValueStore } from '../storage/persistence';
 import { getSeasonStandings } from '../types/season';
@@ -79,10 +79,11 @@ describe('settleLeague (fake clock)', () => {
     expect(after).toBe(league); // same reference: cheap no-op check
   });
 
-  it('settles exactly the due races, in order, accumulating standings', () => {
+  it('settles exactly the races whose broadcasts have ended, in order', () => {
     const league = createLeague(42, makeSetup());
-    // now = just after race 1 (index 1) fires; race 0 fired at founding
-    const { league: after, newlySettled } = settleLeague(league, { now: T0 + 3 * HOUR });
+    // Race 0 aired at founding, race 1 at T0+3h; both broadcasts are over
+    // well before T0+6h, and race 2 hasn't started yet.
+    const { league: after, newlySettled } = settleLeague(league, { now: T0 + 6 * HOUR - 1 });
 
     expect(newlySettled.map(d => d.index)).toEqual([0, 1]);
     expect(after.settledThrough).toBe(1);
@@ -129,6 +130,37 @@ describe('settleLeague (fake clock)', () => {
     const withFullLog = after.digests.filter(d => d.events !== undefined);
     expect(withFullLog).toHaveLength(FULL_EVENT_RETENTION);
     expect(withFullLog.map(d => d.index)).toEqual([1, 2, 3]);
+  });
+
+  it('reports a race as live inside its broadcast window, without settling it', () => {
+    const league = createLeague(42, makeSetup());
+    // 1s after founding: the inaugural race is on the air
+    const { league: after, newlySettled, live } = settleLeague(league, { now: T0 + 1000 });
+    expect(newlySettled).toHaveLength(0);
+    expect(after).toBe(league);
+    expect(live).toBeDefined();
+    expect(live!.index).toBe(0);
+    expect(live!.startedAt).toBe(T0);
+    expect(live!.endsAt).toBeGreaterThan(T0 + 1000);
+  });
+
+  it('the live window matches the settled broadcast exactly (same race)', () => {
+    const league = createLeague(42, makeSetup());
+    const { live } = settleLeague(league, { now: T0 + 1 });
+    const settled = settleLeague(league, { now: T0 + 13 * HOUR }).league;
+    expect(settled.digests[0].startedAt).toBe(T0);
+    expect(settled.digests[0].endedAt).toBe(T0 + settled.digests[0].totalTicks * LIVE_TICK_MS);
+    expect(live!.endsAt).toBe(settled.digests[0].endedAt);
+  });
+
+  it('broadcasts queue: an interval shorter than a race never overlaps', () => {
+    // 1-minute cadence, but races last several minutes — successors must wait
+    const setup = makeSetup({ raceIntervalMs: 60_000 });
+    const league = settleLeague(createLeague(42, setup), { now: T0 + 13 * HOUR }).league;
+    expect(league.digests).toHaveLength(4);
+    for (let i = 1; i < league.digests.length; i++) {
+      expect(league.digests[i].startedAt!).toBeGreaterThanOrEqual(league.digests[i - 1].endedAt!);
+    }
   });
 
   it('reports progress per settled race', () => {

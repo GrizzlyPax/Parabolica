@@ -1,21 +1,26 @@
 // The settle loop: the one function that makes wall-clock time real.
-// Every race whose scheduled moment has passed is simulated headlessly and
-// deterministically from its founding seed, in order, accumulating standings
-// and digests. Pure (input league is never mutated) and synchronous — designed
-// to drop into a Web Worker when backfill UI lands.
+// A race occupies a real-time broadcast window: it starts at its scheduled
+// moment (or when its predecessor ends, whichever is later — broadcasts
+// queue) and runs at LIVE_TICK_MS per tick. Races whose window has fully
+// passed are settled into digests; a race whose window contains `now` is
+// reported as live so the UI can join the broadcast mid-race. Determinism
+// makes the live view and the headless settle the same race.
+// Pure (input league is never mutated) and synchronous.
 // See docs/COMMISSIONER_MODE_TECH.md (Problem 3).
 
 import RaceEngine, { RaceEvent, Driver } from '../RaceEngine';
 import { SimVariables, CANON_VARIABLES } from '../simlab/types';
 import { getTrackById, getDynamicEventDescription, Track } from '../generators/tracks';
 import { updateSeasonWithRaceResult } from '../types/season';
-import { LeagueState, RaceDigest, SettleResult } from './types';
+import { LeagueState, RaceDigest, SettleResult, LiveRace } from './types';
 import { rosterStateAt } from './league';
 
 /** How many of the most recent digests keep their full event log. */
 export const FULL_EVENT_RETENTION = 3;
 /** How many top-magnitude events every digest keeps forever. */
 export const HIGHLIGHTS_PER_RACE = 12;
+/** Real-time ms per tick on a live broadcast (1x — broadcasts are not pausable). */
+export const LIVE_TICK_MS = 100;
 
 export interface SettleOptions {
   /** Wall-clock "now" (epoch ms). Injected for testability. */
@@ -108,25 +113,35 @@ function applyRetention(digests: RaceDigest[]): RaceDigest[] {
   });
 }
 
+/** When the last settled broadcast ended (queue anchor for the next one).
+ * Digests from before live broadcasts existed lack endedAt; fall back to 0 so
+ * the next race anchors to its scheduled time. */
+function lastBroadcastEnd(league: LeagueState): number {
+  const last = league.digests[league.digests.length - 1];
+  return last?.endedAt ?? 0;
+}
+
 /**
- * Settle every due race. Refuses to re-run history: races at or before
- * settledThrough are never touched, and an empty due-list returns the input
- * league unchanged (same reference, so callers can cheap-check `===`).
+ * Settle every race whose broadcast window has fully passed. Refuses to
+ * re-run history: races at or before settledThrough are never touched, and
+ * when nothing settles the input league is returned unchanged (same
+ * reference, so callers can cheap-check `===`). If `now` falls inside a
+ * race's window, that race is reported as `live` and not settled — joining
+ * the broadcast is the UI's job.
  */
 export function settleLeague(league: LeagueState, options: SettleOptions): SettleResult {
   const simVars = options.simVars ?? CANON_VARIABLES;
 
-  const due = league.schedule.filter(
-    r => r.index > league.settledThrough && r.scheduledAt <= options.now
-  );
-  if (due.length === 0) {
-    return { league, newlySettled: [] };
-  }
-
+  const pending = league.schedule.filter(r => r.index > league.settledThrough);
+  let prevEnd = lastBroadcastEnd(league);
   let season = league.season;
   const newlySettled: RaceDigest[] = [];
+  let live: LiveRace | undefined;
 
-  for (const race of due) {
+  for (const race of pending) {
+    const startedAt = Math.max(race.scheduledAt, prevEnd);
+    if (startedAt > options.now) break; // not on the air yet
+
     const track = getTrackById(race.trackId);
     if (!track) {
       // A calendar entry pointing at a track that no longer exists means the
@@ -135,7 +150,19 @@ export function settleLeague(league: LeagueState, options: SettleOptions): Settl
       throw new Error(`settleLeague: unknown track '${race.trackId}' at race ${race.index}`);
     }
 
+    // Run the race to learn how long its broadcast lasts (deterministic, so
+    // this is the same race a viewer would watch live).
     const { digest } = runScheduledRace(league, race.index, track, simVars);
+    const endedAt = startedAt + digest.totalTicks * LIVE_TICK_MS;
+
+    if (endedAt > options.now) {
+      // The race is on the air right now — don't settle it, report it.
+      live = { index: race.index, trackId: race.trackId, startedAt, endsAt: endedAt };
+      break;
+    }
+
+    digest.startedAt = startedAt;
+    digest.endedAt = endedAt;
     season = updateSeasonWithRaceResult(
       season,
       digest.finishOrder,
@@ -145,22 +172,28 @@ export function settleLeague(league: LeagueState, options: SettleOptions): Settl
       digest.fastestLapDriverId
     );
     newlySettled.push(digest);
-    options.onRaceSettled?.(digest, newlySettled.length, due.length);
+    prevEnd = endedAt;
+    options.onRaceSettled?.(digest, newlySettled.length, pending.length);
+  }
+
+  if (newlySettled.length === 0) {
+    return { league, newlySettled: [], live };
   }
 
   const settled: LeagueState = {
     ...league,
-    settledThrough: due[due.length - 1].index,
+    settledThrough: newlySettled[newlySettled.length - 1].index,
     season,
     digests: applyRetention([...league.digests, ...newlySettled]),
   };
-  return { league: settled, newlySettled };
+  return { league: settled, newlySettled, live };
 }
 
-/** Epoch ms of the next unsettled race, or null when the season is done. */
+/** Epoch ms when the next broadcast begins (queue-aware), or null when the
+ * season is done. May be in the past if that race is live or overdue. */
 export function nextRaceAt(league: LeagueState): number | null {
   const next = league.schedule.find(r => r.index > league.settledThrough);
-  return next ? next.scheduledAt : null;
+  return next ? Math.max(next.scheduledAt, lastBroadcastEnd(league)) : null;
 }
 
 /** True once every scheduled race has settled. */

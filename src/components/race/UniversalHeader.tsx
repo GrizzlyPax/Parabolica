@@ -23,6 +23,7 @@ function UniversalHeader({
   trackFlagEmoji,
   elapsedTime,
   onMenuOpen,
+  liveBadge = false,
   // Race controls
   isRunning = false,
   raceFinished = false,
@@ -74,7 +75,12 @@ function UniversalHeader({
         </div>
       </div>
 
-      {/* Right: Race controls */}
+      {/* Right: LIVE badge (broadcast) or race controls */}
+      {liveBadge && (
+        <div className="header-controls">
+          <span className="live-badge"><span className="live-dot" /> LIVE</span>
+        </div>
+      )}
       {hasControls && (
         <div className="header-controls">
           {/* Play/Pause button */}

@@ -81,6 +81,8 @@ export interface UniversalHeaderProps {
   trackFlagEmoji?: string; // Flag emoji for the track location
   elapsedTime: number;
   onMenuOpen: () => void;
+  /** Show a pulsing LIVE pill (broadcast spectating). */
+  liveBadge?: boolean;
   // Race controls
   isRunning?: boolean;
   raceFinished?: boolean;

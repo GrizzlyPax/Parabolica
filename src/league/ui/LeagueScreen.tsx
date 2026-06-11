@@ -3,7 +3,7 @@
 // while-you-were-away reel, standings, calendar, and the chronicle of digests.
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { LeagueState, RaceDigest } from '../types';
+import { LeagueState, RaceDigest, LiveRace } from '../types';
 import { settleLeague, nextRaceAt, isSeasonOver } from '../settle';
 import { saveLeagueState } from '../../storage/persistence';
 import { getSeasonStandings } from '../../types/season';
@@ -15,6 +15,8 @@ import './League.css';
 interface LeagueScreenProps {
   league: LeagueState;
   onLeagueUpdate: (league: LeagueState) => void;
+  /** Join the broadcast of a race that's on the air right now. */
+  onWatchLive: (live: LiveRace) => void;
   onExit: () => void;
   onDissolve: () => void;
 }
@@ -78,13 +80,16 @@ function DigestCard({ league, digest, defaultOpen = false }: {
   );
 }
 
-function LeagueScreen({ league, onLeagueUpdate, onExit, onDissolve }: LeagueScreenProps) {
+function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onDissolve }: LeagueScreenProps) {
   // The while-you-were-away reel: digests settled since this screen opened.
   const [reel, setReel] = useState<RaceDigest[]>([]);
+  const [live, setLive] = useState<LiveRace | null>(null);
   const [now, setNow] = useState(() => Date.now());
   const [confirmDissolve, setConfirmDissolve] = useState(false);
-  // Settle must not run twice for the same moment (StrictMode double-effects).
+  // Settle must not run twice for the same moment (StrictMode double-effects),
+  // and the 1s clock must not re-run the live race's sim every tick.
   const settlingRef = useRef(false);
+  const liveRef = useRef<LiveRace | null>(null);
 
   const god = getGodById(league.setup.godId);
   const over = isSeasonOver(league);
@@ -94,7 +99,9 @@ function LeagueScreen({ league, onLeagueUpdate, onExit, onDissolve }: LeagueScre
     if (settlingRef.current) return;
     settlingRef.current = true;
     try {
-      const { league: after, newlySettled } = settleLeague(league, { now: Date.now() });
+      const { league: after, newlySettled, live: onAir } = settleLeague(league, { now: Date.now() });
+      liveRef.current = onAir ?? null;
+      setLive(onAir ?? null);
       if (newlySettled.length > 0) {
         saveLeagueState(after);
         // Dedupe by race index: StrictMode double-mounts this effect with the
@@ -110,14 +117,17 @@ function LeagueScreen({ league, onLeagueUpdate, onExit, onDissolve }: LeagueScre
     }
   }, [league, onLeagueUpdate]);
 
-  // Settle whatever is due on mount (the check-in), then keep a 1s clock:
-  // when the countdown crosses zero the next race settles live.
+  // Settle whatever is due on mount (the check-in), then keep a 1s clock.
+  // While a broadcast is on the air we already know its future (endsAt) —
+  // wait for it rather than re-simulating every second. Otherwise settle the
+  // moment the countdown crosses zero, which puts the next race on the air.
   useEffect(() => {
     settleNow();
     const timer = setInterval(() => {
       setNow(Date.now());
-      const next = nextRaceAt(league);
-      if (next !== null && next <= Date.now()) settleNow();
+      const onAir = liveRef.current;
+      if (onAir && Date.now() < onAir.endsAt) return;
+      if (onAir || (nextRaceAt(league) ?? Infinity) <= Date.now()) settleNow();
     }, 1000);
     return () => clearInterval(timer);
   }, [league, settleNow]);
@@ -144,7 +154,7 @@ function LeagueScreen({ league, onLeagueUpdate, onExit, onDissolve }: LeagueScre
           </p>
         </header>
 
-        {/* Next race countdown — or the end of days */}
+        {/* On the air / next race countdown / the end of days */}
         {over ? (
           <section className="league-finale">
             <h2>🏁 The season is complete</h2>
@@ -156,6 +166,24 @@ function LeagueScreen({ league, onLeagueUpdate, onExit, onDissolve }: LeagueScre
               </p>
             )}
           </section>
+        ) : live && now < live.endsAt ? (
+          <section className="league-live-card">
+            <div className="league-live-info">
+              <span className="live-badge"><span className="live-dot" /> LIVE</span>
+              <span className="league-live-title">
+                {(() => {
+                  const track = getTrackById(live.trackId);
+                  return `R${live.index + 1} — ${track?.funEmoji ?? ''} ${track?.name ?? ''}`;
+                })()}
+              </span>
+              <span className="league-live-elapsed">
+                {formatCountdown(now - live.startedAt)} in · ends in {formatCountdown(live.endsAt - now)}
+              </span>
+            </div>
+            <button className="watch-live-btn" onClick={() => onWatchLive(live)}>
+              📺 Watch
+            </button>
+          </section>
         ) : nextAt !== null && (
           <section className="league-next-race">
             <span className="next-race-label">
@@ -166,7 +194,7 @@ function LeagueScreen({ league, onLeagueUpdate, onExit, onDissolve }: LeagueScre
               })()}
             </span>
             <span className="next-race-countdown">
-              {nextAt <= now ? 'racing…' : formatCountdown(nextAt - now)}
+              {nextAt <= now ? 'on the air…' : formatCountdown(nextAt - now)}
             </span>
           </section>
         )}

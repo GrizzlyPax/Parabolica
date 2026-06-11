@@ -74,6 +74,65 @@
   font-variant-numeric: tabular-nums;
 }
 
+.league-live-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.12), rgba(20, 20, 24, 0.85));
+  border: 1px solid rgba(220, 38, 38, 0.45);
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin-bottom: 16px;
+}
+
+.league-live-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.league-live-title { color: #fff; font-weight: 700; font-size: 1.05rem; }
+.league-live-elapsed { color: #999; font-size: 0.82rem; font-variant-numeric: tabular-nums; }
+
+.league-live-card .live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #f87171;
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+}
+
+.league-live-card .live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ef4444;
+  animation: league-live-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes league-live-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.watch-live-btn {
+  background: linear-gradient(135deg, #b91c1c, #7f1d1d);
+  border: 1px solid #ef4444;
+  color: #fff;
+  font-weight: 700;
+  font-size: 1rem;
+  padding: 12px 22px;
+  border-radius: 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.watch-live-btn:hover { filter: brightness(1.2); }
+
 .league-finale {
   text-align: center;
   background: linear-gradient(135deg, rgba(138, 104, 48, 0.15), rgba(20, 20, 24, 0.8));

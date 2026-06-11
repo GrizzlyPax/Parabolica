@@ -18,7 +18,9 @@ export interface LeagueSetupConfig {
   trackIds: string[];
   /** Wall-clock ms between race starts (e.g. 3h = 10_800_000). */
   raceIntervalMs: number;
-  /** Epoch ms of league founding; race i fires at createdAt + (i+1)*interval. */
+  /** Epoch ms of league founding; race i is scheduled at createdAt + i*interval
+   * (the inaugural race airs at founding). A race that outlasts the interval
+   * pushes its successor back — broadcasts queue, never overlap. */
   createdAt: number;
 }
 
@@ -52,10 +54,24 @@ export interface RaceDigest {
   dnfDriverIds: number[];
   fastestLapDriverId: number | null;
   totalTicks: number;
+  /** When the broadcast actually aired (queue-aware; epoch ms). Optional on
+   * digests written before live broadcasts existed. */
+  startedAt?: number;
+  endedAt?: number;
   /** Top-magnitude events, always retained (gods and chronicles eat these). */
   highlights: RaceEvent[];
   /** Full event log; only retained for the most recent races (see settle). */
   events?: RaceEvent[];
+}
+
+/** A race currently on the air: its window contains `now`. */
+export interface LiveRace {
+  index: number;
+  trackId: string;
+  /** When the broadcast began (queue-aware). */
+  startedAt: number;
+  /** When it will end — deterministic, so the future is already known. */
+  endsAt: number;
 }
 
 /** The whole league: canonical inputs + derived cache. */
@@ -80,4 +96,6 @@ export interface SettleResult {
   league: LeagueState;
   /** Digests for races settled by this call, oldest first. */
   newlySettled: RaceDigest[];
+  /** The race on the air right now, if `now` fell inside its window. */
+  live?: LiveRace;
 }

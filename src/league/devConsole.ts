@@ -56,22 +56,21 @@ function printDigest(league: LeagueState, index: number) {
 }
 
 function settleAndReport(league: LeagueState, now: number) {
-  const { league: after, newlySettled } = settleLeague(league, { now });
-  if (newlySettled.length === 0) {
-    const next = nextRaceAt(after);
-    if (next === null) {
-      console.log('🏁 Season complete. league.standings() for the final table.');
-    } else {
-      const mins = Math.ceil((next - Date.now()) / MINUTE);
-      console.log(`Nothing due. Next race in ~${mins} min — or league.timeTravel(${Math.max(1, mins)}) to skip ahead.`);
-    }
-    return;
+  const { league: after, newlySettled, live } = settleLeague(league, { now });
+  if (newlySettled.length > 0) {
+    save(after);
+    console.log(`⏱ Settled ${newlySettled.length} race(s) while you were away:`);
+    for (const d of newlySettled) printDigest(after, d.index);
   }
-  save(after);
-  console.log(`⏱ Settled ${newlySettled.length} race(s) while you were away:`);
-  for (const d of newlySettled) printDigest(after, d.index);
-  if (isSeasonOver(after)) {
-    console.log('\n🏁 That was the finale. league.standings() for the final table.');
+  if (live) {
+    const secs = Math.max(0, Math.ceil((live.endsAt - Date.now()) / 1000));
+    console.log(`🔴 R${live.index + 1} is ON THE AIR right now — ends in ~${secs}s. Watch it from the league screen.`);
+  } else if (isSeasonOver(after)) {
+    console.log('🏁 Season complete. league.standings() for the final table.');
+  } else if (newlySettled.length === 0) {
+    const next = nextRaceAt(after);
+    const mins = Math.ceil(((next ?? Date.now()) - Date.now()) / MINUTE);
+    console.log(`Nothing due. Next broadcast in ~${mins} min — or league.timeTravel(${Math.max(1, mins)}) to skip ahead.`);
   }
 }
 
