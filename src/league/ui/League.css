@@ -392,6 +392,8 @@
   font-variant-numeric: tabular-nums;
 }
 
+.cal-on-air { color: #f87171; font-weight: 700; }
+
 /* === The Grid === */
 
 .grid-teams {

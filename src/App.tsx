@@ -9,7 +9,7 @@ import FoundingScreen, { FoundingChoices } from './league/ui/FoundingScreen';
 import LeagueScreen from './league/ui/LeagueScreen';
 import { createLeague, rosterStateAt } from './league/league';
 import { LeagueState, LiveRace } from './league/types';
-import { LIVE_TICK_MS } from './league/settle';
+import { LIVE_TICK_MS, nextRaceAt } from './league/settle';
 import { saveLeagueState, loadLeagueState, clearLeagueState } from './storage/persistence';
 import { mulberry32, deriveSeed, randomSeed } from './engine/rng';
 import { generateTrack, getRandomTracks, getTrackById, getDynamicEventDescription, Track } from './generators/tracks';
@@ -228,7 +228,6 @@ function App() {
     if (!league) return null;
     const total = league.schedule.length;
     const settled = league.settledThrough + 1;
-    const next = league.schedule.find(r => r.index > league.settledThrough);
     return {
       name: league.setup.name,
       settled,
@@ -236,7 +235,9 @@ function App() {
       dueCount: league.schedule.filter(
         r => r.index > league.settledThrough && r.scheduledAt <= Date.now()
       ).length,
-      nextAt: next?.scheduledAt ?? null,
+      // Queue-aware: anchored to the last broadcast's end, not the founding
+      // nominal (back-to-back races push successors later).
+      nextAt: nextRaceAt(league),
     };
   }, [league]);
 

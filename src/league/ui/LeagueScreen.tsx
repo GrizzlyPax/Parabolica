@@ -108,6 +108,9 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onDissolve 
   const god = getGodById(league.setup.godId);
   const over = isSeasonOver(league);
   const nextAt = nextRaceAt(league);
+  // Cadences shorter than a typical broadcast (~5 min) queue continuously:
+  // every scheduled time after the next race is fiction, so don't print them.
+  const backToBack = league.setup.raceIntervalMs <= 10 * 60_000;
 
   const settleNow = useCallback(() => {
     if (settlingRef.current) return;
@@ -282,22 +285,41 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onDissolve 
               </section>
             )}
 
-            {/* Calendar */}
+            {/* Calendar. Scheduled times are founding-time nominals; when races
+                queue back-to-back the real airtime depends on how long each
+                broadcast runs (safety cars, chaos), so printing exact clock
+                times would drift into lies. Only the next race's time is
+                queue-aware and trustworthy — everything later just says what
+                it follows. */}
             <section className="league-section calendar-section">
               <h2 className="league-section-title">Calendar</h2>
               <ul className="league-calendar">
                 {league.schedule.map(race => {
                   const track = getTrackById(race.trackId);
                   const settled = race.index <= league.settledThrough;
+                  let when: React.ReactNode;
+                  if (settled) {
+                    when = '✅';
+                  } else if (live && race.index === live.index && now < live.endsAt) {
+                    when = <span className="cal-on-air">🔴 on the air</span>;
+                  } else if (race.index === league.settledThrough + 1) {
+                    // Queue-aware and exact: anchored to the last broadcast's end
+                    const at = nextRaceAt(league)!;
+                    when = at <= now
+                      ? 'up next'
+                      : new Date(at).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' });
+                  } else if (backToBack) {
+                    when = `follows R${race.index}`;
+                  } else {
+                    when = new Date(race.scheduledAt).toLocaleString([], {
+                      weekday: 'short', hour: 'numeric', minute: '2-digit',
+                    });
+                  }
                   return (
                     <li key={race.index} className={settled ? 'settled' : 'scheduled'}>
                       <span className="cal-race-no">R{race.index + 1}</span>
                       <span className="cal-track">{track?.funEmoji} {track?.name ?? race.trackId}</span>
-                      <span className="cal-when">
-                        {settled ? '✅' : new Date(race.scheduledAt).toLocaleString([], {
-                          weekday: 'short', hour: 'numeric', minute: '2-digit',
-                        })}
-                      </span>
+                      <span className="cal-when">{when}</span>
                     </li>
                   );
                 })}
