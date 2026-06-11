@@ -1,5 +1,6 @@
 import { Tag, getTagById } from './data/tags';
 import { SimVariables, CANON_VARIABLES } from './simlab/types';
+import { Rng, mulberry32, shuffle } from './engine/rng';
 
 export interface DriverStats {
   baseSpeed: number;      // Base speed multiplier (0.85 - 1.15)
@@ -378,6 +379,10 @@ class RaceEngine {
   // Simulation variable overrides (for Sim Lab tuning)
   private simVars: SimVariables | null = null;
 
+  // RNG used by all simulation rolls. Defaults to Math.random (live Quick Race
+  // behavior unchanged); call setSeed() for a deterministic, replayable race.
+  private rng: Rng = Math.random;
+
   private constructor() {
     this.initializeDrivers();
   }
@@ -387,6 +392,21 @@ class RaceEngine {
       RaceEngine.instance = new RaceEngine();
     }
     return RaceEngine.instance;
+  }
+
+  /**
+   * Seed the simulation RNG. Every roll after this point is deterministic:
+   * the same seed + same roster + same config replays the identical race.
+   * Call immediately before start()/runHeadless() — rolls consumed between
+   * seeding and the race would shift the stream.
+   */
+  setSeed(seed: number): void {
+    this.rng = mulberry32(seed);
+  }
+
+  /** Restore the default unseeded behavior (live Quick Race). */
+  clearSeed(): void {
+    this.rng = Math.random;
   }
 
   // === SIM VARIABLE HELPERS ===
@@ -914,7 +934,7 @@ class RaceEngine {
     const enduranceDecay = this.config.enduranceDecay;
 
     // Base random roll
-    const baseRoll = Math.random();
+    const baseRoll = this.rng();
     const baseSpeed = baseSpeedMin + baseRoll * (baseSpeedMax - baseSpeedMin);
 
     // === CAR STATS (from simVars) ===
@@ -943,13 +963,13 @@ class RaceEngine {
     // Driver's luck stat affects the MAGNITUDE of the boost, not the frequency
     // Tag/effect luck modifiers multiply the effective luck stat
     let luckBonus = 1;
-    if (Math.random() < perfVars.luckProcChance) {
+    if (this.rng() < perfVars.luckProcChance) {
       // Luck proc! Driver's luck stat determines how big the boost is
       // Apply luck modifier from tags/effects (e.g., Cursed Chassis has 0.7x luck)
       const effectiveLuck = driver.stats.luck * this.getTagLuckModifier(driver.id);
       const minBoost = perfVars.luckMinBoostBase + effectiveLuck * perfVars.luckMinBoostPerStat;
       const maxBoost = perfVars.luckMaxBoostBase + effectiveLuck * perfVars.luckMaxBoostPerStat;
-      luckBonus = 1 + minBoost + Math.random() * (maxBoost - minBoost);
+      luckBonus = 1 + minBoost + this.rng() * (maxBoost - minBoost);
     }
 
     // Endurance factor: speed degrades over laps
@@ -1038,7 +1058,7 @@ class RaceEngine {
 
     // SAFETY CAR: Greatly reduce blowout risk - low speeds = less tire stress
     if (this.isUnderSafetyCar()) {
-      if (Math.random() > blowoutVars.safetyCarReduction) return false;
+      if (this.rng() > blowoutVars.safetyCarReduction) return false;
     }
 
     const tire = driver.tireState;
@@ -1060,7 +1080,7 @@ class RaceEngine {
     const normalizedAggression = (driver.stats.aggression - 0.3) / 0.5; // 0 to 1
     const finalChance = blowoutChance * (1 + normalizedAggression * blowoutVars.aggressionBonus);
 
-    return Math.random() < finalChance;
+    return this.rng() < finalChance;
   }
 
   /**
@@ -1077,7 +1097,7 @@ class RaceEngine {
 
     // SAFETY CAR: Greatly reduce mechanical failures - cars under less stress
     if (this.isUnderSafetyCar()) {
-      if (Math.random() > crashVars.safetyCarsReduction) return false;
+      if (this.rng() > crashVars.safetyCarsReduction) return false;
     }
 
     // Base mechanical failure chance per tick
@@ -1093,7 +1113,7 @@ class RaceEngine {
     // Final chance: base / reliability * luck factor
     const finalChance = (baseMechanicalChance / reliabilityProtection) * luckFactor;
 
-    return Math.random() < finalChance;
+    return this.rng() < finalChance;
   }
 
   private calculateTireWear(driver: Driver): number {
@@ -1203,7 +1223,7 @@ class RaceEngine {
       // Luck affects pit timing too - lucky drivers might wait longer
       const adjustedChance = pitChance * (1.2 - driver.stats.luck * 0.4);
 
-      return Math.random() < adjustedChance;
+      return this.rng() < adjustedChance;
     }
 
     return false;
@@ -1223,7 +1243,7 @@ class RaceEngine {
     const slowStopChance = pitVars.slowStopBase - pitCrewStat * pitVars.slowStopPerStar;
     const quickStopChance = pitVars.quickStopBase + pitCrewStat * pitVars.quickStopPerStar;
 
-    const roll = Math.random();
+    const roll = this.rng();
     const isSlowStop = roll < slowStopChance;
     const isQuickStop = !isSlowStop && roll < (slowStopChance + quickStopChance);
 
@@ -1326,7 +1346,7 @@ class RaceEngine {
 
     // SAFETY CAR: Greatly reduce crash risk - everyone is going slow and single file
     if (this.isUnderSafetyCar()) {
-      if (Math.random() > crashVars.safetyCarsReduction) {
+      if (this.rng() > crashVars.safetyCarsReduction) {
         return { crashed: false, dnfDriverIds: [], damagedDriverIds: [] };
       }
     }
@@ -1350,14 +1370,14 @@ class RaceEngine {
     crashChance *= (1 - avgCrashResistance);
 
     // Random roll
-    if (Math.random() < crashChance) {
+    if (this.rng() < crashChance) {
       // CRASH!
       const dnfDriverIds: number[] = [];
       const damagedDriverIds: number[] = [];
 
       // Initial collision - survival chance each
       for (const driver of [d1, d2]) {
-        if (Math.random() < crashVars.initialSurvivalChance) {
+        if (this.rng() < crashVars.initialSurvivalChance) {
           // Survives with damage
           damagedDriverIds.push(driver.id);
         } else {
@@ -1386,8 +1406,8 @@ class RaceEngine {
       const pileupCandidates = nearbyDrivers.slice(0, 2);
 
       for (const nearby of pileupCandidates) {
-        if (Math.random() < crashVars.pileupParticipationChance) {
-          if (Math.random() < crashVars.pileupSurvivalChance) {
+        if (this.rng() < crashVars.pileupParticipationChance) {
+          if (this.rng() < crashVars.pileupSurvivalChance) {
             damagedDriverIds.push(nearby.id);
           } else {
             dnfDriverIds.push(nearby.id);
@@ -1399,7 +1419,7 @@ class RaceEngine {
     }
 
     // Close call event (tension builder)
-    if (Math.random() < crashChance * crashVars.secondaryAccidentMultiplier) {
+    if (this.rng() < crashChance * crashVars.secondaryAccidentMultiplier) {
       this.logEvent(
         'close_call',
         d1,
@@ -1440,7 +1460,7 @@ class RaceEngine {
 
       case 'random':
         // Random chance per lap (check only once per lap transition)
-        if (leaderLap !== this.lastEventCheckLap && Math.random() < trigger.chance) {
+        if (leaderLap !== this.lastEventCheckLap && this.rng() < trigger.chance) {
           return true;
         }
         return false;
@@ -1514,8 +1534,7 @@ class RaceEngine {
         case 'top':
           return sortedDrivers.slice(0, count);
         case 'random':
-          const shuffled = [...racingDrivers].sort(() => Math.random() - 0.5);
-          return shuffled.slice(0, count);
+          return shuffle(racingDrivers, this.rng).slice(0, count);
         case 'leader':
           return sortedDrivers.slice(0, 1);
         case 'last':
@@ -1669,7 +1688,7 @@ class RaceEngine {
 
     // Check trigger chance (default 100%)
     const triggerChance = tag.triggerChance ?? 1.0;
-    if (Math.random() > triggerChance) {
+    if (this.rng() > triggerChance) {
       return false;
     }
 
@@ -2538,7 +2557,7 @@ class RaceEngine {
       'The Unsafety Car has noticed the chaos. It approves.',
       'The Unsafety Car rises. None shall pass.',
     ];
-    const message = deployMessages[Math.floor(Math.random() * deployMessages.length)];
+    const message = deployMessages[Math.floor(this.rng() * deployMessages.length)];
 
     this.logEvent(
       'unsafety_car_deployed',
@@ -2634,7 +2653,7 @@ class RaceEngine {
       'The Unsafety Car vanishes. It will remember this.',
       'The Void reclaims its champion. Racing resumes.',
     ];
-    const message = recallMessages[Math.floor(Math.random() * recallMessages.length)];
+    const message = recallMessages[Math.floor(this.rng() * recallMessages.length)];
 
     this.logEvent(
       'unsafety_car_recalled',
@@ -2852,11 +2871,14 @@ class RaceEngine {
    * Used for parallel headless simulation in Web Workers.
    * @param simVars Optional simulation variable overrides for tuning
    */
-  static createForWorker(simVars?: SimVariables): RaceEngine {
+  static createForWorker(simVars?: SimVariables, seed?: number): RaceEngine {
     // Bypass singleton pattern - directly instantiate
     const engine = new RaceEngine();
     if (simVars) {
       engine.simVars = simVars;
+    }
+    if (seed !== undefined) {
+      engine.setSeed(seed);
     }
     return engine;
   }
@@ -2865,8 +2887,13 @@ class RaceEngine {
    * Run a complete race synchronously (for headless simulation).
    * Does not use setInterval - calls tick() directly in a loop.
    * Returns the final state when race is complete.
+   * Pass a seed for a deterministic race (same seed + roster + config =
+   * identical result, replayable live via setSeed() + start()).
    */
-  runHeadless(): { drivers: Driver[]; raceState: RaceState; events: RaceEvent[] } {
+  runHeadless(seed?: number): { drivers: Driver[]; raceState: RaceState; events: RaceEvent[] } {
+    if (seed !== undefined) {
+      this.setSeed(seed);
+    }
     // Reset to fresh state
     this.reset();
 

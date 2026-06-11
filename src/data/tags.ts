@@ -1,6 +1,8 @@
 // Tag System - Emergent storytelling through persistent modifiers
 // Tags can be assigned to drivers, cars, or teams and affect races
 
+import { Rng } from '../engine/rng';
+
 export type TagTarget = 'driver' | 'car' | 'team' | 'condition';
 export type TagTrigger = 'passive' | 'race_start' | 'pit_stop' | 'overtake' | 'crash_proximity' | 'final_lap' | 'track_event';
 
@@ -397,12 +399,12 @@ export function getTagById(id: string): Tag | undefined {
 }
 
 // Get random tag for a target type (with low probability)
-export function maybeAssignTag(target: TagTarget): Tag | null {
+export function maybeAssignTag(target: TagTarget, rng: Rng = Math.random): Tag | null {
   const chance = 0.15; // 15% chance to get a tag
-  if (Math.random() > chance) return null;
+  if (rng() > chance) return null;
 
   const availableTags = ALL_TAGS.filter(t => t.target === target);
-  return availableTags[Math.floor(Math.random() * availableTags.length)];
+  return availableTags[Math.floor(rng() * availableTags.length)];
 }
 
 // Get tags for a specific target type

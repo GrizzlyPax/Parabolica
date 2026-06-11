@@ -2,6 +2,8 @@
 // TODO: Consider filtering surnames that produce unfortunate 3-letter codes (e.g., "Associates" -> "ASS")
 //       Could add a blocklist or swap first 3 chars for problematic surnames
 
+import { Rng, pick } from '../engine/rng';
+
 export const FIRST_NAMES = [
   // Common mundane names (heavily weighted for balance)
   "James", "Mary", "Robert", "Patricia", "John", "Jennifer", "Michael", "Linda",
@@ -104,10 +106,10 @@ export const LAST_NAMES = [
 export const MIDDLE_MODIFIERS = [""];
 
 // Generate a random driver name
-export function generateDriverName(): { firstName: string; middleName: string; lastName: string; fullName: string } {
-  const firstName = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)];
-  const middleName = MIDDLE_MODIFIERS[Math.floor(Math.random() * MIDDLE_MODIFIERS.length)];
-  const lastName = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)];
+export function generateDriverName(rng: Rng = Math.random): { firstName: string; middleName: string; lastName: string; fullName: string } {
+  const firstName = pick(FIRST_NAMES, rng);
+  const middleName = pick(MIDDLE_MODIFIERS, rng);
+  const lastName = pick(LAST_NAMES, rng);
 
   const fullName = middleName
     ? `${firstName} ${middleName} ${lastName}`
@@ -117,7 +119,7 @@ export function generateDriverName(): { firstName: string; middleName: string; l
 }
 
 // Generate a car name (random combination)
-export function generateCarName(): string {
+export function generateCarName(rng: Rng = Math.random): string {
   const prefixes = [
     "Model", "Type", "Series", "Version", "Unit", "Batch", "Run", "Edition",
     "Prototype", "Beta", "Alpha", "Delta", "Sigma", "Omega", "Gamma", "Theta"
@@ -134,9 +136,9 @@ export function generateCarName(): string {
     "-", ".", "/", " ", "_"
   ];
 
-  const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
-  const modifier = modifiers[Math.floor(Math.random() * modifiers.length)];
-  const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
+  const prefix = pick(prefixes, rng);
+  const modifier = pick(modifiers, rng);
+  const suffix = pick(suffixes, rng);
 
   return `${prefix}${modifier}${suffix}`;
 }

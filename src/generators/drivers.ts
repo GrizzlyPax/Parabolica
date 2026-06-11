@@ -2,6 +2,7 @@ import { generateDriverName } from './names';
 import { DriverStats } from '../RaceEngine';
 import { TEAMS, Team, DriverSlot, getTeamsByIds } from '../data/teams';
 import { Tag, maybeAssignTag } from '../data/tags';
+import { Rng, pick } from '../engine/rng';
 
 export interface GeneratedDriver {
   id: number;
@@ -94,7 +95,7 @@ const QUIRKS = [
   "The brakes work differently each time"
 ];
 
-function fillBackstoryTemplate(template: string): string {
+function fillBackstoryTemplate(template: string, rng: Rng): string {
   let result = template;
   const matches = template.match(/\{(\w+)\}/g) || [];
 
@@ -102,7 +103,7 @@ function fillBackstoryTemplate(template: string): string {
     const key = match.slice(1, -1) as keyof typeof BACKSTORY_FILLS;
     const options = BACKSTORY_FILLS[key];
     if (options) {
-      const replacement = options[Math.floor(Math.random() * options.length)];
+      const replacement = pick(options, rng);
       result = result.replace(match, replacement);
     }
   }
@@ -110,12 +111,12 @@ function fillBackstoryTemplate(template: string): string {
   return result;
 }
 
-function generateStats(): DriverStats {
+function generateStats(rng: Rng): DriverStats {
   // Generate stats with compressed ranges for closer competition
   // Speed-type stats: 0.85 to 1.15 (±15% from baseline)
-  const statRoll = () => 0.85 + Math.random() * 0.30;
+  const statRoll = () => 0.85 + rng() * 0.30;
   // Consistency/luck/aggression: 0.3 to 0.8 (avoid extremes)
-  const traitRoll = () => 0.3 + Math.random() * 0.5;
+  const traitRoll = () => 0.3 + rng() * 0.5;
 
   return {
     baseSpeed: statRoll(),
@@ -131,16 +132,17 @@ function generateStats(): DriverStats {
 export function generateDriverForTeam(
   id: number,
   team: Team,
-  slot: DriverSlot
+  slot: DriverSlot,
+  rng: Rng = Math.random
 ): GeneratedDriver {
-  const name = generateDriverName();
+  const name = generateDriverName(rng);
 
   // Generate backstory
-  const backstoryTemplate = BACKSTORY_TEMPLATES[Math.floor(Math.random() * BACKSTORY_TEMPLATES.length)];
-  const backstory = fillBackstoryTemplate(backstoryTemplate);
+  const backstoryTemplate = pick(BACKSTORY_TEMPLATES, rng);
+  const backstory = fillBackstoryTemplate(backstoryTemplate, rng);
 
   // Pick a quirk
-  const quirk = QUIRKS[Math.floor(Math.random() * QUIRKS.length)];
+  const quirk = pick(QUIRKS, rng);
 
   // Create short name (first name + first letter of last, or just first name if too long)
   const shortName = name.firstName.length > 8
@@ -148,7 +150,7 @@ export function generateDriverForTeam(
     : `${name.firstName} ${name.lastName[0]}.`;
 
   // Maybe assign a tag (15% chance)
-  const tag = maybeAssignTag('driver') || undefined;
+  const tag = maybeAssignTag('driver', rng) || undefined;
 
   return {
     id,
@@ -163,7 +165,7 @@ export function generateDriverForTeam(
     color: team.color,
     accentColor: team.accentColor,
     driverSlot: slot,
-    stats: generateStats(),
+    stats: generateStats(rng),
     backstory,
     quirk,
     tag
@@ -174,29 +176,29 @@ export function generateDriverForTeam(
 export const generateDriverForKingdom = generateDriverForTeam;
 
 // Generate a full roster of drivers (2 per team)
-export function generateRoster(): GeneratedDriver[] {
+export function generateRoster(rng: Rng = Math.random): GeneratedDriver[] {
   const drivers: GeneratedDriver[] = [];
   let id = 0;
 
   for (const team of TEAMS) {
     // Generate two drivers for each team
-    drivers.push(generateDriverForTeam(id++, team, 1)); // Primary driver
-    drivers.push(generateDriverForTeam(id++, team, 2)); // Secondary driver
+    drivers.push(generateDriverForTeam(id++, team, 1, rng)); // Primary driver
+    drivers.push(generateDriverForTeam(id++, team, 2, rng)); // Secondary driver
   }
 
   return drivers;
 }
 
 // Generate a roster from specific team IDs (for season mode)
-export function generateRosterFromTeams(teamIds: string[]): GeneratedDriver[] {
+export function generateRosterFromTeams(teamIds: string[], rng: Rng = Math.random): GeneratedDriver[] {
   const drivers: GeneratedDriver[] = [];
   let id = 0;
 
   const teams = getTeamsByIds(teamIds);
   for (const team of teams) {
     // Generate two drivers for each team
-    drivers.push(generateDriverForTeam(id++, team, 1)); // Primary driver
-    drivers.push(generateDriverForTeam(id++, team, 2)); // Secondary driver
+    drivers.push(generateDriverForTeam(id++, team, 1, rng)); // Primary driver
+    drivers.push(generateDriverForTeam(id++, team, 2, rng)); // Secondary driver
   }
 
   return drivers;

@@ -44,6 +44,64 @@ describe('tire tuning consistency', () => {
   });
 });
 
+describe('determinism (golden master)', () => {
+  const track = ALL_TRACKS[0];
+
+  // Build one roster, then deep-clone it per engine so both runs start from
+  // byte-identical inputs (generators are seeded separately).
+  function makeRosterWithCars() {
+    const roster = generateRoster();
+    const cars = generateCarsForKingdoms(TEAMS.map(t => t.id));
+    return createRosterWithCars(roster, cars);
+  }
+
+  function runSeeded(rosterWithCars: ReturnType<typeof makeRosterWithCars>, seed: number) {
+    const engine = RaceEngine.createForWorker(CANON_VARIABLES, seed);
+    engine.loadGeneratedRoster(structuredClone(rosterWithCars));
+    engine.updateConfig({ totalLaps: track.laps, lapLength: track.length });
+    engine.setTrackInfo({
+      id: track.id,
+      name: track.name,
+      emoji: track.emoji,
+      funEmoji: track.funEmoji,
+      description: track.description,
+      laps: track.laps,
+    });
+    return engine.runHeadless();
+  }
+
+  it('replays the identical race for the same seed and roster', () => {
+    const rosterWithCars = makeRosterWithCars();
+    const a = runSeeded(rosterWithCars, 0xC0FFEE);
+    const b = runSeeded(rosterWithCars, 0xC0FFEE);
+
+    expect(b.raceState.finishOrder).toEqual(a.raceState.finishOrder);
+    expect(b.raceState.totalTicks).toBe(a.raceState.totalTicks);
+    expect(b.raceState.leadChanges).toBe(a.raceState.leadChanges);
+    expect(b.events).toEqual(a.events);
+    expect(b.drivers.map(d => ({ id: d.id, status: d.status, lap: d.currentLap })))
+      .toEqual(a.drivers.map(d => ({ id: d.id, status: d.status, lap: d.currentLap })));
+  });
+
+  it('produces a different race for a different seed', () => {
+    const rosterWithCars = makeRosterWithCars();
+    const a = runSeeded(rosterWithCars, 1);
+    const b = runSeeded(rosterWithCars, 2);
+
+    // The full event log differing is the loosest possible assertion that
+    // still proves the seed actually drives the simulation.
+    expect(b.events).not.toEqual(a.events);
+  });
+
+  it('seeded runs do not disturb each other (independent engine instances)', () => {
+    const rosterWithCars = makeRosterWithCars();
+    const a = runSeeded(rosterWithCars, 7);
+    runSeeded(rosterWithCars, 99); // interleaved unrelated run
+    const c = runSeeded(rosterWithCars, 7);
+    expect(c.raceState.finishOrder).toEqual(a.raceState.finishOrder);
+  });
+});
+
 describe('headless race invariants', () => {
   const track = ALL_TRACKS[0];
 

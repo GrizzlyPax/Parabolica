@@ -2,6 +2,7 @@
 // Each team has one car shared by both drivers, plus team-level stats
 
 import { Tag, maybeAssignTag } from '../data/tags';
+import { Rng, pick } from '../engine/rng';
 
 export interface CarStats {
   power: number;        // 1-5 stars - Multiplies with driver speed on straights
@@ -57,8 +58,8 @@ const CAR_QUIRKS = [
  * Generate a random star rating (1-5) with weighted distribution
  * Most chariots cluster around 2-4 stars, with 1 and 5 being rare
  */
-function generateStarRating(): number {
-  const roll = Math.random();
+function generateStarRating(rng: Rng): number {
+  const roll = rng();
   if (roll < 0.08) return 1;       // 8% chance of 1 star
   if (roll < 0.28) return 2;       // 20% chance of 2 stars
   if (roll < 0.68) return 3;       // 40% chance of 3 stars
@@ -119,17 +120,17 @@ const CAR_ACRONYMS = [
 /**
  * Generate a random car name with varied formats
  */
-function generateCarName(): string {
-  const format = Math.floor(Math.random() * 6);
-  const prefix = CAR_PREFIXES_GENERIC[Math.floor(Math.random() * CAR_PREFIXES_GENERIC.length)];
-  const suffix = CAR_SUFFIXES[Math.floor(Math.random() * CAR_SUFFIXES.length)];
-  const acronym = CAR_ACRONYMS[Math.floor(Math.random() * CAR_ACRONYMS.length)];
-  const number = Math.floor(Math.random() * 900) + 100; // 100-999
-  const smallNum = Math.floor(Math.random() * 90) + 10; // 10-99
+function generateCarName(rng: Rng): string {
+  const format = Math.floor(rng() * 6);
+  const prefix = pick(CAR_PREFIXES_GENERIC, rng);
+  const suffix = pick(CAR_SUFFIXES, rng);
+  const acronym = pick(CAR_ACRONYMS, rng);
+  const number = Math.floor(rng() * 900) + 100; // 100-999
+  const smallNum = Math.floor(rng() * 90) + 10; // 10-99
 
   switch (format) {
     case 0: // "Apex GT-7"
-      return `${prefix} ${suffix}-${Math.floor(Math.random() * 9) + 1}`;
+      return `${prefix} ${suffix}-${Math.floor(rng() * 9) + 1}`;
     case 1: // "XR-470"
       return `${acronym}-${number}`;
     case 2: // "Vortex 88"
@@ -147,28 +148,28 @@ function generateCarName(): string {
 /**
  * Generate a car for a specific team
  */
-export function generateCarForKingdom(kingdomId: string): GeneratedCar {
-  const name = generateCarName();
+export function generateCarForKingdom(kingdomId: string, rng: Rng = Math.random): GeneratedCar {
+  const name = generateCarName(rng);
 
   // Generate random chariot stats
   const stats: CarStats = {
-    power: generateStarRating(),
-    grip: generateStarRating(),
-    reliability: generateStarRating(),
+    power: generateStarRating(rng),
+    grip: generateStarRating(rng),
+    reliability: generateStarRating(rng),
   };
 
   // Generate random stable stats
   const teamStats: TeamStats = {
-    tireManagement: generateStarRating(),
-    pitCrew: generateStarRating(),
+    tireManagement: generateStarRating(rng),
+    pitCrew: generateStarRating(rng),
   };
 
   // Pick a random quirk
-  const quirk = CAR_QUIRKS[Math.floor(Math.random() * CAR_QUIRKS.length)];
+  const quirk = pick(CAR_QUIRKS, rng);
 
   // Maybe assign tags (15% chance each)
-  const carTag = maybeAssignTag('car') || undefined;
-  const teamTag = maybeAssignTag('team') || undefined;
+  const carTag = maybeAssignTag('car', rng) || undefined;
+  const teamTag = maybeAssignTag('team', rng) || undefined;
 
   return {
     kingdomId,
@@ -184,11 +185,11 @@ export function generateCarForKingdom(kingdomId: string): GeneratedCar {
 /**
  * Generate chariots for all divine houses in a roster
  */
-export function generateCarsForKingdoms(kingdomIds: string[]): Map<string, GeneratedCar> {
+export function generateCarsForKingdoms(kingdomIds: string[], rng: Rng = Math.random): Map<string, GeneratedCar> {
   const cars = new Map<string, GeneratedCar>();
 
   for (const kingdomId of kingdomIds) {
-    cars.set(kingdomId, generateCarForKingdom(kingdomId));
+    cars.set(kingdomId, generateCarForKingdom(kingdomId, rng));
   }
 
   return cars;

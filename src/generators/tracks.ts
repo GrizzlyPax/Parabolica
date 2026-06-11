@@ -1,5 +1,7 @@
 // Parabolica Track System - F1-Inspired Racing Venues
 
+import { Rng, pick, shuffle } from '../engine/rng';
+
 // ============================================
 // TRACK LAYOUT SYSTEM
 // ============================================
@@ -724,20 +726,18 @@ export function getHistoricTracks(): Track[] {
   return HISTORIC_TRACKS;
 }
 
-export function getRandomTracks(count: number): Track[] {
-  const shuffled = [...CURRENT_TRACKS].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, Math.min(count, CURRENT_TRACKS.length));
+export function getRandomTracks(count: number, rng: Rng = Math.random): Track[] {
+  return shuffle(CURRENT_TRACKS, rng).slice(0, Math.min(count, CURRENT_TRACKS.length));
 }
 
-export function getRandomTracksIncludingHistoric(count: number): Track[] {
-  const shuffled = [...ALL_TRACKS].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, Math.min(count, ALL_TRACKS.length));
+export function getRandomTracksIncludingHistoric(count: number, rng: Rng = Math.random): Track[] {
+  return shuffle(ALL_TRACKS, rng).slice(0, Math.min(count, ALL_TRACKS.length));
 }
 
-export function generateTrack(): Track {
-  return CURRENT_TRACKS[Math.floor(Math.random() * CURRENT_TRACKS.length)];
+export function generateTrack(rng: Rng = Math.random): Track {
+  return pick(CURRENT_TRACKS, rng);
 }
 
-export function generateSeason(numTracks: number = 5): Track[] {
-  return getRandomTracks(Math.min(numTracks, CURRENT_TRACKS.length));
+export function generateSeason(numTracks: number = 5, rng: Rng = Math.random): Track[] {
+  return getRandomTracks(Math.min(numTracks, CURRENT_TRACKS.length), rng);
 }
