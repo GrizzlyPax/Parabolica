@@ -115,7 +115,8 @@ State persists in localStorage — reload the page and check in again.`);
     console.log(`🏛 League founded. Seed ${seed} — same seed, same universe, always.`);
     console.log(`${league.roster.length} drivers, ${races} races, one every ${opts.everyMinutes ?? 2} min.`);
     this.schedule();
-    console.log('\nFirst race hasn\'t run yet. Wait for it, or league.timeTravel() ahead.');
+    // The inaugural race fires at founding — settle it right now.
+    settleAndReport(league, Date.now());
   },
 
   checkIn() {

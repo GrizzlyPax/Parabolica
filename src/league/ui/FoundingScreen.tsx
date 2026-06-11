@@ -127,7 +127,7 @@ function FoundingScreen({ onFound, onBack }: FoundingScreenProps) {
           disabled={!canFound}
           onClick={handleFound}
         >
-          {canFound ? `⚜️ Found it — first race in ${CADENCES[cadenceIdx].detail.replace('a race every ', '')}` : 'Choose a god to continue'}
+          {canFound ? '⚜️ Found it — the inaugural race runs now' : 'Choose a god to continue'}
         </button>
       </div>
     </div>

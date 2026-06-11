@@ -9,6 +9,7 @@ import { saveLeagueState } from '../../storage/persistence';
 import { getSeasonStandings } from '../../types/season';
 import { getTrackById } from '../../generators/tracks';
 import { getGodById } from '../gods';
+import GridSection from './GridSection';
 import './League.css';
 
 interface LeagueScreenProps {
@@ -174,7 +175,9 @@ function LeagueScreen({ league, onLeagueUpdate, onExit, onDissolve }: LeagueScre
         {reel.length > 0 && (
           <section className="league-section reel-section">
             <h2 className="league-section-title">
-              ⏱ While you were away — {reel.length} race{reel.length > 1 ? 's' : ''} ran
+              {reel.length === 1 && reel[0].index === 0
+                ? '🏁 The inaugural race is in the books'
+                : `⏱ While you were away — ${reel.length} race${reel.length > 1 ? 's' : ''} ran`}
             </h2>
             {[...reel].reverse().map(d => (
               <DigestCard key={d.index} league={league} digest={d} defaultOpen={reel.length === 1} />
@@ -209,6 +212,12 @@ function LeagueScreen({ league, onLeagueUpdate, onExit, onDissolve }: LeagueScre
             </table>
           </section>
         )}
+
+        {/* The Grid: teams, cars, and drivers — tap a driver for the lore */}
+        <section className="league-section">
+          <h2 className="league-section-title">The Grid</h2>
+          <GridSection roster={league.roster} />
+        </section>
 
         {/* Calendar */}
         <section className="league-section">

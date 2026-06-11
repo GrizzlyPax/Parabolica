@@ -217,6 +217,144 @@
 .cal-track { flex: 1; }
 .cal-when { color: #888; font-size: 0.85rem; font-variant-numeric: tabular-nums; }
 
+/* === The Grid === */
+
+.grid-teams {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+@media (max-width: 560px) {
+  .grid-teams { grid-template-columns: 1fr; }
+}
+
+.grid-team-card {
+  background: rgba(20, 20, 24, 0.8);
+  border: 1px solid #2a2a34;
+  border-left: 3px solid var(--team-color, #2a2a34);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.grid-team-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.grid-team-name { font-weight: 700; color: #fff; font-size: 0.95rem; }
+
+.grid-team-car {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 0.8rem;
+  color: #999;
+  margin-bottom: 6px;
+}
+
+.grid-car-name { color: #bbb; }
+.grid-car-stars { color: #8a7a4a; letter-spacing: 0.02em; }
+
+.grid-tag-chip {
+  background: rgba(106, 74, 138, 0.2);
+  border: 1px solid #4a3a5a;
+  color: #b8a8d8;
+  border-radius: 999px;
+  padding: 1px 8px;
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+.grid-driver { border-top: 1px solid #1a1a22; }
+
+.grid-driver-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  background: none;
+  border: none;
+  color: inherit;
+  padding: 7px 2px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  text-align: left;
+}
+.grid-driver-row:hover { background: rgba(255, 255, 255, 0.03); }
+
+.grid-driver-marble {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.grid-driver-name {
+  flex: 1;
+  color: #ddd;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.grid-driver-toggle { color: #555; font-size: 0.8rem; }
+
+.grid-driver-detail { padding: 2px 4px 10px 32px; }
+
+.grid-driver-backstory {
+  margin: 0 0 6px;
+  color: #999;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.grid-driver-quirk {
+  margin: 0 0 8px;
+  color: #b8a060;
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
+.grid-stat-bars { display: flex; flex-direction: column; gap: 3px; }
+
+.grid-stat-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.grid-stat-label {
+  width: 52px;
+  font-size: 0.68rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #777;
+}
+
+.grid-stat-track {
+  flex: 1;
+  height: 5px;
+  background: #1a1a22;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.grid-stat-fill {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  opacity: 0.85;
+}
+
 /* === Danger zone === */
 
 .league-danger-zone { margin-top: 32px; text-align: center; }

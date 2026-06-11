@@ -24,7 +24,7 @@ function memoryStore(): KeyValueStore & { map: Map<string, string> } {
   };
 }
 
-// A league with two races settled, so season.driverStats has real data.
+// A league with a few races settled, so season.driverStats has real data.
 function makeLeague() {
   const league = createLeague(123, {
     name: 'Persistence League',

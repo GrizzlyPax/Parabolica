@@ -32,12 +32,14 @@ export function generateGenesisRoster(leagueSeed: number, teamIds: string[]): Ro
   });
 }
 
-/** Fix the calendar: every race gets its wall-clock slot and seed at founding. */
+/** Fix the calendar: every race gets its wall-clock slot and seed at founding.
+ * The inaugural race fires at founding itself — a league is born mid-roar —
+ * and the cadence applies from there. */
 export function buildSchedule(leagueSeed: number, setup: LeagueSetupConfig): ScheduledRace[] {
   return setup.trackIds.map((trackId, index) => ({
     index,
     trackId,
-    scheduledAt: setup.createdAt + (index + 1) * setup.raceIntervalMs,
+    scheduledAt: setup.createdAt + index * setup.raceIntervalMs,
     seed: deriveSeed(leagueSeed, 'race', index),
   }));
 }

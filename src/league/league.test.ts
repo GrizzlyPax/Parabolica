@@ -59,11 +59,11 @@ describe('league creation', () => {
     expect(b.schedule.map(r => r.seed)).not.toEqual(a.schedule.map(r => r.seed));
   });
 
-  it('schedules races on the wall-clock cadence', () => {
+  it('schedules races on the wall-clock cadence, inaugural race at founding', () => {
     const schedule = buildSchedule(7, makeSetup());
     expect(schedule).toHaveLength(4);
     schedule.forEach((race, i) => {
-      expect(race.scheduledAt).toBe(T0 + (i + 1) * 3 * HOUR);
+      expect(race.scheduledAt).toBe(T0 + i * 3 * HOUR);
       expect(race.index).toBe(i);
     });
     // Race seeds are distinct streams
@@ -72,17 +72,17 @@ describe('league creation', () => {
 });
 
 describe('settleLeague (fake clock)', () => {
-  it('settles nothing before the first race fires', () => {
+  it('settles nothing before the inaugural race fires', () => {
     const league = createLeague(42, makeSetup());
-    const { league: after, newlySettled } = settleLeague(league, { now: T0 + 3 * HOUR - 1 });
+    const { league: after, newlySettled } = settleLeague(league, { now: T0 - 1 });
     expect(newlySettled).toHaveLength(0);
     expect(after).toBe(league); // same reference: cheap no-op check
   });
 
   it('settles exactly the due races, in order, accumulating standings', () => {
     const league = createLeague(42, makeSetup());
-    // now = just after race 1 (index 1) fires
-    const { league: after, newlySettled } = settleLeague(league, { now: T0 + 6 * HOUR });
+    // now = just after race 1 (index 1) fires; race 0 fired at founding
+    const { league: after, newlySettled } = settleLeague(league, { now: T0 + 3 * HOUR });
 
     expect(newlySettled.map(d => d.index)).toEqual([0, 1]);
     expect(after.settledThrough).toBe(1);
