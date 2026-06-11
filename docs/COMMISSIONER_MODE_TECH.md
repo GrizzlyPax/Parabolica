@@ -4,6 +4,24 @@
 how. Grounded in a full audit of the current codebase — every claim below
 about existing code was verified against source, with locations cited.*
 
+## Build status
+
+| PR | Status |
+|---|---|
+| 1 — Seeded RNG core | ✅ shipped (`src/engine/rng.ts`, engine injection, golden-master tests) |
+| 2 — Deterministic generation | ✅ shipped (rng threaded through `generators/` + `maybeAssignTag`) |
+| 3 — Storage layer + resume current game | ✅ shipped (`src/storage/persistence.ts`, Resume Season card; closes #43; browser-verified) |
+| 4 — League core: schedule + settle | ✅ shipped (`src/league/`: createLeague, settle loop, interventions, event-cap fix, fake-clock tests) |
+| 5 — Gods, demands, smiting | not started |
+| 6 — League UI shell | not started |
+| 7 — Interventions UI + decree beat | not started (intervention *engine* shipped in PR 4: `rosterStateAt` + append-only log) |
+
+*Note vs. plan: settle shipped as a pure synchronous function with a progress
+callback (`settleLeague(league, {now, onRaceSettled})`) rather than inside a
+worker — the worker is a thin wrapper to add with the backfill UI in PR 6.
+Headless races measured fast enough (~tens of ms each) that the worker is
+about UI smoothness, not feasibility.*
+
 ## What we're building on
 
 The audit found the foundation is better than expected. Two things we

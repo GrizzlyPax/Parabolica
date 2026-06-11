@@ -135,6 +135,7 @@ export interface RaceConfig {
   baseCrashChance: number;        // Crash probability when in proximity (default: 0.001)
   enableCrashes: boolean;         // Toggle crash system
   enableTireWear: boolean;        // Toggle tire wear system
+  maxStoredEvents: number;        // Event log cap (UI default 500; league settle raises it so digests keep the whole race)
 }
 
 export interface RaceState {
@@ -339,6 +340,7 @@ export const DEFAULT_CONFIG: RaceConfig = {
   baseCrashChance: 0.0001,  // Reduced for realistic ~20% DNF rate
   enableCrashes: true,
   enableTireWear: true,
+  maxStoredEvents: 500,     // UI safety cap; league settle raises it
 };
 
 // Helper to select starting tires based on driver stats
@@ -2487,9 +2489,10 @@ class RaceEngine {
       this.stop();
     }
 
-    // Keep only last 500 events to prevent memory issues
-    if (this.raceEvents.length > 500) {
-      this.raceEvents = this.raceEvents.slice(-500);
+    // Cap stored events to prevent memory issues in long live races.
+    // League settle raises maxStoredEvents so backfilled digests keep everything.
+    if (this.raceEvents.length > this.config.maxStoredEvents) {
+      this.raceEvents = this.raceEvents.slice(-this.config.maxStoredEvents);
     }
 
     // Throttle UI updates to ~30fps for smooth rendering at high simulation speeds

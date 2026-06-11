@@ -14,7 +14,10 @@ Formula 1 race simulation with betting odds system.
   - `betlab/` - Betting odds analysis
   - `betting/utils.ts` - Pure betting calculation utilities
   - `feed/commentary.ts` - Race feed persona/commentary engine
-  - `RaceEngine.ts` - Core race simulation engine
+  - `RaceEngine.ts` - Core race simulation engine (seedable: setSeed / runHeadless(seed))
+  - `engine/rng.ts` - Seeded RNG (mulberry32, deriveSeed, shuffle) — determinism foundation
+  - `storage/persistence.ts` - Versioned localStorage save states (season + league)
+  - `league/` - Commissioner Mode runtime: seed → universe, wall-clock settle loop, interventions
 - `dist/` - Production build output
 - `public/` - Static assets
 

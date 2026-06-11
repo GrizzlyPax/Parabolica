@@ -6,9 +6,11 @@
 import { SeasonState, DriverSeasonStats } from '../types/season';
 import { RosterDriver } from '../RaceEngine';
 import { SeasonRaceResult } from '../MarbleMode';
+import { LeagueState } from '../league/types';
 
 export const SCHEMA_VERSION = 1;
 const SEASON_KEY = 'parabolica.season.v1';
+const LEAGUE_KEY = 'parabolica.league.v1';
 
 /** Everything needed to put a mid-season player back where they left off. */
 export interface SeasonSnapshot {
@@ -124,6 +126,76 @@ export function loadSeasonSnapshot(
 export function clearSeasonSnapshot(store: KeyValueStore | null = defaultStore()): void {
   try {
     store?.removeItem(SEASON_KEY);
+  } catch {
+    // Nothing useful to do if storage is unavailable.
+  }
+}
+
+// === Commissioner league persistence ===
+// Same envelope pattern; LeagueState's only Map is season.driverStats.
+
+interface EncodedLeagueState extends Omit<LeagueState, 'season'> {
+  season: EncodedSeasonState;
+}
+
+interface LeagueEnvelope {
+  schemaVersion: number;
+  savedAt: number;
+  data: EncodedLeagueState;
+}
+
+export function saveLeagueState(
+  league: LeagueState,
+  store: KeyValueStore | null = defaultStore(),
+  now: number = Date.now()
+): boolean {
+  if (!store) return false;
+  try {
+    const envelope: LeagueEnvelope = {
+      schemaVersion: SCHEMA_VERSION,
+      savedAt: now,
+      data: {
+        ...league,
+        season: {
+          ...league.season,
+          driverStats: Array.from(league.season.driverStats.entries()),
+        },
+      },
+    };
+    store.setItem(LEAGUE_KEY, JSON.stringify(envelope));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function loadLeagueState(
+  store: KeyValueStore | null = defaultStore()
+): LeagueState | null {
+  if (!store) return null;
+  try {
+    const raw = store.getItem(LEAGUE_KEY);
+    if (!raw) return null;
+    const envelope = JSON.parse(raw) as LeagueEnvelope;
+    if (envelope?.schemaVersion !== SCHEMA_VERSION) return null;
+    const league: LeagueState = {
+      ...envelope.data,
+      season: {
+        ...envelope.data.season,
+        driverStats: new Map(envelope.data.season.driverStats),
+      },
+    };
+    if (!Array.isArray(league.roster) || league.roster.length === 0) return null;
+    if (!Array.isArray(league.schedule) || league.schedule.length === 0) return null;
+    return league;
+  } catch {
+    return null;
+  }
+}
+
+export function clearLeagueState(store: KeyValueStore | null = defaultStore()): void {
+  try {
+    store?.removeItem(LEAGUE_KEY);
   } catch {
     // Nothing useful to do if storage is unavailable.
   }
