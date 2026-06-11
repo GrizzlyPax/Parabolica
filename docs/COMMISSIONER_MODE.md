@@ -43,23 +43,47 @@ drivers, and both rungs have opinions about their job performance.
    physics underneath (`CANON_VARIABLES` is the implementation layer), but
    the player-facing choice is always fictional: "appease the Tortoise" never
    "tire wear ×0.8".
+6. **The additive engine is the fun.** The base simulation is the stage; tags,
+   track events, and injected oddities stacking into combinatorial chaos are
+   the game (the Mewgenics instinct). When prioritizing systems, the question
+   is always: does this make the tag layer richer? The MVP intervention verb,
+   the decree implementations, and most future content should all resolve to
+   "things that attach tags to things."
+
+In-fiction, the player is **the Commissionary** — the title keeps it sporty
+while implying the weird religious office it actually is. The UI can say
+"Commissioner" where clarity wins; the gods and the feed say Commissionary.
 
 ## The shape of a run
 
 A run is one season: **~12–16 races over 2–3 real days**, one race firing
-every ~3 wall-clock hours. Races run overnight too — waking up to a digest of
-what happened while you slept is the ant farm working as intended.
+every ~3 wall-clock hours. The clock is fully indifferent — races run
+overnight too, and waking up to a digest of what happened while you slept is
+the ant farm working as intended.
+
+The one exception to the indifferent clock: **full stops** (Phase 2). Rare
+random events can bring the entire season to a halt — a stewards' inquiry, a
+scandal, a god's ultimatum — and the league stays frozen until the
+Commissionary returns and rules on it. Time only resumes when you decide.
+Full stops are the pressure valve on the 24/7 clock (the league can wait for
+you, but only when something dramatic forces it) and the single best
+push-notification moment in the design ("THE LEAGUE IS HELD. YOUR RULING IS
+REQUIRED."). Deferred past MVP so decrees and demands can prove the
+decision loop first.
 
 ### 1. Season setup (the deck-build moment)
 
 The commissioner founds the league:
 
-- **Choose your patron god** — one of several eldritch powers, each with a
-  personality, a demand structure, and a relationship to the sim. (Examples
-  to riff: *The Stewards* demand order — too many crashes displeases them.
-  *The Scrap Heap* feeds on attrition — too *few* DNFs displeases it. *The
-  Long Now* cares about streaks and records.) The god choice is the run's
-  difficulty modifier and win condition in one.
+- **Choose your patron god** — the pantheon is **appetite gods**: each god
+  hungers for a different shape of season *statistics*, deliberately not
+  one-to-one with any single dial. (Sketches: *The Scrap Heap* feeds on
+  attrition — too few DNFs starves it. *The Stewards* demand order — clean
+  races, no carnage. *The Photo Finish* craves parity — a championship
+  decided by inches; domination displeases it.) Appetites key off the highs
+  and lows of the season's stat lines, so pleasing a god is about shaping
+  conditions, not pressing a button that increments a meter. The god choice
+  is the run's difficulty modifier and win condition in one.
 - **Select the teams** that may compete (which of the generated/known teams
   get grid slots).
 - **Select the tracks** and their order — the calendar is the schedule of
@@ -80,11 +104,13 @@ commissioner can check in — a check-in is 1–3 minutes and offers:
   ones). This screen IS the in-app notification system for the MVP.
 - **The league pulse**: god displeasure meter, fan mood, standings, who's on
   a streak, who's cursed.
-- **Interventions** ("throw things in"): a scarce resource — inject a new
-  driver mid-season, attach a tag to someone, schedule a track event, rename
-  a thing. Interventions are *committed before the next race fires*; if you
-  don't check in, the slot passes unused. That's the roguelite pressure of
-  limited interaction.
+- **Interventions** ("throw things in"): a scarce resource — attach a tag to
+  a driver or team, and later: inject a new driver mid-season, schedule a
+  track event, rename a thing. **Economy: a fixed allowance of tokens per
+  season** (simple, predictable, pure roguelite; a god-granted favor economy
+  is a possible later evolution). Interventions are *committed before the
+  next race fires*; if you don't check in, the opportunity to influence that
+  race passes. That's the roguelite pressure of limited interaction.
 - **Watch live**: if you happen to be present when a race fires, you get the
   full WatchMode broadcast. Optional, never required.
 
@@ -101,10 +127,14 @@ the dials by construction.
 ### 4. The god can end you
 
 The patron god has a **displeasure meter**. Demands arrive with deadlines
-("three DNFs at Subpoena Day by week 6"). Fail enough and the run ends early
-in catastrophe — and a smiting must be *spectacle*: the feed goes apocalyptic,
-the league is consumed, the chronicle records exactly how. Losing should
-produce a better story than a mediocre win.
+("three DNFs at Subpoena Day by week 6"). **Demands are explicit, the voice
+is cryptic**: the demand UI always shows exact terms and live progress
+("DNFs: 1/3 — two races remain"), so a smiting never feels like a rules
+ambush — but the god's feed lines are riddles and menace, and the personas
+interpret. Fail enough and the run ends early in catastrophe — and a smiting
+must be *spectacle*: the feed goes apocalyptic, the league is consumed, the
+chronicle records exactly how. Losing should produce a better story than a
+mediocre win.
 
 ### 5. Score and the Hall of Seasons
 
@@ -116,6 +146,13 @@ Every run — completed or smited — produces:
 - **A chronicle**: champion, final standings, records, the weirdest three
   events, the decrees taken, cause of death if applicable. Auto-written by
   the commentary personas.
+
+**Score is personal — but seasons are seed-reproducible from day one.** No
+leaderboard in the MVP; the Hall of Seasons is your museum. But because a
+season is fully determined by `(seed, god, setup choices, intervention log)`,
+a shared "daily run" — same god, same grid, same seed for everyone, compare
+scores — can exist later without rearchitecting. That door stays open free
+of charge.
 
 **Meta-progression is the museum, not power.** The Hall of Seasons is an
 archive of chronicles you can revisit and share. No carried currency, no
@@ -209,40 +246,58 @@ the commissioner uses to watch races anyway).
 
 ### Phase 1 — the minimum viable season
 The smallest thing that is recognizably the game:
-- Season setup: pick **one of three gods**, pick teams and tracks.
+- Season setup: pick **one of three appetite gods**, pick teams and tracks.
 - Wall-clock schedule + lazy backfill on app open.
 - The digest screen (feed personas over past races).
-- God demand tracking, displeasure meter, early-end smiting.
-- **One** intervention type (inject a driver or tag between races).
+- God demand tracking (explicit terms + progress UI, cryptic feed voice),
+  displeasure meter, early-end smiting.
+- **One** intervention type: **attach a tag** to a driver or team, from a
+  fixed token allowance per season. (Chosen deliberately — the tag system is
+  the additive engine the whole game bets on, and it's the cheapest verb to
+  build because tags already exist in the sim.)
 - **One** decree beat at mid-season (pick 1 of 3).
 - Final score + a Hall of Seasons screen with the chronicle.
 
-Deliberately cut from MVP: fan mood, NPC betting crowds, multiple
-intervention types, push notifications, rival gods.
+Deliberately cut from MVP: full stops, fan mood, NPC betting crowds,
+multiple intervention types, push notifications, rival gods.
 
 ### Phase 2 — texture
-NPC crowd betting + fan mood as a second pressure gauge; more gods, decrees,
-and intervention types; chronicle share cards (#54 energy); notification
-event log → PWA push.
+**Full stops** (season-halting decision events — start with one type, e.g.
+the stewards' inquiry, then grow the table); NPC crowd betting + fan mood as
+a second pressure gauge; more gods, decrees, and intervention types
+(driver injection, track events, renaming); chronicle share cards (#54
+energy); notification event log → PWA push.
 
 ### Phase 3 — the horizon
 Capacitor iOS wrapper with scheduled local notifications; the Big Leagues
 (public persistent league, server-evaluated, bettable, joinable).
 
-## Open design questions (for the next interview)
+## Resolved in interview #2 (June 2026)
 
-1. **Intervention economy**: fixed allowance per season? Earned by pleasing
-   the god? Priced in something fans give you? (Leaning: god grants them —
-   keeps the god relationship central.)
-2. **God demand legibility**: fully explicit ("3 DNFs by race 10") vs.
-   partially cryptic (the god speaks in riddles, the feed interprets)?
-   Cryptic is more Blaseball; explicit is better game design. Probably
-   explicit demands, cryptic *voice*.
-3. **Score chasing**: is there a global/shared leaderboard eventually, or is
-   score purely personal? (Affects how seriously to take seeded fairness —
-   same god/teams/seed could be a shareable "daily run".)
-4. **Quiet hours**: races overnight are good ambience, but should the finale
-   be guaranteed to land at a waking hour? (Probably yes — the season finale
-   is an appointment.)
-5. **What's the player called in-fiction?** "Commissioner" is the working
-   title; the gods presumably have a less flattering word for it.
+1. **Intervention economy**: fixed token allowance per season (simplicity
+   first; god-granted favor is a possible later evolution).
+2. **God demand legibility**: explicit demands with progress UI, cryptic
+   voice in the feed.
+3. **Score**: personal museum number now; seasons seed-reproducible from day
+   one so shared "daily runs"/leaderboards remain possible later.
+4. **The clock**: fully 24/7 and indifferent — no quiet hours. The eventual
+   counterweight is **full stops** (Phase 2): rare pausing events that freeze
+   the season until the Commissionary returns to rule on something.
+5. **The player is the Commissionary** — religious office, sporty register.
+6. **MVP intervention verb**: tag attachment — chosen because the tag system
+   is the additive engine the whole design bets on (pillar 6).
+7. **Pantheon flavor**: appetite gods keyed to season-statistic shapes
+   (carnage, order, parity/closeness, domination...), never one-to-one with
+   a single dial.
+
+## Still open (small, can be settled during the build)
+
+1. **Token allowance size** — how many tag interventions per season? (Gut:
+   3–4, so each is an event. Tune in playtesting.)
+2. **The three MVP gods' final names and exact appetite formulas** — needs a
+   writing pass plus a stat audit of what the engine already tracks per race.
+3. **Tag taxonomy for the MVP** — which existing tags are commissioner-
+   grantable, and do we author a few intervention-only ones (curses/boons)?
+4. **Front door** — does the app open into Commissionary Mode with Quick
+   Race demoted to a side mode, or keep Quick Race as the front door until
+   the MVP proves itself?
