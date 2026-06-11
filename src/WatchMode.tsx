@@ -192,11 +192,8 @@ function WatchMode({
   // Status effects for timing tower (longer duration - persists for ~1 lap)
   const [statusEffects, setStatusEffects] = useState<StatusEffect[]>([]);
 
-  // Share button state
-  const [shareCopied, setShareCopied] = useState(false);
-
   // Multi-view system - different "lenses" over the same race state
-  // New view system: track (map + tower), detail (full tower), standings (points)
+  // New view system: track (map + tower), detail (full tower)
   const [activeView, setActiveView] = useState<RaceView>('track');
   // Multi-driver focus - allow up to 10 focused drivers (click to toggle)
   const [focusedDriverIds, setFocusedDriverIds] = useState<Set<number>>(new Set());
@@ -280,7 +277,7 @@ function WatchMode({
 
     // Only trigger if horizontal swipe is dominant (not vertical scrolling)
     if (Math.abs(deltaX) > SWIPE_THRESHOLD && Math.abs(deltaX) > Math.abs(deltaY)) {
-      const views: RaceView[] = ['track', 'detail', 'standings'];
+      const views: RaceView[] = ['track', 'detail'];
       const currentIdx = views.indexOf(activeView);
 
       if (deltaX > 0 && currentIdx > 0) {
@@ -359,77 +356,6 @@ function WatchMode({
       if (d.status !== 'dnf' && d.currentLap > lap) lap = d.currentLap;
     }
     return Math.min(Math.max(lap, 1), totalLaps);
-  };
-
-  // Generate shareable race summary (Wordle-style)
-  const generateShareText = (): string => {
-    const trackEmoji = trackInfo?.funEmoji || '🏁';
-
-    // Get sorted finished drivers
-    const sortedFinished = drivers
-      .filter(d => d.status === 'finished')
-      .sort((a, b) => raceState.finishOrder.indexOf(a.id) - raceState.finishOrder.indexOf(b.id));
-
-    // Count DNFs
-    const dnfCount = drivers.filter(d => d.status === 'dnf').length;
-
-    // Random Mister Marbles quote
-    const shareQuotes = [
-      "The marbles remember.",
-      "Everything is fine.",
-      "The simulation continues.",
-      "Chaos finds a way.",
-      "Fortune favors the bold. Sometimes.",
-      "The void watches.",
-      "Results may vary.",
-      "Past performance does not guarantee future results.",
-      "The house always... well.",
-      "Interesting.",
-      "You should have bet differently.",
-      "The numbers don't lie. But they do whisper.",
-      "Luck is a pattern we haven't identified yet.",
-      "The marbles are never wrong.",
-    ];
-    const quote = shareQuotes[Math.floor(Math.random() * shareQuotes.length)];
-
-    // Build the share text
-    const lines: string[] = [
-      '🏁 PARABOLICA',
-      '',
-      `${trackEmoji}| ${totalLaps} 🔄 | 💀 ${dnfCount}`,
-    ];
-
-    // Podium
-    if (sortedFinished[0]) lines.push(`🥇| ${sortedFinished[0].emoji} ${sortedFinished[0].name}`);
-    if (sortedFinished[1]) lines.push(`🥈| ${sortedFinished[1].emoji} ${sortedFinished[1].name}`);
-    if (sortedFinished[2]) lines.push(`🥉| ${sortedFinished[2].emoji} ${sortedFinished[2].name}`);
-
-    lines.push('');
-    lines.push(`"${quote}"`);
-    lines.push('');
-    lines.push('playparabolica.com');
-
-    return lines.join('\n');
-  };
-
-  // Copy share text to clipboard
-  const handleShare = async () => {
-    const shareText = generateShareText();
-    try {
-      await navigator.clipboard.writeText(shareText);
-      setShareCopied(true);
-      setTimeout(() => setShareCopied(false), 2000);
-    } catch {
-      // Fallback for older browsers
-      const textarea = document.createElement('textarea');
-      textarea.value = shareText;
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textarea);
-      setShareCopied(true);
-      setTimeout(() => setShareCopied(false), 2000);
-    }
   };
 
   // Get track path and pit lane path from layout
@@ -1134,6 +1060,8 @@ function WatchMode({
         onViewChange={setActiveView}
         onClose={() => setNavPanelOpen(false)}
         onExit={onExit}
+        exitLabel={spectator ? 'League' : 'Main Menu'}
+        exitDescription={spectator ? 'Back to the league view' : 'Leave the race'}
       />
 
       {/* Main content: Single scroll container for entire page */}
@@ -1231,16 +1159,6 @@ function WatchMode({
               <RaceFeed items={feedItems} className="story-feed-detail" />
             </section>
           </>
-        )}
-
-        {/* STANDINGS VIEW: Points tables and bet status */}
-        {activeView === 'standings' && (
-          <section className="dashboard-section standings-section">
-            <div className="standings-placeholder">
-              <span className="standings-icon">🏆</span>
-              <span className="standings-text">Standings coming soon</span>
-            </div>
-          </section>
         )}
       </div>
 
@@ -1351,17 +1269,17 @@ function WatchMode({
             )}
 
             <div className="finish-modal-buttons">
-              <button className="share-btn" onClick={handleShare}>
-                {shareCopied ? '✓ Copied!' : '📋 Share'}
-              </button>
               {onExit && (
-                <button className="share-btn" onClick={onExit}>
-                  {spectator ? '⚜️ Back to League' : '🏠 Menu'}
+                <button
+                  className={spectator ? 'next-race-btn' : 'finish-menu-btn'}
+                  onClick={onExit}
+                >
+                  {spectator ? '⚜️ Back to League' : 'Menu'}
                 </button>
               )}
               {onNextRace && (
                 <button className="next-race-btn" onClick={onNextRace}>
-                  Next Race
+                  Next Race →
                 </button>
               )}
             </div>

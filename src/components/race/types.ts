@@ -35,7 +35,7 @@ export interface RowContext {
 export type LapTimeClass = '' | 'fastest' | 'improved' | 'slower';
 
 // View types
-export type RaceView = 'track' | 'detail' | 'standings';
+export type RaceView = 'track' | 'detail';
 
 // Session state for universal header
 export type SessionState = 'racing' | 'safety-car' | 'final-lap' | 'finished';
@@ -99,8 +99,10 @@ export interface NavPanelProps {
   activeView: RaceView;
   onViewChange: (view: RaceView) => void;
   onClose: () => void;
-  /** Leave the race entirely (back to main menu). */
+  /** Leave the race entirely (back to main menu / league). */
   onExit?: () => void;
+  exitLabel?: string;
+  exitDescription?: string;
 }
 
 // Driver position on track map

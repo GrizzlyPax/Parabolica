@@ -1,6 +1,11 @@
 // The league home: the ant farm window. Settles due races on mount and live
 // (a countdown ticks down and the race simply *happens*), shows the
 // while-you-were-away reel, standings, calendar, and the chronicle of digests.
+//
+// Layout: full-width masthead (title, on-air strip), then a two-column
+// dashboard on desktop — the feed (reel, grid, chronicle) on the left, the
+// data rail (standings, calendar) on the right. Single column on mobile,
+// re-ordered so standings sit right under the reel.
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { LeagueState, RaceDigest, LiveRace } from '../types';
@@ -10,6 +15,7 @@ import { getSeasonStandings } from '../../types/season';
 import { getTrackById } from '../../generators/tracks';
 import { getGodById } from '../gods';
 import GridSection from './GridSection';
+import { TeamMarble } from './TeamMarble';
 import './League.css';
 
 interface LeagueScreenProps {
@@ -39,26 +45,34 @@ function DigestCard({ league, digest, defaultOpen = false }: {
   const [open, setOpen] = useState(defaultOpen);
   const driver = (id: number) => league.roster.find(d => d.id === id);
   const podium = digest.finishOrder.slice(0, 3);
+  const winner = driver(podium[0]);
 
   return (
     <div className={`digest-card ${open ? 'open' : ''}`}>
       <button className="digest-summary" onClick={() => setOpen(!open)}>
         <span className="digest-race-no">R{digest.index + 1}</span>
         <span className="digest-track">{digest.trackEmoji} {digest.trackName}</span>
-        <span className="digest-winner" style={{ color: driver(podium[0])?.color }}>
-          🏆 {driver(podium[0])?.fullName ?? '—'}
+        <span className="digest-winner">
+          <TeamMarble color={winner?.color} accentColor={winner?.accentColor}
+            emoji={winner?.emoji} size={20} slot={winner?.driverSlot} />
+          <span style={{ color: winner?.color }}>{winner?.fullName ?? '—'}</span>
         </span>
         <span className="digest-toggle">{open ? '▾' : '▸'}</span>
       </button>
       {open && (
         <div className="digest-detail">
           <div className="digest-podium">
-            {podium.map((id, i) => (
-              <span key={id} className="digest-podium-spot">
-                {['🥇', '🥈', '🥉'][i]}{' '}
-                <span style={{ color: driver(id)?.color }}>{driver(id)?.fullName}</span>
-              </span>
-            ))}
+            {podium.map((id, i) => {
+              const d = driver(id);
+              return (
+                <span key={id} className="digest-podium-spot">
+                  {['🥇', '🥈', '🥉'][i]}
+                  <TeamMarble color={d?.color} accentColor={d?.accentColor}
+                    emoji={d?.emoji} size={20} slot={d?.driverSlot} />
+                  <span style={{ color: d?.color }}>{d?.fullName}</span>
+                </span>
+              );
+            })}
           </div>
           {digest.dnfDriverIds.length > 0 && (
             <div className="digest-dnfs">
@@ -136,6 +150,7 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onDissolve 
   const driver = (id: number) => league.roster.find(d => d.id === id);
   const champion = over && standings.length > 0 ? driver(standings[0].driverId) : null;
   const chronicle = useMemo(() => [...league.digests].reverse(), [league.digests]);
+  const hasStandings = standings.length > 0 && league.settledThrough >= 0;
 
   return (
     <div className="league-screen">
@@ -160,9 +175,10 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onDissolve 
             <h2>🏁 The season is complete</h2>
             {champion && (
               <p className="league-champion">
-                Champion: <strong style={{ color: champion.color }}>
-                  {champion.emoji} {champion.fullName}
-                </strong> — {standings[0].points} pts, {standings[0].wins} wins
+                Champion: <TeamMarble color={champion.color} accentColor={champion.accentColor}
+                  emoji={champion.emoji} size={24} slot={champion.driverSlot} />{' '}
+                <strong style={{ color: champion.color }}>{champion.fullName}</strong>
+                {' '}— {standings[0].points} pts, {standings[0].wins} wins
               </p>
             )}
           </section>
@@ -199,85 +215,96 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onDissolve 
           </section>
         )}
 
-        {/* While you were away */}
-        {reel.length > 0 && (
-          <section className="league-section reel-section">
-            <h2 className="league-section-title">
-              {reel.length === 1 && reel[0].index === 0
-                ? '🏁 The inaugural race is in the books'
-                : `⏱ While you were away — ${reel.length} race${reel.length > 1 ? 's' : ''} ran`}
-            </h2>
-            {[...reel].reverse().map(d => (
-              <DigestCard key={d.index} league={league} digest={d} defaultOpen={reel.length === 1} />
-            ))}
-          </section>
-        )}
+        {/* Desktop: feed on the left, data rail on the right.
+            Mobile: wrappers dissolve (display: contents) and sections re-order. */}
+        <div className="league-columns">
+          <div className="league-main">
+            {/* While you were away */}
+            {reel.length > 0 && (
+              <section className="league-section reel-section">
+                <h2 className="league-section-title">
+                  {reel.length === 1 && reel[0].index === 0
+                    ? '🏁 The inaugural race is in the books'
+                    : `⏱ While you were away — ${reel.length} race${reel.length > 1 ? 's' : ''} ran`}
+                </h2>
+                {[...reel].reverse().map(d => (
+                  <DigestCard key={d.index} league={league} digest={d} defaultOpen={reel.length === 1} />
+                ))}
+              </section>
+            )}
 
-        {/* Standings */}
-        {standings.length > 0 && league.settledThrough >= 0 && (
-          <section className="league-section">
-            <h2 className="league-section-title">Standings</h2>
-            <table className="league-standings">
-              <thead>
-                <tr><th>P</th><th></th><th>Driver</th><th>Pts</th><th>W</th><th>Pod</th><th>DNF</th></tr>
-              </thead>
-              <tbody>
-                {standings.map((s, i) => {
-                  const d = driver(s.driverId);
+            {/* The Grid: teams, cars, and drivers — tap a driver for the lore */}
+            <section className="league-section grid-section">
+              <h2 className="league-section-title">The Grid</h2>
+              <GridSection roster={league.roster} />
+            </section>
+
+            {/* Chronicle: every settled race, newest first */}
+            {chronicle.length > 0 && (
+              <section className="league-section chronicle-section">
+                <h2 className="league-section-title">Chronicle</h2>
+                {chronicle.map(d => (
+                  <DigestCard key={d.index} league={league} digest={d} />
+                ))}
+              </section>
+            )}
+          </div>
+
+          <aside className="league-rail">
+            {/* Standings */}
+            {hasStandings && (
+              <section className="league-section standings-section">
+                <h2 className="league-section-title">Standings</h2>
+                <table className="league-standings">
+                  <thead>
+                    <tr><th>P</th><th></th><th>Driver</th><th>Pts</th><th>W</th><th>Pod</th><th>DNF</th></tr>
+                  </thead>
+                  <tbody>
+                    {standings.map((s, i) => {
+                      const d = driver(s.driverId);
+                      return (
+                        <tr key={s.driverId}>
+                          <td className="standings-pos">{i + 1}</td>
+                          <td className="standings-marble">
+                            <TeamMarble color={d?.color} accentColor={d?.accentColor}
+                              emoji={d?.emoji} slot={d?.driverSlot} />
+                          </td>
+                          <td className="standings-name" style={{ color: d?.color }}>{d?.fullName}</td>
+                          <td className="standings-pts">{s.points}</td>
+                          <td className="standings-num">{s.wins}</td>
+                          <td className="standings-num">{s.podiums}</td>
+                          <td className="standings-num">{s.dnfs}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </section>
+            )}
+
+            {/* Calendar */}
+            <section className="league-section calendar-section">
+              <h2 className="league-section-title">Calendar</h2>
+              <ul className="league-calendar">
+                {league.schedule.map(race => {
+                  const track = getTrackById(race.trackId);
+                  const settled = race.index <= league.settledThrough;
                   return (
-                    <tr key={s.driverId}>
-                      <td className="standings-pos">{i + 1}</td>
-                      <td className="standings-marble"><span style={{ background: d?.color }}>{d?.emoji}</span></td>
-                      <td className="standings-name" style={{ color: d?.color }}>{d?.fullName}</td>
-                      <td className="standings-pts">{s.points}</td>
-                      <td>{s.wins}</td>
-                      <td>{s.podiums}</td>
-                      <td>{s.dnfs}</td>
-                    </tr>
+                    <li key={race.index} className={settled ? 'settled' : 'scheduled'}>
+                      <span className="cal-race-no">R{race.index + 1}</span>
+                      <span className="cal-track">{track?.funEmoji} {track?.name ?? race.trackId}</span>
+                      <span className="cal-when">
+                        {settled ? '✅' : new Date(race.scheduledAt).toLocaleString([], {
+                          weekday: 'short', hour: 'numeric', minute: '2-digit',
+                        })}
+                      </span>
+                    </li>
                   );
                 })}
-              </tbody>
-            </table>
-          </section>
-        )}
-
-        {/* The Grid: teams, cars, and drivers — tap a driver for the lore */}
-        <section className="league-section">
-          <h2 className="league-section-title">The Grid</h2>
-          <GridSection roster={league.roster} />
-        </section>
-
-        {/* Calendar */}
-        <section className="league-section">
-          <h2 className="league-section-title">Calendar</h2>
-          <ul className="league-calendar">
-            {league.schedule.map(race => {
-              const track = getTrackById(race.trackId);
-              const settled = race.index <= league.settledThrough;
-              return (
-                <li key={race.index} className={settled ? 'settled' : 'scheduled'}>
-                  <span className="cal-race-no">R{race.index + 1}</span>
-                  <span className="cal-track">{track?.funEmoji} {track?.name ?? race.trackId}</span>
-                  <span className="cal-when">
-                    {settled ? '✅' : new Date(race.scheduledAt).toLocaleString([], {
-                      weekday: 'short', hour: 'numeric', minute: '2-digit',
-                    })}
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
-        </section>
-
-        {/* Chronicle: every settled race, newest first */}
-        {chronicle.length > 0 && (
-          <section className="league-section">
-            <h2 className="league-section-title">Chronicle</h2>
-            {chronicle.map(d => (
-              <DigestCard key={d.index} league={league} digest={d} />
-            ))}
-          </section>
-        )}
+              </ul>
+            </section>
+          </aside>
+        </div>
 
         <div className="league-danger-zone">
           {confirmDissolve ? (

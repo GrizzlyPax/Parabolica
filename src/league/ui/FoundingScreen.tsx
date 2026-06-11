@@ -27,11 +27,15 @@ const CADENCES = [
 ];
 
 const SEASON_LENGTHS = [8, 12, 16];
+const MIN_RACES = 1;
+const MAX_RACES = 24;
 
 function FoundingScreen({ onFound, onBack }: FoundingScreenProps) {
   const [name, setName] = useState('');
   const [godId, setGodId] = useState<string | null>(null);
   const [raceCount, setRaceCount] = useState(12);
+  // Free-form season length (e.g. a 2-race test run); '' = using a preset
+  const [customCount, setCustomCount] = useState('');
   const [cadenceIdx, setCadenceIdx] = useState(1);
 
   const god = GODS.find(g => g.id === godId);
@@ -97,12 +101,30 @@ function FoundingScreen({ onFound, onBack }: FoundingScreenProps) {
             {SEASON_LENGTHS.map(n => (
               <button
                 key={n}
-                className={`founding-option ${raceCount === n ? 'selected' : ''}`}
-                onClick={() => setRaceCount(n)}
+                className={`founding-option ${customCount === '' && raceCount === n ? 'selected' : ''}`}
+                onClick={() => { setRaceCount(n); setCustomCount(''); }}
               >
                 {n} races
               </button>
             ))}
+            <label className={`founding-option founding-custom-count ${customCount !== '' ? 'selected' : ''}`}>
+              <input
+                type="number"
+                min={MIN_RACES}
+                max={MAX_RACES}
+                value={customCount}
+                placeholder="#"
+                onChange={e => {
+                  const raw = e.target.value;
+                  setCustomCount(raw);
+                  const n = parseInt(raw, 10);
+                  if (!Number.isNaN(n)) {
+                    setRaceCount(Math.max(MIN_RACES, Math.min(MAX_RACES, n)));
+                  }
+                }}
+              />
+              <span className="founding-option-detail">custom</span>
+            </label>
           </div>
         </section>
 

@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { RosterDriver } from '../../RaceEngine';
 import { getTeamById } from '../../data/teams';
 import { Tag } from '../../data/tags';
+import { TeamMarble } from './TeamMarble';
 
 function stars(n: number): string {
   const filled = Math.max(0, Math.min(5, Math.round(n)));
@@ -34,7 +35,8 @@ function DriverEntry({ driver }: { driver: RosterDriver }) {
   return (
     <div className={`grid-driver ${open ? 'open' : ''}`}>
       <button className="grid-driver-row" onClick={() => setOpen(!open)}>
-        <span className="grid-driver-marble" style={{ background: driver.color }}>{driver.emoji}</span>
+        <TeamMarble color={driver.color} accentColor={driver.accentColor}
+          emoji={driver.emoji} size={24} slot={driver.driverSlot} />
         <span className="grid-driver-name">{driver.fullName}</span>
         {driver.driverTag && <TagChip tag={driver.driverTag} />}
         <span className="grid-driver-toggle">{open ? '▾' : '▸'}</span>

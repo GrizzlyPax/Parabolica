@@ -8,9 +8,46 @@
 }
 
 .league-content {
-  max-width: 720px;
+  max-width: 1180px;
   margin: 0 auto;
-  padding: 24px 16px 64px;
+  padding: 24px 20px 64px;
+}
+
+/* Shared team marble: emoji on team color, accent-color ring (same identity
+   mark as the timing tower). Inline size/colors come from TeamMarble.tsx. */
+.lg-marble {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border-width: 2px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+/* === Dashboard columns === */
+
+.league-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  gap: 28px;
+  align-items: start;
+}
+
+.league-rail {
+  position: sticky;
+  top: 16px;
+}
+
+@media (max-width: 920px) {
+  .league-columns { display: flex; flex-direction: column; }
+  .league-main, .league-rail { display: contents; }
+  /* Single column reads: reel, standings, grid, calendar, chronicle */
+  .reel-section { order: 1; }
+  .standings-section { order: 2; }
+  .grid-section { order: 3; }
+  .calendar-section { order: 4; }
+  .chronicle-section { order: 5; }
 }
 
 .league-topbar {
@@ -44,7 +81,10 @@
 
 .league-title {
   font-family: var(--font-display), var(--font-emoji);
-  font-size: 2rem;
+  font-size: 2.4rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
   margin: 0 0 4px;
   color: #fff;
 }
@@ -68,8 +108,9 @@
 .next-race-label { color: #ccc; font-size: 1rem; }
 
 .next-race-countdown {
-  font-family: var(--font-display), monospace;
+  font-family: var(--font-mono), monospace;
   font-size: 1.4rem;
+  font-weight: 700;
   color: #6ab882;
   font-variant-numeric: tabular-nums;
 }
@@ -93,8 +134,19 @@
   min-width: 0;
 }
 
-.league-live-title { color: #fff; font-weight: 700; font-size: 1.05rem; }
-.league-live-elapsed { color: #999; font-size: 0.82rem; font-variant-numeric: tabular-nums; }
+.league-live-title {
+  color: #fff;
+  font-weight: 700;
+  font-size: 1.15rem;
+  font-family: var(--font-display), var(--font-emoji);
+  letter-spacing: 0.03em;
+}
+.league-live-elapsed {
+  color: #999;
+  font-size: 0.82rem;
+  font-family: var(--font-mono), monospace;
+  font-variant-numeric: tabular-nums;
+}
 
 .league-live-card .live-badge {
   display: inline-flex;
@@ -142,15 +194,26 @@
   margin-bottom: 16px;
 }
 .league-finale h2 { margin: 0 0 8px; color: #d8b860; }
-.league-champion { margin: 0; font-size: 1.05rem; }
+.league-champion {
+  margin: 0;
+  font-size: 1.1rem;
+  font-family: var(--font-display), var(--font-emoji);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
 
 /* === Sections === */
 
 .league-section { margin-bottom: 24px; }
 
 .league-section-title {
-  font-size: 0.85rem;
-  letter-spacing: 0.1em;
+  font-family: var(--font-display), var(--font-emoji);
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: #888;
   border-bottom: 1px solid #2a2a34;
@@ -192,18 +255,41 @@
   min-width: 28px;
 }
 
-.digest-track { flex: 0 0 auto; color: #ccc; }
-.digest-winner { flex: 1; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.digest-track {
+  flex: 0 0 auto;
+  color: #ccc;
+  font-family: var(--font-display), var(--font-emoji);
+  font-size: 1.02rem;
+  letter-spacing: 0.03em;
+}
+.digest-winner {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 7px;
+  font-family: var(--font-display), var(--font-emoji);
+  font-size: 1rem;
+  white-space: nowrap;
+  overflow: hidden;
+}
 .digest-toggle { color: #555; }
 
 .digest-detail { padding: 0 14px 12px; }
 
 .digest-podium {
   display: flex;
-  gap: 14px;
+  gap: 16px;
   flex-wrap: wrap;
   margin-bottom: 8px;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
+  font-family: var(--font-display), var(--font-emoji);
+}
+
+.digest-podium-spot {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .digest-dnfs { color: #b86a6a; font-size: 0.85rem; margin-bottom: 8px; }
@@ -227,10 +313,12 @@
 }
 
 .league-standings th {
+  font-family: var(--font-display), var(--font-emoji);
   text-align: left;
   color: #666;
-  font-size: 0.75rem;
-  letter-spacing: 0.05em;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
   padding: 4px 6px;
 }
 
@@ -239,19 +327,37 @@
   border-top: 1px solid #1a1a22;
 }
 
-.standings-pos { color: #888; width: 24px; }
-
-.standings-marble span {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  font-size: 0.8rem;
+.standings-pos {
+  color: #888;
+  width: 24px;
+  font-family: var(--font-mono), monospace;
+  font-variant-numeric: tabular-nums;
 }
 
-.standings-pts { font-weight: 700; color: #fff; }
+.standings-marble { width: 28px; }
+
+.standings-name {
+  font-family: var(--font-display), var(--font-emoji);
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+}
+
+.standings-pts {
+  font-family: var(--font-mono), monospace;
+  font-weight: 700;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+
+.standings-num {
+  font-family: var(--font-mono), monospace;
+  color: #999;
+  font-variant-numeric: tabular-nums;
+}
 
 /* === Calendar === */
 
@@ -272,9 +378,19 @@
 
 .league-calendar li.settled { color: #666; }
 
-.cal-race-no { color: #666; font-size: 0.8rem; min-width: 28px; }
-.cal-track { flex: 1; }
-.cal-when { color: #888; font-size: 0.85rem; font-variant-numeric: tabular-nums; }
+.cal-race-no {
+  color: #666;
+  font-size: 0.8rem;
+  min-width: 28px;
+  font-family: var(--font-mono), monospace;
+}
+.cal-track { flex: 1; font-family: var(--font-display), var(--font-emoji); font-size: 0.95rem; }
+.cal-when {
+  color: #888;
+  font-size: 0.85rem;
+  font-family: var(--font-mono), monospace;
+  font-variant-numeric: tabular-nums;
+}
 
 /* === The Grid === */
 
@@ -304,7 +420,13 @@
   margin-bottom: 4px;
 }
 
-.grid-team-name { font-weight: 700; color: #fff; font-size: 0.95rem; }
+.grid-team-name {
+  font-family: var(--font-display), var(--font-emoji);
+  font-weight: 700;
+  color: #fff;
+  font-size: 1.05rem;
+  letter-spacing: 0.03em;
+}
 
 .grid-team-car {
   display: flex;
@@ -346,20 +468,12 @@
 }
 .grid-driver-row:hover { background: rgba(255, 255, 255, 0.03); }
 
-.grid-driver-marble {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  font-size: 0.85rem;
-  flex-shrink: 0;
-}
-
 .grid-driver-name {
   flex: 1;
   color: #ddd;
+  font-family: var(--font-display), var(--font-emoji);
+  font-size: 1rem;
+  letter-spacing: 0.02em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -535,6 +649,23 @@
 .founding-option.selected { border-color: #6ab882; color: #fff; background: rgba(74, 136, 102, 0.12); }
 
 .founding-option-detail { font-size: 0.75rem; color: #777; }
+
+.founding-custom-count { align-items: center; }
+
+.founding-custom-count input {
+  width: 48px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid #3a3a44;
+  color: #fff;
+  font-size: 0.95rem;
+  font-family: inherit;
+  text-align: center;
+  padding: 0 0 2px;
+}
+.founding-custom-count input:focus { outline: none; border-bottom-color: #6ab882; }
+.founding-custom-count input::-webkit-outer-spin-button,
+.founding-custom-count input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 
 .found-league-btn {
   width: 100%;

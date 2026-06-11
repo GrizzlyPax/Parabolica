@@ -23,15 +23,9 @@ const VIEW_OPTIONS: Array<{
     label: 'Detail View',
     description: 'Full timing tower with all data',
   },
-  {
-    id: 'standings',
-    icon: '🏆',
-    label: 'Standings',
-    description: 'Points & teams',
-  },
 ];
 
-function NavPanel({ isOpen, activeView, onViewChange, onClose, onExit }: NavPanelProps) {
+function NavPanel({ isOpen, activeView, onViewChange, onClose, onExit, exitLabel = 'Main Menu', exitDescription = 'Leave the race' }: NavPanelProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const touchStartX = useRef<number>(0);
 
@@ -126,10 +120,10 @@ function NavPanel({ isOpen, activeView, onViewChange, onClose, onExit }: NavPane
 
           {onExit && (
             <button className="nav-option nav-option-exit" onClick={onExit}>
-              <span className="nav-option-icon">🏠</span>
+              <span className="nav-option-icon">{exitLabel === 'League' ? '⚜️' : '🏠'}</span>
               <div className="nav-option-text">
-                <span className="nav-option-label">Main Menu</span>
-                <span className="nav-option-desc">Leave the race</span>
+                <span className="nav-option-label">{exitLabel}</span>
+                <span className="nav-option-desc">{exitDescription}</span>
               </div>
             </button>
           )}
