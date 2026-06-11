@@ -1,5 +1,5 @@
-import { useEffect, useState, useCallback } from 'react';
-import RaceEngine, { Driver, RaceConfig, RaceState, TrackInfo, RaceEvent } from './RaceEngine';
+import { useEffect, useState, useCallback, useMemo } from 'react';
+import RaceEngine, { Driver, RaceConfig, RaceState, TrackInfo, RaceEvent, RosterDriver } from './RaceEngine';
 import LeagueSetup from './LeagueSetup';
 import MainMenu from './MainMenu';
 import SeasonSetup from './SeasonSetup';
@@ -11,6 +11,7 @@ import Compendium from './Compendium';
 import { BettingInterface, RaceResults, SeasonTally, Bet, ResolvedBet, MarbleState, SeasonRaceResult, resolveBets } from './MarbleMode';
 import { generateTrack, getTracksByIds, getDynamicEventDescription, Track } from './generators/tracks';
 import { SeasonState, createInitialSeasonState, updateSeasonWithRaceResult, getSeasonStandings } from './types/season';
+import { saveSeasonSnapshot, loadSeasonSnapshot, clearSeasonSnapshot, loadSeasonSummary } from './storage/persistence';
 import './App.css';
 
 type AppScreen = 'main-menu' | 'setup' | 'season-setup' | 'betting' | 'race' | 'race-results' | 'season-complete' | 'marble-tally' | 'compendium';
@@ -40,6 +41,8 @@ function App() {
   const [seasonKingdomIds, setSeasonKingdomIds] = useState<string[]>([]);
   const [seasonTracks, setSeasonTracks] = useState<Track[]>([]);
   const [currentSeasonTrackIndex, setCurrentSeasonTrackIndex] = useState(0);
+  // The grid loaded into the engine at season start (persisted for resume)
+  const [seasonRoster, setSeasonRoster] = useState<RosterDriver[]>([]);
 
   // Race events for track event notifications
   const [raceEvents, setRaceEvents] = useState<RaceEvent[]>([]);
@@ -83,6 +86,48 @@ function App() {
       engine.updateConfig({ tickInterval: newInterval });
     }
   }, [raceSpeed, engine]); // Don't include config - it causes infinite loop
+
+  // Persist the season after every meaningful change so a refresh can't kill
+  // it (issue #43). Race-in-progress is deliberately not saved: resuming puts
+  // you at the betting screen of the current race. Completed seasons clear
+  // the save — there's nothing left to resume.
+  useEffect(() => {
+    if (gameMode !== 'season' || !seasonState) return;
+    if (seasonState.isComplete) {
+      clearSeasonSnapshot();
+      return;
+    }
+    // driverStats is missing on the placeholder set before drivers generate
+    if (!seasonState.driverStats || seasonRoster.length === 0) return;
+    saveSeasonSnapshot({
+      seasonState,
+      seasonKingdomIds,
+      seasonTrackIds: seasonTracks.map(t => t.id),
+      currentSeasonTrackIndex,
+      roster: seasonRoster,
+      marble: {
+        bankroll: marbleState.bankroll,
+        seasonHistory: marbleState.seasonHistory,
+      },
+      currentRaceNumber,
+    });
+  }, [
+    gameMode,
+    seasonState,
+    seasonRoster,
+    seasonKingdomIds,
+    seasonTracks,
+    currentSeasonTrackIndex,
+    marbleState.bankroll,
+    marbleState.seasonHistory,
+    currentRaceNumber,
+  ]);
+
+  // Saved-season summary for the main menu's Resume card
+  const seasonSummary = useMemo(
+    () => (screen === 'main-menu' ? loadSeasonSummary() : null),
+    [screen]
+  );
 
   const handleSingleRace = () => {
     setGameMode('single');
@@ -132,7 +177,8 @@ function App() {
     setScreen('setup');
   };
 
-  const handleStartRace = () => {
+  const handleStartRace = (rosterWithCars: RosterDriver[]) => {
+    setSeasonRoster(rosterWithCars);
     setTrackInfo(engine.getTrackInfo());
 
     // Initialize season state with driver IDs if this is a season and not yet initialized
@@ -256,6 +302,77 @@ function App() {
     setShowCountdown(false);
   };
 
+  // Point the engine at a track (info + config) and sync local track state.
+  // Shared by next-race advancement and season resume.
+  const applyTrackToEngine = useCallback((track: Track) => {
+    engine.setTrackInfo({
+      id: track.id,
+      name: track.name,
+      emoji: track.emoji,
+      funEmoji: track.funEmoji,
+      description: track.description,
+      laps: track.laps,
+      layout: {
+        trackPath: track.layout.trackPath,
+        pitLanePath: track.layout.pitLanePath,
+        straightStart: track.layout.straightStart,
+        straightEnd: track.layout.straightEnd,
+        totalLength: track.layout.totalLength,
+      },
+      event: track.event ? {
+        id: track.event.id,
+        name: track.event.name,
+        emoji: track.event.emoji,
+        description: getDynamicEventDescription(track.event, track.laps),
+        flavorText: track.event.flavorText,
+      } : undefined,
+      // Full event data for engine processing
+      eventTrigger: track.event?.trigger,
+      eventEffect: track.event?.effect,
+    });
+    engine.updateConfig({
+      lapLength: track.length,
+      totalLaps: track.laps,
+    });
+    setTrackInfo(engine.getTrackInfo());
+  }, [engine]);
+
+  // Restore a saved season: same grid, same standings, same bankroll,
+  // landing at the betting screen of the race that was up next.
+  const handleResumeSeason = () => {
+    const snapshot = loadSeasonSnapshot();
+    if (!snapshot) return;
+    const tracks = getTracksByIds(snapshot.seasonTrackIds);
+    if (tracks.length === 0 || snapshot.roster.length === 0) return;
+    const track = tracks[snapshot.currentSeasonTrackIndex % tracks.length];
+
+    setGameMode('season');
+    setSeasonKingdomIds(snapshot.seasonKingdomIds);
+    setSeasonTracks(tracks);
+    setCurrentSeasonTrackIndex(snapshot.currentSeasonTrackIndex);
+    setSeasonState(snapshot.seasonState);
+    setSeasonRoster(snapshot.roster);
+    setCurrentRaceNumber(snapshot.currentRaceNumber);
+    setMarbleModeEnabled(true);
+    setMarbleState({
+      bankroll: snapshot.marble.bankroll,
+      raceBudget: 500,
+      currentBets: [],
+      seasonHistory: snapshot.marble.seasonHistory,
+    });
+    setResolvedBets([]);
+    setShowCountdown(false);
+    setViewMode('watch');
+
+    // Rebuild the engine with the saved grid and the upcoming track
+    engine.stop();
+    engine.reset();
+    engine.loadGeneratedRoster(snapshot.roster);
+    applyTrackToEngine(track);
+
+    setScreen('betting');
+  };
+
   const handleNextRace = () => {
     // If marble mode is enabled and race just finished, record betting results
     // (Results are now shown in the finish modal, so we don't need a separate screen)
@@ -337,44 +454,9 @@ function App() {
       newTrack = generateTrack();
     }
 
-    // Reset the race
+    // Reset the race and point the engine at the new track
     engine.reset();
-
-    // Store new track info
-    engine.setTrackInfo({
-      id: newTrack.id,
-      name: newTrack.name,
-      emoji: newTrack.emoji,
-      funEmoji: newTrack.funEmoji,
-      description: newTrack.description,
-      laps: newTrack.laps,
-      layout: {
-        trackPath: newTrack.layout.trackPath,
-        pitLanePath: newTrack.layout.pitLanePath,
-        straightStart: newTrack.layout.straightStart,
-        straightEnd: newTrack.layout.straightEnd,
-        totalLength: newTrack.layout.totalLength,
-      },
-      event: newTrack.event ? {
-        id: newTrack.event.id,
-        name: newTrack.event.name,
-        emoji: newTrack.event.emoji,
-        description: getDynamicEventDescription(newTrack.event, newTrack.laps),
-        flavorText: newTrack.event.flavorText,
-      } : undefined,
-      // Full event data for engine processing
-      eventTrigger: newTrack.event?.trigger,
-      eventEffect: newTrack.event?.effect,
-    });
-
-    // Apply new track settings
-    engine.updateConfig({
-      lapLength: newTrack.length,
-      totalLaps: newTrack.laps,
-    });
-
-    // Update local track info state
-    setTrackInfo(engine.getTrackInfo());
+    applyTrackToEngine(newTrack);
 
     // If marble mode, go to betting. Otherwise go straight to countdown
     if (marbleModeEnabled) {
@@ -405,7 +487,15 @@ function App() {
 
   // Show main menu
   if (screen === 'main-menu') {
-    return <MainMenu onSingleRace={handleSingleRace} onSeason={handleSeasonMode} onCompendium={handleCompendium} />;
+    return (
+      <MainMenu
+        onSingleRace={handleSingleRace}
+        onSeason={handleSeasonMode}
+        onCompendium={handleCompendium}
+        resume={seasonSummary}
+        onResume={handleResumeSeason}
+      />
+    );
   }
 
   // Show compendium

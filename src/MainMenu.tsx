@@ -1,14 +1,18 @@
 import { useState, useEffect } from 'react';
 import './MainMenu.css';
 import { version } from '../package.json';
+import { SeasonSummary } from './storage/persistence';
 
 interface MainMenuProps {
   onSingleRace: () => void;
   onSeason: () => void;
   onCompendium: () => void;
+  // Saved mid-season state, if any
+  resume?: SeasonSummary | null;
+  onResume?: () => void;
 }
 
-function MainMenu({ onSingleRace, onSeason, onCompendium }: MainMenuProps) {
+function MainMenu({ onSingleRace, onSeason, onCompendium, resume, onResume }: MainMenuProps) {
   const [lockedFeedback, setLockedFeedback] = useState<'parabolica' | 'feeder' | null>(null);
   const [raceControlFlipped, setRaceControlFlipped] = useState(false);
   const [password, setPassword] = useState('');
@@ -66,6 +70,27 @@ function MainMenu({ onSingleRace, onSeason, onCompendium }: MainMenuProps) {
         </div>
 
         <div className="mode-selection">
+          {/* Resume saved season - only when a mid-season save exists */}
+          {resume && onResume && (
+            <button className="mode-card tier-green" onClick={onResume}>
+              <div className="mode-card-header">
+                <div className="mode-icon">📼</div>
+                <div className="mode-title-row">
+                  <div className="mode-info">
+                    <h2>Resume Season</h2>
+                  </div>
+                  <span className="status-pill live">Saved</span>
+                </div>
+              </div>
+              <div className="mode-info">
+                <p>
+                  Pick up where you left off — Race {resume.currentRaceNumber} of {resume.totalRaces},{' '}
+                  {resume.bankroll >= 0 ? `${resume.bankroll} marbles up` : `${Math.abs(resume.bankroll)} marbles down`}.
+                </p>
+              </div>
+            </button>
+          )}
+
           {/* Quick Race - Green/Live */}
           <button className="mode-card tier-green" onClick={onSingleRace}>
             <div className="mode-card-header">

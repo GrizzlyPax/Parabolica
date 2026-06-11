@@ -3,7 +3,7 @@ import { generateRosterFromTeams, GeneratedDriver } from './generators/drivers';
 import { Track, CURRENT_TRACKS, HISTORIC_TRACKS, getDynamicEventDescription, generateTrack } from './generators/tracks';
 import { generateCarsForKingdoms, GeneratedCar } from './generators/cars';
 import { getTeamsByIds, getRandomTeams, Team, CURRENT_TEAMS } from './data/teams';
-import RaceEngine from './RaceEngine';
+import RaceEngine, { RosterDriver } from './RaceEngine';
 import TeamCell from './components/TeamCell';
 import './LeagueSetup.css';
 
@@ -105,7 +105,8 @@ function getCarTier(car: GeneratedCar): RatingTier {
 }
 
 interface LeagueSetupProps {
-  onStartRace: () => void;
+  // Receives the exact grid loaded into the engine, so App can persist it
+  onStartRace: (rosterWithCars: RosterDriver[]) => void;
   // Season mode - use specific teams and track
   seasonKingdomIds?: string[];
   seasonTrack?: Track;
@@ -196,7 +197,7 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
 
   const handleStartRace = () => {
     // Attach car stats, team stats, and tags to each driver before loading into engine
-    const rosterWithCars = roster.map(driver => {
+    const rosterWithCars: RosterDriver[] = roster.map(driver => {
       const car = cars.get(driver.kingdomId);
       return {
         ...driver,
@@ -245,7 +246,7 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
       totalLaps: track.laps,
     });
 
-    onStartRace();
+    onStartRace(rosterWithCars);
   };
 
   return (

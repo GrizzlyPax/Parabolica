@@ -24,6 +24,32 @@ export interface TeamStats {
   pitCrew: number;         // 1-5 stars - Reduces chance of slow pit stops
 }
 
+// The shape loadGeneratedRoster() accepts: a generated driver with car/team
+// stats and tags attached. Also what season persistence snapshots, so a saved
+// season can reload the exact same grid.
+export interface RosterDriver {
+  id: number;
+  fullName: string;
+  shortName: string;
+  emoji: string;
+  color: string;
+  accentColor?: string;
+  stats: DriverStats;
+  firstName?: string;
+  lastName?: string;
+  teamName?: string;
+  kingdomId?: string;
+  driverSlot?: 1 | 2;
+  backstory?: string;
+  quirk?: string;
+  carStats?: CarStats;
+  carName?: string;
+  teamStats?: TeamStats;
+  driverTag?: Tag;
+  carTag?: Tag;
+  teamTag?: Tag;
+}
+
 export interface Driver {
   id: number;
   name: string;
@@ -526,28 +552,7 @@ class RaceEngine {
   }
 
   // Load a custom roster of generated drivers
-  loadGeneratedRoster(roster: Array<{
-    id: number;
-    fullName: string;
-    shortName: string;
-    emoji: string;
-    color: string;
-    accentColor?: string;
-    stats: DriverStats;
-    firstName?: string;
-    lastName?: string;
-    teamName?: string;
-    kingdomId?: string;
-    driverSlot?: 1 | 2;
-    backstory?: string;
-    quirk?: string;
-    carStats?: CarStats;
-    carName?: string;
-    teamStats?: TeamStats;
-    driverTag?: Tag;
-    carTag?: Tag;
-    teamTag?: Tag;
-  }>): void {
+  loadGeneratedRoster(roster: RosterDriver[]): void {
     this.stop();
     this.drivers = roster.map(d => {
       const startingCompound = selectStartingTires(d.stats);
