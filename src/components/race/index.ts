@@ -11,7 +11,6 @@ export { default as TrackMap } from './TrackMap';
 export { default as TeamStripe } from './TeamStripe';
 export { default as LapTime } from './LapTime';
 export { default as PositionDelta } from './PositionDelta';
-export { default as BetIndicator } from './BetIndicator';
 export { default as TireHistory } from './TireHistory';
 
 // Column configuration
@@ -28,7 +27,6 @@ export {
   COLUMN_BEST_LAP,
   COLUMN_TIRES,
   COLUMN_TIRE_HISTORY,
-  COLUMN_BET_INDICATOR,
   COLUMN_STATUS,
   TRACK_COLUMNS,
   DETAIL_COLUMNS,
@@ -39,7 +37,6 @@ export {
 export type {
   ColumnConfig,
   RowContext,
-  BetInfo,
   LapTimeClass,
   RaceView,
   RaceSpeed,

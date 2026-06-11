@@ -27,11 +27,11 @@ const VIEW_OPTIONS: Array<{
     id: 'standings',
     icon: '🏆',
     label: 'Standings',
-    description: 'Points, teams & bet status',
+    description: 'Points & teams',
   },
 ];
 
-function NavPanel({ isOpen, activeView, onViewChange, onClose }: NavPanelProps) {
+function NavPanel({ isOpen, activeView, onViewChange, onClose, onExit }: NavPanelProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const touchStartX = useRef<number>(0);
 
@@ -123,6 +123,16 @@ function NavPanel({ isOpen, activeView, onViewChange, onClose }: NavPanelProps) 
               )}
             </button>
           ))}
+
+          {onExit && (
+            <button className="nav-option nav-option-exit" onClick={onExit}>
+              <span className="nav-option-icon">🏠</span>
+              <div className="nav-option-text">
+                <span className="nav-option-label">Main Menu</span>
+                <span className="nav-option-desc">Leave the race</span>
+              </div>
+            </button>
+          )}
         </div>
       </nav>
     </>

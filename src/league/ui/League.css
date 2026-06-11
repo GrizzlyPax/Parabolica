@@ -1,0 +1,360 @@
+/* Commissioner Mode screens — matches the MainMenu dark-table aesthetic */
+
+.league-screen {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #0a0a0c 0%, #0d0d0f 50%, #0a0a0c 100%);
+  color: #e8e8ec;
+  overflow-y: auto;
+}
+
+.league-content {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px 16px 64px;
+}
+
+.league-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.league-back-btn {
+  background: rgba(20, 20, 24, 0.8);
+  border: 1px solid #2a2a34;
+  color: #aaa;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+.league-back-btn:hover { border-color: #3a3a44; color: #fff; }
+
+.league-progress {
+  color: #666;
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* === Header === */
+
+.league-header { text-align: center; margin-bottom: 20px; }
+
+.league-title {
+  font-family: var(--font-display), var(--font-emoji);
+  font-size: 2rem;
+  margin: 0 0 4px;
+  color: #fff;
+}
+
+.league-god-line { color: #9a8ab8; margin: 0; font-size: 0.95rem; }
+.league-god-line strong { color: #b8a8d8; }
+
+/* === Next race / finale === */
+
+.league-next-race {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  background: rgba(20, 20, 24, 0.8);
+  border: 1px solid #2a2a34;
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin-bottom: 16px;
+}
+
+.next-race-label { color: #ccc; font-size: 1rem; }
+
+.next-race-countdown {
+  font-family: var(--font-display), monospace;
+  font-size: 1.4rem;
+  color: #6ab882;
+  font-variant-numeric: tabular-nums;
+}
+
+.league-finale {
+  text-align: center;
+  background: linear-gradient(135deg, rgba(138, 104, 48, 0.15), rgba(20, 20, 24, 0.8));
+  border: 1px solid #8a6830;
+  border-radius: 12px;
+  padding: 18px;
+  margin-bottom: 16px;
+}
+.league-finale h2 { margin: 0 0 8px; color: #d8b860; }
+.league-champion { margin: 0; font-size: 1.05rem; }
+
+/* === Sections === */
+
+.league-section { margin-bottom: 24px; }
+
+.league-section-title {
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #888;
+  border-bottom: 1px solid #2a2a34;
+  padding-bottom: 6px;
+  margin: 0 0 10px;
+}
+
+.reel-section .league-section-title { color: #6ab882; border-color: #2a4a36; }
+
+/* === Digest cards === */
+
+.digest-card {
+  background: rgba(20, 20, 24, 0.8);
+  border: 1px solid #2a2a34;
+  border-radius: 10px;
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+.digest-card.open { border-color: #3a3a48; }
+
+.digest-summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  background: none;
+  border: none;
+  color: inherit;
+  padding: 12px 14px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  text-align: left;
+}
+.digest-summary:hover { background: rgba(255, 255, 255, 0.03); }
+
+.digest-race-no {
+  color: #666;
+  font-size: 0.8rem;
+  min-width: 28px;
+}
+
+.digest-track { flex: 0 0 auto; color: #ccc; }
+.digest-winner { flex: 1; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.digest-toggle { color: #555; }
+
+.digest-detail { padding: 0 14px 12px; }
+
+.digest-podium {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+}
+
+.digest-dnfs { color: #b86a6a; font-size: 0.85rem; margin-bottom: 8px; }
+
+.digest-highlights {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 0.85rem;
+  color: #aaa;
+}
+.digest-highlights li { padding: 3px 0; border-top: 1px solid #1a1a22; }
+.digest-ev-emoji { display: inline-block; width: 1.4em; }
+
+/* === Standings === */
+
+.league-standings {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.league-standings th {
+  text-align: left;
+  color: #666;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  padding: 4px 6px;
+}
+
+.league-standings td {
+  padding: 5px 6px;
+  border-top: 1px solid #1a1a22;
+}
+
+.standings-pos { color: #888; width: 24px; }
+
+.standings-marble span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font-size: 0.8rem;
+}
+
+.standings-pts { font-weight: 700; color: #fff; }
+
+/* === Calendar === */
+
+.league-calendar {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 0.9rem;
+}
+
+.league-calendar li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 4px;
+  border-top: 1px solid #1a1a22;
+}
+
+.league-calendar li.settled { color: #666; }
+
+.cal-race-no { color: #666; font-size: 0.8rem; min-width: 28px; }
+.cal-track { flex: 1; }
+.cal-when { color: #888; font-size: 0.85rem; font-variant-numeric: tabular-nums; }
+
+/* === Danger zone === */
+
+.league-danger-zone { margin-top: 32px; text-align: center; }
+
+.dissolve-btn {
+  background: none;
+  border: 1px solid #4a2a2a;
+  color: #b86a6a;
+  padding: 10px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+.dissolve-btn:hover { border-color: #8a4a4a; background: rgba(138, 74, 74, 0.1); }
+.dissolve-btn.cancel { border-color: #2a2a34; color: #aaa; }
+
+.dissolve-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+  color: #b86a6a;
+  font-size: 0.9rem;
+}
+
+/* === Founding screen === */
+
+.founding-header { text-align: center; margin-bottom: 24px; }
+.founding-header h1 {
+  font-family: var(--font-display), var(--font-emoji);
+  font-size: 2rem;
+  margin: 12px 0 6px;
+  color: #fff;
+}
+
+.founding-subtitle { color: #888; max-width: 480px; margin: 0 auto; line-height: 1.5; }
+
+.founding-section { margin-bottom: 24px; }
+
+.founding-label {
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #888;
+  margin: 0 0 10px;
+}
+
+.founding-name-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: rgba(20, 20, 24, 0.8);
+  border: 1px solid #2a2a34;
+  border-radius: 10px;
+  color: #fff;
+  padding: 12px 14px;
+  font-size: 1.1rem;
+  font-family: inherit;
+}
+.founding-name-input:focus { outline: none; border-color: #6a4a8a; }
+
+.god-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+@media (max-width: 560px) {
+  .god-cards { grid-template-columns: 1fr; }
+}
+
+.god-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: rgba(20, 20, 24, 0.8);
+  border: 1px solid #2a2a34;
+  border-radius: 12px;
+  padding: 16px 12px;
+  cursor: pointer;
+  color: inherit;
+  text-align: center;
+  transition: border-color 0.15s, transform 0.1s;
+}
+.god-card:hover { border-color: #4a3a5a; transform: translateY(-1px); }
+.god-card.selected {
+  border-color: #8a6ab8;
+  background: linear-gradient(180deg, rgba(106, 74, 138, 0.18), rgba(20, 20, 24, 0.8));
+}
+
+.god-emoji { font-size: 2rem; }
+.god-name { font-weight: 700; color: #fff; }
+.god-epithet { font-size: 0.75rem; color: #9a8ab8; font-style: italic; }
+.god-appetite { font-size: 0.8rem; color: #999; line-height: 1.4; margin-top: 4px; }
+
+.god-hunger {
+  margin: 12px 4px 0;
+  color: #b8a8d8;
+  font-style: italic;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.founding-options { display: flex; gap: 10px; flex-wrap: wrap; }
+
+.founding-option {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: rgba(20, 20, 24, 0.8);
+  border: 1px solid #2a2a34;
+  border-radius: 10px;
+  color: #ccc;
+  padding: 10px 16px;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+.founding-option:hover { border-color: #3a3a44; }
+.founding-option.selected { border-color: #6ab882; color: #fff; background: rgba(74, 136, 102, 0.12); }
+
+.founding-option-detail { font-size: 0.75rem; color: #777; }
+
+.found-league-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #6a4a8a, #4a3464);
+  border: 1px solid #8a6ab8;
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 700;
+  padding: 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  margin-top: 8px;
+}
+.found-league-btn:hover:not(:disabled) { filter: brightness(1.15); }
+.found-league-btn:disabled {
+  background: rgba(20, 20, 24, 0.8);
+  border-color: #2a2a34;
+  color: #666;
+  cursor: default;
+}

@@ -1,7 +1,6 @@
 // Shared types for race components
 
 import { Driver, RaceState } from '../../RaceEngine';
-import { Bet } from '../../MarbleMode';
 
 // Column configuration for TimingTower
 export interface ColumnConfig {
@@ -23,7 +22,6 @@ export interface RowContext {
   bestLapTime: number | null;
   bestLapClass: LapTimeClass;
   statusEmoji?: string;
-  betInfo?: BetInfo;
   isFocused: boolean;
   isFinished: boolean;
   isDNF: boolean;
@@ -35,17 +33,6 @@ export interface RowContext {
 
 // Lap time styling class
 export type LapTimeClass = '' | 'fastest' | 'improved' | 'slower';
-
-// Bet information for a driver
-export interface BetInfo {
-  totalAmount: number;
-  bets: Array<{
-    type: string;
-    amount: number;
-    isWinning: boolean;
-  }>;
-  overallStatus: 'winning' | 'losing' | 'pending';
-}
 
 // View types
 export type RaceView = 'track' | 'detail' | 'standings';
@@ -60,7 +47,6 @@ export interface TimingTowerProps {
   raceState: RaceState;
   totalLaps: number;
   lapLength: number;
-  activeBets?: Bet[];
   focusedDriverIds?: Set<number>; // Multi-driver focus
   onDriverClick?: (driverId: number) => void;
   condensed?: boolean;
@@ -111,6 +97,8 @@ export interface NavPanelProps {
   activeView: RaceView;
   onViewChange: (view: RaceView) => void;
   onClose: () => void;
+  /** Leave the race entirely (back to main menu). */
+  onExit?: () => void;
 }
 
 // Driver position on track map

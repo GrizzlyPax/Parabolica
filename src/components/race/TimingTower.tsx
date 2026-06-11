@@ -4,8 +4,7 @@ import { useMemo } from 'react';
 import DriverRow from './DriverRow';
 import { getGridTemplate } from './columns';
 import { formatGap, formatLapGap } from '../../utils/raceTime';
-import { calculateLiveBetStatus } from '../../MarbleMode';
-import type { TimingTowerProps, RowContext, BetInfo, LapTimeClass } from './types';
+import type { TimingTowerProps, RowContext, LapTimeClass } from './types';
 import type { Driver } from '../../RaceEngine';
 import './TimingTower.css';
 import './components.css';
@@ -26,7 +25,6 @@ function TimingTower({
   raceState,
   totalLaps,
   lapLength: _lapLength, // No longer used - pure sector-based timing
-  activeBets = [],
   focusedDriverIds = new Set(),
   onDriverClick,
   condensed: _condensed = false, // Reserved for future styling differences
@@ -204,23 +202,6 @@ function TimingTower({
     // Status emoji
     const statusEmoji = statusEffects?.get(driver.id);
 
-    // Bet info
-    let betInfo: BetInfo | undefined;
-    if (activeBets.length > 0) {
-      const betStatus = calculateLiveBetStatus(driver.id, index + 1, activeBets, isDNF);
-      if (betStatus.status !== 'none') {
-        betInfo = {
-          totalAmount: betStatus.totalPotential,
-          bets: betStatus.bets.map(b => ({
-            type: getBetLabel(b.type),
-            amount: b.amount,
-            isWinning: b.isWinning,
-          })),
-          overallStatus: betStatus.status as 'winning' | 'losing' | 'pending',
-        };
-      }
-    }
-
     return {
       displayPosition,
       positionDelta,
@@ -231,7 +212,6 @@ function TimingTower({
       bestLapTime,
       bestLapClass,
       statusEmoji,
-      betInfo,
       isFocused,
       isFinished,
       isDNF,
@@ -288,18 +268,6 @@ function TimingTower({
       </div>
     </div>
   );
-}
-
-// Helper: Get short labels for bet types
-function getBetLabel(type: string): string {
-  switch (type) {
-    case 'win': return 'WIN';
-    case 'podium': return 'POD';
-    case 'points': return 'PTS';
-    case 'finishes': return 'FIN';
-    case 'dnf': return 'DNF';
-    default: return type.slice(0, 3).toUpperCase();
-  }
 }
 
 export default TimingTower;

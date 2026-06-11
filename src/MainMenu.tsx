@@ -1,34 +1,41 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import './MainMenu.css';
 import { version } from '../package.json';
-import { SeasonSummary } from './storage/persistence';
+
+/** What the menu needs to know about a saved league, if one exists. */
+export interface LeagueCardSummary {
+  name: string;
+  settled: number;
+  total: number;
+  /** Races that have fired but not yet been watched/settled. */
+  dueCount: number;
+  /** Epoch ms of the next scheduled race, null when the season is over. */
+  nextAt: number | null;
+}
 
 interface MainMenuProps {
   onSingleRace: () => void;
-  onSeason: () => void;
+  onCommissioner: () => void;
   onCompendium: () => void;
-  // Saved mid-season state, if any
-  resume?: SeasonSummary | null;
-  onResume?: () => void;
+  league?: LeagueCardSummary | null;
 }
 
-function MainMenu({ onSingleRace, onSeason, onCompendium, resume, onResume }: MainMenuProps) {
-  const [lockedFeedback, setLockedFeedback] = useState<'parabolica' | 'feeder' | null>(null);
+function describeLeague(league: LeagueCardSummary): string {
+  if (league.nextAt === null && league.dueCount === 0) {
+    return `Season complete — ${league.total} races run. A champion awaits your judgment.`;
+  }
+  if (league.dueCount > 0) {
+    return `${league.dueCount} race${league.dueCount > 1 ? 's' : ''} ran while you were away. ${league.settled + league.dueCount}/${league.total} complete.`;
+  }
+  const mins = Math.max(1, Math.round((league.nextAt! - Date.now()) / 60000));
+  const when = mins >= 90 ? `${Math.round(mins / 60)}h` : `${mins}m`;
+  return `${league.settled}/${league.total} races run. Next race in ~${when}.`;
+}
+
+function MainMenu({ onSingleRace, onCommissioner, onCompendium, league }: MainMenuProps) {
   const [raceControlFlipped, setRaceControlFlipped] = useState(false);
   const [password, setPassword] = useState('');
   const [passwordError, setPasswordError] = useState(false);
-
-  // Clear locked feedback after animation
-  useEffect(() => {
-    if (lockedFeedback) {
-      const timer = setTimeout(() => setLockedFeedback(null), 1200);
-      return () => clearTimeout(timer);
-    }
-  }, [lockedFeedback]);
-
-  const handleLockedClick = (mode: 'parabolica' | 'feeder') => {
-    setLockedFeedback(mode);
-  };
 
   const handleRaceControlClick = () => {
     setRaceControlFlipped(true);
@@ -70,26 +77,27 @@ function MainMenu({ onSingleRace, onSeason, onCompendium, resume, onResume }: Ma
         </div>
 
         <div className="mode-selection">
-          {/* Resume saved season - only when a mid-season save exists */}
-          {resume && onResume && (
-            <button className="mode-card tier-green" onClick={onResume}>
-              <div className="mode-card-header">
-                <div className="mode-icon">📼</div>
-                <div className="mode-title-row">
-                  <div className="mode-info">
-                    <h2>Resume Season</h2>
-                  </div>
-                  <span className="status-pill live">Saved</span>
+          {/* Commissioner Mode - the main event */}
+          <button className="mode-card tier-purple" onClick={onCommissioner}>
+            <div className="mode-card-header">
+              <div className="mode-icon">⚜️</div>
+              <div className="mode-title-row">
+                <div className="mode-info">
+                  <h2>{league ? league.name : 'Commissioner Mode'}</h2>
                 </div>
+                <span className={`status-pill ${league && league.dueCount > 0 ? 'live' : 'secret'}`}>
+                  {league ? (league.dueCount > 0 ? 'Races ran!' : 'Running') : 'New'}
+                </span>
               </div>
-              <div className="mode-info">
-                <p>
-                  Pick up where you left off — Race {resume.currentRaceNumber} of {resume.totalRaces},{' '}
-                  {resume.bankroll >= 0 ? `${resume.bankroll} marbles up` : `${Math.abs(resume.bankroll)} marbles down`}.
-                </p>
-              </div>
-            </button>
-          )}
+            </div>
+            <div className="mode-info">
+              <p>
+                {league
+                  ? describeLeague(league)
+                  : 'Found a league that runs on the real clock — races happen whether you watch or not. Kneel to a god. Try to survive it.'}
+              </p>
+            </div>
+          </button>
 
           {/* Quick Race - Green/Live */}
           <button className="mode-card tier-green" onClick={onSingleRace}>
@@ -104,64 +112,6 @@ function MainMenu({ onSingleRace, onSeason, onCompendium, resume, onResume }: Ma
             </div>
             <div className="mode-info">
               <p>Jump straight into a one-off race with a fresh grid and zero setup friction.</p>
-            </div>
-          </button>
-
-          {/* Full Season - Green/Live */}
-          <button className="mode-card tier-green" onClick={onSeason}>
-            <div className="mode-card-header">
-              <div className="mode-icon">🏆</div>
-              <div className="mode-title-row">
-                <div className="mode-info">
-                  <h2>Full Season</h2>
-                </div>
-                <span className="status-pill live">Live</span>
-              </div>
-            </div>
-            <div className="mode-info">
-              <p>Run a full championship, follow the standings, and watch rivalries and momentum build.</p>
-            </div>
-          </button>
-
-          {/* Parabolica 1 - Gold/Locked */}
-          <button
-            className={`mode-card tier-gold ${lockedFeedback === 'parabolica' ? 'locked-shake' : ''}`}
-            onClick={() => handleLockedClick('parabolica')}
-          >
-            <div className="mode-card-header">
-              <div className="mode-icon">🏁</div>
-              <div className="mode-title-row">
-                <div className="mode-info">
-                  <h2>Parabolica 1</h2>
-                </div>
-                <span className={`status-pill ${lockedFeedback === 'parabolica' ? 'locked-flash' : 'locked'}`}>
-                  {lockedFeedback === 'parabolica' ? 'Locked!' : 'Locked'}
-                </span>
-              </div>
-            </div>
-            <div className="mode-info">
-              <p>The flagship series. Real stakes. Real marbles.</p>
-            </div>
-          </button>
-
-          {/* Feeder Series - Gold/Locked */}
-          <button
-            className={`mode-card tier-gold ${lockedFeedback === 'feeder' ? 'locked-shake' : ''}`}
-            onClick={() => handleLockedClick('feeder')}
-          >
-            <div className="mode-card-header">
-              <div className="mode-icon">🛞</div>
-              <div className="mode-title-row">
-                <div className="mode-info">
-                  <h2>Feeder Series</h2>
-                </div>
-                <span className={`status-pill ${lockedFeedback === 'feeder' ? 'locked-flash' : 'locked'}`}>
-                  {lockedFeedback === 'feeder' ? 'Locked!' : 'Locked'}
-                </span>
-              </div>
-            </div>
-            <div className="mode-info">
-              <p>Run your own leagues. Win marbles. Lose friends.</p>
             </div>
           </button>
 

@@ -1,6 +1,5 @@
 import { Driver, RaceConfig, RaceState, TrackInfo, RaceEvent } from './RaceEngine';
 import { useMemo, useRef, useEffect, useState } from 'react';
-import { Bet, resolveBets } from './MarbleMode';
 import {
   UniversalHeader,
   NavPanel,
@@ -13,7 +12,7 @@ import {
   type SessionState,
 } from './components/race';
 import RaceFeed from './components/race/RaceFeed';
-import { voiceNotification, voiceBetSwing, type FeedItem, type BetSwing } from './feed/commentary';
+import { voiceNotification, type FeedItem } from './feed/commentary';
 import './WatchMode.css';
 
 // Suffixes to ignore when extracting surname
@@ -40,7 +39,7 @@ interface WatchModeProps {
   onNextRace?: () => void;
   powerActivation?: PowerActivation | null;
   raceEvents?: RaceEvent[];  // For track event notifications
-  activeBets?: Bet[];  // Marble Mode: current bets to display in timing tower
+  onExit?: () => void;  // Leave the race (back to main menu)
   // Race controls
   isRunning?: boolean;
   raceSpeed?: RaceSpeed;
@@ -70,65 +69,6 @@ interface StatusEffect {
   driverId: number;
   emoji: string;
   expiresAtTick: number;
-}
-
-// Bet type labels for displaying what kind of bet
-const BET_TYPE_LABELS: Record<string, string> = {
-  win: 'WIN',
-  podium: 'PODIUM',
-  points: 'POINTS',
-  finishes: 'FINISH',
-  dnf: 'DNF',
-};
-
-// Helper to get 3-letter driver code from name
-function getDriverCode(name: string): string {
-  const parts = name.split(' ').filter(p => p.length > 0);
-  const suffixes = new Set(['JR', 'JR.', 'SR', 'SR.', 'II', 'III', 'IV', 'V']);
-  const filteredParts = parts.filter(p => !suffixes.has(p.toUpperCase()));
-  const surname = filteredParts[filteredParts.length - 1] || parts[parts.length - 1] || '';
-  return surname.slice(0, 3).toUpperCase().replace(/[^A-Z]/g, '');
-}
-
-// Determine if a bet is currently winning, losing, or impossible (DNF'd)
-type BetStatus = 'winning' | 'losing' | 'dnf' | 'pending';
-function getBetStatus(
-  bet: Bet,
-  driver: Driver | undefined,
-  sortedDrivers: Driver[],
-  raceFinished: boolean
-): BetStatus {
-  if (!driver) return 'pending';
-
-  // Driver DNF'd - check if bet is impossible or fulfilled
-  if (driver.status === 'dnf') {
-    // DNF bet wins if driver DNF'd
-    if (bet.type === 'dnf') return 'winning';
-    // All other bets are impossible if driver DNF'd
-    return 'dnf';
-  }
-
-  // Get current position (1-indexed)
-  const currentPosition = sortedDrivers.findIndex(d => d.id === driver.id) + 1;
-  if (currentPosition === 0) return 'pending';
-
-  // Determine if currently in winning position
-  switch (bet.type) {
-    case 'win':
-      return currentPosition === 1 ? 'winning' : 'losing';
-    case 'podium':
-      return currentPosition <= 3 ? 'winning' : 'losing';
-    case 'points':
-      return currentPosition <= 10 ? 'winning' : 'losing';
-    case 'finishes':
-      // Driver is still racing = will finish (optimistic until DNF)
-      return 'winning';
-    case 'dnf':
-      // DNF bet only wins if driver DNF's
-      return raceFinished ? 'losing' : 'pending';
-    default:
-      return 'pending';
-  }
 }
 
 // Generate light and dark variants of a hex color
@@ -204,7 +144,7 @@ function WatchMode({
   onNextRace,
   powerActivation,
   raceEvents,
-  activeBets,
+  onExit,
   // Race controls
   isRunning = false,
   raceSpeed = 1,
@@ -229,8 +169,6 @@ function WatchMode({
   const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
   const feedIdRef = useRef(0);
   const recentNotifKeysRef = useRef<Map<string, { tick: number; time: number }>>(new Map());
-  const betStatusesRef = useRef<Map<string, BetStatus>>(new Map());
-  const betSwingCooldownRef = useRef<Map<string, number>>(new Map());
   const seenCrashesRef = useRef<Set<number>>(new Set());
   const seenSlowPitStopsRef = useRef<Set<number>>(new Set()); // Track drivers who have had slow pit stop notified
   const seenQuickPitStopsRef = useRef<Set<number>>(new Set()); // Track drivers who have had quick pit stop notified
@@ -259,16 +197,6 @@ function WatchMode({
   // Multi-driver focus - allow up to 10 focused drivers (click to toggle)
   const [focusedDriverIds, setFocusedDriverIds] = useState<Set<number>>(new Set());
   const [navPanelOpen, setNavPanelOpen] = useState(false);
-
-  // Auto-focus bet drivers at race start (only once)
-  const betsInitializedRef = useRef(false);
-  useEffect(() => {
-    if (!betsInitializedRef.current && activeBets && activeBets.length > 0) {
-      const betDriverIds = activeBets.map(bet => bet.driverId);
-      setFocusedDriverIds(new Set(betDriverIds));
-      betsInitializedRef.current = true;
-    }
-  }, [activeBets]);
 
   // Auto-unfocus DNF'd drivers (they can manually re-focus if wanted)
   const unfocusedDnfDriversRef = useRef<Set<number>>(new Set());
@@ -472,19 +400,6 @@ function WatchMode({
     if (sortedFinished[1]) lines.push(`🥈| ${sortedFinished[1].emoji} ${sortedFinished[1].name}`);
     if (sortedFinished[2]) lines.push(`🥉| ${sortedFinished[2].emoji} ${sortedFinished[2].name}`);
 
-    // Betting results (if any bets were placed)
-    if (activeBets && activeBets.length > 0) {
-      const resolved = resolveBets(activeBets, drivers, raceState);
-      const totalWagered = resolved.reduce((sum, b) => sum + b.amount, 0);
-      const totalPayout = resolved.reduce((sum, b) => sum + b.payout, 0);
-      const netChange = totalPayout - totalWagered;
-
-      lines.push('');
-      const resultBoxes = resolved.map(b => b.won ? '🟩' : '🟥').join('');
-      lines.push(resultBoxes);
-      lines.push(`🔮 ${netChange >= 0 ? '+' : ''}${netChange} marbles`);
-    }
-
     lines.push('');
     lines.push(`"${quote}"`);
     lines.push('');
@@ -658,8 +573,6 @@ function WatchMode({
       setFeedItems([]);
       feedIdRef.current = 0;
       recentNotifKeysRef.current.clear();
-      betStatusesRef.current.clear();
-      betSwingCooldownRef.current.clear();
       lastCrashTickRef.current = -1;
       previousLeaderRef.current = null;
       notificationIdRef.current = 0;
@@ -1134,56 +1047,6 @@ function WatchMode({
   // Fall back to realtime if frozen is empty (during initialization)
   const sortedDrivers = frozenSortedDrivers.length > 0 ? frozenSortedDrivers : realtimeSortedDrivers;
 
-  // Mister Marbles reacts when a bet crosses the money line (issue #55).
-  // DNF swings always post; position swings are rate-limited per bet so a
-  // P3/P4 battle reads as drama, not spam.
-  useEffect(() => {
-    if (!activeBets || activeBets.length === 0) return;
-    const lap = leaderLapForFeed();
-
-    for (const bet of activeBets) {
-      const driver = drivers.find(d => d.id === bet.driverId);
-      const status = getBetStatus(bet, driver, sortedDrivers, raceState.raceFinished);
-      const prev = betStatusesRef.current.get(bet.id);
-      betStatusesRef.current.set(bet.id, status);
-
-      // Lap 1 is a scramble — record statuses but stay quiet
-      if (lap < 2 || raceState.raceFinished) continue;
-      if (!prev || prev === status || status === 'pending') continue;
-
-      let swing: BetSwing;
-      if (status === 'dnf') swing = 'bet_dead';
-      else if (bet.type === 'dnf' && status === 'winning' && driver?.status === 'dnf') swing = 'dnf_bet_hit';
-      else if (status === 'winning') swing = 'now_winning';
-      else swing = 'now_losing';
-
-      const isDnfSwing = swing === 'bet_dead' || swing === 'dnf_bet_hit';
-      const now = Date.now();
-      const lastEmit = betSwingCooldownRef.current.get(bet.id) ?? 0;
-      if (!isDnfSwing && now - lastEmit < 25000) continue;
-      betSwingCooldownRef.current.set(bet.id, now);
-
-      const position = driver && driver.status !== 'dnf'
-        ? sortedDrivers.findIndex(d => d.id === driver.id) + 1
-        : undefined;
-      const voiced = voiceBetSwing(
-        {
-          swing,
-          driverName: bet.driverName,
-          betLabel: BET_TYPE_LABELS[bet.type] ?? bet.type.toUpperCase(),
-          amount: bet.amount,
-          potential: Math.floor(bet.amount * bet.odds),
-          position: position && position > 0 ? position : undefined,
-        },
-        { lap, totalLaps, trackName: trackInfo?.name ?? '', trackEmoji: trackInfo?.funEmoji ?? '' },
-        raceState.totalTicks + bet.id.length,
-        driver?.color
-      );
-      pushFeedItem(voiced);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sortedDrivers, activeBets, raceState.raceFinished]);
-
   // Derived values for TimingTower
   const fastestLapOverall = useMemo(() => {
     const allLapTimes = drivers.flatMap(d => d.lapTimes || []);
@@ -1265,6 +1128,7 @@ function WatchMode({
         activeView={activeView}
         onViewChange={setActiveView}
         onClose={() => setNavPanelOpen(false)}
+        onExit={onExit}
       />
 
       {/* Main content: Single scroll container for entire page */}
@@ -1289,7 +1153,6 @@ function WatchMode({
                 raceState={raceState}
                 totalLaps={totalLaps}
                 lapLength={trackLength}
-                activeBets={activeBets}
                 focusedDriverIds={focusedDriverIds}
                 onDriverClick={toggleDriverFocus}
                 condensed={false}
@@ -1308,40 +1171,9 @@ function WatchMode({
                 trackLength={trackLength}
                 drivers={drivers}
                 focusedDriverIds={Array.from(focusedDriverIds)}
-                highlightedDriverIds={activeBets?.map(b => b.driverId) || []}
                 unsafetyCarActive={raceState.unsafetyCarActive}
                 unsafetyCarPosition={raceState.unsafetyCarPosition}
               />
-
-              {/* Betting summary overlay */}
-              {activeBets && activeBets.length > 0 && (
-                <div className="track-betting-summary">
-                  <span className="betting-label">Your Bets</span>
-                  <div className="betting-chips">
-                    {activeBets.map(bet => {
-                      const driver = drivers.find(d => d.id === bet.driverId);
-                      const status = getBetStatus(bet, driver, sortedDrivers, raceState.raceFinished);
-                      const potentialWin = Math.floor(bet.amount * bet.odds);
-                      const driverCode = driver ? getDriverCode(driver.name) : '???';
-                      return (
-                        <span
-                          key={bet.id}
-                          className={`bet-chip bet-chip-${status} ${focusedDriverIds.has(bet.driverId) ? 'focused' : ''}`}
-                          style={{ '--chip-color': driver?.color } as React.CSSProperties}
-                          title={`${bet.type} bet on ${driver?.name} - Win ${potentialWin}ṁ (click to focus)`}
-                          onClick={() => toggleDriverFocus(bet.driverId)}
-                        >
-                          <span className="bet-chip-marble" style={{ background: driver?.color }}>{driver?.emoji}</span>
-                          <span className="bet-chip-code">{driverCode}</span>
-                          <span className="bet-chip-type">{BET_TYPE_LABELS[bet.type] || bet.type.toUpperCase()}</span>
-                          <span className="bet-chip-payout">+{potentialWin}ṁ</span>
-                          {status === 'dnf' && <span className="bet-chip-dnf-overlay">DNF</span>}
-                        </span>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
 
               {/* The narrator: persistent persona-voiced race feed */}
               <RaceFeed items={feedItems} className="story-feed-track" />
@@ -1365,7 +1197,6 @@ function WatchMode({
                 raceState={raceState}
                 totalLaps={totalLaps}
                 lapLength={trackLength}
-                activeBets={activeBets}
                 focusedDriverIds={focusedDriverIds}
                 onDriverClick={toggleDriverFocus}
                 condensed={false}
@@ -1385,40 +1216,9 @@ function WatchMode({
                 trackLength={trackLength}
                 drivers={drivers}
                 focusedDriverIds={Array.from(focusedDriverIds)}
-                highlightedDriverIds={activeBets?.map(b => b.driverId) || []}
                 unsafetyCarActive={raceState.unsafetyCarActive}
                 unsafetyCarPosition={raceState.unsafetyCarPosition}
               />
-
-              {/* Betting summary overlay */}
-              {activeBets && activeBets.length > 0 && (
-                <div className="track-betting-summary">
-                  <span className="betting-label">Your Bets</span>
-                  <div className="betting-chips">
-                    {activeBets.map(bet => {
-                      const driver = drivers.find(d => d.id === bet.driverId);
-                      const status = getBetStatus(bet, driver, sortedDrivers, raceState.raceFinished);
-                      const potentialWin = Math.floor(bet.amount * bet.odds);
-                      const driverCode = driver ? getDriverCode(driver.name) : '???';
-                      return (
-                        <span
-                          key={bet.id}
-                          className={`bet-chip bet-chip-${status} ${focusedDriverIds.has(bet.driverId) ? 'focused' : ''}`}
-                          style={{ '--chip-color': driver?.color } as React.CSSProperties}
-                          title={`${bet.type} bet on ${driver?.name} - Win ${potentialWin}ṁ (click to focus)`}
-                          onClick={() => toggleDriverFocus(bet.driverId)}
-                        >
-                          <span className="bet-chip-marble" style={{ background: driver?.color }}>{driver?.emoji}</span>
-                          <span className="bet-chip-code">{driverCode}</span>
-                          <span className="bet-chip-type">{BET_TYPE_LABELS[bet.type] || bet.type.toUpperCase()}</span>
-                          <span className="bet-chip-payout">+{potentialWin}ṁ</span>
-                          {status === 'dnf' && <span className="bet-chip-dnf-overlay">DNF</span>}
-                        </span>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
             </section>
 
             {/* Live Events Feed — persistent narrated history */}
@@ -1545,53 +1345,15 @@ function WatchMode({
               </div>
             )}
 
-            {/* Betting Results - show if any bets were placed */}
-            {activeBets && activeBets.length > 0 && (() => {
-              const resolved = resolveBets(activeBets, drivers, raceState);
-              const totalWagered = resolved.reduce((sum, b) => sum + b.amount, 0);
-              const totalPayout = resolved.reduce((sum, b) => sum + b.payout, 0);
-              const netChange = totalPayout - totalWagered;
-              const wins = resolved.filter(b => b.won).length;
-              const losses = resolved.filter(b => !b.won).length;
-
-              return (
-                <div className="finish-betting-results">
-                  <div className="betting-results-header">
-                    <span className="betting-icon">🎰</span>
-                    <span className="betting-title">Your Bets</span>
-                  </div>
-                  <div className="betting-results-list">
-                    {resolved.map(bet => (
-                      <div key={bet.id} className={`betting-result-item ${bet.won ? 'won' : 'lost'}`}>
-                        <span className="bet-driver">{bet.driverEmoji}</span>
-                        <span className="bet-type">{bet.type}</span>
-                        <span className="bet-outcome">
-                          {bet.won ? `+${bet.payout - bet.amount}` : `-${bet.amount}`} ṁ
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                  <div className={`betting-results-summary ${netChange >= 0 ? 'positive' : 'negative'}`}>
-                    <span className="summary-boxes">
-                      {resolved.map((b, i) => (
-                        <span key={i} className={`result-box ${b.won ? 'won' : 'lost'}`}>
-                          {b.won ? '🟩' : '🟥'}
-                        </span>
-                      ))}
-                    </span>
-                    <span className="summary-net">
-                      {netChange >= 0 ? '📈' : '📉'} {netChange >= 0 ? '+' : ''}{netChange} ṁ
-                      <span className="summary-record">({wins}W/{losses}L)</span>
-                    </span>
-                  </div>
-                </div>
-              );
-            })()}
-
             <div className="finish-modal-buttons">
               <button className="share-btn" onClick={handleShare}>
                 {shareCopied ? '✓ Copied!' : '📋 Share'}
               </button>
+              {onExit && (
+                <button className="share-btn" onClick={onExit}>
+                  🏠 Menu
+                </button>
+              )}
               {onNextRace && (
                 <button className="next-race-btn" onClick={onNextRace}>
                   Next Race

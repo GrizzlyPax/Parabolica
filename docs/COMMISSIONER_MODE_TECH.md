@@ -12,15 +12,27 @@ about existing code was verified against source, with locations cited.*
 | 2 — Deterministic generation | ✅ shipped (rng threaded through `generators/` + `maybeAssignTag`) |
 | 3 — Storage layer + resume current game | ✅ shipped (`src/storage/persistence.ts`, Resume Season card; closes #43; browser-verified) |
 | 4 — League core: schedule + settle | ✅ shipped (`src/league/`: createLeague, settle loop, interventions, event-cap fix, fake-clock tests) |
-| 5 — Gods, demands, smiting | not started |
-| 6 — League UI shell | not started |
+| 5 — Gods, demands, smiting | placeholder shipped (`league/gods.ts`: 3 gods' identity + voice; appetite evaluators/smiting still to build) |
+| 6 — League UI shell | ✅ shipped (`league/ui/`: FoundingScreen + LeagueScreen — check-in reel, live countdown settle, standings, calendar, chronicle digests; browser-verified). Hall of Seasons + commentary-voiced digests still pending. |
 | 7 — Interventions UI + decree beat | not started (intervention *engine* shipped in PR 4: `rosterStateAt` + append-only log) |
 
 *Note vs. plan: settle shipped as a pure synchronous function with a progress
 callback (`settleLeague(league, {now, onRaceSettled})`) rather than inside a
 worker — the worker is a thin wrapper to add with the backfill UI in PR 6.
 Headless races measured fast enough (~tens of ms each) that the worker is
-about UI smoothness, not feasibility.*
+about UI smoothness, not feasibility. In practice the synchronous settle also
+proved fine for the PR 6 check-in reel; the worker remains an option if long
+backfills (16-race Classic-cadence sleeps) ever stutter.*
+
+*June 2026 scope change: player betting was retired entirely (decision: the
+GDD demotes betting to far-future NPC crowds). Deleted: MarbleMode betting
+screens, Full Season mode (SeasonSetup/SeasonStandings/SeasonComplete), the
+season snapshot save, the locked Parabolica 1 / Feeder Series menu teasers.
+Kept: `betting/utils.ts` odds math + BetLab (the calibration workshop), the
+bet-swing persona lines in `feed/commentary.ts` — all future NPC-crowd fuel.
+Commissioner Mode replaced Full Season as the menu's hero card. UI build
+order was deliberately flipped: PR 6 shell shipped before PR 5 god mechanics
+so the loop is playable with placeholder gods.*
 
 ## What we're building on
 

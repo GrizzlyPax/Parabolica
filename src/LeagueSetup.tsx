@@ -460,7 +460,7 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
       {/* Sticky Footer */}
       <div className="setup-footer-sticky">
         <button className="confirm-bets-btn has-bets" onClick={handleStartRace}>
-          Place Your Bets →
+          Start Race →
         </button>
       </div>
     </div>

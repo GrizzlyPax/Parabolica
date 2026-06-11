@@ -4,7 +4,6 @@
 import TeamStripe from './TeamStripe';
 import LapTime from './LapTime';
 import PositionDelta from './PositionDelta';
-import BetIndicator from './BetIndicator';
 import TireHistory from './TireHistory';
 import type { ColumnConfig, RowContext } from './types';
 import { Driver } from '../../RaceEngine';
@@ -219,17 +218,6 @@ export const COLUMN_TIRES: ColumnConfig = {
       </div>
     );
   },
-};
-
-// Bet indicator
-export const COLUMN_BET_INDICATOR: ColumnConfig = {
-  id: 'bet',
-  header: '',
-  width: '50px',
-  align: 'right',
-  render: (_driver: Driver, ctx: RowContext) => (
-    ctx.betInfo ? <BetIndicator betInfo={ctx.betInfo} compact /> : null
-  ),
 };
 
 // Status icon (tags, effects)

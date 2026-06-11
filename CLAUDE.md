@@ -1,30 +1,35 @@
 # Parabolica Race Engine
 
-Formula 1 race simulation with betting odds system.
+Formula 1 race simulation, building toward Commissioner Mode (wall-clock roguelite leagues).
+Player betting was retired in June 2026 (git history has it); odds math survives in betting/utils
+and BetLab for the future NPC-crowd system.
 
 ## Project Location
 `/Users/pax/parabolica`
 
 ## Structure
 - `src/` - All source code
-  - `MarbleMode.tsx` - Main race/betting UI
-  - `WatchMode.tsx` - Live race screen (track/detail/standings views)
+  - `App.tsx` - Screen router: main menu, quick race, founding, league, compendium
+  - `WatchMode.tsx` - Live race screen (track/detail views, finish modal)
   - `Compendium.tsx` - Lab tools navigation (SimLab, BetLab)
   - `simlab/` - Monte Carlo race simulation
-  - `betlab/` - Betting odds analysis
-  - `betting/utils.ts` - Pure betting calculation utilities
+  - `betlab/` - Betting odds analysis (lab tool; player betting is retired)
+  - `betting/utils.ts` - Pure odds/rating utilities (kept for NPC crowds later)
   - `feed/commentary.ts` - Race feed persona/commentary engine
   - `RaceEngine.ts` - Core race simulation engine (seedable: setSeed / runHeadless(seed))
   - `engine/rng.ts` - Seeded RNG (mulberry32, deriveSeed, shuffle) — determinism foundation
-  - `storage/persistence.ts` - Versioned localStorage save states (season + league)
-  - `league/` - Commissioner Mode runtime: seed → universe, wall-clock settle loop, interventions
+  - `storage/persistence.ts` - Versioned localStorage league save
+  - `league/` - Commissioner Mode: seed → universe, wall-clock settle loop, interventions
+    - `gods.ts` - Appetite gods (placeholder identities; evaluators are PR 5)
+    - `ui/` - FoundingScreen, LeagueScreen (check-in reel, countdown, standings, chronicle)
+    - `devConsole.ts` - window.league console (dev builds only)
 - `dist/` - Production build output
 - `public/` - Static assets
 
 ## Commands
 - `npm run dev` - Start dev server (localhost:5173)
 - `npm run build` - Production build
-- `npm test` - Run vitest suite (betting math + race engine invariants)
+- `npm test` - Run vitest suite (engine determinism, league invariants, persistence)
 - `gh issue list` - View GitHub issues
 - `gh issue view <number>` - View specific issue
 

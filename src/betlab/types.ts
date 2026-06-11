@@ -1,6 +1,6 @@
 // Bet Lab Types - Monte Carlo testing for betting system calibration
 
-import { BetType } from '../MarbleMode';
+import { BetType } from '../betting/utils';
 
 // === CONFIGURATION ===
 

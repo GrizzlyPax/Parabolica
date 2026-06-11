@@ -71,7 +71,7 @@ function postError(message: string) {
   self.postMessage(msg);
 }
 
-// Determine tier based on rank (same logic as MarbleMode)
+// Determine tier based on rank (mirrors the retired betting UI tiers)
 function getTierForRank(rank: number, total: number): 'favorite' | 'contender' | 'longshot' | 'wildcard' {
   const purpleCutoff = Math.max(1, Math.round(total * 0.15));  // Top ~15%
   const greenCutoff = purpleCutoff + Math.max(1, Math.round(total * 0.35));  // Next ~35%
