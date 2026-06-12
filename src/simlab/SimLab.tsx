@@ -88,6 +88,16 @@ function computeVariablesDiff(canon: SimVariables, heretic: SimVariables): Varia
   compare('performance.enduranceMaxPenalty', 'endurance max penalty', canon.performance.enduranceMaxPenalty, heretic.performance.enduranceMaxPenalty);
   compare('performance.endurancePenaltyMultiplier', 'endurance mult', canon.performance.endurancePenaltyMultiplier, heretic.performance.endurancePenaltyMultiplier);
   compare('performance.damageSpeedPenalty', 'damage penalty', canon.performance.damageSpeedPenalty, heretic.performance.damageSpeedPenalty);
+  compare('performance.accelLaunchTicks', 'accel window', canon.performance.accelLaunchTicks, heretic.performance.accelLaunchTicks);
+  compare('performance.accelEffect', 'accel effect', canon.performance.accelEffect, heretic.performance.accelEffect);
+  compare('performance.aggressionTrafficBoost', 'aggro traffic boost', canon.performance.aggressionTrafficBoost, heretic.performance.aggressionTrafficBoost);
+  compare('performance.mistakeBaseChance', 'mistake chance', canon.performance.mistakeBaseChance, heretic.performance.mistakeBaseChance);
+  compare('performance.mistakeConsistencyWeight', 'mistake cons wt', canon.performance.mistakeConsistencyWeight, heretic.performance.mistakeConsistencyWeight);
+  compare('performance.mistakeAggressionWeight', 'mistake aggro wt', canon.performance.mistakeAggressionWeight, heretic.performance.mistakeAggressionWeight);
+  compare('performance.mistakeDamageWeight', 'mistake damage wt', canon.performance.mistakeDamageWeight, heretic.performance.mistakeDamageWeight);
+  compare('performance.mistakeSpeedPenalty', 'mistake penalty', canon.performance.mistakeSpeedPenalty, heretic.performance.mistakeSpeedPenalty);
+  compare('performance.mistakeDurationTicks', 'mistake duration', canon.performance.mistakeDurationTicks, heretic.performance.mistakeDurationTicks);
+  compare('performance.mistakeCooldownTicks', 'mistake cooldown', canon.performance.mistakeCooldownTicks, heretic.performance.mistakeCooldownTicks);
 
   // Car Stats
   compare('carStats.powerBase', 'power base', canon.carStats.powerBase, heretic.carStats.powerBase);

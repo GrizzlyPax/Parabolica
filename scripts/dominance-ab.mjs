@@ -53,12 +53,27 @@ function clampRoster(roster, maxStars) {
   });
 }
 
+// #82 mistakes layer at the §3 first-lab values (built v0.3.30, dormant in
+// canon). Optionally stacked on power compression — the A+B acceptance combo.
+function withMistakes(base = CANON_VARIABLES) {
+  const v = cloneVariables(base);
+  v.performance.mistakeBaseChance = 1.5e-4;
+  v.performance.mistakeConsistencyWeight = 1.5;
+  v.performance.mistakeAggressionWeight = 0.5;
+  v.performance.mistakeSpeedPenalty = 0.85;
+  v.performance.mistakeDurationTicks = 150;
+  v.performance.mistakeCooldownTicks = 300;
+  return v;
+}
+
 const ALL_SCENARIOS = [
   { key: 'canon', name: 'canon (0.018)', simVars: CANON_VARIABLES, clamp: null },
   { key: 'p014', name: 'power 0.014', simVars: withPower(0.014), clamp: null },
   { key: 'p011', name: 'power 0.011', simVars: withPower(0.011), clamp: null },
   { key: 'clamp', name: 'clamp ≤18', simVars: CANON_VARIABLES, clamp: 18 },
   { key: 'p014clamp', name: '0.014 + clamp', simVars: withPower(0.014), clamp: 18 },
+  { key: 'mistakes', name: 'mistakes (lab)', simVars: withMistakes(), clamp: null },
+  { key: 'mp014', name: 'mistakes + 0.014', simVars: withMistakes(withPower(0.014)), clamp: null },
 ];
 // Optional scenario filter: comma-separated keys as argv[3]
 const only = process.argv[3]?.split(',');

@@ -134,6 +134,13 @@ function buildVariableList(): VarDef[] {
     { key: 'accelLaunchTicks', label: 'Accel Window', desc: 'Ticks accel matters (launch/pit exit/SC restart)', format: 'decimal' as const, min: 0, max: 300, step: 10 },
     { key: 'accelEffect', label: 'Accel Effect', desc: 'Accel stat strength in windows (0 = dormant)', format: 'decimal' as const, min: 0, max: 2, step: 0.1 },
     { key: 'aggressionTrafficBoost', label: 'Aggro Traffic Boost', desc: 'Aggression speed reward in traffic (0 = dormant)', format: 'percent' as const, min: 0, max: 0.15, step: 0.005 },
+    { key: 'mistakeBaseChance', label: 'Mistake Chance', desc: '#82 per-tick error roll (0 = dormant)', format: 'decimal' as const, min: 0, max: 0.001, step: 0.00005 },
+    { key: 'mistakeConsistencyWeight', label: 'Mistake Cons Wt', desc: 'Low consistency → more mistakes', format: 'decimal' as const, min: 0, max: 3, step: 0.25 },
+    { key: 'mistakeAggressionWeight', label: 'Mistake Aggro Wt', desc: 'Aggression → more mistakes', format: 'decimal' as const, min: 0, max: 2, step: 0.25 },
+    { key: 'mistakeDamageWeight', label: 'Mistake Damage Wt', desc: 'Damaged car → scrappier', format: 'decimal' as const, min: 0, max: 2, step: 0.25 },
+    { key: 'mistakeSpeedPenalty', label: 'Mistake Penalty', desc: 'Speed multiplier while recovering', format: 'percent' as const, min: 0.6, max: 1, step: 0.05 },
+    { key: 'mistakeDurationTicks', label: 'Mistake Duration', desc: 'Recovery window (ticks)', format: 'decimal' as const, min: 0, max: 400, step: 25 },
+    { key: 'mistakeCooldownTicks', label: 'Mistake Cooldown', desc: 'Refractory window (ticks)', format: 'decimal' as const, min: 0, max: 600, step: 50 },
   ];
   for (const v of perfVars) {
     vars.push({ category: 'Performance', categoryEmoji: '⚡', path: `performance.${v.key}`, label: v.label, description: v.desc, format: v.format, min: v.min, max: v.max, step: v.step });

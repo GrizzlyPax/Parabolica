@@ -533,6 +533,15 @@ export interface SimVariables {
     accelLaunchTicks: number;         // Window length for acceleration to matter (launch/pit exit/SC restart)
     accelEffect: number;              // How much of the accel stat applies in windows (0 = stat dormant)
     aggressionTrafficBoost: number;   // Max speed bonus for aggressive drivers in traffic (0 = no reward)
+    // #82 mistakes layer (gated: mistakeBaseChance 0 = dormant, draws NO RNG —
+    // same pattern as accelEffect; see BALANCE_DOMINANCE_PASS.md §3)
+    mistakeBaseChance: number;        // Per-tick mistake roll; 0 = off (0; first lab value 1.5e-4)
+    mistakeConsistencyWeight: number; // Low consistency → more mistakes (0; lab 1.5)
+    mistakeAggressionWeight: number;  // Pushing harder → more mistakes (0; lab 0.5)
+    mistakeDamageWeight: number;      // Damaged car → scrappier (0; optional flavor hook)
+    mistakeSpeedPenalty: number;      // Speed multiplier while recovering (1.0; lab 0.85)
+    mistakeDurationTicks: number;     // Recovery window in ticks (0; lab 150 ≈ 15s broadcast)
+    mistakeCooldownTicks: number;     // Refractory window after recovery (0; lab 300)
   };
 
   // === CAR STAT FORMULAS ===
@@ -672,6 +681,13 @@ export const CANON_VARIABLES: SimVariables = {
     accelLaunchTicks: 80,
     accelEffect: 0.5,                   // Rebalance v2 (lab-verified Δ+2.6%): launches, pit exits, SC restarts
     aggressionTrafficBoost: 0.10,       // Rebalance v2 (lab-verified Δ+1.4% with DNF cost intact): the gamble pays
+    mistakeBaseChance: 0,               // #82 DORMANT — flip via dominance-pass A/B, not here first
+    mistakeConsistencyWeight: 0,
+    mistakeAggressionWeight: 0,
+    mistakeDamageWeight: 0,
+    mistakeSpeedPenalty: 1.0,
+    mistakeDurationTicks: 0,
+    mistakeCooldownTicks: 0,
   },
   carStats: {
     powerBase: 0.93,                    // Higher base, less per-star spread

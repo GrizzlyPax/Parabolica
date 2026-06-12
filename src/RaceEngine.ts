@@ -237,7 +237,9 @@ export type RaceEventType =
   | 'tag_activation'   // A driver/car/team tag triggered
   // Unsafety Car events
   | 'unsafety_car_deployed'  // The Unsafety Car has been deployed
-  | 'unsafety_car_recalled'; // The Unsafety Car is returning to the void
+  | 'unsafety_car_recalled'  // The Unsafety Car is returning to the void
+  // Mistakes layer (#82)
+  | 'driver_error';    // Non-terminal mistake: spin / lock-up / wide moment
 
 export interface RaceEvent {
   tick: number;
@@ -435,6 +437,18 @@ class RaceEngine {
   // streams (deriveSeed) stay independent of the race rolls, so a feature that
   // reads them is byte-identical to today whenever its gate knob is 0.
   private strategySeed: number = randomSeed();
+
+  // #82 mistakes layer: per-driver tick until which no new mistake may start
+  // (active recovery + refractory window). Cleared per race.
+  private mistakeBlockedUntilTick: Map<number, number> = new Map();
+
+  /** Mistake flavor variants (#82): the feed story each error tells. */
+  private static readonly MISTAKE_FLAVORS = [
+    { id: 'spin', name: 'Spin', emoji: '🌀', text: 'spins! The car swaps ends and rejoins down the order' },
+    { id: 'lockup', name: 'Lock-up', emoji: '🛞', text: 'locks up hard into the corner and shoots up the escape road' },
+    { id: 'wide', name: 'Wide Moment', emoji: '↩️', text: 'runs wide and scrabbles back across the grass' },
+    { id: 'flatspot', name: 'Flat Spot', emoji: '🫨', text: 'flat-spots the tires — the car vibrates like a paint shaker' },
+  ] as const;
 
   // Conditional tags (e.g. Front Runner "when leading") are evaluated live each
   // tick against this cache, not stored as permanent effects — that's the #156
@@ -682,6 +696,7 @@ class RaceEngine {
       unsafetyCarCooldownUntilLap: 0,
     };
     this.raceEvents = [];
+    this.mistakeBlockedUntilTick.clear();
     this.notifyListeners();
     this.notifyStateListeners();
     this.notifyEventListeners();
@@ -985,6 +1000,7 @@ class RaceEngine {
       unsafetyCarCooldownUntilLap: 0,
     };
     this.raceEvents = [];
+    this.mistakeBlockedUntilTick.clear();
     // Reset track event state
     this.activeTrackEffects = [];
     this.trackEventTriggeredLaps = new Set();
@@ -2065,6 +2081,62 @@ class RaceEngine {
     }
   }
 
+  /** #82 mistakes layer — non-terminal driver errors (spin, lock-up, wide
+   * moment): real time lost, car intact. Rides the unified effect system
+   * (expiry + timing-tower icon for free) and logs a dedicated
+   * 'driver_error' event so the lab and season digests can count mistakes
+   * directly. One mistake at a time per driver plus a refractory window;
+   * suppressed under the Unsafety Car (consistent with crash/blowout/mech).
+   * DETERMINISM INVARIANT: gated on mistakeBaseChance — at canon 0 this
+   * method draws NO RNG, so seed streams stay byte-identical to today
+   * (same pattern as accelEffect). Spec: BALANCE_DOMINANCE_PASS.md §3. */
+  private processMistakes(): void {
+    const perfVars = this.getPerformanceVars();
+    if (perfVars.mistakeBaseChance <= 0) return; // dormant: no RNG drawn
+    if (this.raceState.unsafetyCarActive) return;
+
+    const now = this.raceState.totalTicks;
+    for (const driver of this.drivers) {
+      if (driver.status !== 'racing') continue;
+      if ((this.mistakeBlockedUntilTick.get(driver.id) ?? 0) > now) continue;
+
+      // pMistake = base × (1 + (1−normC)·cWeight) × (1 + normA·aWeight)
+      // (stats span 0.3–0.8; norm maps that to 0–1)
+      const normC = Math.min(1, Math.max(0, (driver.stats.consistency - 0.3) / 0.5));
+      const normA = Math.min(1, Math.max(0, (driver.stats.aggression - 0.3) / 0.5));
+      let pMistake = perfVars.mistakeBaseChance
+        * (1 + (1 - normC) * perfVars.mistakeConsistencyWeight)
+        * (1 + normA * perfVars.mistakeAggressionWeight);
+      if (driver.isDamaged) pMistake *= 1 + perfVars.mistakeDamageWeight;
+
+      if (this.rng() >= pMistake) continue;
+
+      const flavor = RaceEngine.MISTAKE_FLAVORS[
+        Math.floor(this.rng() * RaceEngine.MISTAKE_FLAVORS.length)
+      ];
+      this.mistakeBlockedUntilTick.set(
+        driver.id,
+        now + perfVars.mistakeDurationTicks + perfVars.mistakeCooldownTicks
+      );
+      this.createTrackEffect(
+        `mistake-${flavor.id}`,
+        flavor.name,
+        flavor.emoji,
+        [driver.id],
+        now + perfVars.mistakeDurationTicks,
+        { speedModifier: perfVars.mistakeSpeedPenalty }
+      );
+      this.logEvent(
+        'driver_error',
+        driver,
+        `${flavor.name}: ${driver.name} ${flavor.text}`,
+        'negative',
+        0.8,
+        flavor.emoji
+      );
+    }
+  }
+
   /** Tag ids currently contributing effects for a driver: conditional tags
    * whose gate is open this tick + stored tag activations still live. Display
    * surface for the timing tower (lit vs dormant chips). */
@@ -2268,6 +2340,7 @@ class RaceEngine {
 
     // Environment inflictions (mid-race state tags: storm strikes, fog, etc.)
     this.processInflictions();
+    this.processMistakes();
 
     const crashedThisTick: Set<number> = new Set();
     const damagedThisTick: Set<number> = new Set();
