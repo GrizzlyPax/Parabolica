@@ -109,12 +109,12 @@ export function buildRaceReportMd(meta: RaceReportMeta, drivers: Driver[], sampl
   // === Pit stop detail ===
   const allStops = drivers
     .flatMap(d => (d.pitStops ?? []).map(ps => ({ d, ps })))
-    .sort((a, b) => a.ps.tick - b.ps.tick);
+    .sort((a, b) => a.ps.lap - b.ps.lap || a.ps.tick - b.ps.tick);
   if (allStops.length) {
     lines.push('## Pit stops');
     lines.push('');
-    lines.push('| Lap | Driver | Change | Stationary | Note |');
-    lines.push('|-----|--------|--------|------------|------|');
+    lines.push('| Lap | Driver | Change | Pit lane | Note |');
+    lines.push('|-----|--------|--------|----------|------|');
     for (const { d, ps } of allStops) {
       lines.push(
         `| ${ps.lap} | ${d.name} | ${COMPOUND[ps.tiresBefore] ?? '?'}→${COMPOUND[ps.tiresAfter] ?? '?'} | ${fmtSecs(ps.duration)} | ${ps.wasSlowStop ? 'slow stop' : ''} |`

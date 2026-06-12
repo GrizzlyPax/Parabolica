@@ -195,6 +195,25 @@ describe('conditional tags (#156 gate)', () => {
     expect(history[0].order.length).toBe(grid.length);
   });
 
+  it('records true pit-lane durations (regression: stops 2+ logged the stint length)', () => {
+    // The old duration formula subtracted the PREVIOUS stop's tick, so any
+    // stop after the first recorded ~40-90s. Real pit-lane time (entry→exit)
+    // is bounded: lane transit at the speed limit + stationary work.
+    const grid = structuredClone(cleanRoster());
+    const engine = RaceEngine.createForWorker(CANON_VARIABLES, 0x917);
+    engine.loadGeneratedRoster(grid);
+    engine.updateConfig({ totalLaps: track.laps, lapLength: track.length });
+    engine.setTrackInfo({ id: track.id, name: track.name, emoji: track.emoji,
+      funEmoji: track.funEmoji, description: track.description, laps: track.laps });
+    const { drivers } = engine.runHeadless();
+    const stops = drivers.flatMap(d => d.pitStops ?? []);
+    expect(stops.length).toBeGreaterThan(10);
+    for (const s of stops) {
+      expect(s.duration, `stop at L${s.lap}`).toBeGreaterThan(0);
+      expect(s.duration, `stop at L${s.lap}`).toBeLessThan(250); // ≤ 25s incl. slow stops
+    }
+  });
+
   it('a track tag passive lean changes the race', () => {
     const base = cleanRoster();
     const plain = run(base, 0x7AC, undefined);

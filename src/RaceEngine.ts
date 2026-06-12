@@ -94,6 +94,9 @@ export interface Driver {
   pitBoxPosition: number;       // 0-1 position along pit lane where this driver's pit box is
   pitWorkProgress: number;      // 0-1 progress through the stationary pit work phase
   currentPitWorkDuration: number;   // Duration of pit work (stationary part, affected by team stat)
+  /** Tick when the current pit stop began (pit-lane entry) — used to record
+   * the stop's true duration at exit. */
+  currentPitEntryTick?: number;
   currentPitIsSlowStop: boolean; // Whether current pit stop is a slow stop
   currentPitIsQuickStop: boolean; // Whether current pit stop is a quick stop
   isDamaged: boolean;       // Survived a crash but with damage
@@ -2355,9 +2358,11 @@ class RaceEngine {
         if (newPitProgress >= 1 && newPitPhase === 'exit') {
           // Exit pit
           const newCompound = this.selectNewTires(driver);
-          const totalPitDuration = this.raceState.totalTicks - (driver.pitStops.length > 0
-            ? driver.pitStops[driver.pitStops.length - 1].tick
-            : this.lapStartTick.get(driver.id) || 0);
+          // True pit-lane time: entry → exit. (The old formula subtracted the
+          // PREVIOUS stop's tick, so stops 2+ recorded the whole stint length
+          // as their 'duration' — 85s 'stops' in race reports.)
+          const totalPitDuration = this.raceState.totalTicks
+            - (driver.currentPitEntryTick ?? this.raceState.totalTicks);
 
           const pitStop: PitStopInfo = {
             lap: newLap,
@@ -2439,6 +2444,7 @@ class RaceEngine {
           pitPhase: 'entry' as PitPhase,
           pitWorkProgress: 0,
           currentPitWorkDuration: duration,
+          currentPitEntryTick: this.raceState.totalTicks,
           currentPitIsSlowStop: isSlowStop,
           currentPitIsQuickStop: isQuickStop,
         };
