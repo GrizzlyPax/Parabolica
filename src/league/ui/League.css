@@ -255,6 +255,74 @@
 
 .reel-section .league-section-title { color: #6ab882; border-color: #2a4a36; }
 
+/* Section titles that collapse their content */
+button.section-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  width: 100%;
+  background: none;
+  border: none;
+  border-bottom: 1px solid #2a2a34;
+  cursor: pointer;
+  text-align: left;
+}
+button.section-toggle:hover { color: #bbb; }
+.section-toggle-hint { font-size: 0.78rem; color: #555; letter-spacing: 0.05em; }
+
+/* Standings header: title + drivers/teams toggle */
+.standings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  border-bottom: 1px solid #2a2a34;
+  margin-bottom: 10px;
+}
+.standings-header .league-section-title { border-bottom: none; margin-bottom: 0; flex: 1; }
+
+.standings-toggle {
+  display: inline-flex;
+  gap: 2px;
+  background: rgba(20, 20, 24, 0.8);
+  border: 1px solid #2a2a34;
+  border-radius: 999px;
+  padding: 2px;
+  margin-bottom: 4px;
+}
+.standings-toggle button {
+  background: none;
+  border: none;
+  border-radius: 999px;
+  color: #888;
+  font-family: var(--font-display), var(--font-emoji);
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 3px 12px;
+  cursor: pointer;
+}
+.standings-toggle button.active { background: #2a2a38; color: #fff; }
+
+/* Points-over-races chart */
+.points-chart {
+  width: 100%;
+  height: auto;
+  margin-top: 12px;
+  display: block;
+}
+.chart-tick {
+  font-family: var(--font-mono), monospace;
+  font-size: 7px;
+  fill: #555;
+}
+.chart-waiting {
+  color: #555;
+  font-size: 0.8rem;
+  font-style: italic;
+  margin: 10px 0 0;
+}
+
 /* === Digest cards === */
 
 .digest-card {
@@ -458,7 +526,7 @@
 .grid-teams {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
+  gap: 8px;
 }
 
 @media (max-width: 560px) {
@@ -470,7 +538,7 @@
   border: 1px solid #2a2a34;
   border-left: 3px solid var(--team-color, #2a2a34);
   border-radius: 10px;
-  padding: 10px 12px;
+  padding: 8px 10px;
 }
 
 .grid-team-header {
@@ -522,7 +590,7 @@
   background: none;
   border: none;
   color: inherit;
-  padding: 7px 2px;
+  padding: 5px 2px;
   cursor: pointer;
   font-size: 0.9rem;
   text-align: left;

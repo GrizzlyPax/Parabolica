@@ -12,10 +12,12 @@ import { RaceEvent } from '../../RaceEngine';
 import { LeagueState, RaceDigest, LiveRace } from '../types';
 import { settleLeague, nextRaceAt, isSeasonOver, liveRaceSnapshot, LiveSnapshot } from '../settle';
 import { saveLeagueState } from '../../storage/persistence';
-import { getSeasonStandings } from '../../types/season';
+import { getSeasonStandings, calculatePointsForPosition } from '../../types/season';
 import { getTrackById } from '../../generators/tracks';
+import { getTeamById } from '../../data/teams';
 import { getGodById } from '../gods';
 import GridSection from './GridSection';
+import PointsChart, { ChartSeries } from './PointsChart';
 import { TeamMarble } from './TeamMarble';
 import './League.css';
 
@@ -153,6 +155,10 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onDissolve 
   const [live, setLive] = useState<LiveRace | null>(null);
   const [now, setNow] = useState(() => Date.now());
   const [confirmDissolve, setConfirmDissolve] = useState(false);
+  const [standingsView, setStandingsView] = useState<'drivers' | 'teams'>('drivers');
+  // The Grid is browsing material — front and center on a fresh league,
+  // tucked away once the season is producing results.
+  const [gridOpen, setGridOpen] = useState(league.settledThrough < 0);
   // Settle must not run twice for the same moment (StrictMode double-effects),
   // and the 1s clock must not re-run the live race's sim every tick.
   const settlingRef = useRef(false);
@@ -221,6 +227,73 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onDissolve 
   const champion = over && standings.length > 0 ? driver(standings[0].driverId) : null;
   const chronicle = useMemo(() => [...league.digests].reverse(), [league.digests]);
   const hasStandings = standings.length > 0 && league.settledThrough >= 0;
+  const raceCount = league.settledThrough + 1;
+
+  // Constructor standings: both seats tallied per team.
+  const constructorStandings = useMemo(() => {
+    const byTeam = new Map<string, {
+      kingdomId: string; name: string; emoji: string; color?: string; accentColor?: string;
+      points: number; wins: number; podiums: number; dnfs: number;
+    }>();
+    for (const d of league.roster) {
+      const kingdomId = d.kingdomId ?? 'unknown';
+      const stats = league.season.driverStats.get(d.id);
+      if (!stats) continue;
+      const team = getTeamById(kingdomId);
+      const entry = byTeam.get(kingdomId) ?? {
+        kingdomId,
+        name: team?.name ?? d.teamName ?? kingdomId,
+        emoji: team?.emoji ?? d.emoji,
+        color: d.color,
+        accentColor: d.accentColor,
+        points: 0, wins: 0, podiums: 0, dnfs: 0,
+      };
+      entry.points += stats.points;
+      entry.wins += stats.wins;
+      entry.podiums += stats.podiums;
+      entry.dnfs += stats.dnfs;
+      byTeam.set(kingdomId, entry);
+    }
+    return [...byTeam.values()].sort((a, b) =>
+      b.points - a.points || b.wins - a.wins || b.podiums - a.podiums);
+  }, [league.roster, league.season]);
+
+  // Cumulative points per race: derivable exactly, since scoring is pure
+  // position points (raceResults stores each driver's finish per race).
+  const { driverSeries, teamSeries } = useMemo(() => {
+    const drivers: ChartSeries[] = [];
+    const teamTotals = new Map<string, number[]>();
+    for (const d of league.roster) {
+      const stats = league.season.driverStats.get(d.id);
+      if (!stats) continue;
+      let running = 0;
+      const values = stats.raceResults.slice(0, raceCount).map(pos => {
+        running += calculatePointsForPosition(pos);
+        return running;
+      });
+      drivers.push({
+        id: d.id,
+        color: d.color,
+        dashed: d.driverSlot === 2,
+        values,
+        label: d.fullName,
+      });
+      const kingdomId = d.kingdomId ?? 'unknown';
+      const totals = teamTotals.get(kingdomId) ?? Array(values.length).fill(0);
+      values.forEach((v, i) => { totals[i] = (totals[i] ?? 0) + v; });
+      teamTotals.set(kingdomId, totals);
+    }
+    const teams: ChartSeries[] = [...teamTotals.entries()].map(([kingdomId, values]) => {
+      const lead = league.roster.find(d => d.kingdomId === kingdomId);
+      return {
+        id: kingdomId,
+        color: lead?.color ?? '#888',
+        values,
+        label: getTeamById(kingdomId)?.name ?? kingdomId,
+      };
+    });
+    return { driverSeries: drivers, teamSeries: teams };
+  }, [league.roster, league.season, raceCount]);
 
   return (
     <div className="league-screen">
@@ -322,8 +395,13 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onDissolve 
 
             {/* The Grid: teams, cars, and drivers — tap a driver for the lore */}
             <section className="league-section grid-section">
-              <h2 className="league-section-title">The Grid</h2>
-              <GridSection roster={league.roster} />
+              <button className="league-section-title section-toggle" onClick={() => setGridOpen(!gridOpen)}>
+                The Grid
+                <span className="section-toggle-hint">
+                  {gridOpen ? '▾' : `${league.roster.length} drivers ▸`}
+                </span>
+              </button>
+              {gridOpen && <GridSection roster={league.roster} />}
             </section>
 
             {/* Chronicle: every settled race, newest first */}
@@ -338,34 +416,75 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onDissolve 
           </div>
 
           <aside className="league-rail">
-            {/* Standings */}
+            {/* Standings: drivers ↔ constructors, with the points race below */}
             {hasStandings && (
               <section className="league-section standings-section">
-                <h2 className="league-section-title">Standings</h2>
-                <table className="league-standings">
-                  <thead>
-                    <tr><th>P</th><th></th><th>Driver</th><th>Pts</th><th>W</th><th>Pod</th><th>DNF</th></tr>
-                  </thead>
-                  <tbody>
-                    {standings.map((s, i) => {
-                      const d = driver(s.driverId);
-                      return (
-                        <tr key={s.driverId}>
+                <div className="standings-header">
+                  <h2 className="league-section-title">Standings</h2>
+                  <div className="standings-toggle">
+                    <button
+                      className={standingsView === 'drivers' ? 'active' : ''}
+                      onClick={() => setStandingsView('drivers')}
+                    >Drivers</button>
+                    <button
+                      className={standingsView === 'teams' ? 'active' : ''}
+                      onClick={() => setStandingsView('teams')}
+                    >Teams</button>
+                  </div>
+                </div>
+
+                {standingsView === 'drivers' ? (
+                  <table className="league-standings">
+                    <thead>
+                      <tr><th>P</th><th></th><th>Driver</th><th>Pts</th><th>W</th><th>Pod</th><th>DNF</th></tr>
+                    </thead>
+                    <tbody>
+                      {standings.map((s, i) => {
+                        const d = driver(s.driverId);
+                        return (
+                          <tr key={s.driverId}>
+                            <td className="standings-pos">{i + 1}</td>
+                            <td className="standings-marble">
+                              <TeamMarble color={d?.color} accentColor={d?.accentColor}
+                                emoji={d?.emoji} slot={d?.driverSlot} />
+                            </td>
+                            <td className="standings-name" style={{ color: d?.color }}>{d?.fullName}</td>
+                            <td className="standings-pts">{s.points}</td>
+                            <td className="standings-num">{s.wins}</td>
+                            <td className="standings-num">{s.podiums}</td>
+                            <td className="standings-num">{s.dnfs}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                ) : (
+                  <table className="league-standings">
+                    <thead>
+                      <tr><th>P</th><th></th><th>Team</th><th>Pts</th><th>W</th><th>Pod</th><th>DNF</th></tr>
+                    </thead>
+                    <tbody>
+                      {constructorStandings.map((t, i) => (
+                        <tr key={t.kingdomId}>
                           <td className="standings-pos">{i + 1}</td>
                           <td className="standings-marble">
-                            <TeamMarble color={d?.color} accentColor={d?.accentColor}
-                              emoji={d?.emoji} slot={d?.driverSlot} />
+                            <TeamMarble color={t.color} accentColor={t.accentColor} emoji={t.emoji} />
                           </td>
-                          <td className="standings-name" style={{ color: d?.color }}>{d?.fullName}</td>
-                          <td className="standings-pts">{s.points}</td>
-                          <td className="standings-num">{s.wins}</td>
-                          <td className="standings-num">{s.podiums}</td>
-                          <td className="standings-num">{s.dnfs}</td>
+                          <td className="standings-name" style={{ color: t.color }}>{t.name}</td>
+                          <td className="standings-pts">{t.points}</td>
+                          <td className="standings-num">{t.wins}</td>
+                          <td className="standings-num">{t.podiums}</td>
+                          <td className="standings-num">{t.dnfs}</td>
                         </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+
+                <PointsChart
+                  series={standingsView === 'drivers' ? driverSeries : teamSeries}
+                  raceCount={raceCount}
+                />
               </section>
             )}
 
