@@ -105,33 +105,6 @@ function getColorVariants(hexColor: string): { light: string; dark: string } {
 // Default fallback track path (oval) if no layout provided
 const DEFAULT_TRACK_PATH = 'M 150 60 L 450 60 Q 550 60, 550 150 Q 550 240, 450 240 L 150 240 Q 50 240, 50 150 Q 50 60, 150 60 Z';
 
-// Map track emojis to background themes
-const TRACK_THEMES: Record<string, { bg: string; trackColor: string; accent: string }> = {
-  '🏁': { bg: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #1a1a2e 100%)', trackColor: '#2a2a4a', accent: '#4a4a6a' },
-  '🏎️': { bg: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%)', trackColor: '#3a3a3a', accent: '#5a5a5a' },
-  '🌋': { bg: 'linear-gradient(135deg, #1a0a0a 0%, #3d1a1a 50%, #1a0a0a 100%)', trackColor: '#4a2020', accent: '#8a4040' },
-  '🏔️': { bg: 'linear-gradient(135deg, #0a1a2a 0%, #1a3a5a 50%, #0a1a2a 100%)', trackColor: '#2a4a6a', accent: '#4a6a8a' },
-  '🌊': { bg: 'linear-gradient(135deg, #0a1a2a 0%, #1a2a4a 50%, #0a1a2a 100%)', trackColor: '#1a3a5a', accent: '#3a5a7a' },
-  '🏜️': { bg: 'linear-gradient(135deg, #2a1a0a 0%, #4a3a1a 50%, #2a1a0a 100%)', trackColor: '#5a4a2a', accent: '#8a7a4a' },
-  '🌲': { bg: 'linear-gradient(135deg, #0a1a0a 0%, #1a3a1a 50%, #0a1a0a 100%)', trackColor: '#2a4a2a', accent: '#4a6a4a' },
-  '🌴': { bg: 'linear-gradient(135deg, #1a2a1a 0%, #2a4a2a 50%, #1a2a1a 100%)', trackColor: '#3a5a3a', accent: '#5a7a5a' },
-  '🏰': { bg: 'linear-gradient(135deg, #1a1a1a 0%, #2a2a3a 50%, #1a1a1a 100%)', trackColor: '#3a3a4a', accent: '#5a5a6a' },
-  '🌌': { bg: 'linear-gradient(135deg, #0a0a1a 0%, #1a1a3a 50%, #0a0a1a 100%)', trackColor: '#2a2a4a', accent: '#4a4a8a' },
-  '☄️': { bg: 'linear-gradient(135deg, #1a0a1a 0%, #3a1a3a 50%, #1a0a1a 100%)', trackColor: '#4a2a4a', accent: '#6a4a6a' },
-  '🌙': { bg: 'linear-gradient(135deg, #0a0a1a 0%, #1a1a2a 50%, #0a0a1a 100%)', trackColor: '#2a2a3a', accent: '#4a4a5a' },
-  '⚡': { bg: 'linear-gradient(135deg, #1a1a0a 0%, #3a3a1a 50%, #1a1a0a 100%)', trackColor: '#4a4a2a', accent: '#6a6a4a' },
-  '🔥': { bg: 'linear-gradient(135deg, #1a0a0a 0%, #3a1a0a 50%, #1a0a0a 100%)', trackColor: '#4a2a1a', accent: '#6a4a3a' },
-  '❄️': { bg: 'linear-gradient(135deg, #0a1a2a 0%, #1a2a4a 50%, #0a1a2a 100%)', trackColor: '#2a3a5a', accent: '#4a5a7a' },
-  '🌈': { bg: 'linear-gradient(135deg, #1a1a2a 0%, #2a2a4a 50%, #1a1a2a 100%)', trackColor: '#3a3a5a', accent: '#5a5a7a' },
-  '🌪️': { bg: 'linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 50%, #1a1a1a 100%)', trackColor: '#3a3a3a', accent: '#5a5a5a' },
-  '💎': { bg: 'linear-gradient(135deg, #0a1a2a 0%, #1a3a4a 50%, #0a1a2a 100%)', trackColor: '#2a4a5a', accent: '#4a6a7a' },
-  '🔮': { bg: 'linear-gradient(135deg, #1a0a2a 0%, #2a1a4a 50%, #1a0a2a 100%)', trackColor: '#3a2a5a', accent: '#5a4a7a' },
-  '👁️': { bg: 'linear-gradient(135deg, #1a0a1a 0%, #2a1a2a 50%, #1a0a1a 100%)', trackColor: '#3a2a3a', accent: '#5a4a5a' },
-  '🌸': { bg: 'linear-gradient(135deg, #1a0a1a 0%, #2a1a2a 50%, #1a0a1a 100%)', trackColor: '#3a2a3a', accent: '#6a4a5a' },
-  '♾️': { bg: 'linear-gradient(135deg, #0a0a1a 0%, #1a1a3a 50%, #0a0a1a 100%)', trackColor: '#2a2a4a', accent: '#4a4a6a' },
-};
-
-const DEFAULT_THEME = { bg: 'linear-gradient(135deg, #0d0d0d 0%, #1a1018 50%, #0d0d0d 100%)', trackColor: '#2a2535', accent: '#3a3545' };
 
 function WatchMode({
   drivers,
@@ -962,9 +935,6 @@ function WatchMode({
     );
   }, [powerActivation]);
 
-  // Get theme based on track emoji
-  const theme = trackInfo ? (TRACK_THEMES[trackInfo.emoji] || DEFAULT_THEME) : DEFAULT_THEME;
-
   // Real-time sorted drivers (for track position badges - need current positions)
   const realtimeSortedDrivers = [...drivers].sort((a, b) => {
     const aFinished = a.status === 'finished';
@@ -1086,7 +1056,7 @@ function WatchMode({
   const currentLapForHeader = Math.max(1, (frozenSortedDrivers[0]?.currentLap || 0) + 1);
 
   return (
-    <div className="watch-mode" style={{ background: theme.bg }}>
+    <div className="watch-mode">
       {/* Universal Header - new navigation system */}
       <UniversalHeader
         currentLap={currentLapForHeader}
