@@ -18,6 +18,10 @@ export interface ChartSeries {
   label?: string;
   /** 3-letter code shown at the line's end for top series. */
   code?: string;
+  /** Render the code as a team marble (emoji on team color, accent ring)
+   * instead of text — bare emoji is illegible on the dark background. */
+  marble?: boolean;
+  accentColor?: string;
 }
 
 interface PointsChartProps {
@@ -29,7 +33,6 @@ const W = 720;
 const H = 280;
 const PAD = { top: 14, right: 56, bottom: 24, left: 36 };
 const LABELED_COUNT = 6;
-const LABEL_MIN_SEPARATION = 13;
 
 function PointsChart({ series, raceCount }: PointsChartProps) {
   if (raceCount < 2) {
@@ -50,11 +53,16 @@ function PointsChart({ series, raceCount }: PointsChartProps) {
   const labels = ranked
     .slice(0, LABELED_COUNT)
     .filter(s => s.code)
-    .map(s => ({ code: s.code!, color: s.color, dashed: s.dashed, y: y(finalValue(s)) }))
+    .map(s => ({
+      code: s.code!, color: s.color, dashed: s.dashed,
+      marble: s.marble, accentColor: s.accentColor,
+      y: y(finalValue(s)),
+    }))
     .sort((a, b) => a.y - b.y);
+  const minSeparation = labels.some(l => l.marble) ? 20 : 13;
   for (let i = 1; i < labels.length; i++) {
-    if (labels[i].y - labels[i - 1].y < LABEL_MIN_SEPARATION) {
-      labels[i].y = labels[i - 1].y + LABEL_MIN_SEPARATION;
+    if (labels[i].y - labels[i - 1].y < minSeparation) {
+      labels[i].y = labels[i - 1].y + minSeparation;
     }
   }
   // If the stack ran off the bottom, push it back up
@@ -64,7 +72,7 @@ function PointsChart({ series, raceCount }: PointsChartProps) {
   if (overflow > 0) {
     for (let i = labels.length - 1; i >= 1; i--) {
       labels[i].y -= overflow;
-      if (labels[i].y - labels[i - 1].y >= LABEL_MIN_SEPARATION) break;
+      if (labels[i].y - labels[i - 1].y >= minSeparation) break;
     }
   }
 
@@ -112,8 +120,28 @@ function PointsChart({ series, raceCount }: PointsChartProps) {
           </polyline>
         );
       })}
-      {/* End-of-line codes for the contenders */}
-      {labels.map(l => (
+      {/* End-of-line labels for the contenders */}
+      {labels.map(l => l.marble ? (
+        <g key={String(l.code) + l.y}>
+          <circle
+            cx={W - PAD.right + 16}
+            cy={l.y}
+            r={9}
+            fill={l.color}
+            stroke={l.accentColor || '#fff'}
+            strokeWidth={1.8}
+          />
+          <text
+            x={W - PAD.right + 16}
+            y={l.y}
+            textAnchor="middle"
+            dominantBaseline="central"
+            style={{ fontSize: '10px' }}
+          >
+            {l.code}
+          </text>
+        </g>
+      ) : (
         <text
           key={l.code + l.y}
           x={W - PAD.right + 6}

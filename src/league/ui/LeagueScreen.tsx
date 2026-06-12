@@ -292,10 +292,13 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onDissolve 
       return {
         id: kingdomId,
         color: lead?.color ?? '#888',
+        accentColor: lead?.accentColor,
         values,
         label: team?.name ?? kingdomId,
-        // Teams are known by their emoji, not a 3-letter code
+        // Teams are known by their emoji — rendered as a marble so it
+        // doesn't vanish against the dark background
         code: team?.emoji ?? lead?.emoji ?? '🏁',
+        marble: true,
       };
     });
     return { driverSeries: drivers, teamSeries: teams };
