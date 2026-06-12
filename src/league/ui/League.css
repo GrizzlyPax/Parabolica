@@ -45,8 +45,8 @@
   .league-main, .league-rail { display: contents; }
   /* Single column reads: reel, standings, chart, grid, calendar, chronicle */
   .reel-section { order: 1; }
-  .standings-section { order: 2; }
-  .chart-section { order: 3; }
+  .league-standings-section { order: 2; }
+  .league-chart-section { order: 3; }
   .grid-section { order: 4; }
   .calendar-section { order: 5; }
   .chronicle-section { order: 6; }
@@ -272,7 +272,7 @@ button.section-toggle:hover { color: #bbb; }
 .section-toggle-hint { font-size: 0.78rem; color: #555; letter-spacing: 0.05em; }
 
 /* Standings header: title + drivers/teams toggle */
-.standings-header {
+.league-subhead {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
@@ -280,9 +280,9 @@ button.section-toggle:hover { color: #bbb; }
   border-bottom: 1px solid #2a2a34;
   margin-bottom: 10px;
 }
-.standings-header .league-section-title { border-bottom: none; margin-bottom: 0; flex: 1; }
+.league-subhead .league-section-title { border-bottom: none; margin-bottom: 0; flex: 1; }
 
-.standings-toggle {
+.league-view-toggle {
   display: inline-flex;
   gap: 2px;
   background: rgba(20, 20, 24, 0.8);
@@ -291,7 +291,7 @@ button.section-toggle:hover { color: #bbb; }
   padding: 2px;
   margin-bottom: 4px;
 }
-.standings-toggle button {
+.league-view-toggle button {
   background: none;
   border: none;
   border-radius: 999px;
@@ -303,7 +303,7 @@ button.section-toggle:hover { color: #bbb; }
   padding: 3px 12px;
   cursor: pointer;
 }
-.standings-toggle button.active { background: #2a2a38; color: #fff; }
+.league-view-toggle button.active { background: #2a2a38; color: #fff; }
 
 /* Points-over-races chart */
 .points-chart {
@@ -316,6 +316,12 @@ button.section-toggle:hover { color: #bbb; }
   font-family: var(--font-mono), monospace;
   font-size: 10px;
   fill: #555;
+}
+.chart-code {
+  font-family: var(--font-display), var(--font-emoji);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
 }
 .chart-waiting {
   color: #555;

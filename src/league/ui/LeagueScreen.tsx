@@ -30,6 +30,19 @@ interface LeagueScreenProps {
   onDissolve: () => void;
 }
 
+// 3-letter chart code from a driver name, F1-style (suffix-aware: VER, HAM)
+const NAME_SUFFIXES = new Set(['JR', 'JR.', 'SR', 'SR.', 'II', 'III', 'IV', 'V']);
+function driverCode(fullName: string): string {
+  const parts = fullName.split(' ').filter(p => p.length > 0);
+  const filtered = parts.filter(p => !NAME_SUFFIXES.has(p.toUpperCase()));
+  const surname = filtered[filtered.length - 1] || parts[parts.length - 1] || '';
+  return surname.slice(0, 3).toUpperCase().replace(/[^A-Z]/g, '') || '???';
+}
+
+function teamCode(name: string): string {
+  return name.replace(/[^A-Za-z]/g, '').slice(0, 3).toUpperCase() || '???';
+}
+
 function formatCountdown(ms: number): string {
   const total = Math.max(0, Math.ceil(ms / 1000));
   const h = Math.floor(total / 3600);
@@ -277,6 +290,7 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onDissolve 
         dashed: d.driverSlot === 2,
         values,
         label: d.fullName,
+        code: driverCode(d.fullName),
       });
       const kingdomId = d.kingdomId ?? 'unknown';
       const totals = teamTotals.get(kingdomId) ?? Array(values.length).fill(0);
@@ -285,11 +299,13 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onDissolve 
     }
     const teams: ChartSeries[] = [...teamTotals.entries()].map(([kingdomId, values]) => {
       const lead = league.roster.find(d => d.kingdomId === kingdomId);
+      const name = getTeamById(kingdomId)?.name ?? kingdomId;
       return {
         id: kingdomId,
         color: lead?.color ?? '#888',
         values,
-        label: getTeamById(kingdomId)?.name ?? kingdomId,
+        label: name,
+        code: teamCode(name),
       };
     });
     return { driverSeries: drivers, teamSeries: teams };
@@ -395,10 +411,10 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onDissolve 
 
             {/* The Points Race: cumulative points, the season's shape at a glance */}
             {hasStandings && (
-              <section className="league-section chart-section">
-                <div className="standings-header">
+              <section className="league-section league-chart-section">
+                <div className="league-subhead">
                   <h2 className="league-section-title">The Points Race</h2>
-                  <div className="standings-toggle">
+                  <div className="league-view-toggle">
                     <button
                       className={standingsView === 'drivers' ? 'active' : ''}
                       onClick={() => setStandingsView('drivers')}
@@ -441,10 +457,10 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onDissolve 
           <aside className="league-rail">
             {/* Standings: drivers ↔ constructors, with the points race below */}
             {hasStandings && (
-              <section className="league-section standings-section">
-                <div className="standings-header">
+              <section className="league-section league-standings-section">
+                <div className="league-subhead">
                   <h2 className="league-section-title">Standings</h2>
-                  <div className="standings-toggle">
+                  <div className="league-view-toggle">
                     <button
                       className={standingsView === 'drivers' ? 'active' : ''}
                       onClick={() => setStandingsView('drivers')}
