@@ -6,6 +6,70 @@ import { Rng } from '../engine/rng';
 export type TagTarget = 'driver' | 'car' | 'team' | 'condition';
 export type TagTrigger = 'passive' | 'race_start' | 'pit_stop' | 'overtake' | 'crash_proximity' | 'final_lap' | 'track_event';
 
+// Magnitude ladder (see docs/TAG_SYSTEM.md §3 and #156). Tiers are lab-calibrated
+// targets, not raw numbers — they say how big a tag is allowed to be:
+//   quirk ~1× (flavor) · trait ~1.2× · power ~1.5-2× · destiny ~3×+ (rare, season-warping)
+export type TagTier = 'quirk' | 'trait' | 'power' | 'destiny';
+
+/**
+ * A declarative gate on a passive tag's effects: the effects apply only while
+ * the predicate holds against the live RaceContext (evaluated every tick, no
+ * RNG). This is the fix for #156 — "conditional" tags like Rain Dancer were
+ * passive-but-ungated, so they ran 100% of the time. See docs/CONDITIONS_LAYER.md.
+ */
+export type TagCondition =
+  | { when: 'position'; min?: number; max?: number }              // 1-based running position
+  | { when: 'positionFraction'; top?: number; bottom?: number }   // share of the field (0-1)
+  | { when: 'lapProgress'; after?: number; before?: number }      // 0-1 over the race
+  | { when: 'condition'; has: string }                            // active weather/track condition id
+  | { when: 'damaged' }                                            // car is damaged
+  | { when: 'tireWear'; below?: number; above?: number };          // 0-100
+
+/** The live race state a TagCondition reads. Built once per tick by the engine.
+ * Pure data so conditions stay declarative and testable. */
+export interface RaceContext {
+  position: number;       // 1-based running position
+  fieldSize: number;      // cars still running (non-DNF)
+  lapProgress: number;    // 0-1 over the race
+  gapAhead: number;       // distance units to the car ahead (Infinity if leader)
+  gapBehind: number;      // distance units to the car behind (Infinity if last)
+  inTraffic: boolean;     // in a proximity battle this tick
+  tireWear: number;       // 0-100
+  isDamaged: boolean;
+  safetyCar: boolean;
+  conditions: string[];   // active weather/track condition ids (empty until weather lands)
+}
+
+/** Evaluate a TagCondition against the current race state. Deterministic, no RNG. */
+export function evaluateTagCondition(cond: TagCondition, ctx: RaceContext): boolean {
+  switch (cond.when) {
+    case 'position':
+      if (cond.min !== undefined && ctx.position < cond.min) return false;
+      if (cond.max !== undefined && ctx.position > cond.max) return false;
+      return true;
+    case 'positionFraction': {
+      const frac = ctx.fieldSize > 0 ? ctx.position / ctx.fieldSize : 0;
+      if (cond.top !== undefined && frac > cond.top) return false;
+      if (cond.bottom !== undefined && frac <= 1 - cond.bottom) return false;
+      return true;
+    }
+    case 'lapProgress':
+      if (cond.after !== undefined && ctx.lapProgress < cond.after) return false;
+      if (cond.before !== undefined && ctx.lapProgress >= cond.before) return false;
+      return true;
+    case 'condition':
+      return ctx.conditions.includes(cond.has);
+    case 'damaged':
+      return ctx.isDamaged;
+    case 'tireWear':
+      if (cond.below !== undefined && ctx.tireWear >= cond.below) return false;
+      if (cond.above !== undefined && ctx.tireWear <= cond.above) return false;
+      return true;
+    default:
+      return false;
+  }
+}
+
 export interface Tag {
   id: string;
   name: string;
@@ -13,6 +77,10 @@ export interface Tag {
   description: string;
   target: TagTarget;
   trigger: TagTrigger;
+  /** Magnitude tier (the #156 ladder). Optional while the roster is being calibrated. */
+  tier?: TagTier;
+  /** Gate for passive effects — apply only while this holds. Ungated passives are always-on. */
+  condition?: TagCondition;
   // Effect modifiers (applied when tag is active)
   effects: {
     speedModifier?: number;      // Multiplier (1.0 = no change, 1.05 = +5%)
@@ -36,6 +104,7 @@ export const DRIVER_TAGS: Tag[] = [
     description: 'Raises their game when it matters most',
     target: 'driver',
     trigger: 'final_lap',
+    tier: 'power',
     effects: {
       speedModifier: 1.08,
       consistencyModifier: 1.15,
@@ -47,11 +116,15 @@ export const DRIVER_TAGS: Tag[] = [
     id: 'rain-dancer',
     name: 'Rain Dancer',
     emoji: '🌧️',
-    description: 'Mysteriously faster when conditions are difficult',
+    description: 'Mysteriously faster when the skies open',
     target: 'driver',
     trigger: 'passive',
+    tier: 'destiny',
+    // #156 fix: gated to rain. Dormant until the weather layer lands (C2) —
+    // until then `conditions` never contains 'rain', so this is inert instead
+    // of the old always-on 9× destiny. Magnitudes to be lab-calibrated with weather.
+    condition: { when: 'condition', has: 'rain' },
     effects: {
-      // This will be checked against track conditions
       consistencyModifier: 1.12,
       crashResistance: 0.3,
     },
@@ -61,12 +134,15 @@ export const DRIVER_TAGS: Tag[] = [
     id: 'sunday-driver',
     name: 'Sunday Driver',
     emoji: '🐢',
-    description: 'Slow starter but builds pace throughout',
+    description: 'Slow starter who builds to a strong finish',
     target: 'driver',
     trigger: 'passive',
+    tier: 'trait',
+    // #156 fix: the "builds pace" was never implemented — only a permanent
+    // 0.95 penalty (a death sentence). Now a late-race surge that actually pays off.
+    condition: { when: 'lapProgress', after: 0.6 },
     effects: {
-      // Early race: slower. Late race: faster. Handled in engine.
-      speedModifier: 0.95, // Base penalty, increases over race
+      speedModifier: 1.05,
     },
     activationText: 'is finally getting up to speed...',
   },
@@ -81,6 +157,7 @@ export const CAR_TAGS: Tag[] = [
     description: 'Blazingly fast but fragile',
     target: 'car',
     trigger: 'passive',
+    tier: 'power',
     effects: {
       speedModifier: 1.06,
       crashResistance: -0.25, // More likely to break
@@ -94,6 +171,7 @@ export const CAR_TAGS: Tag[] = [
     description: 'Something is wrong with this car. Nobody knows what.',
     target: 'car',
     trigger: 'passive',
+    tier: 'destiny',
     effects: {
       luckModifier: 0.7,
       consistencyModifier: 0.9,
@@ -107,6 +185,7 @@ export const CAR_TAGS: Tag[] = [
     description: 'Optimized for quick pit stops',
     target: 'car',
     trigger: 'pit_stop',
+    tier: 'trait',
     effects: {
       pitSpeedModifier: 0.75, // 25% faster pits
     },
@@ -124,10 +203,12 @@ export const TEAM_TAGS: Tag[] = [
     description: 'Performs better when behind',
     target: 'team',
     trigger: 'passive',
+    tier: 'trait',
+    // #156 fix: "when behind" is now real — gated to the bottom half of the field.
+    condition: { when: 'positionFraction', bottom: 0.5 },
     effects: {
-      // Bonus when in bottom half of standings
-      speedModifier: 1.04,
-      luckModifier: 1.15,
+      speedModifier: 1.03,
+      luckModifier: 1.10,
     },
     activationText: 'refuses to give up!',
   },
@@ -138,10 +219,12 @@ export const TEAM_TAGS: Tag[] = [
     description: 'Thrives when leading the pack',
     target: 'team',
     trigger: 'passive',
+    tier: 'trait',
+    // #156 fix: "when leading" is now real — gated to a top-5 running position.
+    condition: { when: 'position', max: 5 },
     effects: {
-      // Bonus when in top 5
-      consistencyModifier: 1.10,
-      crashResistance: 0.2,
+      consistencyModifier: 1.06,
+      crashResistance: 0.12,
     },
     activationText: 'is comfortable at the front!',
   },
@@ -152,6 +235,7 @@ export const TEAM_TAGS: Tag[] = [
     description: 'Unpredictable - could be brilliant or disastrous',
     target: 'team',
     trigger: 'race_start',
+    tier: 'power',
     effects: {
       // Randomly assigns big bonus or penalty each race
       speedModifier: 1.0, // Modified at race start

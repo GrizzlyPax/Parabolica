@@ -1,10 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import RaceEngine, { TIRE_COMPOUNDS } from './RaceEngine';
+import RaceEngine, { TIRE_COMPOUNDS, RosterDriver } from './RaceEngine';
 import { CANON_VARIABLES } from './simlab/types';
 import { generateRoster, GeneratedDriver } from './generators/drivers';
 import { generateCarsForKingdoms, GeneratedCar } from './generators/cars';
 import { ALL_TRACKS, Track } from './generators/tracks';
 import { TEAMS } from './data/teams';
+import { Tag, getTagById } from './data/tags';
 
 function createRosterWithCars(roster: GeneratedDriver[], cars: Map<string, GeneratedCar>) {
   return roster.map(driver => {
@@ -99,6 +100,65 @@ describe('determinism (golden master)', () => {
     runSeeded(rosterWithCars, 99); // interleaved unrelated run
     const c = runSeeded(rosterWithCars, 7);
     expect(c.raceState.finishOrder).toEqual(a.raceState.finishOrder);
+  });
+});
+
+describe('conditional tags (#156 gate)', () => {
+  const track = ALL_TRACKS[0];
+
+  // One tag-free grid, reused across runs (generators use Math.random, so the
+  // roster must be fixed up-front — only the tag under test may vary).
+  function cleanRoster(): RosterDriver[] {
+    const roster = generateRoster();
+    const cars = generateCarsForKingdoms(TEAMS.map(t => t.id));
+    return createRosterWithCars(roster, cars).map(d => ({
+      ...d, driverTag: undefined, carTag: undefined, teamTag: undefined,
+    }));
+  }
+
+  function run(base: RosterDriver[], seed: number, driverTag: Tag | undefined, conditions: string[] = []) {
+    const grid = structuredClone(base);
+    grid[0].driverTag = driverTag; // only driver 0's tag varies between runs
+    const engine = RaceEngine.createForWorker(CANON_VARIABLES, seed);
+    engine.loadGeneratedRoster(grid);
+    engine.updateConfig({ totalLaps: track.laps, lapLength: track.length });
+    engine.setTrackInfo({
+      id: track.id, name: track.name, emoji: track.emoji,
+      funEmoji: track.funEmoji, description: track.description, laps: track.laps,
+    });
+    if (conditions.length) engine.setRaceConditions(conditions);
+    return engine.runHeadless();
+  }
+
+  it('a rain-dancer in the dry is completely inert (the 9x fix)', () => {
+    // Gated to rain with no rain present → must not perturb the race at all,
+    // including the RNG stream (so it matches the no-tag baseline byte-for-byte).
+    const base = cleanRoster();
+    const baseline = run(base, 0xDDD, undefined);
+    const withDancer = run(base, 0xDDD, getTagById('rain-dancer'));
+    expect(withDancer.raceState.finishOrder).toEqual(baseline.raceState.finishOrder);
+    expect(withDancer.raceState.totalTicks).toBe(baseline.raceState.totalTicks);
+    expect(withDancer.events).toEqual(baseline.events);
+  });
+
+  it('the same rain-dancer DOES bite once it is raining', () => {
+    const base = cleanRoster();
+    const dry = run(base, 0xDDD, getTagById('rain-dancer'));
+    const wet = run(base, 0xDDD, getTagById('rain-dancer'), ['rain']);
+    // Switching the gate on changes the race — proves the live path applies.
+    expect(wet.events).not.toEqual(dry.events);
+  });
+
+  it('an always-satisfied conditional tag changes the race vs no tag', () => {
+    const boost: Tag = {
+      id: 'test-rocket', name: 'Test Rocket', emoji: '🚀', description: 'always on',
+      target: 'driver', trigger: 'passive', condition: { when: 'lapProgress', after: 0 },
+      effects: { speedModifier: 1.2 },
+    };
+    const base = cleanRoster();
+    const baseline = run(base, 0xBEEF, undefined);
+    const boosted = run(base, 0xBEEF, boost);
+    expect(boosted.events).not.toEqual(baseline.events);
   });
 });
 
