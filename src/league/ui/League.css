@@ -914,3 +914,5 @@ button.section-toggle:hover { color: #bbb; }
   padding: 10px 12px;
 }
 .league-chartbox svg { display: block; width: 100%; height: auto; }
+
+.digest-trace-actions { display: flex; gap: 8px; flex-wrap: wrap; }

@@ -22,7 +22,7 @@ import { getGodById } from '../gods';
 import GridSection from './GridSection';
 import PointsChart, { ChartSeries } from './PointsChart';
 import { LapChart } from '../../components/race';
-import { traceRace } from '../raceTrace';
+import { traceRace, raceReportForLeague } from '../raceTrace';
 import { TeamMarble } from './TeamMarble';
 import './League.css';
 
@@ -82,6 +82,7 @@ function DigestCard({ league, digest, defaultOpen = false }: {
 }) {
   const [open, setOpen] = useState(defaultOpen);
   const [showTrace, setShowTrace] = useState(false);
+  const [reportCopied, setReportCopied] = useState(false);
   // The replay costs one headless sim — run it only when asked, then cache.
   const trace = useMemo(
     () => (showTrace ? traceRace(league, digest.index) : null),
@@ -170,11 +171,35 @@ function DigestCard({ league, digest, defaultOpen = false }: {
           )}
           {/* Race replay (#173): the lap chart + strategy table, reconstructed
               deterministically from the race seed. One headless sim, on demand. */}
-          {!showTrace ? (
-            <button className="digest-trace-btn" onClick={() => setShowTrace(true)}>
-              📈 Show lap chart & strategy
+          <div className="digest-trace-actions">
+            {!showTrace && (
+              <button className="digest-trace-btn" onClick={() => setShowTrace(true)}>
+                📈 Show lap chart & strategy
+              </button>
+            )}
+            <button
+              className="digest-trace-btn"
+              onClick={async () => {
+                const md = raceReportForLeague(league, digest.index);
+                if (!md) return;
+                try {
+                  await navigator.clipboard.writeText(md);
+                } catch {
+                  const ta = document.createElement('textarea');
+                  ta.value = md;
+                  document.body.appendChild(ta);
+                  ta.select();
+                  document.execCommand('copy');
+                  document.body.removeChild(ta);
+                }
+                setReportCopied(true);
+                setTimeout(() => setReportCopied(false), 2000);
+              }}
+            >
+              {reportCopied ? '✅ Copied' : '📋 Copy race report'}
             </button>
-          ) : trace && (
+          </div>
+          {showTrace && trace && (
             <div className="digest-trace">
               <LapChart
                 series={trace.series}
