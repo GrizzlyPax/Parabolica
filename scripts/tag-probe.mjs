@@ -45,10 +45,12 @@ for (let i = 0; i < RACES; i++) {
   else if (forced) weather = { id: forced.id, name: forced.name, emoji: forced.emoji,
     intensity: 1, conditions: forced.conditions, effects: forced.id === 'clear' ? {} : forced.baseEffects };
   engine.setWeather(weather);
-  engine.setTrackTags(intrinsicTrackTags(track.id)); // mirror the SimLab loop
+  const trackTags = intrinsicTrackTags(track.id); // mirror the SimLab loop
+  engine.setTrackTags(trackTags);
   const { raceState, drivers } = engine.runHeadless();
   const winner = raceState.finishOrder[0];
-  const conditions = weather?.conditions ?? [];
+  // Union of all condition sources, matching the engine
+  const conditions = [...(weather?.conditions ?? []), ...trackTags.flatMap(t => t.conditions ?? [])];
   const wId = weather?.id ?? 'clear';
   const ws = wx.get(wId) ?? { races: 0, dnfs: 0, driverRaces: 0 };
   ws.races++; ws.driverRaces += roster.length;

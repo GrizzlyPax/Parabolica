@@ -2,8 +2,9 @@ import { useState } from 'react';
 import type { SimLabResults as Results, TagPerformance, ComparisonResults } from './types';
 import { StatBucketChart, StatImpactTable, PieChart, TagImpactTable, StatMetric, StatImpactRow } from './SimLabCharts';
 import { ALL_TAGS } from '../data/tags';
+import { conditionsSections } from './reportSections';
 
-type ResultsTab = 'overview' | 'stats' | 'tags' | 'dnf' | 'pits' | 'tracks' | 'events';
+type ResultsTab = 'overview' | 'stats' | 'tags' | 'conditions' | 'dnf' | 'pits' | 'tracks' | 'events';
 
 interface Props {
   results: Results;
@@ -29,6 +30,7 @@ export default function SimLabResults({ results, comparisonResults, onReset, onE
     overview: 'Overview',
     stats: 'Stats',
     tags: 'Tags',
+    conditions: 'Conditions',
     dnf: 'DNF',
     pits: 'Pits',
     tracks: 'Tracks',
@@ -115,6 +117,7 @@ export default function SimLabResults({ results, comparisonResults, onReset, onE
           />
         )}
         {activeTab === 'tags' && <TagsTab results={activeResults} />}
+        {activeTab === 'conditions' && <ConditionsTab results={activeResults} />}
         {activeTab === 'dnf' && <DNFTab results={activeResults} />}
         {activeTab === 'pits' && <PitsTab results={activeResults} />}
         {activeTab === 'tracks' && <TracksTab results={activeResults} />}
@@ -1150,6 +1153,44 @@ function PitsTab({ results }: { results: Results }) {
 
 type TrackSortKey = 'name' | 'races' | 'finishRate' | 'crashRate' | 'mechRate' | 'tireRate' | 'leads';
 type EventSortKey = 'name' | 'races' | 'triggers' | 'affectedPct' | 'winDelta' | 'podiumDelta' | 'pointsDelta' | 'finishDelta';
+
+// === CONDITIONS TAB ===
+// Renders the shared conditions-layer report sections (weather distribution,
+// reactive tags, tag × weather matrix, track tags) from reportSections.ts —
+// the SAME definitions the clipboard export serializes, so UI and export
+// cannot drift. New conditions reporting goes in reportSections, not here.
+function ConditionsTab({ results }: { results: Results }) {
+  const sections = conditionsSections(results);
+
+  if (sections.every(s => s.rows.length === 0)) {
+    return <p className="no-data">No conditions data (weather/track tags) in this batch</p>;
+  }
+
+  return (
+    <div className="tab-conditions">
+      {sections.map(section => (
+        <div key={section.title} className="conditions-section">
+          <h3 className="conditions-section-title">{section.title}</h3>
+          {section.note && <p className="conditions-section-note">{section.note}</p>}
+          <table className="track-table">
+            <thead>
+              <tr>
+                {section.columns.map((col, i) => <th key={i}>{col}</th>)}
+              </tr>
+            </thead>
+            <tbody>
+              {section.rows.map((row, ri) => (
+                <tr key={ri}>
+                  {row.map((cell, ci) => <td key={ci}>{cell}</td>)}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 function TracksTab({ results }: { results: Results }) {
   const { tracks } = results.trackResults;
