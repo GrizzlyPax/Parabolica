@@ -7,9 +7,10 @@ import WatchMode from './WatchMode';
 import Compendium from './Compendium';
 import FoundingScreen, { FoundingChoices } from './league/ui/FoundingScreen';
 import LeagueScreen from './league/ui/LeagueScreen';
-import { createLeague, rosterStateAt } from './league/league';
+import { createLeague } from './league/league';
 import { LeagueState, LiveRace } from './league/types';
-import { LIVE_TICK_MS, nextRaceAt } from './league/settle';
+import { LIVE_TICK_MS, nextRaceAt, prepareScheduledRace } from './league/settle';
+import { CANON_VARIABLES } from './simlab/types';
 import { saveLeagueState, loadLeagueState, clearLeagueState } from './storage/persistence';
 import { mulberry32, deriveSeed, randomSeed } from './engine/rng';
 import { generateTrack, getRandomTracks, getTrackById, getDynamicEventDescription, Track } from './generators/tracks';
@@ -115,15 +116,17 @@ function App() {
   // Join a live broadcast mid-race. The race is deterministic from its seed,
   // so we rebuild it, fast-forward to the current wall-clock tick, and play
   // on from there — same race the settle loop would compute headlessly.
+  // prepareScheduledRace is the same setup the settle loop uses: anything
+  // configured differently here would make the watched race a different race
+  // than the one that enters the standings.
   const handleWatchLive = useCallback((liveLeague: LeagueState, live: LiveRace) => {
     const race = liveLeague.schedule[live.index];
     const track = getTrackById(race.trackId);
     if (!track) return;
 
     engine.stop();
-    engine.setSeed(race.seed);
-    engine.loadGeneratedRoster(rosterStateAt(liveLeague, live.index));
-    applyTrackToEngine(track);
+    prepareScheduledRace(engine, liveLeague, live.index, track, CANON_VARIABLES);
+    // Real-time pacing only — no effect on the simulated outcome
     engine.updateConfig({ tickInterval: LIVE_TICK_MS });
     setRaceSpeed(1);
     engine.reset();
@@ -139,6 +142,7 @@ function App() {
     engine.stop();
     engine.reset();
     engine.clearSeed();
+    engine.setSimVars(null); // back to Quick Race defaults
     setScreen('league');
   }, [engine]);
 

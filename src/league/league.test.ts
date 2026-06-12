@@ -1,11 +1,16 @@
 import { describe, it, expect } from 'vitest';
 import { createLeague, buildSchedule, rosterStateAt } from './league';
-import { settleLeague, nextRaceAt, isSeasonOver, FULL_EVENT_RETENTION, LIVE_TICK_MS } from './settle';
+import {
+  settleLeague, nextRaceAt, isSeasonOver, prepareScheduledRace,
+  FULL_EVENT_RETENTION, LIVE_TICK_MS,
+} from './settle';
 import { LeagueSetupConfig, LeagueState } from './types';
 import { saveLeagueState, loadLeagueState, KeyValueStore } from '../storage/persistence';
 import { getSeasonStandings } from '../types/season';
-import { CURRENT_TRACKS } from '../generators/tracks';
+import { CURRENT_TRACKS, getTrackById } from '../generators/tracks';
 import { TEAMS } from '../data/teams';
+import RaceEngine from '../RaceEngine';
+import { CANON_VARIABLES } from '../simlab/types';
 
 const HOUR = 3_600_000;
 const T0 = 1_750_000_000_000; // fixed epoch for fake-clock tests
@@ -161,6 +166,36 @@ describe('settleLeague (fake clock)', () => {
     for (let i = 1; i < league.digests.length; i++) {
       expect(league.digests[i].startedAt!).toBeGreaterThanOrEqual(league.digests[i - 1].endedAt!);
     }
+  });
+
+  it('a watched broadcast reproduces the settled digest exactly, even on a dirty engine', () => {
+    // Regression: the live broadcast used to configure the app's singleton
+    // engine by hand and forgot simVars, so viewers watched a race run on
+    // hardcoded defaults while the settle loop scored the CANON race —
+    // different crash odds, different result. Both paths now share
+    // prepareScheduledRace; this asserts a watch-style replay is bit-for-bit
+    // the race that entered the standings.
+    const league = createLeague(42, makeSetup());
+    const settled = settleLeague(league, { now: T0 + 13 * HOUR }).league;
+    const digest = settled.digests[0];
+    const track = getTrackById(digest.trackId)!;
+
+    // The app engine arrives dirty from a Quick Race: stale config, no simVars.
+    const engine = RaceEngine.createForWorker();
+    engine.updateConfig({ totalLaps: 7, lapLength: 333, baseCrashChance: 0.5 });
+    engine.setSimVars(null);
+
+    prepareScheduledRace(engine, league, 0, track, CANON_VARIABLES);
+    engine.updateConfig({ tickInterval: LIVE_TICK_MS }); // pacing only, like handleWatchLive
+    engine.reset();
+    engine.fastForward(Number.MAX_SAFE_INTEGER); // watch to the chequered flag
+
+    const state = engine.getRaceState();
+    expect(state.raceFinished).toBe(true);
+    expect(state.finishOrder).toEqual(digest.finishOrder);
+    expect(state.totalTicks).toBe(digest.totalTicks);
+    expect(engine.getDrivers().filter(d => d.status === 'dnf').map(d => d.id).sort())
+      .toEqual([...digest.dnfDriverIds].sort());
   });
 
   it('reports progress per settled race', () => {
