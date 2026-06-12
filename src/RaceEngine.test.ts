@@ -6,6 +6,7 @@ import { generateCarsForKingdoms, GeneratedCar } from './generators/cars';
 import { ALL_TRACKS, Track } from './generators/tracks';
 import { TEAMS } from './data/teams';
 import { Tag, getTagById } from './data/tags';
+import { rollWeather } from './data/weather';
 
 function createRosterWithCars(roster: GeneratedDriver[], cars: Map<string, GeneratedCar>) {
   return roster.map(driver => {
@@ -159,6 +160,24 @@ describe('conditional tags (#156 gate)', () => {
     const baseline = run(base, 0xBEEF, undefined);
     const boosted = run(base, 0xBEEF, boost);
     expect(boosted.events).not.toEqual(baseline.events);
+  });
+
+  it('setWeather wakes a rain-dancer (the real C2 path, not just raw conditions)', () => {
+    const rain = rollWeather(() => 0.99); // lands in the rain bucket at high intensity
+    expect(rain.id).toBe('rain');
+    const base = cleanRoster();
+    const dry = run(base, 0xDDD, getTagById('rain-dancer'));
+    // setWeather applies the field-wide lean AND stamps 'rain' so the tag fires.
+    const grid = structuredClone(base);
+    grid[0].driverTag = getTagById('rain-dancer');
+    const engine = RaceEngine.createForWorker(CANON_VARIABLES, 0xDDD);
+    engine.loadGeneratedRoster(grid);
+    engine.updateConfig({ totalLaps: track.laps, lapLength: track.length });
+    engine.setTrackInfo({ id: track.id, name: track.name, emoji: track.emoji,
+      funEmoji: track.funEmoji, description: track.description, laps: track.laps });
+    engine.setWeather(rain);
+    const wet = engine.runHeadless();
+    expect(wet.events).not.toEqual(dry.events);
   });
 });
 

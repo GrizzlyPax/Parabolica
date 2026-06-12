@@ -140,11 +140,12 @@ export function buildSeasonReport(league: LeagueState): string {
 
   // === RACES ===
   addRow('RACES');
-  addRow('R#', 'Track', 'Winner', 'Podium', 'Fastest Lap', 'DNFs', 'Duration');
+  addRow('R#', 'Track', 'Weather', 'Winner', 'Podium', 'Fastest Lap', 'DNFs', 'Duration');
   for (const digest of league.digests) {
     addRow(
       digest.index + 1,
       digest.trackName,
+      digest.weather ? `${digest.weather.emoji} ${digest.weather.name}` : '☀️ Clear',
       name(digest.finishOrder[0]),
       digest.finishOrder.slice(0, 3).map(name).join(' | '),
       digest.fastestLapDriverId !== null ? name(digest.fastestLapDriverId) : '—',

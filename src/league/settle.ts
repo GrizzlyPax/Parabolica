@@ -15,6 +15,7 @@ import { updateSeasonWithRaceResult } from '../types/season';
 import { LeagueState, RaceDigest, SettleResult, LiveRace } from './types';
 import { rosterStateAt } from './league';
 import { pickHighlights } from './highlights';
+import { weatherForRace } from '../data/weather';
 
 export { HIGHLIGHTS_PER_RACE } from './highlights';
 
@@ -64,6 +65,9 @@ export function prepareScheduledRace(
   const race = league.schedule[raceIndex];
   engine.setSimVars(simVars);
   engine.setSeed(race.seed);
+  // Weather is part of the fixed universe — same seed+index → same storm, so
+  // the live broadcast and the headless settle see identical conditions (#149).
+  engine.setWeather(weatherForRace(league.leagueSeed, raceIndex));
   engine.loadGeneratedRoster(rosterStateAt(league, raceIndex));
   engine.updateConfig({
     // The sim runs off config, not trackInfo — these decide the outcome
@@ -120,6 +124,7 @@ function runScheduledRace(
   simVars: SimVariables
 ): { digest: RaceDigest; drivers: Driver[] } {
   const engine = prepareEngine(league, raceIndex, track, simVars);
+  const weather = engine.getWeather();
   const { drivers, raceState, events } = engine.runHeadless();
 
   const digest: RaceDigest = {
@@ -131,6 +136,10 @@ function runScheduledRace(
     dnfDriverIds: drivers.filter(d => d.status === 'dnf').map(d => d.id),
     fastestLapDriverId: findFastestLap(drivers),
     totalTicks: raceState.totalTicks,
+    // Only record non-clear weather (keeps clear races/digests clean)
+    weather: weather && weather.id !== 'clear'
+      ? { id: weather.id, name: weather.name, emoji: weather.emoji }
+      : undefined,
     highlights: pickHighlights(events),
     events,
   };

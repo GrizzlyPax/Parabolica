@@ -186,17 +186,24 @@ into stories.
    surge), Rain Dancer (gated to `rain` → dormant until C2). `tier` field added
    to the Tag interface and all entity tags. Magnitudes still pending lab
    calibration (needs the SimLab condition-blindness fix below).
-2. **C2 — Weather.** `WeatherState`, derived-seed roll, weighted-mild
-   frequency, condition stamping via the existing path. Re-home Rain Dancer.
+2. **C2 — Weather. ✅ shipped (v0.3.5).** `WeatherState` + `rollWeather` +
+   `weatherForRace(leagueSeed, raceIndex)` (`data/weather.ts`); rolled into the
+   shared `prepareScheduledRace`, so live and settle get the same storm. Field-
+   wide lean (crash/variance/speed, intensity-scaled) folded into the engine;
+   `setWeather` stamps conditions so Rain Dancer wakes (4% dry → 35% in rain,
+   1.1× blended). SimLab rolls weather per race; digests + season report +
+   league UI surface it. Frequency skews mild (60% clear, 6% rain).
 3. **C3 — Track tags.** Generalize `track.event` → `tags: TrackTag[]`;
    author 1–2 per track; wire emission. The orphaned condition tags come
    alive.
 4. **C4 — Changeable weather + genesis-rolled track tags.** The variety and
    spectacle pass.
 
-⚠️ **Prereq** (`SIM_MECHANICS.md`): the SimLab doesn't wire `eventTrigger`/
-`eventEffect`, so it's currently blind to condition/track-event tags. Fix
-before lab-validating anything in this layer, or the batches lie.
+Note: the SimLab **does** wire `eventTrigger`/`eventEffect` (`simLabWorker.ts`)
+and now also rolls weather per race — so it measures the conditions layer. The
+empty `TRACK EVENTS` table is just a content gap (no track defines an event
+yet); it fills in once C3 ships track tags. (Earlier docs called the lab
+"blind" here — that note was stale.)
 
 ## 10. Open questions
 

@@ -12,6 +12,7 @@ import { CURRENT_TRACKS, getTrackById } from '../generators/tracks';
 import { TEAMS } from '../data/teams';
 import RaceEngine from '../RaceEngine';
 import { CANON_VARIABLES } from '../simlab/types';
+import { weatherForRace } from '../data/weather';
 
 const HOUR = 3_600_000;
 const T0 = 1_750_000_000_000; // fixed epoch for fake-clock tests
@@ -307,6 +308,32 @@ describe('season report (the copyable balance artifact)', () => {
     const a = buildSeasonReport(settleLeague(createLeague(7, setup), { now: T0 + 13 * HOUR }).league);
     const b = buildSeasonReport(settleLeague(createLeague(7, setup), { now: T0 + 13 * HOUR }).league);
     expect(a).toBe(b);
+  });
+});
+
+describe('weather (C2)', () => {
+  it('digests carry the race weather, deterministic per (seed, index)', () => {
+    const setup = makeSetup({ trackIds: CURRENT_TRACKS.slice(0, 8).map(t => t.id) });
+    const a = settleLeague(createLeague(123, setup), { now: T0 + 30 * HOUR }).league;
+    const b = settleLeague(createLeague(123, setup), { now: T0 + 30 * HOUR }).league;
+
+    // Each digest's weather matches what weatherForRace says, and replays exactly.
+    a.digests.forEach((d, i) => {
+      const w = weatherForRace(a.leagueSeed, d.index);
+      const expected = w.id === 'clear' ? undefined : { id: w.id, name: w.name, emoji: w.emoji };
+      expect(d.weather).toEqual(expected);
+      expect(b.digests[i].weather).toEqual(d.weather);
+    });
+  });
+
+  it('the same weather is woven into the deterministic race (live == settle)', () => {
+    // Weather rides on prepareScheduledRace, shared by live + settle, so a
+    // re-settle of the same league reproduces identical results incl. weather.
+    const setup = makeSetup();
+    const once = settleLeague(createLeague(55, setup), { now: T0 + 13 * HOUR }).league;
+    const twice = settleLeague(createLeague(55, setup), { now: T0 + 13 * HOUR }).league;
+    expect(twice.digests.map(d => [d.finishOrder, d.totalTicks, d.weather]))
+      .toEqual(once.digests.map(d => [d.finishOrder, d.totalTicks, d.weather]));
   });
 });
 

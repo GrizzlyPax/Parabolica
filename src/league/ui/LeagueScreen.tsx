@@ -12,6 +12,7 @@ import { RaceEvent } from '../../RaceEngine';
 import { LeagueState, RaceDigest, LiveRace } from '../types';
 import { settleLeague, nextRaceAt, isSeasonOver, liveRaceSnapshot, LiveSnapshot } from '../settle';
 import { buildSeasonReport } from '../seasonReport';
+import { weatherForRace } from '../../data/weather';
 import { saveLeagueState } from '../../storage/persistence';
 import { getSeasonStandings, calculatePointsForPosition } from '../../types/season';
 import { getTrackById } from '../../generators/tracks';
@@ -96,7 +97,12 @@ function DigestCard({ league, digest, defaultOpen = false }: {
     <div className={`digest-card ${open ? 'open' : ''}`}>
       <button className="digest-summary" onClick={() => setOpen(!open)}>
         <span className="digest-race-no">R{digest.index + 1}</span>
-        <span className="digest-track">{digest.trackEmoji} {digest.trackName}</span>
+        <span className="digest-track">
+          {digest.trackEmoji} {digest.trackName}
+          {digest.weather && (
+            <span className="digest-weather" title={digest.weather.name}> {digest.weather.emoji}</span>
+          )}
+        </span>
         <span className="digest-winner">
           <TeamMarble color={winner?.color} accentColor={winner?.accentColor}
             emoji={winner?.emoji} size={20} slot={winner?.driverSlot} />
@@ -364,7 +370,9 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onDissolve 
               <span className="league-live-title">
                 {(() => {
                   const track = getTrackById(live.trackId);
-                  return `R${live.index + 1} — ${track?.funEmoji ?? ''} ${track?.name ?? ''}`;
+                  const weather = weatherForRace(league.leagueSeed, live.index);
+                  const wx = weather.id !== 'clear' ? ` ${weather.emoji}` : '';
+                  return `R${live.index + 1} — ${track?.funEmoji ?? ''} ${track?.name ?? ''}${wx}`;
                 })()}
               </span>
               {snapshot && (() => {
