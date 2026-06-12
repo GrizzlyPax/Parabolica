@@ -17,9 +17,9 @@ interface PointsChartProps {
   raceCount: number;
 }
 
-const W = 360;
-const H = 150;
-const PAD = { top: 8, right: 8, bottom: 18, left: 28 };
+const W = 720;
+const H = 280;
+const PAD = { top: 12, right: 12, bottom: 24, left: 36 };
 
 function PointsChart({ series, raceCount }: PointsChartProps) {
   if (raceCount < 2) {
@@ -59,7 +59,7 @@ function PointsChart({ series, raceCount }: PointsChartProps) {
           key={s.id}
           fill="none"
           stroke={s.color}
-          strokeWidth="1.8"
+          strokeWidth="2"
           strokeLinejoin="round"
           strokeLinecap="round"
           strokeDasharray={s.dashed ? '4 3' : undefined}

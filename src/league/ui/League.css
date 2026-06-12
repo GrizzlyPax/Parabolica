@@ -43,12 +43,13 @@
 @media (max-width: 920px) {
   .league-columns { display: flex; flex-direction: column; }
   .league-main, .league-rail { display: contents; }
-  /* Single column reads: reel, standings, grid, calendar, chronicle */
+  /* Single column reads: reel, standings, chart, grid, calendar, chronicle */
   .reel-section { order: 1; }
   .standings-section { order: 2; }
-  .grid-section { order: 3; }
-  .calendar-section { order: 4; }
-  .chronicle-section { order: 5; }
+  .chart-section { order: 3; }
+  .grid-section { order: 4; }
+  .calendar-section { order: 5; }
+  .chronicle-section { order: 6; }
 }
 
 .league-topbar {
@@ -308,12 +309,12 @@ button.section-toggle:hover { color: #bbb; }
 .points-chart {
   width: 100%;
   height: auto;
-  margin-top: 12px;
+  margin-top: 8px;
   display: block;
 }
 .chart-tick {
   font-family: var(--font-mono), monospace;
-  font-size: 7px;
+  font-size: 10px;
   fill: #555;
 }
 .chart-waiting {

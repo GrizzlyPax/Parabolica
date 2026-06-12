@@ -393,6 +393,29 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onDissolve 
               </section>
             )}
 
+            {/* The Points Race: cumulative points, the season's shape at a glance */}
+            {hasStandings && (
+              <section className="league-section chart-section">
+                <div className="standings-header">
+                  <h2 className="league-section-title">The Points Race</h2>
+                  <div className="standings-toggle">
+                    <button
+                      className={standingsView === 'drivers' ? 'active' : ''}
+                      onClick={() => setStandingsView('drivers')}
+                    >Drivers</button>
+                    <button
+                      className={standingsView === 'teams' ? 'active' : ''}
+                      onClick={() => setStandingsView('teams')}
+                    >Teams</button>
+                  </div>
+                </div>
+                <PointsChart
+                  series={standingsView === 'drivers' ? driverSeries : teamSeries}
+                  raceCount={raceCount}
+                />
+              </section>
+            )}
+
             {/* The Grid: teams, cars, and drivers — tap a driver for the lore */}
             <section className="league-section grid-section">
               <button className="league-section-title section-toggle" onClick={() => setGridOpen(!gridOpen)}>
@@ -480,11 +503,6 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onDissolve 
                     </tbody>
                   </table>
                 )}
-
-                <PointsChart
-                  series={standingsView === 'drivers' ? driverSeries : teamSeries}
-                  raceCount={raceCount}
-                />
               </section>
             )}
 
