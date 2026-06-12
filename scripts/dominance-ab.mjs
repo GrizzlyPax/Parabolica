@@ -53,15 +53,19 @@ function clampRoster(roster, maxStars) {
   });
 }
 
-const SCENARIOS = [
-  { name: 'canon (0.018)', simVars: CANON_VARIABLES, clamp: null },
-  { name: 'power 0.014', simVars: withPower(0.014), clamp: null },
-  { name: 'power 0.011', simVars: withPower(0.011), clamp: null },
-  { name: 'clamp ≤18', simVars: CANON_VARIABLES, clamp: 18 },
-  { name: '0.014 + clamp', simVars: withPower(0.014), clamp: 18 },
+const ALL_SCENARIOS = [
+  { key: 'canon', name: 'canon (0.018)', simVars: CANON_VARIABLES, clamp: null },
+  { key: 'p014', name: 'power 0.014', simVars: withPower(0.014), clamp: null },
+  { key: 'p011', name: 'power 0.011', simVars: withPower(0.011), clamp: null },
+  { key: 'clamp', name: 'clamp ≤18', simVars: CANON_VARIABLES, clamp: 18 },
+  { key: 'p014clamp', name: '0.014 + clamp', simVars: withPower(0.014), clamp: 18 },
 ];
+// Optional scenario filter: comma-separated keys as argv[3]
+const only = process.argv[3]?.split(',');
+const SCENARIOS = only ? ALL_SCENARIOS.filter(s => only.includes(s.key)) : ALL_SCENARIOS;
 
-const results = [];
+console.log(`DOMINANCE A/B — ${SEASONS} paired universes × ${RACE_COUNT} races, ${TEAM_COUNT} teams`);
+console.log(['scenario', 'median win%', 'p95', '>50%', '>=2/3', 'distinct W', 'P1-P2 gap', 'DNF%', 'champ 4★+', 'champ 5★'].join('\t'));
 for (const sc of SCENARIOS) {
   const metaRng = mulberry32(20260612); // same universes every scenario
   const winShares = [], gaps = [], distinct = [];
@@ -89,24 +93,15 @@ for (const sc of SCENARIOS) {
   const sorted = [...winShares].sort((a, b) => a - b);
   const pct = p => sorted[Math.min(sorted.length - 1, Math.floor(p * sorted.length))];
   const mean = xs => xs.reduce((a, b) => a + b, 0) / xs.length;
-  results.push({
-    name: sc.name,
-    median: pct(0.5), p95: pct(0.95),
-    over50: winShares.filter(x => x >= 0.5).length / SEASONS,
-    over23: winShares.filter(x => x >= 2 / 3).length / SEASONS,
-    distinct: mean(distinct), gap: mean(gaps),
-    dnf: dnfTotal / drTotal, champ4p: champ4p / SEASONS, champ5p: champ5p / SEASONS,
-  });
-  console.error(`${sc.name}: done in ${((Date.now() - t0) / 1000).toFixed(0)}s`);
-}
-
-console.log(`\nDOMINANCE A/B — ${SEASONS} paired universes × ${RACE_COUNT} races, ${TEAM_COUNT} teams`);
-console.log(['scenario', 'median win%', 'p95', '>50%', '>=2/3', 'distinct W', 'P1-P2 gap', 'DNF%', 'champ 4★+', 'champ 5★'].join('\t'));
-for (const r of results) {
-  console.log([r.name,
-    (r.median * 100).toFixed(0) + '%', (r.p95 * 100).toFixed(0) + '%',
-    (r.over50 * 100).toFixed(0) + '%', (r.over23 * 100).toFixed(1) + '%',
-    r.distinct.toFixed(1), r.gap.toFixed(0), (r.dnf * 100).toFixed(1) + '%',
-    (r.champ4p * 100).toFixed(0) + '%', (r.champ5p * 100).toFixed(0) + '%',
+  // Print each row as soon as its scenario finishes — an interrupted run
+  // keeps everything already measured.
+  console.log([sc.name,
+    (pct(0.5) * 100).toFixed(0) + '%', (pct(0.95) * 100).toFixed(0) + '%',
+    (winShares.filter(x => x >= 0.5).length / SEASONS * 100).toFixed(0) + '%',
+    (winShares.filter(x => x >= 2 / 3).length / SEASONS * 100).toFixed(1) + '%',
+    mean(distinct).toFixed(1), mean(gaps).toFixed(0),
+    (dnfTotal / drTotal * 100).toFixed(1) + '%',
+    (champ4p / SEASONS * 100).toFixed(0) + '%', (champ5p / SEASONS * 100).toFixed(0) + '%',
   ].join('\t'));
+  console.error(`${sc.name}: done in ${((Date.now() - t0) / 1000).toFixed(0)}s`);
 }
