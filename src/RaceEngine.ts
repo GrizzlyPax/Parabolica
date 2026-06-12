@@ -3,7 +3,7 @@ import { WeatherState } from './data/weather';
 import { TrackTag } from './data/trackTags';
 import { INFLICTIONS } from './data/inflictions';
 import { SimVariables, CANON_VARIABLES } from './simlab/types';
-import { Rng, mulberry32, shuffle } from './engine/rng';
+import { Rng, mulberry32, shuffle, deriveSeed, randomSeed } from './engine/rng';
 
 export interface DriverStats {
   baseSpeed: number;      // Base speed multiplier (0.85 - 1.15)
@@ -430,6 +430,12 @@ class RaceEngine {
   // behavior unchanged); call setSeed() for a deterministic, replayable race.
   private rng: Rng = Math.random;
 
+  // Base seed for SIDE streams that must not perturb the main `rng` ordering —
+  // e.g. each driver's stable pit-strategy offset (#195 anti-herding). Derived
+  // streams (deriveSeed) stay independent of the race rolls, so a feature that
+  // reads them is byte-identical to today whenever its gate knob is 0.
+  private strategySeed: number = randomSeed();
+
   // Conditional tags (e.g. Front Runner "when leading") are evaluated live each
   // tick against this cache, not stored as permanent effects — that's the #156
   // fix. Rebuilt once per tick; reads engine state only, so it adds no RNG.
@@ -464,11 +470,13 @@ class RaceEngine {
    */
   setSeed(seed: number): void {
     this.rng = mulberry32(seed);
+    this.strategySeed = seed; // side streams replay with the race
   }
 
   /** Restore the default unseeded behavior (live Quick Race). */
   clearSeed(): void {
     this.rng = Math.random;
+    this.strategySeed = randomSeed(); // stable within a live race, fresh each one
   }
 
   /**
@@ -1283,7 +1291,22 @@ class RaceEngine {
     // Force pit if tires critical (but not on last lap - handled above).
     // Safety override: shot tires pit regardless of how late it is (blowout
     // risk beats a short final stint).
-    if (wearPercent >= compound.criticalAt) {
+    //
+    // Strategy archetype (gated, #195): this wear trigger is what ACTUALLY
+    // times stops at canon (the probabilistic window below almost never fires
+    // first — verified by zeroing basePitChance/wearPitBonus: pits/race and
+    // stop timing don't move). Identical compounds hitting the same threshold
+    // on the same lap is why the field herds into one strategy. The archetype
+    // leans each camp's stop point: aggressive (-1) pits earlier on fresher
+    // rubber (sprint stints), conservative (+1) stretches into the cliff —
+    // paying cliff pace and blowout exposure for track position. Drawn from a
+    // SIDE seed stream, so the main roll ordering is untouched; 0 = off,
+    // byte-identical to today.
+    let pitAtWear = compound.criticalAt;
+    if (pitVars.strategyWearLean > 0) {
+      pitAtWear *= 1 + this.getStrategyArchetype(driver) * pitVars.strategyWearLean;
+    }
+    if (wearPercent >= pitAtWear) {
       return true;
     }
 
@@ -1304,6 +1327,21 @@ class RaceEngine {
       return false;
     }
 
+    // Unsafety Car opportunism (gated, #195): a stop under the SC is cheap —
+    // the field circulates slowly, so a driver who still owes a stop takes it
+    // now instead of paying full price later. Reaching this line implies a
+    // stop is still owed (the early-return above filtered the done case); the
+    // wear floor stops a driver who JUST pitted from double-stopping. Draws
+    // main RNG only when the knob is live, so canon 0 stays byte-identical.
+    if (
+      pitVars.scPitChance > 0 &&
+      this.raceState.unsafetyCarActive &&
+      wearPercent >= pitVars.scPitMinWear
+    ) {
+      if (this.rng() < pitVars.scPitChance) return true;
+      // fall through: an SC doesn't make anyone skip their normal window
+    }
+
     // Calculate pit windows for 2-stop strategy on 10 lap race:
     // Stop 1: Around lap 3-4 (first third)
     // Stop 2: Around lap 6-7 (second third)
@@ -1318,13 +1356,18 @@ class RaceEngine {
     const segmentLength = lapsRemaining / (stopsNeeded + 1); // +1 for final stint
     const nextStopIdealLap = driver.currentLap + segmentLength;
 
-    // Driver personality adjusts timing by ±1 lap
-    const driverOffset = Math.floor(aggressiveness * 2);
+    // Driver personality staggers the target lap. NOTE (#195 finding): this
+    // whole voluntary-window path is nearly inert at canon — the wear trigger
+    // above fires first for ~all stops (zeroing basePitChance/wearPitBonus
+    // changes nothing measurable). The knobs here are honest lifts of the
+    // formula's literals (canon 2 / 1 reproduces the old behavior
+    // byte-for-byte), but the binding strategy levers are the wear-lean
+    // archetype above and the SC opportunism. Documented in SIM_MECHANICS §4.
+    const driverOffset = Math.floor(aggressiveness * pitVars.windowOffsetPerStat);
     const adjustedIdealLap = Math.max(driver.currentLap + 1, nextStopIdealLap + driverOffset);
 
-    // Window spans 2 laps around ideal
-    const windowStart = Math.max(2, Math.floor(adjustedIdealLap) - 1);
-    const windowEnd = Math.min(this.config.totalLaps - 2, Math.floor(adjustedIdealLap) + 1);
+    const windowStart = Math.max(2, Math.floor(adjustedIdealLap) - pitVars.windowHalfWidth);
+    const windowEnd = Math.min(this.config.totalLaps - 2, Math.floor(adjustedIdealLap) + pitVars.windowHalfWidth);
 
     const isInPitWindow = driver.currentLap >= windowStart && driver.currentLap <= windowEnd;
 
@@ -1351,6 +1394,16 @@ class RaceEngine {
     }
 
     return false;
+  }
+
+  /** Stable per-race strategy archetype: -1 (short stints, aggressive),
+   * 0 (standard), +1 (long stints, conservative). Drawn from the side seed
+   * stream — replays with the race, never touches the main RNG. Roughly a
+   * third of the field lands in each group, so strategies align in 2-3
+   * camps the way real teams converge, rather than per-driver scatter. */
+  private getStrategyArchetype(driver: Driver): number {
+    const r = mulberry32(deriveSeed(this.strategySeed, 'pitstrat', driver.id))();
+    return r < 1 / 3 ? -1 : r < 2 / 3 ? 0 : 1;
   }
 
   // Calculate pit WORK duration (the stationary part where tires are changed)

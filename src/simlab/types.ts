@@ -508,6 +508,11 @@ export interface SimVariables {
     luckPitBase: number;              // Luck multiplier baseline before adjustment (1.2)
     luckPitAdjustment: number;        // Luck pit timing adjustment (0.4)
     lastPitLapBuffer: number;         // No non-critical stop with <= this many laps left (2)
+    windowOffsetPerStat: number;      // Personality stagger on target lap; higher = more spread (2)
+    windowHalfWidth: number;          // Pit-window half-width in laps; wider = less herding (1)
+    strategyWearLean: number;         // Archetype wear-trigger lean (±fraction of criticalAt; short/std/long camps); 0 = off, byte-identical (0)
+    scPitChance: number;              // Per-tick chance to take a cheap stop under the Unsafety Car when one is owed; 0 = off (0)
+    scPitMinWear: number;             // Min tire wear % before an SC stop is worth it (15)
   };
 
   // === PERFORMANCE FACTORS ===
@@ -648,6 +653,11 @@ export const CANON_VARIABLES: SimVariables = {
     luckPitBase: 1.2,
     luckPitAdjustment: 0.4,
     lastPitLapBuffer: 2,
+    windowOffsetPerStat: 2,
+    windowHalfWidth: 1,
+    strategyWearLean: 0,
+    scPitChance: 0,
+    scPitMinWear: 15,
   },
   performance: {
     luckProcChance: 0.045,              // Rebalance v2: more visible fortune (win-impact neutral, survival real)

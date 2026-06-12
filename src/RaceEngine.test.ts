@@ -244,6 +244,45 @@ describe('conditional tags (#156 gate)', () => {
     expect(diverged).toBe(true);
   });
 
+  it('strategy archetypes + SC opportunism are live when gated on, inert at canon — #195', () => {
+    // Both knobs ship canon-0 and must (a) leave the race byte-identical when
+    // dormant — they draw from a side seed stream / draw no main RNG — and
+    // (b) actually change races when flipped on. The wear-lean is the binding
+    // strategy lever: the wear trigger times ~all stops at canon, so leaning
+    // it per-archetype is what un-herds the field.
+    const base = cleanRoster();
+    const withVars = (pits: Partial<typeof CANON_VARIABLES.pits>) => ({
+      ...CANON_VARIABLES,
+      pits: { ...CANON_VARIABLES.pits, ...pits },
+    });
+    const runWith = (vars: typeof CANON_VARIABLES, seed: number) => {
+      const grid = structuredClone(base);
+      const engine = RaceEngine.createForWorker(vars, seed);
+      engine.loadGeneratedRoster(grid);
+      engine.updateConfig({ totalLaps: track.laps, lapLength: track.length });
+      engine.setTrackInfo({ id: track.id, name: track.name, emoji: track.emoji,
+        funEmoji: track.funEmoji, description: track.description, laps: track.laps });
+      return engine.runHeadless();
+    };
+
+    // (a) dormant: a deep-copied canon (knobs explicitly 0) replays byte-identically
+    const canonRun = runWith(CANON_VARIABLES, 0x195);
+    const dormant = runWith(withVars({ strategyWearLean: 0, scPitChance: 0 }), 0x195);
+    expect(dormant.events).toEqual(canonRun.events);
+    expect(dormant.raceState.finishOrder).toEqual(canonRun.raceState.finishOrder);
+
+    // (b) live: each gate independently diverges on at least one of a few seeds
+    for (const pits of [{ strategyWearLean: 0.12 }, { scPitChance: 0.25 }]) {
+      let diverged = false;
+      for (const seed of [0x195, 0x196, 0x197, 0x198]) {
+        const a = runWith(CANON_VARIABLES, seed);
+        const b = runWith(withVars(pits), seed);
+        if (JSON.stringify(a.events) !== JSON.stringify(b.events)) diverged = true;
+      }
+      expect(diverged, `gate ${JSON.stringify(pits)} should change races`).toBe(true);
+    }
+  });
+
   it('a track tag passive lean changes the race', () => {
     const base = cleanRoster();
     const plain = run(base, 0x7AC, undefined);
