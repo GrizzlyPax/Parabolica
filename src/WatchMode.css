@@ -2699,9 +2699,14 @@
   }
 
   @media (min-width: 1200px) {
-    .frame-detail { grid-template-columns: auto minmax(300px, 380px); }
+    .frame-detail { grid-template-columns: auto minmax(320px, 420px); }
     .frame-detail .bf-table { grid-column: 1; }
-    .frame-detail .bf-feed { display: block; grid-column: 2; }
+    .frame-detail .bf-feed {
+      display: flex;
+      flex-direction: column;
+      grid-column: 2;
+      padding: 0;
+    }
   }
 
   /* Detail table header sticks to the top of ITS scroll container now
@@ -2927,4 +2932,52 @@
   .event-message {
     font-size: 1rem;
   }
+}
+
+/* === Detail right-panel tabs (Lap Chart / Feed) === */
+.bf-panel-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 6px 8px;
+  border-bottom: 1px solid #1c1c22;
+  flex-shrink: 0;
+}
+.bf-panel-tab {
+  background: none;
+  border: none;
+  color: #76767e;
+  font-family: var(--font-display), var(--font-emoji);
+  font-size: 0.64rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  padding: 4px 9px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.bf-panel-tab:hover { color: #aaa; }
+.bf-panel-tab.active { color: #e8e8ec; background: rgba(255, 255, 255, 0.07); }
+.bf-panel-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  overflow: auto;
+}
+.bf-feed .story-feed-detail { flex: 1; min-height: 0; }
+
+/* === Lap chart (position trace) === */
+.lap-chart { width: 100%; height: auto; max-height: 100%; }
+.chart-tick {
+  fill: #5a5a64;
+  font-size: 9px;
+  font-family: var(--font-mono), monospace;
+}
+.chart-waiting {
+  color: #66666e;
+  font-size: 0.8rem;
+  text-align: center;
+  padding: 1.5rem 1rem;
 }

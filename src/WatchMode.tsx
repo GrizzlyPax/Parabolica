@@ -7,6 +7,7 @@ import {
   TrackMap,
   TrackStrip,
   ConditionsPanel,
+  LapChart,
   TRACK_COLUMNS,
   DETAIL_COLUMNS,
   type RaceView,
@@ -990,6 +991,60 @@ function WatchMode({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [drivers, raceState.totalTicks]);
 
+  // === Live lap-chart history (the position trace, #208) ===
+  // Sample the running order once per leader-lap. Cheap: ≤ totalLaps snapshots,
+  // grows on lap changes, not every tick.
+  const lapSamplesRef = useRef<{ lap: number; order: number[]; sc: boolean }[]>([]);
+  const lastSampledLapRef = useRef(0);
+  const [lapSampleCount, setLapSampleCount] = useState(0);
+  useEffect(() => {
+    const racing = drivers.filter(d => d.status !== 'dnf');
+    const leaderLap = racing.length ? Math.max(...racing.map(d => d.currentLap)) : 0;
+    // New race / replay rewound the clock: reset.
+    if (leaderLap < lastSampledLapRef.current) {
+      lapSamplesRef.current = [];
+      lastSampledLapRef.current = 0;
+      setLapSampleCount(0);
+    }
+    if (leaderLap >= 1 && leaderLap > lastSampledLapRef.current) {
+      const order = sortedDrivers.map(d => d.id); // current running order (tower sort)
+      lapSamplesRef.current.push({ lap: leaderLap, order, sc: raceState.unsafetyCarActive });
+      lastSampledLapRef.current = leaderLap;
+      setLapSampleCount(lapSamplesRef.current.length);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [drivers, raceState.totalTicks]);
+
+  const [detailPanel, setDetailPanel] = useState<'chart' | 'feed'>('chart');
+
+  // Build lap-chart series from the sampled history + current driver state.
+  const lapChart = useMemo(() => {
+    const samples = lapSamplesRef.current;
+    const laps = samples.map(s => s.lap);
+    const scSampleIdx = new Set<number>();
+    samples.forEach((s, i) => { if (s.sc) scSampleIdx.add(i); });
+    const series = drivers.map(d => {
+      const dnfLap = d.status === 'dnf' ? (d.dnfInfo?.lap ?? Infinity) : Infinity;
+      const positions = samples.map(s => {
+        if (s.lap > dnfLap) return null; // line stops at retirement
+        const idx = s.order.indexOf(d.id);
+        return idx >= 0 ? idx + 1 : null;
+      });
+      return {
+        id: d.id,
+        color: d.color,
+        accentColor: d.accentColor,
+        dashed: d.driverSlot === 2,
+        code: getSurname(d).slice(0, 3),
+        emoji: d.emoji,
+        positions,
+        pitLaps: (d.pitStops ?? []).map(p => p.lap),
+      };
+    });
+    return { series, laps, scSampleIdx };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lapSampleCount, drivers]);
+
   // Transform positionDeltas to just delta values for TimingTower
   const positionDeltasForTower = useMemo(() => {
     const map = new Map<number, number>();
@@ -1139,7 +1194,31 @@ function WatchMode({
               </section>
 
               <section className="bf-feed">
-                <RaceFeed items={feedItems} className="story-feed-detail" />
+                <div className="bf-panel-tabs">
+                  <button
+                    className={`bf-panel-tab ${detailPanel === 'chart' ? 'active' : ''}`}
+                    onClick={() => setDetailPanel('chart')}
+                  >Lap Chart</button>
+                  <button
+                    className={`bf-panel-tab ${detailPanel === 'feed' ? 'active' : ''}`}
+                    onClick={() => setDetailPanel('feed')}
+                  >Feed</button>
+                </div>
+                {detailPanel === 'chart' ? (
+                  <div className="bf-panel-body">
+                    <LapChart
+                      series={lapChart.series}
+                      laps={lapChart.laps}
+                      totalLaps={totalLaps}
+                      fieldSize={drivers.length}
+                      scSampleIdx={lapChart.scSampleIdx}
+                      focusedDriverIds={focusedDriverIds}
+                      onDriverClick={toggleDriverFocus}
+                    />
+                  </div>
+                ) : (
+                  <RaceFeed items={feedItems} className="story-feed-detail" />
+                )}
               </section>
 
               <section className="bf-footer">
