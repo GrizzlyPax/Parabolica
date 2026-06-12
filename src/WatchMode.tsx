@@ -369,6 +369,51 @@ function WatchMode({
     }
   }, [trackPath]);
 
+  // Joining a broadcast mid-race: everything that already happened is
+  // history, not news. On first observation of an in-progress race, prime
+  // every "seen" ref from current state — silently — so catch-up doesn't
+  // fire stale notifications (HALFWAY at lap 11, explosion bursts for old
+  // crashes, the standing fastest lap announced as new).
+  const joinPrimedRef = useRef(false);
+  useEffect(() => {
+    if (joinPrimedRef.current) return;
+    joinPrimedRef.current = true;
+    if (raceState.totalTicks === 0) return; // fresh race — nothing to prime
+
+    drivers.filter(d => d.status === 'dnf')
+      .forEach(d => seenCrashesRef.current.add(d.id));
+    drivers.filter(d => d.status === 'pitting' && d.currentPitIsSlowStop)
+      .forEach(d => seenSlowPitStopsRef.current.add(d.id));
+    drivers.filter(d => d.status === 'pitting' && d.currentPitIsQuickStop)
+      .forEach(d => seenQuickPitStopsRef.current.add(d.id));
+
+    const leaderLap = Math.max(0, ...drivers.map(d => d.currentLap));
+    const halfwayLap = Math.floor(totalLaps / 2);
+    if (halfwayLap > 0 && leaderLap >= halfwayLap) halfwayTriggeredRef.current = true;
+    if (totalLaps > 1 && leaderLap >= totalLaps - 1) lastLapTriggeredRef.current = true;
+    if (raceState.raceFinished) winnerAnnouncedRef.current = true;
+
+    // The standing fastest lap is old news
+    let fastest: { driverId: number; time: number } | null = null;
+    for (const d of drivers) {
+      for (const time of d.lapTimes || []) {
+        if (!fastest || time < fastest.time) fastest = { driverId: d.id, time };
+      }
+    }
+    fastestLapRef.current = fastest;
+
+    // Past track events and tag activations
+    for (const e of raceEvents ?? []) {
+      if (e.type === 'track_event' && e.tick > lastTrackEventTickRef.current) {
+        lastTrackEventTickRef.current = e.tick;
+      }
+      if (e.type === 'tag_activation') {
+        seenTagActivationsRef.current.add(`${e.tick}-${e.driverId}-${e.description}`);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [drivers, raceState.totalTicks]);
+
   // Detect new crashes and tire blowouts, add notifications + SVG effects
   useEffect(() => {
     if (!pathsReady || !trackPathRef.current) return;
@@ -503,6 +548,7 @@ function WatchMode({
       setFeedItems([]);
       feedIdRef.current = 0;
       recentNotifKeysRef.current.clear();
+      joinPrimedRef.current = false;
       lastCrashTickRef.current = -1;
       previousLeaderRef.current = null;
       notificationIdRef.current = 0;

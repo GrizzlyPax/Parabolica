@@ -9,7 +9,7 @@
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { LeagueState, RaceDigest, LiveRace } from '../types';
-import { settleLeague, nextRaceAt, isSeasonOver } from '../settle';
+import { settleLeague, nextRaceAt, isSeasonOver, liveRaceSnapshot, LiveSnapshot } from '../settle';
 import { saveLeagueState } from '../../storage/persistence';
 import { getSeasonStandings } from '../../types/season';
 import { getTrackById } from '../../generators/tracks';
@@ -149,6 +149,20 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onDissolve 
     return () => clearInterval(timer);
   }, [league, settleNow]);
 
+  // The glance at the broadcast: who's leading the live race, refreshed
+  // every few seconds (each refresh is one partial headless sim).
+  const [snapshot, setSnapshot] = useState<LiveSnapshot | null>(null);
+  useEffect(() => {
+    if (!live) {
+      setSnapshot(null);
+      return;
+    }
+    const update = () => setSnapshot(liveRaceSnapshot(league, live, Date.now()));
+    update();
+    const timer = setInterval(update, 5000);
+    return () => clearInterval(timer);
+  }, [league, live]);
+
   const standings = useMemo(() => getSeasonStandings(league.season), [league.season]);
   const driver = (id: number) => league.roster.find(d => d.id === id);
   const champion = over && standings.length > 0 ? driver(standings[0].driverId) : null;
@@ -195,9 +209,26 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onDissolve 
                   return `R${live.index + 1} — ${track?.funEmoji ?? ''} ${track?.name ?? ''}`;
                 })()}
               </span>
-              <span className="league-live-elapsed">
-                {formatCountdown(now - live.startedAt)} in · ends in {formatCountdown(live.endsAt - now)}
-              </span>
+              {snapshot && (() => {
+                const leader = driver(snapshot.runningOrder[0]);
+                return (
+                  <span className="league-live-order">
+                    <span className="live-order-lap">L{snapshot.lap}/{snapshot.totalLaps}</span>
+                    <span className="live-order-marbles">
+                      {snapshot.runningOrder.slice(0, 5).map(id => {
+                        const d = driver(id);
+                        return (
+                          <TeamMarble key={id} color={d?.color} accentColor={d?.accentColor}
+                            emoji={d?.emoji} size={18} slot={d?.driverSlot} />
+                        );
+                      })}
+                    </span>
+                    <span className="live-order-leader" style={{ color: leader?.color }}>
+                      {leader?.fullName} leads
+                    </span>
+                  </span>
+                );
+              })()}
             </div>
             <button className="watch-live-btn" onClick={() => onWatchLive(live)}>
               📺 Watch

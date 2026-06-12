@@ -8,17 +8,18 @@
 // Pure (input league is never mutated) and synchronous.
 // See docs/COMMISSIONER_MODE_TECH.md (Problem 3).
 
-import RaceEngine, { RaceEvent, Driver } from '../RaceEngine';
+import RaceEngine, { Driver } from '../RaceEngine';
 import { SimVariables, CANON_VARIABLES } from '../simlab/types';
 import { getTrackById, getDynamicEventDescription, Track } from '../generators/tracks';
 import { updateSeasonWithRaceResult } from '../types/season';
 import { LeagueState, RaceDigest, SettleResult, LiveRace } from './types';
 import { rosterStateAt } from './league';
+import { pickHighlights } from './highlights';
+
+export { HIGHLIGHTS_PER_RACE } from './highlights';
 
 /** How many of the most recent digests keep their full event log. */
 export const FULL_EVENT_RETENTION = 3;
-/** How many top-magnitude events every digest keeps forever. */
-export const HIGHLIGHTS_PER_RACE = 12;
 /** Real-time ms per tick on a live broadcast (1x — broadcasts are not pausable). */
 export const LIVE_TICK_MS = 100;
 
@@ -29,13 +30,6 @@ export interface SettleOptions {
   simVars?: SimVariables;
   /** Progress callback — one call per settled race (drives backfill UI). */
   onRaceSettled?: (digest: RaceDigest, settledCount: number, dueCount: number) => void;
-}
-
-function pickHighlights(events: RaceEvent[]): RaceEvent[] {
-  return [...events]
-    .sort((a, b) => b.magnitude - a.magnitude)
-    .slice(0, HIGHLIGHTS_PER_RACE)
-    .sort((a, b) => a.tick - b.tick);
 }
 
 function findFastestLap(drivers: Driver[]): number | null {
@@ -51,12 +45,14 @@ function findFastestLap(drivers: Driver[]): number | null {
   return fastestId;
 }
 
-function runScheduledRace(
+/** Build an engine prepared exactly like the live broadcast runs it, so a
+ * headless settle, a mid-race snapshot, and a watched race are the same race. */
+function prepareEngine(
   league: LeagueState,
   raceIndex: number,
   track: Track,
   simVars: SimVariables
-): { digest: RaceDigest; drivers: Driver[] } {
+): RaceEngine {
   const race = league.schedule[raceIndex];
   const engine = RaceEngine.createForWorker(simVars, race.seed);
   engine.loadGeneratedRoster(rosterStateAt(league, raceIndex));
@@ -84,7 +80,16 @@ function runScheduledRace(
     eventTrigger: track.event?.trigger,
     eventEffect: track.event?.effect,
   });
+  return engine;
+}
 
+function runScheduledRace(
+  league: LeagueState,
+  raceIndex: number,
+  track: Track,
+  simVars: SimVariables
+): { digest: RaceDigest; drivers: Driver[] } {
+  const engine = prepareEngine(league, raceIndex, track, simVars);
   const { drivers, raceState, events } = engine.runHeadless();
 
   const digest: RaceDigest = {
@@ -194,6 +199,43 @@ export function settleLeague(league: LeagueState, options: SettleOptions): Settl
 export function nextRaceAt(league: LeagueState): number | null {
   const next = league.schedule.find(r => r.index > league.settledThrough);
   return next ? Math.max(next.scheduledAt, lastBroadcastEnd(league)) : null;
+}
+
+/** The state of a live broadcast at a glance, for UI that isn't watching. */
+export interface LiveSnapshot {
+  /** Driver ids in current race order (DNFs last). */
+  runningOrder: number[];
+  lap: number;
+  totalLaps: number;
+}
+
+/**
+ * Where the live race stands right now: replay the broadcast headlessly to
+ * the current wall-clock tick (determinism makes this exact, not an
+ * estimate). Costs one partial sim — fine on a several-second poll, too
+ * heavy for a 60fps loop.
+ */
+export function liveRaceSnapshot(
+  league: LeagueState,
+  live: LiveRace,
+  now: number,
+  simVars: SimVariables = CANON_VARIABLES
+): LiveSnapshot | null {
+  const track = getTrackById(live.trackId);
+  if (!track) return null;
+  const engine = prepareEngine(league, live.index, track, simVars);
+  engine.reset();
+  engine.fastForward(Math.floor((Math.min(now, live.endsAt) - live.startedAt) / LIVE_TICK_MS));
+
+  const drivers = engine.getDrivers(); // already in race order
+  const racing = drivers.filter(d => d.status !== 'dnf');
+  const dnf = drivers.filter(d => d.status === 'dnf');
+  const leaderLap = Math.max(0, ...racing.map(d => d.currentLap));
+  return {
+    runningOrder: [...racing, ...dnf].map(d => d.id),
+    lap: Math.min(track.laps, leaderLap + 1),
+    totalLaps: track.laps,
+  };
 }
 
 /** True once every scheduled race has settled. */

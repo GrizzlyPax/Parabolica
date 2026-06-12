@@ -16,6 +16,7 @@
 /* Shared team marble: emoji on team color, accent-color ring (same identity
    mark as the timing tower). Inline size/colors come from TeamMarble.tsx. */
 .lg-marble {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -141,11 +142,42 @@
   font-family: var(--font-display), var(--font-emoji);
   letter-spacing: 0.03em;
 }
-.league-live-elapsed {
-  color: #999;
-  font-size: 0.82rem;
+/* The glance: running order while you're not watching */
+.league-live-order {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  min-width: 0;
+}
+
+.live-order-lap {
   font-family: var(--font-mono), monospace;
+  font-size: 0.8rem;
+  color: #888;
   font-variant-numeric: tabular-nums;
+}
+
+.live-order-marbles {
+  display: inline-flex;
+  align-items: center;
+}
+.live-order-marbles .lg-marble { margin-right: -5px; }
+.live-order-marbles .lg-marble:first-child {
+  z-index: 5;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.25);
+}
+.live-order-marbles .lg-marble:nth-child(2) { z-index: 4; }
+.live-order-marbles .lg-marble:nth-child(3) { z-index: 3; }
+.live-order-marbles .lg-marble:nth-child(4) { z-index: 2; }
+.live-order-marbles .lg-marble:nth-child(5) { z-index: 1; }
+
+.live-order-leader {
+  font-family: var(--font-display), var(--font-emoji);
+  font-size: 0.92rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .league-live-card .live-badge {
