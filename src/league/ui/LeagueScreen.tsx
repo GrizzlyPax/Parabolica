@@ -508,6 +508,8 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onDissolve 
                   <h2 className="league-section-title">
                     {chartMode === 'points' ? 'The Points Race' : 'The Standings Race'}
                   </h2>
+                  {/* Drivers/Teams is ONE league-wide switch — it lives on the
+                      Standings rail; the chart follows it. */}
                   <div className="league-view-toggle">
                     <button
                       className={chartMode === 'points' ? 'active' : ''}
@@ -517,16 +519,6 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onDissolve 
                       className={chartMode === 'position' ? 'active' : ''}
                       onClick={() => setChartMode('position')}
                     >Position</button>
-                  </div>
-                  <div className="league-view-toggle">
-                    <button
-                      className={standingsView === 'drivers' ? 'active' : ''}
-                      onClick={() => setStandingsView('drivers')}
-                    >Drivers</button>
-                    <button
-                      className={standingsView === 'teams' ? 'active' : ''}
-                      onClick={() => setStandingsView('teams')}
-                    >Teams</button>
                   </div>
                 </div>
                 {chartMode === 'points' ? (

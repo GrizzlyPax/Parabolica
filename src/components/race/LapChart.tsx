@@ -51,7 +51,6 @@ interface LapChartProps {
 }
 
 const W = 880;
-const H = 460;
 
 function LapChart({ series, laps, totalLaps, fieldSize, scSampleIdx, focusedDriverIds, onDriverClick, legendMode = 'full' }: LapChartProps) {
   if (series.length === 0 || laps.length === 0) {
@@ -60,9 +59,13 @@ function LapChart({ series, laps, totalLaps, fieldSize, scSampleIdx, focusedDriv
   const compact = legendMode === 'compact';
   // Full mode hosts position · marble · name; compact only a marble or code.
   const PAD = { top: 16, right: compact ? 64 : 178, bottom: 30, left: 32 };
+  const rows = Math.max(2, fieldSize);
+  // Compact (standings) height adapts to the field: ~20px per rank row, so 22
+  // drivers expand to roughly the standings tower's height and 11 teams stay
+  // trim instead of floating in dead space. Full (race) keeps a fixed canvas.
+  const H = compact ? PAD.top + PAD.bottom + (rows - 1) * 20 : 460;
   const innerW = W - PAD.left - PAD.right;
   const innerH = H - PAD.top - PAD.bottom;
-  const rows = Math.max(2, fieldSize);
   const x = (lap: number) => PAD.left + (lap / Math.max(1, totalLaps)) * innerW;
   const y = (row: number) => PAD.top + ((row - 1) / (rows - 1)) * innerH;
 
