@@ -8,7 +8,7 @@ import { ALL_TRACKS, Track } from '../generators/tracks';
 import { TEAMS } from '../data/teams';
 import { Tag } from '../data/tags';
 import { rollWeather, WeatherState } from '../data/weather';
-import { intrinsicTrackTags } from '../data/trackTags';
+import { intrinsicTrackTags, TrackTag } from '../data/trackTags';
 import type {
   SimLabConfig,
   WorkerInMessage,
@@ -122,6 +122,7 @@ function createAccumulators(): SimLabAccumulators {
     weatherAccumulators: new Map(),
     reactiveTagAccumulators: new Map(),
     tagWeatherAccumulators: new Map(),
+    trackTagAccumulators: new Map(),
     eventAccumulators: new Map(),
     currentRaceEventEffects: new Map(),
     fieldSpread: {
@@ -165,7 +166,8 @@ function aggregateRaceResult(
   raceState: RaceState,
   events: RaceEvent[],
   track: Track,
-  weather: WeatherState | null
+  weather: WeatherState | null,
+  trackTags: TrackTag[]
 ) {
   acc.totalRaces++;
   const driverCount = drivers.length;
@@ -232,7 +234,13 @@ function aggregateRaceResult(
     updateBucket('tireManagement', tireMgmtBucket);
 
     // === TAG AGGREGATION ===
-    const activeConditions = weather?.conditions ?? [];
+    // Active conditions are the union of every environmental source — weather
+    // AND track-stamped — matching the engine's recomputeConditions. (Reading
+    // weather alone here mis-bucketed tags gated on track conditions.)
+    const activeConditions = [
+      ...(weather?.conditions ?? []),
+      ...trackTags.flatMap(t => t.conditions ?? []),
+    ];
     const weatherId = weather?.id ?? 'clear';
     const updateTag = (tag: Tag | undefined, tagType: 'driver' | 'car' | 'team') => {
       if (!tag) return;
@@ -617,6 +625,24 @@ function aggregateRaceResult(
   weatherAcc.crashes += trackDnfs.crash;
   weatherAcc.totalTicks += raceState.totalTicks;
 
+  // === TRACK TAG AGGREGATION (race-level: how each character bends races) ===
+  for (const tt of trackTags) {
+    let ttAcc = acc.trackTagAccumulators.get(tt.id);
+    if (!ttAcc) {
+      ttAcc = {
+        tagId: tt.id, tagName: tt.name, tagEmoji: tt.emoji,
+        races: 0, driverRaces: 0, dnfs: 0, crashes: 0, totalTicks: 0, totalLeadChanges: 0,
+      };
+      acc.trackTagAccumulators.set(tt.id, ttAcc);
+    }
+    ttAcc.races++;
+    ttAcc.driverRaces += driverCount;
+    ttAcc.dnfs += driverCount - finishersThisRace;
+    ttAcc.crashes += trackDnfs.crash;
+    ttAcc.totalTicks += raceState.totalTicks;
+    ttAcc.totalLeadChanges += raceState.leadChanges;
+  }
+
   // === FIELD SPREAD AGGREGATION ===
   // Get finishers sorted by position
   const finishers = drivers
@@ -724,6 +750,11 @@ function finalizeResults(acc: SimLabAccumulators, config: SimLabConfig, executio
     })),
   };
 
+  // Track tag results (race-level)
+  const trackTagResults: SimLabResults['trackTagResults'] = {
+    trackTags: Array.from(acc.trackTagAccumulators.values()).sort((a, b) => b.races - a.races),
+  };
+
   // Event results
   const eventArray = Array.from(acc.eventAccumulators.values());
   const eventResults: SimLabResults['eventResults'] = {
@@ -754,6 +785,7 @@ function finalizeResults(acc: SimLabAccumulators, config: SimLabConfig, executio
     pitStopResults,
     trackResults,
     weatherResults,
+    trackTagResults,
     eventResults,
     fieldSpreadResults,
   };
@@ -829,7 +861,8 @@ async function runSimulation(config: SimLabConfig, variables?: SimVariables, _la
       const weather = rollWeather();
       engine.setWeather(weather);
       // Apply the track's intrinsic tags (C3) so they're exercised + measured.
-      engine.setTrackTags(intrinsicTrackTags(track.id));
+      const trackTags = intrinsicTrackTags(track.id);
+      engine.setTrackTags(trackTags);
 
       // Run the race headlessly
       const result = engine.runHeadless();
@@ -841,7 +874,8 @@ async function runSimulation(config: SimLabConfig, variables?: SimVariables, _la
         result.raceState,
         result.events,
         track,
-        weather
+        weather,
+        trackTags
       );
 
       // Report progress periodically

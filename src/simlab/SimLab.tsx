@@ -4,6 +4,7 @@ import { SimLabVariables } from './SimLabVariables';
 import type { SimLabConfig as Config, SimLabResults as Results, WorkerOutMessage, SimVariables, ComparisonResults, VariablesDiff } from './types';
 import { CANON_VARIABLES, cloneVariables } from './types';
 import { intrinsicTrackTags } from '../data/trackTags';
+import { conditionsSections, sectionsToTsvRows } from './reportSections';
 import './SimLab.css';
 
 type SimLabPhase = 'setup' | 'running' | 'results';
@@ -376,50 +377,11 @@ export default function SimLab() {
       }
       addBlank();
 
-      // Weather Distribution — how often each weather rolled, and how it played
-      addRow(`${prefix}WEATHER DISTRIBUTION`);
-      addRow('Weather', 'Races', '% of Races', 'DNF%', 'Crashes/Race', 'Avg Ticks');
-      for (const w of data.weatherResults.weathers) {
-        const pct = data.totalRaces > 0 ? ((w.races / data.totalRaces) * 100).toFixed(1) : '0.0';
-        const dnfRate = w.driverRaces > 0 ? ((w.dnfs / w.driverRaces) * 100).toFixed(1) : '0.0';
-        const crashesPerRace = w.races > 0 ? (w.crashes / w.races).toFixed(2) : '0.00';
-        const avgTicks = w.races > 0 ? Math.round(w.totalTicks / w.races) : 0;
-        addRow(`${w.weatherEmoji} ${w.weatherName}`, w.races, `${pct}%`, `${dnfRate}%`, crashesPerRace, avgTicks);
-      }
-      addBlank();
-
-      // Weather-reactive tags — win% when their condition is active vs not
-      if (data.weatherResults.reactiveTags.length > 0) {
-        addRow(`${prefix}WEATHER-REACTIVE TAGS (in-condition vs out)`);
-        addRow('Tag', 'Condition', 'In Appear', 'In Win%', 'Out Appear', 'Out Win%', 'Swing');
-        for (const rt of data.weatherResults.reactiveTags) {
-          const inWin = rt.inAppearances > 0 ? (rt.inWins / rt.inAppearances) * 100 : 0;
-          const outWin = rt.outAppearances > 0 ? (rt.outWins / rt.outAppearances) * 100 : 0;
-          addRow(
-            `${rt.tagEmoji} ${rt.tagName}`, rt.conditionId,
-            rt.inAppearances, `${inWin.toFixed(1)}%`,
-            rt.outAppearances, `${outWin.toFixed(1)}%`,
-            `${(inWin - outWin >= 0 ? '+' : '')}${(inWin - outWin).toFixed(1)}%`,
-          );
-        }
-        addBlank();
-      }
-
-      // Tag × weather matrix — every tag's win% by weather (columns in a fixed
-      // order so cells line up). Sparse cells (rare weather) are small-sample.
-      if (data.weatherResults.tagWeatherMatrix.length > 0) {
-        const cols = data.weatherResults.weathers.map(w => w.weatherId); // sorted by frequency
-        addRow(`${prefix}TAG × WEATHER WIN%`);
-        addRow('Tag', ...cols);
-        for (const tw of data.weatherResults.tagWeatherMatrix) {
-          const byId = new Map(tw.byWeather.map(c => [c.weatherId, c]));
-          const cells = cols.map(id => {
-            const c = byId.get(id);
-            return c && c.appearances > 0 ? `${((c.wins / c.appearances) * 100).toFixed(1)}%` : '—';
-          });
-          addRow(`${tw.tagEmoji} ${tw.tagName}`, ...cells);
-        }
-        addBlank();
+      // Conditions-layer sections (weather, tag × weather, track tags) come from
+      // the shared registry — the same definitions the Conditions tab renders,
+      // so the export and the UI can't drift.
+      for (const row of sectionsToTsvRows(conditionsSections(data), prefix)) {
+        rows.push(row);
       }
 
       // Tag Performance

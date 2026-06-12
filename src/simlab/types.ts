@@ -48,6 +48,9 @@ export interface SimLabResults {
   // Weather analysis (distribution + condition-reactive tag splits)
   weatherResults: WeatherResults;
 
+  // Track tag analysis (race-level: how each track character bends races)
+  trackTagResults: TrackTagResults;
+
   // Event analysis
   eventResults: EventResults;
 
@@ -304,6 +307,26 @@ export interface WeatherResults {
   tagWeatherMatrix: TagWeatherPerformance[];
 }
 
+// === TRACK TAG ANALYSIS ===
+
+/** Race-level stats per track tag (track tags are field-wide, so the signal
+ * is how they bend the whole race — DNFs, crashes, pace — not who wins). */
+export interface TrackTagPerformance {
+  tagId: string;
+  tagName: string;
+  tagEmoji: string;
+  races: number;
+  driverRaces: number;
+  dnfs: number;
+  crashes: number;
+  totalTicks: number;
+  totalLeadChanges: number;
+}
+
+export interface TrackTagResults {
+  trackTags: TrackTagPerformance[];
+}
+
 // === ACCUMULATOR TYPES (used during simulation) ===
 
 export interface SimLabAccumulators {
@@ -353,6 +376,8 @@ export interface SimLabAccumulators {
   reactiveTagAccumulators: Map<string, ReactiveTagPerformance>;
   // Full tag × weather matrix: tagId -> weatherId -> { appearances, wins }
   tagWeatherAccumulators: Map<string, { tagId: string; tagName: string; tagEmoji: string; byWeather: Map<string, { appearances: number; wins: number }> }>;
+  // Track tags: tagId -> race-level accumulator
+  trackTagAccumulators: Map<string, TrackTagPerformance>;
 
   // Events
   eventAccumulators: Map<string, EventPerformance>;
