@@ -6,6 +6,8 @@ export { default as DriverRow } from './DriverRow';
 export { default as UniversalHeader } from './UniversalHeader';
 export { default as NavPanel } from './NavPanel';
 export { default as TrackMap } from './TrackMap';
+export { default as TrackStrip } from './TrackStrip';
+export { default as ConditionsBar } from './ConditionsBar';
 
 // Leaf components
 export { default as TeamStripe } from './TeamStripe';

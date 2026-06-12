@@ -2547,80 +2547,237 @@
 }
 
 /* ============================================
-   VIEW-SPECIFIC LAYOUTS
-   All views scroll as one page - no nested scroll
+   BROADCAST FRAME — a 16:9 widescreen composition (the F1-TV layout).
+   Mobile (portrait, < 800px): falls back to a stacked vertical scroll.
    ============================================ */
 
-/* Track View: Mobile - track on top, tower below */
-/* DOM order: timing, track. Use CSS order to show track first on mobile. */
-.watch-content.view-track {
+/* Mobile base: simple vertical stack, page scrolls as one. */
+.broadcast-frame {
+  display: flex;
   flex-direction: column;
-}
-
-.watch-content.view-track .track-section {
-  min-height: 280px;
-  order: 1; /* Track first on mobile */
-}
-
-.watch-content.view-track .timing-section {
-  order: 2; /* Timing below track on mobile */
-}
-
-/* Track View: Desktop (900px+) - side by side: tower LEFT, track RIGHT */
-@media (min-width: 900px) {
-  .watch-content.view-track {
-    flex-direction: row;
-    height: calc(100vh - 80px); /* Account for header */
-  }
-
-  .watch-content.view-track .timing-section {
-    width: 420px;
-    min-width: 380px;
-    max-width: 480px;
-    overflow-y: auto;
-    flex-shrink: 0;
-    order: 1; /* Timing on LEFT */
-  }
-
-  .watch-content.view-track .track-section {
-    flex: 1;
-    min-height: auto;
-    display: flex;
-    align-items: flex-start;    /* Top-aligned so track lines up with top drivers */
-    justify-content: flex-start; /* Left-aligned */
-    order: 2; /* Track on RIGHT */
-    padding-top: 0.5rem;
-  }
-}
-
-/* Track View: Large desktop (1200px+) */
-@media (min-width: 1200px) {
-  .watch-content.view-track .timing-section {
-    width: 500px;
-    max-width: 560px;
-  }
-}
-
-/* Detail View: the full data table. Tower takes the whole width, events
-   below, no track map, and NO internal scroll anywhere — the page scrolls
-   as one (the old 50% panel with its own overflow-y put a scrollbar in the
-   middle of the screen). */
-.watch-content.view-detail {
-  flex-direction: column;
-}
-
-.watch-content.view-detail .timing-section {
   width: 100%;
-  max-width: 1100px;
-  margin: 0 auto;
 }
-
-.watch-content.view-detail .events-section {
+.broadcast-frame .bf-map {
   padding: 1rem;
-  width: 100%;
-  max-width: 1100px;
-  margin: 0 auto;
+  display: flex;
+  justify-content: center;
 }
+.broadcast-frame .bf-map .track-map { width: 100%; max-width: 640px; }
+.broadcast-frame .bf-tower,
+.broadcast-frame .bf-table { position: relative; }
+.broadcast-frame .bf-feed,
+.broadcast-frame .bf-feed-strip { padding: 1rem; }
+.broadcast-frame .bf-footer { padding: 0.5rem 1rem 1rem; }
+
+/* Thin, dark scrollbars on internally-scrolling panels (no ugly white bars). */
+.bf-tower .timing-tower::-webkit-scrollbar,
+.bf-table::-webkit-scrollbar,
+.bf-feed::-webkit-scrollbar,
+.bf-feed-strip::-webkit-scrollbar {
+  width: 6px;
+}
+.bf-tower .timing-tower::-webkit-scrollbar-thumb,
+.bf-table::-webkit-scrollbar-thumb,
+.bf-feed::-webkit-scrollbar-thumb,
+.bf-feed-strip::-webkit-scrollbar-thumb {
+  background: #2a2a30;
+  border-radius: 3px;
+}
+.bf-tower .timing-tower,
+.bf-table, .bf-feed, .bf-feed-strip {
+  scrollbar-width: thin;
+  scrollbar-color: #2a2a30 transparent;
+}
+
+/* Desktop / landscape: the fixed 16:9 broadcast frame. */
+@media (min-width: 800px) {
+  .watch-mode {
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .watch-content {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+  }
+
+  /* Largest 16:9 box that fits below the header. width drives, max-width caps
+     by available height (≈ 100dvh − header) so height never overflows. */
+  .broadcast-frame {
+    aspect-ratio: 16 / 9;
+    width: 100%;
+    max-width: calc((100dvh - 64px) * 16 / 9);
+    height: auto;
+    margin: auto;
+    background: #050506;
+    border: 1px solid #1a1a1e;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  /* Shared panel look: floating dark cards with quiet borders. */
+  .bf-tower, .bf-table, .bf-feed, .bf-feed-strip, .bf-footer {
+    background: rgba(10, 10, 12, 0.72);
+    border: 1px solid #1c1c22;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  /* --- TRACK VIEW: tower floats left (full height), map fills, feed strip --- */
+  .frame-track {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    grid-template-rows: 1fr 92px;
+    gap: 10px;
+    padding: 10px;
+  }
+  .frame-track .bf-tower {
+    grid-column: 1;
+    grid-row: 1 / 3;
+    display: flex;
+    flex-direction: column;
+    backdrop-filter: blur(6px);
+  }
+  .frame-track .bf-tower .timing-tower {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+  }
+  .frame-track .bf-map {
+    grid-column: 2;
+    grid-row: 1;
+    padding: 8px;
+    align-items: center;
+  }
+  /* Fit the 5:3 map into the cell by height, preserving its ratio. */
+  .frame-track .bf-map .track-map {
+    width: auto;
+    height: 100%;
+    max-width: 100%;
+    min-height: 0;
+  }
+  .frame-track .bf-feed-strip {
+    grid-column: 2;
+    grid-row: 2;
+    padding: 6px 10px;
+    overflow-y: auto;
+  }
+
+  /* --- DETAIL VIEW: F1 data screen — table | feed, conditions+strip footer --- */
+  .frame-detail {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    grid-template-rows: 1fr 96px;
+    gap: 10px;
+    padding: 10px;
+  }
+  .frame-detail .bf-table {
+    grid-column: 1;
+    grid-row: 1;
+    overflow-y: auto;
+    padding: 0;
+  }
+  .frame-detail .bf-feed {
+    grid-column: 2;
+    grid-row: 1;
+    overflow-y: auto;
+    padding: 8px;
+  }
+  .frame-detail .bf-footer {
+    grid-column: 1 / 3;
+    grid-row: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 8px 12px;
+  }
+
+  /* Detail table header sticks to the top of ITS scroll container now
+     (contained scroll inside .bf-table, top:0 — no page-scroll, no phantom
+     offset). Scoped to the frame so it wins over the base static rule. */
+  .frame-detail .timing-tower-detail .timing-tower-header {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: #0a0a0c;
+  }
+}
+
+/* Wider screens: a touch more room for the floating panels. */
+@media (min-width: 1200px) {
+  .frame-track { grid-template-columns: 360px 1fr; }
+  .frame-detail { grid-template-columns: 1fr 360px; }
+}
+
+/* === Track strip (horizontal race-progress dots) === */
+.track-strip { width: 100%; }
+.track-strip-line {
+  position: relative;
+  height: 18px;
+  margin: 4px 14px;
+  border-bottom: 1px solid #2a2a30;
+}
+.track-strip-flag {
+  position: absolute;
+  bottom: -2px;
+  font-size: 0.7rem;
+  color: #555;
+}
+.track-strip-start { left: -10px; }
+.track-strip-finish { right: -10px; }
+.track-strip-dot {
+  position: absolute;
+  bottom: 2px;
+  width: 9px;
+  height: 9px;
+  margin-left: -4.5px;
+  border-radius: 50%;
+  border: 1.5px solid #fff;
+  transition: left 0.4s linear;
+}
+.track-strip-dot.focused {
+  width: 12px;
+  height: 12px;
+  margin-left: -6px;
+  bottom: 0;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.6);
+  z-index: 2;
+}
+.track-strip-dot.pitting { opacity: 0.5; }
+
+/* === Conditions bar (F1 "Current Conditions" block) === */
+.conditions-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.conditions-bar-label {
+  font-family: var(--font-display), var(--font-emoji);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #666;
+  white-space: nowrap;
+}
+.conditions-bar-items {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.conditions-bar-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.8rem;
+  color: #ccc;
+}
+.conditions-bar-emoji { font-size: 0.95rem; }
+.conditions-bar-name { color: #aaa; }
 
 /* Standings View: Points tables */
 
