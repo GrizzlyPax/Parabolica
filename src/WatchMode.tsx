@@ -6,7 +6,7 @@ import {
   TimingTower,
   TrackMap,
   TrackStrip,
-  ConditionsBar,
+  ConditionsPanel,
   TRACK_COLUMNS,
   DETAIL_COLUMNS,
   type RaceView,
@@ -1179,7 +1179,7 @@ function WatchMode({
               </section>
 
               <section className="bf-footer">
-                <ConditionsBar conditions={headerConditions} />
+                <ConditionsPanel weather={engine.getWeather()} trackTags={engine.getTrackTags()} />
                 <TrackStrip
                   drivers={drivers}
                   totalLaps={totalLaps}

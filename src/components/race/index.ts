@@ -8,6 +8,7 @@ export { default as NavPanel } from './NavPanel';
 export { default as TrackMap } from './TrackMap';
 export { default as TrackStrip } from './TrackStrip';
 export { default as ConditionsBar } from './ConditionsBar';
+export { default as ConditionsPanel } from './ConditionsPanel';
 
 // Leaf components
 export { default as TeamStripe } from './TeamStripe';
