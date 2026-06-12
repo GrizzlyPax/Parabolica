@@ -121,7 +121,16 @@ Read `docs/SIM_MECHANICS.md` §5 for the full stat truth table. Summary:
   expect them to move anything.
 - **#171 Content wave** — new tags across all layers are pending; each ships
   with a lab batch proving its tier (partnered flavour + balance).
-- **#106 Morale**, **#82 Spin-outs** — proposed mechanics, not yet built.
+- **#82 Mistakes layer** — **built (v0.3.30), dormant in canon.** Non-terminal
+  driver errors (spin/lock-up/wide/flat-spot) per `BALANCE_DOMINANCE_PASS.md`
+  §3: `performance.mistakeBaseChance` gates it (0 = today, byte-identical);
+  weights for consistency/aggression/damage, penalty + duration + cooldown all
+  tunable. Logged as dedicated `driver_error` events. First A/B (40 paired
+  universes, first-lab values): kills runaway tails (>50% champions 30%→23%,
+  ≥2/3 2.5%→0%) but median win share unmoved — `mistakeBaseChance` is the
+  primary dominance dial, yours to raise. Flip canon only via the §6
+  acceptance run.
+- **#106 Morale** — on hold (snowball risk; redesign later).
 
 ---
 
