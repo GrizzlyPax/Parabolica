@@ -39,10 +39,6 @@ function driverCode(fullName: string): string {
   return surname.slice(0, 3).toUpperCase().replace(/[^A-Z]/g, '') || '???';
 }
 
-function teamCode(name: string): string {
-  return name.replace(/[^A-Za-z]/g, '').slice(0, 3).toUpperCase() || '???';
-}
-
 function formatCountdown(ms: number): string {
   const total = Math.max(0, Math.ceil(ms / 1000));
   const h = Math.floor(total / 3600);
@@ -163,8 +159,6 @@ function DigestCard({ league, digest, defaultOpen = false }: {
 }
 
 function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onDissolve }: LeagueScreenProps) {
-  // The while-you-were-away reel: digests settled since this screen opened.
-  const [reel, setReel] = useState<RaceDigest[]>([]);
   const [live, setLive] = useState<LiveRace | null>(null);
   const [now, setNow] = useState(() => Date.now());
   const [confirmDissolve, setConfirmDissolve] = useState(false);
@@ -193,12 +187,6 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onDissolve 
       setLive(onAir ?? null);
       if (newlySettled.length > 0) {
         saveLeagueState(after);
-        // Dedupe by race index: StrictMode double-mounts this effect with the
-        // same league prop, and the second settle re-derives the same digests.
-        setReel(prev => [
-          ...prev,
-          ...newlySettled.filter(d => !prev.some(p => p.index === d.index)),
-        ]);
         onLeagueUpdate(after);
       }
     } finally {
@@ -238,7 +226,8 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onDissolve 
   const standings = useMemo(() => getSeasonStandings(league.season), [league.season]);
   const driver = (id: number) => league.roster.find(d => d.id === id);
   const champion = over && standings.length > 0 ? driver(standings[0].driverId) : null;
-  const chronicle = useMemo(() => [...league.digests].reverse(), [league.digests]);
+  // Chronological: the season reads top-to-bottom like a story, R1 first
+  const chronicle = league.digests;
   const hasStandings = standings.length > 0 && league.settledThrough >= 0;
   const raceCount = league.settledThrough + 1;
 
@@ -299,13 +288,14 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onDissolve 
     }
     const teams: ChartSeries[] = [...teamTotals.entries()].map(([kingdomId, values]) => {
       const lead = league.roster.find(d => d.kingdomId === kingdomId);
-      const name = getTeamById(kingdomId)?.name ?? kingdomId;
+      const team = getTeamById(kingdomId);
       return {
         id: kingdomId,
         color: lead?.color ?? '#888',
         values,
-        label: name,
-        code: teamCode(name),
+        label: team?.name ?? kingdomId,
+        // Teams are known by their emoji, not a 3-letter code
+        code: team?.emoji ?? lead?.emoji ?? '🏁',
       };
     });
     return { driverSeries: drivers, teamSeries: teams };
@@ -395,20 +385,6 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onDissolve 
             Mobile: wrappers dissolve (display: contents) and sections re-order. */}
         <div className="league-columns">
           <div className="league-main">
-            {/* While you were away */}
-            {reel.length > 0 && (
-              <section className="league-section reel-section">
-                <h2 className="league-section-title">
-                  {reel.length === 1 && reel[0].index === 0
-                    ? '🏁 The inaugural race is in the books'
-                    : `⏱ While you were away — ${reel.length} race${reel.length > 1 ? 's' : ''} ran`}
-                </h2>
-                {[...reel].reverse().map(d => (
-                  <DigestCard key={d.index} league={league} digest={d} defaultOpen={reel.length === 1} />
-                ))}
-              </section>
-            )}
-
             {/* The Points Race: cumulative points, the season's shape at a glance */}
             {hasStandings && (
               <section className="league-section league-chart-section">

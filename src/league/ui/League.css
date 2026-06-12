@@ -43,13 +43,12 @@
 @media (max-width: 920px) {
   .league-columns { display: flex; flex-direction: column; }
   .league-main, .league-rail { display: contents; }
-  /* Single column reads: reel, standings, chart, grid, calendar, chronicle */
-  .reel-section { order: 1; }
-  .league-standings-section { order: 2; }
-  .league-chart-section { order: 3; }
-  .grid-section { order: 4; }
-  .calendar-section { order: 5; }
-  .chronicle-section { order: 6; }
+  /* Single column reads: standings, chart, grid, calendar, chronicle */
+  .league-standings-section { order: 1; }
+  .league-chart-section { order: 2; }
+  .grid-section { order: 3; }
+  .calendar-section { order: 4; }
+  .chronicle-section { order: 5; }
 }
 
 .league-topbar {
@@ -253,8 +252,6 @@
   padding-bottom: 6px;
   margin: 0 0 10px;
 }
-
-.reel-section .league-section-title { color: #6ab882; border-color: #2a4a36; }
 
 /* Section titles that collapse their content */
 button.section-toggle {
