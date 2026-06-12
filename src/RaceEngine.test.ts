@@ -215,11 +215,13 @@ describe('conditional tags (#156 gate)', () => {
     // (per-tick chance ≈ 0.6 expected/race — any single race may be clean).
     const rain = rollWeather(() => 0.99);
     let struck = 0;
-    for (const seed of [11, 22, 33, 44, 55, 66]) {
+    for (const seed of [11, 22, 33, 44, 55, 66, 77, 88]) {
       const grid = structuredClone(base);
       const engine = RaceEngine.createForWorker(CANON_VARIABLES, seed);
       engine.loadGeneratedRoster(grid);
-      engine.updateConfig({ totalLaps: track.laps, lapLength: track.length });
+      // Full event log — the 500-event UI cap can evict an early strike,
+      // which made this assertion flaky.
+      engine.updateConfig({ totalLaps: track.laps, lapLength: track.length, maxStoredEvents: Number.MAX_SAFE_INTEGER });
       engine.setTrackInfo({ id: track.id, name: track.name, emoji: track.emoji,
         funEmoji: track.funEmoji, description: track.description, laps: track.laps });
       engine.setWeather(rain);
