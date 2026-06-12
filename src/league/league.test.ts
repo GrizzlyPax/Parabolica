@@ -5,7 +5,7 @@ import {
   FULL_EVENT_RETENTION, LIVE_TICK_MS,
 } from './settle';
 import { buildSeasonReport } from './seasonReport';
-import { traceRace } from './raceTrace';
+import { traceRace, raceReportForLeague } from './raceTrace';
 import { LeagueSetupConfig, LeagueState } from './types';
 import { saveLeagueState, loadLeagueState, KeyValueStore } from '../storage/persistence';
 import { getSeasonStandings } from '../types/season';
@@ -334,6 +334,29 @@ describe('traceRace (#173): the race replay', () => {
     for (const s of trace.series) expect(s.positions.length).toBe(trace.laps.length);
     // Every driver has a stint history (at least the starting compound).
     for (const s of trace.strategies) expect(s.stints.length).toBeGreaterThanOrEqual(1);
+  });
+});
+
+describe('raceReportForLeague (markdown strategy export)', () => {
+  it('produces a complete, digest-consistent report', () => {
+    const league = settleLeague(createLeague(42, makeSetup()), { now: T0 + 13 * HOUR }).league;
+    const digest = league.digests[0];
+    const md = raceReportForLeague(league, digest.index)!;
+    expect(md).not.toBeNull();
+
+    for (const section of ['# Race Report', '## Classification & strategy', '| P | Driver |']) {
+      expect(md).toContain(section);
+    }
+    // Winner appears as P1, in digest order.
+    const winner = league.roster.find(d => d.id === digest.finishOrder[0])!;
+    expect(md).toContain(`| 1 | ${winner.fullName} |`);
+    // Every DNF is reported with its exit lap marker.
+    for (const id of digest.dnfDriverIds) {
+      const d = league.roster.find(r => r.id === id)!;
+      expect(md).toContain(`| DNF | ${d.fullName} |`);
+    }
+    // Deterministic: same league, same report.
+    expect(raceReportForLeague(league, digest.index)).toBe(md);
   });
 });
 

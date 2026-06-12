@@ -16,6 +16,7 @@ import {
 } from './components/race';
 import RaceFeed from './components/race/RaceFeed';
 import { buildLapChartData } from './components/race/lapChartData';
+import { buildRaceReportMd } from './components/race/raceReportMd';
 import { voiceNotification, type FeedItem } from './feed/commentary';
 import './WatchMode.css';
 
@@ -998,6 +999,7 @@ function WatchMode({
   // live broadcast (fast-forward ticks through them) and headless settles.
   // We just mirror its length to a state so the chart recomputes once per lap.
   const [historyLen, setHistoryLen] = useState(0);
+  const [reportCopied, setReportCopied] = useState(false);
   useEffect(() => {
     const len = engine.getLapHistory().length;
     if (len !== historyLen) setHistoryLen(len);
@@ -1191,7 +1193,46 @@ function WatchMode({
             <section className="bf-lapchart">
               <div className="bf-lapchart-head">
                 <span className="bf-lapchart-title">📈 Race Lap Chart</span>
-                <span className="bf-lapchart-lap">Lap {currentLapForHeader} / {totalLaps}</span>
+                <span className="bf-lapchart-actions">
+                  <button
+                    className="bf-copy-report-btn"
+                    onClick={async () => {
+                      const weather = engine.getWeather();
+                      const conditions = [
+                        ...(weather && weather.id !== 'clear' ? [`${weather.emoji} ${weather.name}`] : []),
+                        ...engine.getTrackTags().map(t => `${t.emoji} ${t.name}`),
+                      ];
+                      const md = buildRaceReportMd(
+                        {
+                          title: raceState.raceFinished
+                            ? `${trackInfo?.funEmoji ?? ''} ${trackInfo?.name ?? 'Race'}`
+                            : `${trackInfo?.funEmoji ?? ''} ${trackInfo?.name ?? 'Race'} (live, lap ${currentLapForHeader}/${totalLaps})`,
+                          totalLaps,
+                          conditions,
+                          totalTicks: raceState.raceFinished ? raceState.totalTicks : undefined,
+                          finishOrder: raceState.raceFinished ? raceState.finishOrder : undefined,
+                        },
+                        drivers,
+                        engine.getLapHistory()
+                      );
+                      try {
+                        await navigator.clipboard.writeText(md);
+                      } catch {
+                        const ta = document.createElement('textarea');
+                        ta.value = md;
+                        document.body.appendChild(ta);
+                        ta.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(ta);
+                      }
+                      setReportCopied(true);
+                      setTimeout(() => setReportCopied(false), 2000);
+                    }}
+                  >
+                    {reportCopied ? '✅ Copied' : '📋 Copy report'}
+                  </button>
+                  <span className="bf-lapchart-lap">Lap {currentLapForHeader} / {totalLaps}</span>
+                </span>
               </div>
               <div className="bf-lapchart-body">
                 <LapChart

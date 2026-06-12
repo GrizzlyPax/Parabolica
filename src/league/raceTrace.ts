@@ -11,6 +11,9 @@ import { getTrackById } from '../generators/tracks';
 import { LeagueState } from './types';
 import { prepareScheduledRace } from './settle';
 import { buildLapChartData, LapChartData } from '../components/race/lapChartData';
+import { buildRaceReportMd } from '../components/race/raceReportMd';
+import { weatherForRace } from '../data/weather';
+import { intrinsicTrackTags } from '../data/trackTags';
 import { TireCompound } from '../RaceEngine';
 
 export interface DriverStrategy {
@@ -34,16 +37,24 @@ export interface RaceTrace extends LapChartData {
   strategies: DriverStrategy[];
 }
 
-/** Replay race `raceIndex` of the league and reconstruct its full trace. */
-export function traceRace(league: LeagueState, raceIndex: number): RaceTrace | null {
+/** Deterministic replay of race `raceIndex` — the shared engine run behind
+ * the chart trace and the markdown report. */
+function replayRace(league: LeagueState, raceIndex: number) {
   const race = league.schedule[raceIndex];
   if (!race) return null;
   const track = getTrackById(race.trackId);
   if (!track) return null;
-
   const engine = RaceEngine.createForWorker();
   prepareScheduledRace(engine, league, raceIndex, track, CANON_VARIABLES);
   const { drivers, raceState } = engine.runHeadless();
+  return { engine, track, drivers, raceState };
+}
+
+/** Replay race `raceIndex` of the league and reconstruct its full trace. */
+export function traceRace(league: LeagueState, raceIndex: number): RaceTrace | null {
+  const replay = replayRace(league, raceIndex);
+  if (!replay) return null;
+  const { engine, track, drivers, raceState } = replay;
 
   const chart = buildLapChartData(engine.getLapHistory(), drivers);
 
@@ -73,4 +84,29 @@ export function traceRace(league: LeagueState, raceIndex: number): RaceTrace | n
     fieldSize: drivers.length,
     strategies,
   };
+}
+
+/** Markdown strategy report for a settled race (#196 detailed tier / #195
+ * audit artifact) — plain text for clipboard, balance handoff, and diffing. */
+export function raceReportForLeague(league: LeagueState, raceIndex: number): string | null {
+  const replay = replayRace(league, raceIndex);
+  if (!replay) return null;
+  const { engine, track, drivers, raceState } = replay;
+
+  const weather = weatherForRace(league.leagueSeed, raceIndex);
+  const conditions = [
+    ...(weather.id !== 'clear' ? [`${weather.emoji} ${weather.name}`] : []),
+    ...intrinsicTrackTags(track.id).map(t => `${t.emoji} ${t.name}`),
+  ];
+  return buildRaceReportMd(
+    {
+      title: `R${raceIndex + 1} · ${track.funEmoji} ${track.name}`,
+      totalLaps: track.laps,
+      conditions,
+      totalTicks: raceState.totalTicks,
+      finishOrder: raceState.finishOrder,
+    },
+    drivers,
+    engine.getLapHistory()
+  );
 }

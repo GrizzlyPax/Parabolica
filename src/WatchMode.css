@@ -3015,3 +3015,21 @@
 .bf-lapchart-body .lap-chart { width: 100%; height: 100%; }
 
 
+
+/* Lap view header actions: copy report + lap counter */
+.bf-lapchart-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+}
+.bf-copy-report-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid #2a2a34;
+  color: #aaa;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.bf-copy-report-btn:hover { color: #fff; border-color: #3a3a44; }
