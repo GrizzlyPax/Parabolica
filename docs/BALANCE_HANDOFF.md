@@ -103,16 +103,22 @@ Read `docs/SIM_MECHANICS.md` §5 for the full stat truth table. Summary:
 
 **Open balance flags (your territory):**
 - **#162 Car Power dominance** — the biggest open lever. Car power's per-star
-  range (~7.2%) is ~2× the (compressed) driver-speed range (~3.6%), so a great
-  car outweighs a great driver ~2:1. STAT IMPACT shows Car Power Δ ≈ **12.8%**,
-  bigger than any driver stat. Likely fix: compress `powerPerStar`. **Lab-
-  validate before/after.**
-- **#195 Pit strategy** — *mechanics being cleaned by Claude* (a duration-
-  recording bug already fixed in v0.3.27). The balance/behaviour problem:
-  strategy **herds** (whole field runs the same compounds + stop laps), and
-  compound selection defaults to same-tyre late. Once the mechanics are sound
-  and the decision is refactored into tunable knobs, **strategy variety + stint
-  targets are yours to tune.**
+  range (~7.6%) is ~2× the (compressed) driver-speed range (~3.6%), so a great
+  car outweighs a great driver ~2:1. Proposed compression (per the dominance
+  pass): `powerPerStar 0.018→0.014` / `powerBase 0.93→0.942` (3★ midpoint
+  preserved). *(The "12.8%" STAT IMPACT figure quoted here previously is from
+  an older canon era — see the reconciliation note in `SIM_MECHANICS.md` §5;
+  win-rate deltas only compare within a canon version.)*
+- **#195 Pit strategy** — *mechanics cleaned (v0.3.27–29)*: pit-duration bug
+  fixed, farcical final-lap stops killed (`lastPitLapBuffer`), and the herding
+  root cause found — the wear trigger times ~all stops, so identical compounds
+  herd the field into one strategy (`SIM_MECHANICS.md` §4 has the corrected
+  decision path). Two gated levers are built and dormant, **yours to tune**:
+  `pits.strategyWearLean` (strategy archetypes — short/standard/long camps;
+  0.12 → distinct strategies/race 8.2→9.8) and `pits.scPitChance` (cheap stops
+  under the safety car; +0.15 → 10.6). Both byte-identical at canon 0. The
+  window knobs (`basePitChance` etc.) are honest but nearly inert — don't
+  expect them to move anything.
 - **#171 Content wave** — new tags across all layers are pending; each ships
   with a lab batch proving its tier (partnered flavour + balance).
 - **#106 Morale**, **#82 Spin-outs** — proposed mechanics, not yet built.
