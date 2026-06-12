@@ -137,7 +137,9 @@ export const DRIVER_TAGS: Tag[] = [
     description: 'Slow starter who builds to a strong finish',
     target: 'driver',
     trigger: 'passive',
-    tier: 'trait',
+    // Measured 10.4% win (2.3×) post-fix — a fun comeback tag living at Power,
+    // not Trait. Re-tiered to match reality rather than nerf the mechanic.
+    tier: 'power',
     // #156 fix: the "builds pace" was never implemented — only a permanent
     // 0.95 penalty (a death sentence). Now a late-race surge that actually pays off.
     condition: { when: 'lapProgress', after: 0.6 },
@@ -158,8 +160,11 @@ export const CAR_TAGS: Tag[] = [
     target: 'car',
     trigger: 'passive',
     tier: 'power',
+    // Calibration (#156): was speed 1.06 → 20.4% win (4.5×, the new top destiny).
+    // The flat +6% all-race outran its fragility because DNFs are only ~22%.
+    // Halved the speed upside; the -0.25 fragility stays its identity.
     effects: {
-      speedModifier: 1.06,
+      speedModifier: 1.03,
       crashResistance: -0.25, // More likely to break
     },
     activationText: 'is pushing the limits of physics!',
@@ -171,10 +176,14 @@ export const CAR_TAGS: Tag[] = [
     description: 'Something is wrong with this car. Nobody knows what.',
     target: 'car',
     trigger: 'passive',
-    tier: 'destiny',
+    tier: 'power',
+    // Calibration (#156): was luck 0.7 / consistency 0.9 → 0.0% win, P20.9 (a
+    // flat death sentence; consistency is the #2 stat so -10% was brutal — and
+    // any persistent penalty pins a car to the back over a full race). Softened
+    // hard to a clearly-cursed but not-hopeless car (still net-negative).
     effects: {
-      luckModifier: 0.7,
-      consistencyModifier: 0.9,
+      luckModifier: 0.88,
+      consistencyModifier: 0.98,
     },
     activationText: 'is acting up again...',
   },
@@ -221,10 +230,12 @@ export const TEAM_TAGS: Tag[] = [
     trigger: 'passive',
     tier: 'trait',
     // #156 fix: "when leading" is now real — gated to a top-5 running position.
+    // Calibration: gating cut it 23.1%→14.3%; trimmed further (was 1.06/0.12) to
+    // soften the rich-get-richer once a car is already at the front.
     condition: { when: 'position', max: 5 },
     effects: {
-      consistencyModifier: 1.06,
-      crashResistance: 0.12,
+      consistencyModifier: 1.04,
+      crashResistance: 0.08,
     },
     activationText: 'is comfortable at the front!',
   },
