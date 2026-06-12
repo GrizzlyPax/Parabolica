@@ -129,19 +129,49 @@ bend seasons, not decide them at genesis.
   per-track numbers.
 - Track DNF spread 17.5%–28.8% — good, tracks have personality.
 
-## 6. Rebalance shortlist (each verifiable with a before/after lab batch)
+## 6. Rebalance v1 — IMPLEMENTED (gated, canon-dormant)
 
-1. **Give aggression its reward**: e.g. aggressive drivers gain a small
-   overtake/proximity speed bonus (they thrive in traffic) — making it a
-   true gamble stat. Target: Q5 win% ≥ Q1, with the DNF cost intact.
-2. **Wire acceleration**: natural home = race start (first ~100 ticks speed
-   modifier) and pit-exit/SC-restart ticks. Small but real: target Δ ≈ +1-2%.
-3. **Wire tireManagement (team)**: scale tire wear rate (replacing part of
-   the aggression-only wear story) and/or smarter pit timing.
-4. **Decide luck's identity**: either honest flavor (rename the lab
-   expectation) or raise proc magnitude until Δ ≈ +1.5% — it also already
-   quietly saves crashes/mechanicals, which the lab confirms (DNF 21.4→20.1).
-5. **Tag magnitude pass** alongside the tag system design.
+Philosophy: **every stat must answer "when is your moment?"** Stats shouldn't
+be flat multipliers fighting the same noise — each gets a situation where it
+decides outcomes. Acceleration owns the launches; aggression owns traffic
+(reward now matches its existing risk); tire management owns the long stint;
+luck stays a gambler's stat but with enough magnitude to notice. All new
+mechanics are gated behind variables whose **canon defaults are neutral
+(zero)** — live leagues and the golden master are byte-identical until canon
+is flipped after lab validation.
+
+| Change | Mechanism | New knob (canon) |
+|---|---|---|
+| Acceleration wired | speed × `1+(accel−1)×effect` during the launch (first N ticks), for N ticks after each pit exit, and for the whole field at SC restarts | `performance.accelLaunchTicks` (80), `performance.accelEffect` (0) |
+| Aggression's reward | aggressive drivers gain speed while in crash-proximity traffic — the same situation that risks wrecking them. True gamble stat. | `performance.aggressionTrafficBoost` (0) |
+| Team tire mgmt wired | tire wear × `1+(3−stars)×k` — 3★ neutral, 5★ preserves rubber, 1★ shreds it | `tires.teamTireMgmtWearPerStar` (0) |
+| Luck with teeth | raise proc rate + top-end magnitude via existing knobs | (preset only) |
+
+**Rebalance v1 preset** — paste into SimLab's variable Import (it deep-merges
+as the heretic side; run a comparison batch against canon for the delta):
+
+```json
+{
+  "performance": {
+    "accelEffect": 0.8,
+    "aggressionTrafficBoost": 0.05,
+    "luckProcChance": 0.045,
+    "luckMaxBoostPerStat": 0.25
+  },
+  "tires": {
+    "teamTireMgmtWearPerStar": 0.06
+  }
+}
+```
+
+Acceptance targets (Q1→Q5 win delta): Acceleration ≈ **+1–2%**; Aggression
+**≥ 0** with its DNF cost intact (the gamble profile: more wins AND more
+wrecks); Tire Mgmt ≈ **+1%**; Luck ≈ **+1–1.5%**. Power/Consistency/Speed
+should be roughly unchanged. If a knob over/undershoots, tune the preset and
+re-run — canon flips only when the lab signs off.
+
+Still open: **tag magnitude pass** alongside the tag system design (tags
+currently outweigh the whole stat sheet).
 
 ## 7. League-seed physics (the "every universe is different" hook)
 

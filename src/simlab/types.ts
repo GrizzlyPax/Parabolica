@@ -388,6 +388,7 @@ export interface SimVariables {
     minSpeedFloor: number;        // Minimum speed multiplier (0.60)
     // Wear factors
     aggressionWearMultiplier: number; // How much aggression affects wear (0.4)
+    teamTireMgmtWearPerStar: number;  // Team tire mgmt wear scaling around 3★ neutral (0 = stat dormant)
   };
 
   // === CRASH SYSTEM ===
@@ -446,6 +447,10 @@ export interface SimVariables {
     endurancePenaltyMultiplier: number; // Endurance penalty factor (0.5)
     // Damage
     damageSpeedPenalty: number;       // Speed multiplier when damaged (0.85)
+    // Rebalance v1 (gated: 0 = legacy behavior, stat dormant)
+    accelLaunchTicks: number;         // Window length for acceleration to matter (launch/pit exit/SC restart)
+    accelEffect: number;              // How much of the accel stat applies in windows (0 = stat dormant)
+    aggressionTrafficBoost: number;   // Max speed bonus for aggressive drivers in traffic (0 = no reward)
   };
 
   // === CAR STAT FORMULAS ===
@@ -530,6 +535,7 @@ export const CANON_VARIABLES: SimVariables = {
     flatPenalty: 0.05,
     minSpeedFloor: 0.60,
     aggressionWearMultiplier: 0.4,
+    teamTireMgmtWearPerStar: 0,         // Dormant in canon — enable via rebalance preset
   },
   crashes: {
     baseCrashChance: 0.00008,           // Reduced from 0.0001 for stable DNF rate
@@ -573,6 +579,9 @@ export const CANON_VARIABLES: SimVariables = {
     enduranceMaxPenalty: 0.15,
     endurancePenaltyMultiplier: 0.5,
     damageSpeedPenalty: 0.85,
+    accelLaunchTicks: 80,
+    accelEffect: 0,                     // Dormant in canon — enable via rebalance preset
+    aggressionTrafficBoost: 0,          // Dormant in canon — enable via rebalance preset
   },
   carStats: {
     powerBase: 0.93,                    // Higher base, less per-star spread

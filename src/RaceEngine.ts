@@ -86,6 +86,8 @@ export interface Driver {
   dnfInfo: DNFInfo | null;
   pitProgress: number;      // 0-1 during pit stop (overall progress through pit lane)
   pitPhase: PitPhase | null;    // Current phase: entry (driving to box), stopped (pit work), exit (driving out)
+  /** Acceleration stat applies until this tick (set at pit exit / SC restart). */
+  accelBoostUntilTick?: number;
   pitBoxPosition: number;       // 0-1 position along pit lane where this driver's pit box is
   pitWorkProgress: number;      // 0-1 progress through the stationary pit work phase
   currentPitWorkDuration: number;   // Duration of pit work (stationary part, affected by team stat)
@@ -390,6 +392,8 @@ class RaceEngine {
   private lapStartTick: Map<number, number> = new Map(); // driverId -> tick when current lap started
   private lastSector: Map<number, number> = new Map(); // driverId -> last sector (0=S1, 1=S2, 2=S3)
   private previousPositions: Map<number, number> = new Map(); // driverId -> previous rank (for overtake detection)
+  // Drivers currently within crash-proximity of another car (rebuilt each tick)
+  private driversInTraffic: Set<number> = new Set();
   private trackInfo: TrackInfo | null = null;
 
   // Track event state
@@ -1013,8 +1017,27 @@ class RaceEngine {
     // Apply tag consistency modifier to the consistency effect
     const adjustedConsistencyEffect = consistencyEffect * tagConsistencyModifier;
 
+    // === REBALANCE V1 (gated: both factors are exactly 1 when canon-dormant) ===
+    // Acceleration: matters in the moments it should — the launch, pit exits,
+    // and Unsafety Car restarts (window length accelLaunchTicks).
+    let accelFactor = 1;
+    if (perfVars.accelEffect > 0) {
+      const inWindow = this.raceState.totalTicks <= perfVars.accelLaunchTicks ||
+        (driver.accelBoostUntilTick !== undefined && this.raceState.totalTicks < driver.accelBoostUntilTick);
+      if (inWindow) {
+        accelFactor = 1 + (driver.stats.acceleration - 1) * perfVars.accelEffect;
+      }
+    }
+    // Aggression's reward: aggressive drivers thrive in traffic (the same
+    // proximity that risks crashes). Pairs with the wear/blowout cost.
+    let trafficFactor = 1;
+    if (perfVars.aggressionTrafficBoost > 0 && this.driversInTraffic.has(driver.id)) {
+      const normalizedAggression = (driver.stats.aggression - 0.3) / 0.5;
+      trafficFactor = 1 + Math.max(0, normalizedAggression) * perfVars.aggressionTrafficBoost;
+    }
+
     // Calculate final speed (car modifiers already incorporated into statsModifier and consistencyEffect)
-    const finalSpeed = baseSpeed * statsModifier * adjustedConsistencyEffect * luckBonus * enduranceFactor * trackEventModifier * tagSpeedModifier;
+    const finalSpeed = baseSpeed * statsModifier * adjustedConsistencyEffect * luckBonus * enduranceFactor * trackEventModifier * tagSpeedModifier * accelFactor * trafficFactor;
 
     return {
       baseRoll,
@@ -1162,7 +1185,11 @@ class RaceEngine {
     const normalizedAggression = (driver.stats.aggression - 0.3) / 0.5; // 0 to 1
     const aggressionFactor = 1 + normalizedAggression * tireVars.aggressionWearMultiplier;
 
-    return compoundWear * aggressionFactor;
+    // Team tire management: good crews preserve rubber (3★ = neutral)
+    const tireMgmtStars = driver.teamStats?.tireManagement ?? 3;
+    const tireMgmtFactor = 1 + (3 - tireMgmtStars) * tireVars.teamTireMgmtWearPerStar;
+
+    return compoundWear * aggressionFactor * tireMgmtFactor;
   }
 
   // === PIT STOP METHODS ===
@@ -1911,6 +1938,12 @@ class RaceEngine {
 
     // === CRASH DETECTION (before movement) ===
     const proximityPairs = this.detectProximityPairs();
+    // Who's in traffic this tick (aggression's reward window — see calculateSpeed)
+    this.driversInTraffic.clear();
+    for (const pair of proximityPairs) {
+      this.driversInTraffic.add(pair[0].id);
+      this.driversInTraffic.add(pair[1].id);
+    }
     const crashedThisTick: Set<number> = new Set();
     const damagedThisTick: Set<number> = new Set();
 
@@ -2115,6 +2148,8 @@ class RaceEngine {
             usedCompounds: updatedUsedCompounds,
             tireState: { compound: newCompound, wear: 0, lapsOnTires: 0 },
             pitStops: [...driver.pitStops, pitStop],
+            // Rejoining traffic from a standstill: acceleration's moment
+            accelBoostUntilTick: this.raceState.totalTicks + this.getPerformanceVars().accelLaunchTicks,
           };
         }
 
@@ -2669,6 +2704,14 @@ class RaceEngine {
     this.raceState.unsafetyCarLap = 0;
     this.raceState.unsafetyCarLapsRemaining = 0;
     this.raceState.unsafetyCarWaitingForLeader = false;
+
+    // The restart scramble: acceleration's moment for the whole field
+    const accelWindow = this.getPerformanceVars().accelLaunchTicks;
+    this.drivers = this.drivers.map(d =>
+      d.status === 'racing'
+        ? { ...d, accelBoostUntilTick: this.raceState.totalTicks + accelWindow }
+        : d
+    );
 
     // Sentient recall messages
     const recallMessages = [

@@ -59,6 +59,7 @@ function buildVariableList(): VarDef[] {
     { key: 'flatPenalty', label: 'Flat Penalty', desc: 'Immediate penalty at critical', format: 'percent' as const, min: 0, max: 0.15, step: 0.01 },
     { key: 'minSpeedFloor', label: 'Min Speed Floor', desc: 'Min speed with dead tires', format: 'percent' as const, min: 0.4, max: 0.8, step: 0.05 },
     { key: 'aggressionWearMultiplier', label: 'Aggression Wear', desc: 'Aggression wear impact', format: 'decimal' as const, min: 0, max: 1, step: 0.05 },
+    { key: 'teamTireMgmtWearPerStar', label: 'Tire Mgmt Wear/Star', desc: 'Team tire mgmt wear scaling, 3★ neutral (0 = dormant)', format: 'decimal' as const, min: 0, max: 0.15, step: 0.01 },
   ];
   for (const v of tireGeneralVars) {
     vars.push({ category: 'Tires (general)', categoryEmoji: '🛞', path: `tires.${v.key}`, label: v.label, description: v.desc, format: v.format, min: v.min, max: v.max, step: v.step });
@@ -122,6 +123,9 @@ function buildVariableList(): VarDef[] {
     { key: 'enduranceMaxPenalty', label: 'Max Fatigue', desc: 'Max fatigue penalty', format: 'percent' as const, min: 0.05, max: 0.3, step: 0.01 },
     { key: 'endurancePenaltyMultiplier', label: 'Endurance Mult', desc: 'Endurance penalty factor', format: 'decimal' as const, min: 0.2, max: 1, step: 0.1 },
     { key: 'damageSpeedPenalty', label: 'Damage Penalty', desc: 'Speed when damaged', format: 'percent' as const, min: 0.6, max: 0.95, step: 0.05 },
+    { key: 'accelLaunchTicks', label: 'Accel Window', desc: 'Ticks accel matters (launch/pit exit/SC restart)', format: 'decimal' as const, min: 0, max: 300, step: 10 },
+    { key: 'accelEffect', label: 'Accel Effect', desc: 'Accel stat strength in windows (0 = dormant)', format: 'decimal' as const, min: 0, max: 2, step: 0.1 },
+    { key: 'aggressionTrafficBoost', label: 'Aggro Traffic Boost', desc: 'Aggression speed reward in traffic (0 = dormant)', format: 'percent' as const, min: 0, max: 0.15, step: 0.005 },
   ];
   for (const v of perfVars) {
     vars.push({ category: 'Performance', categoryEmoji: '⚡', path: `performance.${v.key}`, label: v.label, description: v.desc, format: v.format, min: v.min, max: v.max, step: v.step });
