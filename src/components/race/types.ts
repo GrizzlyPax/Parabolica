@@ -38,7 +38,7 @@ export interface RowContext {
 export type LapTimeClass = '' | 'fastest' | 'improved' | 'slower';
 
 // View types
-export type RaceView = 'track' | 'detail';
+export type RaceView = 'track' | 'detail' | 'lap';
 
 // Session state for universal header
 export type SessionState = 'racing' | 'safety-car' | 'final-lap' | 'finished';
