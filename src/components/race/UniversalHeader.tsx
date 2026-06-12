@@ -21,6 +21,7 @@ function UniversalHeader({
   trackName,
   trackEmoji,
   trackFlagEmoji,
+  conditions,
   elapsedTime,
   onMenuOpen,
   liveBadge = false,
@@ -64,11 +65,20 @@ function UniversalHeader({
           </span>
         </div>
 
-        {/* Bottom row: Track name and elapsed time */}
+        {/* Bottom row: Track name, ambient conditions, elapsed time */}
         <div className="header-bottom-row">
           <span className="track-name">
             {trackEmoji} {trackName} {trackFlagEmoji}
           </span>
+          {conditions && conditions.length > 0 && (
+            <span className="header-conditions">
+              {conditions.map(c => (
+                <span key={c.label} className="condition-chip" title={c.label}>
+                  {c.emoji} <span className="condition-chip-label">{c.label}</span>
+                </span>
+              ))}
+            </span>
+          )}
           <span className="elapsed-time">
             {ticksToTime(elapsedTime)}
           </span>

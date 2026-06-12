@@ -204,6 +204,50 @@ describe('conditional tags (#156 gate)', () => {
     expect(plainWithTag.events).toEqual(plainNoTag.events);
   });
 
+  it('inflictions strike only when their condition is active, and land as events', () => {
+    const base = cleanRoster();
+    // Dry races (no weather, no track tags): zero inflictions, ever.
+    for (const seed of [11, 22, 33]) {
+      const dry = run(base, seed, undefined);
+      expect(dry.events.some(e => e.description.includes('Electrocuted'))).toBe(false);
+    }
+    // Rainy races: ⚡ Electrocuted strikes show up across a handful of seeds
+    // (per-tick chance ≈ 0.6 expected/race — any single race may be clean).
+    const rain = rollWeather(() => 0.99);
+    let struck = 0;
+    for (const seed of [11, 22, 33, 44, 55, 66]) {
+      const grid = structuredClone(base);
+      const engine = RaceEngine.createForWorker(CANON_VARIABLES, seed);
+      engine.loadGeneratedRoster(grid);
+      engine.updateConfig({ totalLaps: track.laps, lapLength: track.length });
+      engine.setTrackInfo({ id: track.id, name: track.name, emoji: track.emoji,
+        funEmoji: track.funEmoji, description: track.description, laps: track.laps });
+      engine.setWeather(rain);
+      const wet = engine.runHeadless();
+      if (wet.events.some(e => e.description.includes('Electrocuted'))) struck++;
+    }
+    expect(struck).toBeGreaterThan(0);
+  });
+
+  it('getActiveTagIds reports a conditional tag only while its gate is open', () => {
+    const base = cleanRoster();
+    const prep = (weather: ReturnType<typeof rollWeather> | null) => {
+      const grid = structuredClone(base);
+      grid[0].driverTag = getTagById('rain-dancer');
+      const engine = RaceEngine.createForWorker(CANON_VARIABLES, 0xACE);
+      engine.loadGeneratedRoster(grid);
+      engine.updateConfig({ totalLaps: track.laps, lapLength: track.length });
+      engine.setTrackInfo({ id: track.id, name: track.name, emoji: track.emoji,
+        funEmoji: track.funEmoji, description: track.description, laps: track.laps });
+      engine.setWeather(weather);
+      engine.reset();
+      engine.fastForward(50); // contexts rebuilt per tick
+      return engine;
+    };
+    expect(prep(null).getActiveTagIds(base[0].id)).not.toContain('rain-dancer');
+    expect(prep(rollWeather(() => 0.99)).getActiveTagIds(base[0].id)).toContain('rain-dancer');
+  });
+
   it('setWeather wakes a rain-dancer (the real C2 path, not just raw conditions)', () => {
     const rain = rollWeather(() => 0.99); // lands in the rain bucket at high intensity
     expect(rain.id).toBe('rain');

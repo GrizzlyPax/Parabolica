@@ -466,3 +466,27 @@
   0%, 100% { opacity: 1; }
   50% { opacity: 0.3; }
 }
+
+/* === Ambient condition chips (weather, track character) === */
+.header-conditions {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  min-width: 0;
+}
+.condition-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.7rem;
+  color: #aaa;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  padding: 1px 7px;
+  white-space: nowrap;
+}
+@media (max-width: 480px) {
+  .condition-chip-label { display: none; } /* emoji-only on phones */
+  .condition-chip { padding: 1px 5px; }
+}

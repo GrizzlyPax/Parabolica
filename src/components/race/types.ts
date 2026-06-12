@@ -22,6 +22,9 @@ export interface RowContext {
   bestLapTime: number | null;
   bestLapClass: LapTimeClass;
   statusEmoji?: string;
+  /** Tag ids currently contributing effects (conditional gates open / triggered
+   * activations live) — drives lit vs dormant tag chips. */
+  activeTagIds?: Set<string>;
   isFocused: boolean;
   isFinished: boolean;
   isDNF: boolean;
@@ -52,6 +55,8 @@ export interface TimingTowerProps {
   condensed?: boolean;
   expandable?: boolean; // Show expanded row details on focus (default true, false for Detail View)
   statusEffects?: Map<number, string>;
+  /** Per-driver tag ids currently contributing effects (see RowContext). */
+  activeTags?: Map<number, Set<string>>;
   positionDeltas?: Map<number, number>;
   fastestLapOverall?: number;
   className?: string;
@@ -71,6 +76,12 @@ export interface DriverRowProps {
 // Race speed options
 export type RaceSpeed = 0.5 | 1 | 2 | 10;
 
+// A small chip describing an ambient race condition (weather, track tag)
+export interface ConditionChip {
+  emoji: string;
+  label: string;
+}
+
 // Props for UniversalHeader
 export interface UniversalHeaderProps {
   currentLap: number;
@@ -79,6 +90,8 @@ export interface UniversalHeaderProps {
   trackName: string;
   trackEmoji: string; // Fun/theme emoji for the track
   trackFlagEmoji?: string; // Flag emoji for the track location
+  /** Ambient conditions for this race (weather, track character). */
+  conditions?: ConditionChip[];
   elapsedTime: number;
   onMenuOpen: () => void;
   /** Show a pulsing LIVE pill (broadcast spectating). */

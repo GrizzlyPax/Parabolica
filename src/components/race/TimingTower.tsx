@@ -30,6 +30,7 @@ function TimingTower({
   condensed: _condensed = false, // Reserved for future styling differences
   expandable = true, // Show expanded row details on focus
   statusEffects,
+  activeTags,
   positionDeltas,
   fastestLapOverall,
   className = '',
@@ -212,6 +213,7 @@ function TimingTower({
       bestLapTime,
       bestLapClass,
       statusEmoji,
+      activeTagIds: activeTags?.get(driver.id),
       isFocused,
       isFinished,
       isDNF,
