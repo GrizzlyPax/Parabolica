@@ -45,6 +45,9 @@ export interface SimLabResults {
   // Track analysis (if using 'all' tracks)
   trackResults: TrackResults;
 
+  // Weather analysis (distribution + condition-reactive tag splits)
+  weatherResults: WeatherResults;
+
   // Event analysis
   eventResults: EventResults;
 
@@ -261,6 +264,37 @@ export interface TrackResults {
   tracks: TrackPerformance[];
 }
 
+// === WEATHER ANALYSIS ===
+
+export interface WeatherPerformance {
+  weatherId: string;
+  weatherName: string;
+  weatherEmoji: string;
+  races: number;
+  driverRaces: number;
+  dnfs: number;
+  crashes: number;
+  totalTicks: number;       // For average race duration per weather
+}
+
+/** A condition-reactive tag (e.g. Rain Dancer) split by whether its weather
+ * condition was active that race — the "how does it do in its weather?" view. */
+export interface ReactiveTagPerformance {
+  tagId: string;
+  tagName: string;
+  tagEmoji: string;
+  conditionId: string;       // the condition it reacts to (e.g. 'rain')
+  inAppearances: number;     // driver-races where the condition was active
+  inWins: number;
+  outAppearances: number;    // driver-races where it was not
+  outWins: number;
+}
+
+export interface WeatherResults {
+  weathers: WeatherPerformance[];
+  reactiveTags: ReactiveTagPerformance[];
+}
+
 // === ACCUMULATOR TYPES (used during simulation) ===
 
 export interface SimLabAccumulators {
@@ -304,6 +338,10 @@ export interface SimLabAccumulators {
 
   // Tracks
   trackAccumulators: Map<string, TrackPerformance>;
+
+  // Weather: weatherId -> distribution accumulator; reactive tags split by condition
+  weatherAccumulators: Map<string, WeatherPerformance>;
+  reactiveTagAccumulators: Map<string, ReactiveTagPerformance>;
 
   // Events
   eventAccumulators: Map<string, EventPerformance>;

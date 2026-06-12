@@ -373,6 +373,35 @@ export default function SimLab() {
       }
       addBlank();
 
+      // Weather Distribution — how often each weather rolled, and how it played
+      addRow(`${prefix}WEATHER DISTRIBUTION`);
+      addRow('Weather', 'Races', '% of Races', 'DNF%', 'Crashes/Race', 'Avg Ticks');
+      for (const w of data.weatherResults.weathers) {
+        const pct = data.totalRaces > 0 ? ((w.races / data.totalRaces) * 100).toFixed(1) : '0.0';
+        const dnfRate = w.driverRaces > 0 ? ((w.dnfs / w.driverRaces) * 100).toFixed(1) : '0.0';
+        const crashesPerRace = w.races > 0 ? (w.crashes / w.races).toFixed(2) : '0.00';
+        const avgTicks = w.races > 0 ? Math.round(w.totalTicks / w.races) : 0;
+        addRow(`${w.weatherEmoji} ${w.weatherName}`, w.races, `${pct}%`, `${dnfRate}%`, crashesPerRace, avgTicks);
+      }
+      addBlank();
+
+      // Weather-reactive tags — win% when their condition is active vs not
+      if (data.weatherResults.reactiveTags.length > 0) {
+        addRow(`${prefix}WEATHER-REACTIVE TAGS (in-condition vs out)`);
+        addRow('Tag', 'Condition', 'In Appear', 'In Win%', 'Out Appear', 'Out Win%', 'Swing');
+        for (const rt of data.weatherResults.reactiveTags) {
+          const inWin = rt.inAppearances > 0 ? (rt.inWins / rt.inAppearances) * 100 : 0;
+          const outWin = rt.outAppearances > 0 ? (rt.outWins / rt.outAppearances) * 100 : 0;
+          addRow(
+            `${rt.tagEmoji} ${rt.tagName}`, rt.conditionId,
+            rt.inAppearances, `${inWin.toFixed(1)}%`,
+            rt.outAppearances, `${outWin.toFixed(1)}%`,
+            `${(inWin - outWin >= 0 ? '+' : '')}${(inWin - outWin).toFixed(1)}%`,
+          );
+        }
+        addBlank();
+      }
+
       // Tag Performance
       addRow(`${prefix}TAG PERFORMANCE - DRIVER TAGS`);
       addRow('Tag', 'Appearances', 'Wins', 'Win%', 'Podiums', 'Podium%', 'Points', 'DNFs', 'DNF%', 'Avg Position');

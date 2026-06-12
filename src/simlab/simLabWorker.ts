@@ -6,7 +6,8 @@ import { generateRoster, GeneratedDriver } from '../generators/drivers';
 import { generateCarsForKingdoms, GeneratedCar } from '../generators/cars';
 import { ALL_TRACKS, Track } from '../generators/tracks';
 import { TEAMS } from '../data/teams';
-import { rollWeather } from '../data/weather';
+import { Tag } from '../data/tags';
+import { rollWeather, WeatherState } from '../data/weather';
 import type {
   SimLabConfig,
   WorkerInMessage,
@@ -117,6 +118,8 @@ function createAccumulators(): SimLabAccumulators {
       hard: { starts: 0, wins: 0, podiums: 0, pointsFinishes: 0, dnfs: 0 },
     },
     trackAccumulators: new Map(),
+    weatherAccumulators: new Map(),
+    reactiveTagAccumulators: new Map(),
     eventAccumulators: new Map(),
     currentRaceEventEffects: new Map(),
     fieldSpread: {
@@ -159,7 +162,8 @@ function aggregateRaceResult(
   drivers: Driver[],
   raceState: RaceState,
   events: RaceEvent[],
-  track: Track
+  track: Track,
+  weather: WeatherState | null
 ) {
   acc.totalRaces++;
   const driverCount = drivers.length;
@@ -226,8 +230,28 @@ function aggregateRaceResult(
     updateBucket('tireManagement', tireMgmtBucket);
 
     // === TAG AGGREGATION ===
-    const updateTag = (tag: { id: string; name: string; emoji: string } | undefined, tagType: 'driver' | 'car' | 'team') => {
+    const activeConditions = weather?.conditions ?? [];
+    const updateTag = (tag: Tag | undefined, tagType: 'driver' | 'car' | 'team') => {
       if (!tag) return;
+
+      // Condition-reactive tags (e.g. Rain Dancer): split appearances/wins by
+      // whether the tag's weather condition was active this race.
+      if (tag.condition?.when === 'condition') {
+        const conditionId = tag.condition.has;
+        let rt = acc.reactiveTagAccumulators.get(tag.id);
+        if (!rt) {
+          rt = { tagId: tag.id, tagName: tag.name, tagEmoji: tag.emoji, conditionId,
+            inAppearances: 0, inWins: 0, outAppearances: 0, outWins: 0 };
+          acc.reactiveTagAccumulators.set(tag.id, rt);
+        }
+        if (activeConditions.includes(conditionId)) {
+          rt.inAppearances++;
+          if (isWinner) rt.inWins++;
+        } else {
+          rt.outAppearances++;
+          if (isWinner) rt.outWins++;
+        }
+      }
 
       let tagAcc = acc.tagAccumulators.get(tag.id);
       if (!tagAcc) {
@@ -561,6 +585,24 @@ function aggregateRaceResult(
   trackAcc.totalLeadChanges += raceState.leadChanges;
   trackAcc.totalTicks += raceState.totalTicks;
 
+  // === WEATHER AGGREGATION ===
+  const wId = weather?.id ?? 'clear';
+  let weatherAcc = acc.weatherAccumulators.get(wId);
+  if (!weatherAcc) {
+    weatherAcc = {
+      weatherId: wId,
+      weatherName: weather?.name ?? 'Clear',
+      weatherEmoji: weather?.emoji ?? '☀️',
+      races: 0, driverRaces: 0, dnfs: 0, crashes: 0, totalTicks: 0,
+    };
+    acc.weatherAccumulators.set(wId, weatherAcc);
+  }
+  weatherAcc.races++;
+  weatherAcc.driverRaces += driverCount;
+  weatherAcc.dnfs += driverCount - finishersThisRace;
+  weatherAcc.crashes += trackDnfs.crash;
+  weatherAcc.totalTicks += raceState.totalTicks;
+
   // === FIELD SPREAD AGGREGATION ===
   // Get finishers sorted by position
   const finishers = drivers
@@ -658,6 +700,12 @@ function finalizeResults(acc: SimLabAccumulators, config: SimLabConfig, executio
     tracks: Array.from(acc.trackAccumulators.values()),
   };
 
+  // Weather results (distribution + condition-reactive tag splits)
+  const weatherResults: SimLabResults['weatherResults'] = {
+    weathers: Array.from(acc.weatherAccumulators.values()).sort((a, b) => b.races - a.races),
+    reactiveTags: Array.from(acc.reactiveTagAccumulators.values()),
+  };
+
   // Event results
   const eventArray = Array.from(acc.eventAccumulators.values());
   const eventResults: SimLabResults['eventResults'] = {
@@ -687,6 +735,7 @@ function finalizeResults(acc: SimLabAccumulators, config: SimLabConfig, executio
     dnfResults,
     pitStopResults,
     trackResults,
+    weatherResults,
     eventResults,
     fieldSpreadResults,
   };
@@ -759,7 +808,8 @@ async function runSimulation(config: SimLabConfig, variables?: SimVariables, _la
 
       // Roll weather per race so the conditions layer (and weather-gated tags
       // like Rain Dancer) are exercised and measured, not dormant.
-      engine.setWeather(rollWeather());
+      const weather = rollWeather();
+      engine.setWeather(weather);
 
       // Run the race headlessly
       const result = engine.runHeadless();
@@ -770,7 +820,8 @@ async function runSimulation(config: SimLabConfig, variables?: SimVariables, _la
         result.drivers,
         result.raceState,
         result.events,
-        track
+        track,
+        weather
       );
 
       // Report progress periodically
