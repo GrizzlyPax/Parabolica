@@ -68,7 +68,15 @@ function computeVariablesDiff(canon: SimVariables, heretic: SimVariables): Varia
   compare('pits.quickStopPerStar', 'quick stop/star', canon.pits.quickStopPerStar, heretic.pits.quickStopPerStar);
   compare('pits.basePitChance', 'pit chance', canon.pits.basePitChance, heretic.pits.basePitChance);
   compare('pits.wearPitBonus', 'wear pit bonus', canon.pits.wearPitBonus, heretic.pits.wearPitBonus);
+  compare('pits.wearPitDenominator', 'wear saturation', canon.pits.wearPitDenominator, heretic.pits.wearPitDenominator);
+  compare('pits.luckPitBase', 'luck pit base', canon.pits.luckPitBase, heretic.pits.luckPitBase);
   compare('pits.luckPitAdjustment', 'luck pit adjust', canon.pits.luckPitAdjustment, heretic.pits.luckPitAdjustment);
+  compare('pits.lastPitLapBuffer', 'last pit buffer', canon.pits.lastPitLapBuffer, heretic.pits.lastPitLapBuffer);
+  compare('pits.windowOffsetPerStat', 'window stagger', canon.pits.windowOffsetPerStat, heretic.pits.windowOffsetPerStat);
+  compare('pits.windowHalfWidth', 'window width', canon.pits.windowHalfWidth, heretic.pits.windowHalfWidth);
+  compare('pits.strategyWearLean', 'strategy lean', canon.pits.strategyWearLean, heretic.pits.strategyWearLean);
+  compare('pits.scPitChance', 'SC pit chance', canon.pits.scPitChance, heretic.pits.scPitChance);
+  compare('pits.scPitMinWear', 'SC pit min wear', canon.pits.scPitMinWear, heretic.pits.scPitMinWear);
 
   // Performance
   compare('performance.luckProcChance', 'luck proc', canon.performance.luckProcChance, heretic.performance.luckProcChance);
@@ -80,6 +88,16 @@ function computeVariablesDiff(canon: SimVariables, heretic: SimVariables): Varia
   compare('performance.enduranceMaxPenalty', 'endurance max penalty', canon.performance.enduranceMaxPenalty, heretic.performance.enduranceMaxPenalty);
   compare('performance.endurancePenaltyMultiplier', 'endurance mult', canon.performance.endurancePenaltyMultiplier, heretic.performance.endurancePenaltyMultiplier);
   compare('performance.damageSpeedPenalty', 'damage penalty', canon.performance.damageSpeedPenalty, heretic.performance.damageSpeedPenalty);
+  compare('performance.accelLaunchTicks', 'accel window', canon.performance.accelLaunchTicks, heretic.performance.accelLaunchTicks);
+  compare('performance.accelEffect', 'accel effect', canon.performance.accelEffect, heretic.performance.accelEffect);
+  compare('performance.aggressionTrafficBoost', 'aggro traffic boost', canon.performance.aggressionTrafficBoost, heretic.performance.aggressionTrafficBoost);
+  compare('performance.mistakeBaseChance', 'mistake chance', canon.performance.mistakeBaseChance, heretic.performance.mistakeBaseChance);
+  compare('performance.mistakeConsistencyWeight', 'mistake cons wt', canon.performance.mistakeConsistencyWeight, heretic.performance.mistakeConsistencyWeight);
+  compare('performance.mistakeAggressionWeight', 'mistake aggro wt', canon.performance.mistakeAggressionWeight, heretic.performance.mistakeAggressionWeight);
+  compare('performance.mistakeDamageWeight', 'mistake damage wt', canon.performance.mistakeDamageWeight, heretic.performance.mistakeDamageWeight);
+  compare('performance.mistakeSpeedPenalty', 'mistake penalty', canon.performance.mistakeSpeedPenalty, heretic.performance.mistakeSpeedPenalty);
+  compare('performance.mistakeDurationTicks', 'mistake duration', canon.performance.mistakeDurationTicks, heretic.performance.mistakeDurationTicks);
+  compare('performance.mistakeCooldownTicks', 'mistake cooldown', canon.performance.mistakeCooldownTicks, heretic.performance.mistakeCooldownTicks);
 
   // Car Stats
   compare('carStats.powerBase', 'power base', canon.carStats.powerBase, heretic.carStats.powerBase);

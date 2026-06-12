@@ -343,7 +343,7 @@ function WatchMode({
           e.tick > lastUnsafetyCarTickRef.current) {
         lastUnsafetyCarTickRef.current = e.tick;
       }
-      if (e.type === 'track_event_effect' && e.driverId >= 0) {
+      if ((e.type === 'track_event_effect' || e.type === 'driver_error') && e.driverId >= 0) {
         seenTrackEffectsRef.current.add(`${e.tick}-${e.driverId}`);
       }
       if (e.type === 'tag_activation') {
@@ -564,9 +564,10 @@ function WatchMode({
   useEffect(() => {
     if (!raceEvents || raceEvents.length === 0) return;
 
-    // Find track_event_effect events for individual drivers
+    // Find track_event_effect / driver_error events for individual drivers
+    // (driver mistakes — #82 — ride the same status-icon path)
     const newEffects = raceEvents.filter(e => {
-      if (e.type !== 'track_event_effect') return false;
+      if (e.type !== 'track_event_effect' && e.type !== 'driver_error') return false;
       if (e.driverId < 0) return false;
       const key = `${e.tick}-${e.driverId}`;
       if (seenTrackEffectsRef.current.has(key)) return false;
@@ -582,7 +583,17 @@ function WatchMode({
         expiresAtTick: raceState.totalTicks + 500,
       }));
       setStatusEffects(prev => [...prev, ...statusToAdd]);
+
+      // Driver mistakes get a feed card too — every spin is a story
+      for (const e of newEffects) {
+        if (e.type !== 'driver_error') continue;
+        const colonIndex = e.description.indexOf(':');
+        const title = colonIndex > 0 ? e.description.substring(0, colonIndex).trim().toUpperCase() : 'MISTAKE';
+        const body = colonIndex > 0 ? e.description.substring(colonIndex + 1).trim() : e.description;
+        addNotification('track_event', title, body, e.emoji, undefined, 9000);
+      }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [raceEvents, trackInfo, raceState.totalTicks]);
 
   // Detect tag activations and show notifications

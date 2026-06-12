@@ -3,7 +3,7 @@ import { WeatherState } from './data/weather';
 import { TrackTag } from './data/trackTags';
 import { INFLICTIONS } from './data/inflictions';
 import { SimVariables, CANON_VARIABLES } from './simlab/types';
-import { Rng, mulberry32, shuffle } from './engine/rng';
+import { Rng, mulberry32, shuffle, deriveSeed, randomSeed } from './engine/rng';
 
 export interface DriverStats {
   baseSpeed: number;      // Base speed multiplier (0.85 - 1.15)
@@ -237,7 +237,9 @@ export type RaceEventType =
   | 'tag_activation'   // A driver/car/team tag triggered
   // Unsafety Car events
   | 'unsafety_car_deployed'  // The Unsafety Car has been deployed
-  | 'unsafety_car_recalled'; // The Unsafety Car is returning to the void
+  | 'unsafety_car_recalled'  // The Unsafety Car is returning to the void
+  // Mistakes layer (#82)
+  | 'driver_error';    // Non-terminal mistake: spin / lock-up / wide moment
 
 export interface RaceEvent {
   tick: number;
@@ -430,6 +432,24 @@ class RaceEngine {
   // behavior unchanged); call setSeed() for a deterministic, replayable race.
   private rng: Rng = Math.random;
 
+  // Base seed for SIDE streams that must not perturb the main `rng` ordering —
+  // e.g. each driver's stable pit-strategy offset (#195 anti-herding). Derived
+  // streams (deriveSeed) stay independent of the race rolls, so a feature that
+  // reads them is byte-identical to today whenever its gate knob is 0.
+  private strategySeed: number = randomSeed();
+
+  // #82 mistakes layer: per-driver tick until which no new mistake may start
+  // (active recovery + refractory window). Cleared per race.
+  private mistakeBlockedUntilTick: Map<number, number> = new Map();
+
+  /** Mistake flavor variants (#82): the feed story each error tells. */
+  private static readonly MISTAKE_FLAVORS = [
+    { id: 'spin', name: 'Spin', emoji: '🌀', text: 'spins! The car swaps ends and rejoins down the order' },
+    { id: 'lockup', name: 'Lock-up', emoji: '🛞', text: 'locks up hard into the corner and shoots up the escape road' },
+    { id: 'wide', name: 'Wide Moment', emoji: '↩️', text: 'runs wide and scrabbles back across the grass' },
+    { id: 'flatspot', name: 'Flat Spot', emoji: '🫨', text: 'flat-spots the tires — the car vibrates like a paint shaker' },
+  ] as const;
+
   // Conditional tags (e.g. Front Runner "when leading") are evaluated live each
   // tick against this cache, not stored as permanent effects — that's the #156
   // fix. Rebuilt once per tick; reads engine state only, so it adds no RNG.
@@ -464,11 +484,13 @@ class RaceEngine {
    */
   setSeed(seed: number): void {
     this.rng = mulberry32(seed);
+    this.strategySeed = seed; // side streams replay with the race
   }
 
   /** Restore the default unseeded behavior (live Quick Race). */
   clearSeed(): void {
     this.rng = Math.random;
+    this.strategySeed = randomSeed(); // stable within a live race, fresh each one
   }
 
   /**
@@ -674,6 +696,7 @@ class RaceEngine {
       unsafetyCarCooldownUntilLap: 0,
     };
     this.raceEvents = [];
+    this.mistakeBlockedUntilTick.clear();
     this.notifyListeners();
     this.notifyStateListeners();
     this.notifyEventListeners();
@@ -977,6 +1000,7 @@ class RaceEngine {
       unsafetyCarCooldownUntilLap: 0,
     };
     this.raceEvents = [];
+    this.mistakeBlockedUntilTick.clear();
     // Reset track event state
     this.activeTrackEffects = [];
     this.trackEventTriggeredLaps = new Set();
@@ -1271,6 +1295,7 @@ class RaceEngine {
     const wearPercent = driver.tireState.wear;
     const pitStopsDone = driver.pitStops.length;
     const mandatoryStops = this.config.mandatoryPitStops;
+    const pitVars = this.getPitVars();
 
     // Check if we need more stops for compound variety (must use all 3 compounds with 2 stops)
     const allCompounds: TireCompound[] = ['soft', 'medium', 'hard'];
@@ -1279,14 +1304,58 @@ class RaceEngine {
     const stopsRemaining = mandatoryStops - pitStopsDone;
     const mustPitForCompounds = compoundsRemaining > 0 && stopsRemaining > 0;
 
-    // Force pit if tires critical (but not on last lap - handled above)
-    if (wearPercent >= compound.criticalAt) {
+    // Force pit if tires critical (but not on last lap - handled above).
+    // Safety override: shot tires pit regardless of how late it is (blowout
+    // risk beats a short final stint).
+    //
+    // Strategy archetype (gated, #195): this wear trigger is what ACTUALLY
+    // times stops at canon (the probabilistic window below almost never fires
+    // first — verified by zeroing basePitChance/wearPitBonus: pits/race and
+    // stop timing don't move). Identical compounds hitting the same threshold
+    // on the same lap is why the field herds into one strategy. The archetype
+    // leans each camp's stop point: aggressive (-1) pits earlier on fresher
+    // rubber (sprint stints), conservative (+1) stretches into the cliff —
+    // paying cliff pace and blowout exposure for track position. Drawn from a
+    // SIDE seed stream, so the main roll ordering is untouched; 0 = off,
+    // byte-identical to today.
+    let pitAtWear = compound.criticalAt;
+    if (pitVars.strategyWearLean > 0) {
+      pitAtWear *= 1 + this.getStrategyArchetype(driver) * pitVars.strategyWearLean;
+    }
+    if (wearPercent >= pitAtWear) {
       return true;
+    }
+
+    // Unified late-race guard: with too few racing laps left, no non-critical
+    // stop is worth the pit-lane loss. This is the single source of truth for
+    // "too late to pit" — it makes the old "can't pit in last 2 laps" contract
+    // actually hold for BOTH the mandatory-compound force-pit and the
+    // probabilistic path. There is no penalty for unmet compound variety, so a
+    // farcical final-lap stop to "complete" it is strictly worse than running a
+    // compound short. (#195)
+    const lapsLeft = this.config.totalLaps - driver.currentLap;
+    if (lapsLeft <= pitVars.lastPitLapBuffer) {
+      return false;
     }
 
     // Already done all mandatory stops and used all compounds? No need to pit again
     if (pitStopsDone >= mandatoryStops && compoundsRemaining === 0) {
       return false;
+    }
+
+    // Unsafety Car opportunism (gated, #195): a stop under the SC is cheap —
+    // the field circulates slowly, so a driver who still owes a stop takes it
+    // now instead of paying full price later. Reaching this line implies a
+    // stop is still owed (the early-return above filtered the done case); the
+    // wear floor stops a driver who JUST pitted from double-stopping. Draws
+    // main RNG only when the knob is live, so canon 0 stays byte-identical.
+    if (
+      pitVars.scPitChance > 0 &&
+      this.raceState.unsafetyCarActive &&
+      wearPercent >= pitVars.scPitMinWear
+    ) {
+      if (this.rng() < pitVars.scPitChance) return true;
+      // fall through: an SC doesn't make anyone skip their normal window
     }
 
     // Calculate pit windows for 2-stop strategy on 10 lap race:
@@ -1303,35 +1372,54 @@ class RaceEngine {
     const segmentLength = lapsRemaining / (stopsNeeded + 1); // +1 for final stint
     const nextStopIdealLap = driver.currentLap + segmentLength;
 
-    // Driver personality adjusts timing by ±1 lap
-    const driverOffset = Math.floor(aggressiveness * 2);
+    // Driver personality staggers the target lap. NOTE (#195 finding): this
+    // whole voluntary-window path is nearly inert at canon — the wear trigger
+    // above fires first for ~all stops (zeroing basePitChance/wearPitBonus
+    // changes nothing measurable). The knobs here are honest lifts of the
+    // formula's literals (canon 2 / 1 reproduces the old behavior
+    // byte-for-byte), but the binding strategy levers are the wear-lean
+    // archetype above and the SC opportunism. Documented in SIM_MECHANICS §4.
+    const driverOffset = Math.floor(aggressiveness * pitVars.windowOffsetPerStat);
     const adjustedIdealLap = Math.max(driver.currentLap + 1, nextStopIdealLap + driverOffset);
 
-    // Window spans 2 laps around ideal
-    const windowStart = Math.max(2, Math.floor(adjustedIdealLap) - 1);
-    const windowEnd = Math.min(this.config.totalLaps - 2, Math.floor(adjustedIdealLap) + 1);
+    const windowStart = Math.max(2, Math.floor(adjustedIdealLap) - pitVars.windowHalfWidth);
+    const windowEnd = Math.min(this.config.totalLaps - 2, Math.floor(adjustedIdealLap) + pitVars.windowHalfWidth);
 
     const isInPitWindow = driver.currentLap >= windowStart && driver.currentLap <= windowEnd;
 
-    // Force pit if we're in the last window for mandatory stops
-    const lapsUntilTooLate = this.config.totalLaps - driver.currentLap - 2; // Can't pit in last 2 laps
+    // Force pit if we're in the last window for mandatory stops. The
+    // lastPitLapBuffer guard above already ruled out the farcically-late case;
+    // here we pull a still-needed mandatory stop forward as the room runs out.
+    const lapsUntilTooLate = lapsLeft - pitVars.lastPitLapBuffer;
     if (mustPitForCompounds && lapsUntilTooLate <= stopsRemaining) {
       return true; // Must pit now or won't complete mandatory stops
     }
 
     if (isInPitWindow) {
-      // Higher wear = more likely to pit now
-      // Base 20% chance, up to 50% at high wear
-      const wearFactor = Math.min(1, wearPercent / 70);
-      const pitChance = 0.20 + (wearFactor * 0.30);
+      // Higher wear = more likely to pit now. Base chance climbs with wear up
+      // to (basePitChance + wearPitBonus) at the wear denominator. All knobs
+      // live in CANON_VARIABLES.pits (canon values reproduce the old literals
+      // byte-for-byte — this lift changed no behavior, see #195).
+      const wearFactor = Math.min(1, wearPercent / pitVars.wearPitDenominator);
+      const pitChance = pitVars.basePitChance + (wearFactor * pitVars.wearPitBonus);
 
-      // Luck affects pit timing too - lucky drivers might wait longer
-      const adjustedChance = pitChance * (1.2 - driver.stats.luck * 0.4);
+      // Luck affects pit timing too - lucky drivers might wait longer.
+      const adjustedChance = pitChance * (pitVars.luckPitBase - driver.stats.luck * pitVars.luckPitAdjustment);
 
       return this.rng() < adjustedChance;
     }
 
     return false;
+  }
+
+  /** Stable per-race strategy archetype: -1 (short stints, aggressive),
+   * 0 (standard), +1 (long stints, conservative). Drawn from the side seed
+   * stream — replays with the race, never touches the main RNG. Roughly a
+   * third of the field lands in each group, so strategies align in 2-3
+   * camps the way real teams converge, rather than per-driver scatter. */
+  private getStrategyArchetype(driver: Driver): number {
+    const r = mulberry32(deriveSeed(this.strategySeed, 'pitstrat', driver.id))();
+    return r < 1 / 3 ? -1 : r < 2 / 3 ? 0 : 1;
   }
 
   // Calculate pit WORK duration (the stationary part where tires are changed)
@@ -1387,11 +1475,16 @@ class RaceEngine {
     // Filter to compounds not yet used
     const unusedCompounds = allCompounds.filter(c => !usedCompounds.includes(c));
 
-    // If all compounds used (shouldn't happen with 2 mandatory stops), pick based on stint length
+    // If all compounds used (stops 3+), pick based on stint length — but never
+    // re-fit the compound just removed when a softer one covers the distance
+    // (the "M→M" report flag, #195): a late stop onto the identical tire is
+    // pointless; real late stops take the grippier rubber.
     if (unusedCompounds.length === 0) {
-      if (remainingLaps <= 2) return 'soft';
-      if (remainingLaps <= 4) return 'medium';
-      return 'hard';
+      let pick: TireCompound = remainingLaps <= 2 ? 'soft' : remainingLaps <= 4 ? 'medium' : 'hard';
+      if (pick === driver.tireState.compound && pick !== 'soft') {
+        pick = pick === 'hard' ? 'medium' : 'soft';
+      }
+      return pick;
     }
 
     // Must use an unused compound - pick strategically based on remaining laps
@@ -1993,6 +2086,62 @@ class RaceEngine {
     }
   }
 
+  /** #82 mistakes layer — non-terminal driver errors (spin, lock-up, wide
+   * moment): real time lost, car intact. Rides the unified effect system
+   * (expiry + timing-tower icon for free) and logs a dedicated
+   * 'driver_error' event so the lab and season digests can count mistakes
+   * directly. One mistake at a time per driver plus a refractory window;
+   * suppressed under the Unsafety Car (consistent with crash/blowout/mech).
+   * DETERMINISM INVARIANT: gated on mistakeBaseChance — at canon 0 this
+   * method draws NO RNG, so seed streams stay byte-identical to today
+   * (same pattern as accelEffect). Spec: BALANCE_DOMINANCE_PASS.md §3. */
+  private processMistakes(): void {
+    const perfVars = this.getPerformanceVars();
+    if (perfVars.mistakeBaseChance <= 0) return; // dormant: no RNG drawn
+    if (this.raceState.unsafetyCarActive) return;
+
+    const now = this.raceState.totalTicks;
+    for (const driver of this.drivers) {
+      if (driver.status !== 'racing') continue;
+      if ((this.mistakeBlockedUntilTick.get(driver.id) ?? 0) > now) continue;
+
+      // pMistake = base × (1 + (1−normC)·cWeight) × (1 + normA·aWeight)
+      // (stats span 0.3–0.8; norm maps that to 0–1)
+      const normC = Math.min(1, Math.max(0, (driver.stats.consistency - 0.3) / 0.5));
+      const normA = Math.min(1, Math.max(0, (driver.stats.aggression - 0.3) / 0.5));
+      let pMistake = perfVars.mistakeBaseChance
+        * (1 + (1 - normC) * perfVars.mistakeConsistencyWeight)
+        * (1 + normA * perfVars.mistakeAggressionWeight);
+      if (driver.isDamaged) pMistake *= 1 + perfVars.mistakeDamageWeight;
+
+      if (this.rng() >= pMistake) continue;
+
+      const flavor = RaceEngine.MISTAKE_FLAVORS[
+        Math.floor(this.rng() * RaceEngine.MISTAKE_FLAVORS.length)
+      ];
+      this.mistakeBlockedUntilTick.set(
+        driver.id,
+        now + perfVars.mistakeDurationTicks + perfVars.mistakeCooldownTicks
+      );
+      this.createTrackEffect(
+        `mistake-${flavor.id}`,
+        flavor.name,
+        flavor.emoji,
+        [driver.id],
+        now + perfVars.mistakeDurationTicks,
+        { speedModifier: perfVars.mistakeSpeedPenalty }
+      );
+      this.logEvent(
+        'driver_error',
+        driver,
+        `${flavor.name}: ${driver.name} ${flavor.text}`,
+        'negative',
+        0.8,
+        flavor.emoji
+      );
+    }
+  }
+
   /** Tag ids currently contributing effects for a driver: conditional tags
    * whose gate is open this tick + stored tag activations still live. Display
    * surface for the timing tower (lit vs dormant chips). */
@@ -2196,6 +2345,7 @@ class RaceEngine {
 
     // Environment inflictions (mid-race state tags: storm strikes, fog, etc.)
     this.processInflictions();
+    this.processMistakes();
 
     const crashedThisTick: Set<number> = new Set();
     const damagedThisTick: Set<number> = new Set();

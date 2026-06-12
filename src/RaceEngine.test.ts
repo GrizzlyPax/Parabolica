@@ -214,6 +214,133 @@ describe('conditional tags (#156 gate)', () => {
     }
   });
 
+  it('lastPitLapBuffer is a live knob (no farcical final-lap stops) — #195', () => {
+    // The pit-window decision now routes the late-race cutoff through one knob
+    // (pits.lastPitLapBuffer) instead of inconsistent inline literals. Cranking
+    // it up must change races: it suppresses non-critical stops in the closing
+    // laps (a stop you can't recover the pit-loss from before the flag is
+    // strictly worse than running a compound short — there's no penalty for
+    // unmet compound variety). At least one of a handful of seeds must diverge.
+    const base = cleanRoster();
+    const wideBuffer = {
+      ...CANON_VARIABLES,
+      pits: { ...CANON_VARIABLES.pits, lastPitLapBuffer: 8 },
+    };
+    const runWith = (vars: typeof CANON_VARIABLES, seed: number) => {
+      const grid = structuredClone(base);
+      const engine = RaceEngine.createForWorker(vars, seed);
+      engine.loadGeneratedRoster(grid);
+      engine.updateConfig({ totalLaps: track.laps, lapLength: track.length });
+      engine.setTrackInfo({ id: track.id, name: track.name, emoji: track.emoji,
+        funEmoji: track.funEmoji, description: track.description, laps: track.laps });
+      return engine.runHeadless();
+    };
+    let diverged = false;
+    for (const seed of [0x517, 0x518, 0x519, 0x51A]) {
+      const canon = runWith(CANON_VARIABLES, seed);
+      const wide = runWith(wideBuffer, seed);
+      if (JSON.stringify(canon.events) !== JSON.stringify(wide.events)) diverged = true;
+    }
+    expect(diverged).toBe(true);
+  });
+
+  it('strategy archetypes + SC opportunism are live when gated on, inert at canon — #195', () => {
+    // Both knobs ship canon-0 and must (a) leave the race byte-identical when
+    // dormant — they draw from a side seed stream / draw no main RNG — and
+    // (b) actually change races when flipped on. The wear-lean is the binding
+    // strategy lever: the wear trigger times ~all stops at canon, so leaning
+    // it per-archetype is what un-herds the field.
+    const base = cleanRoster();
+    const withVars = (pits: Partial<typeof CANON_VARIABLES.pits>) => ({
+      ...CANON_VARIABLES,
+      pits: { ...CANON_VARIABLES.pits, ...pits },
+    });
+    const runWith = (vars: typeof CANON_VARIABLES, seed: number) => {
+      const grid = structuredClone(base);
+      const engine = RaceEngine.createForWorker(vars, seed);
+      engine.loadGeneratedRoster(grid);
+      engine.updateConfig({ totalLaps: track.laps, lapLength: track.length });
+      engine.setTrackInfo({ id: track.id, name: track.name, emoji: track.emoji,
+        funEmoji: track.funEmoji, description: track.description, laps: track.laps });
+      return engine.runHeadless();
+    };
+
+    // (a) dormant: a deep-copied canon (knobs explicitly 0) replays byte-identically
+    const canonRun = runWith(CANON_VARIABLES, 0x195);
+    const dormant = runWith(withVars({ strategyWearLean: 0, scPitChance: 0 }), 0x195);
+    expect(dormant.events).toEqual(canonRun.events);
+    expect(dormant.raceState.finishOrder).toEqual(canonRun.raceState.finishOrder);
+
+    // (b) live: each gate independently diverges on at least one of a few seeds
+    for (const pits of [{ strategyWearLean: 0.12 }, { scPitChance: 0.25 }]) {
+      let diverged = false;
+      for (const seed of [0x195, 0x196, 0x197, 0x198]) {
+        const a = runWith(CANON_VARIABLES, seed);
+        const b = runWith(withVars(pits), seed);
+        if (JSON.stringify(a.events) !== JSON.stringify(b.events)) diverged = true;
+      }
+      expect(diverged, `gate ${JSON.stringify(pits)} should change races`).toBe(true);
+    }
+  });
+
+  it('#82 mistakes layer: dormant at canon draws no RNG; live at lab values it bites', () => {
+    // The determinism invariant from BALANCE_DOMINANCE_PASS §3: with
+    // mistakeBaseChance 0 the mistake path must draw NO RNG, so the race is
+    // byte-identical to canon (same pattern as accelEffect). At first-lab
+    // values it must produce driver_error events that respect the
+    // one-at-a-time + refractory contract and never DNF anyone directly.
+    const base = cleanRoster();
+    const labValues = {
+      ...CANON_VARIABLES,
+      performance: {
+        ...CANON_VARIABLES.performance,
+        mistakeBaseChance: 1.5e-4,
+        mistakeConsistencyWeight: 1.5,
+        mistakeAggressionWeight: 0.5,
+        mistakeSpeedPenalty: 0.85,
+        mistakeDurationTicks: 150,
+        mistakeCooldownTicks: 300,
+      },
+    };
+    const runWith = (vars: typeof CANON_VARIABLES, seed: number) => {
+      const grid = structuredClone(base);
+      const engine = RaceEngine.createForWorker(vars, seed);
+      engine.loadGeneratedRoster(grid);
+      engine.updateConfig({ totalLaps: track.laps, lapLength: track.length, maxStoredEvents: 100000 });
+      engine.setTrackInfo({ id: track.id, name: track.name, emoji: track.emoji,
+        funEmoji: track.funEmoji, description: track.description, laps: track.laps });
+      return engine.runHeadless();
+    };
+
+    // Dormant: explicit zeros replay canon byte-for-byte
+    const canonRun = runWith(CANON_VARIABLES, 0x82);
+    const dormant = runWith({
+      ...CANON_VARIABLES,
+      performance: { ...CANON_VARIABLES.performance, mistakeBaseChance: 0 },
+    }, 0x82);
+    expect(dormant.events).toEqual(canonRun.events);
+    expect(dormant.raceState.finishOrder).toEqual(canonRun.raceState.finishOrder);
+    expect(canonRun.events.some(e => e.type === 'driver_error')).toBe(false);
+
+    // Live: mistakes happen, spaced by duration+cooldown per driver, none fatal
+    let sawMistake = false;
+    for (const seed of [0x82, 0x83, 0x84]) {
+      const live = runWith(labValues, seed);
+      const errors = live.events.filter(e => e.type === 'driver_error');
+      if (errors.length === 0) continue;
+      sawMistake = true;
+      const lastByDriver = new Map<number, number>();
+      for (const e of errors) {
+        const prev = lastByDriver.get(e.driverId);
+        if (prev !== undefined) {
+          expect(e.tick - prev).toBeGreaterThanOrEqual(450); // duration + cooldown
+        }
+        lastByDriver.set(e.driverId, e.tick);
+      }
+    }
+    expect(sawMistake).toBe(true);
+  });
+
   it('a track tag passive lean changes the race', () => {
     const base = cleanRoster();
     const plain = run(base, 0x7AC, undefined);

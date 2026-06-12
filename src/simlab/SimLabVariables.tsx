@@ -106,7 +106,15 @@ function buildVariableList(): VarDef[] {
     { key: 'quickStopPerStar', label: 'Quick Stop/Star', desc: 'Quick stop bonus/star', format: 'decimal' as const, min: 0.02, max: 0.15, step: 0.01 },
     { key: 'basePitChance', label: 'Pit Chance', desc: 'Base chance to pit', format: 'percent' as const, min: 0.05, max: 0.5, step: 0.05 },
     { key: 'wearPitBonus', label: 'Wear Pit Bonus', desc: 'Extra pit chance from wear', format: 'percent' as const, min: 0.1, max: 0.6, step: 0.05 },
+    { key: 'wearPitDenominator', label: 'Wear Saturation', desc: 'Wear % that maxes the bonus', format: 'decimal' as const, min: 40, max: 100, step: 5 },
+    { key: 'luckPitBase', label: 'Luck Pit Base', desc: 'Luck multiplier baseline', format: 'decimal' as const, min: 1.0, max: 1.5, step: 0.05 },
     { key: 'luckPitAdjustment', label: 'Luck Pit Adjust', desc: 'Luck pit timing adjust', format: 'decimal' as const, min: 0.1, max: 0.8, step: 0.05 },
+    { key: 'lastPitLapBuffer', label: 'Last Pit Buffer', desc: 'No stop within N laps of finish', format: 'decimal' as const, min: 1, max: 4, step: 1 },
+    { key: 'windowOffsetPerStat', label: 'Window Stagger', desc: 'Personality spread on stop lap', format: 'decimal' as const, min: 0, max: 6, step: 0.5 },
+    { key: 'windowHalfWidth', label: 'Window Width', desc: 'Pit-window half-width (laps)', format: 'decimal' as const, min: 1, max: 5, step: 1 },
+    { key: 'strategyWearLean', label: 'Strategy Lean', desc: 'Archetype wear-trigger lean (0=off)', format: 'percent' as const, min: 0, max: 0.25, step: 0.01 },
+    { key: 'scPitChance', label: 'SC Pit Chance', desc: 'Cheap-stop roll under SC (0=off)', format: 'percent' as const, min: 0, max: 0.5, step: 0.02 },
+    { key: 'scPitMinWear', label: 'SC Pit Min Wear', desc: 'Wear floor for an SC stop', format: 'decimal' as const, min: 5, max: 50, step: 5 },
   ];
   for (const v of pitVars) {
     vars.push({ category: 'Pit Stops', categoryEmoji: '🏁', path: `pits.${v.key}`, label: v.label, description: v.desc, format: v.format, min: v.min, max: v.max, step: v.step });
@@ -126,6 +134,13 @@ function buildVariableList(): VarDef[] {
     { key: 'accelLaunchTicks', label: 'Accel Window', desc: 'Ticks accel matters (launch/pit exit/SC restart)', format: 'decimal' as const, min: 0, max: 300, step: 10 },
     { key: 'accelEffect', label: 'Accel Effect', desc: 'Accel stat strength in windows (0 = dormant)', format: 'decimal' as const, min: 0, max: 2, step: 0.1 },
     { key: 'aggressionTrafficBoost', label: 'Aggro Traffic Boost', desc: 'Aggression speed reward in traffic (0 = dormant)', format: 'percent' as const, min: 0, max: 0.15, step: 0.005 },
+    { key: 'mistakeBaseChance', label: 'Mistake Chance', desc: '#82 per-tick error roll (0 = dormant)', format: 'decimal' as const, min: 0, max: 0.001, step: 0.00005 },
+    { key: 'mistakeConsistencyWeight', label: 'Mistake Cons Wt', desc: 'Low consistency → more mistakes', format: 'decimal' as const, min: 0, max: 3, step: 0.25 },
+    { key: 'mistakeAggressionWeight', label: 'Mistake Aggro Wt', desc: 'Aggression → more mistakes', format: 'decimal' as const, min: 0, max: 2, step: 0.25 },
+    { key: 'mistakeDamageWeight', label: 'Mistake Damage Wt', desc: 'Damaged car → scrappier', format: 'decimal' as const, min: 0, max: 2, step: 0.25 },
+    { key: 'mistakeSpeedPenalty', label: 'Mistake Penalty', desc: 'Speed multiplier while recovering', format: 'percent' as const, min: 0.6, max: 1, step: 0.05 },
+    { key: 'mistakeDurationTicks', label: 'Mistake Duration', desc: 'Recovery window (ticks)', format: 'decimal' as const, min: 0, max: 400, step: 25 },
+    { key: 'mistakeCooldownTicks', label: 'Mistake Cooldown', desc: 'Refractory window (ticks)', format: 'decimal' as const, min: 0, max: 600, step: 50 },
   ];
   for (const v of perfVars) {
     vars.push({ category: 'Performance', categoryEmoji: '⚡', path: `performance.${v.key}`, label: v.label, description: v.desc, format: v.format, min: v.min, max: v.max, step: v.step });

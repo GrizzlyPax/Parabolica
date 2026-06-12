@@ -50,6 +50,13 @@ Factor by factor, with canon numbers and **effective magnitude**:
 stat > endurance >> luck`. Confirmed by lab Q1→Q5 win deltas: Power +7.0,
 Consistency +4.3, Speed +4.0, Endurance +1.5, Luck +0.3.**
 
+*Correction (June 2026, dominance pass): consistency is not just variance
+shrink — because `consistencyEffect` multiplies the roll it corrects, it
+carries a Jensen penalty of `κ·Var(roll)` (κ = (1−c_eff)×0.35) in expected
+speed. Across the stat range that's ~5% of mean pace, comparable to power's
+7.6%. Its win impact is substantially a hidden flat-speed effect. See
+`BALANCE_DOMINANCE_PASS.md` §2.*
+
 ## 3. Attrition (the Scrap Heap's domain)
 
 Lab: 21.2% DNF rate, 4.7 DNFs/race, 48% of DNFs in the first third.
@@ -80,15 +87,54 @@ Reliability 1★→5★ roughly halves failures (lab DNF: 23.7%→19.2%).
 ## 4. Tires & pits
 
 - Compounds: soft (fast, melts), medium, hard. Mandatory-variety rule tracked
-  via `usedCompounds`.
+  via `usedCompounds`. **There is no penalty for failing the variety rule** —
+  it only shapes the pit *decision*, nothing checks it at the flag.
 - Starting compound is **deterministic from stats** (`selectStartingTires`):
   speed>1.08 → soft, endurance>1.08 → hard, else medium. *(Lab's "soft
   starters win 6.9%" is therefore confounded — soft starters ARE the fast
   drivers.)*
-- Pit decision: probabilistic per lap-ish (`basePitChance 0.20` + wear bonus
-  +30%, luck adjustment), NOT an optimizing strategist.
 - Pit crew (1–5★): slow-stop chance 42%−7%/★, quick-stop 3%+5%/★. Real but
   small (lab Δ+1.7%).
+
+### The pit decision (`shouldDriverPit`) — corrected, v0.3.29 (#195)
+
+The decision has four paths, checked at the pit-entry zone (85% of lap), in
+priority order. **Measurement finding: the wear trigger decides ~all stops at
+canon.** Zeroing `basePitChance` + `wearPitBonus` changes neither pits/race
+(55.5 vs 54.8) nor stop timing (first stop at 26% distance either way) — the
+"probabilistic pit window" this doc previously described is nearly inert.
+Identical compounds hitting the same wear threshold on the same lap is **why
+the field herds into one strategy.**
+
+1. **Wear trigger (binding):** pit when `wear ≥ compound.criticalAt` (70/75/80
+   for S/M/H). With `pits.strategyWearLean > 0`, each driver's stable per-race
+   **archetype** (short/standard/long, ~⅓ of the field each, drawn from a side
+   seed stream that never touches the main RNG) leans this threshold ±lean —
+   aggressive camps sprint on fresher rubber, conservative camps stretch into
+   the cliff. *Canon 0 = dormant, byte-identical.* At lean 0.12 + SC
+   opportunism 0.15 (200 races): distinct strategies/race 8.2→10.6,
+   biggest-herd share 31%→24%, DNF flat.
+2. **Late-race guard:** no non-critical stop with `≤ pits.lastPitLapBuffer`
+   laps left (canon 2). Single source of truth — fixed a v0.3.28 bug where the
+   mandatory-compound force-pit ignored it and produced farcical
+   second-to-last-lap stops.
+3. **Unsafety-Car opportunism:** with `pits.scPitChance > 0` (canon 0 =
+   dormant, draws no RNG), a driver who still owes a stop and has
+   `wear ≥ scPitMinWear` rolls to take the cheap stop under the SC.
+4. **Window roll (nearly inert at canon):** deterministic segment-split target
+   ± personality stagger (`windowOffsetPerStat` — quantizes to ~0 for the
+   whole field) over `windowHalfWidth`, then a per-tick roll of
+   `basePitChance + wear×wearPitBonus` adjusted by luck. All literals are now
+   knobs, but **tuning these moves almost nothing** unless the wear trigger is
+   loosened first — measured: widening stagger/width 2×–3× moved first-stop
+   spread by −0.05 laps.
+
+Compound choice on a stop (`selectNewTires`): deterministic from
+laps-remaining among unused compounds (≤3 soft, ≤5 medium, else hard) — so
+two drivers stopping on the same lap always take the same tire; strategy
+variety comes from *when* they stop (the archetype lean shifts this).
+Fallback when all compounds are used can return the same compound late
+(the "M→M" report flag) — open item.
 
 ## 5. THE STAT TRUTH TABLE
 
@@ -105,6 +151,16 @@ Reliability 1★→5★ roughly halves failures (lab DNF: 23.7%→19.2%).
 | **Aggression** | +tire wear, +blowouts. **No upside is implemented.** | **−1.5%, DNF 18.9→25.3%** | ❌ **Backwards** — "risk/reward" with the reward missing |
 | **Acceleration** | **NEVER READ BY THE ENGINE** | −0.4% (noise) | ❌ **Dead stat** |
 | **Tire Mgmt (team)** | **NEVER READ BY THE ENGINE** | −0.3% (noise) | ❌ **Dead stat** |
+
+*Car Power Δ — number reconciliation (June 2026):* three figures circulate
+and they are **not the same measurement**: **7.6%** is the *pace spread*
+(1★→5★ on the speed multiplier, §2 — an input); **+7.0%** (this table) and
+**~+5.7%** (`BALANCE_DOMINANCE_PASS.md`) are *Q1→Q5 win-rate deltas* from
+batches on different canon eras; **12.8%** (issue #162 / `BALANCE_HANDOFF`)
+is a win-rate delta from an older batch predating the tag fix + rebalance
+v2. Win-rate deltas are not comparable across canon versions — quote them
+with their version. The post-#195 2,000-race re-baseline supersedes all of
+the win-rate figures.
 
 ### Tags: destiny → spice (FIXED, v0.3.3–v0.3.4, #156)
 
