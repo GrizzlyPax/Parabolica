@@ -223,35 +223,8 @@ function WatchMode({
   // Store delta AND the lap at which it should disappear (showUntilLap)
   const [positionDeltas, setPositionDeltas] = useState<Map<number, { delta: number; showUntilLap: number }>>(new Map());
 
-  // Swipe navigation for mobile - track touch start position
-  const touchStartRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
-  const SWIPE_THRESHOLD = 50; // Minimum distance in pixels to trigger view change
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartRef.current = {
-      x: e.touches[0].clientX,
-      y: e.touches[0].clientY,
-    };
-  };
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    const deltaX = e.changedTouches[0].clientX - touchStartRef.current.x;
-    const deltaY = e.changedTouches[0].clientY - touchStartRef.current.y;
-
-    // Only trigger if horizontal swipe is dominant (not vertical scrolling)
-    if (Math.abs(deltaX) > SWIPE_THRESHOLD && Math.abs(deltaX) > Math.abs(deltaY)) {
-      const views: RaceView[] = ['track', 'detail'];
-      const currentIdx = views.indexOf(activeView);
-
-      if (deltaX > 0 && currentIdx > 0) {
-        // Swipe right → previous view
-        setActiveView(views[currentIdx - 1]);
-      } else if (deltaX < 0 && currentIdx < views.length - 1) {
-        // Swipe left → next view
-        setActiveView(views[currentIdx + 1]);
-      }
-    }
-  };
+  // (Swipe-to-switch-view was removed: it conflicted with horizontal scrolling
+  // in the timing tables. View changes happen via the nav panel only.)
 
   // Helper to get current sector (0-5) from position
   const getSector = (position: number): number => {
@@ -1093,11 +1066,7 @@ function WatchMode({
       {/* Main content: a 16:9 broadcast frame that scales to fit the viewport
           (desktop/landscape). On portrait phones it falls back to the stacked
           vertical layout. */}
-      <div
-        className={`watch-content view-${activeView}`}
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
-      >
+      <div className={`watch-content view-${activeView}`}>
         <div className={`broadcast-frame frame-${activeView}`}>
           {/* TRACK VIEW: track map fills the frame, timing tower floats left */}
           {activeView === 'track' && (
