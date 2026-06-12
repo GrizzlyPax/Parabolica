@@ -991,33 +991,20 @@ function WatchMode({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [drivers, raceState.totalTicks]);
 
-  // === Live lap-chart history (the position trace, #208) ===
-  // Sample the running order once per leader-lap. Cheap: ≤ totalLaps snapshots,
-  // grows on lap changes, not every tick.
-  const lapSamplesRef = useRef<{ lap: number; order: number[]; sc: boolean }[]>([]);
-  const lastSampledLapRef = useRef(0);
-  const [lapSampleCount, setLapSampleCount] = useState(0);
+  // === Lap-chart history (the position trace, #208) ===
+  // The engine records a snapshot per leader-lap inside tick(), so the history
+  // is complete from lap 1 — including the laps that ran before you joined a
+  // live broadcast (fast-forward ticks through them) and headless settles.
+  // We just mirror its length to a state so the chart recomputes once per lap.
+  const [historyLen, setHistoryLen] = useState(0);
   useEffect(() => {
-    const racing = drivers.filter(d => d.status !== 'dnf');
-    const leaderLap = racing.length ? Math.max(...racing.map(d => d.currentLap)) : 0;
-    // New race / replay rewound the clock: reset.
-    if (leaderLap < lastSampledLapRef.current) {
-      lapSamplesRef.current = [];
-      lastSampledLapRef.current = 0;
-      setLapSampleCount(0);
-    }
-    if (leaderLap >= 1 && leaderLap > lastSampledLapRef.current) {
-      const order = sortedDrivers.map(d => d.id); // current running order (tower sort)
-      lapSamplesRef.current.push({ lap: leaderLap, order, sc: raceState.unsafetyCarActive });
-      lastSampledLapRef.current = leaderLap;
-      setLapSampleCount(lapSamplesRef.current.length);
-    }
+    const len = engine.getLapHistory().length;
+    if (len !== historyLen) setHistoryLen(len);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [drivers, raceState.totalTicks]);
+  }, [raceState.totalTicks]);
 
-  // Build lap-chart series from the sampled history + current driver state.
   const lapChart = useMemo(() => {
-    const samples = lapSamplesRef.current;
+    const samples = engine.getLapHistory();
     const laps = samples.map(s => s.lap);
     const scSampleIdx = new Set<number>();
     samples.forEach((s, i) => { if (s.sc) scSampleIdx.add(i); });
@@ -1030,6 +1017,7 @@ function WatchMode({
       });
       return {
         id: d.id,
+        name: d.name,
         color: d.color,
         accentColor: d.accentColor,
         dashed: d.driverSlot === 2,
@@ -1041,7 +1029,7 @@ function WatchMode({
     });
     return { series, laps, scSampleIdx };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lapSampleCount, drivers]);
+  }, [historyLen, drivers]);
 
   // Transform positionDeltas to just delta values for TimingTower
   const positionDeltasForTower = useMemo(() => {
