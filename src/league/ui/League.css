@@ -831,3 +831,12 @@ button.section-toggle:hover { color: #bbb; }
   color: #666;
   cursor: default;
 }
+
+/* Calendar condition emojis (track character + weather forecast) */
+.cal-conditions {
+  display: inline-flex;
+  gap: 2px;
+  margin-left: 6px;
+  font-size: 0.8rem;
+  opacity: 0.85;
+}

@@ -315,3 +315,24 @@
     font-size: 1rem;
   }
 }
+
+/* === Tag chips (identity tags in the timing tower) === */
+.tag-chips {
+  display: inline-flex;
+  gap: 2px;
+  align-items: center;
+  justify-content: center;
+}
+.tag-chip {
+  font-size: 0.85rem;
+  line-height: 1;
+  transition: opacity 0.3s ease, filter 0.3s ease;
+}
+.tag-chip.dormant {
+  opacity: 0.25;
+  filter: grayscale(0.8);
+}
+.tag-chip.active {
+  opacity: 1;
+  filter: drop-shadow(0 0 3px rgba(216, 184, 96, 0.8));
+}

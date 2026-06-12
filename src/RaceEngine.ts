@@ -1,6 +1,7 @@
 import { Tag, getTagById, RaceContext, evaluateTagCondition } from './data/tags';
 import { WeatherState } from './data/weather';
 import { TrackTag } from './data/trackTags';
+import { INFLICTIONS } from './data/inflictions';
 import { SimVariables, CANON_VARIABLES } from './simlab/types';
 import { Rng, mulberry32, shuffle } from './engine/rng';
 
@@ -1933,6 +1934,74 @@ class RaceEngine {
     return this.trackTags;
   }
 
+  // === INFLICTIONS (mid-race state tags from the environment) ===
+
+  /** Roll environment inflictions for this tick: when an infliction's required
+   * condition is active, a small seeded chance strikes ONE racing driver with a
+   * temporary effect. Rare by design — each application is a feed event.
+   * Rides the unified effect system + track_event_effect logging, so the
+   * timing-tower status icons and notifications light up with no extra UI. */
+  private processInflictions(): void {
+    if (this.currentConditions.size === 0) return;
+
+    for (const inf of INFLICTIONS) {
+      if (!inf.requiresCondition.some(c => this.currentConditions.has(c))) continue;
+      if (this.rng() >= inf.perTickChance) continue;
+
+      const candidates = this.drivers.filter(d => d.status === 'racing');
+      if (candidates.length === 0) continue;
+      const victim = candidates[Math.floor(this.rng() * candidates.length)];
+
+      this.createTrackEffect(
+        `infliction-${inf.id}`,
+        inf.name,
+        inf.emoji,
+        [victim.id],
+        this.raceState.totalTicks + inf.durationTicks,
+        {
+          speedModifier: inf.effects.speedModifier,
+          consistencyModifier: inf.effects.consistencyModifier,
+          luckModifier: inf.effects.luckModifier,
+          crashResistance: inf.effects.crashResistance,
+        }
+      );
+      this.logEvent(
+        'track_event_effect',
+        victim,
+        `${inf.name}: ${inf.activationText}`,
+        inf.impact,
+        0.8,
+        inf.emoji
+      );
+    }
+  }
+
+  /** Tag ids currently contributing effects for a driver: conditional tags
+   * whose gate is open this tick + stored tag activations still live. Display
+   * surface for the timing tower (lit vs dormant chips). */
+  getActiveTagIds(driverId: number): string[] {
+    const active: string[] = [];
+
+    const ctx = this.raceContextCache.get(driverId);
+    const driver = this.drivers.find(d => d.id === driverId);
+    if (driver && ctx) {
+      for (const tag of [driver.driverTag, driver.carTag, driver.teamTag]) {
+        if (tag?.condition && evaluateTagCondition(tag.condition, ctx)) active.push(tag.id);
+      }
+    }
+
+    const effects = this.unifiedEffects.get(driverId);
+    if (effects) {
+      for (const e of effects) {
+        if (e.source === 'tag' &&
+            (e.expiresAtTick === null || e.expiresAtTick > this.raceState.totalTicks)) {
+          active.push(e.sourceId);
+        }
+      }
+    }
+    return active;
+  }
+
   // === ENVIRONMENT EFFECTS (weather + track tags, field-wide) ===
 
   private getEnvSpeedModifier(): number {
@@ -2107,6 +2176,9 @@ class RaceEngine {
     // Refresh conditional-tag context now that position + traffic are known this
     // tick, before crash resistance and speed modifiers are read below.
     this.rebuildRaceContexts();
+
+    // Environment inflictions (mid-race state tags: storm strikes, fog, etc.)
+    this.processInflictions();
 
     const crashedThisTick: Set<number> = new Set();
     const damagedThisTick: Set<number> = new Set();

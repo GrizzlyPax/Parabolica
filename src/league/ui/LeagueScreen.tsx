@@ -13,6 +13,7 @@ import { LeagueState, RaceDigest, LiveRace } from '../types';
 import { settleLeague, nextRaceAt, isSeasonOver, liveRaceSnapshot, LiveSnapshot } from '../settle';
 import { buildSeasonReport } from '../seasonReport';
 import { weatherForRace } from '../../data/weather';
+import { intrinsicTrackTags } from '../../data/trackTags';
 import { saveLeagueState } from '../../storage/persistence';
 import { getSeasonStandings, calculatePointsForPosition } from '../../types/season';
 import { getTrackById } from '../../generators/tracks';
@@ -562,10 +563,24 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onDissolve 
                       weekday: 'short', hour: 'numeric', minute: '2-digit',
                     });
                   }
+                  // Conditions are part of the fixed universe: the forecast is
+                  // real (deterministic), and the track's character is intrinsic.
+                  const forecast = weatherForRace(league.leagueSeed, race.index);
+                  const tags = intrinsicTrackTags(race.trackId);
                   return (
                     <li key={race.index} className={settled ? 'settled' : 'scheduled'}>
                       <span className="cal-race-no">R{race.index + 1}</span>
-                      <span className="cal-track">{track?.funEmoji} {track?.name ?? race.trackId}</span>
+                      <span className="cal-track">
+                        {track?.funEmoji} {track?.name ?? race.trackId}
+                        <span className="cal-conditions">
+                          {tags.map(t => (
+                            <span key={t.id} className="cal-condition" title={t.name}>{t.emoji}</span>
+                          ))}
+                          {forecast.id !== 'clear' && (
+                            <span className="cal-condition" title={`Forecast: ${forecast.name}`}>{forecast.emoji}</span>
+                          )}
+                        </span>
+                      </span>
                       <span className="cal-when">{when}</span>
                     </li>
                   );

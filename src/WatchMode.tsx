@@ -1,4 +1,4 @@
-import { Driver, RaceConfig, RaceState, TrackInfo, RaceEvent } from './RaceEngine';
+import RaceEngine, { Driver, RaceConfig, RaceState, TrackInfo, RaceEvent } from './RaceEngine';
 import { useMemo, useRef, useEffect, useState } from 'react';
 import {
   UniversalHeader,
@@ -1021,6 +1021,30 @@ function WatchMode({
     return map;
   }, [statusEffects]);
 
+  // Ambient race conditions (weather + track character) for the header, and
+  // per-driver active-tag state for the tower's tag chips. WatchMode always
+  // renders the app singleton's race, so reading it directly is sound; both
+  // refresh on every drivers-notify render.
+  const engine = RaceEngine.getInstance();
+  const headerConditions = useMemo(() => {
+    const chips: { emoji: string; label: string }[] = [];
+    const weather = engine.getWeather();
+    if (weather && weather.id !== 'clear') chips.push({ emoji: weather.emoji, label: weather.name });
+    for (const tt of engine.getTrackTags()) chips.push({ emoji: tt.emoji, label: tt.name });
+    return chips;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [engine, trackInfo]);
+  const activeTagsMap = useMemo(() => {
+    const map = new Map<number, Set<string>>();
+    for (const d of drivers) {
+      if (d.driverTag || d.carTag || d.teamTag) {
+        map.set(d.id, new Set(engine.getActiveTagIds(d.id)));
+      }
+    }
+    return map;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [drivers, raceState.totalTicks]);
+
   // Transform positionDeltas to just delta values for TimingTower
   const positionDeltasForTower = useMemo(() => {
     const map = new Map<number, number>();
@@ -1069,6 +1093,7 @@ function WatchMode({
         trackName={trackInfo?.name || 'Grand Prix'}
         trackEmoji={trackInfo?.funEmoji || '🏁'}
         trackFlagEmoji={trackInfo?.emoji}
+        conditions={headerConditions}
         elapsedTime={raceState.totalTicks}
         onMenuOpen={() => setNavPanelOpen(true)}
         liveBadge={spectator && !raceState.raceFinished}
@@ -1119,6 +1144,7 @@ function WatchMode({
                 onDriverClick={toggleDriverFocus}
                 condensed={false}
                 statusEffects={statusEffectsMap}
+                activeTags={activeTagsMap}
                 positionDeltas={positionDeltasForTower}
                 fastestLapOverall={fastestLapOverall ?? undefined}
                 className="timing-tower-track"
@@ -1165,6 +1191,7 @@ function WatchMode({
                 condensed={false}
                 expandable={false}
                 statusEffects={statusEffectsMap}
+                activeTags={activeTagsMap}
                 positionDeltas={positionDeltasForTower}
                 fastestLapOverall={fastestLapOverall ?? undefined}
                 className="timing-tower-detail"

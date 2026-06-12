@@ -220,6 +220,40 @@ export const COLUMN_TIRES: ColumnConfig = {
   },
 };
 
+// Identity tag chips (driver/car/team tags). Dormant tags render dim; a tag
+// whose condition gate is open (or whose trigger has fired) lights up — you
+// can literally watch Rain Dancer wake when the skies open.
+export const COLUMN_TAGS: ColumnConfig = {
+  id: 'tags',
+  header: 'Tags',
+  width: '64px',
+  align: 'center',
+  render: (driver: Driver, ctx: RowContext) => {
+    const tags = [driver.driverTag, driver.carTag, driver.teamTag].filter(
+      (t): t is NonNullable<typeof t> => !!t
+    );
+    if (tags.length === 0) return <span style={{ color: '#333' }}>-</span>;
+    return (
+      <span className="tag-chips">
+        {tags.slice(0, 3).map(tag => {
+          const isActive = ctx.activeTagIds?.has(tag.id) ?? false;
+          // Ungated passives are always-on: show them lit.
+          const alwaysOn = tag.trigger === 'passive' && !tag.condition;
+          return (
+            <span
+              key={tag.id}
+              className={`tag-chip ${isActive || alwaysOn ? 'active' : 'dormant'}`}
+              title={`${tag.name} — ${tag.description}`}
+            >
+              {tag.emoji}
+            </span>
+          );
+        })}
+      </span>
+    );
+  },
+};
+
 // Status icon (tags, effects)
 export const COLUMN_STATUS: ColumnConfig = {
   id: 'status',
@@ -273,6 +307,7 @@ export const DETAIL_COLUMNS: ColumnConfig[] = [
   COLUMN_GAP_LEADER,
   COLUMN_LAST_LAP,
   COLUMN_TIRE_HISTORY,
+  COLUMN_TAGS,
   COLUMN_STATUS,
 ];
 
