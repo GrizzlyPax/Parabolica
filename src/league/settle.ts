@@ -45,22 +45,30 @@ function findFastestLap(drivers: Driver[]): number | null {
   return fastestId;
 }
 
-/** Build an engine prepared exactly like the live broadcast runs it, so a
- * headless settle, a mid-race snapshot, and a watched race are the same race. */
-function prepareEngine(
+/**
+ * Configure `engine` to run scheduled race `raceIndex` exactly as the settle
+ * loop scores it: same sim variables, same seed, same roster, same lap
+ * count/length, same track events. The headless settle AND the live
+ * broadcast (App's handleWatchLive) both go through here — this is the
+ * single source of truth for how a league race is built. Any divergence
+ * (a forgotten updateConfig, different simVars) makes the watched race a
+ * different race than the one that enters the standings.
+ */
+export function prepareScheduledRace(
+  engine: RaceEngine,
   league: LeagueState,
   raceIndex: number,
   track: Track,
   simVars: SimVariables
-): RaceEngine {
+): void {
   const race = league.schedule[raceIndex];
-  const engine = RaceEngine.createForWorker(simVars, race.seed);
+  engine.setSimVars(simVars);
+  engine.setSeed(race.seed);
   engine.loadGeneratedRoster(rosterStateAt(league, raceIndex));
   engine.updateConfig({
+    // The sim runs off config, not trackInfo — these decide the outcome
     totalLaps: track.laps,
     lapLength: track.length,
-    // Digests need the whole race, not the live-UI window
-    maxStoredEvents: Number.MAX_SAFE_INTEGER,
   });
   engine.setTrackInfo({
     id: track.id,
@@ -69,6 +77,14 @@ function prepareEngine(
     funEmoji: track.funEmoji,
     description: track.description,
     laps: track.laps,
+    // Layout is render-only (the live view needs it; headless ignores it)
+    layout: {
+      trackPath: track.layout.trackPath,
+      pitLanePath: track.layout.pitLanePath,
+      straightStart: track.layout.straightStart,
+      straightEnd: track.layout.straightEnd,
+      totalLength: track.layout.totalLength,
+    },
     event: track.event ? {
       id: track.event.id,
       name: track.event.name,
@@ -80,6 +96,20 @@ function prepareEngine(
     eventTrigger: track.event?.trigger,
     eventEffect: track.event?.effect,
   });
+}
+
+/** Build a fresh engine prepared exactly like the live broadcast runs it, so a
+ * headless settle, a mid-race snapshot, and a watched race are the same race. */
+function prepareEngine(
+  league: LeagueState,
+  raceIndex: number,
+  track: Track,
+  simVars: SimVariables
+): RaceEngine {
+  const engine = RaceEngine.createForWorker();
+  prepareScheduledRace(engine, league, raceIndex, track, simVars);
+  // Digests need the whole race, not the live-UI window (no effect on outcome)
+  engine.updateConfig({ maxStoredEvents: Number.MAX_SAFE_INTEGER });
   return engine;
 }
 

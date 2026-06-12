@@ -444,6 +444,16 @@ class RaceEngine {
     this.rng = Math.random;
   }
 
+  /**
+   * Override simulation variables (Sim Lab tuning, league canon, future
+   * decrees). Pass null to restore the hardcoded defaults. Replays only
+   * match when this is identical between runs — the league settle and the
+   * live broadcast must both run CANON (or the same decree set).
+   */
+  setSimVars(simVars: SimVariables | null): void {
+    this.simVars = simVars;
+  }
+
   // === SIM VARIABLE HELPERS ===
   // These methods return overridden values from simVars or fall back to hardcoded defaults
 
