@@ -43,3 +43,5 @@ and BetLab for the future NPC-crowd system.
 - `docs/GAME_DESIGN_PASS.md` - Live-race design roadmap (drama beats, bet settlement, persistence)
 - `docs/COMMISSIONER_MODE.md` - Gamification north star (wall-clock roguelite seasons, gods, decrees)
 - `docs/COMMISSIONER_MODE_TECH.md` - Technical plan (seeded RNG, persistence, settle/scheduler, league runtime)
+- `docs/SIM_MECHANICS.md` - The stat truth doc: formulas, magnitudes, rebalance history, lab workflow
+- `docs/TAG_SYSTEM.md` - Tag system design framework (five sources, magnitude ladder, acquisition engine, interview)
