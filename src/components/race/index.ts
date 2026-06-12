@@ -7,6 +7,7 @@ export { default as UniversalHeader } from './UniversalHeader';
 export { default as NavPanel } from './NavPanel';
 export { default as TrackMap } from './TrackMap';
 export { default as TrackStrip } from './TrackStrip';
+export { default as LapChart, type LapChartSeries } from './LapChart';
 export { default as ConditionsBar } from './ConditionsBar';
 export { default as ConditionsPanel } from './ConditionsPanel';
 
