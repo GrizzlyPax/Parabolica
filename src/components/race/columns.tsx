@@ -35,7 +35,7 @@ function getDriverCode(driver: Driver): string {
 export const COLUMN_POSITION: ColumnConfig = {
   id: 'position',
   header: 'P',
-  width: '28px',
+  width: '32px',
   align: 'center',
   render: (_driver: Driver, ctx: RowContext) => (
     <span className={`position-number ${ctx.isFinished ? 'finished' : ''} ${ctx.isDNF ? 'dnf' : ''} ${ctx.isPitting ? 'pitting' : ''}`}>
@@ -57,7 +57,7 @@ export const COLUMN_TEAM_STRIPE: ColumnConfig = {
 export const COLUMN_TEAM_MARBLE: ColumnConfig = {
   id: 'teamMarble',
   header: '',
-  width: '28px',
+  width: '26px',
   align: 'center',
   render: (driver: Driver) => (
     <span
@@ -85,7 +85,7 @@ export const COLUMN_TEAM_MARBLE: ColumnConfig = {
 export const COLUMN_DRIVER_CODE: ColumnConfig = {
   id: 'driverCode',
   header: 'Driver',
-  width: '52px', // Fixed width - just 3 letters
+  width: '46px', // Fixed width - just 3 letters
   align: 'left',
   render: (driver: Driver, ctx: RowContext) => (
     <span
@@ -101,7 +101,7 @@ export const COLUMN_DRIVER_CODE: ColumnConfig = {
 export const COLUMN_DRIVER_FULL_NAME: ColumnConfig = {
   id: 'driverFullName',
   header: 'Driver',
-  width: 'minmax(90px, 140px)', // Tighter max width
+  width: '156px',
   align: 'left',
   render: (driver: Driver, ctx: RowContext) => (
     <span
@@ -117,7 +117,7 @@ export const COLUMN_DRIVER_FULL_NAME: ColumnConfig = {
 export const COLUMN_TEAM_NAME: ColumnConfig = {
   id: 'teamName',
   header: 'Team',
-  width: 'minmax(80px, 120px)',
+  width: '112px',
   align: 'left',
   render: (driver: Driver) => (
     <span className="team-name" style={{ color: driver.color }}>
@@ -139,22 +139,24 @@ export const COLUMN_DELTA_POS: ColumnConfig = {
   ),
 };
 
-// Gap to car ahead
+// Interval to the car ahead (the racing battle)
 export const COLUMN_GAP_AHEAD: ColumnConfig = {
   id: 'gapAhead',
-  header: 'Gap',
-  width: 'minmax(52px, 1fr)', // Flexible to fill space
+  header: 'Int',
+  width: '62px',
   align: 'right',
-  render: (_driver: Driver, ctx: RowContext) => (
-    <span className="gap-value gap-ahead">{ctx.intervalGap}</span>
-  ),
+  render: (_driver: Driver, ctx: RowContext) => {
+    // Highlight a live battle: within 0.5s of the car ahead.
+    const close = /^\+0\.[0-4]/.test(ctx.intervalGap);
+    return <span className={`gap-value gap-ahead ${close ? 'gap-battle' : ''}`}>{ctx.intervalGap}</span>;
+  },
 };
 
 // Gap to leader
 export const COLUMN_GAP_LEADER: ColumnConfig = {
   id: 'gapLeader',
   header: 'Leader',
-  width: 'minmax(52px, 1fr)', // Flexible to fill space
+  width: '62px',
   align: 'right',
   render: (_driver: Driver, ctx: RowContext) => (
     <span className="gap-value gap-leader">{ctx.leaderGap}</span>
@@ -165,7 +167,7 @@ export const COLUMN_GAP_LEADER: ColumnConfig = {
 export const COLUMN_LAST_LAP: ColumnConfig = {
   id: 'lastLap',
   header: 'Last',
-  width: 'minmax(56px, 1fr)', // Flexible to fill space
+  width: '58px',
   align: 'right',
   render: (_driver: Driver, ctx: RowContext) => (
     <LapTime time={ctx.lastLapTime} className={ctx.lastLapClass} />
@@ -176,11 +178,44 @@ export const COLUMN_LAST_LAP: ColumnConfig = {
 export const COLUMN_BEST_LAP: ColumnConfig = {
   id: 'bestLap',
   header: 'Best',
-  width: 'minmax(56px, 1fr)', // Flexible to fill space
+  width: '58px',
   align: 'right',
   render: (_driver: Driver, ctx: RowContext) => (
     <LapTime time={ctx.bestLapTime} className={ctx.bestLapClass} />
   ),
+};
+
+// Tire: current compound (colored pip) + age in laps
+const TIRE_LETTER: Record<string, string> = { soft: 'S', medium: 'M', hard: 'H' };
+export const COLUMN_TIRE_AGE: ColumnConfig = {
+  id: 'tireAge',
+  header: 'Tyre',
+  width: '58px',
+  align: 'center',
+  render: (driver: Driver) => {
+    const compound = driver.tireState?.compound;
+    if (!compound) return <span className="muted-cell">—</span>;
+    return (
+      <span className="tire-age">
+        <span className={`tire-pip tire-pip-${compound}`} title={compound}>
+          {TIRE_LETTER[compound] ?? '?'}
+        </span>
+        <span className="tire-age-laps">{driver.tireState?.lapsOnTires ?? 0}</span>
+      </span>
+    );
+  },
+};
+
+// Pit-stop count
+export const COLUMN_PITS: ColumnConfig = {
+  id: 'pits',
+  header: 'Pit',
+  width: '34px',
+  align: 'center',
+  render: (driver: Driver) => {
+    const n = driver.pitStops?.length ?? 0;
+    return <span className={`pit-count ${n === 0 ? 'muted-cell' : ''}`}>{n}</span>;
+  },
 };
 
 // Tire compound dots
@@ -226,13 +261,13 @@ export const COLUMN_TIRES: ColumnConfig = {
 export const COLUMN_TAGS: ColumnConfig = {
   id: 'tags',
   header: 'Tags',
-  width: '56px',
+  width: '54px',
   align: 'center',
   render: (driver: Driver, ctx: RowContext) => {
     const tags = [driver.driverTag, driver.carTag, driver.teamTag].filter(
       (t): t is NonNullable<typeof t> => !!t
     );
-    if (tags.length === 0) return <span style={{ color: '#333' }}>-</span>;
+    if (tags.length === 0) return <span className="muted-cell">—</span>;
     return (
       <span className="tag-chips">
         {tags.slice(0, 3).map(tag => {
@@ -254,14 +289,14 @@ export const COLUMN_TAGS: ColumnConfig = {
   },
 };
 
-// Status icon (tags, effects)
+// Status icon (mid-race inflictions / effects)
 export const COLUMN_STATUS: ColumnConfig = {
   id: 'status',
-  header: 'STS',
-  width: '32px',
+  header: '!',
+  width: '30px',
   align: 'center',
   render: (_driver: Driver, ctx: RowContext) => (
-    ctx.statusEmoji ? <span className="status-icon">{ctx.statusEmoji}</span> : <span style={{ color: '#333' }}>-</span>
+    ctx.statusEmoji ? <span className="status-icon">{ctx.statusEmoji}</span> : <span className="muted-cell">—</span>
   ),
 };
 
@@ -284,21 +319,19 @@ export const COLUMN_TIRE_HISTORY: ColumnConfig = {
 // VIEW-SPECIFIC COLUMN SETS
 // ============================================
 
-// Track View: Minimal columns, NO horizontal scroll
-// P | Marble | Code | Gap | Leader | Last | Tags
+// Track View: compact floating panel — the essentials only.
+// P | Marble | Code | Interval | Last | Tags
 export const TRACK_COLUMNS: ColumnConfig[] = [
   COLUMN_POSITION,
   COLUMN_TEAM_MARBLE,
   COLUMN_DRIVER_CODE,
   COLUMN_GAP_AHEAD,
-  COLUMN_GAP_LEADER,
   COLUMN_LAST_LAP,
   COLUMN_TAGS,
 ];
 
-// Detail View: Full data with tire history chart (like F1)
-// P | Marble | Full Name | Team | Gap | Leader | Last | TireHistory | Status
-// Note: Bet info is shown in the "Your Bets" section below track, not in the tower
+// Detail View: the rich broadcast data screen (F1 timing).
+// P | Marble | Driver | Team | Int | Leader | Last | Best | Tyre | Pit | Tags | !
 export const DETAIL_COLUMNS: ColumnConfig[] = [
   COLUMN_POSITION,
   COLUMN_TEAM_MARBLE,
@@ -307,7 +340,9 @@ export const DETAIL_COLUMNS: ColumnConfig[] = [
   COLUMN_GAP_AHEAD,
   COLUMN_GAP_LEADER,
   COLUMN_LAST_LAP,
-  COLUMN_TIRE_HISTORY,
+  COLUMN_BEST_LAP,
+  COLUMN_TIRE_AGE,
+  COLUMN_PITS,
   COLUMN_TAGS,
   COLUMN_STATUS,
 ];

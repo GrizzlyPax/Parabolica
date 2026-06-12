@@ -566,3 +566,93 @@
     font-size: 1.2rem;
   }
 }
+
+/* ============================================================
+   DESIGN SYSTEM PASS (v0.3.14) — typography, hierarchy, spacing,
+   colour discipline, accessibility. Appended last so it governs.
+   Principle: team colour ONLY on driver identity; everything else
+   is grayscale gradations + semantic accents. Numerics tabular.
+   ============================================================ */
+
+/* Header: quiet small-caps, clearly separated from the data. */
+.timing-tower-header {
+  padding: 7px 10px !important;
+  font-size: 0.6rem !important;
+  letter-spacing: 0.09em;
+  font-weight: 600;
+  color: #71717c !important;
+  background: #0b0b0e;
+  border-bottom: 1px solid #23232a !important;
+  gap: 8px !important;
+}
+
+/* Rows: one consistent rhythm, subtle separators, clear states. */
+.timing-row {
+  padding: 0 10px !important;
+  gap: 8px !important;
+  min-height: 36px !important;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.035);
+  font-variant-numeric: tabular-nums;
+}
+.timing-row:hover { background: rgba(255, 255, 255, 0.05) !important; }
+.timing-row:focus-visible {
+  outline: 2px solid #d8b860;
+  outline-offset: -2px;
+}
+
+/* Position: bold, tabular. DNF/PIT smaller + semantic colour. */
+.position-number { font-weight: 700; color: #eaeaef; font-size: 0.92rem; }
+.position-number.dnf { color: #ff6b6b; font-size: 0.62rem; font-weight: 700; letter-spacing: 0.04em; }
+.position-number.pitting { color: #5aa9ff; font-size: 0.62rem; font-weight: 700; letter-spacing: 0.04em; }
+.position-number.finished { color: #d8b860; }
+
+/* Driver identity carries the only team colour in the row. */
+.driver-code { font-weight: 700; font-size: 0.9rem; letter-spacing: 0.02em; }
+.driver-full-name { font-weight: 600; font-size: 0.9rem; }
+.team-name {
+  color: #82828e !important;
+  font-weight: 500;
+  font-size: 0.78rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Numerics — a deliberate hierarchy of importance. */
+.gap-value { font-variant-numeric: tabular-nums; font-weight: 500; font-size: 0.82rem; }
+.gap-ahead { color: #c8c8d2; }                 /* interval — the live battle */
+.gap-leader { color: #7a7a86; }                /* leader gap — secondary */
+.gap-battle { color: #ff7a45 !important; font-weight: 700; }  /* < 0.5s fight */
+.lap-time { font-variant-numeric: tabular-nums; color: #d4d4dc; font-size: 0.82rem; }
+.lap-fastest { color: #c084fc !important; font-weight: 700; }  /* purple = session best */
+.lap-improved { color: #5ad17a !important; }
+.lap-slower { color: #9a9aa4 !important; }
+.lap-time-empty, .muted-cell { color: #46464e !important; }
+
+/* Tyre: compound pip (F1 colours) + age in laps. */
+.tire-age { display: inline-flex; align-items: center; gap: 5px; justify-content: center; }
+.tire-pip {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 17px; height: 17px; border-radius: 4px;
+  font-size: 0.6rem; font-weight: 800;
+}
+.tire-pip-soft { background: #e64545; color: #fff; }
+.tire-pip-medium { background: #f1c40f; color: #1a1a1a; }
+.tire-pip-hard { background: #e8e8ec; color: #1a1a1a; }
+.tire-age-laps { font-size: 0.74rem; color: #8a8a94; font-variant-numeric: tabular-nums; }
+
+/* Pit count */
+.pit-count { font-variant-numeric: tabular-nums; color: #b2b2bc; font-weight: 600; font-size: 0.82rem; }
+
+/* Chips a touch larger for legibility. */
+.tag-chip { font-size: 0.92rem; }
+.status-icon { font-size: 1rem; }
+
+/* Accessibility: honour reduced-motion. */
+@media (prefers-reduced-motion: reduce) {
+  .timing-row, .tag-chip, .track-strip-dot, .timing-row-expanded, .condition-chip {
+    transition: none !important;
+    animation: none !important;
+  }
+}
