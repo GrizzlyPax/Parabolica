@@ -23,6 +23,12 @@ const VIEW_OPTIONS: Array<{
     label: 'Detail View',
     description: 'Full timing tower with all data',
   },
+  {
+    id: 'lap',
+    icon: '📈',
+    label: 'Lap Chart',
+    description: 'Position trace through the race',
+  },
 ];
 
 function NavPanel({ isOpen, activeView, onViewChange, onClose, onExit, exitLabel = 'Main Menu', exitDescription = 'Leave the race' }: NavPanelProps) {

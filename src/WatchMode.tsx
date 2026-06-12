@@ -1015,8 +1015,6 @@ function WatchMode({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [drivers, raceState.totalTicks]);
 
-  const [detailPanel, setDetailPanel] = useState<'chart' | 'feed'>('chart');
-
   // Build lap-chart series from the sampled history + current driver state.
   const lapChart = useMemo(() => {
     const samples = lapSamplesRef.current;
@@ -1194,31 +1192,7 @@ function WatchMode({
               </section>
 
               <section className="bf-feed">
-                <div className="bf-panel-tabs">
-                  <button
-                    className={`bf-panel-tab ${detailPanel === 'chart' ? 'active' : ''}`}
-                    onClick={() => setDetailPanel('chart')}
-                  >Lap Chart</button>
-                  <button
-                    className={`bf-panel-tab ${detailPanel === 'feed' ? 'active' : ''}`}
-                    onClick={() => setDetailPanel('feed')}
-                  >Feed</button>
-                </div>
-                {detailPanel === 'chart' ? (
-                  <div className="bf-panel-body">
-                    <LapChart
-                      series={lapChart.series}
-                      laps={lapChart.laps}
-                      totalLaps={totalLaps}
-                      fieldSize={drivers.length}
-                      scSampleIdx={lapChart.scSampleIdx}
-                      focusedDriverIds={focusedDriverIds}
-                      onDriverClick={toggleDriverFocus}
-                    />
-                  </div>
-                ) : (
-                  <RaceFeed items={feedItems} className="story-feed-detail" />
-                )}
+                <RaceFeed items={feedItems} className="story-feed-detail" />
               </section>
 
               <section className="bf-footer">
@@ -1243,6 +1217,27 @@ function WatchMode({
                 </div>
               </section>
             </>
+          )}
+
+          {/* LAP VIEW: the lap chart, featured full-frame (the F1 lap chart). */}
+          {activeView === 'lap' && (
+            <section className="bf-lapchart">
+              <div className="bf-lapchart-head">
+                <span className="bf-lapchart-title">📈 Race Lap Chart</span>
+                <span className="bf-lapchart-lap">Lap {currentLapForHeader} / {totalLaps}</span>
+              </div>
+              <div className="bf-lapchart-body">
+                <LapChart
+                  series={lapChart.series}
+                  laps={lapChart.laps}
+                  totalLaps={totalLaps}
+                  fieldSize={drivers.length}
+                  scSampleIdx={lapChart.scSampleIdx}
+                  focusedDriverIds={focusedDriverIds}
+                  onDriverClick={toggleDriverFocus}
+                />
+              </div>
+            </section>
           )}
         </div>
       </div>
