@@ -24,7 +24,7 @@ interface TrackMapProps {
   trackLength: number;
   drivers: Driver[];
   focusedDriverIds?: number[]; // Support multiple focused drivers
-  highlightedDriverIds?: number[]; // Bet drivers - always visible
+  highlightedDriverIds?: number[]; // Always-visible drivers (e.g. the current podium): bigger marker + team emoji
   unsafetyCarActive?: boolean; // Show Safety Carl when true
   unsafetyCarPosition?: number; // Position on track (0-1 percentage)
   className?: string;
@@ -346,7 +346,7 @@ function TrackMap({
           const showNameLabel = isFocused;
 
           // Marker sizes: focused = large, highlighted = medium, normal = small
-          const radius = isFocused ? 13 : isHighlighted ? 9 : isDNF ? 5 : 7;
+          const radius = isFocused ? 13 : isHighlighted ? 10 : isDNF ? 5 : 7;
           const strokeWidth = isFocused ? 2.5 : isHighlighted ? 2 : 2;
           // Non-focused drivers are dimmed
           const opacity = isDNF ? 0.3 : isPitting ? 0.8 : isFocused ? 1 : isHighlighted ? 0.9 : 0.7;
@@ -397,15 +397,15 @@ function TrackMap({
                 className="marker-circle"
               />
 
-              {/* Emoji inside marker for focused drivers only */}
-              {isFocused && !isDNF && (
+              {/* Emoji inside marker for focused and highlighted (podium) drivers */}
+              {(isFocused || isHighlighted) && !isDNF && (
                 <text
                   x={0}
                   y={1}
                   textAnchor="middle"
                   dominantBaseline="central"
                   className="marker-emoji"
-                  style={{ fontSize: '12px' }}
+                  style={{ fontSize: isFocused ? '12px' : '10px' }}
                 >
                   {driver.emoji}
                 </text>

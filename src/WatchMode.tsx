@@ -999,6 +999,13 @@ function WatchMode({
   // Fall back to realtime if frozen is empty (during initialization)
   const sortedDrivers = frozenSortedDrivers.length > 0 ? frozenSortedDrivers : realtimeSortedDrivers;
 
+  // P1–P3 always stand out on the map (bigger marker + team emoji) so the
+  // front of the race stays trackable through lapped traffic.
+  const podiumIds = useMemo(
+    () => sortedDrivers.filter(d => d.status !== 'dnf').slice(0, 3).map(d => d.id),
+    [sortedDrivers]
+  );
+
   // Derived values for TimingTower
   const fastestLapOverall = useMemo(() => {
     const allLapTimes = drivers.flatMap(d => d.lapTimes || []);
@@ -1126,6 +1133,7 @@ function WatchMode({
                 trackLength={trackLength}
                 drivers={drivers}
                 focusedDriverIds={Array.from(focusedDriverIds)}
+                highlightedDriverIds={podiumIds}
                 unsafetyCarActive={raceState.unsafetyCarActive}
                 unsafetyCarPosition={raceState.unsafetyCarPosition}
               />
@@ -1171,6 +1179,7 @@ function WatchMode({
                 trackLength={trackLength}
                 drivers={drivers}
                 focusedDriverIds={Array.from(focusedDriverIds)}
+                highlightedDriverIds={podiumIds}
                 unsafetyCarActive={raceState.unsafetyCarActive}
                 unsafetyCarPosition={raceState.unsafetyCarPosition}
               />
