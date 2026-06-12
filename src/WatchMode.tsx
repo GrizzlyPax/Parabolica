@@ -103,14 +103,6 @@ function getColorVariants(hexColor: string): { light: string; dark: string } {
 // Default fallback track path (oval) if no layout provided
 const DEFAULT_TRACK_PATH = 'M 150 60 L 450 60 Q 550 60, 550 150 Q 550 240, 450 240 L 150 240 Q 50 240, 50 150 Q 50 60, 150 60 Z';
 
-// Get a point along an SVG path at a given percentage (0-1)
-function getPointAlongPath(pathElement: SVGPathElement | null, percentage: number): { x: number; y: number } {
-  if (!pathElement) return { x: 300, y: 150 };
-  const length = pathElement.getTotalLength();
-  const point = pathElement.getPointAtLength(percentage * length);
-  return { x: point.x, y: point.y };
-}
-
 // Map track emojis to background themes
 const TRACK_THEMES: Record<string, { bg: string; trackColor: string; accent: string }> = {
   '🏁': { bg: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #1a1a2e 100%)', trackColor: '#2a2a4a', accent: '#4a4a6a' },
@@ -159,10 +151,6 @@ function WatchMode({
 }: WatchModeProps) {
   const trackLength = config.lapLength;
   const totalLaps = config.totalLaps;
-
-  // Refs for SVG path elements (used for positioning drivers)
-  const trackPathRef = useRef<SVGPathElement>(null);
-  const [pathsReady, setPathsReady] = useState(false);
 
   // Track which drivers were pitting in the previous frame (to detect pit exit)
   const previouslyPittingRef = useRef<Set<number>>(new Set());
@@ -362,13 +350,6 @@ function WatchMode({
   const trackPath = trackInfo?.layout?.trackPath || DEFAULT_TRACK_PATH;
   const pitLanePath = trackInfo?.layout?.pitLanePath;
 
-  // Signal when paths are mounted
-  useEffect(() => {
-    if (trackPathRef.current) {
-      setPathsReady(true);
-    }
-  }, [trackPath]);
-
   // Joining a broadcast mid-race: everything that already happened is
   // history, not news. On first observation of an in-progress race, prime
   // every "seen" ref from current state — silently — so catch-up doesn't
@@ -402,10 +383,17 @@ function WatchMode({
     }
     fastestLapRef.current = fastest;
 
-    // Past track events and tag activations
+    // Past track events, unsafety car deployments, effects, tag activations
     for (const e of raceEvents ?? []) {
       if (e.type === 'track_event' && e.tick > lastTrackEventTickRef.current) {
         lastTrackEventTickRef.current = e.tick;
+      }
+      if ((e.type === 'unsafety_car_deployed' || e.type === 'unsafety_car_recalled') &&
+          e.tick > lastUnsafetyCarTickRef.current) {
+        lastUnsafetyCarTickRef.current = e.tick;
+      }
+      if (e.type === 'track_event_effect' && e.driverId >= 0) {
+        seenTrackEffectsRef.current.add(`${e.tick}-${e.driverId}`);
       }
       if (e.type === 'tag_activation') {
         seenTagActivationsRef.current.add(`${e.tick}-${e.driverId}-${e.description}`);
@@ -414,10 +402,8 @@ function WatchMode({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [drivers, raceState.totalTicks]);
 
-  // Detect new crashes and tire blowouts, add notifications + SVG effects
+  // Detect new crashes and tire blowouts, add notifications
   useEffect(() => {
-    if (!pathsReady || !trackPathRef.current) return;
-
     // Get all DNF drivers (crashes and tire failures)
     const dnfDrivers = drivers.filter(d => d.status === 'dnf' && d.dnfInfo);
     const crashedDrivers = dnfDrivers.filter(d => d.dnfInfo?.reason === 'crash');
@@ -430,16 +416,6 @@ function WatchMode({
     // Handle regular crashes
     if (newlyCrashed.length > 0) {
       newlyCrashed.forEach(d => seenCrashesRef.current.add(d.id));
-
-      let avgX = 0, avgY = 0;
-      newlyCrashed.forEach(driver => {
-        const lapProgress = driver.position / trackLength;
-        const point = getPointAlongPath(trackPathRef.current, lapProgress);
-        avgX += point.x;
-        avgY += point.y;
-      });
-      avgX /= newlyCrashed.length;
-      avgY /= newlyCrashed.length;
 
       const currentTick = raceState.totalTicks;
       const isPartOfExistingCrash = currentTick - lastCrashTickRef.current <= 5;
@@ -534,7 +510,7 @@ function WatchMode({
         );
       });
     }
-  }, [drivers, pathsReady, trackLength, raceState.totalTicks]);
+  }, [drivers, raceState.totalTicks]);
 
   // Track if we're in the first few ticks of a race (for position stabilization)
   const raceStartGraceRef = useRef(true);
