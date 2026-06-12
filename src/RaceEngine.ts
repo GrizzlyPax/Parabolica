@@ -410,6 +410,12 @@ class RaceEngine {
   private lastEventCheckLap: number = 0;  // For interval-based triggers
   private leaderLapCount: Map<number, number> = new Map();  // Track how many laps each driver has led
 
+  // Lap chart history (#208/#173): one running-order snapshot per leader-lap.
+  // Recorded inside tick(), so it's complete from lap 1 whether the race runs
+  // headless, live, or is fast-forwarded into mid-broadcast.
+  private lapPositionHistory: { lap: number; order: number[]; sc: boolean }[] = [];
+  private lastRecordedLap = 0;
+
   // Tag activation state - tracks which tags have activated and when
   private activeTagEffects: Map<number, { tagId: string; speedModifier: number; consistencyModifier: number; luckModifier: number; expiresAtTick: number | null }[]> = new Map();
   private tagActivatedThisRace: Set<string> = new Set();  // "driverId-tagId" to track one-time activations
@@ -829,6 +835,12 @@ class RaceEngine {
     return { ...this.config };
   }
 
+  /** Per-leader-lap running-order snapshots for the lap chart (#208). Complete
+   * from lap 1 — populated during fast-forward and headless runs too. */
+  getLapHistory(): { lap: number; order: number[]; sc: boolean }[] {
+    return this.lapPositionHistory;
+  }
+
   updateConfig(updates: Partial<RaceConfig>): void {
     this.config = { ...this.config, ...updates };
     // If tick interval changed and race is running, restart the interval
@@ -967,6 +979,8 @@ class RaceEngine {
     this.trackEventTriggeredLaps = new Set();
     this.lastEventCheckLap = 0;
     this.leaderLapCount = new Map();
+    this.lapPositionHistory = [];
+    this.lastRecordedLap = 0;
     // Reset tag activation state
     this.activeTagEffects = new Map();
     this.tagActivatedThisRace = new Set();
@@ -2734,6 +2748,19 @@ class RaceEngine {
       }
     }
     this.raceState.currentLeader = newLeader;
+
+    // Record one position snapshot per leader-lap for the lap chart.
+    const leaderLap = sorted.length
+      ? Math.max(0, ...sorted.filter(d => d.status !== 'dnf').map(d => d.currentLap))
+      : 0;
+    if (leaderLap >= 1 && leaderLap > this.lastRecordedLap) {
+      this.lapPositionHistory.push({
+        lap: leaderLap,
+        order: sorted.map(d => d.id),
+        sc: this.raceState.unsafetyCarActive,
+      });
+      this.lastRecordedLap = leaderLap;
+    }
 
     // Detect overtakes by comparing current positions to previous
     const currentRanks = new Map<number, number>();

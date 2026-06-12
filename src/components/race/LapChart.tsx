@@ -10,6 +10,7 @@
 
 export interface LapChartSeries {
   id: number;
+  name: string;
   color: string;
   accentColor?: string;
   dashed?: boolean;
@@ -34,9 +35,10 @@ interface LapChartProps {
   onDriverClick?: (id: number) => void;
 }
 
-const W = 640;
+const W = 720;
 const H = 360;
-const PAD = { top: 14, right: 46, bottom: 22, left: 30 };
+// Wide right gutter for the standings: position · marble · driver name.
+const PAD = { top: 14, right: 210, bottom: 22, left: 30 };
 
 function LapChart({ series, laps, totalLaps, fieldSize, scSampleIdx, focusedDriverIds, onDriverClick }: LapChartProps) {
   if (laps.length < 2) {
@@ -65,14 +67,15 @@ function LapChart({ series, laps, totalLaps, fieldSize, scSampleIdx, focusedDriv
     if (start !== null) scBands.push({ from: laps[start], to: laps[laps.length - 1] });
   }
 
-  // Right-edge labels for currently-classified drivers, nudged apart.
+  // Right-edge standings: current position · marble · name, nudged apart.
   const labels = series
     .map(s => ({ s, pos: lastPos(s) }))
     .filter((l): l is { s: LapChartSeries; pos: number } => l.pos != null)
     .sort((a, b) => a.pos - b.pos)
-    .map(l => ({ s: l.s, y: y(l.pos) }));
+    .map(l => ({ s: l.s, pos: l.pos, y: y(l.pos) }));
+  const rowGap = Math.max(12, innerH / Math.max(1, labels.length));
   for (let i = 1; i < labels.length; i++) {
-    if (labels[i].y - labels[i - 1].y < 15) labels[i].y = labels[i - 1].y + 15;
+    if (labels[i].y - labels[i - 1].y < rowGap) labels[i].y = labels[i - 1].y + rowGap;
   }
 
   // Focused (or all if none) drawn on top.
@@ -125,14 +128,27 @@ function LapChart({ series, laps, totalLaps, fieldSize, scSampleIdx, focusedDriv
         );
       })}
 
-      {/* Right-edge current-position marbles */}
+      {/* Right-edge standings: position · marble · driver name */}
       {labels.map(l => {
-        const dim = hasFocus && !(focusedDriverIds?.has(l.s.id) ?? false);
+        const focused = focusedDriverIds?.has(l.s.id) ?? false;
+        const dim = hasFocus && !focused;
+        const gx = W - PAD.right + 8;
         return (
-          <g key={l.s.id} opacity={dim ? 0.25 : 1}>
-            <circle cx={W - PAD.right + 16} cy={l.y} r={8} fill={l.s.color} stroke={l.s.accentColor || '#fff'} strokeWidth={1.6} />
-            <text x={W - PAD.right + 16} y={l.y} textAnchor="middle" dominantBaseline="central" style={{ fontSize: '8px' }}>
+          <g
+            key={l.s.id}
+            opacity={dim ? 0.32 : 1}
+            onClick={() => onDriverClick?.(l.s.id)}
+            style={{ cursor: onDriverClick ? 'pointer' : undefined }}
+          >
+            <text x={gx} y={l.y} textAnchor="end" dominantBaseline="central"
+              className={`lap-rank ${focused ? 'focused' : ''}`}>{l.pos}</text>
+            <circle cx={gx + 14} cy={l.y} r={8} fill={l.s.color} stroke={l.s.accentColor || '#fff'} strokeWidth={1.6} />
+            <text x={gx + 14} y={l.y} textAnchor="middle" dominantBaseline="central" style={{ fontSize: '8px' }}>
               {l.s.emoji || l.s.code.slice(0, 1)}
+            </text>
+            <text x={gx + 27} y={l.y} dominantBaseline="central"
+              className={`lap-name ${focused ? 'focused' : ''}`} fill={l.s.color}>
+              {l.s.name.length > 20 ? l.s.name.slice(0, 19) + '…' : l.s.name}
             </text>
           </g>
         );

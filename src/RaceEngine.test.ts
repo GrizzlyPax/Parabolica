@@ -174,6 +174,26 @@ describe('conditional tags (#156 gate)', () => {
     return engine.runHeadless();
   }
 
+  it('records a complete lap-position history from lap 1 (the lap chart / #173 trace)', () => {
+    const grid = structuredClone(cleanRoster());
+    const engine = RaceEngine.createForWorker(CANON_VARIABLES, 0x1A9);
+    engine.loadGeneratedRoster(grid);
+    engine.updateConfig({ totalLaps: track.laps, lapLength: track.length });
+    engine.setTrackInfo({ id: track.id, name: track.name, emoji: track.emoji,
+      funEmoji: track.funEmoji, description: track.description, laps: track.laps });
+    engine.runHeadless();
+    const history = engine.getLapHistory();
+    // Complete from lap 1 up to (at least near) the full distance, monotonic.
+    expect(history.length).toBeGreaterThan(0);
+    expect(history[0].lap).toBe(1);
+    expect(history[history.length - 1].lap).toBeGreaterThanOrEqual(track.laps - 1);
+    for (let i = 1; i < history.length; i++) {
+      expect(history[i].lap).toBeGreaterThan(history[i - 1].lap);
+    }
+    // Every snapshot ranks the whole field.
+    expect(history[0].order.length).toBe(grid.length);
+  });
+
   it('a track tag passive lean changes the race', () => {
     const base = cleanRoster();
     const plain = run(base, 0x7AC, undefined);
