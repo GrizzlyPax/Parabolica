@@ -8,9 +8,9 @@
 // - 'full' (race surfaces): one fixed row per car — running drivers in current
 //   order with position · marble · name; retirees pinned to the bottom as DNF
 //   (their lines simply stop where they fell). Click anything to focus.
-// - 'compact' (season surfaces): matches the Points chart conventions — only
-//   the top 6 are emphasized and labelled; teams get a marble, drivers get
-//   their 3-letter code (dotted second seats marked with *).
+// - 'compact' (season surfaces): label-light like the Points chart — teams
+//   get a marble, drivers get their 3-letter code (dotted second seats marked
+//   with *). The whole field stays visible: it's a standings chart.
 
 import './LapChart.css';
 
@@ -44,15 +44,14 @@ interface LapChartProps {
   scSampleIdx?: Set<number>;
   focusedDriverIds?: Set<number>;
   onDriverClick?: (id: number) => void;
-  /** 'full' = per-car classification (race); 'compact' = Points-chart style
-   * (top-6 labels only, marble/code). Default 'full'. */
+  /** 'full' = per-car classification legend (race surfaces); 'compact' =
+   * marble/code-only labels for the whole field (season standings).
+   * Default 'full'. */
   legendMode?: 'full' | 'compact';
 }
 
 const W = 880;
 const H = 460;
-/** Top-N emphasis in compact mode — same as the Points chart. */
-const COMPACT_LABELED = 6;
 
 function LapChart({ series, laps, totalLaps, fieldSize, scSampleIdx, focusedDriverIds, onDriverClick, legendMode = 'full' }: LapChartProps) {
   if (series.length === 0 || laps.length === 0) {
@@ -82,14 +81,10 @@ function LapChart({ series, laps, totalLaps, fieldSize, scSampleIdx, focusedDriv
     .filter(s => s.dnf || s.positions[last] == null)
     .sort((a, b) => lastClassifiedIdx(b) - lastClassifiedIdx(a));
 
-  // Compact mode: the contenders (top 6) get full-strength lines + labels;
-  // the rest are dimmed context — the Points chart treatment.
-  const topIds = new Set(running.slice(0, COMPACT_LABELED).map(s => s.id));
-  const emphasized = (s: LapChartSeries) =>
-    compact ? topIds.has(s.id) : true;
-
-  // Full mode: one fixed row per car. Compact: top-6 labels at their current
-  // row, nudged apart if lines finish close together.
+  // Full mode: one fixed row per car (position · marble · name + DNF pin).
+  // Compact: every entry labelled marble/code-only at its current rank —
+  // ranks are dense (1..N), so rows are evenly spaced with no collisions
+  // (a small nudge guards sparse data just in case).
   type LegendEntry = { s: LapChartSeries; ly: number; label: string; dnf: boolean };
   let legend: LegendEntry[];
   if (!compact) {
@@ -98,10 +93,10 @@ function LapChart({ series, laps, totalLaps, fieldSize, scSampleIdx, focusedDriv
       ...retired.map((s, i) => ({ s, ly: y(running.length + i + 1), label: 'DNF', dnf: true })),
     ];
   } else {
-    legend = running.slice(0, COMPACT_LABELED).map(s => ({
+    legend = running.map(s => ({
       s, ly: y(s.positions[last]!), label: '', dnf: false,
     }));
-    const minSep = 19;
+    const minSep = Math.min(15, innerH / Math.max(1, running.length));
     for (let i = 1; i < legend.length; i++) {
       if (legend[i].ly - legend[i - 1].ly < minSep) legend[i].ly = legend[i - 1].ly + minSep;
     }
@@ -122,10 +117,9 @@ function LapChart({ series, laps, totalLaps, fieldSize, scSampleIdx, focusedDriv
   const tickLaps = Array.from({ length: totalLaps + 1 }, (_, l) => l)
     .filter(l => (l > 0 && l % 5 === 0) || l === totalLaps);
 
-  // Dimmed context behind, contenders/focused on top.
+  // Focused lines drawn on top.
   const drawOrder = [...series].sort((a, b) =>
-    (Number(emphasized(a)) + Number(focusedDriverIds?.has(a.id) ?? false)) -
-    (Number(emphasized(b)) + Number(focusedDriverIds?.has(b.id) ?? false)));
+    Number(focusedDriverIds?.has(a.id) ?? false) - Number(focusedDriverIds?.has(b.id) ?? false));
 
   return (
     <svg className="lap-chart" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Position chart">
@@ -158,15 +152,15 @@ function LapChart({ series, laps, totalLaps, fieldSize, scSampleIdx, focusedDriv
         const pts: string[] = [];
         s.positions.forEach((p, i) => { if (p != null) pts.push(`${x(laps[i])},${y(p)}`); });
         if (pts.length === 0) return null;
-        const dim = hasFocus ? !focused : !emphasized(s);
+        const dim = hasFocus && !focused;
         return (
           <g key={s.id} className="lap-line" onClick={() => onDriverClick?.(s.id)} style={{ cursor: onDriverClick ? 'pointer' : undefined }}>
             <polyline
               fill="none" stroke={s.color}
-              strokeWidth={focused ? 3 : emphasized(s) ? (compact ? 2.4 : 1.8) : 1.4}
+              strokeWidth={focused ? 3 : compact ? 2 : 1.8}
               strokeLinejoin="round" strokeLinecap="round"
               strokeDasharray={s.dashed ? '5 4' : undefined}
-              opacity={dim ? (compact ? 0.3 : 0.15) : s.dnf ? 0.5 : 0.92}
+              opacity={dim ? 0.15 : s.dnf ? 0.5 : 0.92}
               points={pts.join(' ')}
             />
             {/* A DNF line ends with an ✗ where they fell. */}
