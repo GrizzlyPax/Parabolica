@@ -2749,7 +2749,12 @@ class RaceEngine {
     }
     this.raceState.currentLeader = newLeader;
 
-    // Record one position snapshot per leader-lap for the lap chart.
+    // Record one position snapshot per leader-lap for the lap chart. A lap-0
+    // snapshot (the starting grid) lands on the first tick, so the chart has
+    // content the moment a race begins.
+    if (this.lapPositionHistory.length === 0 && sorted.length > 0) {
+      this.lapPositionHistory.push({ lap: 0, order: sorted.map(d => d.id), sc: false });
+    }
     const leaderLap = sorted.length
       ? Math.max(0, ...sorted.filter(d => d.status !== 'dnf').map(d => d.currentLap))
       : 0;

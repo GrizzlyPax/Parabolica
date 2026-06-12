@@ -3029,7 +3029,7 @@
 
 /* Lap chart right-edge standings */
 .lap-rank {
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
   fill: #c8c8d2;
   font-variant-numeric: tabular-nums;
@@ -3037,8 +3037,20 @@
 }
 .lap-rank.focused { fill: #fff; }
 .lap-name {
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 600;
   font-family: var(--font-display), var(--font-emoji);
 }
 .lap-name.focused { font-weight: 700; }
+
+/* Lap chart classification refinements */
+.lap-rank.dnf {
+  fill: #ff6b6b;
+  font-size: 7.5px;
+  letter-spacing: 0.04em;
+}
+.lap-dnf-mark {
+  font-size: 10px;
+  font-weight: 700;
+  fill: #ff6b6b;
+}

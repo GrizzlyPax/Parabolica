@@ -4,9 +4,10 @@
 // the per-race audit (#173), and season standings (#172) all render through
 // this. Dependency-free SVG.
 //
-// Our adaptations over the F1 chart: safety-car bands, pit-stop dots, a DNF
-// drop, team-marble end labels (legible where 22 absurdist names wouldn't be),
-// and click-to-focus.
+// Our adaptations over the F1 chart: safety-car bands, pit-stop dots, and a
+// classification legend on the right — running drivers on fixed rows in
+// current order, retirees pinned to the bottom as DNF (their lines simply
+// stop where they fell). Click anything to focus.
 
 export interface LapChartSeries {
   id: number;
@@ -20,6 +21,8 @@ export interface LapChartSeries {
   positions: (number | null)[];
   /** Lap numbers at which this driver pitted. */
   pitLaps?: number[];
+  /** Out of the race — pinned to the bottom of the legend as DNF. */
+  dnf?: boolean;
 }
 
 interface LapChartProps {
@@ -35,26 +38,42 @@ interface LapChartProps {
   onDriverClick?: (id: number) => void;
 }
 
-const W = 720;
-const H = 360;
-// Wide right gutter for the standings: position · marble · driver name.
-const PAD = { top: 14, right: 210, bottom: 22, left: 30 };
+const W = 880;
+const H = 460;
+// Right gutter hosts the classification: position · marble · driver name.
+const PAD = { top: 16, right: 178, bottom: 30, left: 32 };
 
 function LapChart({ series, laps, totalLaps, fieldSize, scSampleIdx, focusedDriverIds, onDriverClick }: LapChartProps) {
-  if (laps.length < 2) {
+  if (series.length === 0 || laps.length === 0) {
     return <p className="chart-waiting">The lap chart draws as the race unfolds…</p>;
   }
   const innerW = W - PAD.left - PAD.right;
   const innerH = H - PAD.top - PAD.bottom;
   const rows = Math.max(2, fieldSize);
   const x = (lap: number) => PAD.left + (lap / Math.max(1, totalLaps)) * innerW;
-  const y = (pos: number) => PAD.top + ((pos - 1) / (rows - 1)) * innerH;
+  const y = (row: number) => PAD.top + ((row - 1) / (rows - 1)) * innerH;
 
   const hasFocus = (focusedDriverIds?.size ?? 0) > 0;
-  const lastPos = (s: LapChartSeries) => {
-    for (let i = s.positions.length - 1; i >= 0; i--) if (s.positions[i] != null) return s.positions[i]!;
-    return null;
+  const last = laps.length - 1;
+  const lastClassifiedIdx = (s: LapChartSeries) => {
+    for (let i = s.positions.length - 1; i >= 0; i--) if (s.positions[i] != null) return i;
+    return -1;
   };
+
+  // === Classification legend (one fixed row per car, no collisions) ===
+  // Running/finished drivers hold rows 1..K in current order — each label row
+  // IS the row their line currently ends on, so line and name always align.
+  // Retirees fill rows K+1..N, most recent retirement first, labelled DNF.
+  const running = series
+    .filter(s => !s.dnf && s.positions[last] != null)
+    .sort((a, b) => (a.positions[last] ?? 99) - (b.positions[last] ?? 99));
+  const retired = series
+    .filter(s => s.dnf || s.positions[last] == null)
+    .sort((a, b) => lastClassifiedIdx(b) - lastClassifiedIdx(a));
+  const legend = [
+    ...running.map((s, i) => ({ s, row: i + 1, label: String(s.positions[last] ?? i + 1), dnf: false })),
+    ...retired.map((s, i) => ({ s, row: running.length + i + 1, label: 'DNF', dnf: true })),
+  ];
 
   // Safety-car bands: contiguous runs of SC sample indices → lap ranges.
   const scBands: { from: number; to: number }[] = [];
@@ -67,16 +86,9 @@ function LapChart({ series, laps, totalLaps, fieldSize, scSampleIdx, focusedDriv
     if (start !== null) scBands.push({ from: laps[start], to: laps[laps.length - 1] });
   }
 
-  // Right-edge standings: current position · marble · name, nudged apart.
-  const labels = series
-    .map(s => ({ s, pos: lastPos(s) }))
-    .filter((l): l is { s: LapChartSeries; pos: number } => l.pos != null)
-    .sort((a, b) => a.pos - b.pos)
-    .map(l => ({ s: l.s, pos: l.pos, y: y(l.pos) }));
-  const rowGap = Math.max(12, innerH / Math.max(1, labels.length));
-  for (let i = 1; i < labels.length; i++) {
-    if (labels[i].y - labels[i - 1].y < rowGap) labels[i].y = labels[i - 1].y + rowGap;
-  }
+  // Lap ticks: every 5, plus the final lap.
+  const tickLaps = Array.from({ length: totalLaps + 1 }, (_, l) => l)
+    .filter(l => (l > 0 && l % 5 === 0) || l === totalLaps);
 
   // Focused (or all if none) drawn on top.
   const drawOrder = [...series].sort((a, b) =>
@@ -86,19 +98,25 @@ function LapChart({ series, laps, totalLaps, fieldSize, scSampleIdx, focusedDriv
     <svg className="lap-chart" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Race lap chart — position over laps">
       {/* Safety-car bands */}
       {scBands.map((b, i) => (
-        <rect key={i} x={x(b.from - 0.5)} y={PAD.top} width={x(b.to + 0.5) - x(b.from - 0.5)} height={innerH}
+        <rect key={i} x={x(Math.max(0, b.from - 0.5))} y={PAD.top}
+          width={x(b.to + 0.5) - x(Math.max(0, b.from - 0.5))} height={innerH}
           fill="#eab308" opacity="0.08" />
       ))}
       {/* Position gridlines (1, mid, last) */}
       {[1, Math.ceil(rows / 2), rows].map(p => (
         <g key={p}>
           <line x1={PAD.left} y1={y(p)} x2={W - PAD.right} y2={y(p)} stroke="#16161c" strokeWidth="1" />
-          <text x={PAD.left - 4} y={y(p) + 3} textAnchor="end" className="chart-tick">{p}</text>
+          <text x={PAD.left - 6} y={y(p) + 3} textAnchor="end" className="chart-tick">{p}</text>
         </g>
       ))}
-      {/* Lap ticks (every 5) */}
-      {Array.from({ length: totalLaps + 1 }, (_, l) => l).filter(l => l > 0 && l % 5 === 0).map(l => (
-        <text key={l} x={x(l)} y={H - 6} textAnchor="middle" className="chart-tick">{l}</text>
+      {/* Lap axis: baseline, faint verticals + numbers at the ticks */}
+      <line x1={PAD.left} y1={H - PAD.bottom + 6} x2={W - PAD.right} y2={H - PAD.bottom + 6}
+        stroke="#23232a" strokeWidth="1" />
+      {tickLaps.map(l => (
+        <g key={l}>
+          <line x1={x(l)} y1={PAD.top} x2={x(l)} y2={H - PAD.bottom + 6} stroke="#131318" strokeWidth="1" />
+          <text x={x(l)} y={H - 8} textAnchor="middle" className="chart-tick">{l}</text>
+        </g>
       ))}
 
       {/* Driver lines */}
@@ -106,7 +124,7 @@ function LapChart({ series, laps, totalLaps, fieldSize, scSampleIdx, focusedDriv
         const focused = focusedDriverIds?.has(s.id) ?? false;
         const pts: string[] = [];
         s.positions.forEach((p, i) => { if (p != null) pts.push(`${x(laps[i])},${y(p)}`); });
-        if (pts.length < 1) return null;
+        if (pts.length === 0) return null;
         const dim = hasFocus && !focused;
         return (
           <g key={s.id} className="lap-line" onClick={() => onDriverClick?.(s.id)} style={{ cursor: onDriverClick ? 'pointer' : undefined }}>
@@ -115,9 +133,18 @@ function LapChart({ series, laps, totalLaps, fieldSize, scSampleIdx, focusedDriv
               strokeWidth={focused ? 3 : 1.8}
               strokeLinejoin="round" strokeLinecap="round"
               strokeDasharray={s.dashed ? '5 4' : undefined}
-              opacity={dim ? 0.18 : 0.92}
+              opacity={dim ? 0.15 : s.dnf ? 0.5 : 0.92}
               points={pts.join(' ')}
             />
+            {/* A DNF line ends with an ✗ where they fell. */}
+            {s.dnf && !dim && (() => {
+              const li = lastClassifiedIdx(s);
+              if (li < 0) return null;
+              return (
+                <text x={x(laps[li])} y={y(s.positions[li]!) + 3} textAnchor="middle"
+                  className="lap-dnf-mark">✗</text>
+              );
+            })()}
             {/* Pit-stop dots */}
             {!dim && (s.pitLaps ?? []).map(pl => {
               const i = laps.indexOf(pl);
@@ -128,27 +155,28 @@ function LapChart({ series, laps, totalLaps, fieldSize, scSampleIdx, focusedDriv
         );
       })}
 
-      {/* Right-edge standings: position · marble · driver name */}
-      {labels.map(l => {
+      {/* Classification: position · marble · driver name, one fixed row each */}
+      {legend.map(l => {
         const focused = focusedDriverIds?.has(l.s.id) ?? false;
         const dim = hasFocus && !focused;
-        const gx = W - PAD.right + 8;
+        const gx = W - PAD.right + 26;
+        const ly = y(l.row);
         return (
           <g
             key={l.s.id}
-            opacity={dim ? 0.32 : 1}
+            opacity={dim ? 0.32 : l.dnf ? 0.6 : 1}
             onClick={() => onDriverClick?.(l.s.id)}
             style={{ cursor: onDriverClick ? 'pointer' : undefined }}
           >
-            <text x={gx} y={l.y} textAnchor="end" dominantBaseline="central"
-              className={`lap-rank ${focused ? 'focused' : ''}`}>{l.pos}</text>
-            <circle cx={gx + 14} cy={l.y} r={8} fill={l.s.color} stroke={l.s.accentColor || '#fff'} strokeWidth={1.6} />
-            <text x={gx + 14} y={l.y} textAnchor="middle" dominantBaseline="central" style={{ fontSize: '8px' }}>
+            <text x={gx} y={ly} textAnchor="end" dominantBaseline="central"
+              className={`lap-rank ${focused ? 'focused' : ''} ${l.dnf ? 'dnf' : ''}`}>{l.label}</text>
+            <circle cx={gx + 15} cy={ly} r={8} fill={l.s.color} stroke={l.s.accentColor || '#fff'} strokeWidth={1.6} />
+            <text x={gx + 15} y={ly} textAnchor="middle" dominantBaseline="central" style={{ fontSize: '8px' }}>
               {l.s.emoji || l.s.code.slice(0, 1)}
             </text>
-            <text x={gx + 27} y={l.y} dominantBaseline="central"
+            <text x={gx + 29} y={ly} dominantBaseline="central"
               className={`lap-name ${focused ? 'focused' : ''}`} fill={l.s.color}>
-              {l.s.name.length > 20 ? l.s.name.slice(0, 19) + '…' : l.s.name}
+              {l.s.name.length > 18 ? l.s.name.slice(0, 17) + '…' : l.s.name}
             </text>
           </g>
         );

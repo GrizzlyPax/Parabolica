@@ -1011,7 +1011,9 @@ function WatchMode({
     const series = drivers.map(d => {
       const dnfLap = d.status === 'dnf' ? (d.dnfInfo?.lap ?? Infinity) : Infinity;
       const positions = samples.map(s => {
-        if (s.lap > dnfLap) return null; // line stops at retirement
+        // The line ends at the last lap they were racing — no dive through
+        // the field on the way out; the chart marks the spot with an ✗.
+        if (s.lap >= dnfLap) return null;
         const idx = s.order.indexOf(d.id);
         return idx >= 0 ? idx + 1 : null;
       });
@@ -1025,6 +1027,7 @@ function WatchMode({
         emoji: d.emoji,
         positions,
         pitLaps: (d.pitStops ?? []).map(p => p.lap),
+        dnf: d.status === 'dnf',
       };
     });
     return { series, laps, scSampleIdx };
