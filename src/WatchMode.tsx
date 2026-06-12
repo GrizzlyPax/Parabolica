@@ -1071,19 +1071,6 @@ function WatchMode({
           {/* TRACK VIEW: track map fills the frame, timing tower floats left */}
           {activeView === 'track' && (
             <>
-              <section className="bf-map">
-                <TrackMap
-                  trackPath={trackPath}
-                  pitLanePath={pitLanePath}
-                  trackLength={trackLength}
-                  drivers={drivers}
-                  focusedDriverIds={Array.from(focusedDriverIds)}
-                  highlightedDriverIds={podiumIds}
-                  unsafetyCarActive={raceState.unsafetyCarActive}
-                  unsafetyCarPosition={raceState.unsafetyCarPosition}
-                />
-              </section>
-
               <section className="bf-tower bf-tower-floating">
                 {focusedDriverIds.size > 0 && (
                   <button className="clear-focus-btn" onClick={clearFocus}>
@@ -1107,9 +1094,17 @@ function WatchMode({
                 />
               </section>
 
-              {/* Booth feed as a compact floating strip along the bottom */}
-              <section className="bf-feed-strip">
-                <RaceFeed items={feedItems} className="story-feed-track" />
+              <section className="bf-map">
+                <TrackMap
+                  trackPath={trackPath}
+                  pitLanePath={pitLanePath}
+                  trackLength={trackLength}
+                  drivers={drivers}
+                  focusedDriverIds={Array.from(focusedDriverIds)}
+                  highlightedDriverIds={podiumIds}
+                  unsafetyCarActive={raceState.unsafetyCarActive}
+                  unsafetyCarPosition={raceState.unsafetyCarPosition}
+                />
               </section>
             </>
           )}
@@ -1149,12 +1144,24 @@ function WatchMode({
 
               <section className="bf-footer">
                 <ConditionsPanel weather={engine.getWeather()} trackTags={engine.getTrackTags()} />
-                <TrackStrip
-                  drivers={drivers}
-                  totalLaps={totalLaps}
-                  lapLength={trackLength}
-                  focusedDriverIds={focusedDriverIds}
-                />
+                <div className="bf-strips">
+                  <TrackStrip
+                    drivers={drivers}
+                    totalLaps={totalLaps}
+                    lapLength={trackLength}
+                    mode="race"
+                    label="Race"
+                    focusedDriverIds={focusedDriverIds}
+                  />
+                  <TrackStrip
+                    drivers={drivers}
+                    totalLaps={totalLaps}
+                    lapLength={trackLength}
+                    mode="lap"
+                    label="Lap"
+                    focusedDriverIds={focusedDriverIds}
+                  />
+                </div>
               </section>
             </>
           )}

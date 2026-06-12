@@ -2627,17 +2627,19 @@
     overflow: hidden;
   }
 
-  /* --- TRACK VIEW: tower floats left (full height), map fills, feed strip --- */
+  /* --- TRACK VIEW: tower floats left, map fills the rest. No feed here
+     (it lives in the detail view) — the cleaner two-panel split, with more
+     room for the tower. --- */
   .frame-track {
     display: grid;
-    grid-template-columns: 342px 1fr;
-    grid-template-rows: 1fr 96px;
+    grid-template-columns: 408px 1fr;
+    grid-template-rows: 1fr;
     gap: 10px;
     padding: 10px;
   }
   .frame-track .bf-tower {
     grid-column: 1;
-    grid-row: 1 / 3;
+    grid-row: 1;
     display: flex;
     flex-direction: column;
     backdrop-filter: blur(6px);
@@ -2650,7 +2652,8 @@
   .frame-track .bf-map {
     grid-column: 2;
     grid-row: 1;
-    padding: 8px;
+    /* Extra right padding so the track + SC loop aren't jammed to the edge. */
+    padding: 16px 34px 16px 14px;
     align-items: center;
   }
   /* Fit the 5:3 map into the cell by height, preserving its ratio. */
@@ -2659,12 +2662,6 @@
     height: 100%;
     max-width: 100%;
     min-height: 0;
-  }
-  .frame-track .bf-feed-strip {
-    grid-column: 2;
-    grid-row: 2;
-    padding: 6px 10px;
-    overflow-y: auto;
   }
 
   /* --- DETAIL VIEW: F1 data screen. The table is a fixed-width data block
@@ -2720,44 +2717,72 @@
 
 /* Wider screens: a touch more room for the floating panels. */
 @media (min-width: 1400px) {
-  .frame-track { grid-template-columns: 372px 1fr; }
+  .frame-track { grid-template-columns: 440px 1fr; }
 }
 
-/* === Track strip (horizontal race-progress dots) === */
-.track-strip { width: 100%; }
+/* === Track strips: Race (full distance) + Lap (one straightened lap) === */
+.bf-strips {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+}
+.track-strip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.track-strip-label {
+  flex-shrink: 0;
+  width: 34px;
+  font-family: var(--font-display), var(--font-emoji);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #71717c;
+}
+.track-strip-track { position: relative; flex: 1; min-width: 0; }
 .track-strip-line {
   position: relative;
-  height: 18px;
-  margin: 4px 14px;
-  border-bottom: 1px solid #2a2a30;
+  height: 16px;
+  border-bottom: 1px solid #303039;
 }
-.track-strip-flag {
+.track-strip-pitline {
+  position: relative;
+  height: 13px;
+  margin-top: 3px;
+  opacity: 0.78;
+}
+.track-strip-finish {
   position: absolute;
-  bottom: -2px;
-  font-size: 0.7rem;
-  color: #555;
+  right: -7px;
+  bottom: -4px;
+  font-size: 0.72rem;
 }
-.track-strip-start { left: -10px; }
-.track-strip-finish { right: -10px; }
+.track-strip-pit-label {
+  position: absolute;
+  left: -16px;
+  bottom: 0;
+  font-size: 0.62rem;
+}
 .track-strip-dot {
   position: absolute;
-  bottom: 2px;
-  width: 9px;
-  height: 9px;
-  margin-left: -4.5px;
-  border-radius: 50%;
-  border: 1.5px solid #fff;
-  transition: left 0.4s linear;
-}
-.track-strip-dot.focused {
+  bottom: 1px;
   width: 12px;
   height: 12px;
   margin-left: -6px;
-  bottom: 0;
-  box-shadow: 0 0 6px rgba(255, 255, 255, 0.6);
+  border-radius: 50%;
+  border: 2px solid #fff;
+  transition: left 0.4s linear;
+}
+.track-strip-pitline .track-strip-dot { width: 10px; height: 10px; margin-left: -5px; }
+.track-strip-dot.focused {
+  width: 15px;
+  height: 15px;
+  margin-left: -7.5px;
+  box-shadow: 0 0 7px rgba(255, 255, 255, 0.65);
   z-index: 2;
 }
-.track-strip-dot.pitting { opacity: 0.5; }
 
 /* === Conditions panel (expanded F1 "Current Conditions" block) === */
 .conditions-panel {
@@ -2786,16 +2811,16 @@
   align-items: center;
   gap: 8px;
 }
-.conditions-panel-emoji { font-size: 1.15rem; line-height: 1; }
-.conditions-panel-text { display: inline-flex; flex-direction: column; line-height: 1.25; }
+.conditions-panel-emoji { font-size: 1.25rem; line-height: 1; }
+.conditions-panel-text { display: inline-flex; flex-direction: column; line-height: 1.3; }
 .conditions-panel-name {
-  font-size: 0.82rem;
+  font-size: 0.88rem;
   font-weight: 600;
-  color: #d8d8e0;
+  color: #dadae2;
 }
 .conditions-panel-sub {
-  font-size: 0.66rem;
-  color: #7a7a86;
+  font-size: 0.72rem;
+  color: #80808c;
   text-transform: lowercase;
 }
 
