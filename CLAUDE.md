@@ -44,5 +44,6 @@ and BetLab for the future NPC-crowd system.
 - `docs/COMMISSIONER_MODE.md` - Gamification north star (wall-clock roguelite seasons, gods, decrees)
 - `docs/COMMISSIONER_MODE_TECH.md` - Technical plan (seeded RNG, persistence, settle/scheduler, league runtime)
 - `docs/SIM_MECHANICS.md` - The stat truth doc: formulas, magnitudes, rebalance history, lab workflow
+- `docs/BALANCE_HANDOFF.md` - Game-dev handoff: data exports, tuning surface, balance state, workflow
 - `docs/TAG_SYSTEM.md` - Tag system design framework (five sources, magnitude ladder, acquisition engine, interview)
 - `docs/CONDITIONS_LAYER.md` - Track tags + weather design build (the conditions stack; companion to TAG_SYSTEM)
