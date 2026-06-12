@@ -54,6 +54,9 @@ export interface RaceDigest {
   dnfDriverIds: number[];
   fastestLapDriverId: number | null;
   totalTicks: number;
+  /** This race's weather (C2). Optional on digests written before the weather
+   * layer; 'clear' races may also omit it. */
+  weather?: { id: string; name: string; emoji: string };
   /** When the broadcast actually aired (queue-aware; epoch ms). Optional on
    * digests written before live broadcasts existed. */
   startedAt?: number;

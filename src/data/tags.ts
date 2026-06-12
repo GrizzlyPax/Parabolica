@@ -124,9 +124,11 @@ export const DRIVER_TAGS: Tag[] = [
     // until then `conditions` never contains 'rain', so this is inert instead
     // of the old always-on 9× destiny. Magnitudes to be lab-calibrated with weather.
     condition: { when: 'condition', has: 'rain' },
+    // Calibrated for the wet (C2): at 1.12/0.30 it won 46.7% of rain races
+    // (10.3× — an auto-win). Trimmed so it's the clear rain favorite, not a lock.
     effects: {
-      consistencyModifier: 1.12,
-      crashResistance: 0.3,
+      consistencyModifier: 1.08,
+      crashResistance: 0.15,
     },
     activationText: 'thrives in the chaos!',
   },

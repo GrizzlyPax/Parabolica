@@ -7,8 +7,12 @@ import { generateRoster } from '../src/generators/drivers.ts';
 import { generateCarsForKingdoms } from '../src/generators/cars.ts';
 import { ALL_TRACKS } from '../src/generators/tracks.ts';
 import { TEAMS } from '../src/data/teams.ts';
+import { rollWeather, WEATHER_TYPES } from '../src/data/weather.ts';
 
 const RACES = Number(process.argv[2] ?? 1500);
+// 'dry' (no weather), 'rolled' (per-race weather roll), or a weather id to force.
+const WEATHER = process.argv[3] ?? 'rolled';
+const forced = WEATHER_TYPES.find(w => w.id === WEATHER);
 
 function withCars(roster, cars) {
   return roster.map(d => {
@@ -33,6 +37,10 @@ for (let i = 0; i < RACES; i++) {
   engine.updateConfig({ totalLaps: track.laps, lapLength: track.length, maxStoredEvents: 0 });
   engine.setTrackInfo({ id: track.id, name: track.name, emoji: track.emoji,
     funEmoji: track.funEmoji, description: track.description ?? '', laps: track.laps });
+  if (WEATHER === 'rolled') engine.setWeather(rollWeather());
+  else if (forced) engine.setWeather({ id: forced.id, name: forced.name, emoji: forced.emoji,
+    intensity: 1, conditions: forced.conditions, effects: forced.id === 'clear' ? {} : forced.baseEffects });
+  else engine.setWeather(null); // 'dry'
   const { raceState } = engine.runHeadless();
   const winner = raceState.finishOrder[0];
   for (const d of roster) {

@@ -6,6 +6,7 @@ import { generateRoster, GeneratedDriver } from '../generators/drivers';
 import { generateCarsForKingdoms, GeneratedCar } from '../generators/cars';
 import { ALL_TRACKS, Track } from '../generators/tracks';
 import { TEAMS } from '../data/teams';
+import { rollWeather } from '../data/weather';
 import type {
   SimLabConfig,
   WorkerInMessage,
@@ -755,6 +756,10 @@ async function runSimulation(config: SimLabConfig, variables?: SimVariables, _la
         eventTrigger: track.event?.trigger,
         eventEffect: track.event?.effect,
       });
+
+      // Roll weather per race so the conditions layer (and weather-gated tags
+      // like Rain Dancer) are exercised and measured, not dormant.
+      engine.setWeather(rollWeather());
 
       // Run the race headlessly
       const result = engine.runHeadless();

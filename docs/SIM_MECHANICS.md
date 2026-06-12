@@ -126,7 +126,7 @@ passives. After (1,500-race headless probe, `scripts/tag-probe.mjs`):
 | 🎯 Clutch Performer | 9.0% | 2.0× | power |
 | 🔧 Pit Lane Special | 6.1% | 1.3× | trait |
 | 🐕 Underdog Spirit | 4.9% | 1.1× | trait, gated bottom-half |
-| 🌧️ Rain Dancer | 4.5% | 1.0× | destiny — **dormant until weather (C2)** |
+| 🌧️ Rain Dancer | 5.1% blended | 1.1× | destiny in the wet (C2): **4% dry → 35% in rain**, rain ~6% of races |
 | 🌀 Chaotic Energy | 2.8% | 0.6× | power (swingy) |
 | 👻 Cursed Chassis | 1.7% | 0.4× | cursed, not doomed (was 0.04×) |
 
