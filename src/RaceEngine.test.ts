@@ -214,6 +214,36 @@ describe('conditional tags (#156 gate)', () => {
     }
   });
 
+  it('lastPitLapBuffer is a live knob (no farcical final-lap stops) — #195', () => {
+    // The pit-window decision now routes the late-race cutoff through one knob
+    // (pits.lastPitLapBuffer) instead of inconsistent inline literals. Cranking
+    // it up must change races: it suppresses non-critical stops in the closing
+    // laps (a stop you can't recover the pit-loss from before the flag is
+    // strictly worse than running a compound short — there's no penalty for
+    // unmet compound variety). At least one of a handful of seeds must diverge.
+    const base = cleanRoster();
+    const wideBuffer = {
+      ...CANON_VARIABLES,
+      pits: { ...CANON_VARIABLES.pits, lastPitLapBuffer: 8 },
+    };
+    const runWith = (vars: typeof CANON_VARIABLES, seed: number) => {
+      const grid = structuredClone(base);
+      const engine = RaceEngine.createForWorker(vars, seed);
+      engine.loadGeneratedRoster(grid);
+      engine.updateConfig({ totalLaps: track.laps, lapLength: track.length });
+      engine.setTrackInfo({ id: track.id, name: track.name, emoji: track.emoji,
+        funEmoji: track.funEmoji, description: track.description, laps: track.laps });
+      return engine.runHeadless();
+    };
+    let diverged = false;
+    for (const seed of [0x517, 0x518, 0x519, 0x51A]) {
+      const canon = runWith(CANON_VARIABLES, seed);
+      const wide = runWith(wideBuffer, seed);
+      if (JSON.stringify(canon.events) !== JSON.stringify(wide.events)) diverged = true;
+    }
+    expect(diverged).toBe(true);
+  });
+
   it('a track tag passive lean changes the race', () => {
     const base = cleanRoster();
     const plain = run(base, 0x7AC, undefined);

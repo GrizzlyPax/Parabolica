@@ -507,6 +507,7 @@ export interface SimVariables {
     wearPitDenominator: number;       // Wear % that saturates the wear bonus (70)
     luckPitBase: number;              // Luck multiplier baseline before adjustment (1.2)
     luckPitAdjustment: number;        // Luck pit timing adjustment (0.4)
+    lastPitLapBuffer: number;         // No non-critical stop with <= this many laps left (2)
   };
 
   // === PERFORMANCE FACTORS ===
@@ -646,6 +647,7 @@ export const CANON_VARIABLES: SimVariables = {
     wearPitDenominator: 70,
     luckPitBase: 1.2,
     luckPitAdjustment: 0.4,
+    lastPitLapBuffer: 2,
   },
   performance: {
     luckProcChance: 0.045,              // Rebalance v2: more visible fortune (win-impact neutral, survival real)

@@ -1271,6 +1271,7 @@ class RaceEngine {
     const wearPercent = driver.tireState.wear;
     const pitStopsDone = driver.pitStops.length;
     const mandatoryStops = this.config.mandatoryPitStops;
+    const pitVars = this.getPitVars();
 
     // Check if we need more stops for compound variety (must use all 3 compounds with 2 stops)
     const allCompounds: TireCompound[] = ['soft', 'medium', 'hard'];
@@ -1279,9 +1280,23 @@ class RaceEngine {
     const stopsRemaining = mandatoryStops - pitStopsDone;
     const mustPitForCompounds = compoundsRemaining > 0 && stopsRemaining > 0;
 
-    // Force pit if tires critical (but not on last lap - handled above)
+    // Force pit if tires critical (but not on last lap - handled above).
+    // Safety override: shot tires pit regardless of how late it is (blowout
+    // risk beats a short final stint).
     if (wearPercent >= compound.criticalAt) {
       return true;
+    }
+
+    // Unified late-race guard: with too few racing laps left, no non-critical
+    // stop is worth the pit-lane loss. This is the single source of truth for
+    // "too late to pit" — it makes the old "can't pit in last 2 laps" contract
+    // actually hold for BOTH the mandatory-compound force-pit and the
+    // probabilistic path. There is no penalty for unmet compound variety, so a
+    // farcical final-lap stop to "complete" it is strictly worse than running a
+    // compound short. (#195)
+    const lapsLeft = this.config.totalLaps - driver.currentLap;
+    if (lapsLeft <= pitVars.lastPitLapBuffer) {
+      return false;
     }
 
     // Already done all mandatory stops and used all compounds? No need to pit again
@@ -1313,8 +1328,10 @@ class RaceEngine {
 
     const isInPitWindow = driver.currentLap >= windowStart && driver.currentLap <= windowEnd;
 
-    // Force pit if we're in the last window for mandatory stops
-    const lapsUntilTooLate = this.config.totalLaps - driver.currentLap - 2; // Can't pit in last 2 laps
+    // Force pit if we're in the last window for mandatory stops. The
+    // lastPitLapBuffer guard above already ruled out the farcically-late case;
+    // here we pull a still-needed mandatory stop forward as the room runs out.
+    const lapsUntilTooLate = lapsLeft - pitVars.lastPitLapBuffer;
     if (mustPitForCompounds && lapsUntilTooLate <= stopsRemaining) {
       return true; // Must pit now or won't complete mandatory stops
     }
@@ -1324,7 +1341,6 @@ class RaceEngine {
       // to (basePitChance + wearPitBonus) at the wear denominator. All knobs
       // live in CANON_VARIABLES.pits (canon values reproduce the old literals
       // byte-for-byte — this lift changed no behavior, see #195).
-      const pitVars = this.getPitVars();
       const wearFactor = Math.min(1, wearPercent / pitVars.wearPitDenominator);
       const pitChance = pitVars.basePitChance + (wearFactor * pitVars.wearPitBonus);
 

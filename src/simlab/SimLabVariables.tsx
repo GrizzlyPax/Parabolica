@@ -109,6 +109,7 @@ function buildVariableList(): VarDef[] {
     { key: 'wearPitDenominator', label: 'Wear Saturation', desc: 'Wear % that maxes the bonus', format: 'decimal' as const, min: 40, max: 100, step: 5 },
     { key: 'luckPitBase', label: 'Luck Pit Base', desc: 'Luck multiplier baseline', format: 'decimal' as const, min: 1.0, max: 1.5, step: 0.05 },
     { key: 'luckPitAdjustment', label: 'Luck Pit Adjust', desc: 'Luck pit timing adjust', format: 'decimal' as const, min: 0.1, max: 0.8, step: 0.05 },
+    { key: 'lastPitLapBuffer', label: 'Last Pit Buffer', desc: 'No stop within N laps of finish', format: 'decimal' as const, min: 1, max: 4, step: 1 },
   ];
   for (const v of pitVars) {
     vars.push({ category: 'Pit Stops', categoryEmoji: '🏁', path: `pits.${v.key}`, label: v.label, description: v.desc, format: v.format, min: v.min, max: v.max, step: v.step });

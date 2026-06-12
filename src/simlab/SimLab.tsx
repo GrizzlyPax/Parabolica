@@ -71,6 +71,7 @@ function computeVariablesDiff(canon: SimVariables, heretic: SimVariables): Varia
   compare('pits.wearPitDenominator', 'wear saturation', canon.pits.wearPitDenominator, heretic.pits.wearPitDenominator);
   compare('pits.luckPitBase', 'luck pit base', canon.pits.luckPitBase, heretic.pits.luckPitBase);
   compare('pits.luckPitAdjustment', 'luck pit adjust', canon.pits.luckPitAdjustment, heretic.pits.luckPitAdjustment);
+  compare('pits.lastPitLapBuffer', 'last pit buffer', canon.pits.lastPitLapBuffer, heretic.pits.lastPitLapBuffer);
 
   // Performance
   compare('performance.luckProcChance', 'luck proc', canon.performance.luckProcChance, heretic.performance.luckProcChance);
