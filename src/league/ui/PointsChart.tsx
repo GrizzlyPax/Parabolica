@@ -27,17 +27,20 @@ export interface ChartSeries {
 interface PointsChartProps {
   series: ChartSeries[];
   raceCount: number;
+  /** Explicit canvas height in viewBox units (overrides the default) — used
+   * to sync the chart to a neighbour's height. */
+  viewH?: number;
 }
 
 const W = 720;
-const H = 280;
 const PAD = { top: 14, right: 56, bottom: 24, left: 36 };
 const LABELED_COUNT = 6;
 
-function PointsChart({ series, raceCount }: PointsChartProps) {
+function PointsChart({ series, raceCount, viewH }: PointsChartProps) {
   if (raceCount < 2) {
     return <p className="chart-waiting">The points race begins after race 2.</p>;
   }
+  const H = viewH ?? 280;
 
   const maxY = Math.max(1, ...series.flatMap(s => s.values));
   const innerW = W - PAD.left - PAD.right;

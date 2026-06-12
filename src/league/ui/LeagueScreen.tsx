@@ -364,6 +364,44 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onDissolve 
   // Position mode (#172): the same season as championship POSITION after each
   // race — the lap chart applied to the season (x = races, rows = standings).
   const [chartMode, setChartMode] = useState<'points' | 'position'>('points');
+
+  // The chart should always stand exactly as tall as the standings tower
+  // beside it (desktop two-column layout). Rendered SVG height is width-
+  // dependent, so measure the tower + the chart box and convert the target
+  // height into viewBox units (height/width ratio). Mobile (single column)
+  // falls back to the charts' natural heights.
+  const standingsSecRef = useRef<HTMLElement | null>(null);
+  const chartSubheadRef = useRef<HTMLDivElement | null>(null);
+  const chartBoxRef = useRef<HTMLDivElement | null>(null);
+  const [chartRatio, setChartRatio] = useState<number | null>(null);
+  useEffect(() => {
+    const measure = () => {
+      const rail = standingsSecRef.current;
+      const subhead = chartSubheadRef.current;
+      const box = chartBoxRef.current;
+      const twoCol = window.matchMedia('(min-width: 921px)').matches;
+      if (!twoCol || !rail || !subhead || !box) { setChartRatio(null); return; }
+      const bs = getComputedStyle(box);
+      const padV = parseFloat(bs.paddingTop) + parseFloat(bs.paddingBottom)
+        + parseFloat(bs.borderTopWidth) + parseFloat(bs.borderBottomWidth);
+      const padH = parseFloat(bs.paddingLeft) + parseFloat(bs.paddingRight);
+      const chrome = subhead.offsetHeight + parseFloat(getComputedStyle(subhead).marginBottom || '0');
+      const svgW = box.clientWidth - padH;
+      const target = rail.offsetHeight - chrome - padV;
+      if (svgW > 50 && target > 160) {
+        setChartRatio(Math.min(1.6, Math.max(0.25, target / svgW)));
+      } else {
+        setChartRatio(null);
+      }
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    if (standingsSecRef.current) ro.observe(standingsSecRef.current);
+    if (chartBoxRef.current) ro.observe(chartBoxRef.current);
+    const mq = window.matchMedia('(min-width: 921px)');
+    mq.addEventListener('change', measure);
+    return () => { ro.disconnect(); mq.removeEventListener('change', measure); };
+  }, [hasStandings, standingsView, chartMode]);
   const positionChart = useMemo(() => {
     const src = standingsView === 'drivers' ? driverSeries : teamSeries;
     const rosterById = new Map(league.roster.map(d => [d.id, d]));
@@ -504,7 +542,7 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onDissolve 
             {/* The Points Race: cumulative points, the season's shape at a glance */}
             {hasStandings && (
               <section className="league-section league-chart-section">
-                <div className="league-subhead">
+                <div className="league-subhead" ref={chartSubheadRef}>
                   <h2 className="league-section-title">
                     {chartMode === 'points' ? 'The Points Race' : 'The Standings Race'}
                   </h2>
@@ -521,22 +559,24 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onDissolve 
                     >Position</button>
                   </div>
                 </div>
-                {chartMode === 'points' ? (
-                  <PointsChart
-                    series={standingsView === 'drivers' ? driverSeries : teamSeries}
-                    raceCount={raceCount}
-                  />
-                ) : (
-                  <div className="league-lapchart">
+                <div className="league-chartbox" ref={chartBoxRef}>
+                  {chartMode === 'points' ? (
+                    <PointsChart
+                      series={standingsView === 'drivers' ? driverSeries : teamSeries}
+                      raceCount={raceCount}
+                      viewH={chartRatio ? Math.round(720 * chartRatio) : undefined}
+                    />
+                  ) : (
                     <LapChart
                       series={positionChart.series}
                       laps={positionChart.laps}
                       totalLaps={raceCount}
                       fieldSize={positionChart.series.length}
                       legendMode="compact"
+                      viewH={chartRatio ? Math.round(880 * chartRatio) : undefined}
                     />
-                  </div>
-                )}
+                  )}
+                </div>
               </section>
             )}
 
@@ -565,7 +605,7 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onDissolve 
           <aside className="league-rail">
             {/* Standings: drivers ↔ constructors, with the points race below */}
             {hasStandings && (
-              <section className="league-section league-standings-section">
+              <section className="league-section league-standings-section" ref={standingsSecRef}>
                 <div className="league-subhead">
                   <h2 className="league-section-title">Standings</h2>
                   <div className="league-view-toggle">

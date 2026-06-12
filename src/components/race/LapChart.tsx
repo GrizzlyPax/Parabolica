@@ -48,11 +48,14 @@ interface LapChartProps {
    * marble/code-only labels for the whole field (season standings).
    * Default 'full'. */
   legendMode?: 'full' | 'compact';
+  /** Explicit canvas height in viewBox units (overrides the default /
+   * adaptive height) — used to sync the chart to a neighbour's height. */
+  viewH?: number;
 }
 
 const W = 880;
 
-function LapChart({ series, laps, totalLaps, fieldSize, scSampleIdx, focusedDriverIds, onDriverClick, legendMode = 'full' }: LapChartProps) {
+function LapChart({ series, laps, totalLaps, fieldSize, scSampleIdx, focusedDriverIds, onDriverClick, legendMode = 'full', viewH }: LapChartProps) {
   if (series.length === 0 || laps.length === 0) {
     return <p className="chart-waiting">The lap chart draws as the race unfolds…</p>;
   }
@@ -60,10 +63,10 @@ function LapChart({ series, laps, totalLaps, fieldSize, scSampleIdx, focusedDriv
   // Full mode hosts position · marble · name; compact only a marble or code.
   const PAD = { top: 16, right: compact ? 64 : 178, bottom: 30, left: 32 };
   const rows = Math.max(2, fieldSize);
-  // Compact (standings) height adapts to the field: ~20px per rank row, so 22
-  // drivers expand to roughly the standings tower's height and 11 teams stay
-  // trim instead of floating in dead space. Full (race) keeps a fixed canvas.
-  const H = compact ? PAD.top + PAD.bottom + (rows - 1) * 20 : 460;
+  // Height: explicit (synced to a neighbour, e.g. the standings tower) →
+  // else compact adapts to the field (~20px per rank row) → else the fixed
+  // race canvas.
+  const H = viewH ?? (compact ? PAD.top + PAD.bottom + (rows - 1) * 20 : 460);
   const innerW = W - PAD.left - PAD.right;
   const innerH = H - PAD.top - PAD.bottom;
   const x = (lap: number) => PAD.left + (lap / Math.max(1, totalLaps)) * innerW;
