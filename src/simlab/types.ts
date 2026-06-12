@@ -290,9 +290,18 @@ export interface ReactiveTagPerformance {
   outWins: number;
 }
 
+/** A tag's win rate broken out by weather — the full tag × weather matrix. */
+export interface TagWeatherPerformance {
+  tagId: string;
+  tagName: string;
+  tagEmoji: string;
+  byWeather: { weatherId: string; appearances: number; wins: number }[];
+}
+
 export interface WeatherResults {
   weathers: WeatherPerformance[];
   reactiveTags: ReactiveTagPerformance[];
+  tagWeatherMatrix: TagWeatherPerformance[];
 }
 
 // === ACCUMULATOR TYPES (used during simulation) ===
@@ -342,6 +351,8 @@ export interface SimLabAccumulators {
   // Weather: weatherId -> distribution accumulator; reactive tags split by condition
   weatherAccumulators: Map<string, WeatherPerformance>;
   reactiveTagAccumulators: Map<string, ReactiveTagPerformance>;
+  // Full tag × weather matrix: tagId -> weatherId -> { appearances, wins }
+  tagWeatherAccumulators: Map<string, { tagId: string; tagName: string; tagEmoji: string; byWeather: Map<string, { appearances: number; wins: number }> }>;
 
   // Events
   eventAccumulators: Map<string, EventPerformance>;

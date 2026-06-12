@@ -402,6 +402,23 @@ export default function SimLab() {
         addBlank();
       }
 
+      // Tag × weather matrix — every tag's win% by weather (columns in a fixed
+      // order so cells line up). Sparse cells (rare weather) are small-sample.
+      if (data.weatherResults.tagWeatherMatrix.length > 0) {
+        const cols = data.weatherResults.weathers.map(w => w.weatherId); // sorted by frequency
+        addRow(`${prefix}TAG × WEATHER WIN%`);
+        addRow('Tag', ...cols);
+        for (const tw of data.weatherResults.tagWeatherMatrix) {
+          const byId = new Map(tw.byWeather.map(c => [c.weatherId, c]));
+          const cells = cols.map(id => {
+            const c = byId.get(id);
+            return c && c.appearances > 0 ? `${((c.wins / c.appearances) * 100).toFixed(1)}%` : '—';
+          });
+          addRow(`${tw.tagEmoji} ${tw.tagName}`, ...cells);
+        }
+        addBlank();
+      }
+
       // Tag Performance
       addRow(`${prefix}TAG PERFORMANCE - DRIVER TAGS`);
       addRow('Tag', 'Appearances', 'Wins', 'Win%', 'Podiums', 'Podium%', 'Points', 'DNFs', 'DNF%', 'Avg Position');

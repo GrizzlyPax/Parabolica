@@ -120,6 +120,7 @@ function createAccumulators(): SimLabAccumulators {
     trackAccumulators: new Map(),
     weatherAccumulators: new Map(),
     reactiveTagAccumulators: new Map(),
+    tagWeatherAccumulators: new Map(),
     eventAccumulators: new Map(),
     currentRaceEventEffects: new Map(),
     fieldSpread: {
@@ -231,8 +232,20 @@ function aggregateRaceResult(
 
     // === TAG AGGREGATION ===
     const activeConditions = weather?.conditions ?? [];
+    const weatherId = weather?.id ?? 'clear';
     const updateTag = (tag: Tag | undefined, tagType: 'driver' | 'car' | 'team') => {
       if (!tag) return;
+
+      // Tag × weather matrix: per-tag win rate broken out by weather.
+      let tw = acc.tagWeatherAccumulators.get(tag.id);
+      if (!tw) {
+        tw = { tagId: tag.id, tagName: tag.name, tagEmoji: tag.emoji, byWeather: new Map() };
+        acc.tagWeatherAccumulators.set(tag.id, tw);
+      }
+      let cell = tw.byWeather.get(weatherId);
+      if (!cell) { cell = { appearances: 0, wins: 0 }; tw.byWeather.set(weatherId, cell); }
+      cell.appearances++;
+      if (isWinner) cell.wins++;
 
       // Condition-reactive tags (e.g. Rain Dancer): split appearances/wins by
       // whether the tag's weather condition was active this race.
@@ -700,10 +713,14 @@ function finalizeResults(acc: SimLabAccumulators, config: SimLabConfig, executio
     tracks: Array.from(acc.trackAccumulators.values()),
   };
 
-  // Weather results (distribution + condition-reactive tag splits)
+  // Weather results (distribution + condition-reactive tag splits + full matrix)
   const weatherResults: SimLabResults['weatherResults'] = {
     weathers: Array.from(acc.weatherAccumulators.values()).sort((a, b) => b.races - a.races),
     reactiveTags: Array.from(acc.reactiveTagAccumulators.values()),
+    tagWeatherMatrix: Array.from(acc.tagWeatherAccumulators.values()).map(tw => ({
+      tagId: tw.tagId, tagName: tw.tagName, tagEmoji: tw.tagEmoji,
+      byWeather: Array.from(tw.byWeather.entries()).map(([weatherId, c]) => ({ weatherId, ...c })),
+    })),
   };
 
   // Event results
