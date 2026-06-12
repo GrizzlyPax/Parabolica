@@ -2601,47 +2601,25 @@
   }
 }
 
-/* Detail View: Tower first, track second, events third */
+/* Detail View: the full data table. Tower takes the whole width, events
+   below, no track map, and NO internal scroll anywhere — the page scrolls
+   as one (the old 50% panel with its own overflow-y put a scrollbar in the
+   middle of the screen). */
 .watch-content.view-detail {
   flex-direction: column;
 }
 
 .watch-content.view-detail .timing-section {
-  /* Full tower - no height constraints */
-}
-
-.watch-content.view-detail .track-section {
-  min-height: 280px;
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
 }
 
 .watch-content.view-detail .events-section {
   padding: 1rem;
-}
-
-/* Detail View: Desktop side-by-side option */
-@media (min-width: 1100px) {
-  .watch-content.view-detail {
-    flex-direction: row;
-    flex-wrap: wrap;
-  }
-
-  .watch-content.view-detail .timing-section {
-    width: 50%;
-    min-width: 400px;
-    max-height: calc(100vh - 80px);
-    overflow-y: auto;
-    border-right: 1px solid #222;
-  }
-
-  .watch-content.view-detail .track-section {
-    width: 50%;
-    flex: 1;
-    min-height: 400px;
-  }
-
-  .watch-content.view-detail .events-section {
-    width: 100%;
-  }
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
 }
 
 /* Standings View: Points tables */

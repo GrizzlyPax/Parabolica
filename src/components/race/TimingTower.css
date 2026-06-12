@@ -380,37 +380,51 @@
   background: transparent;
   border: none;
   border-radius: 0;
-  /* Allow horizontal scroll if needed for wide tables */
-  overflow-x: auto;
-  overflow-y: visible;
-  -webkit-overflow-scrolling: touch;
+  overflow: visible;
 }
 
-.timing-tower.timing-tower-detail .timing-tower-lap {
-  background: #000;
-  border-bottom: none;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
+/* In-flow header (NOT sticky: the old sticky top offset assumed a lap-counter
+   element that no longer renders, so P1 slid underneath it). Quiet, clearly
+   separated from the data — the F1 timing-screen treatment. */
 .timing-tower.timing-tower-detail .timing-tower-header {
   background: #000;
-  position: sticky;
-  top: 48px; /* After lap counter */
-  z-index: 9;
-  min-width: 500px;
+  position: static;
+  padding: 0.55rem 0.6rem;
+  border-bottom: 1px solid #1e1e1e;
+  margin-bottom: 2px;
 }
 
+/* Spaced-out table rhythm: identical row heights, real breathing room */
 .timing-tower.timing-tower-detail .timing-row {
-  min-width: 500px;
-  min-height: 44px; /* Touch target */
+  min-height: 48px;
+  padding: 0.4rem 0.6rem;
+  gap: 0.4rem;
 }
 
 /* Detail view body - no internal scroll */
 .timing-tower.timing-tower-detail .timing-tower-body {
   /* NO internal scrolling - page scrolls as one */
   overflow: visible;
+}
+
+/* Phones: the full table is wider than the viewport — the tower itself may
+   pan horizontally (allowed in detail view), the page never does. */
+@media (max-width: 700px) {
+  .timing-tower.timing-tower-detail {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .timing-tower.timing-tower-detail .timing-tower-header,
+  .timing-tower.timing-tower-detail .timing-row {
+    min-width: 560px;
+  }
+}
+
+/* Numeric discipline (F1 lesson): gaps and lap times read as columns —
+   right-aligned tabular figures, consistent kerning. */
+.timing-cell .gap-value,
+.timing-cell .lap-time {
+  font-variant-numeric: tabular-nums;
 }
 
 /* ============================================

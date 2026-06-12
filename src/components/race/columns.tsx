@@ -226,7 +226,7 @@ export const COLUMN_TIRES: ColumnConfig = {
 export const COLUMN_TAGS: ColumnConfig = {
   id: 'tags',
   header: 'Tags',
-  width: '64px',
+  width: '56px',
   align: 'center',
   render: (driver: Driver, ctx: RowContext) => {
     const tags = [driver.driverTag, driver.carTag, driver.teamTag].filter(
@@ -285,7 +285,7 @@ export const COLUMN_TIRE_HISTORY: ColumnConfig = {
 // ============================================
 
 // Track View: Minimal columns, NO horizontal scroll
-// P | Marble | Code | Gap | Leader | Last
+// P | Marble | Code | Gap | Leader | Last | Tags
 export const TRACK_COLUMNS: ColumnConfig[] = [
   COLUMN_POSITION,
   COLUMN_TEAM_MARBLE,
@@ -293,6 +293,7 @@ export const TRACK_COLUMNS: ColumnConfig[] = [
   COLUMN_GAP_AHEAD,
   COLUMN_GAP_LEADER,
   COLUMN_LAST_LAP,
+  COLUMN_TAGS,
 ];
 
 // Detail View: Full data with tire history chart (like F1)

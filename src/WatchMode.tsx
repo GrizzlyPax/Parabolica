@@ -1198,19 +1198,8 @@ function WatchMode({
               />
             </section>
 
-            {/* Track Map */}
-            <section className="dashboard-section track-section">
-              <TrackMap
-                trackPath={trackPath}
-                pitLanePath={pitLanePath}
-                trackLength={trackLength}
-                drivers={drivers}
-                focusedDriverIds={Array.from(focusedDriverIds)}
-                highlightedDriverIds={podiumIds}
-                unsafetyCarActive={raceState.unsafetyCarActive}
-                unsafetyCarPosition={raceState.unsafetyCarPosition}
-              />
-            </section>
+            {/* No track map here — detail view IS the full data table.
+                The map lives in the track view. */}
 
             {/* Live Events Feed — persistent narrated history */}
             <section className="dashboard-section events-section">
