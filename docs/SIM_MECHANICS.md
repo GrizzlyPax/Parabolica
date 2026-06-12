@@ -138,29 +138,33 @@ Fallback when all compounds are used can return the same compound late
 
 ## 5. THE STAT TRUTH TABLE
 
+*Numbers below are the **post-#195 re-baseline**: 2,000-race SimLab batch on
+v0.3.30 canon (all tracks, fresh rosters; #82 mistakes dormant). This is the
+authoritative current baseline — it supersedes every earlier win-Δ figure.*
+
 | Stat | Where it acts | Lab Δ (Q1→Q5 win) | Verdict |
 |---|---|---|---|
-| **Car Power** | speed multiplier | **+7.0%** | ✅ Works — *dominant* |
-| **Consistency** | variance shrink + crash avoidance | **+4.3%** | ✅ Works |
-| **Speed (driver)** | speed multiplier (compressed ×0.12) | **+4.0%** | ✅ Works |
-| **Endurance** | late-race decay resistance | +1.5% | 🟡 Mild |
-| **Pit Crew** | slow/quick stop odds | +1.7% | 🟡 Mild |
-| **Reliability** | mechanical failures | +1.1% | 🟡 Mild (survival, not wins) |
-| **Grip** | multiplies consistency only | +0.7% | 🟠 Second-order; nearly invisible |
+| **Car Power** | speed multiplier | **+13.2%** (0.3→13.5) | ✅ Works — **over-dominant** (#162) |
+| **Consistency** | variance shrink + hidden Jensen mean-pace | **+7.4%** (1.4→8.9) | ✅ Works — clear #2 |
+| **Speed (driver)** | speed multiplier (compressed ×0.12) | **+5.5%** (2.1→7.5) | ✅ Works |
+| **Acceleration** | launch / pit-exit / SC-restart windows | **+4.8%** (2.3→7.1) | ✅ **Alive** (was a dead stat; accelEffect, rebalance v2) |
+| **Pit Crew** | slow/quick stop odds | +3.5% (2.9→6.4) | 🟡 Mild but real |
+| **Tire Mgmt (team)** | tire wear rate | +3.5% (2.9→6.4) | ✅ **Alive** (was a dead stat) |
+| **Aggression** | traffic speed reward vs +wear/+blowout cost | **+2.6%** (2.4→5.0), DNF 19.9→28.2% | ✅ **Fixed** — risk/reward now both-sided (was −1.5% backwards) |
+| **Grip** | multiplies consistency only | +2.6% (3.2→5.8) | 🟠 Second-order |
+| **Endurance** | late-race decay resistance | +1.6% (3.9→5.5) | 🟡 Mild |
 | **Luck** | tiny speed procs + crash/mech savings | +0.3% | 🟠 Flavor, not force |
-| **Aggression** | +tire wear, +blowouts. **No upside is implemented.** | **−1.5%, DNF 18.9→25.3%** | ❌ **Backwards** — "risk/reward" with the reward missing |
-| **Acceleration** | **NEVER READ BY THE ENGINE** | −0.4% (noise) | ❌ **Dead stat** |
-| **Tire Mgmt (team)** | **NEVER READ BY THE ENGINE** | −0.3% (noise) | ❌ **Dead stat** |
+| **Reliability** | mechanical failures | −0.7% (DNF 27.7→21.1) | 🟡 Survival, not wins |
 
-*Car Power Δ — number reconciliation (June 2026):* three figures circulate
-and they are **not the same measurement**: **7.6%** is the *pace spread*
-(1★→5★ on the speed multiplier, §2 — an input); **+7.0%** (this table) and
-**~+5.7%** (`BALANCE_DOMINANCE_PASS.md`) are *Q1→Q5 win-rate deltas* from
-batches on different canon eras; **12.8%** (issue #162 / `BALANCE_HANDOFF`)
-is a win-rate delta from an older batch predating the tag fix + rebalance
-v2. Win-rate deltas are not comparable across canon versions — quote them
-with their version. The post-#195 2,000-race re-baseline supersedes all of
-the win-rate figures.
+*Car Power Δ — reconciliation, settled by the re-baseline:* the fresh
+2,000-race batch reads **13.2%**, essentially unchanged from the old #162
+figure (12.8%). Car Power did **not** shrink with the tag fix / rebalance v2
+— it is genuinely ~1.8× the next stat and the dominant deterministic force.
+(The earlier "+7.0%" in this table and "~5.7%" in `BALANCE_DOMINANCE_PASS.md`
+were a smaller/older batch and are now retired.) The 7.6% in §2 is a
+different axis entirely — the 1★→5★ *pace spread* (an input), not a win Δ.
+**This is the empirical case for the #162 compression** (`powerPerStar`
+0.018→0.014).
 
 ### Tags: destiny → spice (FIXED, v0.3.3–v0.3.4, #156)
 
@@ -192,14 +196,20 @@ be fully validated until the weather layer exists** (it gates on `rain`); and
 the lab is still blind to track-event tags (`TRACK EVENTS` empty). Calibrate
 those once C2/C3 land.
 
-### Other lab observations
-- **SC Lap % 0.4%** — suspiciously low for 1.6 crashes/race; either pileups
-  rarely chain (15% participation) or the lab metric undercounts. Verify.
+### Other lab observations (post-#195 re-baseline, v0.3.30)
+- **SC Lap % now 12.3%** (was a flagged 0.4% undercount) — sensible for 5.1
+  DNFs/race; the earlier suspiciously-low reading is resolved.
+- **DNF 23.2%**, 5.1/race — at the top of the 21–23% target band. Phase split
+  early/mid/late 45/29/25% (crash-front-loaded). Weather lifts it: rain 26.4%
+  vs clear 22.8%.
+- **Tyres:** usage S45/M23/H32%; stints S2.7/M3.9/H5.3 laps; blowout rate
+  S3.0/M1.7/H1.0% — the soft sprint/hard endurance trade reads correctly.
+  Avg 2.80 stops/race (mandatory 2). No M→M distortion after the v0.3.30 fix.
 - **TRACK EVENTS table is empty** — the lab does not wire `eventTrigger`/
   `eventEffect` when configuring tracks (settle and live do). The lab is
   blind to a whole system it should be measuring. Fix before trusting
   per-track numbers.
-- Track DNF spread 17.5%–28.8% — good, tracks have personality.
+- Track DNF spread 21.8%–30.5% — good, tracks have personality.
 
 ## 6. Rebalance — CANON since v2 (June 2026)
 

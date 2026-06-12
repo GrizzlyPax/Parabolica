@@ -102,13 +102,13 @@ Read `docs/SIM_MECHANICS.md` §5 for the full stat truth table. Summary:
   inflictions. All measurable in SimLab.
 
 **Open balance flags (your territory):**
-- **#162 Car Power dominance** — the biggest open lever. Car power's per-star
-  range (~7.6%) is ~2× the (compressed) driver-speed range (~3.6%), so a great
-  car outweighs a great driver ~2:1. Proposed compression (per the dominance
-  pass): `powerPerStar 0.018→0.014` / `powerBase 0.93→0.942` (3★ midpoint
-  preserved). *(The "12.8%" STAT IMPACT figure quoted here previously is from
-  an older canon era — see the reconciliation note in `SIM_MECHANICS.md` §5;
-  win-rate deltas only compare within a canon version.)*
+- **#162 Car Power dominance** — the biggest open lever, **confirmed by the
+  post-#195 re-baseline**: STAT IMPACT Car Power Δ = **13.2%** (Q1 0.3% → Q5
+  13.5% win), ~1.8× the next stat (Consistency 7.4%). It did not shrink with
+  the tag fix / rebalance v2 — the old 12.8% was real and current. Proposed
+  compression (per the dominance pass): `powerPerStar 0.018→0.014` /
+  `powerBase 0.93→0.942` (3★ midpoint preserved). Lab-validate before/after,
+  then recalibrate `betting.strengthWeights` at the flip.
 - **#195 Pit strategy** — *mechanics cleaned (v0.3.27–29)*: pit-duration bug
   fixed, farcical final-lap stops killed (`lastPitLapBuffer`), and the herding
   root cause found — the wear trigger times ~all stops, so identical compounds
