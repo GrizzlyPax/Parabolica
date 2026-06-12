@@ -126,6 +126,10 @@ function App() {
 
     engine.stop();
     prepareScheduledRace(engine, liveLeague, live.index, track, CANON_VARIABLES);
+    // Sync the UI's track state (layout, pit lane) — WatchMode renders from
+    // this React state, not from the engine, and falls back to a default
+    // oval without it.
+    setTrackInfo(engine.getTrackInfo());
     // Real-time pacing only — no effect on the simulated outcome
     engine.updateConfig({ tickInterval: LIVE_TICK_MS });
     setRaceSpeed(1);
