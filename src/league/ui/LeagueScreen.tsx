@@ -386,6 +386,9 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onDissolve 
         code: s.code ?? '',
         emoji: rd?.emoji ?? (s.marble ? s.code : undefined),
         positions: positions[idx],
+        // Points-chart conventions: teams are known by their marble, drivers
+        // by their 3-letter code.
+        marble: s.marble ?? false,
       };
     });
     return { series, laps: Array.from({ length: raceCount }, (_, i) => i + 1) };
@@ -538,6 +541,7 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onDissolve 
                       laps={positionChart.laps}
                       totalLaps={raceCount}
                       fieldSize={positionChart.series.length}
+                      legendMode="compact"
                     />
                   </div>
                 )}
