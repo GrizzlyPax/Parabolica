@@ -106,19 +106,35 @@ Reliability 1★→5★ roughly halves failures (lab DNF: 23.7%→19.2%).
 | **Acceleration** | **NEVER READ BY THE ENGINE** | −0.4% (noise) | ❌ **Dead stat** |
 | **Tire Mgmt (team)** | **NEVER READ BY THE ENGINE** | −0.3% (noise) | ❌ **Dead stat** |
 
-### Tags are destiny, not spice (lab, 2,000 races)
+### Tags: destiny → spice (FIXED, v0.3.3–v0.3.4, #156)
 
-| Tag | Win% | Baseline ≈4.5% |
-|---|---|---|
-| 🌧️ Rain Dancer | **41.5%** | 9× baseline |
-| 👑 Front Runners | 23.1% | 5× |
-| 💎 Glass Cannon | 14.8% | 3× |
-| 🐢 Sunday Driver | 0.1% | death sentence |
-| 👻 Cursed Chassis | 0.04% | death sentence |
+**Before** (2,000-race lab): a rolled tag outweighed every stat combined —
+Rain Dancer **41.5%** win (9×), Front Runners 23.1% (5×), Glass Cannon 14.8%
+(3×), while Sunday Driver (0.1%) and Cursed Chassis (0.04%) were death
+sentences. The cause: "conditional" tags were passive-but-ungated (always-on),
+and the always-on passives sat at unladdered magnitudes.
 
-A rolled tag currently outweighs every stat on the sheet combined. For the
-coming tag system this is the **first balance lever to grab**: tags should
-bend seasons, not decide them at genesis.
+**Fix:** C1 added live conditional gating (`evaluateTagCondition` per tick, no
+RNG) + a `tier` field; then a magnitude-calibration pass on the always-on
+passives. After (1,500-race headless probe, `scripts/tag-probe.mjs`):
+
+| Tag | Win% | × base (≈4.5%) | Tier |
+|---|---|---|---|
+| 🐢 Sunday Driver | 11.9% | 2.6× | power (late-race surge) |
+| 💎 Glass Cannon | 11.0% | 2.4× | power (was 4.5×) |
+| 👑 Front Runners | 10.8% | 2.4× | power, gated top-5 (was 5×) |
+| 🎯 Clutch Performer | 9.0% | 2.0× | power |
+| 🔧 Pit Lane Special | 6.1% | 1.3× | trait |
+| 🐕 Underdog Spirit | 4.9% | 1.1× | trait, gated bottom-half |
+| 🌧️ Rain Dancer | 4.5% | 1.0× | destiny — **dormant until weather (C2)** |
+| 🌀 Chaotic Energy | 2.8% | 0.6× | power (swingy) |
+| 👻 Cursed Chassis | 1.7% | 0.4× | cursed, not doomed (was 0.04×) |
+
+A smooth ladder (2.6× → 0.4×), no destinies, no death sentences. Top band is
+slightly above the ~2× Power ceiling — acceptable for now. **Rain Dancer can't
+be fully validated until the weather layer exists** (it gates on `rain`); and
+the lab is still blind to track-event tags (`TRACK EVENTS` empty). Calibrate
+those once C2/C3 land.
 
 ### Other lab observations
 - **SC Lap % 0.4%** — suspiciously low for 1.6 crashes/race; either pileups
