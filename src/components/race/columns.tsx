@@ -319,13 +319,14 @@ export const COLUMN_TIRE_HISTORY: ColumnConfig = {
 // VIEW-SPECIFIC COLUMN SETS
 // ============================================
 
-// Track View: compact floating panel — the essentials only.
-// P | Marble | Code | Interval | Last | Tags
+// Track View: floating panel — the live-racing essentials.
+// P | Marble | Code | Interval | Leader | Last | Tags
 export const TRACK_COLUMNS: ColumnConfig[] = [
   COLUMN_POSITION,
   COLUMN_TEAM_MARBLE,
   COLUMN_DRIVER_CODE,
   COLUMN_GAP_AHEAD,
+  COLUMN_GAP_LEADER,
   COLUMN_LAST_LAP,
   COLUMN_TAGS,
 ];
