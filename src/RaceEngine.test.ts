@@ -162,6 +162,48 @@ describe('conditional tags (#156 gate)', () => {
     expect(boosted.events).not.toEqual(baseline.events);
   });
 
+  function runWithTrackTags(base: RosterDriver[], seed: number, trackTags: Parameters<RaceEngine['setTrackTags']>[0], driverTag?: Tag) {
+    const grid = structuredClone(base);
+    grid[0].driverTag = driverTag;
+    const engine = RaceEngine.createForWorker(CANON_VARIABLES, seed);
+    engine.loadGeneratedRoster(grid);
+    engine.updateConfig({ totalLaps: track.laps, lapLength: track.length });
+    engine.setTrackInfo({ id: track.id, name: track.name, emoji: track.emoji,
+      funEmoji: track.funEmoji, description: track.description, laps: track.laps });
+    engine.setTrackTags(trackTags);
+    return engine.runHeadless();
+  }
+
+  it('a track tag passive lean changes the race', () => {
+    const base = cleanRoster();
+    const plain = run(base, 0x7AC, undefined);
+    // A field-wide pace lean touches every tick — guaranteed divergence.
+    const tagged = runWithTrackTags(base, 0x7AC, [{ id: 'high-speed', name: 'High-Speed', emoji: '🏎️',
+      passive: { speedModifier: 1.02 } }]);
+    expect(tagged.events).not.toEqual(plain.events);
+  });
+
+  it('a track tag stamps conditions that condition-gated tags react to', () => {
+    // The cross-layer trigger: a driver tag gated on 'debris-hazard' must be
+    // inert on a plain track but bite when the track stamps that condition.
+    const debrisLover: Tag = {
+      id: 'test-scavenger', name: 'Scavenger', emoji: '🦅', description: 'thrives in debris',
+      target: 'driver', trigger: 'passive', condition: { when: 'condition', has: 'debris-hazard' },
+      effects: { speedModifier: 1.15 },
+    };
+    const hazardTag = { id: 'hazardous', name: 'Hazardous', emoji: '⚠️', conditions: ['debris-hazard'] };
+    const base = cleanRoster();
+    // Same track tag both runs; only the driver tag differs. On a stamping
+    // track, the gated tag must fire and change the race.
+    const withoutDriverTag = runWithTrackTags(base, 0x7AD, [hazardTag]);
+    const withDriverTag = runWithTrackTags(base, 0x7AD, [hazardTag], debrisLover);
+    expect(withDriverTag.events).not.toEqual(withoutDriverTag.events);
+    // And on a non-stamping track the gated tag is fully inert (no condition).
+    const plainNoTag = runWithTrackTags(base, 0x7AD, []);
+    const plainWithTag = runWithTrackTags(base, 0x7AD, [], debrisLover);
+    expect(plainWithTag.events).toEqual(plainNoTag.events);
+  });
+
   it('setWeather wakes a rain-dancer (the real C2 path, not just raw conditions)', () => {
     const rain = rollWeather(() => 0.99); // lands in the rain bucket at high intensity
     expect(rain.id).toBe('rain');

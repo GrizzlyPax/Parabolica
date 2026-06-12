@@ -3,6 +3,7 @@ import SimLabResults from './SimLabResults';
 import { SimLabVariables } from './SimLabVariables';
 import type { SimLabConfig as Config, SimLabResults as Results, WorkerOutMessage, SimVariables, ComparisonResults, VariablesDiff } from './types';
 import { CANON_VARIABLES, cloneVariables } from './types';
+import { intrinsicTrackTags } from '../data/trackTags';
 import './SimLab.css';
 
 type SimLabPhase = 'setup' | 'running' | 'results';
@@ -353,12 +354,14 @@ export default function SimLab() {
     const outputDetailedData = (data: typeof canon, prefix: string) => {
       // Track Performance
       addRow(`${prefix}TRACK PERFORMANCE`);
-      addRow('Track', 'Races', 'DNFs', 'DNF%', 'Crashes', 'Mechanical', 'Tire Failures', 'Finishers', 'Lead Changes', 'Avg Ticks', 'Event');
+      addRow('Track', 'Track Tag', 'Races', 'DNFs', 'DNF%', 'Crashes', 'Mechanical', 'Tire Failures', 'Finishers', 'Lead Changes', 'Avg Ticks', 'Event');
       for (const track of data.trackResults.tracks) {
         const dnfRate = track.racesRun > 0 ? ((track.totalDNFs / (track.racesRun * 20)) * 100).toFixed(1) : '0.0';
         const avgTicks = track.racesRun > 0 ? Math.round(track.totalTicks / track.racesRun) : 0;
+        const trackTags = intrinsicTrackTags(track.trackId).map(t => `${t.emoji} ${t.name}`).join(', ');
         addRow(
           `${track.trackEmoji} ${track.trackName}`,
+          trackTags || '—',
           track.racesRun,
           track.totalDNFs,
           `${dnfRate}%`,

@@ -1,5 +1,6 @@
 import { Tag, getTagById, RaceContext, evaluateTagCondition } from './data/tags';
 import { WeatherState } from './data/weather';
+import { TrackTag } from './data/trackTags';
 import { SimVariables, CANON_VARIABLES } from './simlab/types';
 import { Rng, mulberry32, shuffle } from './engine/rng';
 
@@ -430,6 +431,9 @@ class RaceEngine {
   // sets currentConditions so condition-gated tags wake. Null = no weather
   // (Quick Race). Set per race; not cleared by reset() (it's race setup).
   private weather: WeatherState | null = null;
+  // This race's track tags (C3) — the track's intrinsic character. Also a
+  // field-wide lean + condition stamper, alongside weather. Set per race.
+  private trackTags: TrackTag[] = [];
 
   private constructor() {
     this.initializeDrivers();
@@ -1040,13 +1044,14 @@ class RaceEngine {
     const tagSpeedModifier = this.getTagSpeedModifier(driver.id);
     const tagConsistencyModifier = this.getTagConsistencyModifier(driver.id);
 
-    // Field-wide weather lean (C2): speed scales the whole field (duration, not
-    // order); consistency shrink adds variance that rewards consistent drivers.
-    const weatherSpeedModifier = this.weather?.effects.speedModifier ?? 1;
-    const weatherConsistencyModifier = this.weather?.effects.consistencyModifier ?? 1;
+    // Field-wide environment lean (C2 weather + C3 track tags): speed scales the
+    // whole field (duration, not order); consistency shrink adds variance that
+    // rewards consistent drivers.
+    const envSpeedModifier = this.getEnvSpeedModifier();
+    const envConsistencyModifier = this.getEnvConsistencyModifier();
 
-    // Apply tag + weather consistency modifiers to the consistency effect
-    const adjustedConsistencyEffect = consistencyEffect * tagConsistencyModifier * weatherConsistencyModifier;
+    // Apply tag + environment consistency modifiers to the consistency effect
+    const adjustedConsistencyEffect = consistencyEffect * tagConsistencyModifier * envConsistencyModifier;
 
     // === REBALANCE V1 (gated: both factors are exactly 1 when canon-dormant) ===
     // Acceleration: matters in the moments it should — the launch, pit exits,
@@ -1068,7 +1073,7 @@ class RaceEngine {
     }
 
     // Calculate final speed (car modifiers already incorporated into statsModifier and consistencyEffect)
-    const finalSpeed = baseSpeed * statsModifier * adjustedConsistencyEffect * luckBonus * enduranceFactor * trackEventModifier * tagSpeedModifier * weatherSpeedModifier * accelFactor * trafficFactor;
+    const finalSpeed = baseSpeed * statsModifier * adjustedConsistencyEffect * luckBonus * enduranceFactor * trackEventModifier * tagSpeedModifier * envSpeedModifier * accelFactor * trafficFactor;
 
     return {
       baseRoll,
@@ -1891,22 +1896,61 @@ class RaceEngine {
     return result;
   }
 
-  /** Set the active weather/track conditions for this race (e.g. ['rain']).
-   * Used by the weather layer (C2); empty by default keeps conditional weather
-   * tags dormant. Call after reset()/before the race runs. */
+  /** Directly set the active conditions (e.g. ['rain']) — used by tests. The
+   * normal path is setWeather/setTrackTags, which recompute from their sources. */
   setRaceConditions(ids: string[]): void {
     this.currentConditions = new Set(ids);
+  }
+
+  /** Recompute the active condition set from every environmental source
+   * (weather + track tags), so condition-gated tags see the union. */
+  private recomputeConditions(): void {
+    this.currentConditions = new Set([
+      ...(this.weather?.conditions ?? []),
+      ...this.trackTags.flatMap(t => t.conditions ?? []),
+    ]);
   }
 
   /** Set this race's weather (C2): applies a field-wide lean and stamps its
    * conditions so condition-gated tags (Rain Dancer) wake. Pass null for none. */
   setWeather(weather: WeatherState | null): void {
     this.weather = weather;
-    this.setRaceConditions(weather?.conditions ?? []);
+    this.recomputeConditions();
   }
 
   getWeather(): WeatherState | null {
     return this.weather;
+  }
+
+  /** Set this race's track tags (C3): the track's intrinsic character. Like
+   * weather, a field-wide lean + condition stamper. Pass [] for none. */
+  setTrackTags(tags: TrackTag[]): void {
+    this.trackTags = tags;
+    this.recomputeConditions();
+  }
+
+  getTrackTags(): TrackTag[] {
+    return this.trackTags;
+  }
+
+  // === ENVIRONMENT EFFECTS (weather + track tags, field-wide) ===
+
+  private getEnvSpeedModifier(): number {
+    let m = this.weather?.effects.speedModifier ?? 1;
+    for (const t of this.trackTags) m *= t.passive?.speedModifier ?? 1;
+    return m;
+  }
+
+  private getEnvConsistencyModifier(): number {
+    let m = this.weather?.effects.consistencyModifier ?? 1;
+    for (const t of this.trackTags) m *= t.passive?.consistencyModifier ?? 1;
+    return m;
+  }
+
+  private getEnvCrashResistance(): number {
+    let r = this.weather?.effects.crashResistance ?? 0;
+    for (const t of this.trackTags) r += t.passive?.crashResistance ?? 0;
+    return r;
   }
 
   // === UNIFIED EFFECT SYSTEM METHODS ===
@@ -2013,11 +2057,12 @@ class RaceEngine {
   }
 
   private getTagCrashResistance(driverId: number): number {
-    // Stored effects + live conditional tags + field-wide weather (rain/fog
-    // raise everyone's crash risk; a Rain Dancer's own resistance offsets it).
+    // Stored effects + live conditional tags + field-wide environment (weather
+    // rain/fog and hazardous tracks raise everyone's crash risk; a Rain Dancer's
+    // own resistance offsets it).
     const combined = this.getEffectCrashResistance(driverId)
       + this.getConditionalCrashResistance(driverId)
-      + (this.weather?.effects.crashResistance ?? 0);
+      + this.getEnvCrashResistance();
     return Math.max(-0.5, Math.min(0.5, combined));
   }
 

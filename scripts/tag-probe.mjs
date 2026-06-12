@@ -8,6 +8,7 @@ import { generateCarsForKingdoms } from '../src/generators/cars.ts';
 import { ALL_TRACKS } from '../src/generators/tracks.ts';
 import { TEAMS } from '../src/data/teams.ts';
 import { rollWeather, WEATHER_TYPES } from '../src/data/weather.ts';
+import { intrinsicTrackTags } from '../src/data/trackTags.ts';
 
 const RACES = Number(process.argv[2] ?? 1500);
 // 'dry' (no weather), 'rolled' (per-race weather roll), or a weather id to force.
@@ -44,6 +45,7 @@ for (let i = 0; i < RACES; i++) {
   else if (forced) weather = { id: forced.id, name: forced.name, emoji: forced.emoji,
     intensity: 1, conditions: forced.conditions, effects: forced.id === 'clear' ? {} : forced.baseEffects };
   engine.setWeather(weather);
+  engine.setTrackTags(intrinsicTrackTags(track.id)); // mirror the SimLab loop
   const { raceState, drivers } = engine.runHeadless();
   const winner = raceState.finishOrder[0];
   const conditions = weather?.conditions ?? [];

@@ -193,9 +193,18 @@ into stories.
    `setWeather` stamps conditions so Rain Dancer wakes (4% dry → 35% in rain,
    1.1× blended). SimLab rolls weather per race; digests + season report +
    league UI surface it. Frequency skews mild (60% clear, 6% rain).
-3. **C3 — Track tags.** Generalize `track.event` → `tags: TrackTag[]`;
-   author 1–2 per track; wire emission. The orphaned condition tags come
-   alive.
+3. **C3 — Track tags. ✅ backend shipped (v0.3.8); flavor/content pass pending.**
+   `data/trackTags.ts`: `TrackTag` (passive field-wide lean + condition
+   stamping), `intrinsicTrackTags(trackId)` — one tag per track by default,
+   tied to the place (stable across universes), extensible to multiple and to
+   dynamic additions later (e.g. a season event attaching a tag to a future
+   race). Engine unifies weather + track tags into shared environment getters;
+   conditions are the union of both layers, so condition-gated racer tags react
+   to either (cross-layer trigger proven by test). Wired through settle (the
+   deterministic seam), SimLab (Track Tag column), and the probe. **Deliberately
+   minimal flavor** — 3 functional tags (pace/variance/hazard) prove the
+   mechanisms; real track identities + balance are a partnered future pass,
+   alongside the UI pass that makes weather + track tags visible in-app.
 4. **C4 — Changeable weather + genesis-rolled track tags.** The variety and
    spectacle pass.
 

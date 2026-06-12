@@ -16,6 +16,7 @@ import { LeagueState, RaceDigest, SettleResult, LiveRace } from './types';
 import { rosterStateAt } from './league';
 import { pickHighlights } from './highlights';
 import { weatherForRace } from '../data/weather';
+import { intrinsicTrackTags } from '../data/trackTags';
 
 export { HIGHLIGHTS_PER_RACE } from './highlights';
 
@@ -68,6 +69,8 @@ export function prepareScheduledRace(
   // Weather is part of the fixed universe — same seed+index → same storm, so
   // the live broadcast and the headless settle see identical conditions (#149).
   engine.setWeather(weatherForRace(league.leagueSeed, raceIndex));
+  // Track tags are intrinsic to the track (C3) — same place, same character.
+  engine.setTrackTags(intrinsicTrackTags(track.id));
   engine.loadGeneratedRoster(rosterStateAt(league, raceIndex));
   engine.updateConfig({
     // The sim runs off config, not trackInfo — these decide the outcome
