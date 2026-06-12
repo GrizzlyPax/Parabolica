@@ -535,7 +535,7 @@ export const CANON_VARIABLES: SimVariables = {
     flatPenalty: 0.05,
     minSpeedFloor: 0.60,
     aggressionWearMultiplier: 0.4,
-    teamTireMgmtWearPerStar: 0,         // Dormant in canon — enable via rebalance preset
+    teamTireMgmtWearPerStar: 0.03,      // Rebalance v2 (lab-verified Δ+2.0%): crews that preserve rubber
   },
   crashes: {
     baseCrashChance: 0.00008,           // Reduced from 0.0001 for stable DNF rate
@@ -570,18 +570,18 @@ export const CANON_VARIABLES: SimVariables = {
     luckPitAdjustment: 0.4,
   },
   performance: {
-    luckProcChance: 0.025,              // Slightly reduced luck procs
+    luckProcChance: 0.045,              // Rebalance v2: more visible fortune (win-impact neutral, survival real)
     luckMinBoostBase: 0.02,             // Reduced luck boost range
     luckMinBoostPerStat: 0.125,
     luckMaxBoostBase: 0.08,             // Reduced luck boost range
-    luckMaxBoostPerStat: 0.1875,
+    luckMaxBoostPerStat: 0.25,
     enduranceDecay: 0.1,
     enduranceMaxPenalty: 0.15,
     endurancePenaltyMultiplier: 0.5,
     damageSpeedPenalty: 0.85,
     accelLaunchTicks: 80,
-    accelEffect: 0,                     // Dormant in canon — enable via rebalance preset
-    aggressionTrafficBoost: 0,          // Dormant in canon — enable via rebalance preset
+    accelEffect: 0.5,                   // Rebalance v2 (lab-verified Δ+2.6%): launches, pit exits, SC restarts
+    aggressionTrafficBoost: 0.10,       // Rebalance v2 (lab-verified Δ+1.4% with DNF cost intact): the gamble pays
   },
   carStats: {
     powerBase: 0.93,                    // Higher base, less per-star spread

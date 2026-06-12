@@ -129,7 +129,7 @@ bend seasons, not decide them at genesis.
   per-track numbers.
 - Track DNF spread 17.5%–28.8% — good, tracks have personality.
 
-## 6. Rebalance v1 — IMPLEMENTED (gated, canon-dormant)
+## 6. Rebalance — CANON since v2 (June 2026)
 
 Philosophy: **every stat must answer "when is your moment?"** Stats shouldn't
 be flat multipliers fighting the same noise — each gets a situation where it
@@ -147,38 +147,32 @@ is flipped after lab validation.
 | Team tire mgmt wired | tire wear × `1+(3−stars)×k` — 3★ neutral, 5★ preserves rubber, 1★ shreds it | `tires.teamTireMgmtWearPerStar` (0) |
 | Luck with teeth | raise proc rate + top-end magnitude via existing knobs | (preset only) |
 
-**Rebalance preset v2** — paste into SimLab's variable Import (it deep-merges
-as the heretic side; run a comparison batch against canon for the delta):
+**Status: v2 values are CANON** (verified in a 1,000-race A/B):
 
-```json
-{
-  "performance": {
-    "accelEffect": 0.5,
-    "aggressionTrafficBoost": 0.10,
-    "luckProcChance": 0.045,
-    "luckMaxBoostPerStat": 0.25
-  },
-  "tires": {
-    "teamTireMgmtWearPerStar": 0.03
-  }
-}
-```
+| Stat | Old Δ | v2 Δ | Notes |
+|---|---|---|---|
+| Acceleration | −0.1% | **+2.6%** | clean monotonic gradient Q1→Q5 |
+| Aggression | −1.2% | **+1.4%** | and DNF% still climbs 18.3→23.5 — the gamble profile, exactly as designed; winner avg aggression rose 0.531→0.569 |
+| Tire Mgmt (team) | 0.0% | **+2.0%** | monotonic |
+| Luck | 0.6% | ~0.4% | win impact stays flat at any sane magnitude; its real identity is **survival** (DNF 22.2%→19.4% Q1→Q5) + spectacle. Accepted as such. |
+| Power / Consistency / Speed | 6.8 / 4.9 / 4.5 | 5.7 / 3.6 / 4.0 | compressed slightly as the new stats take share — power still king |
 
-*v1 lab results (500-race A/B, June 2026): Acceleration −0.2→**+3.8** (alive
-but overshot at effect 0.8 — halved for v2), Tire Mgmt 0.9→**+4.2** (overshot
-at 0.06/★ — halved), Luck 0.4→**+1.1** (on target, kept), Aggression
-−0.9→−2.5 (traffic reward at 5% didn't pay; doubled for v2 — if it still
-can't go positive, the mechanism needs rethinking, e.g. boost only when
-chasing the car ahead). Side observation: accel windows appear to spread the
-field at launch — early-phase DNF share fell 50.7%→43.4% and crash DNFs
-dropped ~20%; watch whether this holds at 2,000 races.*
+Canon values: `accelEffect 0.5`, `aggressionTrafficBoost 0.10`,
+`teamTireMgmtWearPerStar 0.03`, `luckProcChance 0.045`,
+`luckMaxBoostPerStat 0.25`. Side effect worth knowing: **racing got
+closer** — leader margin 6.8%→3.3% of a lap, lead-lap finishers
+39.8%→46%, more lead changes. The launch differentiation also trims
+early-race crash carnage slightly.
 
-Acceptance targets (Q1→Q5 win delta): Acceleration ≈ **+1–2%**; Aggression
-**≥ 0** with its DNF cost intact (the gamble profile: more wins AND more
-wrecks); Tire Mgmt ≈ **+1–2%**; Luck ≈ **+1–1.5%**. Power/Consistency/Speed
-roughly unchanged. Use batch 2000 — at 500 races, per-bucket win% noise is
-≈±1%, which swamps the aggression signal. Canon flips only when the lab
-signs off.
+*Lab integrity note: metrics derived from the event log (quick stops, SC
+counts, tag events) were garbage before June 2026 — the lab left the
+500-event live-UI cap on and luck procs alone log ~1,200 events/race,
+so the buffer wrapped repeatedly. Fixed (maxStoredEvents uncapped in the
+lab worker). Post-fix reality: SC laps ≈ 11%, quick stops ≈ 19% of stops.*
+
+*Track events: the TRACK EVENTS table is empty because no track defines an
+`event` — the engine system (triggers/effects/lab measurement) is fully
+built with zero content. Open content opportunity.*
 
 Still open: **tag magnitude pass** alongside the tag system design (tags
 currently outweigh the whole stat sheet).
