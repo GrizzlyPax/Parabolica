@@ -1475,11 +1475,16 @@ class RaceEngine {
     // Filter to compounds not yet used
     const unusedCompounds = allCompounds.filter(c => !usedCompounds.includes(c));
 
-    // If all compounds used (shouldn't happen with 2 mandatory stops), pick based on stint length
+    // If all compounds used (stops 3+), pick based on stint length — but never
+    // re-fit the compound just removed when a softer one covers the distance
+    // (the "M→M" report flag, #195): a late stop onto the identical tire is
+    // pointless; real late stops take the grippier rubber.
     if (unusedCompounds.length === 0) {
-      if (remainingLaps <= 2) return 'soft';
-      if (remainingLaps <= 4) return 'medium';
-      return 'hard';
+      let pick: TireCompound = remainingLaps <= 2 ? 'soft' : remainingLaps <= 4 ? 'medium' : 'hard';
+      if (pick === driver.tireState.compound && pick !== 'soft') {
+        pick = pick === 'hard' ? 'medium' : 'soft';
+      }
+      return pick;
     }
 
     // Must use an unused compound - pick strategically based on remaining laps
