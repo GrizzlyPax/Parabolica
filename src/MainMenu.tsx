@@ -159,7 +159,15 @@ function MainMenu({ onSingleRace, onCommissioner, onCompendium, league }: MainMe
         </div>
 
         <div className="main-menu-footer">
-          <span className="version">v{version}</span>
+          <span className="version">
+            v{version}
+            <span className="version-built">
+              {' · '}
+              {new Date(__BUILD_TIME__).toLocaleString([], {
+                month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
+              })}
+            </span>
+          </span>
         </div>
       </div>
     </div>

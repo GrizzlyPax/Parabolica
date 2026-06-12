@@ -518,6 +518,9 @@
   font-size: clamp(0.7rem, 1.8vw, 0.85rem);
   font-style: italic;
 }
+.version-built {
+  color: #383838;
+}
 
 /* ============================================
    LOCKED BUTTON FEEDBACK
