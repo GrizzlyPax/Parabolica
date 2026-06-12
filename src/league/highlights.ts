@@ -19,11 +19,13 @@ import { RaceEvent } from '../RaceEngine';
 /** How many curated events every digest keeps forever. */
 export const HIGHLIGHTS_PER_RACE = 12;
 
+// Note: 'dnf' is deliberately NOT canon — crash events already name everyone
+// involved and the digest header lists the dead, so per-driver "Retired due
+// to crash damage" lines were triple-telling the same wreck.
 const CANON_TYPES = new Set<RaceEvent['type']>([
   'crash',
   'tire_failure',
   'mechanical_failure',
-  'dnf',
   'track_event',
   'tag_activation',
 ]);

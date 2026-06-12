@@ -233,6 +233,9 @@ export type RaceEventType =
 
 export interface RaceEvent {
   tick: number;
+  /** 1-based lap the event happened on (absent on driverless track events
+   * and on event logs saved before this field existed). */
+  lap?: number;
   type: RaceEventType;
   driverId: number;
   driverName: string;
@@ -686,6 +689,7 @@ class RaceEngine {
   ): void {
     this.raceEvents.push({
       tick: this.raceState.totalTicks,
+      lap: driver ? Math.min(this.config.totalLaps, driver.currentLap + 1) : undefined,
       type,
       driverId: driver?.id ?? -1,
       driverName: driver?.name ?? 'Track Event',

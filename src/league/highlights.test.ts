@@ -58,7 +58,7 @@ describe('digest highlight curation', () => {
     }
   });
 
-  it('excludes pure texture types entirely', () => {
+  it('excludes pure texture types entirely, and dnf lines (crash already tells it)', () => {
     nextTick = 0;
     const events = [
       ev('lap_complete', 0.9),
@@ -67,6 +67,7 @@ describe('digest highlight curation', () => {
       ev('tire_warning', 0.9),
       ev('luck_trigger', 0.9),
       ev('endurance_decay', 0.9),
+      ev('dnf', 0.9),
       ev('crash', 1.0),
     ];
     const picked = pickHighlights(events);

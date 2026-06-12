@@ -333,8 +333,35 @@
   font-size: 0.85rem;
   color: #aaa;
 }
-.digest-highlights li { padding: 3px 0; border-top: 1px solid #1a1a22; }
-.digest-ev-emoji { display: inline-block; width: 1.4em; }
+.digest-highlights li {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 4px 0;
+  border-top: 1px solid #1a1a22;
+}
+.digest-ev-emoji { width: 1.3em; text-align: center; flex-shrink: 0; }
+.digest-ev-lap {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.72rem;
+  color: #666;
+  min-width: 28px;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+.digest-ev-text { min-width: 0; }
+
+.digest-stats {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid #1a1a22;
+  font-size: 0.85rem;
+  color: #999;
+}
+.digest-stat { white-space: nowrap; }
 
 /* === Standings === */
 

@@ -8,6 +8,7 @@
 // re-ordered so standings sit right under the reel.
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { RaceEvent } from '../../RaceEngine';
 import { LeagueState, RaceDigest, LiveRace } from '../types';
 import { settleLeague, nextRaceAt, isSeasonOver, liveRaceSnapshot, LiveSnapshot } from '../settle';
 import { saveLeagueState } from '../../storage/persistence';
@@ -37,6 +38,27 @@ function formatCountdown(ms: number): string {
   return `0:${String(s).padStart(2, '0')}`;
 }
 
+// One consistent icon per event type, so the left rail of a digest reads as
+// "what happened", not a soup of team emojis. Track events and tag
+// activations keep their own emoji — there, the emoji IS the event.
+const EVENT_ICONS: Partial<Record<RaceEvent['type'], string>> = {
+  crash: '💥',
+  tire_failure: '💨',
+  mechanical_failure: '⚙️',
+  race_finish: '🏁',
+  lead_change: '👑',
+  overtake: '📈',
+  slow_pit_stop: '🐌',
+  quick_pit_stop: '⚡',
+  close_call: '😬',
+  dnf: '💀',
+};
+
+function eventIcon(ev: RaceEvent): string {
+  if (ev.type === 'track_event' || ev.type === 'tag_activation') return ev.emoji;
+  return EVENT_ICONS[ev.type] ?? '•';
+}
+
 function DigestCard({ league, digest, defaultOpen = false }: {
   league: LeagueState;
   digest: RaceDigest;
@@ -46,6 +68,17 @@ function DigestCard({ league, digest, defaultOpen = false }: {
   const driver = (id: number) => league.roster.find(d => d.id === id);
   const podium = digest.finishOrder.slice(0, 3);
   const winner = driver(podium[0]);
+
+  // Biggest climber: the grid starts in roster order, so gain is start
+  // position minus finish position.
+  const startPos = new Map(league.roster.map((d, i) => [d.id, i]));
+  let climber: { id: number; gained: number } | null = null;
+  for (const [finishIdx, id] of digest.finishOrder.entries()) {
+    const gained = (startPos.get(id) ?? 0) - finishIdx;
+    if (gained > 0 && (climber === null || gained > climber.gained)) climber = { id, gained };
+  }
+  const fastest = digest.fastestLapDriverId !== null ? driver(digest.fastestLapDriverId) : null;
+  const climberDriver = climber !== null ? driver(climber.id) : null;
 
   return (
     <div className={`digest-card ${open ? 'open' : ''}`}>
@@ -76,18 +109,38 @@ function DigestCard({ league, digest, defaultOpen = false }: {
           </div>
           {digest.dnfDriverIds.length > 0 && (
             <div className="digest-dnfs">
-              💀 {digest.dnfDriverIds.map(id => driver(id)?.fullName ?? `#${id}`).join(', ')}
+              💀 {digest.dnfDriverIds.map(id => (
+                <span key={id} style={{ color: driver(id)?.color }}>{driver(id)?.fullName ?? `#${id}`}</span>
+              )).reduce<React.ReactNode[]>((acc, el, i) => (i === 0 ? [el] : [...acc, ', ', el]), [])}
             </div>
           )}
           <ul className="digest-highlights">
             {digest.highlights.map((ev, i) => (
               <li key={i}>
-                <span className="digest-ev-emoji">{ev.emoji}</span>{' '}
-                <strong style={{ color: driver(ev.driverId)?.color }}>{ev.driverName}</strong>{' '}
-                {ev.description}
+                <span className="digest-ev-emoji">{eventIcon(ev)}</span>
+                <span className="digest-ev-lap">{ev.lap !== undefined ? `L${ev.lap}` : ''}</span>
+                <span className="digest-ev-text">
+                  <strong style={{ color: driver(ev.driverId)?.color }}>{ev.driverName}</strong>{' '}
+                  {ev.description}
+                </span>
               </li>
             ))}
           </ul>
+          {(fastest || climberDriver) && (
+            <div className="digest-stats">
+              {fastest && (
+                <span className="digest-stat">
+                  ⏱ Fastest lap <strong style={{ color: fastest.color }}>{fastest.fullName}</strong>
+                </span>
+              )}
+              {climberDriver && climber !== null && (
+                <span className="digest-stat">
+                  📈 Biggest climber <strong style={{ color: climberDriver.color }}>
+                    {climberDriver.fullName}</strong> +{climber.gained}
+                </span>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>
