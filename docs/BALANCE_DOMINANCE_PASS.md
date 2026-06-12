@@ -128,11 +128,22 @@ field-pace shift, replays of 3★-heavy grids barely move):
 Spread 1★→5★ goes 7.6% → 5.6%. Power should remain the #1 deterministic
 force (target lab Δ ~+4 to 5%, from ~+5.7%).
 
+*Probe finding (see `BALANCE_RECOMMENDATION.md` §4): compression is a
+**car-vs-driver parity** lever (#162), not a dominance lever — it shifts
+championships from car-led to driver-led packages (champ 5★-power share
+41%→31%) but barely moves win concentration. The mistakes layer (§3) carries
+the dominance targets.*
+
 **Required follow-ups when this flips canon:** recalibrate
 `betting.strengthWeights` (documented as outcome-calibrated) and update the
 SIM_MECHANICS §2 table.
 
-## 5. Mechanism C (secondary, optional) — genesis star budget
+## 5. Mechanism C — genesis star budget (HELD: probe-tested, within noise)
+
+*Status update: paired-universe A/B (`scripts/dominance-ab.mjs`) measured no
+dominance effect beyond noise — the clamp shaves support stats but leaves
+5★-power champions unchanged. Recommendation: do not build now; keep for a
+future genesis-variety pass. Original design retained below for that day.*
 
 A gentle birth rule: clamp a team's total hardware stars
 (power+grip+reliability+tireMgmt+pitCrew) to a budget band (proposal:
@@ -162,8 +173,9 @@ hit.
 | Stat truth ordering | Power #1 | Power #1, Consistency ≤ Power |
 | Race duration / lead-lap % / leader margin | — | within ±10% of current |
 
-Tuning order if targets miss: `mistakeBaseChance` is the primary dial;
-`powerPerStar` second; star budget third.
+Tuning order if targets miss: `mistakeBaseChance` is the primary (and per
+the A/B probe, effectively the only) dominance dial; `powerPerStar` tunes
+car-vs-driver parity alongside it; the star budget is held.
 
 ## 7. Open questions
 

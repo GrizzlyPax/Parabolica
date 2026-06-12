@@ -33,8 +33,8 @@ are explicitly deferred — core sim first.
 | R1 | Pit mechanics correctness + strategy refactor into knobs | #195 | Engineering (in flight) | duration-recording fix shipped v0.3.27; herding/strategy refactor pending |
 | R2 | Re-baseline: 2,000-race SimLab batch on the post-R1 build | — | Pax (in-app) | **queued** — see §7 |
 | R3 | Mistakes layer (spin-outs) — gated knobs, canon-neutral | #82 / #220 | Engineering builds, analytics calibrates | spec ready (`BALANCE_DOMINANCE_PASS.md` §3) |
-| R4 | Car-power compression | #162 / #220 | One-line canon change after lab | value chosen by paired A/B — §4 |
-| R5 | Genesis star budget (optional) | #220 | Engineering (generators) | probe-tested — §4; ship only if R3+R4 undershoot |
+| R4 | Car-power compression (parity lever, not a dominance lever) | #162 / #220 | One-line canon change after lab | **0.014 recommended** — §4 |
+| R5 | Genesis star budget | #220 | — | **held** — dominance effect within noise (§4) |
 | R6 | Strategy variety tuning (post-#195 knobs) | #195 | Analytics | blocked on R1 |
 | R7 | Morale/confidence | #106 | Hold | needs anti-snowball redesign — §5 |
 
@@ -76,9 +76,38 @@ reserve: it only trims genesis tails and costs new-universe variety.
 Same meta-seed per scenario → identical universes; deltas are physics-only.
 (`scripts/dominance-ab.mjs`.)
 
-<!-- RESULTS_TABLE -->
+| Scenario | Median win% | p95 | >50% | ≥2/3 | Distinct W | P1–P2 gap | DNF | Champ 4★+ pwr | Champ 5★ pwr |
+|---|---|---|---|---|---|---|---|---|---|
+| canon (0.018) | 38% | 63% | 23% | 4.0% | 6.8 | 70 | 22.2% | 73% | 41% |
+| power 0.014 | 38% | 63% | 17% | 4.0% | 7.4 | 63 | 22.7% | 61% | 31% |
+| power 0.011 | 33% | 58% | 23% | 3.3% | 7.4 | 67 | 22.7% | 55% | 27% |
+| clamp ≤18 | 33% | 58% | 23% | 4.0% | 6.8 | 64 | 22.7% | 73% | 40% |
+| 0.014 + clamp | 38% | 67% | 20% | 6.0% | 7.3 | 69 | 22.8% | 60% | 30% |
 
-**Reading & recommendation:** <!-- RESULTS_READING -->
+*Noise notes: win share is quantized in 1/24 steps (median moves of "4–5pp"
+are one step); the >50% column carries ±3–4pp sampling noise at n=150 even
+with paired universes (same rosters, but changed physics re-rolls the races).*
+
+**Reading & recommendation:**
+
+1. **Edge-shrinking levers do not fix dominance.** Even #162's aggressive
+   compression (0.011) moves the median champion one win-step (9 → 8 of 24)
+   and leaves runaway frequency essentially unchanged. The math says why: a
+   median universe's best package keeps a ~1% pace edge after compression,
+   which still towers over ~0.3% race-level noise. Compression changes **who
+   dominates** — champion 5★-power share drops 41% → 27–31%, shifting titles
+   from car-led to driver-led packages — not **whether** someone dominates.
+2. **Therefore the mistakes layer (R3/#82) is the load-bearing change** for
+   the §6 dominance targets. Variance is the only lever that moves them.
+3. **R4 (#162) should still ship, reframed**: it's the *car-vs-driver parity*
+   lever, exactly as #162 originally framed it. Recommend **0.014** (champ
+   5★-power 41%→31%; power stays the #1 single force per the design steer).
+   Revisit 0.011 only if the R2 re-baseline batch still shows power Δ far
+   above consistency.
+4. **R5 (star clamp): hold — do not build now.** Its dominance effect is
+   within noise (it shaves support stats but leaves 5★-power champions at
+   73/40%, unchanged). Doesn't earn generator complexity; keep in the back
+   pocket for a genesis-variety pass.
 
 ## 5. Morale (#106) — a flag before it's built
 
