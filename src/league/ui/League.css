@@ -840,3 +840,73 @@ button.section-toggle:hover { color: #bbb; }
   font-size: 0.8rem;
   opacity: 0.85;
 }
+
+/* === Race replay in the chronicle (#173): lap chart + strategy table === */
+.digest-trace-btn {
+  margin-top: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid #2a2a34;
+  color: #aaa;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 7px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.digest-trace-btn:hover { color: #fff; border-color: #3a3a44; }
+
+.digest-trace {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.digest-strategy {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+}
+.digest-strategy th {
+  text-align: left;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #71717c;
+  padding: 4px 8px;
+  border-bottom: 1px solid #2a2a34;
+}
+.digest-strategy td {
+  padding: 4px 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  vertical-align: middle;
+}
+.digest-strategy tr.dnf { opacity: 0.55; }
+.strategy-pos {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #eaeaef;
+  width: 36px;
+}
+.digest-strategy tr.dnf .strategy-pos { color: #ff6b6b; font-size: 0.66rem; }
+.strategy-name { font-weight: 600; }
+.strategy-stints { display: flex; gap: 3px; align-items: center; }
+.digest-strategy .tire-pip {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 16px; height: 16px; border-radius: 4px;
+  font-size: 0.58rem; font-weight: 800;
+}
+.digest-strategy .tire-pip-soft { background: #e64545; color: #fff; }
+.digest-strategy .tire-pip-medium { background: #f1c40f; color: #1a1a1a; }
+.digest-strategy .tire-pip-hard { background: #e8e8ec; color: #1a1a1a; }
+.strategy-pits { color: #9a9aa4; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.strategy-dnf { color: #ff6b6b; font-weight: 700; }
+
+/* Season standings as a lap chart (#172) */
+.league-lapchart {
+  background: rgba(10, 10, 12, 0.6);
+  border: 1px solid #1c1c22;
+  border-radius: 10px;
+  padding: 10px 12px;
+}

@@ -5,6 +5,7 @@ import {
   FULL_EVENT_RETENTION, LIVE_TICK_MS,
 } from './settle';
 import { buildSeasonReport } from './seasonReport';
+import { traceRace } from './raceTrace';
 import { LeagueSetupConfig, LeagueState } from './types';
 import { saveLeagueState, loadLeagueState, KeyValueStore } from '../storage/persistence';
 import { getSeasonStandings } from '../types/season';
@@ -308,6 +309,31 @@ describe('season report (the copyable balance artifact)', () => {
     const a = buildSeasonReport(settleLeague(createLeague(7, setup), { now: T0 + 13 * HOUR }).league);
     const b = buildSeasonReport(settleLeague(createLeague(7, setup), { now: T0 + 13 * HOUR }).league);
     expect(a).toBe(b);
+  });
+});
+
+describe('traceRace (#173): the race replay', () => {
+  it('reconstructs a settled race exactly — classification matches the digest', () => {
+    const league = settleLeague(createLeague(42, makeSetup()), { now: T0 + 13 * HOUR }).league;
+    const digest = league.digests[0];
+    const trace = traceRace(league, digest.index)!;
+    expect(trace).not.toBeNull();
+
+    // The replayed classification IS the digest's: determinism working for us.
+    const classified = trace.strategies
+      .filter(s => s.finalPosition !== null)
+      .sort((a, b) => a.finalPosition! - b.finalPosition!)
+      .map(s => s.driverId);
+    expect(classified).toEqual(digest.finishOrder);
+    const dnfs = trace.strategies.filter(s => s.finalPosition === null).map(s => s.driverId).sort();
+    expect(dnfs).toEqual([...digest.dnfDriverIds].sort());
+
+    // Chart data is complete and well-formed.
+    expect(trace.laps[0]).toBe(0); // starting grid
+    expect(trace.series.length).toBe(trace.fieldSize);
+    for (const s of trace.series) expect(s.positions.length).toBe(trace.laps.length);
+    // Every driver has a stint history (at least the starting compound).
+    for (const s of trace.strategies) expect(s.stints.length).toBeGreaterThanOrEqual(1);
   });
 });
 

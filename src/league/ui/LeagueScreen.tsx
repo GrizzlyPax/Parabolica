@@ -21,6 +21,8 @@ import { getTeamById } from '../../data/teams';
 import { getGodById } from '../gods';
 import GridSection from './GridSection';
 import PointsChart, { ChartSeries } from './PointsChart';
+import { LapChart } from '../../components/race';
+import { traceRace } from '../raceTrace';
 import { TeamMarble } from './TeamMarble';
 import './League.css';
 
@@ -79,6 +81,12 @@ function DigestCard({ league, digest, defaultOpen = false }: {
   defaultOpen?: boolean;
 }) {
   const [open, setOpen] = useState(defaultOpen);
+  const [showTrace, setShowTrace] = useState(false);
+  // The replay costs one headless sim — run it only when asked, then cache.
+  const trace = useMemo(
+    () => (showTrace ? traceRace(league, digest.index) : null),
+    [showTrace, league, digest.index]
+  );
   const driver = (id: number) => league.roster.find(d => d.id === id);
   const podium = digest.finishOrder.slice(0, 3);
   const winner = driver(podium[0]);
@@ -158,6 +166,46 @@ function DigestCard({ league, digest, defaultOpen = false }: {
                     {climberDriver.fullName}</strong> +{climber.gained}
                 </span>
               )}
+            </div>
+          )}
+          {/* Race replay (#173): the lap chart + strategy table, reconstructed
+              deterministically from the race seed. One headless sim, on demand. */}
+          {!showTrace ? (
+            <button className="digest-trace-btn" onClick={() => setShowTrace(true)}>
+              📈 Show lap chart & strategy
+            </button>
+          ) : trace && (
+            <div className="digest-trace">
+              <LapChart
+                series={trace.series}
+                laps={trace.laps}
+                totalLaps={trace.totalLaps}
+                fieldSize={trace.fieldSize}
+                scSampleIdx={trace.scSampleIdx}
+              />
+              <table className="digest-strategy">
+                <thead>
+                  <tr><th>P</th><th></th><th>Driver</th><th>Stints</th><th>Pit laps</th></tr>
+                </thead>
+                <tbody>
+                  {trace.strategies.map(s => (
+                    <tr key={s.driverId} className={s.finalPosition === null ? 'dnf' : ''}>
+                      <td className="strategy-pos">{s.finalPosition ?? 'DNF'}</td>
+                      <td><TeamMarble color={s.color} accentColor={s.accentColor} emoji={s.emoji} size={16} /></td>
+                      <td className="strategy-name" style={{ color: s.color }}>{s.name}</td>
+                      <td className="strategy-stints">
+                        {s.stints.map((c, i) => (
+                          <span key={i} className={`tire-pip tire-pip-${c}`}>{c[0].toUpperCase()}</span>
+                        ))}
+                      </td>
+                      <td className="strategy-pits">
+                        {s.pitLaps.length ? s.pitLaps.map(l => `L${l}`).join(' ') : '—'}
+                        {s.dnfLap !== null && <span className="strategy-dnf"> ✗ L{s.dnfLap}</span>}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
         </div>
@@ -313,6 +361,36 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onDissolve 
     return { driverSeries: drivers, teamSeries: teams };
   }, [league.roster, league.season, raceCount]);
 
+  // Position mode (#172): the same season as championship POSITION after each
+  // race — the lap chart applied to the season (x = races, rows = standings).
+  const [chartMode, setChartMode] = useState<'points' | 'position'>('points');
+  const positionChart = useMemo(() => {
+    const src = standingsView === 'drivers' ? driverSeries : teamSeries;
+    const rosterById = new Map(league.roster.map(d => [d.id, d]));
+    // Rank everyone by cumulative points after each race (stable on ties).
+    const positions: (number | null)[][] = src.map(() => Array(raceCount).fill(null));
+    for (let r = 0; r < raceCount; r++) {
+      src
+        .map((s, idx) => ({ idx, pts: s.values[r] ?? 0 }))
+        .sort((a, b) => b.pts - a.pts)
+        .forEach((o, rank) => { positions[o.idx][r] = rank + 1; });
+    }
+    const series = src.map((s, idx) => {
+      const rd = typeof s.id === 'number' ? rosterById.get(s.id) : undefined;
+      return {
+        id: idx,
+        name: s.label ?? String(s.id),
+        color: s.color,
+        accentColor: s.accentColor ?? rd?.accentColor,
+        dashed: s.dashed,
+        code: s.code ?? '',
+        emoji: rd?.emoji ?? (s.marble ? s.code : undefined),
+        positions: positions[idx],
+      };
+    });
+    return { series, laps: Array.from({ length: raceCount }, (_, i) => i + 1) };
+  }, [driverSeries, teamSeries, standingsView, league.roster, raceCount]);
+
   return (
     <div className="league-screen">
       <div className="league-content">
@@ -424,7 +502,19 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onDissolve 
             {hasStandings && (
               <section className="league-section league-chart-section">
                 <div className="league-subhead">
-                  <h2 className="league-section-title">The Points Race</h2>
+                  <h2 className="league-section-title">
+                    {chartMode === 'points' ? 'The Points Race' : 'The Standings Race'}
+                  </h2>
+                  <div className="league-view-toggle">
+                    <button
+                      className={chartMode === 'points' ? 'active' : ''}
+                      onClick={() => setChartMode('points')}
+                    >Points</button>
+                    <button
+                      className={chartMode === 'position' ? 'active' : ''}
+                      onClick={() => setChartMode('position')}
+                    >Position</button>
+                  </div>
                   <div className="league-view-toggle">
                     <button
                       className={standingsView === 'drivers' ? 'active' : ''}
@@ -436,10 +526,21 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onDissolve 
                     >Teams</button>
                   </div>
                 </div>
-                <PointsChart
-                  series={standingsView === 'drivers' ? driverSeries : teamSeries}
-                  raceCount={raceCount}
-                />
+                {chartMode === 'points' ? (
+                  <PointsChart
+                    series={standingsView === 'drivers' ? driverSeries : teamSeries}
+                    raceCount={raceCount}
+                  />
+                ) : (
+                  <div className="league-lapchart">
+                    <LapChart
+                      series={positionChart.series}
+                      laps={positionChart.laps}
+                      totalLaps={raceCount}
+                      fieldSize={positionChart.series.length}
+                    />
+                  </div>
+                )}
               </section>
             )}
 
