@@ -1070,7 +1070,7 @@ function WatchMode({
   };
 
   // Calculate current lap (leader's lap)
-  const currentLapForHeader = Math.max(1, (frozenSortedDrivers[0]?.currentLap || 0) + 1);
+  const currentLapForHeader = Math.min(totalLaps, Math.max(1, (frozenSortedDrivers[0]?.currentLap || 0) + 1));
 
   return (
     <div className="watch-mode">
