@@ -1,0 +1,49 @@
+/* Lap chart (the shared position-over-time primitive, #208).
+   Self-contained so every surface — Lap view, league chronicle replay,
+   season standings — gets identical styling. */
+
+.lap-chart {
+  width: 100%;
+  height: auto;
+  max-height: 100%;
+}
+
+.lap-chart .chart-tick {
+  fill: #5a5a64;
+  font-size: 9px;
+  font-family: var(--font-mono), monospace;
+}
+
+.chart-waiting {
+  color: #66666e;
+  font-size: 0.8rem;
+  text-align: center;
+  padding: 1.5rem 1rem;
+}
+
+.lap-rank {
+  font-size: 10px;
+  font-weight: 700;
+  fill: #c8c8d2;
+  font-variant-numeric: tabular-nums;
+  font-family: var(--font-mono), monospace;
+}
+.lap-rank.focused { fill: #fff; }
+.lap-rank.dnf {
+  fill: #ff6b6b;
+  font-size: 7.5px;
+  letter-spacing: 0.04em;
+}
+
+.lap-name {
+  font-size: 10px;
+  font-weight: 600;
+  font-family: var(--font-display), var(--font-emoji);
+}
+.lap-name.focused { font-weight: 700; }
+
+.lap-dnf-mark {
+  font-size: 10px;
+  font-weight: 700;
+  fill: #ff6b6b;
+}

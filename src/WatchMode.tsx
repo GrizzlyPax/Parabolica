@@ -15,6 +15,7 @@ import {
   type SessionState,
 } from './components/race';
 import RaceFeed from './components/race/RaceFeed';
+import { buildLapChartData } from './components/race/lapChartData';
 import { voiceNotification, type FeedItem } from './feed/commentary';
 import './WatchMode.css';
 
@@ -1003,36 +1004,11 @@ function WatchMode({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [raceState.totalTicks]);
 
-  const lapChart = useMemo(() => {
-    const samples = engine.getLapHistory();
-    const laps = samples.map(s => s.lap);
-    const scSampleIdx = new Set<number>();
-    samples.forEach((s, i) => { if (s.sc) scSampleIdx.add(i); });
-    const series = drivers.map(d => {
-      const dnfLap = d.status === 'dnf' ? (d.dnfInfo?.lap ?? Infinity) : Infinity;
-      const positions = samples.map(s => {
-        // The line ends at the last lap they were racing — no dive through
-        // the field on the way out; the chart marks the spot with an ✗.
-        if (s.lap >= dnfLap) return null;
-        const idx = s.order.indexOf(d.id);
-        return idx >= 0 ? idx + 1 : null;
-      });
-      return {
-        id: d.id,
-        name: d.name,
-        color: d.color,
-        accentColor: d.accentColor,
-        dashed: d.driverSlot === 2,
-        code: getSurname(d).slice(0, 3),
-        emoji: d.emoji,
-        positions,
-        pitLaps: (d.pitStops ?? []).map(p => p.lap),
-        dnf: d.status === 'dnf',
-      };
-    });
-    return { series, laps, scSampleIdx };
+  const lapChart = useMemo(
+    () => buildLapChartData(engine.getLapHistory(), drivers),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [historyLen, drivers]);
+    [historyLen, drivers]
+  );
 
   // Transform positionDeltas to just delta values for TimingTower
   const positionDeltasForTower = useMemo(() => {

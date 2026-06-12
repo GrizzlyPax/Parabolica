@@ -9,6 +9,8 @@
 // current order, retirees pinned to the bottom as DNF (their lines simply
 // stop where they fell). Click anything to focus.
 
+import './LapChart.css';
+
 export interface LapChartSeries {
   id: number;
   name: string;
