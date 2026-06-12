@@ -5,6 +5,8 @@ import {
   NavPanel,
   TimingTower,
   TrackMap,
+  TrackStrip,
+  ConditionsBar,
   TRACK_COLUMNS,
   DETAIL_COLUMNS,
   type RaceView,
@@ -1118,95 +1120,106 @@ function WatchMode({
         exitDescription={spectator ? 'Back to the league view' : 'Leave the race'}
       />
 
-      {/* Main content: Single scroll container for entire page */}
+      {/* Main content: a 16:9 broadcast frame that scales to fit the viewport
+          (desktop/landscape). On portrait phones it falls back to the stacked
+          vertical layout. */}
       <div
         className={`watch-content view-${activeView}`}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
-        {/* TRACK VIEW: Tower on left (desktop), track on right. Mobile: tower below track */}
-        {activeView === 'track' && (
-          <>
-            {/* Timing Tower - appears first in DOM for desktop side-by-side (left) */}
-            <section className="dashboard-section timing-section">
-              {focusedDriverIds.size > 0 && (
-                <button className="clear-focus-btn" onClick={clearFocus}>
-                  Clear Focus ({focusedDriverIds.size})
-                </button>
-              )}
-              <TimingTower
-                drivers={sortedDrivers}
-                columns={TRACK_COLUMNS}
-                raceState={raceState}
-                totalLaps={totalLaps}
-                lapLength={trackLength}
-                focusedDriverIds={focusedDriverIds}
-                onDriverClick={toggleDriverFocus}
-                condensed={false}
-                statusEffects={statusEffectsMap}
-                activeTags={activeTagsMap}
-                positionDeltas={positionDeltasForTower}
-                fastestLapOverall={fastestLapOverall ?? undefined}
-                className="timing-tower-track"
-              />
-            </section>
+        <div className={`broadcast-frame frame-${activeView}`}>
+          {/* TRACK VIEW: track map fills the frame, timing tower floats left */}
+          {activeView === 'track' && (
+            <>
+              <section className="bf-map">
+                <TrackMap
+                  trackPath={trackPath}
+                  pitLanePath={pitLanePath}
+                  trackLength={trackLength}
+                  drivers={drivers}
+                  focusedDriverIds={Array.from(focusedDriverIds)}
+                  highlightedDriverIds={podiumIds}
+                  unsafetyCarActive={raceState.unsafetyCarActive}
+                  unsafetyCarPosition={raceState.unsafetyCarPosition}
+                />
+              </section>
 
-            {/* Track Map - appears second for desktop (right) */}
-            <section className="dashboard-section track-section">
-              <TrackMap
-                trackPath={trackPath}
-                pitLanePath={pitLanePath}
-                trackLength={trackLength}
-                drivers={drivers}
-                focusedDriverIds={Array.from(focusedDriverIds)}
-                highlightedDriverIds={podiumIds}
-                unsafetyCarActive={raceState.unsafetyCarActive}
-                unsafetyCarPosition={raceState.unsafetyCarPosition}
-              />
+              <section className="bf-tower bf-tower-floating">
+                {focusedDriverIds.size > 0 && (
+                  <button className="clear-focus-btn" onClick={clearFocus}>
+                    Clear Focus ({focusedDriverIds.size})
+                  </button>
+                )}
+                <TimingTower
+                  drivers={sortedDrivers}
+                  columns={TRACK_COLUMNS}
+                  raceState={raceState}
+                  totalLaps={totalLaps}
+                  lapLength={trackLength}
+                  focusedDriverIds={focusedDriverIds}
+                  onDriverClick={toggleDriverFocus}
+                  condensed={false}
+                  statusEffects={statusEffectsMap}
+                  activeTags={activeTagsMap}
+                  positionDeltas={positionDeltasForTower}
+                  fastestLapOverall={fastestLapOverall ?? undefined}
+                  className="timing-tower-track"
+                />
+              </section>
 
-              {/* The narrator: persistent persona-voiced race feed */}
-              <RaceFeed items={feedItems} className="story-feed-track" />
-            </section>
-          </>
-        )}
+              {/* Booth feed as a compact floating strip along the bottom */}
+              <section className="bf-feed-strip">
+                <RaceFeed items={feedItems} className="story-feed-track" />
+              </section>
+            </>
+          )}
 
-        {/* DETAIL VIEW: Full timing tower, track, then events - all scroll as one */}
-        {activeView === 'detail' && (
-          <>
-            {/* Full Timing Tower */}
-            <section className="dashboard-section timing-section">
-              {focusedDriverIds.size > 0 && (
-                <button className="clear-focus-btn" onClick={clearFocus}>
-                  Clear Focus ({focusedDriverIds.size})
-                </button>
-              )}
-              <TimingTower
-                drivers={sortedDrivers}
-                columns={DETAIL_COLUMNS}
-                raceState={raceState}
-                totalLaps={totalLaps}
-                lapLength={trackLength}
-                focusedDriverIds={focusedDriverIds}
-                onDriverClick={toggleDriverFocus}
-                condensed={false}
-                expandable={false}
-                statusEffects={statusEffectsMap}
-                activeTags={activeTagsMap}
-                positionDeltas={positionDeltasForTower}
-                fastestLapOverall={fastestLapOverall ?? undefined}
-                className="timing-tower-detail"
-              />
-            </section>
+          {/* DETAIL VIEW: F1 data screen — table left, feed right, conditions +
+              track strip across the bottom. Panels scroll internally; the
+              frame itself does not. */}
+          {activeView === 'detail' && (
+            <>
+              <section className="bf-table">
+                {focusedDriverIds.size > 0 && (
+                  <button className="clear-focus-btn" onClick={clearFocus}>
+                    Clear Focus ({focusedDriverIds.size})
+                  </button>
+                )}
+                <TimingTower
+                  drivers={sortedDrivers}
+                  columns={DETAIL_COLUMNS}
+                  raceState={raceState}
+                  totalLaps={totalLaps}
+                  lapLength={trackLength}
+                  focusedDriverIds={focusedDriverIds}
+                  onDriverClick={toggleDriverFocus}
+                  condensed={false}
+                  expandable={false}
+                  statusEffects={statusEffectsMap}
+                  activeTags={activeTagsMap}
+                  positionDeltas={positionDeltasForTower}
+                  fastestLapOverall={fastestLapOverall ?? undefined}
+                  className="timing-tower-detail"
+                />
+              </section>
 
-            {/* No track map here — detail view IS the full data table.
-                The map lives in the track view. */}
+              <section className="bf-feed">
+                <RaceFeed items={feedItems} className="story-feed-detail" />
+              </section>
 
-            {/* Live Events Feed — persistent narrated history */}
-            <section className="dashboard-section events-section">
-              <RaceFeed items={feedItems} className="story-feed-detail" />
-            </section>
-          </>
-        )}
+              <section className="bf-footer">
+                <ConditionsBar conditions={headerConditions} />
+                <TrackStrip
+                  drivers={drivers}
+                  totalLaps={totalLaps}
+                  lapLength={trackLength}
+                  focusedDriverIds={focusedDriverIds}
+                />
+              </section>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Race Finished Modal Overlay */}
