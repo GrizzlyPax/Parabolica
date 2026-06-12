@@ -30,7 +30,9 @@
 
 .league-columns {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 380px;
+  /* The rail (standings tower) may breathe up to 430px when 22 driver rows
+     want the room; the chart column takes the rest. */
+  grid-template-columns: minmax(0, 1fr) minmax(380px, 430px);
   gap: 28px;
   align-items: start;
 }
