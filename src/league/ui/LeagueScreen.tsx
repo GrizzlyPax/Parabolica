@@ -11,6 +11,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { RaceEvent } from '../../RaceEngine';
 import { LeagueState, RaceDigest, LiveRace } from '../types';
 import { settleLeague, nextRaceAt, isSeasonOver, liveRaceSnapshot, LiveSnapshot } from '../settle';
+import { buildSeasonReport } from '../seasonReport';
 import { saveLeagueState } from '../../storage/persistence';
 import { getSeasonStandings, calculatePointsForPosition } from '../../types/season';
 import { getTrackById } from '../../generators/tracks';
@@ -162,6 +163,7 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onDissolve 
   const [live, setLive] = useState<LiveRace | null>(null);
   const [now, setNow] = useState(() => Date.now());
   const [confirmDissolve, setConfirmDissolve] = useState(false);
+  const [reportCopied, setReportCopied] = useState(false);
   const [standingsView, setStandingsView] = useState<'drivers' | 'teams'>('drivers');
   // The Grid is browsing material — front and center on a fresh league,
   // tucked away once the season is producing results.
@@ -333,6 +335,27 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onDissolve 
                 {' '}— {standings[0].points} pts, {standings[0].wins} wins
               </p>
             )}
+            <button
+              className="league-report-btn"
+              onClick={async () => {
+                const report = buildSeasonReport(league);
+                try {
+                  await navigator.clipboard.writeText(report);
+                } catch {
+                  // Older mobile browsers: textarea fallback (same as SimLab)
+                  const textarea = document.createElement('textarea');
+                  textarea.value = report;
+                  document.body.appendChild(textarea);
+                  textarea.select();
+                  document.execCommand('copy');
+                  document.body.removeChild(textarea);
+                }
+                setReportCopied(true);
+                setTimeout(() => setReportCopied(false), 2000);
+              }}
+            >
+              {reportCopied ? '✅ Copied' : '📋 Copy season report'}
+            </button>
           </section>
         ) : live && now < live.endsAt ? (
           <section className="league-live-card">

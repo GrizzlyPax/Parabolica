@@ -226,6 +226,18 @@
   margin-bottom: 16px;
 }
 .league-finale h2 { margin: 0 0 8px; color: #d8b860; }
+.league-report-btn {
+  margin-top: 12px;
+  background: rgba(216, 184, 96, 0.12);
+  border: 1px solid #8a6830;
+  color: #d8b860;
+  font-weight: 700;
+  font-size: 0.9rem;
+  padding: 10px 18px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.league-report-btn:hover { filter: brightness(1.25); }
 .league-champion {
   margin: 0;
   font-size: 1.1rem;
