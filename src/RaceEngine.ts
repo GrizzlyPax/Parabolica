@@ -1,4 +1,4 @@
-import { Tag, getTagById } from './data/tags';
+import { Tag, getTagById, RaceContext, evaluateTagCondition } from './data/tags';
 import { SimVariables, CANON_VARIABLES } from './simlab/types';
 import { Rng, mulberry32, shuffle } from './engine/rng';
 
@@ -417,6 +417,14 @@ class RaceEngine {
   // RNG used by all simulation rolls. Defaults to Math.random (live Quick Race
   // behavior unchanged); call setSeed() for a deterministic, replayable race.
   private rng: Rng = Math.random;
+
+  // Conditional tags (e.g. Front Runner "when leading") are evaluated live each
+  // tick against this cache, not stored as permanent effects — that's the #156
+  // fix. Rebuilt once per tick; reads engine state only, so it adds no RNG.
+  private raceContextCache: Map<number, RaceContext> = new Map();
+  // Active weather/track condition ids for this race (e.g. 'rain'). Empty until
+  // the weather layer (C2) populates it; Rain Dancer stays dormant until then.
+  private currentConditions: Set<string> = new Set();
 
   private constructor() {
     this.initializeDrivers();
@@ -954,6 +962,9 @@ class RaceEngine {
     this.tagActivatedThisRace = new Set();
     // Reset unified effect storage
     this.unifiedEffects = new Map();
+    // Conditional-tag context is rebuilt each tick; clear stale data (the active
+    // race conditions in currentConditions are race setup, so they persist).
+    this.raceContextCache = new Map();
     this.notifyListeners();
     this.notifyStateListeners();
     this.notifyEventListeners();
@@ -1797,18 +1808,84 @@ class RaceEngine {
    * Check and activate tags for a driver based on current context
    */
   private evaluateDriverTags(driver: Driver, context: { isOvertaking?: boolean; isPitting?: boolean; isFinalLap?: boolean; isRaceStart?: boolean; inCrashProximity?: boolean }): void {
-    // Check driver tag
-    if (driver.driverTag) {
-      this.tryActivateTag(driver, driver.driverTag, context);
+    for (const tag of [driver.driverTag, driver.carTag, driver.teamTag]) {
+      if (!tag) continue;
+      // Conditional tags are gated live every tick (getConditional*), not stored
+      // as a one-time activation — skip them here so they don't become always-on.
+      if (tag.condition) continue;
+      this.tryActivateTag(driver, tag, context);
     }
-    // Check car tag
-    if (driver.carTag) {
-      this.tryActivateTag(driver, driver.carTag, context);
+  }
+
+  // === CONDITIONAL TAG EVALUATION (the live, per-tick gate — see #156) ===
+
+  /** Rebuild the per-driver race context used to gate conditional tags. Called
+   * once per tick after positions and traffic settle. Deterministic (no RNG). */
+  private rebuildRaceContexts(): void {
+    const ordered = this.getDrivers(); // race order: P1 at index 0
+    const fieldSize = ordered.filter(d => d.status !== 'dnf').length;
+    const lapLength = this.config.lapLength;
+    const totalLaps = this.config.totalLaps;
+    const dist = (d: Driver) => d.currentLap * lapLength + d.position;
+    const conditions = [...this.currentConditions];
+
+    this.raceContextCache = new Map();
+    ordered.forEach((d, i) => {
+      const ahead = i > 0 ? ordered[i - 1] : null;
+      const behind = i < ordered.length - 1 ? ordered[i + 1] : null;
+      this.raceContextCache.set(d.id, {
+        position: i + 1,
+        fieldSize,
+        lapProgress: totalLaps > 0 ? Math.min(1, d.currentLap / totalLaps) : 0,
+        gapAhead: ahead ? dist(ahead) - dist(d) : Infinity,
+        gapBehind: behind ? dist(d) - dist(behind) : Infinity,
+        inTraffic: this.driversInTraffic.has(d.id),
+        tireWear: d.tireState?.wear ?? 0,
+        isDamaged: d.isDamaged,
+        safetyCar: this.raceState.unsafetyCarActive,
+        conditions,
+      });
+    });
+  }
+
+  /** Combined multiplier from this driver's currently-satisfied conditional tags. */
+  private getConditionalModifier(driverId: number, modifier: 'speedModifier' | 'consistencyModifier' | 'luckModifier' | 'pitSpeedModifier'): number {
+    const ctx = this.raceContextCache.get(driverId);
+    if (!ctx) return 1;
+    const driver = this.drivers.find(d => d.id === driverId);
+    if (!driver) return 1;
+
+    let result = 1;
+    for (const tag of [driver.driverTag, driver.carTag, driver.teamTag]) {
+      if (!tag?.condition) continue;
+      if (!evaluateTagCondition(tag.condition, ctx)) continue;
+      const v = tag.effects[modifier];
+      if (typeof v === 'number') result *= v;
     }
-    // Check team tag
-    if (driver.teamTag) {
-      this.tryActivateTag(driver, driver.teamTag, context);
+    return result;
+  }
+
+  /** Combined crash-resistance delta from this driver's satisfied conditional tags. */
+  private getConditionalCrashResistance(driverId: number): number {
+    const ctx = this.raceContextCache.get(driverId);
+    if (!ctx) return 0;
+    const driver = this.drivers.find(d => d.id === driverId);
+    if (!driver) return 0;
+
+    let result = 0;
+    for (const tag of [driver.driverTag, driver.carTag, driver.teamTag]) {
+      if (!tag?.condition) continue;
+      if (!evaluateTagCondition(tag.condition, ctx)) continue;
+      result += tag.effects.crashResistance ?? 0;
     }
+    return result;
+  }
+
+  /** Set the active weather/track conditions for this race (e.g. ['rain']).
+   * Used by the weather layer (C2); empty by default keeps conditional weather
+   * tags dormant. Call after reset()/before the race runs. */
+  setRaceConditions(ids: string[]): void {
+    this.currentConditions = new Set(ids);
   }
 
   // === UNIFIED EFFECT SYSTEM METHODS ===
@@ -1900,25 +1977,27 @@ class RaceEngine {
     return Math.max(-0.5, Math.min(0.5, result));
   }
 
-  // Legacy getters that now use unified system
+  // Legacy getters that now combine stored effects (one-time activations + track
+  // events) with live conditional-tag contributions (gated every tick).
   private getTagSpeedModifier(driverId: number): number {
-    return this.getEffectModifier(driverId, 'speedModifier');
+    return this.getEffectModifier(driverId, 'speedModifier') * this.getConditionalModifier(driverId, 'speedModifier');
   }
 
   private getTagConsistencyModifier(driverId: number): number {
-    return this.getEffectModifier(driverId, 'consistencyModifier');
+    return this.getEffectModifier(driverId, 'consistencyModifier') * this.getConditionalModifier(driverId, 'consistencyModifier');
   }
 
   private getTagLuckModifier(driverId: number): number {
-    return this.getEffectModifier(driverId, 'luckModifier');
+    return this.getEffectModifier(driverId, 'luckModifier') * this.getConditionalModifier(driverId, 'luckModifier');
   }
 
   private getTagCrashResistance(driverId: number): number {
-    return this.getEffectCrashResistance(driverId);
+    const combined = this.getEffectCrashResistance(driverId) + this.getConditionalCrashResistance(driverId);
+    return Math.max(-0.5, Math.min(0.5, combined));
   }
 
   private getTagPitModifier(driverId: number): number {
-    return this.getEffectModifier(driverId, 'pitSpeedModifier');
+    return this.getEffectModifier(driverId, 'pitSpeedModifier') * this.getConditionalModifier(driverId, 'pitSpeedModifier');
   }
 
   private tick(): void {
@@ -1954,6 +2033,11 @@ class RaceEngine {
       this.driversInTraffic.add(pair[0].id);
       this.driversInTraffic.add(pair[1].id);
     }
+
+    // Refresh conditional-tag context now that position + traffic are known this
+    // tick, before crash resistance and speed modifiers are read below.
+    this.rebuildRaceContexts();
+
     const crashedThisTick: Set<number> = new Set();
     const damagedThisTick: Set<number> = new Set();
 

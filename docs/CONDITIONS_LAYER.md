@@ -179,9 +179,13 @@ into stories.
 
 ## 9. Build order (proposal)
 
-1. **C1 — Predicate hook.** Expose `RaceContext` to tag evaluation; convert
-   the four broken conditional tags to read it. Ships the #156 fix and the
-   Tier B foundation with zero new content.
+1. **C1 — Predicate hook. ✅ shipped (v0.3.3).** `RaceContext` +
+   `evaluateTagCondition` in `tags.ts`; engine gates conditional passives live
+   each tick (`rebuildRaceContexts`, no RNG). The four broken tags now read it:
+   Front Runner (top-5), Underdog (bottom-half), Sunday Driver (late-race
+   surge), Rain Dancer (gated to `rain` → dormant until C2). `tier` field added
+   to the Tag interface and all entity tags. Magnitudes still pending lab
+   calibration (needs the SimLab condition-blindness fix below).
 2. **C2 — Weather.** `WeatherState`, derived-seed roll, weighted-mild
    frequency, condition stamping via the existing path. Re-home Rain Dancer.
 3. **C3 — Track tags.** Generalize `track.event` → `tags: TrackTag[]`;
