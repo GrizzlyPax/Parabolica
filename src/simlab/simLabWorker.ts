@@ -730,6 +730,11 @@ async function runSimulation(config: SimLabConfig, variables?: SimVariables, _la
       engine.updateConfig({
         totalLaps: track.laps,
         lapLength: track.length,
+        // The lab counts quick stops / SC deploys / tag & track events from
+        // the event log. The 500-event live-UI cap silently evicts most of a
+        // race (luck procs alone log ~1200 events/race), which skewed every
+        // event-derived metric. Keep the whole log.
+        maxStoredEvents: Number.MAX_SAFE_INTEGER,
       });
 
       // Set track info (TrackInfo interface expects separate eventTrigger/eventEffect)
