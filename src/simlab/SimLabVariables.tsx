@@ -106,6 +106,8 @@ function buildVariableList(): VarDef[] {
     { key: 'quickStopPerStar', label: 'Quick Stop/Star', desc: 'Quick stop bonus/star', format: 'decimal' as const, min: 0.02, max: 0.15, step: 0.01 },
     { key: 'basePitChance', label: 'Pit Chance', desc: 'Base chance to pit', format: 'percent' as const, min: 0.05, max: 0.5, step: 0.05 },
     { key: 'wearPitBonus', label: 'Wear Pit Bonus', desc: 'Extra pit chance from wear', format: 'percent' as const, min: 0.1, max: 0.6, step: 0.05 },
+    { key: 'wearPitDenominator', label: 'Wear Saturation', desc: 'Wear % that maxes the bonus', format: 'decimal' as const, min: 40, max: 100, step: 5 },
+    { key: 'luckPitBase', label: 'Luck Pit Base', desc: 'Luck multiplier baseline', format: 'decimal' as const, min: 1.0, max: 1.5, step: 0.05 },
     { key: 'luckPitAdjustment', label: 'Luck Pit Adjust', desc: 'Luck pit timing adjust', format: 'decimal' as const, min: 0.1, max: 0.8, step: 0.05 },
   ];
   for (const v of pitVars) {

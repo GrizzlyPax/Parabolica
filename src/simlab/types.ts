@@ -504,6 +504,8 @@ export interface SimVariables {
     // Pit window
     basePitChance: number;            // Base pit decision chance (0.20)
     wearPitBonus: number;             // Additional chance from wear (0.30)
+    wearPitDenominator: number;       // Wear % that saturates the wear bonus (70)
+    luckPitBase: number;              // Luck multiplier baseline before adjustment (1.2)
     luckPitAdjustment: number;        // Luck pit timing adjustment (0.4)
   };
 
@@ -641,6 +643,8 @@ export const CANON_VARIABLES: SimVariables = {
     quickStopPerStar: 0.05,
     basePitChance: 0.20,
     wearPitBonus: 0.30,
+    wearPitDenominator: 70,
+    luckPitBase: 1.2,
     luckPitAdjustment: 0.4,
   },
   performance: {

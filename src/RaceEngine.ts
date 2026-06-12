@@ -1320,13 +1320,16 @@ class RaceEngine {
     }
 
     if (isInPitWindow) {
-      // Higher wear = more likely to pit now
-      // Base 20% chance, up to 50% at high wear
-      const wearFactor = Math.min(1, wearPercent / 70);
-      const pitChance = 0.20 + (wearFactor * 0.30);
+      // Higher wear = more likely to pit now. Base chance climbs with wear up
+      // to (basePitChance + wearPitBonus) at the wear denominator. All knobs
+      // live in CANON_VARIABLES.pits (canon values reproduce the old literals
+      // byte-for-byte — this lift changed no behavior, see #195).
+      const pitVars = this.getPitVars();
+      const wearFactor = Math.min(1, wearPercent / pitVars.wearPitDenominator);
+      const pitChance = pitVars.basePitChance + (wearFactor * pitVars.wearPitBonus);
 
-      // Luck affects pit timing too - lucky drivers might wait longer
-      const adjustedChance = pitChance * (1.2 - driver.stats.luck * 0.4);
+      // Luck affects pit timing too - lucky drivers might wait longer.
+      const adjustedChance = pitChance * (pitVars.luckPitBase - driver.stats.luck * pitVars.luckPitAdjustment);
 
       return this.rng() < adjustedChance;
     }
