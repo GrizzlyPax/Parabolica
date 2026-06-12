@@ -50,6 +50,13 @@ Factor by factor, with canon numbers and **effective magnitude**:
 stat > endurance >> luck`. Confirmed by lab Q1→Q5 win deltas: Power +7.0,
 Consistency +4.3, Speed +4.0, Endurance +1.5, Luck +0.3.**
 
+*Correction (June 2026, dominance pass): consistency is not just variance
+shrink — because `consistencyEffect` multiplies the roll it corrects, it
+carries a Jensen penalty of `κ·Var(roll)` (κ = (1−c_eff)×0.35) in expected
+speed. Across the stat range that's ~5% of mean pace, comparable to power's
+7.6%. Its win impact is substantially a hidden flat-speed effect. See
+`BALANCE_DOMINANCE_PASS.md` §2.*
+
 ## 3. Attrition (the Scrap Heap's domain)
 
 Lab: 21.2% DNF rate, 4.7 DNFs/race, 48% of DNFs in the first third.
