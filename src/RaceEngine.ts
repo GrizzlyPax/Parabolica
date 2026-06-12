@@ -2775,11 +2775,11 @@ class RaceEngine {
     if (carAhead) {
       currentGap = carAhead.totalDistance - driverTotalDistance;
 
-      // CRITICAL: If the field is still catching up to the SC, don't slow down
-      // just because our gap to car ahead is "correct" - we need to follow the leader!
-      if (fieldIsCatchingUp && currentGap <= TARGET_GAP * 1.5) {
-        // Gap to car ahead is good, but leader is still catching SC
-        // Match leader's catch-up speed so we don't fall behind
+      // If the field is still catching up to the SC, match the catch-up pace
+      // rather than braking for a "correct" gap — but NEVER closer than half
+      // the target gap. Without this floor the whole queue piled onto a
+      // single point during the catch-up phase.
+      if (fieldIsCatchingUp && currentGap <= TARGET_GAP * 1.5 && currentGap >= TARGET_GAP * 0.5) {
         return CATCH_UP_SPEED;
       }
     } else if (distanceBehindSC > 0) {

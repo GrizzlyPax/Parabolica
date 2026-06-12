@@ -464,7 +464,7 @@ export interface SimVariables {
 
   // === SAFETY CAR ===
   safetyCar: {
-    targetGap: number;                // Target spacing between cars (0.16)
+    targetGap: number;                // Target spacing between queued cars, in laps (0.02 ≈ 0.25s)
     cruiseSpeed: number;              // Normal SC speed (0.50)
     catchUpSpeed: number;             // Speed when catching up (0.65)
     unsafetyCarSpeed: number;         // Unsafety car per-tick speed (0.0035)
@@ -587,7 +587,10 @@ export const CANON_VARIABLES: SimVariables = {
     pitCrewPerStar: 0.07,               // Reduced spread
   },
   safetyCar: {
-    targetGap: 0.16,
+    // 0.02 laps ≈ a 0.25s gap at typical lap times. The old value (0.16 laps
+    // per car!) demanded a multi-lap train that could never form, so the
+    // controller collapsed the field onto a single point instead.
+    targetGap: 0.02,
     cruiseSpeed: 0.50,
     catchUpSpeed: 0.65,
     unsafetyCarSpeed: 0.0035,
