@@ -335,6 +335,16 @@ describe('weather (C2)', () => {
     expect(twice.digests.map(d => [d.finishOrder, d.totalTicks, d.weather]))
       .toEqual(once.digests.map(d => [d.finishOrder, d.totalTicks, d.weather]));
   });
+
+  it('track tags (C3) are woven in deterministically too', () => {
+    // Intrinsic track tags ride on the same shared prepare path; a re-settle
+    // reproduces identical races (track tags affect crashes/pace).
+    const setup = makeSetup();
+    const a = settleLeague(createLeague(88, setup), { now: T0 + 13 * HOUR }).league;
+    const b = settleLeague(createLeague(88, setup), { now: T0 + 13 * HOUR }).league;
+    expect(b.digests.map(d => [d.finishOrder, d.totalTicks]))
+      .toEqual(a.digests.map(d => [d.finishOrder, d.totalTicks]));
+  });
 });
 
 describe('league persistence', () => {

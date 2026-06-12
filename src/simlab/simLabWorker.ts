@@ -8,6 +8,7 @@ import { ALL_TRACKS, Track } from '../generators/tracks';
 import { TEAMS } from '../data/teams';
 import { Tag } from '../data/tags';
 import { rollWeather, WeatherState } from '../data/weather';
+import { intrinsicTrackTags } from '../data/trackTags';
 import type {
   SimLabConfig,
   WorkerInMessage,
@@ -827,6 +828,8 @@ async function runSimulation(config: SimLabConfig, variables?: SimVariables, _la
       // like Rain Dancer) are exercised and measured, not dormant.
       const weather = rollWeather();
       engine.setWeather(weather);
+      // Apply the track's intrinsic tags (C3) so they're exercised + measured.
+      engine.setTrackTags(intrinsicTrackTags(track.id));
 
       // Run the race headlessly
       const result = engine.runHeadless();

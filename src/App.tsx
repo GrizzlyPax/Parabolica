@@ -148,6 +148,7 @@ function App() {
     engine.clearSeed();
     engine.setSimVars(null); // back to Quick Race defaults
     engine.setWeather(null);  // drop this race's weather off the shared engine
+    engine.setTrackTags([]);  // and its track tags
     setScreen('league');
   }, [engine]);
 
@@ -223,6 +224,7 @@ function App() {
       totalLaps: track.laps,
     });
     engine.setWeather(null); // Quick Race has no weather (league-only for now)
+    engine.setTrackTags([]);  // nor track tags
     setTrackInfo(engine.getTrackInfo());
   }, [engine]);
 
