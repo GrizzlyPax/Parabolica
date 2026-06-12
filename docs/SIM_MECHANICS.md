@@ -147,28 +147,38 @@ is flipped after lab validation.
 | Team tire mgmt wired | tire wear × `1+(3−stars)×k` — 3★ neutral, 5★ preserves rubber, 1★ shreds it | `tires.teamTireMgmtWearPerStar` (0) |
 | Luck with teeth | raise proc rate + top-end magnitude via existing knobs | (preset only) |
 
-**Rebalance v1 preset** — paste into SimLab's variable Import (it deep-merges
+**Rebalance preset v2** — paste into SimLab's variable Import (it deep-merges
 as the heretic side; run a comparison batch against canon for the delta):
 
 ```json
 {
   "performance": {
-    "accelEffect": 0.8,
-    "aggressionTrafficBoost": 0.05,
+    "accelEffect": 0.5,
+    "aggressionTrafficBoost": 0.10,
     "luckProcChance": 0.045,
     "luckMaxBoostPerStat": 0.25
   },
   "tires": {
-    "teamTireMgmtWearPerStar": 0.06
+    "teamTireMgmtWearPerStar": 0.03
   }
 }
 ```
 
+*v1 lab results (500-race A/B, June 2026): Acceleration −0.2→**+3.8** (alive
+but overshot at effect 0.8 — halved for v2), Tire Mgmt 0.9→**+4.2** (overshot
+at 0.06/★ — halved), Luck 0.4→**+1.1** (on target, kept), Aggression
+−0.9→−2.5 (traffic reward at 5% didn't pay; doubled for v2 — if it still
+can't go positive, the mechanism needs rethinking, e.g. boost only when
+chasing the car ahead). Side observation: accel windows appear to spread the
+field at launch — early-phase DNF share fell 50.7%→43.4% and crash DNFs
+dropped ~20%; watch whether this holds at 2,000 races.*
+
 Acceptance targets (Q1→Q5 win delta): Acceleration ≈ **+1–2%**; Aggression
 **≥ 0** with its DNF cost intact (the gamble profile: more wins AND more
-wrecks); Tire Mgmt ≈ **+1%**; Luck ≈ **+1–1.5%**. Power/Consistency/Speed
-should be roughly unchanged. If a knob over/undershoots, tune the preset and
-re-run — canon flips only when the lab signs off.
+wrecks); Tire Mgmt ≈ **+1–2%**; Luck ≈ **+1–1.5%**. Power/Consistency/Speed
+roughly unchanged. Use batch 2000 — at 500 races, per-bucket win% noise is
+≈±1%, which swamps the aggression signal. Canon flips only when the lab
+signs off.
 
 Still open: **tag magnitude pass** alongside the tag system design (tags
 currently outweigh the whole stat sheet).
