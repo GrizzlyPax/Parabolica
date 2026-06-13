@@ -44,7 +44,8 @@ function FoundingScreen({ onFound, onBack }: FoundingScreenProps) {
   const handleFound = () => {
     if (!canFound) return;
     onFound({
-      name: name.trim() || 'The League',
+      // Blank → App fills a procedural name seeded from the league (#185).
+      name: name.trim(),
       godId: godId!,
       raceCount,
       raceIntervalMs: CADENCES[cadenceIdx].ms,
@@ -71,7 +72,7 @@ function FoundingScreen({ onFound, onBack }: FoundingScreenProps) {
             type="text"
             value={name}
             onChange={e => setName(e.target.value)}
-            placeholder="The League"
+            placeholder="Leave blank to be named by the seed…"
             maxLength={40}
           />
         </section>

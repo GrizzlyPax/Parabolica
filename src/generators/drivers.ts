@@ -144,10 +144,8 @@ export function generateDriverForTeam(
   // Pick a quirk
   const quirk = pick(QUIRKS, rng);
 
-  // Create short name (first name + first letter of last, or just first name if too long)
-  const shortName = name.firstName.length > 8
-    ? name.firstName.slice(0, 8)
-    : `${name.firstName} ${name.lastName[0]}.`;
+  // Short name handles mononyms / corrupted names (computed in names.ts).
+  const shortName = name.shortName;
 
   // Maybe assign a tag (15% chance)
   const tag = maybeAssignTag('driver', rng) || undefined;
