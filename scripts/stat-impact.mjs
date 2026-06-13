@@ -51,11 +51,13 @@ function quintile(value, min, max) {
   const n = (value - min) / (max - min);
   return n < 0.2 ? 1 : n < 0.4 ? 2 : n < 0.6 ? 3 : n < 0.8 ? 4 : 5;
 }
-// Driver stat ranges (from simLabWorker); car/team stats are 1–5 stars direct.
+// Driver stat ranges + field names (from simLabWorker — speed lives on
+// stats.baseSpeed, luck spans 0.3–0.8); car/team stats are 1–5 stars direct.
 const RANGES = {
-  speed: [0.85, 1.15], consistency: [0.3, 0.8], luck: [0.85, 1.15],
+  speed: [0.85, 1.15], consistency: [0.3, 0.8], luck: [0.3, 0.8],
   acceleration: [0.85, 1.15], endurance: [0.85, 1.15], aggression: [0.3, 0.8],
 };
+const FIELD = { speed: 'baseSpeed' };
 const STATS = ['speed','consistency','luck','acceleration','endurance','aggression',
   'carPower','carGrip','carReliability','pitCrew','tireManagement'];
 const buckets = Object.fromEntries(STATS.map(s => [s, [0,0,0,0,0,0].map(() => ({ entries: 0, wins: 0 }))]));
@@ -66,7 +68,7 @@ function bucketOf(driver, stat) {
   if (stat === 'pitCrew') return driver.teamStats?.pitCrew ?? 3;
   if (stat === 'tireManagement') return driver.teamStats?.tireManagement ?? 3;
   const [min, max] = RANGES[stat];
-  return quintile(driver.stats[stat], min, max);
+  return quintile(driver.stats[FIELD[stat] ?? stat], min, max);
 }
 
 const engine = RaceEngine.createForWorker(variables);

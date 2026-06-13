@@ -101,35 +101,38 @@ Read `docs/SIM_MECHANICS.md` §5 for the full stat truth table. Summary:
 - **Conditions layer live**: weather + track tags, deterministic, with mid-race
   inflictions. All measurable in SimLab.
 
+**Canon since v0.3.31 — rebalance v3 (the #220 dominance flip):**
+- **#162 Car Power compression FLIPPED**: `powerPerStar 0.014` / `powerBase
+  0.942` (3★ midpoint preserved; 1★→5★ spread 7.6%→5.6%). The re-baseline had
+  confirmed uncompressed Power at Δ 13.2% (~1.8× the #2 stat); post-flip it
+  reads ~+10%, still #1 but now ~1.2× Consistency — watch that margin when
+  tuning anything that feeds Consistency.
+- **#82 Mistakes layer LIVE**: `mistakeBaseChance 1.5e-4` (+ consistency 1.5 /
+  aggression 0.5 weights, 0.85× for 150t, 300t refractory). Picked by an
+  80-paired-universe `mistakeBaseChance` sweep: this value cuts >50%-runaway
+  universes 18%→**10%** (target 8–12) and median champ win share 38%→33%, DNF
+  flat — and raising it further bought nothing but feed spam (sweep was noise
+  above 1.5e-4). Races now have ~0.4 mistakes/driver (spins, lock-ups — each
+  one a feed story). Logged as `driver_error` events.
+
+**Calibrated and healthy (rebalance v2):**
+- Driver stats form a sensible ladder; Acceleration and Tire-Mgmt (formerly
+  dead stats) are alive. Luck is flavour, Reliability is survival.
+- **Tags FIXED (#156)**: the old 9× destinies are gone — smooth 2.6×→0.4× win
+  ladder, conditional gating + tiers. Validated at 2,000 races.
+- **Conditions layer live**: weather + track tags, deterministic, with mid-race
+  inflictions. All measurable in SimLab.
+
 **Open balance flags (your territory):**
-- **#162 Car Power dominance** — the biggest open lever, **confirmed by the
-  post-#195 re-baseline**: STAT IMPACT Car Power Δ = **13.2%** (Q1 0.3% → Q5
-  13.5% win), ~1.8× the next stat (Consistency 7.4%). It did not shrink with
-  the tag fix / rebalance v2 — the old 12.8% was real and current. Proposed
-  compression (per the dominance pass): `powerPerStar 0.018→0.014` /
-  `powerBase 0.93→0.942` (3★ midpoint preserved). Lab-validate before/after,
-  then recalibrate `betting.strengthWeights` at the flip.
-- **#195 Pit strategy** — *mechanics cleaned (v0.3.27–29)*: pit-duration bug
-  fixed, farcical final-lap stops killed (`lastPitLapBuffer`), and the herding
-  root cause found — the wear trigger times ~all stops, so identical compounds
-  herd the field into one strategy (`SIM_MECHANICS.md` §4 has the corrected
-  decision path). Two gated levers are built and dormant, **yours to tune**:
+- **#195 strategy variety levers — built, dormant, yours to tune**:
   `pits.strategyWearLean` (strategy archetypes — short/standard/long camps;
   0.12 → distinct strategies/race 8.2→9.8) and `pits.scPitChance` (cheap stops
   under the safety car; +0.15 → 10.6). Both byte-identical at canon 0. The
   window knobs (`basePitChance` etc.) are honest but nearly inert — don't
-  expect them to move anything.
+  expect them to move anything (the wear trigger times ~all stops; see
+  `SIM_MECHANICS.md` §4).
 - **#171 Content wave** — new tags across all layers are pending; each ships
   with a lab batch proving its tier (partnered flavour + balance).
-- **#82 Mistakes layer** — **built (v0.3.30), dormant in canon.** Non-terminal
-  driver errors (spin/lock-up/wide/flat-spot) per `BALANCE_DOMINANCE_PASS.md`
-  §3: `performance.mistakeBaseChance` gates it (0 = today, byte-identical);
-  weights for consistency/aggression/damage, penalty + duration + cooldown all
-  tunable. Logged as dedicated `driver_error` events. First A/B (40 paired
-  universes, first-lab values): kills runaway tails (>50% champions 30%→23%,
-  ≥2/3 2.5%→0%) but median win share unmoved — `mistakeBaseChance` is the
-  primary dominance dial, yours to raise. Flip canon only via the §6
-  acceptance run.
 - **#106 Morale** — on hold (snowball risk; redesign later).
 
 ---
