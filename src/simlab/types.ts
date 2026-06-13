@@ -681,17 +681,27 @@ export const CANON_VARIABLES: SimVariables = {
     accelLaunchTicks: 80,
     accelEffect: 0.5,                   // Rebalance v2 (lab-verified Δ+2.6%): launches, pit exits, SC restarts
     aggressionTrafficBoost: 0.10,       // Rebalance v2 (lab-verified Δ+1.4% with DNF cost intact): the gamble pays
-    mistakeBaseChance: 0,               // #82 DORMANT — flip via dominance-pass A/B, not here first
-    mistakeConsistencyWeight: 0,
-    mistakeAggressionWeight: 0,
+    // #82 mistakes layer — CANON since v0.3.31 (rebalance v3, #220 dominance
+    // pass). Validated on the 80-paired-universe A/B stacked with the #162
+    // compression below: median champ win share 38%→33%, >50% runaway
+    // universes 18%→10% (target 8–12%), DNF flat 22.9%. Raising
+    // mistakeBaseChance further bought nothing but feed spam (sweep was
+    // non-monotonic noise above this value).
+    mistakeBaseChance: 1.5e-4,
+    mistakeConsistencyWeight: 1.5,
+    mistakeAggressionWeight: 0.5,
     mistakeDamageWeight: 0,
-    mistakeSpeedPenalty: 1.0,
-    mistakeDurationTicks: 0,
-    mistakeCooldownTicks: 0,
+    mistakeSpeedPenalty: 0.85,
+    mistakeDurationTicks: 150,
+    mistakeCooldownTicks: 300,
   },
   carStats: {
-    powerBase: 0.93,                    // Higher base, less per-star spread
-    powerPerStar: 0.018,
+    // #162 power compression — CANON since v0.3.31. 1★→5★ spread 7.6%→5.6%,
+    // 3★ midpoint preserved (0.984). Re-baseline measured the uncompressed
+    // Car Power win Δ at 13.2% (~1.8× the #2 stat); compression shifts
+    // championships car-led → driver-led (champ 5★-power share ~36%→34%).
+    powerBase: 0.942,
+    powerPerStar: 0.014,
     gripBase: 0.82,                     // Higher base, less per-star spread
     gripPerStar: 0.045,
     reliabilityBase: 0.4,

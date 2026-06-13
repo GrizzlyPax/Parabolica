@@ -53,11 +53,12 @@ function clampRoster(roster, maxStars) {
   });
 }
 
-// #82 mistakes layer at the §3 first-lab values (built v0.3.30, dormant in
-// canon). Optionally stacked on power compression — the A+B acceptance combo.
-function withMistakes(base = CANON_VARIABLES) {
+// #82 mistakes layer (built v0.3.30, dormant in canon). base = per-tick
+// mistake chance; the §3 first-lab value is 1.5e-4. Optionally stacked on
+// power compression — the A+B acceptance combo.
+function withMistakes(base = CANON_VARIABLES, chance = 1.5e-4) {
   const v = cloneVariables(base);
-  v.performance.mistakeBaseChance = 1.5e-4;
+  v.performance.mistakeBaseChance = chance;
   v.performance.mistakeConsistencyWeight = 1.5;
   v.performance.mistakeAggressionWeight = 0.5;
   v.performance.mistakeSpeedPenalty = 0.85;
@@ -74,6 +75,11 @@ const ALL_SCENARIOS = [
   { key: 'p014clamp', name: '0.014 + clamp', simVars: withPower(0.014), clamp: 18 },
   { key: 'mistakes', name: 'mistakes (lab)', simVars: withMistakes(), clamp: null },
   { key: 'mp014', name: 'mistakes + 0.014', simVars: withMistakes(withPower(0.014)), clamp: null },
+  // mistakeBaseChance sweep on the compressed-power base (the candidate canon)
+  { key: 'm3p014', name: 'mist 3e-4 + 0.014', simVars: withMistakes(withPower(0.014), 3e-4), clamp: null },
+  { key: 'm45p014', name: 'mist 4.5e-4 + 0.014', simVars: withMistakes(withPower(0.014), 4.5e-4), clamp: null },
+  { key: 'm6p014', name: 'mist 6e-4 + 0.014', simVars: withMistakes(withPower(0.014), 6e-4), clamp: null },
+  { key: 'm8p014', name: 'mist 8e-4 + 0.014', simVars: withMistakes(withPower(0.014), 8e-4), clamp: null },
 ];
 // Optional scenario filter: comma-separated keys as argv[3]
 const only = process.argv[3]?.split(',');

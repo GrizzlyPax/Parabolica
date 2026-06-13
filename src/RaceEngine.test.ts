@@ -283,25 +283,19 @@ describe('conditional tags (#156 gate)', () => {
     }
   });
 
-  it('#82 mistakes layer: dormant at canon draws no RNG; live at lab values it bites', () => {
+  it('#82 mistakes layer: gate-0 draws no RNG; live at canon (v0.3.31) it bites', () => {
     // The determinism invariant from BALANCE_DOMINANCE_PASS §3: with
-    // mistakeBaseChance 0 the mistake path must draw NO RNG, so the race is
-    // byte-identical to canon (same pattern as accelEffect). At first-lab
-    // values it must produce driver_error events that respect the
-    // one-at-a-time + refractory contract and never DNF anyone directly.
+    // mistakeBaseChance 0 the mistake path must draw NO RNG and ignore every
+    // other mistake knob (same pattern as accelEffect) — two configs that
+    // differ only in non-gate mistake knobs must replay byte-identically.
+    // Mistakes are CANON since v0.3.31 (rebalance v3), so the live contract
+    // (driver_error events, one-at-a-time + refractory) is asserted on canon
+    // itself.
     const base = cleanRoster();
-    const labValues = {
+    const withMistakes = (perf: Partial<typeof CANON_VARIABLES.performance>) => ({
       ...CANON_VARIABLES,
-      performance: {
-        ...CANON_VARIABLES.performance,
-        mistakeBaseChance: 1.5e-4,
-        mistakeConsistencyWeight: 1.5,
-        mistakeAggressionWeight: 0.5,
-        mistakeSpeedPenalty: 0.85,
-        mistakeDurationTicks: 150,
-        mistakeCooldownTicks: 300,
-      },
-    };
+      performance: { ...CANON_VARIABLES.performance, ...perf },
+    });
     const runWith = (vars: typeof CANON_VARIABLES, seed: number) => {
       const grid = structuredClone(base);
       const engine = RaceEngine.createForWorker(vars, seed);
@@ -312,20 +306,20 @@ describe('conditional tags (#156 gate)', () => {
       return engine.runHeadless();
     };
 
-    // Dormant: explicit zeros replay canon byte-for-byte
-    const canonRun = runWith(CANON_VARIABLES, 0x82);
-    const dormant = runWith({
-      ...CANON_VARIABLES,
-      performance: { ...CANON_VARIABLES.performance, mistakeBaseChance: 0 },
-    }, 0x82);
-    expect(dormant.events).toEqual(canonRun.events);
-    expect(dormant.raceState.finishOrder).toEqual(canonRun.raceState.finishOrder);
-    expect(canonRun.events.some(e => e.type === 'driver_error')).toBe(false);
+    // Gate closed: zero base chance, wildly different other knobs → byte-identical
+    const gateA = runWith(withMistakes({ mistakeBaseChance: 0 }), 0x82);
+    const gateB = runWith(withMistakes({
+      mistakeBaseChance: 0, mistakeConsistencyWeight: 9, mistakeAggressionWeight: 9,
+      mistakeSpeedPenalty: 0.1, mistakeDurationTicks: 999, mistakeCooldownTicks: 999,
+    }), 0x82);
+    expect(gateB.events).toEqual(gateA.events);
+    expect(gateB.raceState.finishOrder).toEqual(gateA.raceState.finishOrder);
+    expect(gateA.events.some(e => e.type === 'driver_error')).toBe(false);
 
     // Live: mistakes happen, spaced by duration+cooldown per driver, none fatal
     let sawMistake = false;
     for (const seed of [0x82, 0x83, 0x84]) {
-      const live = runWith(labValues, seed);
+      const live = runWith(CANON_VARIABLES, seed);
       const errors = live.events.filter(e => e.type === 'driver_error');
       if (errors.length === 0) continue;
       sawMistake = true;
