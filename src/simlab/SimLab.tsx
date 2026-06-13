@@ -5,6 +5,7 @@ import type { SimLabConfig as Config, SimLabResults as Results, WorkerOutMessage
 import { CANON_VARIABLES, cloneVariables } from './types';
 import { intrinsicTrackTags } from '../data/trackTags';
 import { conditionsSections, sectionsToTsvRows } from './reportSections';
+import { version } from '../../package.json';
 import './SimLab.css';
 
 type SimLabPhase = 'setup' | 'running' | 'results';
@@ -361,6 +362,14 @@ export default function SimLab() {
     const rows: string[] = [];
     const addRow = (...cols: (string | number)[]) => rows.push(cols.join('\t'));
     const addBlank = () => rows.push('');
+
+    // Version stamp at the very top of every report — so a pasted batch can
+    // never be silently mis-attributed to the wrong canon. Build time pins the
+    // exact deployed bundle (a stale cached tab keeps its old build time).
+    addRow('PARABOLICA VERSION');
+    addRow('App Version', `v${version}`);
+    addRow('Build', new Date(__BUILD_TIME__).toISOString());
+    addBlank();
 
     const statLabels: Record<string, string> = {
       speed: 'Speed', consistency: 'Consistency', luck: 'Luck',
