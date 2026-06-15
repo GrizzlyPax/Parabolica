@@ -144,10 +144,8 @@ export function generateDriverForTeam(
   // Pick a quirk
   const quirk = pick(QUIRKS, rng);
 
-  // Create short name (first name + first letter of last, or just first name if too long)
-  const shortName = name.firstName.length > 8
-    ? name.firstName.slice(0, 8)
-    : `${name.firstName} ${name.lastName[0]}.`;
+  // Short name handles mononyms / corrupted names (computed in names.ts).
+  const shortName = name.shortName;
 
   // Maybe assign a tag (15% chance)
   const tag = maybeAssignTag('driver', rng) || undefined;
@@ -191,16 +189,18 @@ export function generateRoster(rng: Rng = Math.random): GeneratedDriver[] {
 
 // Generate a roster from specific team IDs (for season mode)
 export function generateRosterFromTeams(teamIds: string[], rng: Rng = Math.random): GeneratedDriver[] {
+  return generateRosterFromTeamList(getTeamsByIds(teamIds), rng);
+}
+
+// Generate a roster from resolved Team objects — the path that supports custom
+// teams (not in the static registry). Two drivers per team, in list order.
+export function generateRosterFromTeamList(teams: Team[], rng: Rng = Math.random): GeneratedDriver[] {
   const drivers: GeneratedDriver[] = [];
   let id = 0;
-
-  const teams = getTeamsByIds(teamIds);
   for (const team of teams) {
-    // Generate two drivers for each team
     drivers.push(generateDriverForTeam(id++, team, 1, rng)); // Primary driver
     drivers.push(generateDriverForTeam(id++, team, 2, rng)); // Secondary driver
   }
-
   return drivers;
 }
 

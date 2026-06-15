@@ -8,13 +8,13 @@ import Compendium from './Compendium';
 import FoundingScreen, { FoundingChoices } from './league/ui/FoundingScreen';
 import LeagueScreen from './league/ui/LeagueScreen';
 import { createLeague } from './league/league';
+import { leagueNameForSeed } from './generators/leagueName';
 import { LeagueState, LiveRace } from './league/types';
 import { LIVE_TICK_MS, nextRaceAt, prepareScheduledRace } from './league/settle';
 import { CANON_VARIABLES } from './simlab/types';
 import { saveLeagueState, loadLeagueState, clearLeagueState } from './storage/persistence';
 import { mulberry32, deriveSeed, randomSeed } from './engine/rng';
 import { generateTrack, getRandomTracks, getTrackById, getDynamicEventDescription, Track } from './generators/tracks';
-import { TEAMS } from './data/teams';
 import './App.css';
 
 type AppScreen = 'main-menu' | 'setup' | 'race' | 'compendium' | 'founding' | 'league' | 'broadcast';
@@ -95,9 +95,11 @@ function App() {
     const calendarRng = mulberry32(deriveSeed(leagueSeed, 'genesis', 'calendar'));
     const trackIds = getRandomTracks(choices.raceCount, calendarRng).map(t => t.id);
     const newLeague = createLeague(leagueSeed, {
-      name: choices.name,
+      // Unnamed leagues are christened by their seed — "The Molten Circuit" (#185).
+      name: choices.name || leagueNameForSeed(leagueSeed),
       godId: choices.godId,
-      teamIds: TEAMS.map(t => t.id),
+      teamIds: choices.teamIds,
+      customTeams: choices.customTeams,
       trackIds,
       raceIntervalMs: choices.raceIntervalMs,
       createdAt: Date.now(),

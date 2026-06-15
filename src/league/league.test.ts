@@ -60,6 +60,29 @@ describe('league creation', () => {
     expect(b.schedule).toEqual(a.schedule);
   });
 
+  it('seats player-created custom teams on the grid (identity baked into the roster)', () => {
+    const custom = {
+      id: 'custom-banana-zzzz', name: 'Team Banana', emoji: '🍌',
+      color: '#ffe135', accentColor: '#7a5c00',
+      description: 'custom', isCustom: true,
+    };
+    const setup = makeSetup({ teamIds: TEAMS.slice(0, 3).map(t => t.id), customTeams: [custom] });
+    const league = createLeague(7, setup);
+
+    // 3 registry + 1 custom = 4 teams = 8 drivers; custom seats the last two.
+    expect(league.roster).toHaveLength(8);
+    const bananaDrivers = league.roster.filter(d => d.kingdomId === custom.id);
+    expect(bananaDrivers).toHaveLength(2);
+    for (const d of bananaDrivers) {
+      expect(d.teamName).toBe('Team Banana');
+      expect(d.emoji).toBe('🍌');
+      expect(d.color).toBe('#ffe135');
+      expect(d.carStats).toBeDefined(); // custom teams get cars like anyone
+    }
+    // Still fully deterministic with customs in the mix.
+    expect(createLeague(7, setup).roster).toEqual(league.roster);
+  });
+
   it('different seeds birth different universes with different race seeds', () => {
     const a = createLeague(1, makeSetup());
     const b = createLeague(2, makeSetup());

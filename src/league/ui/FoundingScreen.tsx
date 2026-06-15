@@ -3,6 +3,8 @@
 
 import { useState } from 'react';
 import { GODS } from '../gods';
+import { CURRENT_TEAMS, HISTORIC_TEAMS, makeCustomTeam, Team } from '../../data/teams';
+import { generateTeamIdentities } from '../../generators/teamIdentity';
 import './League.css';
 
 export interface FoundingChoices {
@@ -10,7 +12,14 @@ export interface FoundingChoices {
   godId: string;
   raceCount: number;
   raceIntervalMs: number;
+  /** Registry teams (preset + historic) selected for the grid. */
+  teamIds: string[];
+  /** Player-created teams for the grid. */
+  customTeams: Team[];
 }
+
+const MIN_TEAMS = 2;
+const MAX_TEAMS = 12;
 
 interface FoundingScreenProps {
   onFound: (choices: FoundingChoices) => void;
@@ -38,16 +47,54 @@ function FoundingScreen({ onFound, onBack }: FoundingScreenProps) {
   const [customCount, setCustomCount] = useState('');
   const [cadenceIdx, setCadenceIdx] = useState(1);
 
+  // Grid composition: which registry teams are in, plus any custom teams.
+  // Default = the preset 11.
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(
+    () => new Set(CURRENT_TEAMS.map(t => t.id))
+  );
+  const [customTeams, setCustomTeams] = useState<Team[]>([]);
+  // The in-progress custom team (null = form closed).
+  const [draft, setDraft] = useState<{ name: string; emoji: string; color: string; accent: string } | null>(null);
+
   const god = GODS.find(g => g.id === godId);
-  const canFound = godId !== null;
+  const teamCount = selectedIds.size + customTeams.length;
+  const teamsOk = teamCount >= MIN_TEAMS && teamCount <= MAX_TEAMS;
+  const canFound = godId !== null && teamsOk;
+
+  const toggleTeam = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else if (teamCount < MAX_TEAMS) next.add(id);
+      return next;
+    });
+  };
+
+  const openDraft = () => {
+    const [id] = generateTeamIdentities(Math.random, 1);
+    setDraft({ name: '', emoji: id.emoji, color: id.color, accent: id.accentColor });
+  };
+  const rollDraftLook = () => {
+    const [id] = generateTeamIdentities(Math.random, 1);
+    setDraft(d => d && { ...d, emoji: id.emoji, color: id.color, accent: id.accentColor });
+  };
+  const addCustomTeam = () => {
+    if (!draft || teamCount >= MAX_TEAMS) return;
+    const suffix = Math.random().toString(36).slice(2, 6);
+    setCustomTeams(prev => [...prev, makeCustomTeam(draft.name, draft.emoji, draft.color, draft.accent, suffix)]);
+    setDraft(null);
+  };
 
   const handleFound = () => {
     if (!canFound) return;
     onFound({
-      name: name.trim() || 'The League',
+      // Blank → App fills a procedural name seeded from the league (#185).
+      name: name.trim(),
       godId: godId!,
       raceCount,
       raceIntervalMs: CADENCES[cadenceIdx].ms,
+      teamIds: [...selectedIds],
+      customTeams,
     });
   };
 
@@ -71,9 +118,117 @@ function FoundingScreen({ onFound, onBack }: FoundingScreenProps) {
             type="text"
             value={name}
             onChange={e => setName(e.target.value)}
-            placeholder="The League"
+            placeholder="Leave blank to be named by the seed…"
             maxLength={40}
           />
+        </section>
+
+        <section className="founding-section">
+          <h2 className="founding-label">
+            Build the grid
+            <span className={`founding-team-count ${teamsOk ? '' : 'invalid'}`}>
+              {teamCount} {teamCount === 1 ? 'team' : 'teams'} · {teamCount * 2} cars
+            </span>
+          </h2>
+          <p className="founding-hint">
+            Pick who lines up — the classic grid, historic outfits, or teams of your own.
+            {teamCount > MAX_TEAMS && ` (max ${MAX_TEAMS})`}
+            {teamCount < MIN_TEAMS && ` (need at least ${MIN_TEAMS})`}
+          </p>
+
+          <div className="team-pool">
+            {CURRENT_TEAMS.map(t => (
+              <button
+                key={t.id}
+                type="button"
+                className={`team-chip ${selectedIds.has(t.id) ? 'selected' : ''}`}
+                style={{ '--chip-color': t.color, '--chip-accent': t.accentColor } as React.CSSProperties}
+                onClick={() => toggleTeam(t.id)}
+              >
+                <span className="team-chip-emoji">{t.emoji}</span>
+                <span className="team-chip-name">{t.name}</span>
+              </button>
+            ))}
+          </div>
+
+          <h3 className="founding-sublabel">Historic outfits</h3>
+          <div className="team-pool">
+            {HISTORIC_TEAMS.map(t => (
+              <button
+                key={t.id}
+                type="button"
+                className={`team-chip ${selectedIds.has(t.id) ? 'selected' : ''}`}
+                style={{ '--chip-color': t.color, '--chip-accent': t.accentColor } as React.CSSProperties}
+                onClick={() => toggleTeam(t.id)}
+              >
+                <span className="team-chip-emoji">{t.emoji}</span>
+                <span className="team-chip-name">{t.name}</span>
+              </button>
+            ))}
+          </div>
+
+          {customTeams.length > 0 && (
+            <>
+              <h3 className="founding-sublabel">Your teams</h3>
+              <div className="team-pool">
+                {customTeams.map(t => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    className="team-chip selected custom"
+                    style={{ '--chip-color': t.color, '--chip-accent': t.accentColor } as React.CSSProperties}
+                    onClick={() => setCustomTeams(prev => prev.filter(c => c.id !== t.id))}
+                    title="Remove"
+                  >
+                    <span className="team-chip-emoji">{t.emoji}</span>
+                    <span className="team-chip-name">{t.name}</span>
+                    <span className="team-chip-remove">✕</span>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+
+          {draft ? (
+            <div className="custom-team-form" style={{ '--chip-color': draft.color, '--chip-accent': draft.accent } as React.CSSProperties}>
+              <div className="custom-team-preview">{draft.emoji || '🏁'}</div>
+              <input
+                className="custom-team-name"
+                type="text"
+                value={draft.name}
+                placeholder="Team name"
+                maxLength={28}
+                onChange={e => setDraft(d => d && { ...d, name: e.target.value })}
+              />
+              <input
+                className="custom-team-emoji"
+                type="text"
+                value={draft.emoji}
+                placeholder="🏁"
+                maxLength={4}
+                onChange={e => setDraft(d => d && { ...d, emoji: e.target.value })}
+                aria-label="Team emoji"
+              />
+              <label className="custom-team-color" title="Primary color">
+                <input type="color" value={draft.color} onChange={e => setDraft(d => d && { ...d, color: e.target.value })} />
+              </label>
+              <label className="custom-team-color" title="Accent color">
+                <input type="color" value={draft.accent} onChange={e => setDraft(d => d && { ...d, accent: e.target.value })} />
+              </label>
+              <button type="button" className="custom-team-roll" onClick={rollDraftLook} title="Random look">🎲</button>
+              <button type="button" className="custom-team-add" onClick={addCustomTeam} disabled={teamCount >= MAX_TEAMS}>Add</button>
+              <button type="button" className="custom-team-cancel" onClick={() => setDraft(null)}>Cancel</button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              className="create-team-btn"
+              onClick={openDraft}
+              disabled={teamCount >= MAX_TEAMS}
+            >
+              ＋ Create a team
+            </button>
+          )}
         </section>
 
         <section className="founding-section">
@@ -149,7 +304,11 @@ function FoundingScreen({ onFound, onBack }: FoundingScreenProps) {
           disabled={!canFound}
           onClick={handleFound}
         >
-          {canFound ? '⚜️ Found it — the inaugural race runs now' : 'Choose a god to continue'}
+          {canFound
+            ? '⚜️ Found it — the inaugural race runs now'
+            : !teamsOk
+              ? `Pick ${MIN_TEAMS}–${MAX_TEAMS} teams to continue`
+              : 'Choose a god to continue'}
         </button>
       </div>
     </div>
