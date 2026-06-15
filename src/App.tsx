@@ -7,6 +7,7 @@ import WatchMode from './WatchMode';
 import Compendium from './Compendium';
 import FoundingScreen, { FoundingChoices } from './league/ui/FoundingScreen';
 import LeagueScreen from './league/ui/LeagueScreen';
+import GridScreen from './league/ui/GridScreen';
 import { createLeague } from './league/league';
 import { leagueNameForSeed } from './generators/leagueName';
 import { LeagueState, LiveRace } from './league/types';
@@ -17,7 +18,7 @@ import { mulberry32, deriveSeed, randomSeed } from './engine/rng';
 import { generateTrack, getRandomTracks, getTrackById, getDynamicEventDescription, Track } from './generators/tracks';
 import './App.css';
 
-type AppScreen = 'main-menu' | 'setup' | 'race' | 'compendium' | 'founding' | 'league' | 'broadcast';
+type AppScreen = 'main-menu' | 'setup' | 'race' | 'compendium' | 'founding' | 'league' | 'broadcast' | 'grid';
 type RaceSpeed = 0.5 | 1 | 2 | 10;
 
 function App() {
@@ -290,9 +291,15 @@ function App() {
         onLeagueUpdate={setLeague}
         onWatchLive={live => handleWatchLive(league, live)}
         onExit={handleBackToMainMenu}
+        onOpenGrid={() => setScreen('grid')}
         onDissolve={handleDissolveLeague}
       />
     );
+  }
+
+  // The Grid: the league's roster as its own screen — driver-detail hub.
+  if (screen === 'grid' && league) {
+    return <GridScreen league={league} onExit={() => setScreen('league')} />;
   }
 
   // Commissioner Mode: live broadcast (spectator — no controls, no countdown)

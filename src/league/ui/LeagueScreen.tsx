@@ -19,7 +19,6 @@ import { getSeasonStandings, calculatePointsForPosition } from '../../types/seas
 import { getTrackById } from '../../generators/tracks';
 import { getTeamById } from '../../data/teams';
 import { getGodById } from '../gods';
-import GridSection from './GridSection';
 import PointsChart, { ChartSeries } from './PointsChart';
 import { LapChart } from '../../components/race';
 import { traceRace, raceReportForLeague } from '../raceTrace';
@@ -32,6 +31,8 @@ interface LeagueScreenProps {
   /** Join the broadcast of a race that's on the air right now. */
   onWatchLive: (live: LiveRace) => void;
   onExit: () => void;
+  /** Open the Grid screen — the roster / driver-detail hub. */
+  onOpenGrid: () => void;
   onDissolve: () => void;
 }
 
@@ -239,15 +240,12 @@ function DigestCard({ league, digest, defaultOpen = false }: {
   );
 }
 
-function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onDissolve }: LeagueScreenProps) {
+function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onOpenGrid, onDissolve }: LeagueScreenProps) {
   const [live, setLive] = useState<LiveRace | null>(null);
   const [now, setNow] = useState(() => Date.now());
   const [confirmDissolve, setConfirmDissolve] = useState(false);
   const [reportCopied, setReportCopied] = useState(false);
   const [standingsView, setStandingsView] = useState<'drivers' | 'teams'>('drivers');
-  // The Grid is browsing material — front and center on a fresh league,
-  // tucked away once the season is producing results.
-  const [gridOpen, setGridOpen] = useState(league.settledThrough < 0);
   // Settle must not run twice for the same moment (StrictMode double-effects),
   // and the 1s clock must not re-run the live race's sim every tick.
   const settlingRef = useRef(false);
@@ -464,6 +462,7 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onDissolve 
       <div className="league-content">
         <div className="league-topbar">
           <button className="league-back-btn" onClick={onExit}>← Menu</button>
+          <button className="league-grid-tab" onClick={onOpenGrid}>👥 The Grid →</button>
           <span className="league-progress">
             {league.settledThrough + 1}/{league.schedule.length} races run
           </span>
@@ -593,17 +592,6 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onDissolve 
                 </div>
               </section>
             )}
-
-            {/* The Grid: teams, cars, and drivers — tap a driver for the lore */}
-            <section className="league-section grid-section">
-              <button className="league-section-title section-toggle" onClick={() => setGridOpen(!gridOpen)}>
-                The Grid
-                <span className="section-toggle-hint">
-                  {gridOpen ? '▾' : `${league.roster.length} drivers ▸`}
-                </span>
-              </button>
-              {gridOpen && <GridSection roster={league.roster} />}
-            </section>
 
             {/* The season as one timeline (#176): "now" anchored, the schedule
                 flowing down from it, then results newest-first beneath. Merges

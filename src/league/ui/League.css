@@ -45,11 +45,10 @@
 @media (max-width: 920px) {
   .league-columns { display: flex; flex-direction: column; }
   .league-main, .league-rail { display: contents; }
-  /* Single column reads: standings, chart, grid, then the season timeline */
+  /* Single column reads: standings, chart, then the season timeline */
   .league-standings-section { order: 1; }
   .league-chart-section { order: 2; }
-  .grid-section { order: 3; }
-  .timeline-section { order: 4; }
+  .timeline-section { order: 3; }
 }
 
 .league-topbar {
@@ -69,6 +68,19 @@
   font-size: 0.9rem;
 }
 .league-back-btn:hover { border-color: #3a3a44; color: #fff; }
+
+/* The Grid tab — nav to the roster / driver-detail screen */
+.league-grid-tab {
+  background: rgba(20, 20, 24, 0.8);
+  border: 1px solid #3a2e52;
+  color: #c4b4e0;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-family: inherit;
+}
+.league-grid-tab:hover { border-color: #6a4a8a; color: #fff; }
 
 .league-progress {
   color: #666;
@@ -560,6 +572,32 @@ button.section-toggle:hover { color: #bbb; }
 @media (max-width: 560px) {
   .grid-teams { grid-template-columns: 1fr; }
 }
+
+/* The Grid screen: full-width, responsive multi-column so the roster breathes */
+.grid-teams-full {
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 12px;
+}
+
+/* Per-driver season line in the detail dive (Grid screen) */
+.grid-driver-pts {
+  margin-left: auto;
+  color: #9a9aa8;
+  font-size: 0.78rem;
+  font-family: var(--font-mono), monospace;
+  font-variant-numeric: tabular-nums;
+}
+.grid-driver-season {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid #1e1e26;
+  font-size: 0.82rem;
+  color: #888;
+}
+.grid-season-stat b { color: #ddd; font-variant-numeric: tabular-nums; }
 
 .grid-team-card {
   background: rgba(20, 20, 24, 0.8);
