@@ -76,12 +76,12 @@ function eventIcon(ev: RaceEvent): string {
   return EVENT_ICONS[ev.type] ?? '•';
 }
 
-function DigestCard({ league, digest, defaultOpen = false }: {
+function DigestCard({ league, digest, open, onToggle }: {
   league: LeagueState;
   digest: RaceDigest;
-  defaultOpen?: boolean;
+  open: boolean;
+  onToggle: () => void;
 }) {
-  const [open, setOpen] = useState(defaultOpen);
   const [showTrace, setShowTrace] = useState(false);
   const [reportCopied, setReportCopied] = useState(false);
   // The replay costs one headless sim — run it only when asked, then cache.
@@ -106,7 +106,7 @@ function DigestCard({ league, digest, defaultOpen = false }: {
 
   return (
     <div className={`digest-card ${open ? 'open' : ''}`}>
-      <button className="digest-summary" onClick={() => setOpen(!open)}>
+      <button className="digest-summary" onClick={onToggle}>
         <span className="digest-race-no">R{digest.index + 1}</span>
         <span className="digest-track">
           {digest.trackEmoji} {digest.trackName}
@@ -246,6 +246,20 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onOpenGrid,
   const [confirmDissolve, setConfirmDissolve] = useState(false);
   const [reportCopied, setReportCopied] = useState(false);
   const [standingsView, setStandingsView] = useState<'drivers' | 'teams'>('drivers');
+  // Which settled races are expanded in the Results timeline. The season ribbon
+  // taps into this — clicking a race cell opens that digest and scrolls to it.
+  const [openRaces, setOpenRaces] = useState<Set<number>>(new Set());
+  const toggleRace = (i: number) => setOpenRaces(prev => {
+    const next = new Set(prev);
+    next.has(i) ? next.delete(i) : next.add(i);
+    return next;
+  });
+  const openRace = (i: number) => {
+    setOpenRaces(prev => new Set(prev).add(i));
+    requestAnimationFrame(() =>
+      document.getElementById(`digest-${i}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    );
+  };
   // Settle must not run twice for the same moment (StrictMode double-effects),
   // and the 1s clock must not re-run the live race's sim every tick.
   const settlingRef = useRef(false);
@@ -254,9 +268,6 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onOpenGrid,
   const god = getGodById(league.setup.godId);
   const over = isSeasonOver(league);
   const nextAt = nextRaceAt(league);
-  // Cadences shorter than a typical broadcast (~5 min) queue continuously:
-  // every scheduled time after the next race is fiction, so don't print them.
-  const backToBack = league.setup.raceIntervalMs <= 10 * 60_000;
 
   const settleNow = useCallback(() => {
     if (settlingRef.current) return;
@@ -308,8 +319,9 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onOpenGrid,
   const champion = over && standings.length > 0 ? driver(standings[0].driverId) : null;
   // The season as one timeline (#176): remaining races soonest-first (the next
   // one is the "now" anchor), settled races newest-first as the rich digests.
-  const upcoming = league.schedule.filter(r => r.index > league.settledThrough);
   const results = [...league.digests].sort((a, b) => b.index - a.index);
+  // Winner per settled race, for the season ribbon's marbles.
+  const winnerByRace = new Map(league.digests.map(d => [d.index, d.finishOrder[0]]));
   const hasStandings = standings.length > 0 && league.settledThrough >= 0;
   const raceCount = league.settledThrough + 1;
 
@@ -548,6 +560,54 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onOpenGrid,
           </section>
         ) : null}
 
+        {/* The season ribbon (#176 follow-up): the whole calendar as one
+            horizontal strip. Settled races show the winner's marble; the
+            current race is the lit "now" cell; upcoming show track + forecast.
+            Tap a settled cell to open its result below. */}
+        {league.schedule.length > 0 && (
+          <div className="season-ribbon" role="list">
+            {league.schedule.map(race => {
+              const track = getTrackById(race.trackId);
+              const settled = race.index <= league.settledThrough;
+              const isLiveRace = !!live && race.index === live.index && now < live.endsAt;
+              const isNext = !settled && !isLiveRace && race.index === league.settledThrough + 1;
+              const winner = settled ? driver(winnerByRace.get(race.index) ?? -1) : null;
+              const forecast = weatherForRace(league.leagueSeed, race.index);
+              const tags = intrinsicTrackTags(race.trackId);
+              const cls = `ribbon-cell ${settled ? 'settled' : ''} ${isLiveRace ? 'live' : ''} ${isNext ? 'next' : ''}`;
+              return (
+                <button
+                  key={race.index}
+                  className={cls}
+                  style={winner ? { '--win-color': winner.color } as React.CSSProperties : undefined}
+                  onClick={() => settled ? openRace(race.index) : undefined}
+                  disabled={!settled}
+                  title={track?.name ?? race.trackId}
+                  role="listitem"
+                >
+                  <span className="ribbon-rno">R{race.index + 1}</span>
+                  <span className="ribbon-track">{track?.funEmoji ?? '🏁'}</span>
+                  <span className="ribbon-foot">
+                    {settled ? (
+                      <TeamMarble color={winner?.color} accentColor={winner?.accentColor}
+                        emoji={winner?.emoji} size={18} slot={winner?.driverSlot} />
+                    ) : isLiveRace ? (
+                      <span className="ribbon-live">🔴</span>
+                    ) : isNext ? (
+                      <span className="ribbon-next-when">{nextAt !== null && nextAt > now ? formatCountdown(nextAt - now) : 'next'}</span>
+                    ) : (
+                      <span className="ribbon-conditions">
+                        {tags.slice(0, 1).map(t => <span key={t.id} title={t.name}>{t.emoji}</span>)}
+                        {forecast.id !== 'clear' && <span title={forecast.name}>{forecast.emoji}</span>}
+                      </span>
+                    )}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         {/* Desktop: feed on the left, data rail on the right.
             Mobile: wrappers dissolve (display: contents) and sections re-order. */}
         <div className="league-columns">
@@ -593,62 +653,26 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onOpenGrid,
               </section>
             )}
 
-            {/* The season as one timeline (#176): "now" anchored, the schedule
-                flowing down from it, then results newest-first beneath. Merges
-                the old Chronicle + Calendar — no information split. */}
-            <section className="league-section timeline-section">
-              <h2 className="league-section-title">Season</h2>
-
-              {/* Up next: remaining races, soonest first. The first is the
-                  "now" anchor — its real countdown (or on-air state); the rest
-                  only say what they follow (queue times after it are fiction). */}
-              {!over && upcoming.length > 0 && (
-                <div className="timeline-upnext">
-                  <div className="timeline-subhead">Up next</div>
-                  <ul className="timeline-schedule">
-                    {upcoming.map(race => {
-                      const track = getTrackById(race.trackId);
-                      const isLiveRace = !!live && race.index === live.index && now < live.endsAt;
-                      const isAnchor = race.index === league.settledThrough + 1;
-                      let when: React.ReactNode;
-                      if (isLiveRace) when = <span className="tl-onair">🔴 on the air</span>;
-                      else if (isAnchor) when = nextAt !== null && nextAt > now ? formatCountdown(nextAt - now) : 'up next';
-                      else if (backToBack) when = `follows R${race.index}`;
-                      else when = new Date(race.scheduledAt).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' });
-                      const forecast = weatherForRace(league.leagueSeed, race.index);
-                      const tags = intrinsicTrackTags(race.trackId);
-                      return (
-                        <li key={race.index} className={`timeline-up ${isAnchor ? 'anchor' : ''} ${isLiveRace ? 'live' : ''}`}>
-                          <span className="tl-race-no">R{race.index + 1}</span>
-                          <span className="tl-track">
-                            {track?.funEmoji} {track?.name ?? race.trackId}
-                            <span className="tl-conditions">
-                              {tags.map(t => (
-                                <span key={t.id} className="tl-condition" title={t.name}>{t.emoji}</span>
-                              ))}
-                              {forecast.id !== 'clear' && (
-                                <span className="tl-condition" title={`Forecast: ${forecast.name}`}>{forecast.emoji}</span>
-                              )}
-                            </span>
-                          </span>
-                          <span className="tl-when">{when}</span>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
-              )}
-
-              {/* Results: every settled race, newest first — the rich digests. */}
-              {results.length > 0 && (
+            {/* Results: every settled race, newest first — the rich digests.
+                The season ribbon up top owns the schedule + the "now" anchor;
+                this is the deep-dive (tap a ribbon cell to open one here). */}
+            {results.length > 0 && (
+              <section className="league-section timeline-section">
+                <h2 className="league-section-title">Results</h2>
                 <div className="timeline-results">
-                  <div className="timeline-subhead">Results</div>
                   {results.map(d => (
-                    <DigestCard key={d.index} league={league} digest={d} />
+                    <div id={`digest-${d.index}`} key={d.index}>
+                      <DigestCard
+                        league={league}
+                        digest={d}
+                        open={openRaces.has(d.index)}
+                        onToggle={() => toggleRace(d.index)}
+                      />
+                    </div>
                   ))}
                 </div>
-              )}
-            </section>
+              </section>
+            )}
           </div>
 
           <aside className="league-rail">

@@ -494,6 +494,72 @@ button.section-toggle:hover { color: #bbb; }
   font-variant-numeric: tabular-nums;
 }
 
+/* === Season ribbon (#176 follow-up): the calendar as a horizontal strip === */
+.season-ribbon {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 4px 2px 10px;
+  margin-bottom: 16px;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+.ribbon-cell {
+  flex: 0 0 auto;
+  width: 58px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 8px 4px;
+  background: rgba(20, 20, 24, 0.8);
+  border: 1px solid #23232c;
+  border-radius: 10px;
+  color: #888;
+  font-family: inherit;
+  cursor: default;
+}
+.ribbon-cell.settled {
+  cursor: pointer;
+  /* a hairline of the winner's color along the bottom */
+  border-bottom: 2px solid var(--win-color, #444);
+}
+.ribbon-cell.settled:hover { border-color: var(--win-color, #4a3a5a); transform: translateY(-1px); }
+.ribbon-cell.next {
+  border-color: #6a4a8a;
+  background: linear-gradient(180deg, color-mix(in srgb, #6a4a8a 22%, transparent), rgba(20,20,24,0.8));
+  color: #fff;
+}
+.ribbon-cell.live {
+  border-color: #f87171;
+  background: linear-gradient(180deg, rgba(248,113,113,0.18), rgba(20,20,24,0.8));
+  color: #fff;
+}
+.ribbon-rno {
+  font-size: 0.68rem;
+  font-family: var(--font-mono), monospace;
+  color: #666;
+}
+.ribbon-cell.next .ribbon-rno, .ribbon-cell.live .ribbon-rno { color: #c4b4e0; }
+.ribbon-track { font-size: 1.25rem; line-height: 1; }
+.ribbon-foot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 18px;
+  font-size: 0.72rem;
+}
+.ribbon-next-when {
+  font-family: var(--font-mono), monospace;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: #c4b4e0;
+  font-size: 0.62rem;
+}
+.ribbon-live { font-size: 0.7rem; }
+.ribbon-conditions { display: inline-flex; gap: 1px; opacity: 0.8; }
+.ribbon-cell:disabled { opacity: 1; }
+
 /* === Season timeline (#176): Up-next schedule + Results digests in one === */
 
 .timeline-subhead {
