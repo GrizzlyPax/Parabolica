@@ -4,19 +4,27 @@
 
 import { mulberry32, deriveSeed } from '../engine/rng';
 import { getTagById } from '../data/tags';
-import { generateRosterFromTeams } from '../generators/drivers';
+import { getTeamsByIds, Team } from '../data/teams';
+import { generateRosterFromTeamList } from '../generators/drivers';
 import { generateCarsForKingdoms } from '../generators/cars';
 import { RosterDriver } from '../RaceEngine';
 import { createInitialSeasonState } from '../types/season';
 import { LeagueSetupConfig, LeagueState, ScheduledRace } from './types';
 import { version as engineVersion } from '../../package.json';
 
-/** Build the genesis grid for a league seed: drivers + cars, tags attached. */
-export function generateGenesisRoster(leagueSeed: number, teamIds: string[]): RosterDriver[] {
+/** Build the genesis grid for a league seed: drivers + cars, tags attached.
+ * The grid is the registry teams (by id) plus any player-created customTeams,
+ * in that order. */
+export function generateGenesisRoster(
+  leagueSeed: number,
+  teamIds: string[],
+  customTeams: Team[] = []
+): RosterDriver[] {
+  const teams = [...getTeamsByIds(teamIds), ...customTeams];
   const driverRng = mulberry32(deriveSeed(leagueSeed, 'genesis', 'drivers'));
   const carRng = mulberry32(deriveSeed(leagueSeed, 'genesis', 'cars'));
-  const roster = generateRosterFromTeams(teamIds, driverRng);
-  const cars = generateCarsForKingdoms(teamIds, carRng);
+  const roster = generateRosterFromTeamList(teams, driverRng);
+  const cars = generateCarsForKingdoms(teams.map(t => t.id), carRng);
 
   return roster.map(driver => {
     const car = cars.get(driver.kingdomId);
@@ -45,7 +53,7 @@ export function buildSchedule(leagueSeed: number, setup: LeagueSetupConfig): Sch
 }
 
 export function createLeague(leagueSeed: number, setup: LeagueSetupConfig): LeagueState {
-  const roster = generateGenesisRoster(leagueSeed, setup.teamIds);
+  const roster = generateGenesisRoster(leagueSeed, setup.teamIds, setup.customTeams);
   return {
     engineVersion,
     leagueSeed,

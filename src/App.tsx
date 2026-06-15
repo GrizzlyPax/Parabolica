@@ -15,7 +15,6 @@ import { CANON_VARIABLES } from './simlab/types';
 import { saveLeagueState, loadLeagueState, clearLeagueState } from './storage/persistence';
 import { mulberry32, deriveSeed, randomSeed } from './engine/rng';
 import { generateTrack, getRandomTracks, getTrackById, getDynamicEventDescription, Track } from './generators/tracks';
-import { TEAMS } from './data/teams';
 import './App.css';
 
 type AppScreen = 'main-menu' | 'setup' | 'race' | 'compendium' | 'founding' | 'league' | 'broadcast';
@@ -99,7 +98,8 @@ function App() {
       // Unnamed leagues are christened by their seed — "The Molten Circuit" (#185).
       name: choices.name || leagueNameForSeed(leagueSeed),
       godId: choices.godId,
-      teamIds: TEAMS.map(t => t.id),
+      teamIds: choices.teamIds,
+      customTeams: choices.customTeams,
       trackIds,
       raceIntervalMs: choices.raceIntervalMs,
       createdAt: Date.now(),

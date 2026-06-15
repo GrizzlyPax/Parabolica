@@ -7,13 +7,19 @@
 
 import { RosterDriver, RaceEvent } from '../RaceEngine';
 import { SeasonState } from '../types/season';
+import { Team } from '../data/teams';
 
 /** Choices made at league founding. Immutable for the life of the run. */
 export interface LeagueSetupConfig {
   name: string;
   /** Patron god id. Placeholder string until gods land (build plan PR 5). */
   godId: string;
+  /** Registry teams (preset + historic) on the grid, by id. */
   teamIds: string[];
+  /** Player-created teams on the grid — full definitions, since they aren't in
+   * the static registry. Appended after teamIds in grid order. Their identity
+   * is baked into the generated roster, so they survive persistence/replay. */
+  customTeams?: Team[];
   /** Calendar in running order (one entry per race). */
   trackIds: string[];
   /** Wall-clock ms between race starts (e.g. 3h = 10_800_000). */

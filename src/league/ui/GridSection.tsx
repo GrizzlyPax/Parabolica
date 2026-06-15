@@ -82,7 +82,7 @@ function GridSection({ roster }: { roster: RosterDriver[] }) {
         return (
           <div key={kingdomId} className="grid-team-card" style={{ '--team-color': lead?.color } as React.CSSProperties}>
             <div className="grid-team-header">
-              <span className="grid-team-name">{team?.emoji} {team?.name ?? lead?.teamName ?? kingdomId}</span>
+              <span className="grid-team-name">{team?.emoji ?? lead?.emoji} {team?.name ?? lead?.teamName ?? kingdomId}</span>
               {lead?.teamTag && <TagChip tag={lead.teamTag} />}
             </div>
             {lead?.carName && (

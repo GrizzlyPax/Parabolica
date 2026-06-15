@@ -9,6 +9,7 @@ export interface Team {
   accentColor: string;  // Secondary/accent color
   description: string;  // Aesthetic vibe
   isHistoric?: boolean; // Historic teams (unlockable)
+  isCustom?: boolean;   // Player-created at league founding
   tags?: string[];      // Team-specific tag IDs (to be assigned)
 }
 
@@ -245,6 +246,29 @@ export function getRandomTeamsIncludingHistoric(count: number = 11): Team[] {
 // Get teams by their IDs
 export function getTeamsByIds(ids: string[]): Team[] {
   return ids.map(id => getTeamById(id)).filter((t): t is Team => t !== undefined);
+}
+
+/** Mint a player-created team. The id is slugged from the name + a short
+ * unique suffix so two "Team Banana"s never collide on the grid. Custom teams
+ * live only in their league's setup — never the static registry — so their
+ * identity is carried by the generated roster (driver color/emoji/teamName). */
+export function makeCustomTeam(
+  name: string,
+  emoji: string,
+  color: string,
+  accentColor: string,
+  uniqueSuffix: string
+): Team {
+  const slug = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'team';
+  return {
+    id: `custom-${slug}-${uniqueSuffix}`,
+    name: name.trim() || 'Custom Team',
+    emoji: emoji || '🏁',
+    color,
+    accentColor,
+    description: 'A team of the Commissioner\'s own making.',
+    isCustom: true,
+  };
 }
 
 // Legacy compatibility - map old function names

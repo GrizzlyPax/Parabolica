@@ -66,28 +66,40 @@ founded without a name is christened by its seed (`App.tsx`). Players still
 override by typing one. (Placeholder updated: "Leave blank to be named by the
 seed…")
 
-## 3. Team identity (#183) — `src/generators/teamIdentity.ts`
+## 3. Team identity (#183) — generator + grid composition at founding
 
-`generateTeamIdentities(rng, count)` returns `{ emoji, color, accentColor }`
-per team, generated as a **batch** so hues are spread evenly around the wheel
-(even spacing + seeded rotation + sub-step jitter) — 11 teams stay
-distinguishable across a 22-car field (tested: min adjacent hue gap > 8°).
-Colors are vivid and dark-broadcast-readable; the accent is an analogous,
-lighter shift. `teamIdentitiesForSeed(seed, count)` is the deterministic form.
+The procedural generator (`src/generators/teamIdentity.ts`,
+`generateTeamIdentities(rng, count)` → `{ emoji, color, accentColor }`, hues
+spread evenly so 11 teams stay distinguishable across a 22-car field, tested
+min hue gap > 8°) is **not** a silent override of the hand-crafted teams.
+Instead, per Pax's steer, it powers **grid composition at league founding**:
 
-**Status: built + tested, NOT wired into the default flow.** The hand-crafted
-`CURRENT_TEAMS` (with their curated colors, descriptions, tags) are still the
-default — I didn't want to override beloved team looks unilaterally. The
-existing color plumbing already consumes `driver.color`/`accentColor` (WatchMode
-CSS vars, LapChart strokes), so flipping a league onto procedural identities is
-a one-step override on the genesis roster.
+**The Founding screen now lets you build the grid** (`FoundingScreen.tsx`):
+- Toggle the preset 11 (`CURRENT_TEAMS`, all selected by default) in/out.
+- Toggle in **historic outfits** (`HISTORIC_TEAMS`).
+- **＋ Create a team** — name, emoji, and two native colour pickers (primary +
+  accent), with a 🎲 button that rolls a fresh look from
+  `generateTeamIdentities`. The procedural generator is the *suggestion* here,
+  never a forced override.
+- Flexible grid: **2–12 teams** (default 11). The count + car total is shown
+  live; founding is gated until it's valid.
 
-**Your calls before wiring it in:**
-- Replace hand-crafted team colors per-league, or keep names/colors and only
-  procedurally tint *new* universes? (I lean: opt-in per league, default off.)
-- Emoji pool: I went chaotic-fun (🦆🔥🦂🐙). Racing-themed instead? (#183 Q)
-- Coordinate with the icon-library research (#182) before colors flow to charts
-  everywhere.
+**Data flow.** Custom teams ride in `LeagueSetupConfig.customTeams: Team[]`
+(`makeCustomTeam()` mints a slugged, collision-safe id with `isCustom: true`).
+`generateGenesisRoster(seed, teamIds, customTeams)` resolves the grid as
+`getTeamsByIds(teamIds) ++ customTeams` and runs the normal seeded driver+car
+generation over it — so a custom team gets a procedurally-generated lineup and
+cars like anyone else. **Custom teams never enter the static registry**; their
+identity is baked into the generated roster (`driver.color/emoji/teamName`),
+which is what persistence stores and the league UI already falls back to
+(`team?.emoji ?? lead?.emoji`). No persistence migration needed.
+
+**Still open (your eyes / future):**
+- Emoji pool for the 🎲 helper is chaotic-fun (🦆🔥🦂🐙) — swap to a real icon
+  set with #182.
+- A "🎲 surprise me — fill the grid with random teams" button (whole-grid
+  procedural) is a natural add on top of the generator.
+- #184 pre-season screen is the place to *re-roll/rename* a team after founding.
 
 ---
 
