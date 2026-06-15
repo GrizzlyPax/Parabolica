@@ -308,8 +308,10 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onDissolve 
   const standings = useMemo(() => getSeasonStandings(league.season), [league.season]);
   const driver = (id: number) => league.roster.find(d => d.id === id);
   const champion = over && standings.length > 0 ? driver(standings[0].driverId) : null;
-  // Chronological: the season reads top-to-bottom like a story, R1 first
-  const chronicle = league.digests;
+  // The season as one timeline (#176): remaining races soonest-first (the next
+  // one is the "now" anchor), settled races newest-first as the rich digests.
+  const upcoming = league.schedule.filter(r => r.index > league.settledThrough);
+  const results = [...league.digests].sort((a, b) => b.index - a.index);
   const hasStandings = standings.length > 0 && league.settledThrough >= 0;
   const raceCount = league.settledThrough + 1;
 
@@ -545,20 +547,7 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onDissolve 
               📺 Watch
             </button>
           </section>
-        ) : nextAt !== null && (
-          <section className="league-next-race">
-            <span className="next-race-label">
-              Next: {(() => {
-                const next = league.schedule[league.settledThrough + 1];
-                const track = next ? getTrackById(next.trackId) : null;
-                return track ? `${track.funEmoji} ${track.name}` : '…';
-              })()}
-            </span>
-            <span className="next-race-countdown">
-              {nextAt <= now ? 'on the air…' : formatCountdown(nextAt - now)}
-            </span>
-          </section>
-        )}
+        ) : null}
 
         {/* Desktop: feed on the left, data rail on the right.
             Mobile: wrappers dissolve (display: contents) and sections re-order. */}
@@ -616,15 +605,62 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onDissolve 
               {gridOpen && <GridSection roster={league.roster} />}
             </section>
 
-            {/* Chronicle: every settled race, newest first */}
-            {chronicle.length > 0 && (
-              <section className="league-section chronicle-section">
-                <h2 className="league-section-title">Chronicle</h2>
-                {chronicle.map(d => (
-                  <DigestCard key={d.index} league={league} digest={d} />
-                ))}
-              </section>
-            )}
+            {/* The season as one timeline (#176): "now" anchored, the schedule
+                flowing down from it, then results newest-first beneath. Merges
+                the old Chronicle + Calendar — no information split. */}
+            <section className="league-section timeline-section">
+              <h2 className="league-section-title">Season</h2>
+
+              {/* Up next: remaining races, soonest first. The first is the
+                  "now" anchor — its real countdown (or on-air state); the rest
+                  only say what they follow (queue times after it are fiction). */}
+              {!over && upcoming.length > 0 && (
+                <div className="timeline-upnext">
+                  <div className="timeline-subhead">Up next</div>
+                  <ul className="timeline-schedule">
+                    {upcoming.map(race => {
+                      const track = getTrackById(race.trackId);
+                      const isLiveRace = !!live && race.index === live.index && now < live.endsAt;
+                      const isAnchor = race.index === league.settledThrough + 1;
+                      let when: React.ReactNode;
+                      if (isLiveRace) when = <span className="tl-onair">🔴 on the air</span>;
+                      else if (isAnchor) when = nextAt !== null && nextAt > now ? formatCountdown(nextAt - now) : 'up next';
+                      else if (backToBack) when = `follows R${race.index}`;
+                      else when = new Date(race.scheduledAt).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' });
+                      const forecast = weatherForRace(league.leagueSeed, race.index);
+                      const tags = intrinsicTrackTags(race.trackId);
+                      return (
+                        <li key={race.index} className={`timeline-up ${isAnchor ? 'anchor' : ''} ${isLiveRace ? 'live' : ''}`}>
+                          <span className="tl-race-no">R{race.index + 1}</span>
+                          <span className="tl-track">
+                            {track?.funEmoji} {track?.name ?? race.trackId}
+                            <span className="tl-conditions">
+                              {tags.map(t => (
+                                <span key={t.id} className="tl-condition" title={t.name}>{t.emoji}</span>
+                              ))}
+                              {forecast.id !== 'clear' && (
+                                <span className="tl-condition" title={`Forecast: ${forecast.name}`}>{forecast.emoji}</span>
+                              )}
+                            </span>
+                          </span>
+                          <span className="tl-when">{when}</span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              )}
+
+              {/* Results: every settled race, newest first — the rich digests. */}
+              {results.length > 0 && (
+                <div className="timeline-results">
+                  <div className="timeline-subhead">Results</div>
+                  {results.map(d => (
+                    <DigestCard key={d.index} league={league} digest={d} />
+                  ))}
+                </div>
+              )}
+            </section>
           </div>
 
           <aside className="league-rail">
@@ -695,60 +731,6 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onDissolve 
               </section>
             )}
 
-            {/* Calendar. Scheduled times are founding-time nominals; when races
-                queue back-to-back the real airtime depends on how long each
-                broadcast runs (safety cars, chaos), so printing exact clock
-                times would drift into lies. Only the next race's time is
-                queue-aware and trustworthy — everything later just says what
-                it follows. */}
-            <section className="league-section calendar-section">
-              <h2 className="league-section-title">Calendar</h2>
-              <ul className="league-calendar">
-                {league.schedule.map(race => {
-                  const track = getTrackById(race.trackId);
-                  const settled = race.index <= league.settledThrough;
-                  let when: React.ReactNode;
-                  if (settled) {
-                    when = '✅';
-                  } else if (live && race.index === live.index && now < live.endsAt) {
-                    when = <span className="cal-on-air">🔴 on the air</span>;
-                  } else if (race.index === league.settledThrough + 1) {
-                    // Queue-aware and exact: anchored to the last broadcast's end
-                    const at = nextRaceAt(league)!;
-                    when = at <= now
-                      ? 'up next'
-                      : new Date(at).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' });
-                  } else if (backToBack) {
-                    when = `follows R${race.index}`;
-                  } else {
-                    when = new Date(race.scheduledAt).toLocaleString([], {
-                      weekday: 'short', hour: 'numeric', minute: '2-digit',
-                    });
-                  }
-                  // Conditions are part of the fixed universe: the forecast is
-                  // real (deterministic), and the track's character is intrinsic.
-                  const forecast = weatherForRace(league.leagueSeed, race.index);
-                  const tags = intrinsicTrackTags(race.trackId);
-                  return (
-                    <li key={race.index} className={settled ? 'settled' : 'scheduled'}>
-                      <span className="cal-race-no">R{race.index + 1}</span>
-                      <span className="cal-track">
-                        {track?.funEmoji} {track?.name ?? race.trackId}
-                        <span className="cal-conditions">
-                          {tags.map(t => (
-                            <span key={t.id} className="cal-condition" title={t.name}>{t.emoji}</span>
-                          ))}
-                          {forecast.id !== 'clear' && (
-                            <span className="cal-condition" title={`Forecast: ${forecast.name}`}>{forecast.emoji}</span>
-                          )}
-                        </span>
-                      </span>
-                      <span className="cal-when">{when}</span>
-                    </li>
-                  );
-                })}
-              </ul>
-            </section>
           </aside>
         </div>
 

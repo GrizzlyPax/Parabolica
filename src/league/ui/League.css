@@ -45,12 +45,11 @@
 @media (max-width: 920px) {
   .league-columns { display: flex; flex-direction: column; }
   .league-main, .league-rail { display: contents; }
-  /* Single column reads: standings, chart, grid, calendar, chronicle */
+  /* Single column reads: standings, chart, grid, then the season timeline */
   .league-standings-section { order: 1; }
   .league-chart-section { order: 2; }
   .grid-section { order: 3; }
-  .calendar-section { order: 4; }
-  .chronicle-section { order: 5; }
+  .timeline-section { order: 4; }
 }
 
 .league-topbar {
@@ -96,27 +95,6 @@
 .league-god-line strong { color: #b8a8d8; }
 
 /* === Next race / finale === */
-
-.league-next-race {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  background: rgba(20, 20, 24, 0.8);
-  border: 1px solid #2a2a34;
-  border-radius: 12px;
-  padding: 14px 18px;
-  margin-bottom: 16px;
-}
-
-.next-race-label { color: #ccc; font-size: 1rem; }
-
-.next-race-countdown {
-  font-family: var(--font-mono), monospace;
-  font-size: 1.4rem;
-  font-weight: 700;
-  color: #6ab882;
-  font-variant-numeric: tabular-nums;
-}
 
 .league-live-card {
   display: flex;
@@ -504,40 +482,72 @@ button.section-toggle:hover { color: #bbb; }
   font-variant-numeric: tabular-nums;
 }
 
-/* === Calendar === */
+/* === Season timeline (#176): Up-next schedule + Results digests in one === */
 
-.league-calendar {
+.timeline-subhead {
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #6a6a78;
+  margin: 4px 0 8px;
+}
+.timeline-results { margin-top: 18px; }
+
+.timeline-schedule {
   list-style: none;
-  margin: 0;
+  margin: 0 0 4px;
   padding: 0;
   font-size: 0.9rem;
 }
 
-.league-calendar li {
+.timeline-up {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 6px 4px;
+  padding: 7px 4px;
   border-top: 1px solid #1a1a22;
+  color: #9a9aa8;
 }
 
-.league-calendar li.settled { color: #666; }
+/* The "now" anchor: the next race, pulled forward and lit up. */
+.timeline-up.anchor {
+  color: #fff;
+  border-top: none;
+  background: linear-gradient(90deg, color-mix(in srgb, #6a4a8a 22%, transparent), transparent);
+  border-left: 3px solid #8a6ab8;
+  border-radius: 8px;
+  padding: 11px 10px;
+  margin-bottom: 4px;
+}
+.timeline-up.anchor.live { border-left-color: #f87171; background: linear-gradient(90deg, rgba(248,113,113,0.16), transparent); }
 
-.cal-race-no {
+.tl-race-no {
   color: #666;
   font-size: 0.8rem;
   min-width: 28px;
   font-family: var(--font-mono), monospace;
 }
-.cal-track { flex: 1; font-family: var(--font-display), var(--font-emoji); font-size: 0.95rem; }
-.cal-when {
+.timeline-up.anchor .tl-race-no { color: #b89ad8; }
+
+.tl-track { flex: 1; font-family: var(--font-display), var(--font-emoji); font-size: 0.95rem; }
+.timeline-up.anchor .tl-track { font-size: 1.05rem; }
+
+.tl-when {
   color: #888;
   font-size: 0.85rem;
   font-family: var(--font-mono), monospace;
   font-variant-numeric: tabular-nums;
 }
+.timeline-up.anchor .tl-when { color: #c4b4e0; font-weight: 700; font-size: 0.95rem; }
+.tl-onair { color: #f87171; font-weight: 700; }
 
-.cal-on-air { color: #f87171; font-weight: 700; }
+.tl-conditions {
+  display: inline-flex;
+  gap: 2px;
+  margin-left: 6px;
+  font-size: 0.8rem;
+  opacity: 0.85;
+}
 
 /* === The Grid === */
 
@@ -930,15 +940,6 @@ button.section-toggle:hover { color: #bbb; }
   border-color: #2a2a34;
   color: #666;
   cursor: default;
-}
-
-/* Calendar condition emojis (track character + weather forecast) */
-.cal-conditions {
-  display: inline-flex;
-  gap: 2px;
-  margin-left: 6px;
-  font-size: 0.8rem;
-  opacity: 0.85;
 }
 
 /* === Race replay in the chronicle (#173): lap chart + strategy table === */
