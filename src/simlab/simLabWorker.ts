@@ -37,30 +37,41 @@ function createRosterWithCars(roster: GeneratedDriver[], cars: Map<string, Gener
 
 let aborted = false;
 
-// Handle messages from main thread
-self.onmessage = (e: MessageEvent<WorkerInMessage>) => {
-  if (e.data.type === 'ABORT') {
-    aborted = true;
-    return;
-  }
+// True when running inside a Web Worker. This module is also imported directly
+// by the headless node runner (scripts/simlab-run.mjs), where `self` doesn't
+// exist — all worker-only messaging is gated behind this flag.
+const isWorkerContext =
+  typeof self !== 'undefined' && typeof (self as any).postMessage === 'function';
 
-  if (e.data.type === 'START') {
-    aborted = false;
-    runSimulation(e.data.config, e.data.variables, e.data.label);
-  }
-};
+// Handle messages from main thread (worker context only)
+if (isWorkerContext) {
+  self.onmessage = (e: MessageEvent<WorkerInMessage>) => {
+    if (e.data.type === 'ABORT') {
+      aborted = true;
+      return;
+    }
+
+    if (e.data.type === 'START') {
+      aborted = false;
+      runSimulation(e.data.config, e.data.variables, e.data.label);
+    }
+  };
+}
 
 function postProgress(completed: number, total: number, currentTrack: string) {
+  if (!isWorkerContext) return;
   const msg: WorkerOutMessage = { type: 'PROGRESS', completed, total, currentTrack };
   self.postMessage(msg);
 }
 
 function postComplete(results: SimLabResults) {
+  if (!isWorkerContext) return;
   const msg: WorkerOutMessage = { type: 'COMPLETE', results };
   self.postMessage(msg);
 }
 
 function postError(message: string) {
+  if (!isWorkerContext) return;
   const msg: WorkerOutMessage = { type: 'ERROR', message };
   self.postMessage(msg);
 }
@@ -792,7 +803,7 @@ function finalizeResults(acc: SimLabAccumulators, config: SimLabConfig, executio
 }
 
 // Main simulation loop
-async function runSimulation(config: SimLabConfig, variables?: SimVariables, _label?: 'canon' | 'heretic') {
+export async function runSimulation(config: SimLabConfig, variables?: SimVariables, _label?: 'canon' | 'heretic'): Promise<SimLabResults | undefined> {
   const startTime = performance.now();
 
   try {
@@ -891,8 +902,10 @@ async function runSimulation(config: SimLabConfig, variables?: SimVariables, _la
     const executionTimeMs = performance.now() - startTime;
     const results = finalizeResults(acc, config, executionTimeMs);
     postComplete(results);
+    return results;
 
   } catch (error) {
     postError(error instanceof Error ? error.message : 'Unknown error during simulation');
+    return undefined;
   }
 }
