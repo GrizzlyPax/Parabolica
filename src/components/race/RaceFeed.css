@@ -4,7 +4,7 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
-  background: #000;
+  background: var(--pw-ground);
   padding: 0.75rem 1rem 1rem;
 }
 
@@ -20,7 +20,7 @@
   font-family: var(--font-display), var(--font-emoji);
   font-size: 0.8rem;
   font-weight: 600;
-  color: #888;
+  color: var(--pw-text-3);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -28,10 +28,10 @@
 .story-feed-count {
   font-family: var(--font-mono), var(--font-emoji);
   font-size: 0.7rem;
-  color: #666;
+  color: var(--pw-text-3);
   padding: 0.15rem 0.4rem;
-  background: #111;
-  border-radius: 4px;
+  background: var(--pw-surface);
+  border-radius: 6px;
 }
 
 .story-feed-list {
@@ -43,7 +43,7 @@
   /* Cap so the feed scrolls instead of growing the page forever */
   max-height: 42vh;
   scrollbar-width: thin;
-  scrollbar-color: #333 transparent;
+  scrollbar-color: var(--pw-border) transparent;
 }
 
 .story-item {
@@ -51,8 +51,8 @@
   align-items: flex-start;
   gap: 0.6rem;
   padding: 0.6rem 0.7rem;
-  background: #0a0a0a;
-  border-left: 3px solid var(--story-accent, #444);
+  background: var(--pw-ground);
+  border-left: 3px solid var(--story-accent, var(--pw-border-strong));
   animation: story-enter 0.35s ease-out;
 }
 
@@ -92,35 +92,35 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #999;
+  color: var(--pw-text-2);
 }
 
 .story-lap {
   font-family: var(--font-mono), var(--font-emoji);
   font-size: 0.62rem;
-  color: #555;
+  color: var(--pw-border-strong);
 }
 
 .story-text {
   margin: 0;
   font-size: 0.85rem;
   line-height: 1.45;
-  color: #c8c8c8;
+  color: var(--pw-text-2);
 }
 
 .story-driver-chip {
-  color: #fff;
+  color: var(--pw-text-1);
   font-weight: 600;
   white-space: nowrap;
 }
 
 /* Persona flavors */
 .story-marbles {
-  border-left-color: #a78bfa;
+  border-left-color: var(--pw-purple);
   background: linear-gradient(90deg, rgba(167, 139, 250, 0.07), transparent 60%);
 }
 .story-marbles .story-persona {
-  color: #a78bfa;
+  color: var(--pw-purple);
 }
 
 .story-track {
@@ -135,20 +135,20 @@
 .story-big {
   background: #121018;
   border-left-width: 4px;
-  border-left-color: var(--story-accent, #f59e0b);
+  border-left-color: var(--story-accent, var(--pw-yellow));
 }
 
 .story-big .story-text {
   font-size: 0.95rem;
-  color: #f0f0f0;
+  color: var(--pw-text-1);
   font-weight: 500;
 }
 
 .story-feed-empty {
   padding: 1.25rem 0.5rem;
-  color: #555;
+  color: var(--pw-border-strong);
   font-size: 0.8rem;
-  font-style: italic;
+  font-style: normal;
 }
 
 @media (min-width: 900px) {

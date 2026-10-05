@@ -6,7 +6,7 @@
   width: 100%;
   aspect-ratio: 5/3;
   min-height: 180px;
-  background: #000;
+  background: var(--pw-ground);
   border: none;
   border-radius: 0;
   overflow: hidden;

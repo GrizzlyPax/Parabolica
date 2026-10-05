@@ -9,13 +9,13 @@
 }
 
 .lap-chart .chart-tick {
-  fill: #5a5a64;
+  fill: var(--pw-text-3);
   font-size: 9px;
   font-family: var(--font-mono), monospace;
 }
 
 .chart-waiting {
-  color: #66666e;
+  color: var(--pw-text-3);
   font-size: 0.8rem;
   text-align: center;
   padding: 1.5rem 1rem;
@@ -24,13 +24,13 @@
 .lap-rank {
   font-size: 10px;
   font-weight: 700;
-  fill: #c8c8d2;
+  fill: var(--pw-text-2);
   font-variant-numeric: tabular-nums;
   font-family: var(--font-mono), monospace;
 }
-.lap-rank.focused { fill: #fff; }
+.lap-rank.focused { fill: var(--pw-text-1); }
 .lap-rank.dnf {
-  fill: #ff6b6b;
+  fill: var(--pw-red-soft);
   font-size: 7.5px;
   letter-spacing: 0.04em;
 }
@@ -45,7 +45,7 @@
 .lap-dnf-mark {
   font-size: 10px;
   font-weight: 700;
-  fill: #ff6b6b;
+  fill: var(--pw-red-soft);
 }
 
 /* Compact-legend code labels (drivers): the Points-chart end-label look */
