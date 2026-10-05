@@ -20,28 +20,17 @@ interface MainMenuProps {
   league?: LeagueCardSummary | null;
 }
 
-function describeLeague(league: LeagueCardSummary): string {
-  if (league.nextAt === null && league.dueCount === 0) {
-    return `Season complete — ${league.total} races run. A champion awaits your judgment.`;
-  }
-  if (league.dueCount > 0) {
-    return `${league.dueCount} race${league.dueCount > 1 ? 's' : ''} ran while you were away. ${league.settled + league.dueCount}/${league.total} complete.`;
-  }
-  const mins = Math.max(1, Math.round((league.nextAt! - Date.now()) / 60000));
-  const when = mins >= 90 ? `${Math.round(mins / 60)}h` : `${mins}m`;
-  return `${league.settled}/${league.total} races run. Next race in ~${when}.`;
+function nextIn(league: LeagueCardSummary): string {
+  if (league.nextAt === null) return 'Season complete';
+  const mins = Math.max(1, Math.round((league.nextAt - Date.now()) / 60000));
+  if (mins >= 90) return `Next in ~${Math.round(mins / 60)}h`;
+  return `Next in ~${mins}m`;
 }
 
 function MainMenu({ onSingleRace, onCommissioner, onCompendium, league }: MainMenuProps) {
-  const [raceControlFlipped, setRaceControlFlipped] = useState(false);
+  const [unlocking, setUnlocking] = useState(false);
   const [password, setPassword] = useState('');
   const [passwordError, setPasswordError] = useState(false);
-
-  const handleRaceControlClick = () => {
-    setRaceControlFlipped(true);
-    setPassword('');
-    setPasswordError(false);
-  };
 
   const handlePasswordSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,122 +42,106 @@ function MainMenu({ onSingleRace, onCommissioner, onCompendium, league }: MainMe
     }
   };
 
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPassword(e.target.value);
-    setPasswordError(false);
-  };
+  const status = league
+    ? league.nextAt === null && league.dueCount === 0 ? { label: 'COMPLETE', tone: 'done' }
+      : league.dueCount > 0 ? { label: `${league.dueCount} RAN`, tone: 'due' }
+      : { label: 'RUNNING', tone: 'live' }
+    : { label: 'NEW', tone: 'new' };
+  const done = league ? league.settled + league.dueCount : 0;
 
   return (
     <div className="main-menu">
       <div className="main-menu-content">
-        <div className="main-menu-header">
-          <h1 className="main-menu-title">
-            Parabolica<span className="tm">TM</span>
-          </h1>
-          <p className="main-menu-subtitle">Racing, where everything is fine.</p>
-        </div>
+        <header className="mm-header">
+          <svg className="mm-curve" width="360" height="120" viewBox="0 0 360 120" fill="none" aria-hidden="true">
+            <path d="M0 108 C 150 108 270 100 318 52 C 338 32 344 16 346 0" stroke="#26262E" strokeWidth="10" strokeLinecap="round" />
+            <path d="M0 108 C 150 108 270 100 318 52 C 338 32 344 16 346 0" stroke="#34343E" strokeWidth="1" strokeDasharray="2 6" />
+            <circle cx="318" cy="52" r="5" fill="var(--pw-purple)" />
+          </svg>
+          <h1 className="mm-title">Parabolica<span className="mm-tm">TM</span></h1>
+          <p className="mm-sub">Racing, where everything is fine.</p>
+        </header>
 
-        {/* Marble counter strip */}
-        <div className="marble-counter-strip">
-          <div className="marble"></div>
-          <div className="marble"></div>
-          <div className="marble"></div>
-          <div className="marble"></div>
-        </div>
-
-        <div className="mode-selection">
-          {/* Commissioner Mode - the main event */}
-          <button className="mode-card tier-purple" onClick={onCommissioner}>
-            <div className="mode-card-header">
-              <div className="mode-icon">⚜️</div>
-              <div className="mode-title-row">
-                <div className="mode-info">
-                  <h2>{league ? league.name : 'Commissioner Mode'}</h2>
+        <section className="mm-section">
+          <div className="mm-k">Your league</div>
+          <button type="button" className="mm-hero" onClick={onCommissioner}>
+            <div className="mm-hero-top">
+              <span className="mm-eyebrow">Commissioner Mode</span>
+              <span className={`mm-pill tone-${status.tone}`}>
+                <span className="mm-dot" />{status.label}
+              </span>
+            </div>
+            <div className="mm-hero-name">{league ? league.name : 'Found a league'}</div>
+            <div className="mm-hero-line">
+              {league
+                ? `${done} of ${league.total} races run`
+                : 'A league that runs on the real clock. Races happen whether you watch or not.'}
+            </div>
+            {league && (
+              <>
+                <div className="mm-ribbon" aria-label={`Season progress: ${done} of ${league.total}`}>
+                  {Array.from({ length: league.total }, (_, i) => (
+                    <span key={i} className={`mm-ribbon-cell ${i < league.settled ? 'run' : i < done ? 'due' : ''}`} />
+                  ))}
                 </div>
-                <span className={`status-pill ${league && league.dueCount > 0 ? 'live' : 'secret'}`}>
-                  {league ? (league.dueCount > 0 ? 'Races ran!' : 'Running') : 'New'}
-                </span>
-              </div>
-            </div>
-            <div className="mode-info">
-              <p>
-                {league
-                  ? describeLeague(league)
-                  : 'Found a league that runs on the real clock — races happen whether you watch or not. Kneel to a god. Try to survive it.'}
-              </p>
-            </div>
+                <div className="mm-hero-foot">
+                  <span>{league.dueCount > 0 ? `${league.dueCount} race${league.dueCount > 1 ? 's' : ''} ran while you were away` : nextIn(league)}</span>
+                  <span className="mm-cta">{league.dueCount > 0 ? 'Check in →' : 'Open league →'}</span>
+                </div>
+              </>
+            )}
+            {!league && <div className="mm-hero-foot"><span /><span className="mm-cta">Found one →</span></div>}
           </button>
+        </section>
 
-          {/* Quick Race - Green/Live */}
-          <button className="mode-card tier-green" onClick={onSingleRace}>
-            <div className="mode-card-header">
-              <div className="mode-icon">🏎️</div>
-              <div className="mode-title-row">
-                <div className="mode-info">
-                  <h2>Quick Race</h2>
-                </div>
-                <span className="status-pill live">Live</span>
-              </div>
-            </div>
-            <div className="mode-info">
-              <p>Jump straight into a one-off race with a fresh grid and zero setup friction.</p>
-            </div>
-          </button>
-
-          {/* Race Control - Purple/Secret - Flip Card */}
-          <div className={`flip-card ${raceControlFlipped ? 'flipped' : ''}`}>
-            <div className="flip-card-inner">
-              {/* Front */}
-              <button className="mode-card tier-purple flip-card-front" onClick={handleRaceControlClick}>
-                <div className="mode-card-header">
-                  <div className="mode-icon">🎛️</div>
-                  <div className="mode-title-row">
-                    <div className="mode-info">
-                      <h2>Race Control</h2>
-                    </div>
-                    <span className="status-pill secret">Secret</span>
-                  </div>
-                </div>
-                <div className="mode-info">
-                  <p>For those who want to look a little closer.</p>
-                </div>
-              </button>
-
-              {/* Back - Password Form */}
-              <div
-                className="mode-card tier-purple flip-card-back"
-                onClick={() => setRaceControlFlipped(false)}
-              >
-                <div className="password-form-content" onClick={(e) => e.stopPropagation()}>
-                  <div className="password-icon">🎛️</div>
-                  <form onSubmit={handlePasswordSubmit} className="password-form">
-                    <input
-                      type="password"
-                      value={password}
-                      onChange={handlePasswordChange}
-                      placeholder="Enter code"
-                      className={`password-input ${passwordError ? 'error' : ''}`}
-                      autoFocus
-                    />
-                    <button type="submit" className="password-submit">Enter</button>
-                  </form>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="main-menu-footer">
-          <span className="version">
-            v{version}
-            <span className="version-built">
-              {' · '}
-              {new Date(__BUILD_TIME__).toLocaleString([], {
-                month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
-              })}
+        <section className="mm-section">
+          <div className="mm-k">Play</div>
+          <button type="button" className="mm-row" onClick={onSingleRace}>
+            <span className="mm-row-icon">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M4 17V3M4 4h10l-2 3 2 3H4" /></svg>
             </span>
-          </span>
-        </div>
+            <span className="mm-row-text">
+              <span className="mm-row-title">Quick Race</span>
+              <span className="mm-row-sub">One race. Pick your cards, edit the grid, go.</span>
+            </span>
+            <span className="mm-row-chev">›</span>
+          </button>
+
+          {!unlocking ? (
+            <button type="button" className="mm-row" onClick={() => setUnlocking(true)}>
+              <span className="mm-row-icon mm-row-icon-dim">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><circle cx="6" cy="6" r="2.5" /><circle cx="14" cy="14" r="2.5" /><path d="M8.5 6H17M3 14h8.5M6 3v-1M14 18v-1" /></svg>
+              </span>
+              <span className="mm-row-text">
+                <span className="mm-row-title">Race Control <span className="mm-tag">LOCKED</span></span>
+                <span className="mm-row-sub">For those who want to look a little closer.</span>
+              </span>
+              <span className="mm-row-chev">›</span>
+            </button>
+          ) : (
+            <form className="mm-row mm-row-form" onSubmit={handlePasswordSubmit}>
+              <span className="mm-row-icon mm-row-icon-dim">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><rect x="4" y="9" width="12" height="9" rx="2" /><path d="M7 9V6a3 3 0 0 1 6 0v3" /></svg>
+              </span>
+              <input
+                type="password"
+                value={password}
+                onChange={e => { setPassword(e.target.value); setPasswordError(false); }}
+                placeholder={passwordError ? 'Not it.' : 'Enter code'}
+                className={`mm-input ${passwordError ? 'error' : ''}`}
+                autoFocus
+                aria-label="Race Control code"
+              />
+              <button type="submit" className="mm-btn">Enter</button>
+              <button type="button" className="mm-btn mm-btn-ghost" onClick={() => { setUnlocking(false); setPassword(''); setPasswordError(false); }}>Cancel</button>
+            </form>
+          )}
+        </section>
+
+        <footer className="mm-footer">
+          <span>v{version} · {new Date(__BUILD_TIME__).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</span>
+          <span>playparabolica.com</span>
+        </footer>
       </div>
     </div>
   );

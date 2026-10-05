@@ -13,6 +13,8 @@ interface TagChipsProps {
   /** From the engine's getEffectStack — entries with source 'tag'. */
   stack?: EffectStackEntry[];
   max?: number;
+  /** Show the tag name next to the emoji (Grid screen, setup pages). */
+  showName?: boolean;
 }
 
 function pct(mult: number): string {
@@ -171,7 +173,7 @@ export function EffectChips({ entries, max = 2 }: { entries: EffectStackEntry[];
   );
 }
 
-export default function TagChips({ tags, stack, max = 4 }: TagChipsProps) {
+export default function TagChips({ tags, stack, max = 4, showName = false }: TagChipsProps) {
   const [open, setOpen] = useState<{ id: string; rect: DOMRect } | null>(null);
   if (tags.length === 0) return <span className="muted-cell">—</span>;
   const byId = new Map((stack ?? []).filter(e => e.source === 'tag').map(e => [e.id, e]));
@@ -184,7 +186,7 @@ export default function TagChips({ tags, stack, max = 4 }: TagChipsProps) {
           <button
             key={tag.id}
             type="button"
-            className={`tag-chip ${active ? 'active' : 'dormant'} ${open?.id === tag.id ? 'open' : ''}`}
+            className={`tag-chip ${showName ? 'named' : ''} ${active ? 'active' : 'dormant'} ${open?.id === tag.id ? 'open' : ''}`}
             title={`${tag.name} — ${entry?.reason ?? tag.description}`}
             aria-label={`${tag.name}, ${active ? 'active' : 'dormant'}`}
             onClick={(e) => {
@@ -193,7 +195,7 @@ export default function TagChips({ tags, stack, max = 4 }: TagChipsProps) {
               setOpen(open?.id === tag.id ? null : { id: tag.id, rect });
             }}
           >
-            {tag.emoji}
+            {tag.emoji}{showName && <span className="tag-chip-name">{tag.name}</span>}
           </button>
         );
       })}

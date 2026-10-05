@@ -108,6 +108,7 @@ function App() {
       trackIds,
       raceIntervalMs: choices.raceIntervalMs,
       createdAt: Date.now(),
+      ruleset: choices.ruleset,
     });
     saveLeagueState(newLeague);
     setLeague(newLeague);

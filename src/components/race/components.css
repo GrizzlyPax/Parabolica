@@ -507,3 +507,7 @@
 .history-chip.kind-tag { border-color: rgba(169, 139, 255, 0.4); }
 .history-chip.kind-crash { border-color: rgba(255, 90, 79, 0.45); }
 .history-chip.kind-error { border-color: rgba(242, 194, 48, 0.4); }
+.tag-chip.named { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px 3px 6px; border-radius: 999px; border-color: #26262e; background: rgba(255,255,255,0.05); font-size: 12px; }
+.tag-chip.named .tag-chip-name { font-family: var(--font-body); font-size: 12px; color: #d9d8d4; }
+.tag-chip.named.dormant { opacity: 0.85; filter: none; }
+.tag-chip.named.active { filter: none; border-color: rgba(169, 139, 255, 0.4); }
