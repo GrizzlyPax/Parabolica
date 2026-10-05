@@ -18,6 +18,7 @@ import RaceFeed from './components/race/RaceFeed';
 import { buildLapChartData } from './components/race/lapChartData';
 import { buildRaceReportMd } from './components/race/raceReportMd';
 import RaceCompleteBar from './components/race/RaceCompleteBar';
+import type { DriverHistoryEntry } from './components/race/types';
 import { version as appVersion } from '../package.json';
 import { voiceNotification, type FeedItem } from './feed/commentary';
 import './WatchMode.css';
@@ -1004,6 +1005,41 @@ function WatchMode({
     );
   };
 
+  // Per-driver history for the focus row: every notable thing that happened
+  // to a car, grouped by kind with the laps it happened on (#243).
+  const historiesMap = useMemo(() => {
+    const map = new Map<number, Map<string, DriverHistoryEntry>>();
+    const kindOf = (t: RaceEvent['type']): DriverHistoryEntry['kind'] | null => {
+      switch (t) {
+        case 'tag_activation': return 'tag';
+        case 'track_event_effect': return 'event';
+        case 'driver_error': return 'error';
+        case 'slow_pit_stop': case 'quick_pit_stop': return 'pit';
+        case 'crash': case 'dnf': case 'mechanical_failure': case 'tire_failure': return 'crash';
+        default: return null;
+      }
+    };
+    for (const e of engine.getFullEvents()) {
+      const kind = kindOf(e.type);
+      if (!kind || e.driverId < 0) continue;
+      // Name = the part before ':' for tags/errors ("Pit Lane Special: flies…" → "Pit Lane Special")
+      let name = e.description;
+      if (kind === 'tag' || kind === 'error') name = e.description.split(':')[0].trim();
+      else if (kind === 'pit') name = e.type === 'slow_pit_stop' ? 'Slow stop' : 'Quick stop';
+      else if (kind === 'crash') name = e.type === 'dnf' ? 'Retired' : e.type === 'crash' ? 'Crash' : e.type === 'mechanical_failure' ? 'Mechanical failure' : 'Tyre failure';
+      else name = e.description.replace(/[!.]+$/, '').slice(0, 40);
+      const key = `${kind}:${name}`;
+      let per = map.get(e.driverId);
+      if (!per) { per = new Map(); map.set(e.driverId, per); }
+      let entry = per.get(key);
+      if (!entry) { entry = { key, emoji: e.emoji, name, laps: [], kind }; per.set(key, entry); }
+      if (e.lap !== undefined && !entry.laps.includes(e.lap)) entry.laps.push(e.lap);
+    }
+    const out = new Map<number, DriverHistoryEntry[]>();
+    for (const [id, per] of map) out.set(id, Array.from(per.values()));
+    return out;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [drivers, engine]);
   const effectStacksMap = useMemo(() => {
     const map = new Map<number, EffectStackEntry[]>();
     for (const d of drivers) map.set(d.id, engine.getEffectStack(d.id));
@@ -1155,6 +1191,7 @@ function WatchMode({
                   statusEffects={statusEffectsMap}
                   activeTags={activeTagsMap}
                   effectStacks={effectStacksMap}
+                  histories={historiesMap}
                   positionDeltas={positionDeltasForTower}
                   fastestLapOverall={fastestLapOverall ?? undefined}
                   className="timing-tower-track"
@@ -1200,6 +1237,7 @@ function WatchMode({
                   statusEffects={statusEffectsMap}
                   activeTags={activeTagsMap}
                   effectStacks={effectStacksMap}
+                  histories={historiesMap}
                   positionDeltas={positionDeltasForTower}
                   fastestLapOverall={fastestLapOverall ?? undefined}
                   className="timing-tower-detail"

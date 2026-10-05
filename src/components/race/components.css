@@ -489,3 +489,21 @@
   .race-complete-actions { margin-left: 0; width: 100%; }
   .rc-btn { flex: 1; }
 }
+
+/* === Focus row: history chips === */
+.driver-history {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px;
+  padding: 4px 10px 8px 14px; border-top: 1px solid #1e1e25;
+}
+.history-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 2px 8px 2px 6px; border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05); border: 1px solid #26262e;
+  font-size: 12px; color: #d9d8d4;
+}
+.history-chip .history-emoji { font-size: 12px; }
+.history-chip .history-name { font-weight: 500; }
+.history-chip .history-laps { font-family: var(--font-mono); font-size: 11px; color: #7c7c88; }
+.history-chip.kind-tag { border-color: rgba(169, 139, 255, 0.4); }
+.history-chip.kind-crash { border-color: rgba(255, 90, 79, 0.45); }
+.history-chip.kind-error { border-color: rgba(242, 194, 48, 0.4); }

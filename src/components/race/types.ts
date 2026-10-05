@@ -2,6 +2,15 @@
 
 import { Driver, RaceState, EffectStackEntry } from '../../RaceEngine';
 
+/** One kind of thing that happened to a driver, with the laps it happened on. */
+export interface DriverHistoryEntry {
+  key: string;
+  emoji: string;
+  name: string;
+  laps: number[];
+  kind: 'tag' | 'event' | 'error' | 'pit' | 'crash';
+}
+
 // Column configuration for TimingTower
 export interface ColumnConfig {
   id: string;
@@ -27,6 +36,8 @@ export interface RowContext {
   activeTagIds?: Set<string>;
   /** Everything acting on this driver right now, with reasons (engine.getEffectStack). */
   effectStack?: EffectStackEntry[];
+  /** What has happened TO this driver so far, grouped: "🔧 Pit Lane Special · L3, L9". */
+  history?: DriverHistoryEntry[];
   isFocused: boolean;
   isFinished: boolean;
   isDNF: boolean;
@@ -61,6 +72,8 @@ export interface TimingTowerProps {
   activeTags?: Map<number, Set<string>>;
   /** Per-driver effect stacks (see RowContext.effectStack). */
   effectStacks?: Map<number, EffectStackEntry[]>;
+  /** Per-driver event history (see RowContext.history). */
+  histories?: Map<number, DriverHistoryEntry[]>;
   positionDeltas?: Map<number, number>;
   fastestLapOverall?: number;
   className?: string;
