@@ -416,3 +416,76 @@
 .effect-row .effect-pills { margin-left: auto; }
 .effect-row.inactive { opacity: 0.55; }
 .effect-row.inactive .effect-emoji { filter: grayscale(0.8); }
+
+/* === Race Complete strip (replaces the finish modal) === */
+.race-complete {
+  width: 100%;
+  max-width: calc((100dvh - 64px) * 16 / 9);
+  margin: 0 auto 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.race-complete-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  padding: 10px 16px;
+  background: #121216;
+  border: 1px solid #34343e;
+  border-radius: 10px;
+}
+.race-complete-flag { font-size: 18px; }
+.race-complete-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #f3f2ef;
+}
+.race-complete-podium {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; gap: 14px; align-items: center; flex-wrap: wrap;
+}
+.rc-p { display: inline-flex; align-items: center; gap: 6px; }
+.rc-pos {
+  font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+  width: 18px; height: 18px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: #26262e; color: #a6a6b0;
+}
+.rc-p1 .rc-pos { background: #f2c230; color: #0a0a0c; }
+.rc-p2 .rc-pos { background: #c9c9d1; color: #0a0a0c; }
+.rc-p3 .rc-pos { background: #b87333; color: #0a0a0c; }
+.rc-marble {
+  width: 22px; height: 22px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 12px; background: var(--team-color, #444); box-shadow: inset 0 0 0 2px rgba(0,0,0,0.35);
+}
+.rc-name { font-family: var(--font-display); font-weight: 700; font-size: 15px; text-transform: uppercase; letter-spacing: 0.02em; }
+.race-complete-facts { display: inline-flex; gap: 14px; flex-wrap: wrap; font-family: var(--font-mono); font-size: 12px; color: #d9d8d4; }
+.rc-k { font-size: 10px; letter-spacing: 0.12em; color: #7c7c88; text-transform: uppercase; margin-right: 2px; }
+.race-complete-facts code { font-family: var(--font-mono); background: #1a1a20; padding: 1px 6px; border-radius: 4px; color: #f3f2ef; }
+.race-complete-actions { margin-left: auto; display: inline-flex; gap: 6px; flex-wrap: wrap; }
+.rc-btn {
+  height: 34px; padding: 0 12px; border-radius: 8px; cursor: pointer;
+  font-family: var(--font-display); font-weight: 700; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase;
+  border: 1px solid #34343e; background: #1a1a20; color: #f3f2ef;
+}
+.rc-btn:hover { background: #22222a; }
+.rc-btn-primary { background: #f3f2ef; color: #0a0a0c; border-color: #f3f2ef; }
+.rc-btn-primary:hover { background: #ffffff; }
+.rc-btn-ghost { background: transparent; color: #a6a6b0; }
+.rc-btn-copy { border-color: #34d27a; color: #34d27a; background: rgba(52, 210, 122, 0.08); }
+.race-complete-report {
+  width: 100%; min-height: 220px; max-height: 40vh; resize: vertical;
+  background: #0a0a0c; color: #d9d8d4; border: 1px solid #26262e; border-radius: 8px;
+  font-family: var(--font-mono); font-size: 11.5px; line-height: 1.45; padding: 10px 12px;
+}
+@media (max-width: 799px) {
+  .race-complete { padding: 0 8px; }
+  .race-complete-actions { margin-left: 0; width: 100%; }
+  .rc-btn { flex: 1; }
+}

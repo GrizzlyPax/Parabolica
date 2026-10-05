@@ -232,8 +232,12 @@ export function getHistoricTeams(): Team[] {
 }
 
 // Get a random selection of N teams from current teams
-export function getRandomTeams(count: number = 11): Team[] {
-  const shuffled = [...CURRENT_TEAMS].sort(() => Math.random() - 0.5);
+export function getRandomTeams(count: number = 11, rng: () => number = Math.random): Team[] {
+  const shuffled = [...CURRENT_TEAMS];
+  for (let i = shuffled.length - 1; i > 0; i--) { // Fisher–Yates, seedable
+    const j = Math.floor(rng() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
   return shuffled.slice(0, Math.min(count, CURRENT_TEAMS.length));
 }
 

@@ -7,6 +7,7 @@ import RaceEngine, { RosterDriver } from './RaceEngine';
 import TeamCell from './components/TeamCell';
 import './LeagueSetup.css';
 import { genesisTags } from './data/tags';
+import { mulberry32, deriveSeed, randomSeed } from './engine/rng';
 
 // ============================================
 // RATING DESCRIPTORS - Vibes over numbers
@@ -117,24 +118,34 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
   // Determine if we're in season mode
   const isSeasonMode = !!seasonKingdomIds && seasonKingdomIds.length > 0;
 
+  // One seed per quick race drives everything — teams, track, roster, cars and
+  // the engine — so a race report's seed reproduces the whole race (#245).
+  const [quickSeed, setQuickSeed] = useState<number>(() => randomSeed());
+  const streams = (seed: number) => ({
+    teams: mulberry32(deriveSeed(seed, 'teams')),
+    track: mulberry32(deriveSeed(seed, 'track')),
+    drivers: mulberry32(deriveSeed(seed, 'genesis', 'drivers')),
+    cars: mulberry32(deriveSeed(seed, 'genesis', 'cars')),
+  });
+
   // Get the active teams (either season-selected or random 11 for single race)
   const [activeTeams, setActiveTeams] = useState<Team[]>(() =>
-    isSeasonMode ? getTeamsByIds(seasonKingdomIds!) : getRandomTeams(11)
+    isSeasonMode ? getTeamsByIds(seasonKingdomIds!) : getRandomTeams(11, streams(quickSeed).teams)
   );
 
   // Generate roster based on active teams
   const [roster, setRoster] = useState<GeneratedDriver[]>(() =>
-    generateRosterFromTeams(activeTeams.map(t => t.id))
+    generateRosterFromTeams(activeTeams.map(t => t.id), streams(quickSeed).drivers)
   );
 
   // Generate cars for each team
   const [cars, setCars] = useState<Map<string, GeneratedCar>>(() =>
-    generateCarsForKingdoms(activeTeams.map(t => t.id))
+    generateCarsForKingdoms(activeTeams.map(t => t.id), streams(quickSeed).cars)
   );
 
   // Use season track if provided, otherwise pick a random track for single race
   const [track, setTrack] = useState<Track>(() =>
-    seasonTrack || generateTrack()
+    seasonTrack || generateTrack(streams(quickSeed).track)
   );
 
   const [activeTab, setActiveTab] = useState<'roster' | 'track'>('roster');
@@ -171,6 +182,9 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
   const handleSummonAgain = useCallback(() => {
     // Debounce: prevent rapid rerolls on mobile (300ms cooldown)
     if (isRerolling) return;
+    const seed = randomSeed();
+    setQuickSeed(seed);
+    const st = streams(seed);
     setIsRerolling(true);
 
     // Clear any existing timeout
@@ -182,14 +196,14 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
     // In season mode, only reroll drivers and cars (teams and track are fixed)
     let newTeams = activeTeams;
     if (!isSeasonMode) {
-      newTeams = getRandomTeams(11);
+      newTeams = getRandomTeams(11, st.teams);
       setActiveTeams(newTeams);
-      setTrack(generateTrack());
+      setTrack(generateTrack(st.track));
     }
 
     const teamIds = newTeams.map(t => t.id);
-    setRoster(generateRosterFromTeams(teamIds));
-    setCars(generateCarsForKingdoms(teamIds));
+    setRoster(generateRosterFromTeams(teamIds, st.drivers));
+    setCars(generateCarsForKingdoms(teamIds, st.cars));
     // Re-enable after cooldown
     rerollTimeoutRef.current = setTimeout(() => {
       setIsRerolling(false);
@@ -209,6 +223,8 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
       };
     });
 
+    // Seed the race itself from the same quick-race seed → fully replayable
+    engine.setSeed(deriveSeed(quickSeed, 'race'));
     // Load the roster into the engine
     engine.loadGeneratedRoster(rosterWithCars);
 

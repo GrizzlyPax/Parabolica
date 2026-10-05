@@ -444,6 +444,9 @@ class RaceEngine {
   // Tag activation state - tracks which tags have activated and when
   private activeTagEffects: Map<number, { tagId: string; speedModifier: number; consistencyModifier: number; luckModifier: number; expiresAtTick: number | null }[]> = new Map();
   private tagActivatedThisRace: Set<string> = new Set();  // "driverId-tagId" to track one-time activations
+  /** Events trimmed off raceEvents by the UI cap, in order — so getFullEvents()
+   * can hand reports the whole race (#245). Cleared with raceEvents. */
+  private droppedEvents: RaceEvent[] = [];
 
   // Simulation variable overrides (for Sim Lab tuning)
   private simVars: SimVariables | null = null;
@@ -510,7 +513,12 @@ class RaceEngine {
     this.rng = mulberry32(seed);
     this.strategySeed = seed; // side streams replay with the race
     this.tagRngs.clear();
+    this.currentSeed = seed;
   }
+
+  /** The seed this race was built from, or null for an unseeded (Math.random) race. */
+  getSeed(): number | null { return this.currentSeed; }
+  private currentSeed: number | null = null;
 
   /** One roll from the side stream for (driver, tag) — see tagRngs. */
   private tagRoll(driverId: number, tagId: string): number {
@@ -528,6 +536,7 @@ class RaceEngine {
     this.rng = Math.random;
     this.strategySeed = randomSeed(); // stable within a live race, fresh each one
     this.tagRngs.clear();
+    this.currentSeed = null;
   }
 
   /**
@@ -732,6 +741,7 @@ class RaceEngine {
       unsafetyCarCooldownUntilLap: 0,
     };
     this.raceEvents = [];
+    this.droppedEvents = [];
     this.mistakeBlockedUntilTick.clear();
     this.notifyListeners();
     this.notifyStateListeners();
@@ -917,6 +927,11 @@ class RaceEngine {
     return { ...this.raceState };
   }
 
+  /** Every event of the race, uncapped (the UI cap only trims getEvents). */
+  getFullEvents(): RaceEvent[] {
+    return this.droppedEvents.length ? [...this.droppedEvents, ...this.raceEvents] : this.raceEvents;
+  }
+
   getEvents(): RaceEvent[] {
     return [...this.raceEvents];
   }
@@ -1036,6 +1051,7 @@ class RaceEngine {
       unsafetyCarCooldownUntilLap: 0,
     };
     this.raceEvents = [];
+    this.droppedEvents = [];
     this.mistakeBlockedUntilTick.clear();
     // Reset track event state
     this.activeTrackEffects = [];
@@ -3081,6 +3097,9 @@ class RaceEngine {
     // Cap stored events to prevent memory issues in long live races.
     // League settle raises maxStoredEvents so backfilled digests keep everything.
     if (this.raceEvents.length > this.config.maxStoredEvents) {
+      // Keep the trimmed head in the full log so reports see the whole race.
+      const dropped = this.raceEvents.length - this.config.maxStoredEvents;
+      this.droppedEvents.push(...this.raceEvents.slice(0, dropped));
       this.raceEvents = this.raceEvents.slice(-this.config.maxStoredEvents);
     }
 
