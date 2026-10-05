@@ -138,7 +138,7 @@ describe('toss-in spike', () => {
   it('5. Nemesis: the live gate rejects an unknown condition, so the tag is inert', () => {
     const base = grid();
     const [me, rival] = base;
-    const withTag = base.map(x => (x.id === me.id ? { ...x, driverTag: nemesis(rival.id, rival.firstName) as unknown as Tag } : x));
+    const withTag = base.map(x => (x.id === me.id ? { ...x, driverTag: nemesis(rival.id, rival.firstName ?? 'Rival') as unknown as Tag } : x));
     // Conditional tags skip the activation roll (evaluateDriverTags `continue`s
     // on tag.condition), so with an unknown condition the race IS identical:
     // the gate's default branch returns false and nothing else touches the stream.

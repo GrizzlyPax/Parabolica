@@ -57,7 +57,7 @@ export type ProposedAcquisitionRule =
   | { on: 'streak'; stat: 'dnf' | 'win' | 'podium'; count: number }
   | { on: 'crashed-with-same-driver'; count: number };
 
-export interface ProposedTag extends Tag {
+export interface ProposedTag extends Omit<Tag, 'condition'> {
   condition?: ProposedCondition;
   raceEffects?: ProposedRaceEffects;
   seasonEffects?: ProposedSeasonEffects;
