@@ -102,7 +102,7 @@ export const COLUMN_DRIVER_CODE: ColumnConfig = {
 export const COLUMN_DRIVER_FULL_NAME: ColumnConfig = {
   id: 'driverFullName',
   header: 'Driver',
-  width: '156px',
+  width: 'minmax(140px, 1.4fr)',
   align: 'left',
   render: (driver: Driver, ctx: RowContext) => (
     <span
@@ -118,7 +118,7 @@ export const COLUMN_DRIVER_FULL_NAME: ColumnConfig = {
 export const COLUMN_TEAM_NAME: ColumnConfig = {
   id: 'teamName',
   header: 'Team',
-  width: '112px',
+  width: 'minmax(96px, 1fr)',
   align: 'left',
   render: (driver: Driver) => (
     <span className="team-name" style={{ color: driver.color }}>
@@ -270,14 +270,27 @@ export const COLUMN_TAGS: ColumnConfig = {
 };
 
 // Status icon (mid-race inflictions / effects)
+// Mid-race things that happened TO the car (track events, inflictions,
+// damage). Read from the effect stack so each one has a name and a reason on
+// hover; the focus row spells them out in full.
 export const COLUMN_STATUS: ColumnConfig = {
   id: 'status',
-  header: '!',
-  width: '30px',
+  header: 'Event',
+  width: '48px',
   align: 'center',
-  render: (_driver: Driver, ctx: RowContext) => (
-    ctx.statusEmoji ? <span className="status-icon">{ctx.statusEmoji}</span> : <span className="muted-cell">—</span>
-  ),
+  render: (_driver: Driver, ctx: RowContext) => {
+    const hits = (ctx.effectStack ?? []).filter(e => e.source === 'track_event' || e.source === 'infliction' || e.source === 'damage');
+    if (hits.length === 0) {
+      return ctx.statusEmoji ? <span className="status-icon">{ctx.statusEmoji}</span> : <span className="muted-cell">—</span>;
+    }
+    return (
+      <span className="tag-chips">
+        {hits.slice(0, 2).map(e => (
+          <span key={`${e.source}-${e.id}`} className="status-icon" title={`${e.name} — ${e.reason}`}>{e.emoji}</span>
+        ))}
+      </span>
+    );
+  },
 };
 
 // Tire history chart (F1 style stint visualization)

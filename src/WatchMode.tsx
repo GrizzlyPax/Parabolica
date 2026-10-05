@@ -1169,7 +1169,7 @@ function WatchMode({
                   focusedDriverIds={focusedDriverIds}
                   onDriverClick={toggleDriverFocus}
                   condensed={false}
-                  expandable={false}
+                  expandable={true}
                   statusEffects={statusEffectsMap}
                   activeTags={activeTagsMap}
                   effectStacks={effectStacksMap}
