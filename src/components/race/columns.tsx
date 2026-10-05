@@ -7,7 +7,7 @@ import PositionDelta from './PositionDelta';
 import TireHistory from './TireHistory';
 import type { ColumnConfig, RowContext } from './types';
 import { Driver } from '../../RaceEngine';
-import TagChips from './TagChips';
+import TagChips, { EffectChips } from './TagChips';
 
 // Suffixes to ignore when extracting surname
 const NAME_SUFFIXES = new Set(['JR', 'JR.', 'SR', 'SR.', 'II', 'III', 'IV', 'V']);
@@ -276,24 +276,15 @@ export const COLUMN_TAGS: ColumnConfig = {
 export const COLUMN_STATUS: ColumnConfig = {
   id: 'status',
   header: 'Event',
-  width: '48px',
+  width: '52px',
   align: 'center',
   render: (_driver: Driver, ctx: RowContext) => {
     const hits = (ctx.effectStack ?? []).filter(e => e.source === 'track_event' || e.source === 'infliction' || e.source === 'damage');
-    if (hits.length === 0) {
-      return ctx.statusEmoji ? <span className="status-icon">{ctx.statusEmoji}</span> : <span className="muted-cell">—</span>;
-    }
-    return (
-      <span className="tag-chips">
-        {hits.slice(0, 2).map(e => (
-          <span key={`${e.source}-${e.id}`} className="status-icon" title={`${e.name} — ${e.reason}`}>{e.emoji}</span>
-        ))}
-      </span>
-    );
+    if (hits.length === 0 && ctx.statusEmoji) return <span className="status-icon">{ctx.statusEmoji}</span>;
+    return <EffectChips entries={hits} />;
   },
 };
 
-// Tire history chart (F1 style stint visualization)
 export const COLUMN_TIRE_HISTORY: ColumnConfig = {
   id: 'tireHistory',
   header: 'Tires',
@@ -308,12 +299,6 @@ export const COLUMN_TIRE_HISTORY: ColumnConfig = {
   ),
 };
 
-// ============================================
-// VIEW-SPECIFIC COLUMN SETS
-// ============================================
-
-// Track View: floating panel — the live-racing essentials.
-// P | Marble | Code | Interval | Leader | Last | Tags
 export const TRACK_COLUMNS: ColumnConfig[] = [
   COLUMN_POSITION,
   COLUMN_TEAM_MARBLE,
@@ -322,6 +307,7 @@ export const TRACK_COLUMNS: ColumnConfig[] = [
   COLUMN_GAP_LEADER,
   COLUMN_LAST_LAP,
   COLUMN_TAGS,
+  COLUMN_STATUS,
 ];
 
 // Detail View: the rich broadcast data screen (F1 timing).

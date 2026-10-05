@@ -91,6 +91,86 @@ function TagCard({ tag, entry, anchor, onClose }: { tag: Tag; entry?: EffectStac
   );
 }
 
+const SOURCE_LABELS: Record<EffectStackEntry['source'], string> = {
+  tag: 'tag', weather: 'weather', track: 'track character', track_event: 'track event',
+  infliction: 'infliction', damage: 'damage', safety_car: 'safety car',
+};
+
+/** Card for any non-tag effect (track event, infliction, damage, weather). */
+function EffectCard({ entry, anchor, onClose }: { entry: EffectStackEntry; anchor: DOMRect; onClose: () => void }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const onDoc = (ev: MouseEvent) => { if (ref.current && !ref.current.contains(ev.target as Node)) onClose(); };
+    const onKey = (ev: KeyboardEvent) => { if (ev.key === 'Escape') onClose(); };
+    document.addEventListener('mousedown', onDoc);
+    document.addEventListener('keydown', onKey);
+    return () => { document.removeEventListener('mousedown', onDoc); document.removeEventListener('keydown', onKey); };
+  }, [onClose]);
+  const width = 300;
+  const left = Math.max(8, Math.min(anchor.left + anchor.width / 2 - width / 2, window.innerWidth - width - 8));
+  const style: React.CSSProperties = { position: 'fixed', left, top: anchor.bottom + 8, width, zIndex: 1000 };
+  const pills = effectPills(entry);
+  return createPortal(
+    <div ref={ref} className="tag-card" style={style} role="dialog" aria-label={`${entry.name}`}>
+      <div className="tag-card-head">
+        <span className="tag-card-emoji">{entry.emoji}</span>
+        <div className="tag-card-title">
+          <div className="tag-card-name">{entry.name}</div>
+          <div className="tag-card-tier">{SOURCE_LABELS[entry.source]}</div>
+        </div>
+        <button type="button" className="tag-card-close" onClick={onClose} aria-label="Close">×</button>
+      </div>
+      <div className={`tag-card-status ${entry.active ? 'on' : 'off'}`}>
+        <span className="tag-card-dot" />
+        <span>{entry.active ? 'ACTIVE' : 'OVER'}</span>
+        <span className="tag-card-reason">{entry.reason}</span>
+      </div>
+      <div className="tag-card-row tag-card-effects">
+        <span className="tag-card-k">Effect</span>
+        {pills.length === 0 ? <span className="tag-card-none">none on the numbers</span> : (
+          <span className="effect-pills">
+            {pills.map(p => <span key={p.label} className={`effect-pill ${p.good ? 'good' : 'bad'}`}><b>{p.value}</b> {p.label}</span>)}
+          </span>
+        )}
+      </div>
+    </div>,
+    document.body
+  );
+}
+
+/** Chips for the things that happened TO a car mid-race (Event column). */
+export function EffectChips({ entries, max = 2 }: { entries: EffectStackEntry[]; max?: number }) {
+  const [open, setOpen] = useState<{ id: string; rect: DOMRect } | null>(null);
+  if (entries.length === 0) return <span className="muted-cell">—</span>;
+  return (
+    <span className="tag-chips">
+      {entries.slice(0, max).map(e => {
+        const key = `${e.source}-${e.id}`;
+        return (
+          <button
+            key={key}
+            type="button"
+            className={`tag-chip active ${open?.id === key ? 'open' : ''}`}
+            title={`${e.name} — ${e.reason}`}
+            aria-label={e.name}
+            onClick={(ev) => {
+              ev.stopPropagation();
+              const rect = (ev.currentTarget as HTMLElement).getBoundingClientRect();
+              setOpen(open?.id === key ? null : { id: key, rect });
+            }}
+          >
+            {e.emoji}
+          </button>
+        );
+      })}
+      {open && (() => {
+        const e = entries.find(x => `${x.source}-${x.id}` === open.id);
+        return e ? <EffectCard entry={e} anchor={open.rect} onClose={() => setOpen(null)} /> : null;
+      })()}
+    </span>
+  );
+}
+
 export default function TagChips({ tags, stack, max = 4 }: TagChipsProps) {
   const [open, setOpen] = useState<{ id: string; rect: DOMRect } | null>(null);
   if (tags.length === 0) return <span className="muted-cell">—</span>;
