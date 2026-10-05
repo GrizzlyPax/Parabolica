@@ -2664,9 +2664,11 @@
      cell's shape (#243 — the frame is no longer a fixed 16:9). */
   .frame-track .bf-map .track-map {
     width: 100%;
+    max-width: none;      /* the mobile 640px cap must not apply here */
     height: 100%;
     aspect-ratio: auto;
     min-height: 0;
+    background: transparent; /* one black, not a darker box inside the frame */
   }
 
   /* --- DETAIL VIEW: F1 data screen. The table is a fixed-width data block
