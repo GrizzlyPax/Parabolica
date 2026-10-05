@@ -8,6 +8,7 @@
 import { RosterDriver, RaceEvent } from '../RaceEngine';
 import { SeasonState } from '../types/season';
 import { Team } from '../data/teams';
+import type { Ruleset } from '../rules/ruleset';
 
 /** Choices made at league founding. Immutable for the life of the run. */
 export interface LeagueSetupConfig {
@@ -24,6 +25,8 @@ export interface LeagueSetupConfig {
   trackIds: string[];
   /** Wall-clock ms between race starts (e.g. 3h = 10_800_000). */
   raceIntervalMs: number;
+  /** The rules this run plays under (#241). Absent = defaults (pre-ruleset saves). */
+  ruleset?: Ruleset;
   /** Epoch ms of league founding; race i is scheduled at createdAt + i*interval
    * (the inaugural race airs at founding). A race that outlasts the interval
    * pushes its successor back — broadcasts queue, never overlap. */

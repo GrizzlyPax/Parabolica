@@ -62,10 +62,15 @@ export interface CardPatch {
 
 export type DeepPartial<T> = { [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K] };
 
+export type CardScope = 'race' | 'season' | 'both';
+
 export interface Card {
   id: string;
   name: string;
   emoji: string;
+  /** Where the card is offered: a one-off race ("Rain"), a whole season
+   * ("Always Raining"), or either. Same patch machinery underneath. */
+  scope: CardScope;
   /** How hard it bends the universe — shown as a badge. */
   weight: 'mild' | 'wild' | 'cursed';
   /** The fiction, one or two lines. */

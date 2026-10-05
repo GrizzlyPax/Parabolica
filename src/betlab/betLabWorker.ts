@@ -1,8 +1,10 @@
-import { genesisTags } from '../data/tags';
 // Bet Lab Web Worker
 // Runs headless race simulations and tracks betting outcomes
 
 import RaceEngine, { Driver, RaceState } from '../RaceEngine';
+import { randomSeed } from '../engine/rng';
+import { buildRoster } from '../rules/genesis';
+import { Ruleset, defaultRuleset } from '../rules/ruleset';
 import { generateRoster, GeneratedDriver } from '../generators/drivers';
 import { generateCarsForKingdoms, GeneratedCar } from '../generators/cars';
 import { ALL_TRACKS, Track } from '../generators/tracks';
@@ -27,17 +29,8 @@ import {
 } from './types';
 
 // Helper to merge roster with car data
-function createRosterWithCars(roster: GeneratedDriver[], cars: Map<string, GeneratedCar>) {
-  return roster.map(driver => {
-    const car = cars.get(driver.kingdomId);
-    return {
-      ...driver,
-      carStats: car?.stats,
-      carName: car?.name,
-      teamStats: car?.teamStats,
-      tags: genesisTags(driver.tag, car?.carTag, car?.teamTag),
-    };
-  });
+function createRosterWithCars(roster: GeneratedDriver[], cars: Map<string, GeneratedCar>, seed: number = randomSeed(), rs: Ruleset = defaultRuleset()) {
+  return buildRoster(roster, cars, seed, rs);
 }
 
 let aborted = false;

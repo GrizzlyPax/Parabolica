@@ -1,7 +1,6 @@
 // Car and team generation for Parabolica teams
 // Each team has one car shared by both drivers, plus team-level stats
 
-import { Tag, maybeAssignTag } from '../data/tags';
 import { Rng, pick } from '../engine/rng';
 
 export interface CarStats {
@@ -22,8 +21,6 @@ export interface GeneratedCar {
   stats: CarStats;
   teamStats: TeamStats; // Team-level operational stats
   quirk: string;        // Flavor text about the car
-  carTag?: Tag;         // Optional tag for the car
-  teamTag?: Tag;        // Optional tag for the team
 }
 
 // Car quirks - absurdist racing flavor
@@ -167,18 +164,13 @@ export function generateCarForKingdom(kingdomId: string, rng: Rng = Math.random)
   // Pick a random quirk
   const quirk = pick(CAR_QUIRKS, rng);
 
-  // Maybe assign tags (15% chance each)
-  const carTag = maybeAssignTag('car', rng) || undefined;
-  const teamTag = maybeAssignTag('team', rng) || undefined;
-
+  // Car/team tags are rolled from the ruleset (rules/genesis.ts), not here.
   return {
     kingdomId,
     name,
     stats,
     teamStats,
     quirk,
-    carTag,
-    teamTag,
   };
 }
 

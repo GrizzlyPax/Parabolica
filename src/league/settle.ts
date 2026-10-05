@@ -68,7 +68,7 @@ export function prepareScheduledRace(
   engine.setSeed(race.seed);
   // Weather is part of the fixed universe — same seed+index → same storm, so
   // the live broadcast and the headless settle see identical conditions (#149).
-  engine.setWeather(weatherForRace(league.leagueSeed, raceIndex));
+  engine.setWeather(weatherForRace(league.leagueSeed, raceIndex, league.setup.ruleset?.weather.weights));
   // Track tags are intrinsic to the track (C3) — same place, same character.
   engine.setTrackTags(intrinsicTrackTags(track.id));
   engine.loadGeneratedRoster(rosterStateAt(league, raceIndex));
@@ -177,7 +177,8 @@ function lastBroadcastEnd(league: LeagueState): number {
  * the broadcast is the UI's job.
  */
 export function settleLeague(league: LeagueState, options: SettleOptions): SettleResult {
-  const simVars = options.simVars ?? CANON_VARIABLES;
+  // Physics: explicit override > the league's ruleset > canon.
+  const simVars = options.simVars ?? league.setup.ruleset?.simVars ?? CANON_VARIABLES;
 
   const pending = league.schedule.filter(r => r.index > league.settledThrough);
   let prevEnd = lastBroadcastEnd(league);

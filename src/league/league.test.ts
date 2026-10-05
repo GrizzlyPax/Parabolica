@@ -267,11 +267,13 @@ describe('interventions', () => {
     const base = settleLeague(createLeague(42, setup), { now: T0 + 13 * HOUR }).league;
 
     const tampered = createLeague(42, setup);
+    // Curse race 2's winner (certain to be on track to the flag), with an
+    // always-on tag so the change can't hide behind a closed gate.
     tampered.interventionLog.push({
       type: 'attach-tag',
       atRaceIndex: 2,
-      targetDriverId: tampered.roster[0].id,
-      tagId: 'sunday-driver',
+      targetDriverId: base.digests[2].finishOrder[0],
+      tagId: 'glass-cannon',
       committedAt: T0 + 5 * HOUR,
     });
     const altered = settleLeague(tampered, { now: T0 + 13 * HOUR }).league;

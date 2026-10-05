@@ -1,38 +1,43 @@
 {
   "seed": 24301,
   "track": "venhir",
-  "rosterHash": "955a666c",
+  "rosterHash": "f9e8b6a2",
   "finishOrder": [
-    10,
-    16,
     8,
-    18,
-    2,
-    21,
-    6,
-    19,
-    3,
-    15,
-    0,
-    12,
     11,
-    17,
     20,
-    13,
     14,
+    9,
+    19,
+    6,
+    2,
+    18,
+    15,
+    4,
+    10,
+    0,
     1,
-    7,
-    4
+    5,
+    17,
+    3
   ],
-  "totalTicks": 2243,
+  "totalTicks": 2184,
   "leadChanges": 13,
-  "eventsHash": "b1f48861",
+  "eventsHash": "37fc0e07",
   "tags": [
     [
       "sunday-driver"
     ],
     [
-      "clutch-performer",
+      "pit-lane-special"
+    ],
+    [],
+    [],
+    [
+      "rain-dancer"
+    ],
+    [],
+    [
       "pit-lane-special"
     ],
     [],
@@ -40,25 +45,23 @@
     [],
     [],
     [
-      "cursed-chassis"
-    ],
-    [],
-    [],
-    [],
-    [],
-    [],
-    [],
-    [
       "pit-lane-special"
     ],
-    [],
-    [],
-    [],
     [
-      "clutch-performer"
+      "cursed-chassis",
+      "chaotic-energy"
     ],
     [
-      "cursed-chassis"
+      "cursed-chassis",
+      "chaotic-energy"
+    ],
+    [],
+    [],
+    [],
+    [],
+    [
+      "sunday-driver",
+      "pit-lane-special"
     ],
     [],
     [],

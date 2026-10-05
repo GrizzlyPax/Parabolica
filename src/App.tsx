@@ -128,7 +128,7 @@ function App() {
     if (!track) return;
 
     engine.stop();
-    prepareScheduledRace(engine, liveLeague, live.index, track, CANON_VARIABLES);
+    prepareScheduledRace(engine, liveLeague, live.index, track, liveLeague.setup.ruleset?.simVars ?? CANON_VARIABLES);
     // Sync the UI's track state (layout, pit lane) — WatchMode renders from
     // this React state, not from the engine, and falls back to a default
     // oval without it.

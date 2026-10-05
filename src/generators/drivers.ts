@@ -1,7 +1,6 @@
 import { generateDriverName } from './names';
 import { DriverStats } from '../RaceEngine';
 import { TEAMS, Team, DriverSlot, getTeamsByIds } from '../data/teams';
-import { Tag, maybeAssignTag } from '../data/tags';
 import { Rng, pick } from '../engine/rng';
 
 export interface GeneratedDriver {
@@ -20,7 +19,6 @@ export interface GeneratedDriver {
   stats: DriverStats;
   backstory: string;
   quirk: string;
-  tag?: Tag;              // Optional tag that affects driver behavior
 }
 
 // Absurdist backstory templates - Blaseball-inspired
@@ -147,9 +145,9 @@ export function generateDriverForTeam(
   // Short name handles mononyms / corrupted names (computed in names.ts).
   const shortName = name.shortName;
 
-  // Maybe assign a tag (15% chance)
-  const tag = maybeAssignTag('driver', rng) || undefined;
-
+  // Tags are no longer rolled here: genesis tags come from the ruleset on their
+  // own seed stream (rules/genesis.ts), so a card can re-roll tags without
+  // moving names or stats.
   return {
     id,
     firstName: name.firstName,
@@ -166,7 +164,6 @@ export function generateDriverForTeam(
     stats: generateStats(rng),
     backstory,
     quirk,
-    tag
   };
 }
 

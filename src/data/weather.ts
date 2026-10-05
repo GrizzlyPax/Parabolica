@@ -58,13 +58,16 @@ function scaleEffects(e: WeatherEffects, k: number): WeatherEffects {
 }
 
 /** Roll a weather state from a weighted draw + intensity. */
-export function rollWeather(rng: Rng = Math.random): WeatherState {
-  const total = WEATHER_TYPES.reduce((s, w) => s + w.weight, 0);
+export function rollWeather(rng: Rng = Math.random, weights?: Record<string, number>): WeatherState {
+  const wOf = (w: WeatherType) => weights?.[w.id] ?? w.weight;
+  const total = WEATHER_TYPES.reduce((s, w) => s + wOf(w), 0);
   let r = rng() * total;
   let type = WEATHER_TYPES[0];
-  for (const w of WEATHER_TYPES) {
-    if (r < w.weight) { type = w; break; }
-    r -= w.weight;
+  if (total > 0) {
+    for (const w of WEATHER_TYPES) {
+      if (r < wOf(w)) { type = w; break; }
+      r -= wOf(w);
+    }
   }
   const intensity = type.minIntensity + rng() * (1 - type.minIntensity);
   return {
@@ -79,6 +82,6 @@ export function rollWeather(rng: Rng = Math.random): WeatherState {
 
 /** Deterministic per-race weather — part of a league's fixed universe, so the
  * live broadcast and the headless settle agree (the #149 contract). */
-export function weatherForRace(leagueSeed: number, raceIndex: number): WeatherState {
-  return rollWeather(mulberry32(deriveSeed(leagueSeed, 'weather', raceIndex)));
+export function weatherForRace(leagueSeed: number, raceIndex: number, weights?: Record<string, number>): WeatherState {
+  return rollWeather(mulberry32(deriveSeed(leagueSeed, 'weather', raceIndex)), weights);
 }

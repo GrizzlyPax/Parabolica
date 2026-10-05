@@ -1,0 +1,61 @@
+// Genesis tags, rolled from the ruleset on their own seed streams (#241).
+// Separating this from driver/car generation means a card that changes the
+// tag pool or chance re-rolls ONLY the tags — names, stats, teams and track
+// stay exactly where they were, so Run Setup can show the grid first and let
+// you flip cards freely.
+//
+// Streams: driver tag ← deriveSeed(seed, 'tags', 'driver', driverId)
+//          car + team tags ← deriveSeed(seed, 'tags', 'team', kingdomId)
+//          (shared by both of a team's drivers, as before)
+
+import { mulberry32, deriveSeed } from '../engine/rng';
+import { Tag, TagTarget, pickTagWeighted } from '../data/tags';
+import type { GeneratedDriver } from '../generators/drivers';
+import type { GeneratedCar } from '../generators/cars';
+import type { RosterDriver } from '../RaceEngine';
+import { Ruleset, poolTags } from './ruleset';
+
+function maybe(target: TagTarget, pool: Tag[], chance: number, rng: () => number): Tag | null {
+  // Always draw both numbers so the stream shape is stable whatever the chance.
+  const roll = rng();
+  const pick = pickTagWeighted(pool.filter(t => t.target === target), rng);
+  return roll < chance ? pick : null;
+}
+
+/** Roll genesis tags for every driver. Pure; same inputs → same tags. */
+export function rollGenesisTags(roster: GeneratedDriver[], seed: number, rs: Ruleset): Map<number, Tag[]> {
+  const pool = poolTags(rs);
+  const chance = rs.tags.genesisChance;
+  const cap = rs.tags.slotCap;
+  const teamRolls = new Map<string, Tag[]>();
+  const out = new Map<number, Tag[]>();
+  for (const d of roster) {
+    let team = teamRolls.get(d.kingdomId);
+    if (!team) {
+      const rng = mulberry32(deriveSeed(seed, 'tags', 'team', d.kingdomId));
+      team = [maybe('car', pool, chance, rng), maybe('team', pool, chance, rng)].filter((t): t is Tag => !!t);
+      teamRolls.set(d.kingdomId, team);
+    }
+    const rng = mulberry32(deriveSeed(seed, 'tags', 'driver', d.id));
+    const own = maybe('driver', pool, chance, rng);
+    const tags = [...(own ? [own] : []), ...team].slice(0, cap);
+    out.set(d.id, tags);
+  }
+  return out;
+}
+
+/** Assemble the engine-ready roster: driver + car/team stats + genesis tags.
+ * The one place this happens (league founding, quick race, labs, tests). */
+export function buildRoster(roster: GeneratedDriver[], cars: Map<string, GeneratedCar>, seed: number, rs: Ruleset): RosterDriver[] {
+  const tags = rollGenesisTags(roster, seed, rs);
+  return roster.map(driver => {
+    const car = cars.get(driver.kingdomId);
+    return {
+      ...driver,
+      carStats: car?.stats,
+      carName: car?.name,
+      teamStats: car?.teamStats,
+      tags: tags.get(driver.id) ?? [],
+    };
+  });
+}

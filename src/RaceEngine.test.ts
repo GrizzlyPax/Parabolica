@@ -5,21 +5,14 @@ import { generateRoster, GeneratedDriver } from './generators/drivers';
 import { generateCarsForKingdoms, GeneratedCar } from './generators/cars';
 import { ALL_TRACKS, Track } from './generators/tracks';
 import { TEAMS } from './data/teams';
-import { Tag, getTagById, genesisTags } from './data/tags';
+import { Tag, getTagById } from './data/tags';
 import { rollWeather } from './data/weather';
-import { mulberry32 } from './engine/rng';
+import { mulberry32, randomSeed } from './engine/rng';
+import { buildRoster } from './rules/genesis';
+import { Ruleset, defaultRuleset } from './rules/ruleset';
 
-function createRosterWithCars(roster: GeneratedDriver[], cars: Map<string, GeneratedCar>) {
-  return roster.map(driver => {
-    const car = cars.get(driver.kingdomId);
-    return {
-      ...driver,
-      carStats: car?.stats,
-      carName: car?.name,
-      teamStats: car?.teamStats,
-      tags: genesisTags(driver.tag, car?.carTag, car?.teamTag),
-    };
-  });
+function createRosterWithCars(roster: GeneratedDriver[], cars: Map<string, GeneratedCar>, seed: number = randomSeed(), rs: Ruleset = defaultRuleset()) {
+  return buildRoster(roster, cars, seed, rs);
 }
 
 function runOneRace(track: Track) {
@@ -499,14 +492,14 @@ describe('golden fingerprint', () => {
     const cars = generateCarsForKingdoms(TEAMS.map(t => t.id), rng);
     const track = ALL_TRACKS[0];
     const engine = RaceEngine.createForWorker(CANON_VARIABLES, SEED);
-    engine.loadGeneratedRoster(createRosterWithCars(roster, cars));
+    engine.loadGeneratedRoster(createRosterWithCars(roster, cars, SEED));
     engine.updateConfig({ totalLaps: track.laps, lapLength: track.length });
     engine.setTrackInfo({ id: track.id, name: track.name, emoji: track.emoji, funEmoji: track.funEmoji, description: track.description, laps: track.laps });
     const r = engine.runHeadless();
     return {
       seed: SEED,
       track: track.id,
-      rosterHash: fnv(JSON.stringify(roster.map(d => [d.fullName, d.stats, d.tag?.id]))),
+      rosterHash: fnv(JSON.stringify(roster.map(d => [d.fullName, d.stats]))),
       finishOrder: r.raceState.finishOrder,
       totalTicks: r.raceState.totalTicks,
       leadChanges: r.raceState.leadChanges,

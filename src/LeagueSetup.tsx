@@ -6,7 +6,8 @@ import { getTeamsByIds, getRandomTeams, Team, CURRENT_TEAMS } from './data/teams
 import RaceEngine, { RosterDriver } from './RaceEngine';
 import TeamCell from './components/TeamCell';
 import './LeagueSetup.css';
-import { genesisTags } from './data/tags';
+import { buildRoster } from './rules/genesis';
+import { defaultRuleset } from './rules/ruleset';
 import { mulberry32, deriveSeed, randomSeed } from './engine/rng';
 
 // ============================================
@@ -212,16 +213,7 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
 
   const handleStartRace = () => {
     // Attach car stats, team stats, and tags to each driver before loading into engine
-    const rosterWithCars: RosterDriver[] = roster.map(driver => {
-      const car = cars.get(driver.kingdomId);
-      return {
-        ...driver,
-        carStats: car?.stats,
-        carName: car?.name,
-        teamStats: car?.teamStats,
-        tags: genesisTags(driver.tag, car?.carTag, car?.teamTag),
-      };
-    });
+    const rosterWithCars: RosterDriver[] = buildRoster(roster, cars, quickSeed, defaultRuleset());
 
     // Seed the race itself from the same quick-race seed → fully replayable
     engine.setSeed(deriveSeed(quickSeed, 'race'));
