@@ -45,6 +45,8 @@ interface WatchModeProps {
   raceState: RaceState;
   trackInfo: TrackInfo | null;
   onNextRace?: () => void;
+  /** Cards + resolved rules, for the report's Rules line (#241). */
+  rulesLines?: string[];
   powerActivation?: PowerActivation | null;
   raceEvents?: RaceEvent[];  // For track event notifications
   onExit?: () => void;  // Leave the race (back to main menu / league)
@@ -95,6 +97,7 @@ function WatchMode({
   raceState,
   trackInfo,
   onNextRace,
+  rulesLines,
   powerActivation,
   raceEvents,
   onExit,
@@ -999,7 +1002,7 @@ function WatchMode({
         trackId: trackInfo?.id,
         teamIds,
         engineVersion: appVersion,
-        ruleset: ['default'],
+        ruleset: rulesLines ?? ['default'],
         events: engine.getFullEvents(),
       }
     );
