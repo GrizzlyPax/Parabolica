@@ -6,7 +6,7 @@ import { generateRoster, GeneratedDriver } from '../generators/drivers';
 import { generateCarsForKingdoms, GeneratedCar } from '../generators/cars';
 import { ALL_TRACKS, Track } from '../generators/tracks';
 import { TEAMS } from '../data/teams';
-import { Tag } from '../data/tags';
+import { Tag, genesisTags } from '../data/tags';
 import { rollWeather, WeatherState } from '../data/weather';
 import { intrinsicTrackTags, TrackTag } from '../data/trackTags';
 import type {
@@ -28,9 +28,7 @@ function createRosterWithCars(roster: GeneratedDriver[], cars: Map<string, Gener
       carStats: car?.stats,
       carName: car?.name,
       teamStats: car?.teamStats,
-      driverTag: driver.tag,
-      carTag: car?.carTag,
-      teamTag: car?.teamTag,
+      tags: genesisTags(driver.tag, car?.carTag, car?.teamTag),
     };
   });
 }
@@ -300,9 +298,7 @@ function aggregateRaceResult(
       tagAcc.totalFinishPosition += finishPosition;
     };
 
-    updateTag(driver.driverTag, 'driver');
-    updateTag(driver.carTag, 'car');
-    updateTag(driver.teamTag, 'team');
+    for (const tag of driver.tags) updateTag(tag, tag.target === 'condition' ? 'driver' : tag.target);
 
     // === DNF AGGREGATION ===
     if (isDNF && driver.dnfInfo) {

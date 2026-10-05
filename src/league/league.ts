@@ -3,7 +3,7 @@
 // generation step later never shifts existing ones.
 
 import { mulberry32, deriveSeed } from '../engine/rng';
-import { getTagById } from '../data/tags';
+import { Tag, getTagById, genesisTags, MAX_TAGS_PER_DRIVER } from '../data/tags';
 import { getTeamsByIds, Team } from '../data/teams';
 import { generateRosterFromTeamList } from '../generators/drivers';
 import { generateCarsForKingdoms } from '../generators/cars';
@@ -33,9 +33,7 @@ export function generateGenesisRoster(
       carStats: car?.stats,
       carName: car?.name,
       teamStats: car?.teamStats,
-      driverTag: driver.tag,
-      carTag: car?.carTag,
-      teamTag: car?.teamTag,
+      tags: genesisTags(driver.tag, car?.carTag, car?.teamTag),
     };
   });
 }
@@ -76,12 +74,29 @@ export function rosterStateAt(league: LeagueState, raceIndex: number): RosterDri
   if (applicable.length === 0) return league.roster;
 
   return league.roster.map(driver => {
-    let result = driver;
+    let tags = driver.tags;
     for (const intervention of applicable) {
-      if (intervention.type === 'attach-tag' && intervention.targetDriverId === driver.id) {
-        result = { ...result, driverTag: getTagById(intervention.tagId) ?? result.driverTag };
-      }
+      if (intervention.type !== 'attach-tag' || intervention.targetDriverId !== driver.id) continue;
+      const tag = getTagById(intervention.tagId);
+      if (!tag) continue;
+      tags = attachTag(tags, tag);
     }
-    return result;
+    return tags === driver.tags ? driver : { ...driver, tags };
   });
+}
+
+/**
+ * Add a tag to a stack. Pure. A duplicate id is a no-op; a full stack
+ * (MAX_TAGS_PER_DRIVER) refuses — the log entry is kept (history is
+ * append-only) but has no effect. Validate with canAttachTag before committing
+ * so the UI never offers an attachment that would be ignored.
+ */
+export function attachTag(tags: Tag[], tag: Tag): Tag[] {
+  if (!canAttachTag(tags, tag)) return tags;
+  return [...tags, tag];
+}
+
+export function canAttachTag(tags: Tag[], tag: Tag): boolean {
+  if (tags.some(t => t.id === tag.id)) return false;
+  return tags.length < MAX_TAGS_PER_DRIVER;
 }

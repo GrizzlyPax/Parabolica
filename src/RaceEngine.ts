@@ -48,9 +48,10 @@ export interface RosterDriver {
   carStats?: CarStats;
   carName?: string;
   teamStats?: TeamStats;
-  driverTag?: Tag;
-  carTag?: Tag;
-  teamTag?: Tag;
+  /** Every tag on this driver (driver, car and team tags together — a tag's
+   * `target` says which). Genesis rolls, interventions and acquisitions all
+   * land here; capped per driver by the league (MAX_TAGS_PER_DRIVER). */
+  tags: Tag[];
 }
 
 export interface Driver {
@@ -104,10 +105,8 @@ export interface Driver {
   // Final classification
   lapsBehind: number;       // How many laps behind the winner (0 = on lead lap)
   finishTick: number | null; // Tick when this driver was classified
-  // Tags
-  driverTag?: Tag;          // Optional driver tag
-  carTag?: Tag;             // Optional car tag (shared by team)
-  teamTag?: Tag;            // Optional team tag (shared by team)
+  // Tags — the full stack (driver + car + team), see RosterDriver.tags
+  tags: Tag[];
 }
 
 export interface TickFactors {
@@ -437,6 +436,10 @@ class RaceEngine {
   // streams (deriveSeed) stay independent of the race rolls, so a feature that
   // reads them is byte-identical to today whenever its gate knob is 0.
   private strategySeed: number = randomSeed();
+  // Tag activation rolls (triggerChance). Derived from the race seed like the
+  // strategy stream, keyed per driver+tag so adding a tag to one driver never
+  // moves another driver's rolls. See tryActivateTag.
+  private tagRngs: Map<string, Rng> = new Map();
 
   // #82 mistakes layer: per-driver tick until which no new mistake may start
   // (active recovery + refractory window). Cleared per race.
@@ -485,12 +488,25 @@ class RaceEngine {
   setSeed(seed: number): void {
     this.rng = mulberry32(seed);
     this.strategySeed = seed; // side streams replay with the race
+    this.tagRngs.clear();
+  }
+
+  /** One roll from the side stream for (driver, tag) — see tagRngs. */
+  private tagRoll(driverId: number, tagId: string): number {
+    const key = `${driverId}:${tagId}`;
+    let r = this.tagRngs.get(key);
+    if (!r) {
+      r = mulberry32(deriveSeed(this.strategySeed, 'tag', key));
+      this.tagRngs.set(key, r);
+    }
+    return r();
   }
 
   /** Restore the default unseeded behavior (live Quick Race). */
   clearSeed(): void {
     this.rng = Math.random;
     this.strategySeed = randomSeed(); // stable within a live race, fresh each one
+    this.tagRngs.clear();
   }
 
   /**
@@ -576,6 +592,7 @@ class RaceEngine {
         position: 0,
         color: d.color,
         stats: { ...d.stats },
+        tags: [],
         currentLap: 0,
         lapTimes: [],
         sectorTimes: [],
@@ -648,9 +665,7 @@ class RaceEngine {
         carStats: d.carStats,
         carName: d.carName,
         teamStats: d.teamStats,
-        driverTag: d.driverTag,
-        carTag: d.carTag,
-        teamTag: d.teamTag,
+        tags: [...(d.tags ?? [])],
         // Tire/Pit/Crash initial state
         tireState: {
           compound: startingCompound,
@@ -1883,10 +1898,12 @@ class RaceEngine {
     if (!this.shouldTagTrigger(driver, tag, context)) {
       return false;
     }
-
-    // Check trigger chance (default 100%)
+    // Trigger chance (default 100%). Rolled on the TAG side stream, never the
+    // main `rng`: a tag's presence must not reshuffle the race for everyone
+    // else — a zero-effect Quirk has to be byte-inert (#231). A certain
+    // trigger draws nothing at all.
     const triggerChance = tag.triggerChance ?? 1.0;
-    if (this.rng() > triggerChance) {
+    if (triggerChance < 1 && this.tagRoll(driver.id, tag.id) > triggerChance) {
       return false;
     }
 
@@ -1934,8 +1951,7 @@ class RaceEngine {
    * Check and activate tags for a driver based on current context
    */
   private evaluateDriverTags(driver: Driver, context: { isOvertaking?: boolean; isPitting?: boolean; isFinalLap?: boolean; isRaceStart?: boolean; inCrashProximity?: boolean }): void {
-    for (const tag of [driver.driverTag, driver.carTag, driver.teamTag]) {
-      if (!tag) continue;
+    for (const tag of driver.tags) {
       // Conditional tags are gated live every tick (getConditional*), not stored
       // as a one-time activation — skip them here so they don't become always-on.
       if (tag.condition) continue;
@@ -1982,8 +1998,8 @@ class RaceEngine {
     if (!driver) return 1;
 
     let result = 1;
-    for (const tag of [driver.driverTag, driver.carTag, driver.teamTag]) {
-      if (!tag?.condition) continue;
+    for (const tag of driver.tags) {
+      if (!tag.condition) continue;
       if (!evaluateTagCondition(tag.condition, ctx)) continue;
       const v = tag.effects[modifier];
       if (typeof v === 'number') result *= v;
@@ -1999,8 +2015,8 @@ class RaceEngine {
     if (!driver) return 0;
 
     let result = 0;
-    for (const tag of [driver.driverTag, driver.carTag, driver.teamTag]) {
-      if (!tag?.condition) continue;
+    for (const tag of driver.tags) {
+      if (!tag.condition) continue;
       if (!evaluateTagCondition(tag.condition, ctx)) continue;
       result += tag.effects.crashResistance ?? 0;
     }
@@ -2151,8 +2167,8 @@ class RaceEngine {
     const ctx = this.raceContextCache.get(driverId);
     const driver = this.drivers.find(d => d.id === driverId);
     if (driver && ctx) {
-      for (const tag of [driver.driverTag, driver.carTag, driver.teamTag]) {
-        if (tag?.condition && evaluateTagCondition(tag.condition, ctx)) active.push(tag.id);
+      for (const tag of driver.tags) {
+        if (tag.condition && evaluateTagCondition(tag.condition, ctx)) active.push(tag.id);
       }
     }
 
