@@ -2632,7 +2632,7 @@
      room for the tower. --- */
   .frame-track {
     display: grid;
-    grid-template-columns: 504px 1fr;
+    grid-template-columns: 470px 1fr;
     grid-template-rows: 1fr;
     gap: 10px;
     padding: 10px;
@@ -2735,7 +2735,7 @@
 
 /* Wider screens: a touch more room for the floating panels. */
 @media (min-width: 1400px) {
-  .frame-track { grid-template-columns: 504px 1fr; }
+  .frame-track { grid-template-columns: 470px 1fr; }
 }
 
 /* === Track strips: Race (full distance) + Lap (one straightened lap) === */

@@ -262,11 +262,20 @@ export const COLUMN_TIRES: ColumnConfig = {
 export const COLUMN_TAGS: ColumnConfig = {
   id: 'tags',
   header: 'Tags',
-  width: '92px',
+  width: '118px',
   align: 'center',
-  render: (driver: Driver, ctx: RowContext) => (
-    <TagChips tags={driver.tags} stack={ctx.effectStack} />
-  ),
+  render: (driver: Driver, ctx: RowContext) => {
+    // One column for everything on the car: identity tags, then the transient
+    // ones (track events, inflictions, damage) — they're all tags at heart.
+    const hits = (ctx.effectStack ?? []).filter(e => e.source === 'track_event' || e.source === 'infliction' || e.source === 'damage');
+    if (driver.tags.length === 0 && hits.length === 0) return <span className="muted-cell">—</span>;
+    return (
+      <span className="tag-chips">
+        {driver.tags.length > 0 && <TagChips tags={driver.tags} stack={ctx.effectStack} />}
+        {hits.length > 0 && <EffectChips entries={hits} />}
+      </span>
+    );
+  },
 };
 
 // Status icon (mid-race inflictions / effects)
@@ -307,7 +316,6 @@ export const TRACK_COLUMNS: ColumnConfig[] = [
   COLUMN_GAP_LEADER,
   COLUMN_LAST_LAP,
   COLUMN_TAGS,
-  COLUMN_STATUS,
 ];
 
 // Detail View: the rich broadcast data screen (F1 timing).
@@ -324,7 +332,6 @@ export const DETAIL_COLUMNS: ColumnConfig[] = [
   COLUMN_TIRE_AGE,
   COLUMN_PITS,
   COLUMN_TAGS,
-  COLUMN_STATUS,
 ];
 
 // Generate grid-template-columns CSS from column config

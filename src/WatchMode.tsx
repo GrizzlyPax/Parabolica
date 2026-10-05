@@ -1035,8 +1035,17 @@ function WatchMode({
       if (!entry) { entry = { key, emoji: e.emoji, name, laps: [], kind }; per.set(key, entry); }
       if (e.lap !== undefined && !entry.laps.includes(e.lap)) entry.laps.push(e.lap);
     }
+    // Safety car periods are field-wide: every driver's history gets them,
+    // from the lap history's sc flags (the deploy event carries no lap).
+    const scLaps: number[] = [];
+    for (const smp of engine.getLapHistory()) if (smp.sc && !scLaps.includes(smp.lap)) scLaps.push(smp.lap);
     const out = new Map<number, DriverHistoryEntry[]>();
-    for (const [id, per] of map) out.set(id, Array.from(per.values()));
+    for (const d of drivers) {
+      const per = map.get(d.id);
+      const list = per ? Array.from(per.values()) : [];
+      if (scLaps.length) list.push({ key: 'sc', emoji: '🚨', name: 'Safety car', laps: scLaps, kind: 'event' });
+      if (list.length) out.set(d.id, list);
+    }
     return out;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [drivers, engine]);
