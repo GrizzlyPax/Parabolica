@@ -299,9 +299,16 @@
    ============================================ */
 
 /* Hide speed control on mobile, show compact controls */
+.speed-cycle-btn { display: none; }
 @media (max-width: 639px) {
   .header-controls .speed-control {
     display: none;
+  }
+  .speed-cycle-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 44px; height: 32px; padding: 0 8px; border-radius: 6px;
+    border: 1px solid var(--pw-border-strong); background: var(--pw-raised); color: var(--pw-text-1);
+    font-family: var(--font-mono); font-size: 12px; font-weight: 600; cursor: pointer;
   }
 
   .control-btn {

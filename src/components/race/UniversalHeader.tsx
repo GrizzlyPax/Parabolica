@@ -122,6 +122,20 @@ function UniversalHeader({
             ↺
           </button>
 
+          {/* Phones: one button that cycles the speed (the full strip is hidden) */}
+          <button
+            type="button"
+            className="speed-cycle-btn"
+            onClick={() => {
+              const i = SPEED_OPTIONS.indexOf(raceSpeed);
+              onSpeedChange?.(SPEED_OPTIONS[(i + 1) % SPEED_OPTIONS.length]);
+            }}
+            title="Change speed"
+            aria-label={`Speed ${raceSpeed}x, tap to change`}
+          >
+            {raceSpeed}x
+          </button>
+
           {/* Speed control */}
           <div className="speed-control">
             {SPEED_OPTIONS.map(speed => (

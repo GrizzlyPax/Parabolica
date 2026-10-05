@@ -83,6 +83,16 @@
 .rs-driver-tags { min-width: 60px; text-align: right; }
 
 @media (max-width: 799px) {
+  .run-setup { padding: 14px 12px 32px; gap: 12px; }
+  .rs-title { font-size: 32px; }
+  .rs-row { padding: 12px 12px; }
+  .rs-hand { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .rs-card { min-height: 0; padding: 10px 10px; gap: 4px; }
+  .rs-card-name { font-size: 16px; }
+  .rs-card-readout { font-size: 12px; }
+  .rs-track-emoji { font-size: 30px; }
+  .rs-track-name { font-size: 22px; }
+  .rs-teams { grid-template-columns: 1fr; }
   .rs-start { width: 100%; margin-left: 0; }
   .rs-driver { grid-template-columns: minmax(0, 1fr) auto; }
   .rs-driver-stats { display: none; }
