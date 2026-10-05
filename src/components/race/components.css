@@ -336,3 +336,83 @@
   opacity: 1;
   filter: drop-shadow(0 0 3px rgba(216, 184, 96, 0.8));
 }
+
+/* === Tag chips are buttons now (#243) === */
+.tag-chip {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 2px 3px;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  font-size: 0.95rem;
+  line-height: 1;
+}
+.tag-chip:hover, .tag-chip.open { border-color: #3a3a44; background: rgba(255, 255, 255, 0.05); }
+.tag-chip.dormant:hover { opacity: 0.6; filter: grayscale(0.4); }
+.tag-chip:focus-visible { outline: 2px solid #a98bff; outline-offset: 1px; }
+
+/* === Tag card (popover) === */
+.tag-card {
+  background: #121216;
+  border: 1px solid #34343e;
+  border-radius: 12px;
+  padding: 14px 16px;
+  color: #f3f2ef;
+  font-family: var(--font-body);
+  font-size: 13px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+  text-align: left;
+}
+.tag-card-head { display: flex; align-items: center; gap: 10px; }
+.tag-card-emoji { font-size: 26px; line-height: 1; }
+.tag-card-title { flex: 1; min-width: 0; }
+.tag-card-name { font-family: var(--font-display); font-weight: 700; font-size: 20px; line-height: 1; }
+.tag-card-tier { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; color: #a6a6b0; margin-top: 4px; text-transform: uppercase; }
+.tag-card-close { background: transparent; border: 0; color: #7c7c88; font-size: 20px; line-height: 1; cursor: pointer; padding: 4px 6px; }
+.tag-card-close:hover { color: #f3f2ef; }
+.tag-card-desc { margin: 10px 0; color: #d9d8d4; line-height: 1.4; }
+.tag-card-status {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; font-weight: 600;
+  padding: 8px 10px; border-radius: 8px; margin-bottom: 8px;
+}
+.tag-card-status.on { background: rgba(52, 210, 122, 0.12); color: #34d27a; }
+.tag-card-status.off { background: rgba(255, 255, 255, 0.05); color: #a6a6b0; }
+.tag-card-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.tag-card-reason { letter-spacing: 0; font-weight: 400; text-transform: none; color: inherit; opacity: 0.9; }
+.tag-card-row { display: flex; gap: 10px; align-items: baseline; padding: 5px 0; border-top: 1px solid #1e1e25; }
+.tag-card-k { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; color: #7c7c88; width: 44px; flex: none; text-transform: uppercase; }
+.tag-card-none { color: #a6a6b0; font-style: normal; }
+.tag-card-quote { color: #a6a6b0; }
+
+/* === Effect pills (shared by card + focus row) === */
+.effect-pills { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+.effect-pill {
+  display: inline-flex; gap: 4px; align-items: baseline;
+  font-family: var(--font-mono); font-size: 11px;
+  padding: 2px 7px; border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06); color: #a6a6b0;
+}
+.effect-pill b { font-weight: 600; color: #f3f2ef; }
+.effect-pill.good { background: rgba(52, 210, 122, 0.12); color: #9fe6bd; }
+.effect-pill.good b { color: #34d27a; }
+.effect-pill.bad { background: rgba(255, 90, 79, 0.12); color: #f5b3ad; }
+.effect-pill.bad b { color: #ff8a80; }
+.effect-pill.neutral { color: #7c7c88; }
+
+/* === Focus row: facts + effect stack === */
+.expanded-fact { font-size: 12px; color: #a6a6b0; white-space: nowrap; }
+.expanded-k { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; color: #7c7c88; text-transform: uppercase; margin-right: 4px; }
+.effect-stack { display: flex; flex-direction: column; gap: 2px; padding: 6px 10px 8px 14px; }
+.effect-row {
+  display: flex; flex-wrap: wrap; column-gap: 8px; row-gap: 3px; align-items: center;
+  font-size: 12px; min-height: 24px; padding: 2px 0;
+}
+.effect-row .effect-emoji { font-size: 13px; width: 20px; text-align: center; flex: none; }
+.effect-row .effect-name { color: #f3f2ef; font-weight: 500; white-space: nowrap; }
+.effect-row .effect-reason { color: #7c7c88; font-family: var(--font-mono); font-size: 11px; }
+.effect-row .effect-pills { margin-left: auto; }
+.effect-row.inactive { opacity: 0.55; }
+.effect-row.inactive .effect-emoji { filter: grayscale(0.8); }

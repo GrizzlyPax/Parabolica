@@ -1,4 +1,4 @@
-import RaceEngine, { Driver, RaceConfig, RaceState, TrackInfo, RaceEvent } from './RaceEngine';
+import RaceEngine, { Driver, RaceConfig, RaceState, TrackInfo, RaceEvent, EffectStackEntry } from './RaceEngine';
 import { useMemo, useRef, useEffect, useState } from 'react';
 import {
   UniversalHeader,
@@ -993,6 +993,12 @@ function WatchMode({
     return chips;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [engine, trackInfo]);
+  const effectStacksMap = useMemo(() => {
+    const map = new Map<number, EffectStackEntry[]>();
+    for (const d of drivers) map.set(d.id, engine.getEffectStack(d.id));
+    return map;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [drivers, engine]);
   const activeTagsMap = useMemo(() => {
     const map = new Map<number, Set<string>>();
     for (const d of drivers) {
@@ -1121,6 +1127,7 @@ function WatchMode({
                   condensed={false}
                   statusEffects={statusEffectsMap}
                   activeTags={activeTagsMap}
+                  effectStacks={effectStacksMap}
                   positionDeltas={positionDeltasForTower}
                   fastestLapOverall={fastestLapOverall ?? undefined}
                   className="timing-tower-track"
@@ -1165,6 +1172,7 @@ function WatchMode({
                   expandable={false}
                   statusEffects={statusEffectsMap}
                   activeTags={activeTagsMap}
+                  effectStacks={effectStacksMap}
                   positionDeltas={positionDeltasForTower}
                   fastestLapOverall={fastestLapOverall ?? undefined}
                   className="timing-tower-detail"

@@ -1,6 +1,6 @@
 // Shared types for race components
 
-import { Driver, RaceState } from '../../RaceEngine';
+import { Driver, RaceState, EffectStackEntry } from '../../RaceEngine';
 
 // Column configuration for TimingTower
 export interface ColumnConfig {
@@ -25,6 +25,8 @@ export interface RowContext {
   /** Tag ids currently contributing effects (conditional gates open / triggered
    * activations live) — drives lit vs dormant tag chips. */
   activeTagIds?: Set<string>;
+  /** Everything acting on this driver right now, with reasons (engine.getEffectStack). */
+  effectStack?: EffectStackEntry[];
   isFocused: boolean;
   isFinished: boolean;
   isDNF: boolean;
@@ -57,6 +59,8 @@ export interface TimingTowerProps {
   statusEffects?: Map<number, string>;
   /** Per-driver tag ids currently contributing effects (see RowContext). */
   activeTags?: Map<number, Set<string>>;
+  /** Per-driver effect stacks (see RowContext.effectStack). */
+  effectStacks?: Map<number, EffectStackEntry[]>;
   positionDeltas?: Map<number, number>;
   fastestLapOverall?: number;
   className?: string;

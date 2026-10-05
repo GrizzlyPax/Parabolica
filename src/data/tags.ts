@@ -70,6 +70,54 @@ export function evaluateTagCondition(cond: TagCondition, ctx: RaceContext): bool
   }
 }
 
+/** Plain-words version of a condition, for the UI ("running top 3", "rain"). */
+export function describeCondition(cond: TagCondition): string {
+  switch (cond.when) {
+    case 'position': {
+      if (cond.max !== undefined && cond.min === undefined) return `running top ${cond.max}`;
+      if (cond.min !== undefined && cond.max === undefined) return `running P${cond.min} or lower`;
+      if (cond.min !== undefined && cond.max !== undefined) return `running P${cond.min}–P${cond.max}`;
+      return 'any position';
+    }
+    case 'positionFraction': {
+      if (cond.top !== undefined) return `top ${Math.round(cond.top * 100)}% of the field`;
+      if (cond.bottom !== undefined) return `bottom ${Math.round(cond.bottom * 100)}% of the field`;
+      return 'any position';
+    }
+    case 'lapProgress': {
+      if (cond.after !== undefined && cond.before === undefined) return cond.after === 0 ? 'all race' : `last ${Math.round((1 - cond.after) * 100)}% of the race`;
+      if (cond.before !== undefined && cond.after === undefined) return `first ${Math.round(cond.before * 100)}% of the race`;
+      return `between ${Math.round((cond.after ?? 0) * 100)}% and ${Math.round((cond.before ?? 1) * 100)}% of the race`;
+    }
+    case 'condition': return cond.has;
+    case 'damaged': return 'car damaged';
+    case 'tireWear': {
+      if (cond.above !== undefined) return `tyre wear over ${cond.above}%`;
+      if (cond.below !== undefined) return `tyre wear under ${cond.below}%`;
+      return 'any tyre wear';
+    }
+    default: return 'unknown condition';
+  }
+}
+
+/** Plain-words trigger, for the UI. */
+export const TRIGGER_LABELS: Record<TagTrigger, string> = {
+  passive: 'always on',
+  race_start: 'at the start',
+  pit_stop: 'on a pit stop',
+  overtake: 'on an overtake',
+  crash_proximity: 'near a crash',
+  final_lap: 'on the final lap',
+  track_event: 'on a track event',
+};
+
+export const TIER_LABELS: Record<TagTier, string> = {
+  quirk: 'Quirk · story only',
+  trait: 'Trait · noticeable lean',
+  power: 'Power · build-around',
+  destiny: 'Destiny · season-warping',
+};
+
 export interface Tag {
   id: string;
   name: string;

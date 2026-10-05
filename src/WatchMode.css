@@ -2600,19 +2600,19 @@
     flex: 1;
     min-height: 0;
     display: flex;
-    align-items: center;
+    align-items: stretch;
     justify-content: center;
     padding: 8px;
   }
 
-  /* Largest 16:9 box that fits below the header. width drives, max-width caps
-     by available height (≈ 100dvh − header) so height never overflows. */
+  /* The frame fills the height below the header. On a wide screen max-width
+     caps it at 16:9 (the F1-TV composition); on a tall or square window it
+     simply grows taller — never a dead band above or below (#243). */
   .broadcast-frame {
-    aspect-ratio: 16 / 9;
     width: 100%;
     max-width: calc((100dvh - 64px) * 16 / 9);
-    height: auto;
-    margin: auto;
+    height: 100%;
+    margin: 0 auto;
     background: #050506;
     border: 1px solid #1a1a1e;
     border-radius: 10px;

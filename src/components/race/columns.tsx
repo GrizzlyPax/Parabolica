@@ -7,6 +7,7 @@ import PositionDelta from './PositionDelta';
 import TireHistory from './TireHistory';
 import type { ColumnConfig, RowContext } from './types';
 import { Driver } from '../../RaceEngine';
+import TagChips from './TagChips';
 
 // Suffixes to ignore when extracting surname
 const NAME_SUFFIXES = new Set(['JR', 'JR.', 'SR', 'SR.', 'II', 'III', 'IV', 'V']);
@@ -261,30 +262,11 @@ export const COLUMN_TIRES: ColumnConfig = {
 export const COLUMN_TAGS: ColumnConfig = {
   id: 'tags',
   header: 'Tags',
-  width: '54px',
+  width: '92px',
   align: 'center',
-  render: (driver: Driver, ctx: RowContext) => {
-    const tags = driver.tags;
-    if (tags.length === 0) return <span className="muted-cell">—</span>;
-    return (
-      <span className="tag-chips">
-        {tags.slice(0, 4).map(tag => {
-          const isActive = ctx.activeTagIds?.has(tag.id) ?? false;
-          // Ungated passives are always-on: show them lit.
-          const alwaysOn = tag.trigger === 'passive' && !tag.condition;
-          return (
-            <span
-              key={tag.id}
-              className={`tag-chip ${isActive || alwaysOn ? 'active' : 'dormant'}`}
-              title={`${tag.name} — ${tag.description}`}
-            >
-              {tag.emoji}
-            </span>
-          );
-        })}
-      </span>
-    );
-  },
+  render: (driver: Driver, ctx: RowContext) => (
+    <TagChips tags={driver.tags} stack={ctx.effectStack} />
+  ),
 };
 
 // Status icon (mid-race inflictions / effects)

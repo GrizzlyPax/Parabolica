@@ -1,4 +1,4 @@
-import { Tag, getTagById, RaceContext, evaluateTagCondition } from './data/tags';
+import { Tag, getTagById, RaceContext, evaluateTagCondition, describeCondition, TRIGGER_LABELS } from './data/tags';
 import { WeatherState } from './data/weather';
 import { TrackTag } from './data/trackTags';
 import { INFLICTIONS } from './data/inflictions';
@@ -312,6 +312,27 @@ export interface ActiveEffect {
   luckModifier: number;          // 1.0 = no change
   crashResistance: number;       // 0 = no change, +0.3 = 30% less likely, -0.25 = 25% more likely
   pitSpeedModifier: number;      // 1.0 = no change, 0.75 = 25% faster, 1.5 = 50% slower
+}
+
+/** One thing acting on a driver right now (or waiting to), in UI terms.
+ * Built by getEffectStack — the legibility layer (#243). */
+export interface EffectStackEntry {
+  source: 'tag' | 'weather' | 'track' | 'track_event' | 'infliction' | 'damage' | 'safety_car';
+  id: string;
+  name: string;
+  emoji: string;
+  /** Is it contributing this tick? */
+  active: boolean;
+  /** Plain words: why it is (or isn't) active — "needs rain", "fired, 140 ticks left". */
+  reason: string;
+  /** Live contribution. Multipliers are 1 = none; crash is additive, 0 = none. */
+  speed: number;
+  consistency: number;
+  luck: number;
+  crash: number;
+  pit: number;
+  /** For tags: the tag definition, so the UI can show tier/description. */
+  tag?: Tag;
 }
 
 type RaceListener = (drivers: Driver[]) => void;
@@ -2196,6 +2217,82 @@ class RaceEngine {
     let m = this.weather?.effects.consistencyModifier ?? 1;
     for (const t of this.trackTags) m *= t.passive?.consistencyModifier ?? 1;
     return m;
+  }
+
+  /**
+   * Everything acting on one driver, with plain-words reasons — the data the
+   * tag card and the focus row's effect stack read (#243). Inert entries
+   * (dormant gated tags, triggered tags that haven't fired) are included with
+   * active=false so the UI can say WHY a chip is dim.
+   */
+  getEffectStack(driverId: number): EffectStackEntry[] {
+    const driver = this.drivers.find(d => d.id === driverId);
+    if (!driver) return [];
+    const ctx = this.raceContextCache.get(driverId);
+    const now = this.raceState.totalTicks;
+    const out: EffectStackEntry[] = [];
+    const liveTagEffects = (this.unifiedEffects.get(driverId) ?? []).filter(e => e.source === 'tag');
+
+    for (const tag of driver.tags) {
+      const fx = tag.effects;
+      const base = { source: 'tag' as const, id: tag.id, name: tag.name, emoji: tag.emoji, tag,
+        speed: fx.speedModifier ?? 1, consistency: fx.consistencyModifier ?? 1, luck: fx.luckModifier ?? 1,
+        crash: fx.crashResistance ?? 0, pit: fx.pitSpeedModifier ?? 1 };
+      if (tag.condition) {
+        const open = ctx ? evaluateTagCondition(tag.condition, ctx) : false;
+        const words = describeCondition(tag.condition);
+        out.push({ ...base, active: open, reason: open ? `on: ${words}` : `needs: ${words}` });
+        continue;
+      }
+      if (tag.trigger === 'passive') {
+        out.push({ ...base, active: true, reason: 'always on' });
+        continue;
+      }
+      const live = liveTagEffects.find(e => e.sourceId === tag.id && (e.expiresAtTick === null || e.expiresAtTick > now));
+      const fired = this.tagActivatedThisRace.has(`${driverId}-${tag.id}`);
+      const chance = tag.triggerChance ?? 1;
+      const chanceWords = chance < 1 ? ` (${Math.round(chance * 100)}% chance)` : '';
+      if (live) {
+        const left = live.expiresAtTick === null ? 'rest of race' : `${live.expiresAtTick - now} ticks left`;
+        out.push({ ...base, active: true, reason: `fired ${TRIGGER_LABELS[tag.trigger]} · ${left}` });
+      } else if (fired) {
+        out.push({ ...base, active: false, speed: 1, consistency: 1, luck: 1, crash: 0, pit: 1, reason: `fired earlier this race · spent` });
+      } else {
+        out.push({ ...base, active: false, speed: 1, consistency: 1, luck: 1, crash: 0, pit: 1, reason: `waits for: ${TRIGGER_LABELS[tag.trigger]}${chanceWords}` });
+      }
+    }
+
+    // Environment: weather + track tags, field-wide
+    if (this.weather && this.weather.id !== 'clear') {
+      const w = this.weather.effects;
+      out.push({ source: 'weather', id: this.weather.id, name: this.weather.name, emoji: this.weather.emoji, active: true,
+        reason: 'field-wide', speed: w.speedModifier ?? 1, consistency: w.consistencyModifier ?? 1, luck: 1, crash: w.crashResistance ?? 0, pit: 1 });
+    }
+    for (const t of this.trackTags) {
+      if (!t.passive) continue;
+      out.push({ source: 'track', id: t.id, name: t.name, emoji: t.emoji, active: true, reason: 'this track, field-wide',
+        speed: t.passive.speedModifier ?? 1, consistency: t.passive.consistencyModifier ?? 1, luck: 1, crash: t.passive.crashResistance ?? 0, pit: 1 });
+    }
+
+    // Track events + inflictions on this driver (unified effects, source 'track')
+    for (const e of this.unifiedEffects.get(driverId) ?? []) {
+      if (e.source !== 'track') continue;
+      if (e.expiresAtTick !== null && e.expiresAtTick <= now) continue;
+      const isInfliction = e.sourceId.startsWith('infliction-');
+      const left = e.expiresAtTick === null ? 'rest of race' : `${e.expiresAtTick - now} ticks left`;
+      out.push({ source: isInfliction ? 'infliction' : 'track_event', id: e.sourceId, name: e.sourceName, emoji: e.sourceEmoji,
+        active: true, reason: left, speed: e.speedModifier, consistency: e.consistencyModifier, luck: e.luckModifier, crash: e.crashResistance, pit: e.pitSpeedModifier });
+    }
+
+    if (driver.isDamaged) {
+      out.push({ source: 'damage', id: 'damage', name: 'Damaged car', emoji: '🔧', active: true, reason: 'survived a crash',
+        speed: driver.damageSpeedPenalty, consistency: 1, luck: 1, crash: 0, pit: 1 });
+    }
+    if (this.raceState.unsafetyCarActive) {
+      out.push({ source: 'safety_car', id: 'safety-car', name: 'Safety car', emoji: '🚨', active: true, reason: 'field held to the SC speed limit',
+        speed: 1, consistency: 1, luck: 1, crash: 0, pit: 1 });
+    }
+    return out;
   }
 
   private getEnvCrashResistance(): number {

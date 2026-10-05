@@ -4,6 +4,7 @@
 import { useMemo } from 'react';
 import type { DriverRowProps } from './types';
 import { getDriverRating, getCarRating } from '../../betting/utils';
+import { effectPills } from './TagChips';
 
 function DriverRow({ driver, columns, context, gridTemplate, isFocused, expandable = true, onClick }: DriverRowProps) {
   const { isFinished, isDNF, isPitting } = context;
@@ -50,19 +51,34 @@ function DriverRow({ driver, columns, context, gridTemplate, isFocused, expandab
         <div className="timing-row-expanded" style={{ '--team-color': driver.color } as React.CSSProperties}>
           <div className="expanded-content">
             <span className="expanded-full-name" style={{ color: driver.color }}>{driver.name}</span>
-            <div className="expanded-ratings">
-              <div className={`expanded-rating-ball tier-${driverRating.tier}`} title={driverRating.label}>
-                👤
-              </div>
-              <div className={`expanded-rating-ball tier-${carRating.tier}`} title={carRating.label}>
-                🏎️
-              </div>
-            </div>
+            <span className="expanded-fact"><span className="expanded-k">Driver</span> {driverRating.label}</span>
+            <span className="expanded-fact"><span className="expanded-k">Car</span> {carRating.label}</span>
             {driver.tireState && (
-              <span className="expanded-tire" data-compound={driver.tireState.compound}>
-                {driver.tireState.compound.charAt(0).toUpperCase()}
+              <span className="expanded-fact"><span className="expanded-k">Tyre</span>
+                <span className="expanded-tire" data-compound={driver.tireState.compound}>{driver.tireState.compound.charAt(0).toUpperCase()}</span>
+                {' '}{Math.round(driver.tireState.wear)}% worn · {driver.tireState.lapsOnTires} laps
               </span>
             )}
+          </div>
+          {/* The effect stack: everything acting on this driver, with the reason (#243) */}
+          <div className="effect-stack">
+            {(context.effectStack ?? []).length === 0 && (
+              <div className="effect-row inactive"><span className="effect-name">Nothing acting on this car</span></div>
+            )}
+            {(context.effectStack ?? []).map(e => {
+              const pills = e.active ? effectPills(e) : [];
+              return (
+                <div key={`${e.source}-${e.id}`} className={`effect-row ${e.active ? 'active' : 'inactive'} src-${e.source}`}>
+                  <span className="effect-emoji">{e.emoji}</span>
+                  <span className="effect-name">{e.name}</span>
+                  <span className="effect-reason">{e.reason}</span>
+                  <span className="effect-pills">
+                    {pills.map(p => <span key={p.label} className={`effect-pill ${p.good ? 'good' : 'bad'}`}><b>{p.value}</b> {p.label}</span>)}
+                    {e.active && pills.length === 0 && <span className="effect-pill neutral">no effect on the numbers</span>}
+                  </span>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
