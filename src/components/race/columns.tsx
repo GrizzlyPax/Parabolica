@@ -92,10 +92,7 @@ export const COLUMN_DRIVER_CODE: ColumnConfig = {
   width: '46px', // Fixed width - just 3 letters
   align: 'left',
   render: (driver: Driver, ctx: RowContext) => (
-    <span
-      className={`driver-code ${ctx.isFocused ? 'focused' : ''}`}
-      style={{ color: driver.color }}
-    >
+    <span className={`driver-code ${ctx.isFocused ? 'focused' : ''}`}>
       {getDriverCode(driver)}
     </span>
   ),
@@ -109,10 +106,7 @@ export const COLUMN_DRIVER_FULL_NAME: ColumnConfig = {
   align: 'left',
   render: (driver: Driver, ctx: RowContext) => (
     <>
-      <span
-        className={`driver-full-name ${ctx.isFocused ? 'focused' : ''}`}
-        style={{ color: driver.color }}
-      >
+      <span className={`driver-full-name ${ctx.isFocused ? 'focused' : ''}`}>
         {driver.name}
       </span>
       {ctx.fantasyTeam && <span className="fantasy-badge" style={{ '--fantasy-color': ctx.fantasyTeam.color } as React.CSSProperties}>{ctx.fantasyTeam.name}</span>}
@@ -127,7 +121,7 @@ export const COLUMN_TEAM_NAME: ColumnConfig = {
   width: 'minmax(96px, 1fr)',
   align: 'left',
   render: (driver: Driver) => (
-    <span className="team-name" style={{ color: driver.color }}>
+    <span className="team-name">
       {driver.teamName || ''}
     </span>
   ),
