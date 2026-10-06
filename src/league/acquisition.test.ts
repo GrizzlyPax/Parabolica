@@ -45,7 +45,9 @@ describe('acquired tags are a separate vocabulary', () => {
       expect(getTagById(t.id)?.id).toBe(t.id);
       expect(isGenesisTag(t), t.id).toBe(false);
       expect(pool.has(t.id), t.id).toBe(false);
-      expect(ACQUISITION_RULES.some(r => r.tagId === t.id), `rule for ${t.id}`).toBe(true);
+      // Reachable: a rule hands it out, or another tag's action does (#233).
+      const viaAction = ACQUIRED_TAGS.some(o => o.afterRace?.some(a => a.do === 'attach-tag' && a.tagId === t.id));
+      expect(ACQUISITION_RULES.some(r => r.tagId === t.id) || viaAction, `door for ${t.id}`).toBe(true);
     }
     for (const r of ACQUISITION_RULES) expect(getTagById(r.tagId), r.id).toBeDefined();
   });

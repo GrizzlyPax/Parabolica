@@ -61,7 +61,7 @@ export default function Glossary({ onBack }: GlossaryProps) {
   const tagRow = (t: GlossaryTag) => (
     <Row key={t.tag.id} id={`tag:${t.tag.id}`} open={isOpen(`tag:${t.tag.id}`)} onToggle={toggle}
       lead={<TagChips tags={[t.tag]} showName />}
-      note={TIER_LABELS[t.tag.tier].split(' · ')[0]}
+      note={<>{TIER_LABELS[t.tag.tier].split(' · ')[0]}{t.does.length > 0 && <span className="gl-does" title="Does something after a race">⚡</span>}</>}
       pills={<Pills effects={t.effects} />}>
       <p className="gl-desc">{t.tag.description}</p>
       <div className="gl-facts">
@@ -69,6 +69,7 @@ export default function Glossary({ onBack }: GlossaryProps) {
         <Fact k="On">{t.tag.target}</Fact>
         <Fact k="Fires">{t.fires}</Fact>
         <Fact k="Lasts">{t.lasts}</Fact>
+        {t.does.length > 0 && <Fact k="After a race">{t.does.join(' · ')}</Fact>}
       </div>
       <div className="gl-src">{t.source}</div>
     </Row>

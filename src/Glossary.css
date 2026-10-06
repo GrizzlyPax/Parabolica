@@ -39,3 +39,4 @@
   .gl-pills { grid-column: 1; }
   .gl-chev { grid-row: 1; grid-column: 2; }
 }
+.gl-does { margin-left: 6px; color: var(--pw-purple); }

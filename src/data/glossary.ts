@@ -2,7 +2,7 @@
 // the data modules so it can never drift. docs/GLOSSARY.md (npm run
 // glossary) and the in-game Glossary screen both render this.
 
-import { ALL_TAGS, Tag, TIER_LABELS, TRIGGER_LABELS, describeCondition, describeDuration, isGenesisTag } from './tags';
+import { ALL_TAGS, ActionTarget, Tag, TagAction, TIER_LABELS, TRIGGER_LABELS, describeCondition, describeDuration, getTagById, isGenesisTag } from './tags';
 import { CARDS } from './cards';
 import type { Card } from '../rules/ruleset';
 import { ACQUISITION_RULES, AcquisitionRule, AcquisitionTrigger } from './acquisitions';
@@ -37,6 +37,20 @@ export interface GlossaryTag {
   effects: GlossaryEffect[];
   /** How you get it, in words. */
   source: string;
+  /** What it does after a race, in words (#233). Empty = nothing. */
+  does: string[];
+}
+
+const TARGET_WORDS: Record<ActionTarget, string> = { self: 'themselves', teammate: 'their teammate', rival: 'whoever they crashed with', random: 'a random driver' };
+
+/** "20%: spreads 👻 Haunted to their teammate" */
+export function describeAction(a: TagAction): string {
+  const pct = a.chance >= 1 ? 'always' : `${Math.round(a.chance * 100)}%`;
+  if (a.do === 'expire-self') return `${pct}: wears off`;
+  const t = getTagById(a.tagId);
+  const name = t ? `${t.emoji} ${t.name}` : a.tagId;
+  if (a.do === 'remove-tag') return `${pct}: shakes off ${name}`;
+  return `${pct}: gives ${name} to ${TARGET_WORDS[a.to]}`;
 }
 
 export function tagGroup(t: Tag): TagGroup {
@@ -85,7 +99,9 @@ export function buildGlossaryTags(): GlossaryTag[] {
     if (group === 'genesis') source = `born with it (${isGenesisTag(tag) ? 'in the genesis pool' : 'not in the pool'}), or granted by the Commissionary`;
     if (group === 'acquired') {
       const rules = ACQUISITION_RULES.filter(r => r.tagId === tag.id);
-      source = rules.length ? rules.map(r => `${r.family}: ${describeTrigger(r.when)}`).join('; ') : 'no rule awards it yet';
+      const givers = ALL_TAGS.filter(o => o.afterRace?.some(a => a.do === 'attach-tag' && a.tagId === tag.id)).map(o => `passed on by ${o.emoji} ${o.name}`);
+      const ways = [...rules.map(r => `${r.family}: ${describeTrigger(r.when)}`), ...givers];
+      source = ways.length ? ways.join('; ') : 'no rule awards it yet';
     }
     if (group === 'in-race') {
       const rules = IN_RACE_RULES.filter(r => r.tagId === tag.id);
@@ -93,7 +109,7 @@ export function buildGlossaryTags(): GlossaryTag[] {
       lasts = rules.length ? describeInRaceDuration(rules[0].duration) : lasts;
     }
     if (group === 'condition') { source = 'stamped by a track event for one race'; lasts = 'one race'; }
-    return { tag, group, fires, lasts, effects: effectsOf(tag.effects), source };
+    return { tag, group, fires, lasts, effects: effectsOf(tag.effects), source, does: (tag.afterRace ?? []).map(describeAction) };
   });
 }
 
@@ -142,9 +158,9 @@ export function renderGlossaryMd(g: Glossary, version: string): string {
     '| Condition | Stamped on drivers by a track event for that race only |', '');
   const groups: [TagGroup, string][] = [['genesis', 'Genesis tags'], ['acquired', 'Acquired tags'], ['in-race', 'In-race tags'], ['condition', 'Condition tags']];
   for (const [grp, title] of groups) {
-    L.push(`## ${title}`, '', '| Tag | Tier | Target | Fires | Effect | Lasts | How you get it |', '|---|---|---|---|---|---|---|');
+    L.push(`## ${title}`, '', '| Tag | Tier | Target | Fires | Effect | Lasts | After a race | How you get it |', '|---|---|---|---|---|---|---|---|');
     for (const t of g.tags.filter(x => x.group === grp)) {
-      L.push(`| ${t.tag.emoji} **${t.tag.name}** \`${t.tag.id}\` — ${t.tag.description} | ${t.tag.tier} | ${t.tag.target} | ${t.fires} | ${fx(t.effects)} | ${t.lasts} | ${t.source} |`);
+      L.push(`| ${t.tag.emoji} **${t.tag.name}** \`${t.tag.id}\` — ${t.tag.description} | ${t.tag.tier} | ${t.tag.target} | ${t.fires} | ${fx(t.effects)} | ${t.lasts} | ${t.does.join('; ') || '—'} | ${t.source} |`);
     }
     L.push('');
   }

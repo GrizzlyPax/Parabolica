@@ -125,6 +125,18 @@ export type TagDuration = 'permanent' | 'season' | { races: number };
  * classic tags). Acquired-only tags never appear in the genesis pool. */
 export type TagSource = 'genesis' | 'acquired' | 'in-race' | 'intervention' | 'decree' | 'divine';
 
+/** Who an after-race action lands on (#233). `rival` = the driver they
+ * tangled with in this race (from the digest's crash pairs). */
+export type ActionTarget = 'self' | 'teammate' | 'rival' | 'random';
+
+/** Something a tag DOES after a race, beyond turning a dial (#233).
+ * Evaluated by settle for every tag carried into that race; every action
+ * rolls its own `chance` from a derived seed, so it replays identically. */
+export type TagAction =
+  | { do: 'attach-tag'; tagId: string; to: ActionTarget; chance: number; headline: string }
+  | { do: 'expire-self'; chance: number; headline: string }
+  | { do: 'remove-tag'; tagId: string; chance: number; headline: string };
+
 export interface Tag {
   id: string;
   name: string;
@@ -151,6 +163,8 @@ export interface Tag {
   triggerChance?: number;
   // Flavor text shown when tag activates
   activationText?: string;
+  /** Things this tag does after each race it was carried into (#233). */
+  afterRace?: TagAction[];
 }
 
 // ============ DRIVER TAGS ============
@@ -577,6 +591,9 @@ export const ACQUIRED_TAGS: Tag[] = [
     duration: { races: 3 },
     sources: ['acquired'],
     effects: { speedModifier: 1.02, consistencyModifier: 1.05 },
+    afterRace: [
+      { do: 'attach-tag', tagId: 'the-charger', to: 'self', chance: 0.15, headline: '{driver}\'s 🔥 Hot Streak hardens into {tag}' },
+    ],
   },
   {
     id: 'the-charger',
@@ -614,6 +631,9 @@ export const ACQUIRED_TAGS: Tag[] = [
     duration: { races: 4 },
     sources: ['acquired'],
     effects: { luckModifier: 0.8, crashResistance: -0.05 },
+    afterRace: [
+      { do: 'attach-tag', tagId: 'haunted', to: 'teammate', chance: 0.1, headline: 'Whatever is 👻 haunting {driver} crosses the garage to {target}' },
+    ],
   },
   {
     id: 'shaken',
@@ -626,6 +646,9 @@ export const ACQUIRED_TAGS: Tag[] = [
     duration: { races: 2 },
     sources: ['acquired'],
     effects: { consistencyModifier: 0.94 },
+    afterRace: [
+      { do: 'attach-tag', tagId: 'bad-blood', to: 'rival', chance: 0.5, headline: '{target} has 👊 Bad Blood with {driver} after that crash' },
+    ],
   },
   {
     id: 'hears-the-track',
@@ -638,6 +661,9 @@ export const ACQUIRED_TAGS: Tag[] = [
     duration: 'season',
     sources: ['acquired'],
     effects: {},
+    afterRace: [
+      { do: 'remove-tag', tagId: 'shaken', chance: 1, headline: 'The track tells {driver} to stop being 😵 Shaken. They listen.' },
+    ],
   },
   {
     id: 'marked-by-the-void',
@@ -650,6 +676,22 @@ export const ACQUIRED_TAGS: Tag[] = [
     duration: { races: 2 },
     sources: ['acquired'],
     effects: { luckModifier: 0.9 },
+    afterRace: [
+      { do: 'attach-tag', tagId: 'marked-by-the-void', to: 'random', chance: 0.1, headline: 'The 🕳️ Void loses interest in {driver} and notices {target}' },
+      { do: 'expire-self', chance: 0.1, headline: 'The 🕳️ Void forgets {driver}' },
+    ],
+  },
+  {
+    id: 'bad-blood',
+    name: 'Bad Blood',
+    emoji: '👊',
+    description: 'Someone is driving angry. Quicker, and less careful about it.',
+    target: 'driver',
+    trigger: 'passive',
+    tier: 'trait',
+    duration: { races: 3 },
+    sources: ['acquired'],
+    effects: { speedModifier: 1.02, crashResistance: -0.06 },
   },
 ];
 

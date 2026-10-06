@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { EffectStackEntry } from '../../RaceEngine';
 import { Tag, TIER_LABELS, TRIGGER_LABELS, describeCondition } from '../../data/tags';
+import { describeAction } from '../../data/glossary';
 
 interface TagChipsProps {
   tags: Tag[];
@@ -87,6 +88,9 @@ function TagCard({ tag, entry, anchor, onClose }: { tag: Tag; entry?: EffectStac
           </span>
         )}
       </div>
+      {tag.afterRace && tag.afterRace.length > 0 && (
+        <div className="tag-card-row"><span className="tag-card-k">After a race</span><span>{tag.afterRace.map(describeAction).join(' · ')}</span></div>
+      )}
       {tag.activationText && <div className="tag-card-row"><span className="tag-card-k">Feed</span><span className="tag-card-quote">“…{tag.activationText}”</span></div>}
     </div>,
     document.body

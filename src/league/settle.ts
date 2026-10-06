@@ -15,6 +15,7 @@ import { updateSeasonWithRaceResult } from '../types/season';
 import { LeagueState, RaceDigest, SettleResult, LiveRace } from './types';
 import { rosterStateAt } from './league';
 import { evaluateAcquisitions, expiriesAt, carryoverEntries } from './acquisition';
+import { evaluateActions } from './actions';
 import { pickHighlights } from './highlights';
 import { weatherForRace } from '../data/weather';
 import { intrinsicTrackTags } from '../data/trackTags';
@@ -245,8 +246,10 @@ export function settleLeague(league: LeagueState, options: SettleOptions): Settl
     const acquired = evaluateAcquisitions(working, digest, season, rosterIn);
     const carried = carryoverEntries(working, digest, rosterIn);
     const expired = expiriesAt(working, race.index, rosterIn);
-    digest.tagChanges = [...expired, ...acquired.changes, ...carried.changes];
-    const newEntries = [...acquired.entries, ...carried.entries];
+    // Then every tag carried into the race gets to DO something (#233).
+    const acted = evaluateActions(working, digest, rosterIn, [...acquired.entries, ...carried.entries]);
+    digest.tagChanges = [...expired, ...acquired.changes, ...carried.changes, ...acted.changes];
+    const newEntries = [...acquired.entries, ...carried.entries, ...acted.entries];
     if (newEntries.length) {
       working = { ...working, interventionLog: [...working.interventionLog, ...newEntries] };
     }

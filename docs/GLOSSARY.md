@@ -2,7 +2,7 @@
 
 *Generated from the data modules by `npm run glossary` — do not edit by hand. Engine v0.3.37.*
 
-38 tags (9 genesis · 7 acquired · 5 in-race · 17 condition) · 11 cards · 12 rules · 5 weathers · 3 track characters · 5 inflictions · 24 tracks
+39 tags (9 genesis · 8 acquired · 5 in-race · 17 condition) · 11 cards · 12 rules · 5 weathers · 3 track characters · 5 inflictions · 24 tracks
 
 ## How tags enter the world
 
@@ -16,61 +16,62 @@
 
 ## Genesis tags
 
-| Tag | Tier | Target | Fires | Effect | Lasts | How you get it |
-|---|---|---|---|---|---|---|
-| 🎯 **Clutch Performer** `clutch-performer` — Raises their game when it matters most | power | driver | on the final lap (70% chance) | +8% speed, +15% consistency | for good | born with it (in the genesis pool), or granted by the Commissionary |
-| 🌧️ **Rain Dancer** `rain-dancer` — Mysteriously faster when the skies open | destiny | driver | while in rain | +8% consistency, −15% crash risk | for good | born with it (in the genesis pool), or granted by the Commissionary |
-| 🐢 **Sunday Driver** `sunday-driver` — Slow starter who builds to a strong finish | power | driver | while last 40% of the race | +5% speed | for good | born with it (in the genesis pool), or granted by the Commissionary |
-| 💎 **Glass Cannon** `glass-cannon` — Blazingly fast but fragile | power | car | always on | +3% speed, +25% crash risk | for good | born with it (in the genesis pool), or granted by the Commissionary |
-| 👻 **Cursed Chassis** `cursed-chassis` — Something is wrong with this car. Nobody knows what. | power | car | always on | -2% consistency, -12% luck | for good | born with it (in the genesis pool), or granted by the Commissionary |
-| 🔧 **Pit Lane Special** `pit-lane-special` — Optimized for quick pit stops | trait | car | on a pit stop | -25% pit time | for good | born with it (in the genesis pool), or granted by the Commissionary |
-| 🐕 **Underdog Spirit** `underdog-spirit` — Performs better when behind | trait | team | while bottom 50% of the field | +3% speed, +10% luck | for good | born with it (in the genesis pool), or granted by the Commissionary |
-| 👑 **Front Runners** `front-runners` — Thrives when leading the pack | trait | team | while running top 5 | +4% consistency, −8% crash risk | for good | born with it (in the genesis pool), or granted by the Commissionary |
-| 🌀 **Chaotic Energy** `chaotic-energy` — Unpredictable - could be brilliant or disastrous | power | team | at the start (50% chance) | -20% consistency | for good | born with it (in the genesis pool), or granted by the Commissionary |
+| Tag | Tier | Target | Fires | Effect | Lasts | After a race | How you get it |
+|---|---|---|---|---|---|---|---|
+| 🎯 **Clutch Performer** `clutch-performer` — Raises their game when it matters most | power | driver | on the final lap (70% chance) | +8% speed, +15% consistency | for good | — | born with it (in the genesis pool), or granted by the Commissionary |
+| 🌧️ **Rain Dancer** `rain-dancer` — Mysteriously faster when the skies open | destiny | driver | while in rain | +8% consistency, −15% crash risk | for good | — | born with it (in the genesis pool), or granted by the Commissionary |
+| 🐢 **Sunday Driver** `sunday-driver` — Slow starter who builds to a strong finish | power | driver | while last 40% of the race | +5% speed | for good | — | born with it (in the genesis pool), or granted by the Commissionary |
+| 💎 **Glass Cannon** `glass-cannon` — Blazingly fast but fragile | power | car | always on | +3% speed, +25% crash risk | for good | — | born with it (in the genesis pool), or granted by the Commissionary |
+| 👻 **Cursed Chassis** `cursed-chassis` — Something is wrong with this car. Nobody knows what. | power | car | always on | -2% consistency, -12% luck | for good | — | born with it (in the genesis pool), or granted by the Commissionary |
+| 🔧 **Pit Lane Special** `pit-lane-special` — Optimized for quick pit stops | trait | car | on a pit stop | -25% pit time | for good | — | born with it (in the genesis pool), or granted by the Commissionary |
+| 🐕 **Underdog Spirit** `underdog-spirit` — Performs better when behind | trait | team | while bottom 50% of the field | +3% speed, +10% luck | for good | — | born with it (in the genesis pool), or granted by the Commissionary |
+| 👑 **Front Runners** `front-runners` — Thrives when leading the pack | trait | team | while running top 5 | +4% consistency, −8% crash risk | for good | — | born with it (in the genesis pool), or granted by the Commissionary |
+| 🌀 **Chaotic Energy** `chaotic-energy` — Unpredictable - could be brilliant or disastrous | power | team | at the start (50% chance) | -20% consistency | for good | — | born with it (in the genesis pool), or granted by the Commissionary |
 
 ## Acquired tags
 
-| Tag | Tier | Target | Fires | Effect | Lasts | How you get it |
-|---|---|---|---|---|---|---|
-| 🔥 **Hot Streak** `hot-streak` — Two wins on the bounce. Everything is coming easy. | trait | driver | always on | +2% speed, +5% consistency | 3 races | earned: 2 wins in a row |
-| 🐎 **The Charger** `the-charger` — Came through the field like it owed them money. Faster in traffic. | trait | driver | while bottom 50% of the field | +3% speed | rest of the season | earned: gained 10+ places from the grid and finished top 5 |
-| 🛡️ **Unkillable** `unkillable` — Walked away from a wreck and kept racing. Harder to put out now. | trait | driver | always on | −12% crash risk | for good | earned: damaged in a crash and still classified in the top 8 |
-| 👻 **Haunted** `haunted` — Three retirements in a row. Something followed them home. | power | driver | always on | -20% luck, +5% crash risk | 4 races | inflicted: 3 retirements in a row |
-| 😵 **Shaken** `shaken` — Crashed out last time. The hands are not quite steady yet. | trait | driver | always on | -6% consistency | 2 races | inflicted: retired in a crash |
-| 👂 **Hears the Track** `hears-the-track` — They say the asphalt talks to them. It has not said anything useful yet. | quirk | driver | always on | — | rest of the season | cosmic: 0.5% lottery per driver per race |
-| 🕳️ **Marked by the Void** `marked-by-the-void` — The universe simply decided. Fortune looks the other way for a while. | trait | driver | always on | -10% luck | 2 races | cosmic: 0.3% lottery per driver per race |
+| Tag | Tier | Target | Fires | Effect | Lasts | After a race | How you get it |
+|---|---|---|---|---|---|---|---|
+| 🔥 **Hot Streak** `hot-streak` — Two wins on the bounce. Everything is coming easy. | trait | driver | always on | +2% speed, +5% consistency | 3 races | 15%: gives 🐎 The Charger to themselves | earned: 2 wins in a row |
+| 🐎 **The Charger** `the-charger` — Came through the field like it owed them money. Faster in traffic. | trait | driver | while bottom 50% of the field | +3% speed | rest of the season | — | earned: gained 10+ places from the grid and finished top 5; passed on by 🔥 Hot Streak |
+| 🛡️ **Unkillable** `unkillable` — Walked away from a wreck and kept racing. Harder to put out now. | trait | driver | always on | −12% crash risk | for good | — | earned: damaged in a crash and still classified in the top 8 |
+| 👻 **Haunted** `haunted` — Three retirements in a row. Something followed them home. | power | driver | always on | -20% luck, +5% crash risk | 4 races | 10%: gives 👻 Haunted to their teammate | inflicted: 3 retirements in a row; passed on by 👻 Haunted |
+| 😵 **Shaken** `shaken` — Crashed out last time. The hands are not quite steady yet. | trait | driver | always on | -6% consistency | 2 races | 50%: gives 👊 Bad Blood to whoever they crashed with | inflicted: retired in a crash |
+| 👂 **Hears the Track** `hears-the-track` — They say the asphalt talks to them. It has not said anything useful yet. | quirk | driver | always on | — | rest of the season | always: shakes off 😵 Shaken | cosmic: 0.5% lottery per driver per race |
+| 🕳️ **Marked by the Void** `marked-by-the-void` — The universe simply decided. Fortune looks the other way for a while. | trait | driver | always on | -10% luck | 2 races | 10%: gives 🕳️ Marked by the Void to a random driver; 10%: wears off | cosmic: 0.3% lottery per driver per race; passed on by 🕳️ Marked by the Void |
+| 👊 **Bad Blood** `bad-blood` — Someone is driving angry. Quicker, and less careful about it. | trait | driver | always on | +2% speed, +6% crash risk | 3 races | — | passed on by 😵 Shaken |
 
 ## In-race tags
 
-| Tag | Tier | Target | Fires | Effect | Lasts | How you get it |
-|---|---|---|---|---|---|---|
-| 🔧 **Damaged** `damaged` — Survived a crash. The car is 15% slower for the rest of the race. | power | driver | always on | -15% speed | rest of the race | mid-race, after surviving a crash |
-| 🌀 **Spun** `spun` — Just swapped ends. The next couple of laps are ragged. | trait | driver | always on | -10% consistency | 2 laps | mid-race, after a driver error |
-| 🔥 **Cooked Tyres** `cooked-tyres` — Past the cliff. Slower until the next stop. | trait | driver | always on | -3% speed | until the next pit stop | mid-race, after tyres falling off the cliff |
-| 🐢 **Sulking** `sulking` — That stop was slow and everyone knows it. | quirk | driver | always on | -4% consistency | 1 lap | mid-race, after a slow pit stop |
-| ⚡ **Fired Up** `fired-up` — A lightning stop. The whole crew is buzzing. | quirk | driver | always on | +1% speed | 1 lap | mid-race, after a lightning pit stop |
+| Tag | Tier | Target | Fires | Effect | Lasts | After a race | How you get it |
+|---|---|---|---|---|---|---|---|
+| 🔧 **Damaged** `damaged` — Survived a crash. The car is 15% slower for the rest of the race. | power | driver | always on | -15% speed | rest of the race | — | mid-race, after surviving a crash |
+| 🌀 **Spun** `spun` — Just swapped ends. The next couple of laps are ragged. | trait | driver | always on | -10% consistency | 2 laps | — | mid-race, after a driver error |
+| 🔥 **Cooked Tyres** `cooked-tyres` — Past the cliff. Slower until the next stop. | trait | driver | always on | -3% speed | until the next pit stop | — | mid-race, after tyres falling off the cliff |
+| 🐢 **Sulking** `sulking` — That stop was slow and everyone knows it. | quirk | driver | always on | -4% consistency | 1 lap | — | mid-race, after a slow pit stop |
+| ⚡ **Fired Up** `fired-up` — A lightning stop. The whole crew is buzzing. | quirk | driver | always on | +1% speed | 1 lap | — | mid-race, after a lightning pit stop |
 
 ## Condition tags
 
-| Tag | Tier | Target | Fires | Effect | Lasts | How you get it |
-|---|---|---|---|---|---|---|
-| 🌫️ **Low Visibility** `low-visibility` — Fog, mist, or smoke reducing driver visibility | trait | condition | on a track event | -8% consistency, +15% crash risk | one race | stamped by a track event for one race |
-| 💧 **Slippery Surface** `slippery-surface` — Oil, water, or debris on the track | power | condition | on a track event | -12% consistency, +20% crash risk | one race | stamped by a track event for one race |
-| ⚠️ **Debris Hazard** `debris-hazard` — Track debris creating danger | power | condition | on a track event | +25% crash risk | one race | stamped by a track event for one race |
-| 💨 **Dust Cloud** `dust-cloud` — Kicked-up dust reducing visibility | trait | condition | on a track event | -6% consistency, +12% crash risk | one race | stamped by a track event for one race |
-| ⚡ **Adrenaline Surge** `adrenaline-surge` — A burst of speed from the excitement | trait | condition | on a track event | +8% speed | one race | stamped by a track event for one race |
-| 🌀 **Slipstream Boost** `slipstream-boost` — Caught a powerful slipstream | quirk | condition | on a track event | +5% speed | one race | stamped by a track event for one race |
-| 📈 **Track Evolution** `track-evolution` — Track grip improving with rubber buildup | quirk | condition | on a track event | +4% speed, +5% consistency | one race | stamped by a track event for one race |
-| 🍃 **Headwind** `headwind` — Strong headwind reducing straight-line speed | trait | condition | on a track event | -6% speed | one race | stamped by a track event for one race |
-| 🌡️ **Cooling Issues** `cooling-issues` — High temperatures forcing reduced pace | trait | condition | on a track event | -8% speed, -5% consistency | one race | stamped by a track event for one race |
-| 🛞 **Tire Graining** `tire-graining` — Temporary loss of tire grip | trait | condition | on a track event | -5% speed, +8% crash risk | one race | stamped by a track event for one race |
-| 😵 **Distracted** `distracted` — Lost focus, making small mistakes | trait | condition | on a track event | -4% speed, -10% consistency | one race | stamped by a track event for one race |
-| 🎯 **In The Zone** `in-the-zone` — Perfect focus, hitting every apex | trait | condition | on a track event | +6% speed, +10% consistency | one race | stamped by a track event for one race |
-| 😰 **Rattled** `rattled` — Shaken up, driving cautiously | trait | condition | on a track event | -7% speed, −15% crash risk | one race | stamped by a track event for one race |
-| 🔥 **Desperate Push** `desperate-push` — Nothing to lose, pushing hard | power | condition | on a track event | +10% speed, +20% crash risk | one race | stamped by a track event for one race |
-| 🚧 **Pit Congestion** `pit-congestion` — Heavy pit lane traffic | trait | condition | on a track event | +25% pit time | one race | stamped by a track event for one race |
-| 🔧 **Equipment Malfunction** `equipment-malfunction` — Pit equipment issues causing delays | power | condition | on a track event | +40% pit time | one race | stamped by a track event for one race |
-| 👐 **Fast Hands** `fast-hands` — Pit crew on fire today | trait | condition | on a track event | -20% pit time | one race | stamped by a track event for one race |
+| Tag | Tier | Target | Fires | Effect | Lasts | After a race | How you get it |
+|---|---|---|---|---|---|---|---|
+| 🌫️ **Low Visibility** `low-visibility` — Fog, mist, or smoke reducing driver visibility | trait | condition | on a track event | -8% consistency, +15% crash risk | one race | — | stamped by a track event for one race |
+| 💧 **Slippery Surface** `slippery-surface` — Oil, water, or debris on the track | power | condition | on a track event | -12% consistency, +20% crash risk | one race | — | stamped by a track event for one race |
+| ⚠️ **Debris Hazard** `debris-hazard` — Track debris creating danger | power | condition | on a track event | +25% crash risk | one race | — | stamped by a track event for one race |
+| 💨 **Dust Cloud** `dust-cloud` — Kicked-up dust reducing visibility | trait | condition | on a track event | -6% consistency, +12% crash risk | one race | — | stamped by a track event for one race |
+| ⚡ **Adrenaline Surge** `adrenaline-surge` — A burst of speed from the excitement | trait | condition | on a track event | +8% speed | one race | — | stamped by a track event for one race |
+| 🌀 **Slipstream Boost** `slipstream-boost` — Caught a powerful slipstream | quirk | condition | on a track event | +5% speed | one race | — | stamped by a track event for one race |
+| 📈 **Track Evolution** `track-evolution` — Track grip improving with rubber buildup | quirk | condition | on a track event | +4% speed, +5% consistency | one race | — | stamped by a track event for one race |
+| 🍃 **Headwind** `headwind` — Strong headwind reducing straight-line speed | trait | condition | on a track event | -6% speed | one race | — | stamped by a track event for one race |
+| 🌡️ **Cooling Issues** `cooling-issues` — High temperatures forcing reduced pace | trait | condition | on a track event | -8% speed, -5% consistency | one race | — | stamped by a track event for one race |
+| 🛞 **Tire Graining** `tire-graining` — Temporary loss of tire grip | trait | condition | on a track event | -5% speed, +8% crash risk | one race | — | stamped by a track event for one race |
+| 😵 **Distracted** `distracted` — Lost focus, making small mistakes | trait | condition | on a track event | -4% speed, -10% consistency | one race | — | stamped by a track event for one race |
+| 🎯 **In The Zone** `in-the-zone` — Perfect focus, hitting every apex | trait | condition | on a track event | +6% speed, +10% consistency | one race | — | stamped by a track event for one race |
+| 😰 **Rattled** `rattled` — Shaken up, driving cautiously | trait | condition | on a track event | -7% speed, −15% crash risk | one race | — | stamped by a track event for one race |
+| 🔥 **Desperate Push** `desperate-push` — Nothing to lose, pushing hard | power | condition | on a track event | +10% speed, +20% crash risk | one race | — | stamped by a track event for one race |
+| 🚧 **Pit Congestion** `pit-congestion` — Heavy pit lane traffic | trait | condition | on a track event | +25% pit time | one race | — | stamped by a track event for one race |
+| 🔧 **Equipment Malfunction** `equipment-malfunction` — Pit equipment issues causing delays | power | condition | on a track event | +40% pit time | one race | — | stamped by a track event for one race |
+| 👐 **Fast Hands** `fast-hands` — Pit crew on fire today | trait | condition | on a track event | -20% pit time | one race | — | stamped by a track event for one race |
 
 ## Cards
 
