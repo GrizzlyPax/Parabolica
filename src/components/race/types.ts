@@ -26,6 +26,8 @@ export interface RowContext {
   positionDelta?: number;
   /** Starting grid slot (1 = pole), or undefined before qualifying. */
   gridSlot?: number;
+  /** Speed vs the running pack's median this tick: 'hot' ≥ +4%, 'quick' ≥ +1%, 'slow' ≤ −3%, else 'pack'. */
+  speedTone?: 'hot' | 'quick' | 'pack' | 'slow';
   /** In a fight right now: attacking the car ahead or defending from the car behind. */
   battle?: { role: 'attacking' | 'defending'; ticks: number; otherId: number };
   intervalGap: string;

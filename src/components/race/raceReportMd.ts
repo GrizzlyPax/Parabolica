@@ -188,10 +188,10 @@ export function buildRaceReportMd(meta: RaceReportMeta, drivers: Driver[], sampl
     if (notable.length) {
       lines.push('## Incidents');
       lines.push('');
-      lines.push('| Lap | Tick | Type | Driver | What |');
+      lines.push('| Lap | Time | Type | Driver | What |');
       lines.push('|-----|------|------|--------|------|');
       for (const e of notable.slice(0, 80)) {
-        lines.push(`| ${e.lap ?? '—'} | ${e.tick} | ${e.type} | ${byDriver.get(e.driverId)?.name ?? '—'} | ${e.emoji} ${e.description} |`);
+        lines.push(`| ${e.lap ?? '—'} | ${fmtDuration(e.tick)} | ${e.type} | ${byDriver.get(e.driverId)?.name ?? '—'} | ${e.emoji} ${e.description} |`);
       }
       if (notable.length > 80) lines.push(`| … | | | | +${notable.length - 80} more |`);
       lines.push('');

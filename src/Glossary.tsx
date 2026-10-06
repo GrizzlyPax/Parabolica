@@ -210,7 +210,7 @@ export default function Glossary({ onBack }: GlossaryProps) {
                 <p className="gl-desc">{i.activationText}</p>
                 <div className="gl-facts">
                   <Fact k="Needs">{i.requiresCondition.join(', ')}</Fact>
-                  <Fact k="Lasts">{i.durationTicks} ticks</Fact>
+                  <Fact k="Lasts">~{Math.round(i.durationTicks / 10)}s</Fact>
                 </div>
               </Row>
             ))}

@@ -144,11 +144,11 @@ Bucket sizes in the default pool: common 3 · uncommon 5 · rare 1 · legendary 
 
 | Infliction | Needs | Effect | Lasts |
 |---|---|---|---|
-| ⚡ **Electrocuted** `electrocuted` | rain | -8% speed | 300 ticks |
-| 🌫️ **Lost in Fog** `lost-in-fog` | fog | -12% consistency | 350 ticks |
-| 🥵 **Overheating** `overheating` | scorcher | -6% speed | 250 ticks |
-| 🌬️ **Tailwind** `tailwind` | windy | +6% speed | 200 ticks |
-| 🪨 **Debris Strike** `debris-strike` | debris-hazard | -5% speed, +10% crash risk | 250 ticks |
+| ⚡ **Electrocuted** `electrocuted` | rain | -8% speed | ~30s |
+| 🌫️ **Lost in Fog** `lost-in-fog` | fog | -12% consistency | ~35s |
+| 🥵 **Overheating** `overheating` | scorcher | -6% speed | ~25s |
+| 🌬️ **Tailwind** `tailwind` | windy | +6% speed | ~20s |
+| 🪨 **Debris Strike** `debris-strike` | debris-hazard | -5% speed, +10% crash risk | ~25s |
 
 ## Tracks
 

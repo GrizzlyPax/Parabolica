@@ -182,7 +182,7 @@ export function renderGlossaryMd(g: Glossary, version: string): string {
   L.push('', '## Track characters', '', '| Character | Field-wide | Stamps |', '|---|---|---|');
   for (const t of g.trackTags) L.push(`| ${t.emoji} **${t.name}** \`${t.id}\` | ${fx(effectsOf(t.passive ?? {}))} | ${(t.conditions ?? []).join(', ') || '—'} |`);
   L.push('', '## Inflictions (mid-race, from conditions)', '', '| Infliction | Needs | Effect | Lasts |', '|---|---|---|---|');
-  for (const i of g.inflictions) L.push(`| ${i.emoji} **${i.name}** \`${i.id}\` | ${i.requiresCondition.join(', ')} | ${fx(effectsOf(i.effects))} | ${i.durationTicks} ticks |`);
+  for (const i of g.inflictions) L.push(`| ${i.emoji} **${i.name}** \`${i.id}\` | ${i.requiresCondition.join(', ')} | ${fx(effectsOf(i.effects))} | ~${Math.round(i.durationTicks / 10)}s |`);
   L.push('', '## Tracks', '', '| Track | Laps | Length | Character | Event |', '|---|---|---|---|---|');
   for (const t of g.tracks) { const tt = g.trackTags.filter(x => intrinsicTrackTags(t.id).some(i => i.id === x.id)); L.push(`| ${t.funEmoji} **${t.name}** \`${t.id}\` | ${t.laps} | ${t.length}m | ${tt.map(x => `${x.emoji} ${x.name}`).join(', ') || '—'} | ${t.event ? `${t.event.emoji} ${t.event.name}` : '—'} |`); }
   L.push('');

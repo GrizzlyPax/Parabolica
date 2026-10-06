@@ -2633,7 +2633,7 @@
   .frame-track {
     display: grid;
     /* #246: the track tower gained GRID▲ and TYRE columns */
-    grid-template-columns: 560px 1fr;
+    grid-template-columns: 610px 1fr;
     grid-template-rows: 1fr;
     gap: 10px;
     padding: 10px;

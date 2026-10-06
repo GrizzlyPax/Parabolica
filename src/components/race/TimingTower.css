@@ -676,7 +676,7 @@
   .timing-tower.timing-tower-track .col-gapLeader { display: none; }
   .timing-tower.timing-tower-track .timing-row,
   .timing-tower.timing-tower-track .timing-tower-header {
-    grid-template-columns: 28px 24px 24px 44px 54px 52px 46px 60px !important;
+    grid-template-columns: 28px 24px 24px 44px 54px 44px 52px 46px 60px !important;
   }
   .timing-tower.timing-tower-track .col-gridDelta .grid-delta { font-size: 0.6rem; }
   .timing-tower.timing-tower-track .col-tags .tag-chip:nth-child(n+3) { display: none; }
@@ -695,3 +695,9 @@
 .gap-swords { margin-right: 3px; font-size: 0.8em; animation: swords-pulse 1.2s ease-in-out infinite; }
 @keyframes swords-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
 .grid-delta.flat { color: var(--pw-text-3); }
+
+/* Live speed, toned against the pack: purple flying, green quick, dim pack, red slow */
+.speed-value { font-variant-numeric: tabular-nums; font-weight: 700; font-size: 0.86rem; color: var(--pw-text-2); }
+.speed-value.tone-hot { color: var(--pw-purple); }
+.speed-value.tone-quick { color: var(--pw-green); }
+.speed-value.tone-slow { color: var(--pw-red-soft); }

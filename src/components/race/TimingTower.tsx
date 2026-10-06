@@ -92,6 +92,12 @@ function TimingTower({
     return [...finished, ...racing, ...dnf];
   }, [drivers, finishOrder, totalSectorCrossings, gridOrder]);
 
+  // Pack speed: median smoothed speed of the cars still racing.
+  const packSpeed = useMemo(() => {
+    const v = drivers.filter(d => d.status === 'racing' && d.speedSmooth > 0).map(d => d.speedSmooth).sort((a, b) => a - b);
+    return v.length ? v[Math.floor(v.length / 2)] : 0;
+  }, [drivers]);
+
   // Generate row context for each driver
   const getRowContext = (driver: Driver, index: number): RowContext => {
     const isFinished = driver.status === 'finished';
@@ -112,6 +118,11 @@ function TimingTower({
 
     // Position delta
     const positionDelta = positionDeltas?.get(driver.id);
+    let speedTone: RowContext['speedTone'];
+    if (packSpeed > 0 && driver.status === 'racing' && driver.speedSmooth > 0) {
+      const r = driver.speedSmooth / packSpeed - 1;
+      speedTone = r >= 0.04 ? 'hot' : r >= 0.01 ? 'quick' : r <= -0.03 ? 'slow' : 'pack';
+    }
     const gridIdx = gridOrder ? gridOrder.indexOf(driver.id) : -1;
     const gridSlot = gridIdx >= 0 ? gridIdx + 1 : undefined;
     let battle: RowContext['battle'];
@@ -225,6 +236,7 @@ function TimingTower({
       positionDelta,
       gridSlot,
       battle,
+      speedTone,
       intervalGap,
       leaderGap,
       lastLapTime,

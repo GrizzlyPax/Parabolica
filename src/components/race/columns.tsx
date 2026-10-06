@@ -177,6 +177,22 @@ export const COLUMN_GRID_DELTA: ColumnConfig = {
   },
 };
 
+/** Units/tick → km/h: a tick is 100 ms and a lap unit is a metre, so ×10 m/s ×3.6. */
+export function kmh(unitsPerTick: number): number { return Math.round(unitsPerTick * 36); }
+
+// Live speed, coloured against the pack (#246: no more "ticks")
+export const COLUMN_SPEED: ColumnConfig = {
+  id: 'speed',
+  header: 'km/h',
+  width: '52px',
+  align: 'right',
+  render: (driver: Driver, ctx: RowContext) => {
+    if (driver.status !== 'racing' || driver.speedSmooth <= 0) return <span className="muted-cell">—</span>;
+    const titles = { hot: 'Flying — well above the pack', quick: 'Quicker than the pack', pack: 'Pack pace', slow: 'Slower than the pack' };
+    return <span className={`speed-value tone-${ctx.speedTone ?? 'pack'}`} title={ctx.speedTone ? titles[ctx.speedTone] : undefined}>{kmh(driver.speedSmooth)}</span>;
+  },
+};
+
 // Interval to the car ahead (the racing battle)
 export const COLUMN_GAP_AHEAD: ColumnConfig = {
   id: 'gapAhead',
@@ -369,6 +385,7 @@ export const TRACK_COLUMNS: ColumnConfig[] = [
   COLUMN_DRIVER_CODE,
   COLUMN_GAP_AHEAD,
   COLUMN_GAP_LEADER,
+  COLUMN_SPEED,
   COLUMN_LAST_LAP,
   COLUMN_TIRE_AGE,
   COLUMN_TAGS,
@@ -384,6 +401,7 @@ export const DETAIL_COLUMNS: ColumnConfig[] = [
   COLUMN_GRID,
   COLUMN_GAP_AHEAD,
   COLUMN_GAP_LEADER,
+  COLUMN_SPEED,
   COLUMN_LAST_LAP,
   COLUMN_BEST_LAP,
   COLUMN_TIRE_AGE,

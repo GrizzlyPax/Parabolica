@@ -68,6 +68,8 @@ export interface Driver {
   lapTimes: number[];     // Time (in ticks) for each completed lap
   sectorTimes: number[];  // Cumulative race time (in ticks) at each sector crossing (S1, S2, S3, S1, S2, S3, ...)
   lastTickSpeed: number;  // Speed from the most recent tick (for debug display)
+  /** Smoothed speed (units/tick, ~1s window) — what the SPEED column shows. */
+  speedSmooth: number;
   lastTickFactors: TickFactors | null; // Breakdown of what affected speed
   // Extended info for generated drivers
   firstName?: string;
@@ -642,6 +644,7 @@ class RaceEngine {
         lapTimes: [],
         sectorTimes: [],
         lastTickSpeed: 0,
+        speedSmooth: 0,
         lastTickFactors: null,
         // Tire/Pit/Crash initial state
         tireState: {
@@ -701,6 +704,7 @@ class RaceEngine {
         lapTimes: [],
         sectorTimes: [],
         lastTickSpeed: 0,
+        speedSmooth: 0,
         lastTickFactors: null,
         firstName: d.firstName,
         lastName: d.lastName,
@@ -1096,6 +1100,7 @@ class RaceEngine {
         lapTimes: [],
         sectorTimes: [],
         lastTickSpeed: 0,
+        speedSmooth: 0,
         lastTickFactors: null,
         tireState: {
           compound: startingCompound,
@@ -3037,6 +3042,7 @@ class RaceEngine {
         lapTimes: newLapTimes,
         sectorTimes: newSectorTimes,
         lastTickSpeed: adjustedSpeed,
+        speedSmooth: driver.speedSmooth > 0 ? driver.speedSmooth * 0.85 + adjustedSpeed * 0.15 : adjustedSpeed,
         lastTickFactors: factors,
         tireState: {
           ...driver.tireState,
