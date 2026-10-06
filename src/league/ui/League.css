@@ -1152,3 +1152,5 @@ button.section-toggle:hover { color: var(--pw-text-2); }
 .digest-tag-changes { list-style: none; margin: 8px 0 4px; padding: 0; display: flex; flex-direction: column; gap: 4px; }
 .digest-tag-change { display: flex; gap: 8px; align-items: baseline; padding: 6px 10px; border-radius: var(--pw-radius-s); background: rgba(169, 139, 255, 0.08); border: 1px solid rgba(169, 139, 255, 0.25); font-size: 13px; }
 .digest-tag-change.expire { background: rgba(255, 255, 255, 0.04); border-color: var(--pw-border); color: var(--pw-text-2); }
+.founding-help { font-size: 13.5px; color: var(--pw-text-2); line-height: 1.45; margin: 0 0 10px; }
+.founding-help .rs-link { margin-left: 6px; }

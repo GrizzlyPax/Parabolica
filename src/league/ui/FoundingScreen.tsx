@@ -1,8 +1,14 @@
-// The Founding: where the Commissionary names a league, kneels to a god, and
-// fixes the calendar. Everything chosen here is sealed into the league seed.
+// The Founding: where the Commissionary names a league, fixes the calendar,
+// and drafts the fantasy teams. Everything chosen here is sealed into the
+// league seed. (Gods are parked: the data stays in gods.ts for a later
+// mechanic; a league is founded under the first one, silently.)
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { GODS } from '../gods';
+import { generateGenesisRoster } from '../league';
+import { randomSeed } from '../../engine/rng';
+import { DraftPanel, emptyFantasy } from '../../fantasy/DraftPanel';
+import { draftComplete, type FantasyConfig } from '../../fantasy/types';
 import { CURRENT_TEAMS, HISTORIC_TEAMS, makeCustomTeam, Team } from '../../data/teams';
 import { generateTeamIdentities } from '../../generators/teamIdentity';
 import { cardsForScope, CARDS_BY_ID } from '../../data/cards';
@@ -13,6 +19,10 @@ import '../../RunSetup.css';
 export interface FoundingChoices {
   name: string;
   godId: string;
+  /** The universe seed — chosen here so the fantasy draft can see the grid it's drafting from. */
+  leagueSeed: number;
+  /** Fantasy teams, when a complete draft was made. */
+  fantasy?: FantasyConfig;
   raceCount: number;
   raceIntervalMs: number;
   /** Registry teams (preset + historic) selected for the grid. */
@@ -46,7 +56,7 @@ const MAX_RACES = 24;
 
 function FoundingScreen({ onFound, onBack }: FoundingScreenProps) {
   const [name, setName] = useState('');
-  const [godId, setGodId] = useState<string | null>(null);
+  const godId = GODS[0].id;
   const [raceCount, setRaceCount] = useState(12);
   // Free-form season length (e.g. a 2-race test run); '' = using a preset
   const [customCount, setCustomCount] = useState('');
@@ -61,10 +71,8 @@ function FoundingScreen({ onFound, onBack }: FoundingScreenProps) {
   // The in-progress custom team (null = form closed).
   const [draft, setDraft] = useState<{ name: string; emoji: string; color: string; accent: string } | null>(null);
 
-  const god = GODS.find(g => g.id === godId);
   const teamCount = selectedIds.size + customTeams.length;
   const teamsOk = teamCount >= MIN_TEAMS && teamCount <= MAX_TEAMS;
-  const canFound = godId !== null && teamsOk;
 
   const toggleTeam = (id: string) => {
     setSelectedIds(prev => {
@@ -96,13 +104,32 @@ function FoundingScreen({ onFound, onBack }: FoundingScreenProps) {
   const rulesLines = describeRuleset(ruleset);
   const toggleCard = (id: string) => setHand(h => (h.includes(id) ? h.filter(x => x !== id) : [...h, id]));
 
+  // The universe is fixed here so the draft can see the actual grid. Re-roll
+  // gives a new one (and clears any picks, since the people change).
+  const [leagueSeed, setLeagueSeed] = useState<number>(() => randomSeed());
+  const [fantasy, setFantasy] = useState<FantasyConfig | null>(null);
+  const roster = useMemo(() => teamsOk ? generateGenesisRoster(leagueSeed, [...selectedIds], customTeams, ruleset) : [], [leagueSeed, selectedIds, customTeams, ruleset, teamsOk]);
+  const rosterKey = roster.map(d => d.id).join(',');
+  const [draftedFor, setDraftedFor] = useState(rosterKey);
+  if (fantasy && draftedFor !== rosterKey && fantasy.teams.some(t => t.driverIds.length)) {
+    // The grid changed under the draft: keep the teams, drop the picks.
+    setFantasy({ ...fantasy, teams: fantasy.teams.map(t => ({ ...t, driverIds: [] })) });
+    setDraftedFor(rosterKey);
+  } else if (draftedFor !== rosterKey) {
+    setDraftedFor(rosterKey);
+  }
+  const fantasyOk = !fantasy || fantasy.teams.every(t => t.driverIds.length === 0) || draftComplete(fantasy);
+  const canFound = teamsOk && fantasyOk;
+
   const handleFound = () => {
     if (!canFound) return;
     onFound({
       ruleset,
+      leagueSeed,
+      fantasy: fantasy && draftComplete(fantasy) ? fantasy : undefined,
       // Blank → App fills a procedural name seeded from the league (#185).
       name: name.trim(),
-      godId: godId!,
+      godId,
       raceCount,
       raceIntervalMs: CADENCES[cadenceIdx].ms,
       teamIds: [...selectedIds],
@@ -244,22 +271,19 @@ function FoundingScreen({ onFound, onBack }: FoundingScreenProps) {
         </section>
 
         <section className="founding-section">
-          <h2 className="founding-label">Kneel to a god</h2>
-          <div className="god-cards">
-            {GODS.map(g => (
-              <button
-                key={g.id}
-                className={`god-card ${godId === g.id ? 'selected' : ''}`}
-                onClick={() => setGodId(g.id)}
-              >
-                <span className="god-emoji">{g.emoji}</span>
-                <span className="god-name">{g.name}</span>
-                <span className="god-epithet">{g.epithet}</span>
-                <span className="god-appetite">{g.appetite}</span>
-              </button>
-            ))}
-          </div>
-          {god && <p className="god-hunger">“{god.hunger}”</p>}
+          <h2 className="founding-label">
+            Fantasy teams
+            <span className="founding-team-count">{fantasy ? (draftComplete(fantasy) ? `${fantasy.teams.length} teams drafted` : 'drafting…') : 'optional'}</span>
+          </h2>
+          <p className="founding-help">A few of you each draft {3} drivers from this grid. A team scores its drivers' race points all season; the standings live on the league page and the drafted rows light up in the timing tower. <button type="button" className="rs-link" onClick={() => setLeagueSeed(randomSeed())}>Re-roll the grid</button></p>
+          {!fantasy ? (
+            <button type="button" className="rs-btn rs-btn-ghost" disabled={!teamsOk} onClick={() => setFantasy(emptyFantasy())}>+ Set up fantasy teams</button>
+          ) : (
+            <>
+              <DraftPanel roster={roster} value={fantasy} onChange={setFantasy} context="league" />
+              <button type="button" className="rs-link" onClick={() => setFantasy(null)}>Skip fantasy for this league</button>
+            </>
+          )}
         </section>
 
         <section className="founding-section">
@@ -351,7 +375,7 @@ function FoundingScreen({ onFound, onBack }: FoundingScreenProps) {
             ? '⚜️ Found it — the inaugural race runs now'
             : !teamsOk
               ? `Pick ${MIN_TEAMS}–${MAX_TEAMS} teams to continue`
-              : 'Choose a god to continue'}
+              : 'Finish the fantasy draft (or skip it) to continue'}
         </button>
       </div>
     </div>

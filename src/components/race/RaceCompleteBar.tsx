@@ -13,6 +13,8 @@ interface RaceCompleteBarProps {
   onNextRace?: () => void;
   onExit?: () => void;
   exitLabel?: string;
+  /** Fantasy points this race, per team (shown as a second line). */
+  fantasy?: { name: string; color: string; points: number; drivers: { name: string; color: string; points: number }[] }[];
 }
 
 async function copyText(text: string): Promise<boolean> {
@@ -36,7 +38,7 @@ async function copyText(text: string): Promise<boolean> {
   }
 }
 
-export default function RaceCompleteBar({ podium, dnfCount, fastestLap, seed, buildReport, onNextRace, onExit, exitLabel = 'Menu' }: RaceCompleteBarProps) {
+export default function RaceCompleteBar({ podium, dnfCount, fastestLap, seed, buildReport, onNextRace, onExit, exitLabel = 'Menu', fantasy }: RaceCompleteBarProps) {
   const [copied, setCopied] = useState<'idle' | 'ok' | 'fail'>('idle');
   const [showReport, setShowReport] = useState(false);
   const [report, setReport] = useState('');
@@ -69,6 +71,15 @@ export default function RaceCompleteBar({ podium, dnfCount, fastestLap, seed, bu
           <span className="rc-fact"><span className="rc-k">DNF</span> {dnfCount}</span>
           <span className="rc-fact"><span className="rc-k">Seed</span> {seed === null ? '—' : <code>{seed}</code>}</span>
         </span>
+        {fantasy && fantasy.length > 0 && (
+          <span className="race-complete-fantasy" aria-label="Fantasy points this race">
+            {fantasy.map(t => (
+              <span key={t.name} className="rc-fantasy-team" style={{ '--fantasy-color': t.color } as React.CSSProperties} title={t.drivers.map(d => `${d.name} ${d.points}`).join(' · ')}>
+                <span className="fantasy-badge">{t.name}</span> <b>{t.points}</b>
+              </span>
+            ))}
+          </span>
+        )}
         <span className="race-complete-actions">
           <button type="button" className="rc-btn rc-btn-copy" onClick={doCopy}>
             {copied === 'ok' ? '✓ Copied' : copied === 'fail' ? 'Select below' : 'Copy report'}

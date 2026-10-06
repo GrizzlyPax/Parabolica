@@ -16,12 +16,13 @@ import LeagueScreen from './league/ui/LeagueScreen';
 import GridScreen from './league/ui/GridScreen';
 import { createLeague } from './league/league';
 import { openLeague, codeFromLocation, RemoteError } from './league/remote';
+import type { FantasyConfig } from './fantasy/types';
 import { leagueNameForSeed } from './generators/leagueName';
 import { LeagueState, LiveRace } from './league/types';
 import { LIVE_TICK_MS, nextRaceAt, prepareScheduledRace } from './league/settle';
 import { CANON_VARIABLES } from './simlab/types';
 import { saveLeagueState, loadLeagueState, clearLeagueState } from './storage/persistence';
-import { mulberry32, deriveSeed, randomSeed } from './engine/rng';
+import { mulberry32, deriveSeed } from './engine/rng';
 import { generateTrack, getRandomTracks, getTrackById, getDynamicEventDescription, Track } from './generators/tracks';
 import './App.css';
 
@@ -98,7 +99,7 @@ function App() {
   };
 
   const handleFoundLeague = (choices: FoundingChoices) => {
-    const leagueSeed = randomSeed();
+    const leagueSeed = choices.leagueSeed;
     // The calendar is part of genesis: same seed, same tracks, always.
     const calendarRng = mulberry32(deriveSeed(leagueSeed, 'genesis', 'calendar'));
     const trackIds = getRandomTracks(choices.raceCount, calendarRng).map(t => t.id);
@@ -112,6 +113,7 @@ function App() {
       raceIntervalMs: choices.raceIntervalMs,
       createdAt: Date.now(),
       ruleset: choices.ruleset,
+      fantasy: choices.fantasy,
     });
     saveLeagueState(newLeague);
     setLeague(newLeague);
@@ -161,6 +163,7 @@ function App() {
   // than the one that enters the standings.
   const handleWatchLive = useCallback((liveLeague: LeagueState, live: LiveRace) => {
     const race = liveLeague.schedule[live.index];
+    setActiveFantasy(liveLeague.setup.fantasy ?? null);
     const track = getTrackById(race.trackId);
     if (!track) return;
 
@@ -197,9 +200,12 @@ function App() {
   // The quick run in progress: one seed + the hand of cards; race N derives
   // its own seed, track and weather from it (so Next Race stays replayable).
   const [quickRun, setQuickRun] = useState<{ seed: number; ruleset: Ruleset; raceIndex: number } | null>(null);
+  // Fantasy teams for whatever race is on screen (a quick race's draft, or the league's).
+  const [activeFantasy, setActiveFantasy] = useState<FantasyConfig | null>(null);
 
-  const handleStartRace = (_roster: RosterDriver[], ruleset: Ruleset, seed: number) => {
+  const handleStartRace = (_roster: RosterDriver[], ruleset: Ruleset, seed: number, fantasy?: FantasyConfig) => {
     setQuickRun({ seed, ruleset, raceIndex: 0 });
+    setActiveFantasy(fantasy ?? null);
     setTrackInfo(engine.getTrackInfo());
     setScreen('race');
     setShowCountdown(true);
@@ -374,6 +380,7 @@ function App() {
           raceState={raceState}
           trackInfo={trackInfo}
           raceEvents={raceEvents}
+          fantasy={activeFantasy ?? undefined}
           onExit={handleLeaveBroadcast}
           spectator
           isRunning={isRunning}
@@ -408,6 +415,7 @@ function App() {
         trackInfo={trackInfo}
         onNextRace={handleNextRace}
         raceEvents={raceEvents}
+        fantasy={activeFantasy ?? undefined}
         onExit={handleBackToMainMenu}
         rulesLines={quickRun ? (quickRun.ruleset.cards.length ? quickRun.ruleset.cards.map(id => `${CARDS_BY_ID.get(id)?.emoji ?? ''} ${CARDS_BY_ID.get(id)?.name ?? id}`.trim()).concat(describeRuleset(quickRun.ruleset)) : ['default']) : undefined}
         // Race controls - now handled by UniversalHeader inside WatchMode
