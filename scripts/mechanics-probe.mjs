@@ -21,7 +21,7 @@ const pace = d => (1 + (d.stats.baseSpeed - 1) * 0.12) * (0.942 + (d.carStats?.p
 const spearman = (a, b) => { const n = a.length; const ra = rank(a), rb = rank(b); let s = 0; for (let i = 0; i < n; i++) s += (ra[i] - rb[i]) ** 2; return 1 - 6 * s / (n * (n * n - 1)); };
 const rank = v => { const idx = v.map((x, i) => [x, i]).sort((p, q) => q[0] - p[0]); const r = new Array(v.length); idx.forEach(([, i], k) => r[i] = k + 1); return r; };
 
-const acc = { rho: [], winnerPaceRank: [], posChanges: [], netPlaceSwaps: [], stops: [], lapped: [], margin: [], dnf: 0, drivers: 0, sc: 0, ticks: [], lapTicks: [], pitTicks: [], compounds: { soft: 0, medium: 0, hard: 0 }, blowouts: 0, crashes: 0, mech: 0, firstStopFrac: [], stopLapSpread: [], lapsPerStint: { soft: [], medium: [], hard: [] }, lapsLed: [], closeCalls: 0 };
+const acc = { rho: [], winnerPaceRank: [], posChanges: [], netPlaceSwaps: [], stops: [], lapped: [], margin: [], dnf: 0, drivers: 0, sc: 0, ticks: [], lapTicks: [], pitTicks: [], compounds: { soft: 0, medium: 0, hard: 0 }, blowouts: 0, crashes: 0, mech: 0, penalties: 0, penaltyWinnerLoss: 0, reasons: {}, plans: {}, firstStopFrac: [], stopLapSpread: [], lapsPerStint: { soft: [], medium: [], hard: [] }, lapsLed: [], closeCalls: 0 };
 let laps = 0;
 
 for (let r = 0; r < RACES; r++) {
@@ -62,6 +62,8 @@ for (let r = 0; r < RACES; r++) {
     for (const c of d.usedCompounds) acc.compounds[c] = (acc.compounds[c] ?? 0) + 1;
     if (d.pitStops[0]) acc.firstStopFrac.push((d.pitStops[0].lap ?? 0) / track.laps);
     for (const p of d.pitStops) if (p.duration) acc.pitTicks.push(p.duration);
+    if (d.penaltyTicks > 0) acc.penalties++;
+    const plan = d.usedCompounds.map(c => c[0].toUpperCase()).join('→'); acc.plans[plan] = (acc.plans[plan] ?? 0) + 1;
     if (d.lapTimes.length) acc.lapTicks.push(d.lapTimes.reduce((a, b) => a + b, 0) / d.lapTimes.length);
   }
   const stopLaps = drivers.flatMap(d => d.pitStops.map(p => p.lap ?? 0));
@@ -71,6 +73,7 @@ for (let r = 0; r < RACES; r++) {
   acc.ticks.push(raceState.totalTicks);
   acc.sc += events.filter(e => e.type === 'unsafety_car_deployed').length / 2; // engine double-logs
   acc.closeCalls += events.filter(e => e.type === 'close_call').length;
+  for (const e of events) if (e.type === 'pit_entry') { const r = e.description.replace('Boxes — ', ''); acc.reasons[r] = (acc.reasons[r] ?? 0) + 1; }
   const leaders = new Set(hist.map(h => h.order[0])); acc.lapsLed.push(leaders.size);
   if ((r + 1) % 50 === 0) console.error(`${r + 1}/${RACES}`);
 }
@@ -86,4 +89,6 @@ console.log(`Stops per finisher: ${mean(acc.stops).toFixed(2)}   first stop at $
 console.log(`Pit stop in-lane time: ${mean(acc.pitTicks).toFixed(0)} ticks = ${(mean(acc.pitTicks) / mean(acc.lapTicks)).toFixed(2)} laps   (lap ≈ ${mean(acc.lapTicks).toFixed(0)} ticks)`);
 console.log(`Lapped finishers: ${pct(acc.lapped)}   compounds used (finisher-stints): S${acc.compounds.soft} M${acc.compounds.medium} H${acc.compounds.hard}`);
 console.log(`DNF: ${pct([acc.dnf / acc.drivers])} of starters (${(acc.dnf / RACES).toFixed(1)}/race) — crash ${acc.crashes}, blowout ${acc.blowouts}, mech ${acc.mech}`);
+console.log(`Penalised finishers: ${pct([acc.penalties / Math.max(1, acc.stops.length)])}   why they boxed: ${Object.entries(acc.reasons).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`${k} ${Math.round(100*v/Object.values(acc.reasons).reduce((a,b)=>a+b,0))}%`).join(' · ')}`);
+console.log(`Plans (finishers): ${Object.entries(acc.plans).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([k,v])=>`${k} ${v}`).join(' · ')}`);
 console.log(`Safety cars/race: ${(acc.sc / RACES).toFixed(2)}   close calls/race: ${(acc.closeCalls / RACES).toFixed(0)}   race length: ${mean(acc.ticks).toFixed(0)} ticks`);

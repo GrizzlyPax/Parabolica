@@ -75,6 +75,9 @@ describe('unsafety car procession', () => {
     // A healthy procession sits ~0.25-0.35 and drifts with field uniformity —
     // tag balance changes the pace spread, so the bound is set well clear of
     // both (0.5) to catch the real regression without being brittle to tuning.
-    expect(stackedFractionSum / snapshots).toBeLessThan(0.5);
+    // #246: cheap SC stops are on at canon (scPitChance 0.5), so more cars
+    // drop out of the pits into the train mid-queue; measured ~0.53. The bug
+    // this guards reads ~0.8, so the bound moves to 0.6.
+    expect(stackedFractionSum / snapshots).toBeLessThan(0.6);
   });
 });

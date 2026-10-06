@@ -8,6 +8,7 @@ import TireHistory from './TireHistory';
 import type { ColumnConfig, RowContext } from './types';
 import { Driver } from '../../RaceEngine';
 import TagChips, { EffectChips } from './TagChips';
+import { CANON_VARIABLES } from '../../simlab/types';
 
 // Suffixes to ignore when extracting surname
 const NAME_SUFFIXES = new Set(['JR', 'JR.', 'SR', 'SR.', 'II', 'III', 'IV', 'V']);
@@ -39,8 +40,10 @@ export const COLUMN_POSITION: ColumnConfig = {
   width: '32px',
   align: 'center',
   render: (_driver: Driver, ctx: RowContext) => (
-    <span className={`position-number ${ctx.isFinished ? 'finished' : ''} ${ctx.isDNF ? 'dnf' : ''} ${ctx.isPitting ? 'pitting' : ''}`}>
+    <span className={`position-number ${ctx.isFinished ? 'finished' : ''} ${ctx.isDNF ? 'dnf' : ''} ${ctx.isPitting ? 'pitting' : ''}`}
+      title={_driver.penaltyTicks > 0 ? `Penalty: ${_driver.penaltyReason}` : undefined}>
       {ctx.isDNF ? 'DNF' : ctx.isPitting ? 'PIT' : ctx.displayPosition}
+      {_driver.penaltyTicks > 0 && <span className="pos-penalty" aria-label="penalty">!</span>}
     </span>
   ),
 };
@@ -196,12 +199,22 @@ export const COLUMN_TIRE_AGE: ColumnConfig = {
   render: (driver: Driver) => {
     const compound = driver.tireState?.compound;
     if (!compound) return <span className="muted-cell">—</span>;
+    const wear = driver.tireState?.wear ?? 0;
+    const cliff = CANON_VARIABLES.tires[compound as 'soft' | 'medium' | 'hard']?.criticalAt ?? 75;
+    const past = wear >= cliff;
+    const used = driver.usedCompounds ?? [];
+    const owed = (['soft', 'medium', 'hard'] as const).filter(c => !used.includes(c));
+    const title = `${compound}, ${Math.round(wear)}% worn${past ? ' — past the cliff' : ''}${owed.length ? ` · still owes ${owed.join(', ')}` : ''}`;
     return (
-      <span className="tire-age">
-        <span className={`tire-pip tire-pip-${compound}`} title={compound}>
+      <span className={`tire-age ${past ? 'past-cliff' : ''}`} title={title}>
+        <span className={`tire-pip tire-pip-${compound}`}>
           {TIRE_LETTER[compound] ?? '?'}
         </span>
         <span className="tire-age-laps">{driver.tireState?.lapsOnTires ?? 0}</span>
+        <span className="tire-life" aria-hidden="true">
+          <span className="tire-life-fill" style={{ width: `${Math.min(100, wear)}%` }} />
+          <span className="tire-life-cliff" style={{ left: `${cliff}%` }} />
+        </span>
       </span>
     );
   },

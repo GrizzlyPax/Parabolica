@@ -27,7 +27,7 @@ function buildVariableList(): VarDef[] {
   // Tire compounds
   const tireCompoundVars = [
     { key: 'speedBonus', label: 'Speed Bonus', desc: 'Speed multiplier', format: 'multiplier' as const, min: 0.8, max: 1.2, step: 0.01 },
-    { key: 'wearRate', label: 'Wear Rate', desc: 'Degradation speed', format: 'decimal' as const, min: 1, max: 8, step: 0.1 },
+    { key: 'lifeLaps', label: 'Life (laps)', desc: 'Laps from fresh to the cliff', format: 'decimal' as const, min: 2, max: 20, step: 0.5 },
     { key: 'criticalAt', label: 'Cliff Start', desc: 'Wear % when cliff begins', format: 'integer' as const, min: 50, max: 95, step: 1 },
     { key: 'cliffSeverity', label: 'Cliff Severity', desc: 'How harsh the cliff is', format: 'decimal' as const, min: 0.1, max: 1.0, step: 0.05 },
     { key: 'blowoutRisk', label: 'Blowout Risk', desc: 'Base blowout chance/tick', format: 'decimal' as const, min: 0, max: 0.01, step: 0.0001 },
@@ -97,21 +97,16 @@ function buildVariableList(): VarDef[] {
 
   // Pits
   const pitVars = [
-    { key: 'basePitDuration', label: 'Base Duration', desc: 'Base pit stop ticks', format: 'integer' as const, min: 30, max: 120, step: 5 },
+    { key: 'basePitDuration', label: 'Base Duration', desc: 'Stationary pit work, ticks', format: 'integer' as const, min: 10, max: 120, step: 2 },
+    { key: 'minStops', label: 'Min Stops', desc: 'Stop rule: stops required (0 = no rule)', format: 'integer' as const, min: 0, max: 4, step: 1 },
+    { key: 'penaltyLapFraction', label: 'Rule Penalty', desc: 'Per unmet stop, in laps', format: 'decimal' as const, min: 0, max: 2, step: 0.1 },
     { key: 'slowStopMultiplier', label: 'Slow Stop Mult', desc: 'Slow stop time mult', format: 'multiplier' as const, min: 1.1, max: 2.5, step: 0.1 },
     { key: 'quickStopMultiplier', label: 'Quick Stop Mult', desc: 'Quick stop time mult', format: 'multiplier' as const, min: 0.5, max: 0.95, step: 0.05 },
     { key: 'slowStopBase', label: 'Slow Stop Base', desc: 'Base slow stop chance', format: 'percent' as const, min: 0.1, max: 0.7, step: 0.02 },
     { key: 'slowStopPerStar', label: 'Slow Stop/Star', desc: 'Slow stop reduction/star', format: 'decimal' as const, min: 0.02, max: 0.15, step: 0.01 },
     { key: 'quickStopBase', label: 'Quick Stop Base', desc: 'Base quick stop chance', format: 'percent' as const, min: 0, max: 0.2, step: 0.01 },
     { key: 'quickStopPerStar', label: 'Quick Stop/Star', desc: 'Quick stop bonus/star', format: 'decimal' as const, min: 0.02, max: 0.15, step: 0.01 },
-    { key: 'basePitChance', label: 'Pit Chance', desc: 'Base chance to pit', format: 'percent' as const, min: 0.05, max: 0.5, step: 0.05 },
-    { key: 'wearPitBonus', label: 'Wear Pit Bonus', desc: 'Extra pit chance from wear', format: 'percent' as const, min: 0.1, max: 0.6, step: 0.05 },
-    { key: 'wearPitDenominator', label: 'Wear Saturation', desc: 'Wear % that maxes the bonus', format: 'decimal' as const, min: 40, max: 100, step: 5 },
-    { key: 'luckPitBase', label: 'Luck Pit Base', desc: 'Luck multiplier baseline', format: 'decimal' as const, min: 1.0, max: 1.5, step: 0.05 },
-    { key: 'luckPitAdjustment', label: 'Luck Pit Adjust', desc: 'Luck pit timing adjust', format: 'decimal' as const, min: 0.1, max: 0.8, step: 0.05 },
     { key: 'lastPitLapBuffer', label: 'Last Pit Buffer', desc: 'No stop within N laps of finish', format: 'decimal' as const, min: 1, max: 4, step: 1 },
-    { key: 'windowOffsetPerStat', label: 'Window Stagger', desc: 'Personality spread on stop lap', format: 'decimal' as const, min: 0, max: 6, step: 0.5 },
-    { key: 'windowHalfWidth', label: 'Window Width', desc: 'Pit-window half-width (laps)', format: 'decimal' as const, min: 1, max: 5, step: 1 },
     { key: 'strategyWearLean', label: 'Strategy Lean', desc: 'Archetype wear-trigger lean (0=off)', format: 'percent' as const, min: 0, max: 0.25, step: 0.01 },
     { key: 'scPitChance', label: 'SC Pit Chance', desc: 'Cheap-stop roll under SC (0=off)', format: 'percent' as const, min: 0, max: 0.5, step: 0.02 },
     { key: 'scPitMinWear', label: 'SC Pit Min Wear', desc: 'Wear floor for an SC stop', format: 'decimal' as const, min: 5, max: 50, step: 5 },

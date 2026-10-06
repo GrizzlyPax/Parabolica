@@ -84,57 +84,58 @@ Lab: soft 3.06% blowout/stint, hard 1.01%.
 Per tick: `0.00005 / (0.4 + reliability×0.2) × (1.4 − luck×0.75)`.
 Reliability 1★→5★ roughly halves failures (lab DNF: 23.7%→19.2%).
 
-## 4. Tires & pits
+## 4. Tires & pits — rewritten v0.4.0 (#246 pass 1, #249)
 
-- Compounds: soft (fast, melts), medium, hard. Mandatory-variety rule tracked
-  via `usedCompounds`. **There is no penalty for failing the variety rule** —
-  it only shapes the pit *decision*, nothing checks it at the flag.
-- Starting compound is **deterministic from stats** (`selectStartingTires`):
-  speed>1.08 → soft, endurance>1.08 → hard, else medium. *(Lab's "soft
-  starters win 6.9%" is therefore confounded — soft starters ARE the fast
-  drivers.)*
-- Pit crew (1–5★): slow-stop chance 42%−7%/★, quick-stop 3%+5%/★. Real but
-  small (lab Δ+1.7%).
+*The audit (Oct 2026, `claude/mechanics-audit`) found tyre life was a share
+of race distance, a stop cost ~60% of a lap, soft→hard was a 15% pace gap,
+and the "pit window" was dead code. All four are gone.*
 
-### The pit decision (`shouldDriverPit`) — corrected, v0.3.29 (#195)
+- **Life is in laps.** `lifeLaps` per compound = laps from fresh to the
+  cliff (`criticalAt`) at mid aggression and 3★ tyre management: **soft 5,
+  medium 7, hard 9**. Wear/tick = `criticalAt/lifeLaps × lapFraction ×
+  aggF × mgmtF`. A 32-lap race needs twice the stops of a 16-lap one.
+- **Pace gap 3%**: soft 1.015 / medium 1.00 / hard 0.985. Pre-cliff fade
+  (−5% from 40% wear) means a 60%-worn soft is already slower than a fresh
+  medium — that is the crossover the stop decision reads.
+- **The cliff hurts on every compound**: severity S 0.85 / M 0.7 / H 0.6
+  (hard was 0.3 and softer than a worn medium). One lap past the cliff on a
+  soft is roughly −16% pace plus blowout exposure.
+- **A stop costs ~25% of a lap all-in** (was ~60%): pit-lane speed limit 6
+  (was 4), stationary work 24 ticks (was 60; slow ×1.5, quick ×0.75). Under
+  the Unsafety Car the field runs half pace so the same stop costs ~half.
+- **The stop rule (#249)**: `pits.minStops 2`, `pits.requireAllCompounds
+  true`, enforced at the flag: each unmet stop or compound adds
+  `penaltyLapFraction` (0.5) of the driver's own average lap to their finish
+  time. Classification sorts lead-lap finishers by `finishTick +
+  penaltyTicks`; a `penalty` event and `Driver.penaltyReason` carry the why.
+  The **No Pit Rules** card sets both to off.
+- **The decision (`shouldDriverPit`)**, once per lap at the pit-entry zone,
+  every path a radio line (logged in the `pit_entry` event):
+  1. never on the last lap;
+  2. **cliff** — wear ≥ `criticalAt × (1 + archetype × strategyWearLean)`;
+  3. **ahead of the cliff** — wear + this driver's wear-per-lap would cross
+     it before the next chance (so stops land a lap *before* the cliff;
+     the archetype lean 0.1 lets aggressive camps dip into it and
+     conservative camps pit a lap early);
+  4. **safety car** — a stop is owed and the SC is out: `scPitChance 0.5`;
+  5. **the rule** — a stop is owed and `lapsLeft − buffer ≤ owed`.
+  No random window roll remains; the old `basePitChance/wearPitBonus/
+  windowOffsetPerStat/windowHalfWidth/luckPit*` knobs are deleted.
+- **Compound choice (`selectNewTires`)**: from the compounds still owed (or
+  anything but the one coming off), score = shortfall vs the stint it has to
+  cover (laps left ÷ stops still owed + 1) × 4 + pace penalty + archetype
+  tie-break (aggressive softer, conservative harder).
+- **Unsafety Car trigger** (also here): a stranded car brings it out with
+  `safetyCar.deployChancePerDnf` (0.5); 3+ cars always. Every crash used to.
 
-The decision has four paths, checked at the pit-entry zone (85% of lap), in
-priority order. **Measurement finding: the wear trigger decides ~all stops at
-canon.** Zeroing `basePitChance` + `wearPitBonus` changes neither pits/race
-(55.5 vs 54.8) nor stop timing (first stop at 26% distance either way) — the
-"probabilistic pit window" this doc previously described is nearly inert.
-Identical compounds hitting the same wear threshold on the same lap is **why
-the field herds into one strategy.**
+Probe (`scripts/mechanics-probe.mjs 150 1`, no tags): stops/finisher
+3.0→2.1, pit lane time 0.87→0.53 lap (net ~0.2), blowouts 29%→4% of DNFs,
+winning margin 14%→6% of a lap, top-3 package wins 36%→46%, SC/race
+0.97→0.75, stops by reason: ahead of the cliff 68% · safety car 28% · the
+rule 3%. Plans seen: M→S→H, S→M→H, M→H→S, H→S→M, H→M→S.
 
-1. **Wear trigger (binding):** pit when `wear ≥ compound.criticalAt` (70/75/80
-   for S/M/H). With `pits.strategyWearLean > 0`, each driver's stable per-race
-   **archetype** (short/standard/long, ~⅓ of the field each, drawn from a side
-   seed stream that never touches the main RNG) leans this threshold ±lean —
-   aggressive camps sprint on fresher rubber, conservative camps stretch into
-   the cliff. *Canon 0 = dormant, byte-identical.* At lean 0.12 + SC
-   opportunism 0.15 (200 races): distinct strategies/race 8.2→10.6,
-   biggest-herd share 31%→24%, DNF flat.
-2. **Late-race guard:** no non-critical stop with `≤ pits.lastPitLapBuffer`
-   laps left (canon 2). Single source of truth — fixed a v0.3.28 bug where the
-   mandatory-compound force-pit ignored it and produced farcical
-   second-to-last-lap stops.
-3. **Unsafety-Car opportunism:** with `pits.scPitChance > 0` (canon 0 =
-   dormant, draws no RNG), a driver who still owes a stop and has
-   `wear ≥ scPitMinWear` rolls to take the cheap stop under the SC.
-4. **Window roll (nearly inert at canon):** deterministic segment-split target
-   ± personality stagger (`windowOffsetPerStat` — quantizes to ~0 for the
-   whole field) over `windowHalfWidth`, then a per-tick roll of
-   `basePitChance + wear×wearPitBonus` adjusted by luck. All literals are now
-   knobs, but **tuning these moves almost nothing** unless the wear trigger is
-   loosened first — measured: widening stagger/width 2×–3× moved first-stop
-   spread by −0.05 laps.
-
-Compound choice on a stop (`selectNewTires`): deterministic from
-laps-remaining among unused compounds (≤3 soft, ≤5 medium, else hard) — so
-two drivers stopping on the same lap always take the same tire; strategy
-variety comes from *when* they stop (the archetype lean shifts this).
-Fallback when all compounds are used can return the same compound late
-(the "M→M" report flag) — open item.
+Still open from the audit: no grid, no overtaking, no undercut (position
+has no value yet), weather/wets, the consistency formula.
 
 ## 5. THE STAT TRUTH TABLE
 

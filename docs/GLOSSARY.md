@@ -1,8 +1,8 @@
 # Parabolica Glossary
 
-*Generated from the data modules by `npm run glossary` — do not edit by hand. Engine v0.3.38.*
+*Generated from the data modules by `npm run glossary` — do not edit by hand. Engine v0.4.0.*
 
-39 tags (9 genesis · 8 acquired · 5 in-race · 17 condition) · 11 cards · 12 rules · 5 weathers · 3 track characters · 5 inflictions · 24 tracks
+39 tags (9 genesis · 8 acquired · 5 in-race · 17 condition) · 12 cards · 12 rules · 5 weathers · 3 track characters · 5 inflictions · 24 tracks
 
 ## How genesis tags are rolled
 
@@ -98,6 +98,7 @@ Bucket sizes in the default pool: common 3 · uncommon 5 · rare 1 · legendary 
 | 🧨 **Unreliable Cars** `unreliable-cars` | both | cursed | Engines fail 3× as often. |
 | 🪨 **Tough Tyres** `tough-tyres` | both | mild | Tyres wear half as fast. Fewer stops. |
 | 🏎️ **Fast Pit Crews** `fast-pit-crews` | both | mild | Pit stops 25% quicker; fewer fumbled stops. |
+| 🔓 **No Pit Rules** `no-pit-rules` | both | wild | No minimum stops, no compound rule. Anything goes. |
 
 ## Acquisition rules (after a race)
 

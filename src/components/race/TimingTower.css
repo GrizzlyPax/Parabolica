@@ -644,6 +644,13 @@
 .tire-pip-medium { background: var(--pw-yellow); color: var(--pw-surface); }
 .tire-pip-hard { background: #e8e8ec; color: var(--pw-surface); }
 .tire-age-laps { font-size: 0.74rem; color: #8a8a94; font-variant-numeric: tabular-nums; }
+/* Tyre life bar with the cliff marked; red once past it (#246) */
+.tire-age { position: relative; padding-bottom: 5px; }
+.tire-life { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: var(--pw-border); border-radius: 2px; overflow: visible; }
+.tire-life-fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--pw-green); border-radius: 2px; transition: width 0.3s; }
+.tire-age.past-cliff .tire-life-fill { background: var(--pw-red); }
+.tire-life-cliff { position: absolute; top: -1px; bottom: -1px; width: 1px; background: var(--pw-text-2); }
+.pos-penalty { color: var(--pw-red); font-weight: 800; margin-left: 1px; }
 
 /* Pit count */
 .pit-count { font-variant-numeric: tabular-nums; color: #b2b2bc; font-weight: 600; font-size: 0.82rem; }

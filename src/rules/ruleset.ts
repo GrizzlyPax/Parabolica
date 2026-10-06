@@ -224,6 +224,9 @@ export function describeRuleset(rs: Ruleset): string[] {
     lines.push('Weather: ' + WEATHER_TYPES.filter(w => rs.weather.weights[w.id] > 0)
       .map(w => `${w.emoji} ${Math.round((rs.weather.weights[w.id] / total) * 100)}%`).join(' · '));
   }
+  if (rs.simVars.pits.minStops !== d.simVars.pits.minStops || rs.simVars.pits.requireAllCompounds !== d.simVars.pits.requireAllCompounds) {
+    lines.push(rs.simVars.pits.minStops === 0 && !rs.simVars.pits.requireAllCompounds ? 'Pit rule: none — anything goes' : `Pit rule: ${rs.simVars.pits.minStops} stops${rs.simVars.pits.requireAllCompounds ? ', all 3 compounds' : ''}`);
+  }
   if (rs.weather.quickRace !== d.weather.quickRace) lines.push(`Quick Race weather: ${rs.weather.quickRace ? 'on' : 'off'}`);
   for (const [path, a, b] of diffNumbers(rs.simVars, d.simVars)) {
     const ratio = b === 0 ? null : a / b;

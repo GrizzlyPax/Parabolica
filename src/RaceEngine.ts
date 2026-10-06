@@ -106,6 +106,9 @@ export interface Driver {
   // Final classification
   lapsBehind: number;       // How many laps behind the winner (0 = on lead lap)
   finishTick: number | null; // Tick when this driver was classified
+  /** Time penalty added at the flag (#249 stop rule), in ticks, and why. */
+  penaltyTicks: number;
+  penaltyReason: string | null;
   // Tags — the full stack (driver + car + team), see RosterDriver.tags
   tags: Tag[];
 }
@@ -175,10 +178,10 @@ export interface TireState {
 
 export interface TireCompoundProperties {
   speedBonus: number;     // Multiplier when fresh
-  wearRate: number;       // How fast they degrade
   criticalAt: number;     // Wear % when performance cliff begins
   cliffSeverity: number;  // How steep the performance drop is (0-1, higher = steeper)
   blowoutRisk: number;    // Base blowout chance per tick when past critical (0-1)
+  lifeLaps: number;       // Laps from fresh to the cliff (#246)
 }
 
 // Tire tuning lives in CANON_VARIABLES (simlab/types.ts) — the single source of
@@ -219,6 +222,7 @@ export type RaceEventType =
   | 'lead_change'      // New race leader
   | 'overtake'         // Driver passed another
   | 'race_finish'      // Driver crossed finish line
+  | 'penalty'          // Time penalty applied at the flag (stop rule)
   // Tire/Pit/Crash events
   | 'pit_entry'        // Driver enters pit lane
   | 'pit_exit'         // Driver exits with fresh tires
@@ -369,7 +373,7 @@ export const DEFAULT_CONFIG: RaceConfig = {
   randomEventChance: 0.05,
   // Tire/Pit/Crash defaults
   tireWearRate: 0.02,
-  pitLaneSpeedLimit: 4,        // Units/tick in pit lane (much slower than racing ~7-8)
+  pitLaneSpeedLimit: 6,        // Units/tick in pit lane (#246: a stop costs ~25% of a lap all-in)
   pitWorkBaseDuration: 30,     // Base ticks for stationary pit work
   mandatoryPitStops: 2,
   crashProximityThreshold: 0.03,
@@ -565,7 +569,7 @@ class RaceEngine {
       const v = this.simVars.tires[compound];
       return {
         speedBonus: v.speedBonus,
-        wearRate: v.wearRate,
+        lifeLaps: v.lifeLaps,
         criticalAt: v.criticalAt,
         cliffSeverity: v.cliffSeverity,
         blowoutRisk: v.blowoutRisk,
@@ -658,6 +662,8 @@ class RaceEngine {
         damageSpeedPenalty: 1.0,
         lapsBehind: 0,
         finishTick: null,
+        penaltyTicks: 0,
+        penaltyReason: null,
       };
     });
     // Assign pit box positions based on driver order (no teams for default drivers)
@@ -726,6 +732,8 @@ class RaceEngine {
         damageSpeedPenalty: 1.0,
         lapsBehind: 0,
         finishTick: null,
+        penaltyTicks: 0,
+        penaltyReason: null,
       };
     });
     // Assign pit box positions based on team names (alphabetically)
@@ -1107,6 +1115,8 @@ class RaceEngine {
         damageSpeedPenalty: 1.0,
         lapsBehind: 0,
         finishTick: null,
+        penaltyTicks: 0,
+        penaltyReason: null,
       };
     });
     // Re-assign pit box positions in case roster changed
@@ -1373,175 +1383,118 @@ class RaceEngine {
     return this.rng() < finalChance;
   }
 
+  /** Wear per tick, in "cliff units": a compound reaches criticalAt after
+   * lifeLaps laps at mid aggression and 3★ tyre management (#246). Life is in
+   * laps, not race share, so a long race means more stops — like racing. */
   private calculateTireWear(driver: Driver): number {
     if (!this.config.enableTireWear) return 0;
-
     const compound = this.getTireCompound(driver.tireState.compound);
     const tireVars = this.getTireVars();
-
-    // Calculate wear rate relative to total race distance
-    const totalRaceDistance = this.config.totalLaps * this.config.lapLength;
-    const distancePerTick = driver.lastTickSpeed || 10;
-
-    // Base wear per tick = (100 / expected ticks to hit 100%) * compound rate
-    const expectedTicksForRace = totalRaceDistance / distancePerTick;
-    const baseWearPerTick = 100 / expectedTicksForRace;
-
-    // Compound wear rate determines how fast they degrade relative to race distance
-    const compoundWear = baseWearPerTick * compound.wearRate;
-
-    // High aggression = pushes tires harder = more wear
-    // Aggression ranges from 0.3 to 0.8, so normalize it
-    const normalizedAggression = (driver.stats.aggression - 0.3) / 0.5; // 0 to 1
-    const aggressionFactor = 1 + normalizedAggression * tireVars.aggressionWearMultiplier;
-
-    // Team tire management: good crews preserve rubber (3★ = neutral)
+    const distancePerTick = driver.lastTickSpeed || 7;
+    const lapFraction = distancePerTick / this.config.lapLength;
+    const wearPerLap = compound.criticalAt / compound.lifeLaps;
+    // Aggression 0.3–0.8 → ×1.0–1.4; mid (0.55) is the calibration point.
+    const normalizedAggression = (driver.stats.aggression - 0.3) / 0.5;
+    const aggressionFactor = (1 + normalizedAggression * tireVars.aggressionWearMultiplier) / (1 + 0.5 * tireVars.aggressionWearMultiplier);
     const tireMgmtStars = driver.teamStats?.tireManagement ?? 3;
     const tireMgmtFactor = 1 + (3 - tireMgmtStars) * tireVars.teamTireMgmtWearPerStar;
-
-    return compoundWear * aggressionFactor * tireMgmtFactor;
+    return wearPerLap * lapFraction * aggressionFactor * tireMgmtFactor;
   }
 
-  // === PIT STOP METHODS ===
+  /** Wear this driver adds over one racing lap at their current pace. */
+  private wearPerLapFor(driver: Driver): number {
+    const perTick = this.calculateTireWear(driver);
+    const distancePerTick = driver.lastTickSpeed || 7;
+    return perTick * (this.config.lapLength / distancePerTick);
+  }
 
-  // Pit lane entry/exit positions as fraction of lap (0-1)
-  private readonly PIT_ENTRY_POSITION = 0.85; // Near end of lap
-  private readonly PIT_EXIT_POSITION = 0.15;  // Early in lap
+  /** The stop rule as it stands for this driver: stops and compounds still owed. */
+  private stopsOwed(driver: Driver): { stops: number; compounds: TireCompound[]; needed: number } {
+    const pitVars = this.getPitVars();
+    const all: TireCompound[] = ['soft', 'medium', 'hard'];
+    const used = driver.usedCompounds || [];
+    const compounds = pitVars.requireAllCompounds ? all.filter(c => !used.includes(c)) : [];
+    const stops = Math.max(0, pitVars.minStops - driver.pitStops.length);
+    return { stops, compounds, needed: Math.max(stops, compounds.length) };
+  }
 
+  /**
+   * The pit decision (#246 pass 1). Checked once per lap at the pit-entry zone,
+   * in this order — every path is a sentence you could say on the radio:
+   *   1. never on the last lap;
+   *   2. tyres are at the cliff → box ("cliff");
+   *   3. tyres WILL be at the cliff before the next chance → box ("ahead of
+   *      the cliff"), leaned by the driver's archetype: aggressive camps dip
+   *      into the cliff, conservative camps pit a lap early;
+   *   4. a stop is owed by the rule and the Unsafety Car is out → cheap stop;
+   *   5. a stop is owed and the room is running out → forced stop;
+   *   6. otherwise stay out.
+   * There is no random "window" roll any more: stops come from tyres and the
+   * rule, and the spread comes from archetypes, aggression and pace.
+   */
   private shouldDriverPit(driver: Driver): boolean {
     if (driver.status !== 'racing') return false;
-
-    // Only check for pit entry when driver is near the pit entry point (85% of lap)
     const lapProgress = driver.position / this.config.lapLength;
     const atPitEntry = lapProgress >= this.PIT_ENTRY_POSITION && lapProgress < this.PIT_ENTRY_POSITION + 0.05;
-
     if (!atPitEntry) return false;
-
-    // NO PITTING ON LAST LAP - too late!
-    const isLastLap = driver.currentLap >= this.config.totalLaps - 1;
-    if (isLastLap) {
-      return false;
-    }
+    if (driver.currentLap >= this.config.totalLaps - 1) return false; // last lap
 
     const compound = this.getTireCompound(driver.tireState.compound);
-    const wearPercent = driver.tireState.wear;
-    const pitStopsDone = driver.pitStops.length;
-    const mandatoryStops = this.config.mandatoryPitStops;
     const pitVars = this.getPitVars();
+    const wear = driver.tireState.wear;
+    const lapsLeft = this.config.totalLaps - driver.currentLap;
 
-    // Check if we need more stops for compound variety (must use all 3 compounds with 2 stops)
-    const allCompounds: TireCompound[] = ['soft', 'medium', 'hard'];
-    const usedCompounds = driver.usedCompounds || [];
-    const compoundsRemaining = allCompounds.filter(c => !usedCompounds.includes(c)).length;
-    const stopsRemaining = mandatoryStops - pitStopsDone;
-    const mustPitForCompounds = compoundsRemaining > 0 && stopsRemaining > 0;
-
-    // Force pit if tires critical (but not on last lap - handled above).
-    // Safety override: shot tires pit regardless of how late it is (blowout
-    // risk beats a short final stint).
-    //
-    // Strategy archetype (gated, #195): this wear trigger is what ACTUALLY
-    // times stops at canon (the probabilistic window below almost never fires
-    // first — verified by zeroing basePitChance/wearPitBonus: pits/race and
-    // stop timing don't move). Identical compounds hitting the same threshold
-    // on the same lap is why the field herds into one strategy. The archetype
-    // leans each camp's stop point: aggressive (-1) pits earlier on fresher
-    // rubber (sprint stints), conservative (+1) stretches into the cliff —
-    // paying cliff pace and blowout exposure for track position. Drawn from a
-    // SIDE seed stream, so the main roll ordering is untouched; 0 = off,
-    // byte-identical to today.
-    let pitAtWear = compound.criticalAt;
-    if (pitVars.strategyWearLean > 0) {
-      pitAtWear *= 1 + this.getStrategyArchetype(driver) * pitVars.strategyWearLean;
-    }
-    if (wearPercent >= pitAtWear) {
+    // 2 + 3. The cliff, now or next lap. Archetype leans the point.
+    const lean = 1 + this.getStrategyArchetype(driver) * pitVars.strategyWearLean;
+    const pitAtWear = compound.criticalAt * lean;
+    if (wear >= pitAtWear) { this.pitReasons.set(driver.id, 'cliff'); return true; }
+    if (lapsLeft > pitVars.lastPitLapBuffer && wear + this.wearPerLapFor(driver) >= pitAtWear) {
+      this.pitReasons.set(driver.id, 'ahead of the cliff');
       return true;
     }
 
-    // Unified late-race guard: with too few racing laps left, no non-critical
-    // stop is worth the pit-lane loss. This is the single source of truth for
-    // "too late to pit" — it makes the old "can't pit in last 2 laps" contract
-    // actually hold for BOTH the mandatory-compound force-pit and the
-    // probabilistic path. There is no penalty for unmet compound variety, so a
-    // farcical final-lap stop to "complete" it is strictly worse than running a
-    // compound short. (#195)
-    const lapsLeft = this.config.totalLaps - driver.currentLap;
-    if (lapsLeft <= pitVars.lastPitLapBuffer) {
-      return false;
+    const owed = this.stopsOwed(driver);
+    if (owed.needed === 0) return false;
+
+    // 4. Cheap stop under the Unsafety Car when a stop is owed.
+    if (pitVars.scPitChance > 0 && this.raceState.unsafetyCarActive && wear >= pitVars.scPitMinWear && lapsLeft > pitVars.lastPitLapBuffer) {
+      if (this.rng() < pitVars.scPitChance) { this.pitReasons.set(driver.id, 'safety car'); return true; }
     }
 
-    // Already done all mandatory stops and used all compounds? No need to pit again
-    if (pitStopsDone >= mandatoryStops && compoundsRemaining === 0) {
-      return false;
+    // 5. Forced: the room to complete the rule is running out (while there is room).
+    if (lapsLeft > pitVars.lastPitLapBuffer && lapsLeft - pitVars.lastPitLapBuffer <= owed.needed) {
+      this.pitReasons.set(driver.id, 'the rule'); return true;
     }
-
-    // Unsafety Car opportunism (gated, #195): a stop under the SC is cheap —
-    // the field circulates slowly, so a driver who still owes a stop takes it
-    // now instead of paying full price later. Reaching this line implies a
-    // stop is still owed (the early-return above filtered the done case); the
-    // wear floor stops a driver who JUST pitted from double-stopping. Draws
-    // main RNG only when the knob is live, so canon 0 stays byte-identical.
-    if (
-      pitVars.scPitChance > 0 &&
-      this.raceState.unsafetyCarActive &&
-      wearPercent >= pitVars.scPitMinWear
-    ) {
-      if (this.rng() < pitVars.scPitChance) return true;
-      // fall through: an SC doesn't make anyone skip their normal window
-    }
-
-    // Calculate pit windows for 2-stop strategy on 10 lap race:
-    // Stop 1: Around lap 3-4 (first third)
-    // Stop 2: Around lap 6-7 (second third)
-    const aggressiveness = (driver.stats.baseSpeed - driver.stats.consistency) / 2;
-
-    // For multiple stops, split race into segments
-    const stopsNeeded = mandatoryStops - pitStopsDone;
-    if (stopsNeeded <= 0) return false;
-
-    // Calculate window for next stop
-    const lapsRemaining = this.config.totalLaps - driver.currentLap;
-    const segmentLength = lapsRemaining / (stopsNeeded + 1); // +1 for final stint
-    const nextStopIdealLap = driver.currentLap + segmentLength;
-
-    // Driver personality staggers the target lap. NOTE (#195 finding): this
-    // whole voluntary-window path is nearly inert at canon — the wear trigger
-    // above fires first for ~all stops (zeroing basePitChance/wearPitBonus
-    // changes nothing measurable). The knobs here are honest lifts of the
-    // formula's literals (canon 2 / 1 reproduces the old behavior
-    // byte-for-byte), but the binding strategy levers are the wear-lean
-    // archetype above and the SC opportunism. Documented in SIM_MECHANICS §4.
-    const driverOffset = Math.floor(aggressiveness * pitVars.windowOffsetPerStat);
-    const adjustedIdealLap = Math.max(driver.currentLap + 1, nextStopIdealLap + driverOffset);
-
-    const windowStart = Math.max(2, Math.floor(adjustedIdealLap) - pitVars.windowHalfWidth);
-    const windowEnd = Math.min(this.config.totalLaps - 2, Math.floor(adjustedIdealLap) + pitVars.windowHalfWidth);
-
-    const isInPitWindow = driver.currentLap >= windowStart && driver.currentLap <= windowEnd;
-
-    // Force pit if we're in the last window for mandatory stops. The
-    // lastPitLapBuffer guard above already ruled out the farcically-late case;
-    // here we pull a still-needed mandatory stop forward as the room runs out.
-    const lapsUntilTooLate = lapsLeft - pitVars.lastPitLapBuffer;
-    if (mustPitForCompounds && lapsUntilTooLate <= stopsRemaining) {
-      return true; // Must pit now or won't complete mandatory stops
-    }
-
-    if (isInPitWindow) {
-      // Higher wear = more likely to pit now. Base chance climbs with wear up
-      // to (basePitChance + wearPitBonus) at the wear denominator. All knobs
-      // live in CANON_VARIABLES.pits (canon values reproduce the old literals
-      // byte-for-byte — this lift changed no behavior, see #195).
-      const wearFactor = Math.min(1, wearPercent / pitVars.wearPitDenominator);
-      const pitChance = pitVars.basePitChance + (wearFactor * pitVars.wearPitBonus);
-
-      // Luck affects pit timing too - lucky drivers might wait longer.
-      const adjustedChance = pitChance * (pitVars.luckPitBase - driver.stats.luck * pitVars.luckPitAdjustment);
-
-      return this.rng() < adjustedChance;
-    }
-
     return false;
+  }
+
+  /** Why each driver last boxed — read by the pit_entry event. */
+  private pitReasons = new Map<number, string>();
+  private readonly PIT_ENTRY_POSITION = 0.85; // Near end of lap
+  private readonly PIT_EXIT_POSITION = 0.15;  // Early in lap
+
+
+  /** The stop rule at the flag (#249): each unmet stop or compound costs a
+   * share of the driver's own average lap. Returns the penalty in ticks. */
+  private assessStopRule(driver: Driver): { ticks: number; reason: string | null } {
+    const pitVars = this.getPitVars();
+    const owed = this.stopsOwed(driver);
+    if (owed.needed === 0) return { ticks: 0, reason: null };
+    const avgLap = driver.lapTimes.length ? driver.lapTimes.reduce((a, b) => a + b, 0) / driver.lapTimes.length : this.config.lapLength / 7;
+    const ticks = Math.round(owed.needed * pitVars.penaltyLapFraction * avgLap);
+    const parts: string[] = [];
+    if (owed.stops > 0) parts.push(`${owed.stops} stop${owed.stops > 1 ? 's' : ''} short`);
+    if (owed.compounds.length > 0) parts.push(`never used ${owed.compounds.join(' or ')}`);
+    return { ticks, reason: parts.join(', ') };
+  }
+
+  /** Apply the stop rule to a driver being classified now. */
+  private classifyWithPenalty(driver: Driver, finishTick: number): Partial<Driver> {
+    const { ticks, reason } = this.assessStopRule(driver);
+    if (ticks > 0) {
+      this.logEvent('penalty', driver, `+${(ticks / Math.max(1, driver.lapTimes.at(-1) ?? 100)).toFixed(1)} laps penalty — ${reason}`, 'negative', 0.9);
+    }
+    return { finishTick, penaltyTicks: ticks, penaltyReason: reason };
   }
 
   /** Stable per-race strategy archetype: -1 (short stints, aggressive),
@@ -1599,39 +1552,30 @@ class RaceEngine {
     return this.config.pitLaneSpeedLimit / pitLaneDistance;
   }
 
+  /**
+   * Which compound goes on (#246). If the rule still owes compounds, pick
+   * from those; otherwise anything but the one coming off. Prefer the
+   * compound whose life best fits the laps left — the last stop wants one
+   * that can go the distance, earlier stops the shorter ones — with the
+   * archetype breaking ties softer (aggressive) or harder (conservative).
+   */
   private selectNewTires(driver: Driver): TireCompound {
-    const allCompounds: TireCompound[] = ['soft', 'medium', 'hard'];
-    const usedCompounds = driver.usedCompounds || [];
-    const remainingLaps = this.config.totalLaps - driver.currentLap;
-
-    // Filter to compounds not yet used
-    const unusedCompounds = allCompounds.filter(c => !usedCompounds.includes(c));
-
-    // If all compounds used (stops 3+), pick based on stint length — but never
-    // re-fit the compound just removed when a softer one covers the distance
-    // (the "M→M" report flag, #195): a late stop onto the identical tire is
-    // pointless; real late stops take the grippier rubber.
-    if (unusedCompounds.length === 0) {
-      let pick: TireCompound = remainingLaps <= 2 ? 'soft' : remainingLaps <= 4 ? 'medium' : 'hard';
-      if (pick === driver.tireState.compound && pick !== 'soft') {
-        pick = pick === 'hard' ? 'medium' : 'soft';
-      }
-      return pick;
-    }
-
-    // Must use an unused compound - pick strategically based on remaining laps
-    if (remainingLaps <= 3 && unusedCompounds.includes('soft')) {
-      return 'soft';  // Short sprint to finish
-    }
-    if (remainingLaps <= 5 && unusedCompounds.includes('medium')) {
-      return 'medium';  // Medium stint
-    }
-    if (unusedCompounds.includes('hard')) {
-      return 'hard';  // Long stint
-    }
-    // Fallback to whatever is unused
-    return unusedCompounds[0];
+    const all: TireCompound[] = ['soft', 'medium', 'hard'];
+    const owed = this.stopsOwed(driver);
+    const pool = owed.compounds.length ? owed.compounds : all.filter(c => c !== driver.tireState.compound);
+    const lapsLeft = this.config.totalLaps - driver.currentLap;
+    const stopsAfterThis = Math.max(0, owed.needed - 1);
+    const arch = this.getStrategyArchetype(driver); // -1 aggressive … +1 conservative
+    const stintTarget = lapsLeft / (stopsAfterThis + 1);
+    const score = (c: TireCompound) => {
+      const v = this.getTireCompound(c);
+      const shortfall = Math.max(0, stintTarget - v.lifeLaps - 0.5);
+      const pace = (1 - v.speedBonus) * 100;          // softer = lower = better
+      return shortfall * 4 + pace + arch * 0.6 * (2 - all.indexOf(c));
+    };
+    return [...pool].sort((a, b) => score(a) - score(b))[0] ?? 'medium';
   }
+
 
   // === CRASH DETECTION METHODS ===
 
@@ -2591,9 +2535,12 @@ class RaceEngine {
           1.0
         );
 
-        // Check for pileup (2+ drivers involved) - deploy Unsafety Car
+        // Unsafety Car (#246): a car stranded on track brings it out some of the
+        // time; a real pileup (3+ cars) always does. Every crash used to summon it.
         const totalInvolved = result.dnfDriverIds.length + result.damagedDriverIds.length;
-        if (totalInvolved >= 2) {
+        const stranded = result.dnfDriverIds.length;
+        const scVars = this.getSafetyCarVars();
+        if (totalInvolved >= 3 || (stranded > 0 && this.rng() < scVars.deployChancePerDnf)) {
           this.deployUnsafetyCar(pair[0].currentLap);
         }
       }
@@ -2792,7 +2739,7 @@ class RaceEngine {
         // Calculate pit WORK duration (stationary part) and slow/quick status
         const { duration, isSlowStop, isQuickStop } = this.calculatePitWorkDuration(driver);
 
-        this.logEvent('pit_entry', driver, `Entering pit lane for tire change`, 'neutral', 0.4);
+        this.logEvent('pit_entry', driver, `Boxes — ${this.pitReasons.get(driver.id) ?? 'tyres'}`, 'neutral', 0.4);
 
         // If slow stop, log it immediately so viewers know what's happening
         if (isSlowStop) {
@@ -2976,7 +2923,7 @@ class RaceEngine {
         this.drivers[driverIndex] = {
           ...this.drivers[driverIndex],
           status: 'finished' as DriverStatus,
-          finishTick: this.raceState.totalTicks,
+          ...this.classifyWithPenalty(this.drivers[driverIndex], this.raceState.totalTicks),
           lapsBehind: 0, // Finishers who complete all laps are on the lead lap
         };
         raceFinishes.push({ driver: this.drivers[driverIndex], position: this.raceState.finishOrder.length, lapsBehind: 0 });
@@ -2997,7 +2944,7 @@ class RaceEngine {
             this.drivers[driverIndex] = {
               ...this.drivers[driverIndex],
               status: 'finished' as DriverStatus,
-              finishTick: this.raceState.totalTicks,
+              ...this.classifyWithPenalty(this.drivers[driverIndex], this.raceState.totalTicks),
               lapsBehind,
             };
             raceFinishes.push({ driver: this.drivers[driverIndex], position: -1, lapsBehind }); // Position set after re-sort
@@ -3016,7 +2963,7 @@ class RaceEngine {
               status: 'finished' as DriverStatus,
               currentLap: newLap,
               lapTimes: newLapTimes,
-              finishTick: this.raceState.totalTicks,
+              ...this.classifyWithPenalty({ ...this.drivers[driverIndex], lapTimes: newLapTimes }, this.raceState.totalTicks),
               lapsBehind,
             };
             raceFinishes.push({ driver: this.drivers[driverIndex], position: -1, lapsBehind });
@@ -3034,8 +2981,8 @@ class RaceEngine {
         if (a.lapsBehind !== b.lapsBehind) {
           return a.lapsBehind - b.lapsBehind;
         }
-        // Then by finish tick (earlier = better position)
-        return (a.finishTick || 0) - (b.finishTick || 0);
+        // Then by finish tick plus any flag penalty (earlier = better position)
+        return ((a.finishTick || 0) + a.penaltyTicks) - ((b.finishTick || 0) + b.penaltyTicks);
       });
 
       // Update positions in raceFinishes for logging

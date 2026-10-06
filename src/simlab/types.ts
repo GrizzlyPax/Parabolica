@@ -441,7 +441,7 @@ export const POINTS_SYSTEM = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1];
 
 export interface TireCompoundConfig {
   speedBonus: number;      // Multiplier (1.08 = +8% for soft)
-  wearRate: number;        // Higher = faster degradation
+  lifeLaps: number;           // Laps from fresh to the cliff (criticalAt) at 3★ tyre mgmt, mid aggression
   criticalAt: number;      // Wear % when cliff starts (70 for soft)
   cliffSeverity: number;   // How harsh the cliff is (0.85 for soft)
   blowoutRisk: number;     // Base blowout chance per tick
@@ -501,17 +501,14 @@ export interface SimVariables {
     slowStopPerStar: number;          // Slow stop reduction per star (0.07)
     quickStopBase: number;            // Base quick stop chance (0.03)
     quickStopPerStar: number;         // Quick stop bonus per star (0.05)
-    // Pit window
-    basePitChance: number;            // Base pit decision chance (0.20)
-    wearPitBonus: number;             // Additional chance from wear (0.30)
-    wearPitDenominator: number;       // Wear % that saturates the wear bonus (70)
-    luckPitBase: number;              // Luck multiplier baseline before adjustment (1.2)
-    luckPitAdjustment: number;        // Luck pit timing adjustment (0.4)
+    // The stop rule (#249): enforced at the flag with a time penalty
+    minStops: number;                 // Classified finish needs at least this many stops (2); 0 = no rule
+    requireAllCompounds: boolean;     // ...and every compound used (true)
+    penaltyLapFraction: number;       // Penalty per unmet stop/compound, as a share of the driver's average lap (0.5)
+    // The decision
     lastPitLapBuffer: number;         // No non-critical stop with <= this many laps left (2)
-    windowOffsetPerStat: number;      // Personality stagger on target lap; higher = more spread (2)
-    windowHalfWidth: number;          // Pit-window half-width in laps; wider = less herding (1)
-    strategyWearLean: number;         // Archetype wear-trigger lean (±fraction of criticalAt; short/std/long camps); 0 = off, byte-identical (0)
-    scPitChance: number;              // Per-tick chance to take a cheap stop under the Unsafety Car when one is owed; 0 = off (0)
+    strategyWearLean: number;         // Archetype lean on the pit point (±fraction of criticalAt; short/std/long camps) (0.1)
+    scPitChance: number;              // Per-tick chance to take a cheap stop under the Unsafety Car when one is owed (0.5)
     scPitMinWear: number;             // Min tire wear % before an SC stop is worth it (15)
   };
 
@@ -564,6 +561,7 @@ export interface SimVariables {
     cruiseSpeed: number;              // Normal SC speed (0.50)
     catchUpSpeed: number;             // Speed when catching up (0.65)
     unsafetyCarSpeed: number;         // Unsafety car per-tick speed (0.0035)
+    deployChancePerDnf: number;       // Chance a stranded car brings out the SC; 3+ cars always do (0.5)
   };
 
   // === BLOWOUT SYSTEM ===
@@ -616,9 +614,12 @@ export interface SimVariables {
 // Default "Canon" values - tuned for ~40% Lead Lap, ~22% DNF, compressed field
 export const CANON_VARIABLES: SimVariables = {
   tires: {
-    soft: { speedBonus: 1.08, wearRate: 4.0, criticalAt: 70, cliffSeverity: 0.85, blowoutRisk: 0.0003 },
-    medium: { speedBonus: 1.00, wearRate: 2.8, criticalAt: 75, cliffSeverity: 0.5, blowoutRisk: 0.0002 },
-    hard: { speedBonus: 0.94, wearRate: 2.2, criticalAt: 80, cliffSeverity: 0.3, blowoutRisk: 0.0001 },
+    // #246 pass 1: life in LAPS (not race share), a 3% soft→hard gap (was 15%),
+    // and a cliff that hurts on every compound. S+M+H ≈ 21 laps > a 16-lap race,
+    // so the question is which compound carries the long stint, not survival.
+    soft: { speedBonus: 1.015, lifeLaps: 5, criticalAt: 70, cliffSeverity: 0.85, blowoutRisk: 0.0003 },
+    medium: { speedBonus: 1.00, lifeLaps: 7, criticalAt: 75, cliffSeverity: 0.7, blowoutRisk: 0.0002 },
+    hard: { speedBonus: 0.985, lifeLaps: 9, criticalAt: 80, cliffSeverity: 0.6, blowoutRisk: 0.0001 },
     precliffStart: 40,
     precliffMaxPenalty: 0.05,
     cliffExponent: 1.5,
@@ -649,23 +650,19 @@ export const CANON_VARIABLES: SimVariables = {
     luckMultiplier: 0.75,
   },
   pits: {
-    basePitDuration: 60,
+    basePitDuration: 24,                // #246: a stop costs ~25% of a lap all-in (was ~60%)
     slowStopMultiplier: 1.5,
     quickStopMultiplier: 0.75,
     slowStopBase: 0.42,
     slowStopPerStar: 0.07,
     quickStopBase: 0.03,
     quickStopPerStar: 0.05,
-    basePitChance: 0.20,
-    wearPitBonus: 0.30,
-    wearPitDenominator: 70,
-    luckPitBase: 1.2,
-    luckPitAdjustment: 0.4,
+    minStops: 2,
+    requireAllCompounds: true,
+    penaltyLapFraction: 0.5,
     lastPitLapBuffer: 2,
-    windowOffsetPerStat: 2,
-    windowHalfWidth: 1,
-    strategyWearLean: 0,
-    scPitChance: 0,
+    strategyWearLean: 0.1,
+    scPitChance: 0.5,
     scPitMinWear: 15,
   },
   performance: {
@@ -719,6 +716,7 @@ export const CANON_VARIABLES: SimVariables = {
     cruiseSpeed: 0.50,
     catchUpSpeed: 0.65,
     unsafetyCarSpeed: 0.0035,
+    deployChancePerDnf: 0.5,            // #246: was every crash, ~1 SC/race
   },
   blowouts: {
     riskExponent: 2,

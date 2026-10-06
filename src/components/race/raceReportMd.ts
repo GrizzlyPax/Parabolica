@@ -122,7 +122,8 @@ export function buildRaceReportMd(meta: RaceReportMeta, drivers: Driver[], sampl
     const pits = (d.pitStops ?? [])
       .map(ps => `L${ps.lap}${ps.wasSlowStop ? ' (slow)' : ''}`)
       .join(', ') || '—';
-    lines.push(`| ${p} | ${d.name} | ${d.teamName ?? '—'} | ${g ?? '—'} | ${deltaStr} | ${bestLap(d)} | ${avgLap(d)} | ${stintString(d, lapsRun)} | ${pits} | ${tagStr(d)} |`);
+    const pen = d.penaltyTicks > 0 ? ` ⚠ +${(d.penaltyTicks / Math.max(1, d.lapTimes.at(-1) ?? 100)).toFixed(1)}L (${d.penaltyReason})` : '';
+    lines.push(`| ${p} | ${d.name}${pen} | ${d.teamName ?? '—'} | ${g ?? '—'} | ${deltaStr} | ${bestLap(d)} | ${avgLap(d)} | ${stintString(d, lapsRun)} | ${pits} | ${tagStr(d)} |`);
   });
   dnfs.forEach(d => {
     const g = grid.get(d.id);

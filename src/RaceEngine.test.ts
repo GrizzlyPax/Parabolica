@@ -3,7 +3,8 @@ import RaceEngine, { TIRE_COMPOUNDS, RosterDriver } from './RaceEngine';
 import { CANON_VARIABLES } from './simlab/types';
 import { generateRoster, GeneratedDriver } from './generators/drivers';
 import { generateCarsForKingdoms, GeneratedCar } from './generators/cars';
-import { ALL_TRACKS, Track } from './generators/tracks';
+import { ALL_TRACKS, CURRENT_TRACKS, Track } from './generators/tracks';
+import { generateGenesisRoster } from './league/league';
 import { TEAMS } from './data/teams';
 import { Tag, getTagById } from './data/tags';
 import { rollWeather } from './data/weather';
@@ -237,12 +238,10 @@ describe('conditional tags (#156 gate)', () => {
     expect(diverged).toBe(true);
   });
 
-  it('strategy archetypes + SC opportunism are live when gated on, inert at canon — #195', () => {
-    // Both knobs ship canon-0 and must (a) leave the race byte-identical when
-    // dormant — they draw from a side seed stream / draw no main RNG — and
-    // (b) actually change races when flipped on. The wear-lean is the binding
-    // strategy lever: the wear trigger times ~all stops at canon, so leaning
-    // it per-archetype is what un-herds the field.
+  it('strategy archetypes + SC opportunism are live at canon and each changes races — #195/#246', () => {
+    // Both knobs are canon-on since #246 (lean 0.1, SC stops 0.5). Each must
+    // (a) replay byte-identically for a fixed seed and (b) actually change
+    // races when turned off, so neither is a dead knob.
     const base = cleanRoster();
     const withVars = (pits: Partial<typeof CANON_VARIABLES.pits>) => ({
       ...CANON_VARIABLES,
@@ -258,14 +257,14 @@ describe('conditional tags (#156 gate)', () => {
       return engine.runHeadless();
     };
 
-    // (a) dormant: a deep-copied canon (knobs explicitly 0) replays byte-identically
-    const canonRun = runWith(CANON_VARIABLES, 0x195);
-    const dormant = runWith(withVars({ strategyWearLean: 0, scPitChance: 0 }), 0x195);
-    expect(dormant.events).toEqual(canonRun.events);
-    expect(dormant.raceState.finishOrder).toEqual(canonRun.raceState.finishOrder);
+    // (a) replay
+    const once = runWith(CANON_VARIABLES, 0x195);
+    const again = runWith(CANON_VARIABLES, 0x195);
+    expect(again.events).toEqual(once.events);
+    expect(again.raceState.finishOrder).toEqual(once.raceState.finishOrder);
 
-    // (b) live: each gate independently diverges on at least one of a few seeds
-    for (const pits of [{ strategyWearLean: 0.12 }, { scPitChance: 0.25 }]) {
+    // (b) live: turning each gate off diverges on at least one of a few seeds
+    for (const pits of [{ strategyWearLean: 0 }, { scPitChance: 0 }]) {
       let diverged = false;
       for (const seed of [0x195, 0x196, 0x197, 0x198]) {
         const a = runWith(CANON_VARIABLES, seed);
@@ -623,5 +622,59 @@ describe('in-race acquisition (#232b)', () => {
     const a = run(grid, 9).result, b = run(grid, 9).result;
     expect(b.events).toEqual(a.events);
     expect(b.drivers.map(d => d.tags.map(t => t.id))).toEqual(a.drivers.map(d => d.tags.map(t => t.id)));
+  });
+});
+
+describe('the stop rule at the flag (#249 / #246)', () => {
+  const track = CURRENT_TRACKS[0];
+  const run = (pits: Partial<typeof CANON_VARIABLES.pits>, seed = 0x249, tires: Partial<typeof CANON_VARIABLES.tires> = {}) => {
+    const engine = RaceEngine.createForWorker({ ...CANON_VARIABLES, pits: { ...CANON_VARIABLES.pits, ...pits }, tires: { ...CANON_VARIABLES.tires, ...tires } }, seed);
+    engine.loadGeneratedRoster(generateGenesisRoster(seed, TEAMS.slice(0, 6).map(t => t.id)));
+    engine.updateConfig({ totalLaps: track.laps, lapLength: track.length, maxStoredEvents: Number.MAX_SAFE_INTEGER });
+    return engine.runHeadless(seed);
+  };
+
+  it('at canon every classified driver makes 2 stops on 3 compounds, or is penalised', () => {
+    const { drivers } = run({});
+    const finishers = drivers.filter(d => d.status === 'finished');
+    expect(finishers.length).toBeGreaterThan(5);
+    for (const d of finishers) {
+      const ok = d.pitStops.length >= 2 && new Set(d.usedCompounds).size === 3;
+      if (ok) expect(d.penaltyTicks).toBe(0);
+      else { expect(d.penaltyTicks).toBeGreaterThan(0); expect(d.penaltyReason).toBeTruthy(); }
+    }
+  });
+
+  it('a penalty is time, not laps: it reorders within the lead lap', () => {
+    // Tyres that never wear and no room to pit voluntarily → nobody stops,
+    // everyone owes the rule; the classification must follow finishTick + penalty.
+    const { drivers, raceState } = run({ minStops: 1, requireAllCompounds: false, lastPitLapBuffer: 40, penaltyLapFraction: 0.5 }, 0x249,
+      { soft: { ...CANON_VARIABLES.tires.soft, lifeLaps: 100 }, medium: { ...CANON_VARIABLES.tires.medium, lifeLaps: 100 }, hard: { ...CANON_VARIABLES.tires.hard, lifeLaps: 100 } });
+    const byId = new Map(drivers.map(d => [d.id, d]));
+    const lead = raceState.finishOrder.map(id => byId.get(id)!).filter(d => d.status === 'finished' && d.lapsBehind === 0);
+    expect(lead.some(d => d.penaltyTicks > 0)).toBe(true);
+    for (let i = 1; i < lead.length; i++) {
+      expect(lead[i].finishTick! + lead[i].penaltyTicks).toBeGreaterThanOrEqual(lead[i - 1].finishTick! + lead[i - 1].penaltyTicks);
+    }
+  });
+
+  it('No Pit Rules: minStops 0 and no compound rule → no penalties, fewer stops', () => {
+    const strict = run({});
+    const loose = run({ minStops: 0, requireAllCompounds: false });
+    expect(loose.drivers.every(d => d.penaltyTicks === 0)).toBe(true);
+    const stops = (r: typeof strict) => r.drivers.filter(d => d.status === 'finished').reduce((s, d) => s + d.pitStops.length, 0) / Math.max(1, r.drivers.filter(d => d.status === 'finished').length);
+    expect(stops(loose)).toBeLessThan(stops(strict));
+  });
+
+  it('tyre life is in laps: a 2× longer race needs more stops', () => {
+    const go = (laps: number) => {
+      const engine = RaceEngine.createForWorker(CANON_VARIABLES, 7);
+      engine.loadGeneratedRoster(generateGenesisRoster(7, TEAMS.slice(0, 6).map(t => t.id)));
+      engine.updateConfig({ totalLaps: laps, lapLength: track.length });
+      const { drivers } = engine.runHeadless(7);
+      const f = drivers.filter(d => d.status === 'finished');
+      return f.reduce((s, d) => s + d.pitStops.length, 0) / Math.max(1, f.length);
+    };
+    expect(go(32)).toBeGreaterThan(go(16) + 1);
   });
 });
