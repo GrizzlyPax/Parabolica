@@ -1,8 +1,8 @@
 # Parabolica World Deck
 
-*Everything in the sim and the world, generated from the data modules by `npm run glossary` — do not edit by hand; edit the source files named in each section and re-run. Engine v0.4.2. How to add content: docs/WORLD_DECK.md.*
+*Everything in the sim and the world, generated from the data modules by `npm run glossary` — do not edit by hand; edit the source files named in each section and re-run. Engine v0.4.3. How to add content: docs/WORLD_DECK.md.*
 
-11 teams (+11 historic) · 24 tracks (+7 historic) · 39 tags (9 genesis · 8 acquired · 5 in-race · 17 condition) · 12 cards · 12 rules · 5 weathers · 3 track characters · 5 inflictions · 3 gods
+11 teams (+11 historic) · 24 tracks (+7 historic) · 60 tags (30 genesis · 8 acquired · 5 in-race · 17 condition) · 12 cards · 12 rules · 5 weathers · 3 track characters · 5 inflictions · 3 gods
 
 ## Teams
 
@@ -56,7 +56,7 @@ Each driver gets three slots: driver, car (their own chassis), team (one roll, s
 2. **Which bucket?** 60% common · 30% uncommon · 9% rare · 1% legendary. Fixed odds — adding tags to a bucket never changes how often it comes up, only which tag you get.
 3. **Which tag?** An even pick inside the bucket. An empty bucket falls to the next more common one.
 
-Bucket sizes in the default pool: common 3 · uncommon 5 · rare 1 · legendary 0. Cards change the hit chance and the odds.
+Bucket sizes in the default pool: common 12 · uncommon 9 · rare 6 · legendary 3. Cards change the hit chance and the odds.
 
 ## How tags enter the world
 
@@ -75,12 +75,33 @@ Bucket sizes in the default pool: common 3 · uncommon 5 · rare 1 · legendary 
 | 🎯 **Clutch Performer** `clutch-performer` — Raises their game when it matters most | uncommon | driver | on the final lap (70% chance) | +8% speed, +15% consistency | for good | — | born with it (in the genesis pool), or granted by the Commissionary |
 | 🌧️ **Rain Dancer** `rain-dancer` — Mysteriously faster when the skies open | rare | driver | while in rain | +8% consistency, −15% crash risk | for good | — | born with it (in the genesis pool), or granted by the Commissionary |
 | 🐢 **Sunday Driver** `sunday-driver` — Slow starter who builds to a strong finish | uncommon | driver | while last 40% of the race | +5% speed | for good | — | born with it (in the genesis pool), or granted by the Commissionary |
+| 🧤 **Steady Hands** `steady-hands` — Rarely puts a wheel wrong | common | driver | always on | +4% consistency | for good | — | born with it (in the genesis pool), or granted by the Commissionary |
+| 🛑 **Late Braker** `late-braker` — Brave into the corners. Sometimes too brave | common | driver | always on | +1% speed, +3% crash risk | for good | — | born with it (in the genesis pool), or granted by the Commissionary |
+| 🚦 **Quick Starter** `quick-starter` — Lights out and gone | common | driver | at the start | +5% speed | for good | — | born with it (in the genesis pool), or granted by the Commissionary |
+| 🙌 **Crowd Favourite** `crowd-favourite` — Things just seem to go their way | common | driver | always on | +10% luck | for good | — | born with it (in the genesis pool), or granted by the Commissionary |
+| 🌂 **Rain Shy** `rain-shy` — Would rather be indoors when it rains | uncommon | driver | while in rain | -3% speed | for good | — | born with it (in the genesis pool), or granted by the Commissionary |
+| 🧊 **Ice Veins** `ice-veins` — Unflappable with the lead in sight | rare | driver | while running top 3 | +8% consistency | for good | — | born with it (in the genesis pool), or granted by the Commissionary |
+| ⭐ **The Natural** `the-natural` — Born for this. Everyone can tell | legendary | driver | always on | +3% speed, +5% consistency, +10% luck | for good | — | born with it (in the genesis pool), or granted by the Commissionary |
 | 💎 **Glass Cannon** `glass-cannon` — Blazingly fast but fragile | uncommon | car | always on | +3% speed, +25% crash risk | for good | — | born with it (in the genesis pool), or granted by the Commissionary |
 | 👻 **Cursed Chassis** `cursed-chassis` — Something is wrong with this car. Nobody knows what. | uncommon | car | always on | -2% consistency, -12% luck | for good | — | born with it (in the genesis pool), or granted by the Commissionary |
 | 🔧 **Pit Lane Special** `pit-lane-special` — Optimized for quick pit stops | common | car | on a pit stop | -25% pit time | for good | — | born with it (in the genesis pool), or granted by the Commissionary |
+| 🔋 **Big Engine** `big-engine` — More horsepower than manners | common | car | always on | +1% speed | for good | — | born with it (in the genesis pool), or granted by the Commissionary |
+| 🛡️ **Built Like a Tank** `built-like-a-tank` — Shrugs off contact that would end other cars | common | car | always on | −6% crash risk | for good | — | born with it (in the genesis pool), or granted by the Commissionary |
+| 🪶 **Light-Footed** `light-footed` — Flies on fresh rubber | common | car | while tyre wear under 40% | +2% speed | for good | — | born with it (in the genesis pool), or granted by the Commissionary |
+| 🌡️ **Runs Hot** `runs-hot` — Hates a scorcher | uncommon | car | while in scorcher | -4% speed | for good | — | born with it (in the genesis pool), or granted by the Commissionary |
+| 🌧️ **Wet Weather Package** `wet-weather-package` — Built for the rain; sure-footed when it pours | rare | car | while in rain | +3% speed, −5% crash risk | for good | — | born with it (in the genesis pool), or granted by the Commissionary |
+| 🛸 **Spaceship** `spaceship` — Nobody is sure how it works, including the team | rare | car | always on | +3% speed, -10% luck | for good | — | born with it (in the genesis pool), or granted by the Commissionary |
+| 🦄 **The Unicorn** `the-unicorn` — The car every team dreams of building once | legendary | car | always on | +3% speed, +4% consistency, −5% crash risk | for good | — | born with it (in the genesis pool), or granted by the Commissionary |
 | 🐕 **Underdog Spirit** `underdog-spirit` — Performs better when behind | common | team | while bottom 50% of the field | +3% speed, +10% luck | for good | — | born with it (in the genesis pool), or granted by the Commissionary |
 | 👑 **Front Runners** `front-runners` — Thrives when leading the pack | common | team | while running top 5 | +4% consistency, −8% crash risk | for good | — | born with it (in the genesis pool), or granted by the Commissionary |
 | 🌀 **Chaotic Energy** `chaotic-energy` — Unpredictable - could be brilliant or disastrous | uncommon | team | at the start (50% chance) | -20% consistency | for good | — | born with it (in the genesis pool), or granted by the Commissionary |
+| 🔧 **Drilled Crew** `drilled-crew` — Every stop rehearsed a hundred times | common | team | always on | -8% pit time | for good | — | born with it (in the genesis pool), or granted by the Commissionary |
+| 🍲 **Home Cooking** `home-cooking` — Well fed, well loved, a little lucky | common | team | always on | +8% luck | for good | — | born with it (in the genesis pool), or granted by the Commissionary |
+| 🌱 **Late Bloomers** `late-bloomers` — Find their pace when the race gets long | uncommon | team | while last 30% of the race | +1% speed | for good | — | born with it (in the genesis pool), or granted by the Commissionary |
+| 🧈 **Butterfingers** `butterfingers` — Something always rolls under the car | uncommon | team | always on | +15% pit time | for good | — | born with it (in the genesis pool), or granted by the Commissionary |
+| 🏰 **Siege Mentality** `siege-mentality` — Defend the lead at all costs | rare | team | while running top 3 | +3% consistency, −8% crash risk | for good | — | born with it (in the genesis pool), or granted by the Commissionary |
+| 🕳️ **Void-Touched** `void-touched` — Fast, and the Void is watching | rare | team | always on | +2% speed, -15% luck | for good | — | born with it (in the genesis pool), or granted by the Commissionary |
+| 👑 **Dynasty** `dynasty` — Generations of winning, and it shows everywhere | legendary | team | always on | +2% speed, +3% consistency, +5% luck, -5% pit time | for good | — | born with it (in the genesis pool), or granted by the Commissionary |
 
 ## Acquired tags
 

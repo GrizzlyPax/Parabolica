@@ -4,74 +4,72 @@
   "rosterHash": "6ed404b2",
   "finishOrder": [
     8,
-    21,
     9,
+    21,
+    12,
     11,
     18,
-    12,
-    19,
-    16,
     0,
-    2,
     14,
     1,
-    10,
+    16,
+    19,
     13,
+    10,
     17,
-    20,
-    7,
-    4,
     3,
+    4,
+    7,
     15,
     6,
     5
   ],
-  "totalTicks": 1939,
-  "leadChanges": 2,
-  "eventsHash": "baf2d49d",
+  "totalTicks": 1875,
+  "leadChanges": 0,
+  "eventsHash": "dc6fcdba",
   "tags": [
     [
-      "rain-dancer"
-    ],
-    [],
-    [
-      "sunday-driver"
+      "ice-veins"
     ],
     [
-      "chaotic-energy"
+      "crowd-favourite"
     ],
-    [],
     [],
     [],
     [
-      "pit-lane-special"
+      "butterfingers"
     ],
+    [],
     [
       "underdog-spirit"
     ],
-    [],
     [],
     [
       "underdog-spirit"
     ],
     [
-      "chaotic-energy"
-    ],
-    [
-      "pit-lane-special"
+      "built-like-a-tank"
     ],
     [],
-    [],
     [
-      "sunday-driver",
-      "chaotic-energy"
+      "light-footed"
+    ],
+    [
+      "butterfingers"
     ],
     [],
     [],
     [],
     [
-      "chaotic-energy"
+      "rain-shy",
+      "late-bloomers"
     ],
+    [],
+    [
+      "late-bloomers"
+    ],
+    [],
+    [],
     []
   ]
 }
