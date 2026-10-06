@@ -6,13 +6,13 @@
 // Pure (no React, no DOM); the clipboard write lives in the UI.
 
 import { RosterDriver } from '../RaceEngine';
-import { Tag } from '../data/tags';
+import { Tag, tagsFor } from '../data/tags';
 import { getSeasonStandings, DriverSeasonStats } from '../types/season';
 import { LeagueState } from './types';
 import { rosterStateAt } from './league';
 
-function fmtTag(tag: Tag | undefined): string {
-  return tag ? `${tag.emoji} ${tag.name} (${tag.id})` : '—';
+function fmtTags(tags: Tag[]): string {
+  return tags.length ? tags.map(t => `${t.emoji} ${t.name} (${t.id})`).join(' + ') : '—';
 }
 
 function fmtRaceResults(results: number[]): string {
@@ -111,7 +111,7 @@ export function buildSeasonReport(league: LeagueState): string {
       d.stats.acceleration.toFixed(3),
       d.stats.endurance.toFixed(3),
       d.stats.aggression.toFixed(3),
-      fmtTag(d.driverTag),
+      fmtTags(tagsFor(d.tags, 'driver')),
     );
   }
   addBlank();
@@ -132,8 +132,8 @@ export function buildSeasonReport(league: LeagueState): string {
       d.carStats?.reliability ?? '—',
       d.teamStats?.tireManagement ?? '—',
       d.teamStats?.pitCrew ?? '—',
-      fmtTag(d.carTag),
-      fmtTag(d.teamTag),
+      fmtTags(tagsFor(d.tags, 'car')),
+      fmtTags(tagsFor(d.tags, 'team')),
     );
   }
   addBlank();

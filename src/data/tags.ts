@@ -77,8 +77,9 @@ export interface Tag {
   description: string;
   target: TagTarget;
   trigger: TagTrigger;
-  /** Magnitude tier (the #156 ladder). Optional while the roster is being calibrated. */
-  tier?: TagTier;
+  /** Magnitude tier (the #156 ladder). Required: genesis rolls weight by it
+   * and the lab batch that ships with every tag is what justifies it. */
+  tier: TagTier;
   /** Gate for passive effects — apply only while this holds. Ungated passives are always-on. */
   condition?: TagCondition;
   // Effect modifiers (applied when tag is active)
@@ -267,6 +268,7 @@ export const CONDITION_TAGS: Tag[] = [
   // === HAZARD CONDITIONS (crash risk) ===
   {
     id: 'low-visibility',
+    tier: 'trait', // transient (track-event) tag — tiered by magnitude, not yet lab-batched
     name: 'Low Visibility',
     emoji: '🌫️',
     description: 'Fog, mist, or smoke reducing driver visibility',
@@ -280,6 +282,7 @@ export const CONDITION_TAGS: Tag[] = [
   },
   {
     id: 'slippery-surface',
+    tier: 'power', // transient (track-event) tag — tiered by magnitude, not yet lab-batched
     name: 'Slippery Surface',
     emoji: '💧',
     description: 'Oil, water, or debris on the track',
@@ -293,6 +296,7 @@ export const CONDITION_TAGS: Tag[] = [
   },
   {
     id: 'debris-hazard',
+    tier: 'power', // transient (track-event) tag — tiered by magnitude, not yet lab-batched
     name: 'Debris Hazard',
     emoji: '⚠️',
     description: 'Track debris creating danger',
@@ -305,6 +309,7 @@ export const CONDITION_TAGS: Tag[] = [
   },
   {
     id: 'dust-cloud',
+    tier: 'trait', // transient (track-event) tag — tiered by magnitude, not yet lab-batched
     name: 'Dust Cloud',
     emoji: '💨',
     description: 'Kicked-up dust reducing visibility',
@@ -320,6 +325,7 @@ export const CONDITION_TAGS: Tag[] = [
   // === SPEED CONDITIONS ===
   {
     id: 'adrenaline-surge',
+    tier: 'trait', // transient (track-event) tag — tiered by magnitude, not yet lab-batched
     name: 'Adrenaline Surge',
     emoji: '⚡',
     description: 'A burst of speed from the excitement',
@@ -332,6 +338,7 @@ export const CONDITION_TAGS: Tag[] = [
   },
   {
     id: 'slipstream-boost',
+    tier: 'quirk', // transient (track-event) tag — tiered by magnitude, not yet lab-batched
     name: 'Slipstream Boost',
     emoji: '🌀',
     description: 'Caught a powerful slipstream',
@@ -344,6 +351,7 @@ export const CONDITION_TAGS: Tag[] = [
   },
   {
     id: 'track-evolution',
+    tier: 'quirk', // transient (track-event) tag — tiered by magnitude, not yet lab-batched
     name: 'Track Evolution',
     emoji: '📈',
     description: 'Track grip improving with rubber buildup',
@@ -357,6 +365,7 @@ export const CONDITION_TAGS: Tag[] = [
   },
   {
     id: 'headwind',
+    tier: 'trait', // transient (track-event) tag — tiered by magnitude, not yet lab-batched
     name: 'Headwind',
     emoji: '🍃',
     description: 'Strong headwind reducing straight-line speed',
@@ -369,6 +378,7 @@ export const CONDITION_TAGS: Tag[] = [
   },
   {
     id: 'cooling-issues',
+    tier: 'trait', // transient (track-event) tag — tiered by magnitude, not yet lab-batched
     name: 'Cooling Issues',
     emoji: '🌡️',
     description: 'High temperatures forcing reduced pace',
@@ -382,6 +392,7 @@ export const CONDITION_TAGS: Tag[] = [
   },
   {
     id: 'tire-graining',
+    tier: 'trait', // transient (track-event) tag — tiered by magnitude, not yet lab-batched
     name: 'Tire Graining',
     emoji: '🛞',
     description: 'Temporary loss of tire grip',
@@ -397,6 +408,7 @@ export const CONDITION_TAGS: Tag[] = [
   // === FOCUS CONDITIONS ===
   {
     id: 'distracted',
+    tier: 'trait', // transient (track-event) tag — tiered by magnitude, not yet lab-batched
     name: 'Distracted',
     emoji: '😵',
     description: 'Lost focus, making small mistakes',
@@ -410,6 +422,7 @@ export const CONDITION_TAGS: Tag[] = [
   },
   {
     id: 'in-the-zone',
+    tier: 'trait', // transient (track-event) tag — tiered by magnitude, not yet lab-batched
     name: 'In The Zone',
     emoji: '🎯',
     description: 'Perfect focus, hitting every apex',
@@ -423,6 +436,7 @@ export const CONDITION_TAGS: Tag[] = [
   },
   {
     id: 'rattled',
+    tier: 'trait', // transient (track-event) tag — tiered by magnitude, not yet lab-batched
     name: 'Rattled',
     emoji: '😰',
     description: 'Shaken up, driving cautiously',
@@ -436,6 +450,7 @@ export const CONDITION_TAGS: Tag[] = [
   },
   {
     id: 'desperate-push',
+    tier: 'power', // transient (track-event) tag — tiered by magnitude, not yet lab-batched
     name: 'Desperate Push',
     emoji: '🔥',
     description: 'Nothing to lose, pushing hard',
@@ -451,6 +466,7 @@ export const CONDITION_TAGS: Tag[] = [
   // === PIT CONDITIONS ===
   {
     id: 'pit-congestion',
+    tier: 'trait', // transient (track-event) tag — tiered by magnitude, not yet lab-batched
     name: 'Pit Congestion',
     emoji: '🚧',
     description: 'Heavy pit lane traffic',
@@ -463,6 +479,7 @@ export const CONDITION_TAGS: Tag[] = [
   },
   {
     id: 'equipment-malfunction',
+    tier: 'power', // transient (track-event) tag — tiered by magnitude, not yet lab-batched
     name: 'Equipment Malfunction',
     emoji: '🔧',
     description: 'Pit equipment issues causing delays',
@@ -475,6 +492,7 @@ export const CONDITION_TAGS: Tag[] = [
   },
   {
     id: 'fast-hands',
+    tier: 'trait', // transient (track-event) tag — tiered by magnitude, not yet lab-batched
     name: 'Fast Hands',
     emoji: '👐',
     description: 'Pit crew on fire today',
@@ -495,13 +513,44 @@ export function getTagById(id: string): Tag | undefined {
   return ALL_TAGS.find(t => t.id === id);
 }
 
+/** Slots per driver for the full stack (driver + car + team tags, from any
+ * source). Enforced by the league when tags are attached, not by the engine. */
+export const MAX_TAGS_PER_DRIVER = 4;
+
+/** Genesis draw weights by tier: mostly quirks and traits, destinies rare
+ * (TAG_SYSTEM §3). A destiny should be the thing the whole league talks about. */
+export const GENESIS_TIER_WEIGHTS: Record<TagTier, number> = { quirk: 6, trait: 4, power: 2, destiny: 1 };
+
+/** Weighted pick from a pool by tier. Exactly one rng() draw. */
+export function pickTagWeighted(pool: Tag[], rng: Rng): Tag | null {
+  if (pool.length === 0) return null;
+  const total = pool.reduce((sum, t) => sum + GENESIS_TIER_WEIGHTS[t.tier], 0);
+  let r = rng() * total;
+  for (const t of pool) {
+    r -= GENESIS_TIER_WEIGHTS[t.tier];
+    if (r < 0) return t;
+  }
+  return pool[pool.length - 1];
+}
+
 // Get random tag for a target type (with low probability)
 export function maybeAssignTag(target: TagTarget, rng: Rng = Math.random): Tag | null {
   const chance = 0.15; // 15% chance to get a tag
   if (rng() > chance) return null;
 
   const availableTags = ALL_TAGS.filter(t => t.target === target);
-  return availableTags[Math.floor(rng() * availableTags.length)];
+  return pickTagWeighted(availableTags, rng);
+}
+
+/** Assemble a driver's starting stack from the genesis rolls (driver, car,
+ * team) — the one place the three old slots become the list. */
+export function genesisTags(...rolled: (Tag | null | undefined)[]): Tag[] {
+  return rolled.filter((t): t is Tag => !!t);
+}
+
+/** Tags on a stack that belong to a given target (for UI grouping). */
+export function tagsFor(tags: Tag[] | undefined, target: TagTarget): Tag[] {
+  return (tags ?? []).filter(t => t.target === target);
 }
 
 // Get tags for a specific target type

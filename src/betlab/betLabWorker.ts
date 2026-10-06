@@ -1,3 +1,4 @@
+import { genesisTags } from '../data/tags';
 // Bet Lab Web Worker
 // Runs headless race simulations and tracks betting outcomes
 
@@ -34,9 +35,7 @@ function createRosterWithCars(roster: GeneratedDriver[], cars: Map<string, Gener
       carStats: car?.stats,
       carName: car?.name,
       teamStats: car?.teamStats,
-      driverTag: driver.tag,
-      carTag: car?.carTag,
-      teamTag: car?.teamTag,
+      tags: genesisTags(driver.tag, car?.carTag, car?.teamTag),
     };
   });
 }

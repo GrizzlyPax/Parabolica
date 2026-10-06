@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { createLeague, buildSchedule, rosterStateAt } from './league';
+import { MAX_TAGS_PER_DRIVER } from '../data/tags';
 import {
   settleLeague, nextRaceAt, isSeasonOver, prepareScheduledRace,
   FULL_EVENT_RETENTION, LIVE_TICK_MS,
@@ -252,10 +253,13 @@ describe('interventions', () => {
 
     const before = rosterStateAt(withIntervention, 1).find(d => d.id === targetId)!;
     const after = rosterStateAt(withIntervention, 2).find(d => d.id === targetId)!;
-    expect(before.driverTag?.id).not.toBe('sunday-driver');
-    expect(after.driverTag?.id).toBe('sunday-driver');
+    const has = (d: typeof before) => d.tags.some(t => t.id === 'sunday-driver');
+    expect(has(before)).toBe(false);
+    expect(has(after)).toBe(true);
+    // the attachment stacks on top of genesis tags rather than replacing them
+    expect(after.tags.length).toBe(before.tags.length + 1);
     // genesis roster untouched (pure function)
-    expect(league.roster[0].driverTag?.id).not.toBe('sunday-driver');
+    expect(has(league.roster[0])).toBe(false);
   });
 
   it('changes the affected race but not the already-deterministic earlier ones', () => {
@@ -440,5 +444,22 @@ describe('league persistence', () => {
 
   it('returns null when nothing is saved', () => {
     expect(loadLeagueState(memoryStore())).toBeNull();
+  });
+});
+
+describe('tag stack cap (#231)', () => {
+  it('attach-tag stacks up to MAX_TAGS_PER_DRIVER, ignores duplicates and overflow', () => {
+    const league = createLeague(7, makeSetup());
+    const id = league.roster[0].id;
+    const base = league.roster[0].tags.length;
+    const pool = ['sunday-driver', 'clutch-performer', 'glass-cannon', 'cursed-chassis', 'front-runners', 'chaotic-energy'];
+    const log = pool.map((tagId, i) => ({ type: 'attach-tag' as const, atRaceIndex: 0, targetDriverId: id, tagId, committedAt: i }));
+    // a duplicate of the first, appended last
+    log.push({ ...log[0], committedAt: 99 });
+    const after = rosterStateAt({ ...league, interventionLog: log }, 0).find(d => d.id === id)!;
+    expect(after.tags.length).toBe(Math.min(base + pool.length, MAX_TAGS_PER_DRIVER));
+    expect(new Set(after.tags.map(t => t.id)).size).toBe(after.tags.length);
+    // genesis stays first; attachments keep log order
+    expect(after.tags.slice(0, base)).toEqual(league.roster[0].tags);
   });
 });

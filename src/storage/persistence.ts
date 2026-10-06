@@ -6,7 +6,10 @@
 import { SeasonState, DriverSeasonStats } from '../types/season';
 import { LeagueState } from '../league/types';
 
-export const SCHEMA_VERSION = 1;
+// v2 (#231): RosterDriver.tags[] replaced driverTag/carTag/teamTag; genesis draws
+// weight by tier; tag rolls moved to a side stream. v1 saves are not migrated
+// (archive-don't-migrate, pre-1.0).
+export const SCHEMA_VERSION = 2;
 const LEAGUE_KEY = 'parabolica.league.v1';
 
 // Minimal Storage interface so tests can inject an in-memory store and the

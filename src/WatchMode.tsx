@@ -996,7 +996,7 @@ function WatchMode({
   const activeTagsMap = useMemo(() => {
     const map = new Map<number, Set<string>>();
     for (const d of drivers) {
-      if (d.driverTag || d.carTag || d.teamTag) {
+      if (d.tags.length > 0) {
         map.set(d.id, new Set(engine.getActiveTagIds(d.id)));
       }
     }

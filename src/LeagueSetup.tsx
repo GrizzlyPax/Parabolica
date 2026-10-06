@@ -6,6 +6,7 @@ import { getTeamsByIds, getRandomTeams, Team, CURRENT_TEAMS } from './data/teams
 import RaceEngine, { RosterDriver } from './RaceEngine';
 import TeamCell from './components/TeamCell';
 import './LeagueSetup.css';
+import { genesisTags } from './data/tags';
 
 // ============================================
 // RATING DESCRIPTORS - Vibes over numbers
@@ -204,9 +205,7 @@ function LeagueSetup({ onStartRace, seasonKingdomIds, seasonTrack }: LeagueSetup
         carStats: car?.stats,
         carName: car?.name,
         teamStats: car?.teamStats,
-        driverTag: driver.tag,
-        carTag: car?.carTag,
-        teamTag: car?.teamTag,
+        tags: genesisTags(driver.tag, car?.carTag, car?.teamTag),
       };
     });
 

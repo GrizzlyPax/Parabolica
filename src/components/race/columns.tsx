@@ -264,13 +264,11 @@ export const COLUMN_TAGS: ColumnConfig = {
   width: '54px',
   align: 'center',
   render: (driver: Driver, ctx: RowContext) => {
-    const tags = [driver.driverTag, driver.carTag, driver.teamTag].filter(
-      (t): t is NonNullable<typeof t> => !!t
-    );
+    const tags = driver.tags;
     if (tags.length === 0) return <span className="muted-cell">—</span>;
     return (
       <span className="tag-chips">
-        {tags.slice(0, 3).map(tag => {
+        {tags.slice(0, 4).map(tag => {
           const isActive = ctx.activeTagIds?.has(tag.id) ?? false;
           // Ungated passives are always-on: show them lit.
           const alwaysOn = tag.trigger === 'passive' && !tag.condition;

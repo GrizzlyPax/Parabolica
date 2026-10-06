@@ -7,7 +7,7 @@ import { useState } from 'react';
 import { RosterDriver } from '../../RaceEngine';
 import { LeagueState } from '../types';
 import { getTeamById } from '../../data/teams';
-import { Tag } from '../../data/tags';
+import { Tag, tagsFor } from '../../data/tags';
 import { getSeasonStandings, DriverSeasonStats } from '../../types/season';
 import { getGodById } from '../gods';
 import { TeamMarble } from './TeamMarble';
@@ -51,7 +51,7 @@ function DriverEntry({ driver, stats }: { driver: RosterDriver; stats?: DriverSe
         <TeamMarble color={driver.color} accentColor={driver.accentColor}
           emoji={driver.emoji} size={24} slot={driver.driverSlot} />
         <span className="grid-driver-name">{driver.fullName}</span>
-        {driver.driverTag && <TagChip tag={driver.driverTag} />}
+        {tagsFor(driver.tags, 'driver').map(t => <TagChip key={t.id} tag={t} />)}
         {stats && <span className="grid-driver-pts">{stats.points} pts</span>}
         <span className="grid-driver-toggle">{open ? '▾' : '▸'}</span>
       </button>
@@ -124,7 +124,7 @@ function GridScreen({ league, onExit }: { league: LeagueState; onExit: () => voi
               <div key={kingdomId} className="grid-team-card" style={{ '--team-color': lead?.color } as React.CSSProperties}>
                 <div className="grid-team-header">
                   <span className="grid-team-name">{team?.emoji ?? lead?.emoji} {team?.name ?? lead?.teamName ?? kingdomId}</span>
-                  {lead?.teamTag && <TagChip tag={lead.teamTag} />}
+                  {tagsFor(lead?.tags, 'team').map(t => <TagChip key={t.id} tag={t} />)}
                 </div>
                 {lead?.carName && (
                   <div className="grid-team-car">
@@ -134,7 +134,7 @@ function GridScreen({ league, onExit }: { league: LeagueState; onExit: () => voi
                         P {stars(lead.carStats.power)} · G {stars(lead.carStats.grip)} · R {stars(lead.carStats.reliability)}
                       </span>
                     )}
-                    {lead.carTag && <TagChip tag={lead.carTag} />}
+                    {tagsFor(lead.tags, 'car').map(t => <TagChip key={t.id} tag={t} />)}
                   </div>
                 )}
                 <div className="grid-team-drivers">

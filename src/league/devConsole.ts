@@ -4,7 +4,7 @@
 //
 // Open the browser console and type `league.help()`.
 
-import { createLeague, rosterStateAt } from './league';
+import { createLeague, rosterStateAt, canAttachTag } from './league';
 import { settleLeague, nextRaceAt, isSeasonOver } from './settle';
 import { LeagueState } from './types';
 import {
@@ -15,7 +15,7 @@ import {
 import { getSeasonStandings } from '../types/season';
 import { TEAMS } from '../data/teams';
 import { CURRENT_TRACKS, getTrackById } from '../generators/tracks';
-import { DRIVER_TAGS } from '../data/tags';
+import { DRIVER_TAGS, getTagById, MAX_TAGS_PER_DRIVER } from '../data/tags';
 import { randomSeed } from '../engine/rng';
 
 const MINUTE = 60_000;
@@ -159,7 +159,7 @@ State persists in localStorage — reload the page and check in again.`);
       Driver: d.fullName,
       Team: d.kingdomId,
       Car: d.carName,
-      Tag: d.driverTag?.name ?? '—',
+      Tags: d.tags.map(t => t.name).join(' + ') || '—',
     })));
   },
 
@@ -173,6 +173,13 @@ State persists in localStorage — reload the page and check in again.`);
     const nextRace = league.settledThrough + 1;
     if (nextRace >= league.schedule.length) {
       console.log('Season is over — nothing left to curse.');
+      return;
+    }
+    const tag = getTagById(tagId);
+    const stack = rosterStateAt(league, nextRace).find(d => d.id === driverId)?.tags ?? [];
+    if (!tag) { console.log(`No such tag '${tagId}'.`); return; }
+    if (!canAttachTag(stack, tag)) {
+      console.log(`Refused: ${driverName(league, driverId)} already carries it, or the stack is full (${MAX_TAGS_PER_DRIVER}).`);
       return;
     }
     save({
@@ -190,7 +197,7 @@ State persists in localStorage — reload the page and check in again.`);
     console.log(`Proof: rosterStateAt applies only interventions at/before each race index.`);
     console.table(rosterStateAt(current!, nextRace)
       .filter(d => d.id === driverId)
-      .map(d => ({ Driver: d.fullName, Tag: d.driverTag?.name ?? '—' })));
+      .map(d => ({ Driver: d.fullName, Tags: d.tags.map(t => t.name).join(' + ') || '—' })));
   },
 
   reset() {

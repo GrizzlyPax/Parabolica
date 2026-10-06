@@ -5,8 +5,9 @@ import { generateRoster, GeneratedDriver } from './generators/drivers';
 import { generateCarsForKingdoms, GeneratedCar } from './generators/cars';
 import { ALL_TRACKS, Track } from './generators/tracks';
 import { TEAMS } from './data/teams';
-import { Tag, getTagById } from './data/tags';
+import { Tag, getTagById, genesisTags } from './data/tags';
 import { rollWeather } from './data/weather';
+import { mulberry32 } from './engine/rng';
 
 function createRosterWithCars(roster: GeneratedDriver[], cars: Map<string, GeneratedCar>) {
   return roster.map(driver => {
@@ -16,9 +17,7 @@ function createRosterWithCars(roster: GeneratedDriver[], cars: Map<string, Gener
       carStats: car?.stats,
       carName: car?.name,
       teamStats: car?.teamStats,
-      driverTag: driver.tag,
-      carTag: car?.carTag,
-      teamTag: car?.teamTag,
+      tags: genesisTags(driver.tag, car?.carTag, car?.teamTag),
     };
   });
 }
@@ -110,16 +109,17 @@ describe('conditional tags (#156 gate)', () => {
   // One tag-free grid, reused across runs (generators use Math.random, so the
   // roster must be fixed up-front — only the tag under test may vary).
   function cleanRoster(): RosterDriver[] {
-    const roster = generateRoster();
-    const cars = generateCarsForKingdoms(TEAMS.map(t => t.id));
-    return createRosterWithCars(roster, cars).map(d => ({
-      ...d, driverTag: undefined, carTag: undefined, teamTag: undefined,
-    }));
+    // Seeded so these gate tests are deterministic (unseeded rosters made the
+    // "diverges on at least one of four seeds" assertions flaky).
+    const rng = mulberry32(0x156);
+    const roster = generateRoster(rng);
+    const cars = generateCarsForKingdoms(TEAMS.map(t => t.id), rng);
+    return createRosterWithCars(roster, cars).map(d => ({ ...d, tags: [] }));
   }
 
   function run(base: RosterDriver[], seed: number, driverTag: Tag | undefined, conditions: string[] = []) {
     const grid = structuredClone(base);
-    grid[0].driverTag = driverTag; // only driver 0's tag varies between runs
+    grid[0].tags = driverTag ? [driverTag] : []; // only driver 0's tag varies between runs
     const engine = RaceEngine.createForWorker(CANON_VARIABLES, seed);
     engine.loadGeneratedRoster(grid);
     engine.updateConfig({ totalLaps: track.laps, lapLength: track.length });
@@ -153,7 +153,7 @@ describe('conditional tags (#156 gate)', () => {
   it('an always-satisfied conditional tag changes the race vs no tag', () => {
     const boost: Tag = {
       id: 'test-rocket', name: 'Test Rocket', emoji: '🚀', description: 'always on',
-      target: 'driver', trigger: 'passive', condition: { when: 'lapProgress', after: 0 },
+      tier: 'power', target: 'driver', trigger: 'passive', condition: { when: 'lapProgress', after: 0 },
       effects: { speedModifier: 1.2 },
     };
     const base = cleanRoster();
@@ -164,7 +164,7 @@ describe('conditional tags (#156 gate)', () => {
 
   function runWithTrackTags(base: RosterDriver[], seed: number, trackTags: Parameters<RaceEngine['setTrackTags']>[0], driverTag?: Tag) {
     const grid = structuredClone(base);
-    grid[0].driverTag = driverTag;
+    grid[0].tags = driverTag ? [driverTag] : [];
     const engine = RaceEngine.createForWorker(CANON_VARIABLES, seed);
     engine.loadGeneratedRoster(grid);
     engine.updateConfig({ totalLaps: track.laps, lapLength: track.length });
@@ -349,7 +349,7 @@ describe('conditional tags (#156 gate)', () => {
     // inert on a plain track but bite when the track stamps that condition.
     const debrisLover: Tag = {
       id: 'test-scavenger', name: 'Scavenger', emoji: '🦅', description: 'thrives in debris',
-      target: 'driver', trigger: 'passive', condition: { when: 'condition', has: 'debris-hazard' },
+      tier: 'power', target: 'driver', trigger: 'passive', condition: { when: 'condition', has: 'debris-hazard' },
       effects: { speedModifier: 1.15 },
     };
     const hazardTag = { id: 'hazardous', name: 'Hazardous', emoji: '⚠️', conditions: ['debris-hazard'] };
@@ -396,7 +396,7 @@ describe('conditional tags (#156 gate)', () => {
     const base = cleanRoster();
     const prep = (weather: ReturnType<typeof rollWeather> | null) => {
       const grid = structuredClone(base);
-      grid[0].driverTag = getTagById('rain-dancer');
+      grid[0].tags = [getTagById('rain-dancer')!];
       const engine = RaceEngine.createForWorker(CANON_VARIABLES, 0xACE);
       engine.loadGeneratedRoster(grid);
       engine.updateConfig({ totalLaps: track.laps, lapLength: track.length });
@@ -418,7 +418,7 @@ describe('conditional tags (#156 gate)', () => {
     const dry = run(base, 0xDDD, getTagById('rain-dancer'));
     // setWeather applies the field-wide lean AND stamps 'rain' so the tag fires.
     const grid = structuredClone(base);
-    grid[0].driverTag = getTagById('rain-dancer');
+    grid[0].tags = [getTagById('rain-dancer')!];
     const engine = RaceEngine.createForWorker(CANON_VARIABLES, 0xDDD);
     engine.loadGeneratedRoster(grid);
     engine.updateConfig({ totalLaps: track.laps, lapLength: track.length });
@@ -470,5 +470,114 @@ describe('headless race invariants', () => {
     }
     const dnfRate = dnfs / total;
     expect(dnfRate).toBeLessThan(0.45);
+  });
+});
+
+// === Pinned golden master (#231) ===
+// The suite above proves same-seed-twice equality, which is necessary but
+// does not catch an engine change that alters what EVERY seed produces — and
+// that is the save-breaking case saved leagues care about. This pins one
+// fully seeded race (seeded generators + seeded engine) to a fingerprint on
+// disk. When it fails: the engine's output changed. If that was intended,
+// bump the version in package.json (saves archive themselves) and regenerate
+// with `GOLDEN_UPDATE=1 npx vitest run -t fingerprint`.
+import { readFileSync, writeFileSync } from 'node:fs';
+
+describe('golden fingerprint', () => {
+  const FIXTURE = new URL('./engine/golden.fixture.json', import.meta.url);
+  const SEED = 0x5EED;
+
+  function fnv(str: string): string {
+    let h = 0x811c9dc5;
+    for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+    return h.toString(16).padStart(8, '0');
+  }
+
+  function fingerprint() {
+    const rng = mulberry32(SEED);
+    const roster = generateRoster(rng);
+    const cars = generateCarsForKingdoms(TEAMS.map(t => t.id), rng);
+    const track = ALL_TRACKS[0];
+    const engine = RaceEngine.createForWorker(CANON_VARIABLES, SEED);
+    engine.loadGeneratedRoster(createRosterWithCars(roster, cars));
+    engine.updateConfig({ totalLaps: track.laps, lapLength: track.length });
+    engine.setTrackInfo({ id: track.id, name: track.name, emoji: track.emoji, funEmoji: track.funEmoji, description: track.description, laps: track.laps });
+    const r = engine.runHeadless();
+    return {
+      seed: SEED,
+      track: track.id,
+      rosterHash: fnv(JSON.stringify(roster.map(d => [d.fullName, d.stats, d.tag?.id]))),
+      finishOrder: r.raceState.finishOrder,
+      totalTicks: r.raceState.totalTicks,
+      leadChanges: r.raceState.leadChanges,
+      eventsHash: fnv(JSON.stringify(r.events.map(e => [e.tick, e.type, e.driverId, e.magnitude]))),
+      tags: r.drivers.map(d => d.tags.map(t => t.id)),
+    };
+  }
+
+  it('matches the pinned fingerprint', () => {
+    const now = fingerprint();
+    if (process.env.GOLDEN_UPDATE) {
+      writeFileSync(FIXTURE, JSON.stringify(now, null, 2) + '\n');
+      return;
+    }
+    const pinned = JSON.parse(readFileSync(FIXTURE, 'utf8'));
+    expect(now, 'Engine output changed for a fixed seed. If intended: bump package.json version and run GOLDEN_UPDATE=1 npx vitest run -t fingerprint').toEqual(pinned);
+  });
+});
+
+describe('tag stacks (#231)', () => {
+  const track = ALL_TRACKS[0];
+  function cleanGrid(seed: number): RosterDriver[] {
+    const rng = mulberry32(seed);
+    const roster = generateRoster(rng);
+    const cars = generateCarsForKingdoms(TEAMS.map(t => t.id), rng);
+    return createRosterWithCars(roster, cars).map(d => ({ ...d, tags: [] }));
+  }
+  function run(grid: RosterDriver[], seed: number, conditions: string[] = []) {
+    const engine = RaceEngine.createForWorker(CANON_VARIABLES, seed);
+    engine.loadGeneratedRoster(structuredClone(grid));
+    engine.updateConfig({ totalLaps: track.laps, lapLength: track.length });
+    engine.setTrackInfo({ id: track.id, name: track.name, emoji: track.emoji, funEmoji: track.funEmoji, description: track.description, laps: track.laps });
+    if (conditions.length) engine.setRaceConditions(conditions);
+    return engine.runHeadless();
+  }
+  const sig = (r: ReturnType<typeof run>) => ({ order: r.raceState.finishOrder, ticks: r.raceState.totalTicks, events: r.events });
+
+  it('two tags on one driver both bite (effects multiply across the stack)', () => {
+    const base = cleanGrid(11);
+    const d = base[0].id;
+    const fast: Tag = { id: 't-fast', name: 'Fast', emoji: '1', description: '', target: 'driver', trigger: 'passive', tier: 'power', condition: { when: 'lapProgress', after: 0 }, effects: { speedModifier: 1.1 } };
+    const faster: Tag = { id: 't-faster', name: 'Faster', emoji: '2', description: '', target: 'car', trigger: 'passive', tier: 'power', condition: { when: 'lapProgress', after: 0 }, effects: { speedModifier: 1.1 } };
+    const with1 = base.map(x => x.id === d ? { ...x, tags: [fast] } : x);
+    const with2 = base.map(x => x.id === d ? { ...x, tags: [fast, faster] } : x);
+    // Best lap is robust to DNFs and to where the driver finishes.
+    const best = (grid: RosterDriver[]) => Math.min(...run(grid, 5).drivers.find(x => x.id === d)!.lapTimes);
+    const t0 = best(base), t1 = best(with1), t2 = best(with2);
+    expect(t1).toBeLessThan(t0);
+    expect(t2).toBeLessThan(t1);
+  });
+
+  it('a zero-effect tag leaves the race byte-identical (quiet quirks)', () => {
+    const base = cleanGrid(12);
+    const d = base[0].id;
+    const quirk: Tag = { id: 't-hums', name: 'Hums while driving', emoji: '~', description: 'story only', target: 'driver', trigger: 'passive', tier: 'quirk', effects: {} };
+    const withQuirk = base.map(x => x.id === d ? { ...x, tags: [quirk] } : x);
+    expect(sig(run(withQuirk, 9))).toEqual(sig(run(base, 9)));
+  });
+
+  it("a chance-based tag on one driver does not move another driver's rolls", () => {
+    // Tag rolls live on per-driver side streams: adding a 50% final-lap tag to
+    // driver A must not change whether driver B's own 50% tag fires.
+    const base = cleanGrid(13);
+    const [a, b] = base;
+    const coin = (id: string): Tag => ({ id, name: id, emoji: '?', description: '', target: 'driver', trigger: 'final_lap', tier: 'trait', triggerChance: 0.5, effects: { speedModifier: 1.001 } });
+    const onlyB = base.map(x => x.id === b.id ? { ...x, tags: [coin('coin-b')] } : x);
+    const both = base.map(x => x.id === b.id ? { ...x, tags: [coin('coin-b')] } : x.id === a.id ? { ...x, tags: [coin('coin-a')] } : x);
+    const firedB = (r: ReturnType<typeof run>) => r.events.some(e => e.type === 'tag_activation' && e.driverId === b.id);
+    // Run a few seeds so this isn't one lucky coin.
+    for (const seed of [21, 22, 23, 24, 25, 26]) {
+      expect(firedB(run(both, seed))).toBe(firedB(run(onlyB, seed)));
+    }
   });
 });
