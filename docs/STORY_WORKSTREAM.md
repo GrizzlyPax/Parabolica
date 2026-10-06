@@ -2,6 +2,12 @@
 
 *Plain markdown so anyone can read it: a human, Claude, ChatGPT, Codex, Cursor, whoever. If you have never heard of Parabolica, start at §0. If you are here to do a pass, jump to §6 for the prompt that matches your job.*
 
+> **State as of Oct 6, 2026 — read this first; it overrides anything older below.**
+> - **Gods are parked.** Founding a league no longer asks for one (leagues are silently founded under the first god in `src/league/gods.ts`). The gods' names, epithets and hungers are still content you can rewrite, but nothing on screen shows them right now; Pax has a different mechanic in mind for them later. Don't build story *on* gods yet.
+> - **Fantasy teams exist** (`src/fantasy/`, `docs/FANTASY.md`). Players name 2–6 teams, pick colours, and snake-draft 3 drivers each. Team names are player-made, not World Deck content; the draft copy and labels ("front third", "midfield", "back third") are strings you can restyle.
+> - **Leagues are online** (`docs/LEAGUE_SERVER.md`): a published league is watched from any device by code or link. No story impact, but seasons are now long-running and shared, so the season chronicle and headlines are read by more than one person.
+> - **Names in the UI are white**; team colour lives on the marbles. Flavour that relied on coloured names won't show.
+
 ---
 
 ## 0. Orientation: what Parabolica is
