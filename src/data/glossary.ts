@@ -11,6 +11,8 @@ import { IN_RACE_RULES, InRaceRule, InRaceDuration } from './inRace';
 import { WEATHER_TYPES } from './weather';
 import { TRACK_TAGS, intrinsicTrackTags } from './trackTags';
 import { INFLICTIONS } from './inflictions';
+import { TAG_CALIBRATION, calibrationFor } from './tagCalibration';
+import { describeCalibration } from '../racecontrol/calibrate';
 import { CURRENT_TRACKS, HISTORIC_TRACKS, LAYOUTS } from '../generators/tracks';
 import { CURRENT_TEAMS, HISTORIC_TEAMS } from './teams';
 import { GODS } from '../league/gods';
@@ -201,9 +203,13 @@ export function renderGlossaryMd(g: Glossary, version: string): string {
     '| Condition | Stamped on drivers by a track event for that race only |', '');
   const groups: [TagGroup, string][] = [['genesis', 'Genesis tags'], ['acquired', 'Acquired tags'], ['in-race', 'In-race tags'], ['condition', 'Condition tags']];
   for (const [grp, title] of groups) {
-    L.push(`## ${title}`, '', '| Tag | Rarity | Target | Fires | Effect | Lasts | After a race | How you get it |', '|---|---|---|---|---|---|---|---|');
+    const measured = grp === 'genesis';
+    L.push(`## ${title}`, '');
+    if (measured) L.push(`Measured: each tag alone on one driver over ${TAG_CALIBRATION.races} seeded races vs the same races untagged (Race Control → Tag calibration; \`npm run calibrate\`, batch ${TAG_CALIBRATION.batchSeed}).`, '');
+    L.push(`| Tag | Rarity | Target | Fires | Effect | Lasts | After a race | How you get it |${measured ? ' Measured |' : ''}`, `|---|---|---|---|---|---|---|---|${measured ? '---|' : ''}`);
     for (const t of g.tags.filter(x => x.group === grp)) {
-      L.push(`| ${t.tag.emoji} **${t.tag.name}** \`${t.tag.id}\` — ${t.tag.description} | ${t.tag.rarity} | ${t.tag.target} | ${t.fires} | ${fx(t.effects)} | ${t.lasts} | ${t.does.join('; ') || '—'} | ${t.source} |`);
+      const c = measured ? calibrationFor(t.tag.id) : undefined;
+      L.push(`| ${t.tag.emoji} **${t.tag.name}** \`${t.tag.id}\` — ${t.tag.description} | ${t.tag.rarity} | ${t.tag.target} | ${t.fires} | ${fx(t.effects)} | ${t.lasts} | ${t.does.join('; ') || '—'} | ${t.source} |${measured ? ` ${c ? describeCalibration(c) : 'not measured'} |` : ''}`);
     }
     L.push('');
   }

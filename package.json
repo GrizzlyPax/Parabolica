@@ -12,7 +12,9 @@
     "release:major": "npm version major -m 'v%s' && git push --follow-tags",
     "test": "vitest run",
     "test:watch": "vitest",
-    "glossary": "tsx scripts/glossary.mjs"
+    "glossary": "tsx scripts/glossary.mjs",
+    "lab": "tsx scripts/lab.ts",
+    "calibrate": "tsx scripts/calibrate-tags.ts"
   },
   "dependencies": {
     "react": "^18.3.1",

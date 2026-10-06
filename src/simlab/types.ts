@@ -5,8 +5,11 @@
 
 export interface SimLabConfig {
   batchSize: number;           // 100, 250, 500, 1000
-  trackSelection: 'random' | 'all';  // Track selection mode
-  // Note: totalLaps removed - uses track's hardcoded lap count
+  trackSelection: 'random' | 'all';  // Track selection mode (current tracks only)
+  /** Batch seed — the replication key. Same seed + size + cards → same races. */
+  seed: number;
+  /** Card hand the batch plays under (resolveRuleset). Empty = default rules. */
+  cardIds?: string[];
 }
 
 // === WORKER MESSAGES ===
@@ -26,6 +29,8 @@ export type WorkerOutMessage =
 
 export interface SimLabResults {
   config: SimLabConfig;
+  /** Fingerprint of every race's outcome — equal across runtimes for the same config. */
+  fingerprint?: string;
   totalRaces: number;
   totalDriverRaces: number;   // totalRaces * driversPerRace
   executionTimeMs: number;

@@ -18,6 +18,9 @@ import { BACKSTORY_TEMPLATES, BACKSTORY_FILLS, QUIRKS } from '../generators/driv
 import { CAR_QUIRKS } from '../generators/cars';
 import { resolveRuleset, defaultRuleset } from '../rules/ruleset';
 import { CARDS_BY_ID } from './cards';
+import { TAG_CALIBRATION, calibrationFor } from './tagCalibration';
+import { effectsHash, bandViolation, CALIBRATION_CARDS } from '../racecontrol/calibrate';
+import { isGenesisTag } from './tags';
 
 const HEX = /^#[0-9a-fA-F]{6}$/;
 const ID = /^[a-z0-9]+(-[a-z0-9]+)*$/;
@@ -127,5 +130,20 @@ describe('flavour pools', () => {
     const slots = new Set(Object.keys(BACKSTORY_FILLS));
     for (const tpl of BACKSTORY_TEMPLATES) for (const m of tpl.matchAll(/\{(\w+)\}/g)) expect(slots.has(m[1]), `template "${tpl}" uses {${m[1]}} with no fills`).toBe(true);
     for (const [k, v] of Object.entries(BACKSTORY_FILLS)) expect(v.length, `fills for {${k}}`).toBeGreaterThanOrEqual(3);
+  });
+});
+
+describe('tag calibration is current and in band', () => {
+  const genesis = ALL_TAGS.filter(isGenesisTag);
+  it('every genesis tag has been measured since its effects last changed (npm run calibrate)', () => {
+    expect(TAG_CALIBRATION.cards).toEqual(CALIBRATION_CARDS);
+    for (const t of genesis) {
+      const c = calibrationFor(t.id);
+      expect(c, `${t.id} is not in src/data/tagCalibration.json — run npm run calibrate`).toBeDefined();
+      expect(c!.effectsHash, `${t.id} changed since it was calibrated — run npm run calibrate`).toBe(effectsHash(t));
+    }
+  });
+  it('no genesis tag is out of band', () => {
+    for (const c of TAG_CALIBRATION.tags) expect(bandViolation(c), `${c.tagId}: ${bandViolation(c)}`).toBeNull();
   });
 });

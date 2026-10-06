@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import './MainMenu.css';
 import { version } from '../package.json';
 
@@ -29,20 +28,6 @@ function nextIn(league: LeagueCardSummary): string {
 }
 
 function MainMenu({ onSingleRace, onCommissioner, onCompendium, onGlossary, league }: MainMenuProps) {
-  const [unlocking, setUnlocking] = useState(false);
-  const [password, setPassword] = useState('');
-  const [passwordError, setPasswordError] = useState(false);
-
-  const handlePasswordSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (password.toLowerCase().trim() === 'goodjob') {
-      onCompendium();
-    } else {
-      setPasswordError(true);
-      setPassword('');
-    }
-  };
-
   const status = league
     ? league.nextAt === null && league.dueCount === 0 ? { label: 'COMPLETE', tone: 'done' }
       : league.dueCount > 0 ? { label: `${league.dueCount} RAN`, tone: 'due' }
@@ -119,35 +104,16 @@ function MainMenu({ onSingleRace, onCommissioner, onCompendium, onGlossary, leag
             <span className="mm-row-chev">›</span>
           </button>
 
-          {!unlocking ? (
-            <button type="button" className="mm-row" onClick={() => setUnlocking(true)}>
-              <span className="mm-row-icon mm-row-icon-dim">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><circle cx="6" cy="6" r="2.5" /><circle cx="14" cy="14" r="2.5" /><path d="M8.5 6H17M3 14h8.5M6 3v-1M14 18v-1" /></svg>
-              </span>
-              <span className="mm-row-text">
-                <span className="mm-row-title">Race Control <span className="mm-tag">LOCKED</span></span>
-                <span className="mm-row-sub">For those who want to look a little closer.</span>
-              </span>
-              <span className="mm-row-chev">›</span>
-            </button>
-          ) : (
-            <form className="mm-row mm-row-form" onSubmit={handlePasswordSubmit}>
-              <span className="mm-row-icon mm-row-icon-dim">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><rect x="4" y="9" width="12" height="9" rx="2" /><path d="M7 9V6a3 3 0 0 1 6 0v3" /></svg>
-              </span>
-              <input
-                type="password"
-                value={password}
-                onChange={e => { setPassword(e.target.value); setPasswordError(false); }}
-                placeholder={passwordError ? 'Not it.' : 'Enter code'}
-                className={`mm-input ${passwordError ? 'error' : ''}`}
-                autoFocus
-                aria-label="Race Control code"
-              />
-              <button type="submit" className="mm-btn">Enter</button>
-              <button type="button" className="mm-btn mm-btn-ghost" onClick={() => { setUnlocking(false); setPassword(''); setPasswordError(false); }}>Cancel</button>
-            </form>
-          )}
+          <button type="button" className="mm-row" onClick={onCompendium}>
+            <span className="mm-row-icon mm-row-icon-dim">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><circle cx="6" cy="6" r="2.5" /><circle cx="14" cy="14" r="2.5" /><path d="M8.5 6H17M3 14h8.5M6 3v-1M14 18v-1" /></svg>
+            </span>
+            <span className="mm-row-text">
+              <span className="mm-row-title">Race Control</span>
+              <span className="mm-row-sub">The lab: seeded batches, tag calibration, odds. Every number replicable.</span>
+            </span>
+            <span className="mm-row-chev">›</span>
+          </button>
         </section>
 
         <footer className="mm-footer">
