@@ -10,7 +10,7 @@
 // toss-in: an object in data/cards.ts, no engine edits.
 
 import { SimVariables, CANON_VARIABLES } from '../simlab/types';
-import { ALL_TAGS, Tag, TagTier, MAX_TAGS_PER_DRIVER } from '../data/tags';
+import { ALL_TAGS, Tag, TagTier, MAX_TAGS_PER_DRIVER, isGenesisTag } from '../data/tags';
 import { WEATHER_TYPES } from '../data/weather';
 
 export const RULESET_VERSION = 1 as const;
@@ -90,7 +90,7 @@ export function defaultRuleset(): Ruleset {
     v: RULESET_VERSION,
     cards: [],
     tags: {
-      pool: ALL_TAGS.filter(t => t.target !== 'condition').map(t => t.id),
+      pool: ALL_TAGS.filter(isGenesisTag).map(t => t.id),
       genesisChance: 0.15,
       slotCap: MAX_TAGS_PER_DRIVER,
     },

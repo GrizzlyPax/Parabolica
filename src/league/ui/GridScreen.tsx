@@ -12,6 +12,7 @@ import { getSeasonStandings, DriverSeasonStats } from '../../types/season';
 import { getGodById } from '../gods';
 import { TeamMarble } from './TeamMarble';
 import './League.css';
+import { rosterStateAt } from '../league';
 import TagChips from '../../components/race/TagChips';
 import '../../components/race/components.css';
 
@@ -93,7 +94,10 @@ function GridScreen({ league, onExit }: { league: LeagueState; onExit: () => voi
 
   // Group by team, preserving roster order.
   const teams: Array<{ kingdomId: string; drivers: RosterDriver[] }> = [];
-  for (const driver of league.roster) {
+  // The grid as it stands NOW — genesis plus every intervention and acquisition
+  // up to the next race (#232), not the genesis roster.
+  const current = rosterStateAt(league, league.settledThrough + 1);
+  for (const driver of current) {
     const kingdomId = driver.kingdomId ?? 'unknown';
     const existing = teams.find(t => t.kingdomId === kingdomId);
     if (existing) existing.drivers.push(driver);

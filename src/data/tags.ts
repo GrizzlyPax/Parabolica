@@ -118,6 +118,13 @@ export const TIER_LABELS: Record<TagTier, string> = {
   destiny: 'Destiny · season-warping',
 };
 
+/** How long an acquired tag sticks (#232). Absent = permanent. */
+export type TagDuration = 'permanent' | 'season' | { races: number };
+
+/** Which doors may hand a tag out. Absent = genesis + intervention (the
+ * classic tags). Acquired-only tags never appear in the genesis pool. */
+export type TagSource = 'genesis' | 'acquired' | 'intervention' | 'decree' | 'divine';
+
 export interface Tag {
   id: string;
   name: string;
@@ -125,6 +132,8 @@ export interface Tag {
   description: string;
   target: TagTarget;
   trigger: TagTrigger;
+  duration?: TagDuration;
+  sources?: TagSource[];
   /** Magnitude tier (the #156 ladder). Required: genesis rolls weight by it
    * and the lab batch that ships with every tag is what justifies it. */
   tier: TagTier;
@@ -553,8 +562,111 @@ export const CONDITION_TAGS: Tag[] = [
   },
 ];
 
+// ============ ACQUIRED TAGS (#232) ============
+// Handed out by the settle loop when something happens — never rolled at
+// genesis. The rules that award them live in data/acquisitions.ts.
+export const ACQUIRED_TAGS: Tag[] = [
+  {
+    id: 'hot-streak',
+    name: 'Hot Streak',
+    emoji: '🔥',
+    description: 'Two wins on the bounce. Everything is coming easy.',
+    target: 'driver',
+    trigger: 'passive',
+    tier: 'trait',
+    duration: { races: 3 },
+    sources: ['acquired'],
+    effects: { speedModifier: 1.02, consistencyModifier: 1.05 },
+  },
+  {
+    id: 'the-charger',
+    name: 'The Charger',
+    emoji: '🐎',
+    description: 'Came through the field like it owed them money. Faster in traffic.',
+    target: 'driver',
+    trigger: 'passive',
+    tier: 'trait',
+    duration: 'season',
+    sources: ['acquired'],
+    condition: { when: 'positionFraction', bottom: 0.5 },
+    effects: { speedModifier: 1.03 },
+  },
+  {
+    id: 'unkillable',
+    name: 'Unkillable',
+    emoji: '🛡️',
+    description: 'Walked away from a wreck and kept racing. Harder to put out now.',
+    target: 'driver',
+    trigger: 'passive',
+    tier: 'trait',
+    duration: 'permanent',
+    sources: ['acquired'],
+    effects: { crashResistance: 0.12 },
+  },
+  {
+    id: 'haunted',
+    name: 'Haunted',
+    emoji: '👻',
+    description: 'Three retirements in a row. Something followed them home.',
+    target: 'driver',
+    trigger: 'passive',
+    tier: 'power',
+    duration: { races: 4 },
+    sources: ['acquired'],
+    effects: { luckModifier: 0.8, crashResistance: -0.05 },
+  },
+  {
+    id: 'shaken',
+    name: 'Shaken',
+    emoji: '😵',
+    description: 'Crashed out last time. The hands are not quite steady yet.',
+    target: 'driver',
+    trigger: 'passive',
+    tier: 'trait',
+    duration: { races: 2 },
+    sources: ['acquired'],
+    effects: { consistencyModifier: 0.94 },
+  },
+  {
+    id: 'hears-the-track',
+    name: 'Hears the Track',
+    emoji: '👂',
+    description: 'They say the asphalt talks to them. It has not said anything useful yet.',
+    target: 'driver',
+    trigger: 'passive',
+    tier: 'quirk',
+    duration: 'season',
+    sources: ['acquired'],
+    effects: {},
+  },
+  {
+    id: 'marked-by-the-void',
+    name: 'Marked by the Void',
+    emoji: '🕳️',
+    description: 'The universe simply decided. Fortune looks the other way for a while.',
+    target: 'driver',
+    trigger: 'passive',
+    tier: 'trait',
+    duration: { races: 2 },
+    sources: ['acquired'],
+    effects: { luckModifier: 0.9 },
+  },
+];
+
 // All tags combined for easy lookup
-export const ALL_TAGS: Tag[] = [...DRIVER_TAGS, ...CAR_TAGS, ...TEAM_TAGS, ...CONDITION_TAGS];
+export const ALL_TAGS: Tag[] = [...DRIVER_TAGS, ...CAR_TAGS, ...TEAM_TAGS, ...CONDITION_TAGS, ...ACQUIRED_TAGS];
+
+/** May this tag be rolled at genesis? Classic tags (no `sources`) yes. */
+export function isGenesisTag(t: Tag): boolean {
+  return t.target !== 'condition' && (t.sources?.includes('genesis') ?? true);
+}
+
+/** Plain-words duration, for the UI. */
+export function describeDuration(d: TagDuration | undefined): string {
+  if (!d || d === 'permanent') return 'for good';
+  if (d === 'season') return 'rest of the season';
+  return `${d.races} race${d.races === 1 ? '' : 's'}`;
+}
 
 // Get tag by ID
 export function getTagById(id: string): Tag | undefined {

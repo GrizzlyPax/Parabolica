@@ -69,11 +69,16 @@ export function rosterStateAt(league: LeagueState, raceIndex: number): RosterDri
 
   return league.roster.map(driver => {
     let tags = driver.tags;
-    for (const intervention of applicable) {
-      if (intervention.type !== 'attach-tag' || intervention.targetDriverId !== driver.id) continue;
-      const tag = getTagById(intervention.tagId);
+    for (const entry of applicable) {
+      if (entry.targetDriverId !== driver.id) continue;
+      const tag = getTagById(entry.tagId);
       if (!tag) continue;
-      tags = attachTag(tags, tag, cap);
+      if (entry.type === 'expire-tag') {
+        tags = tags.filter(t => t.id !== tag.id);
+      } else {
+        // attach-tag (Commissionary) and acquire-tag (the sim) land the same way
+        tags = attachTag(tags, tag, cap);
+      }
     }
     return tags === driver.tags ? driver : { ...driver, tags };
   });
