@@ -331,6 +331,7 @@ button.section-toggle:hover { color: var(--pw-text-2); }
   fill: var(--pw-border-strong);
 }
 .chart-code {
+  fill: var(--pw-text-1);
   font-family: var(--font-display), var(--font-emoji);
   font-size: 12px;
   font-weight: 700;

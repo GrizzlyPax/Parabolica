@@ -134,7 +134,7 @@ export function DraftPanel({ roster, value, onChange, context }: DraftPanelProps
         <div className="fd-board">
           {byTeam.map(group => (
             <div key={group[0].kingdomId ?? group[0].id} className="fd-constructor">
-              <div className="fd-constructor-name" style={{ color: group[0].color }}>{group[0].teamName ?? 'Independent'}</div>
+              <div className="fd-constructor-name">{group[0].teamName ?? 'Independent'}</div>
               {group.map(d => {
                 const owner = owners.get(d.id);
                 const dr = thirdOf(ranks.driver.get(d.id)?.tone);
