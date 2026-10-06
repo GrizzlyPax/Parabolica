@@ -2,7 +2,7 @@
 // the data modules so it can never drift. docs/GLOSSARY.md (npm run
 // glossary) and the in-game Glossary screen both render this.
 
-import { ALL_TAGS, ActionTarget, Tag, TagAction, TIER_LABELS, TRIGGER_LABELS, describeCondition, describeDuration, getTagById, isGenesisTag } from './tags';
+import { ALL_TAGS, ActionTarget, Tag, TagAction, TRIGGER_LABELS, describeCondition, describeDuration, getTagById, isGenesisTag } from './tags';
 import { CARDS } from './cards';
 import type { Card } from '../rules/ruleset';
 import { ACQUISITION_RULES, AcquisitionRule, AcquisitionTrigger } from './acquisitions';
@@ -142,8 +142,6 @@ export function buildGlossary(): Glossary {
   };
 }
 
-export const TIER_WORDS = TIER_LABELS;
-
 /** Render the whole glossary as markdown — docs/GLOSSARY.md. */
 export function renderGlossaryMd(g: Glossary, version: string): string {
   const L: string[] = [];
@@ -158,9 +156,9 @@ export function renderGlossaryMd(g: Glossary, version: string): string {
     '| Condition | Stamped on drivers by a track event for that race only |', '');
   const groups: [TagGroup, string][] = [['genesis', 'Genesis tags'], ['acquired', 'Acquired tags'], ['in-race', 'In-race tags'], ['condition', 'Condition tags']];
   for (const [grp, title] of groups) {
-    L.push(`## ${title}`, '', '| Tag | Tier | Target | Fires | Effect | Lasts | After a race | How you get it |', '|---|---|---|---|---|---|---|---|');
+    L.push(`## ${title}`, '', '| Tag | Rarity | Target | Fires | Effect | Lasts | After a race | How you get it |', '|---|---|---|---|---|---|---|---|');
     for (const t of g.tags.filter(x => x.group === grp)) {
-      L.push(`| ${t.tag.emoji} **${t.tag.name}** \`${t.tag.id}\` — ${t.tag.description} | ${t.tag.tier} | ${t.tag.target} | ${t.fires} | ${fx(t.effects)} | ${t.lasts} | ${t.does.join('; ') || '—'} | ${t.source} |`);
+      L.push(`| ${t.tag.emoji} **${t.tag.name}** \`${t.tag.id}\` — ${t.tag.description} | ${t.tag.rarity ?? 1}× | ${t.tag.target} | ${t.fires} | ${fx(t.effects)} | ${t.lasts} | ${t.does.join('; ') || '—'} | ${t.source} |`);
     }
     L.push('');
   }

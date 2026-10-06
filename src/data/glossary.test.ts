@@ -8,9 +8,8 @@ describe('docs/GLOSSARY.md is the source of truth', () => {
     const onDisk = readFileSync(new URL('../../docs/GLOSSARY.md', import.meta.url), 'utf8');
     expect(onDisk).toBe(renderGlossaryMd(buildGlossary(), version));
   });
-  it('every tag has a tier, a target and a plain-words source', () => {
+  it('every tag has a target and a plain-words source', () => {
     for (const t of buildGlossary().tags) {
-      expect(t.tag.tier, t.tag.id).toBeDefined();
       expect(t.source.length, t.tag.id).toBeGreaterThan(0);
     }
   });

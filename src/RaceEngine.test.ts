@@ -146,7 +146,7 @@ describe('conditional tags (#156 gate)', () => {
   it('an always-satisfied conditional tag changes the race vs no tag', () => {
     const boost: Tag = {
       id: 'test-rocket', name: 'Test Rocket', emoji: '🚀', description: 'always on',
-      tier: 'power', target: 'driver', trigger: 'passive', condition: { when: 'lapProgress', after: 0 },
+      target: 'driver', trigger: 'passive', condition: { when: 'lapProgress', after: 0 },
       effects: { speedModifier: 1.2 },
     };
     const base = cleanRoster();
@@ -342,7 +342,7 @@ describe('conditional tags (#156 gate)', () => {
     // inert on a plain track but bite when the track stamps that condition.
     const debrisLover: Tag = {
       id: 'test-scavenger', name: 'Scavenger', emoji: '🦅', description: 'thrives in debris',
-      tier: 'power', target: 'driver', trigger: 'passive', condition: { when: 'condition', has: 'debris-hazard' },
+      target: 'driver', trigger: 'passive', condition: { when: 'condition', has: 'debris-hazard' },
       effects: { speedModifier: 1.15 },
     };
     const hazardTag = { id: 'hazardous', name: 'Hazardous', emoji: '⚠️', conditions: ['debris-hazard'] };
@@ -540,8 +540,8 @@ describe('tag stacks (#231)', () => {
   it('two tags on one driver both bite (effects multiply across the stack)', () => {
     const base = cleanGrid(11);
     const d = base[0].id;
-    const fast: Tag = { id: 't-fast', name: 'Fast', emoji: '1', description: '', target: 'driver', trigger: 'passive', tier: 'power', condition: { when: 'lapProgress', after: 0 }, effects: { speedModifier: 1.1 } };
-    const faster: Tag = { id: 't-faster', name: 'Faster', emoji: '2', description: '', target: 'car', trigger: 'passive', tier: 'power', condition: { when: 'lapProgress', after: 0 }, effects: { speedModifier: 1.1 } };
+    const fast: Tag = { id: 't-fast', name: 'Fast', emoji: '1', description: '', target: 'driver', trigger: 'passive', condition: { when: 'lapProgress', after: 0 }, effects: { speedModifier: 1.1 } };
+    const faster: Tag = { id: 't-faster', name: 'Faster', emoji: '2', description: '', target: 'car', trigger: 'passive', condition: { when: 'lapProgress', after: 0 }, effects: { speedModifier: 1.1 } };
     const with1 = base.map(x => x.id === d ? { ...x, tags: [fast] } : x);
     const with2 = base.map(x => x.id === d ? { ...x, tags: [fast, faster] } : x);
     // Best lap is robust to DNFs and to where the driver finishes.
@@ -554,7 +554,7 @@ describe('tag stacks (#231)', () => {
   it('a zero-effect tag leaves the race byte-identical (quiet quirks)', () => {
     const base = cleanGrid(12);
     const d = base[0].id;
-    const quirk: Tag = { id: 't-hums', name: 'Hums while driving', emoji: '~', description: 'story only', target: 'driver', trigger: 'passive', tier: 'quirk', effects: {} };
+    const quirk: Tag = { id: 't-hums', name: 'Hums while driving', emoji: '~', description: 'story only', target: 'driver', trigger: 'passive', effects: {} };
     const withQuirk = base.map(x => x.id === d ? { ...x, tags: [quirk] } : x);
     expect(sig(run(withQuirk, 9))).toEqual(sig(run(base, 9)));
   });
@@ -564,7 +564,7 @@ describe('tag stacks (#231)', () => {
     // driver A must not change whether driver B's own 50% tag fires.
     const base = cleanGrid(13);
     const [a, b] = base;
-    const coin = (id: string): Tag => ({ id, name: id, emoji: '?', description: '', target: 'driver', trigger: 'final_lap', tier: 'trait', triggerChance: 0.5, effects: { speedModifier: 1.001 } });
+    const coin = (id: string): Tag => ({ id, name: id, emoji: '?', description: '', target: 'driver', trigger: 'final_lap', triggerChance: 0.5, effects: { speedModifier: 1.001 } });
     const onlyB = base.map(x => x.id === b.id ? { ...x, tags: [coin('coin-b')] } : x);
     const both = base.map(x => x.id === b.id ? { ...x, tags: [coin('coin-b')] } : x.id === a.id ? { ...x, tags: [coin('coin-a')] } : x);
     const firedB = (r: ReturnType<typeof run>) => r.events.some(e => e.type === 'tag_activation' && e.driverId === b.id);

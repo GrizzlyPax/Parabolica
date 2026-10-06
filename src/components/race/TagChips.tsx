@@ -6,7 +6,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { EffectStackEntry } from '../../RaceEngine';
-import { Tag, TIER_LABELS, TRIGGER_LABELS, describeCondition } from '../../data/tags';
+import { Tag, TRIGGER_LABELS, describeCondition } from '../../data/tags';
 import { describeAction } from '../../data/glossary';
 
 interface TagChipsProps {
@@ -67,7 +67,7 @@ function TagCard({ tag, entry, anchor, onClose }: { tag: Tag; entry?: EffectStac
         <span className="tag-card-emoji">{tag.emoji}</span>
         <div className="tag-card-title">
           <div className="tag-card-name">{tag.name}</div>
-          <div className="tag-card-tier">{TIER_LABELS[tag.tier]} · {tag.target} tag</div>
+          <div className="tag-card-tier">{tag.target} tag{tag.rarity && tag.rarity > 1 ? ` · rare ×${tag.rarity}` : ''}</div>
         </div>
         <button type="button" className="tag-card-close" onClick={onClose} aria-label="Close">×</button>
       </div>

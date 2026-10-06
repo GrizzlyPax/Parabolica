@@ -10,7 +10,7 @@
 // toss-in: an object in data/cards.ts, no engine edits.
 
 import { SimVariables, CANON_VARIABLES } from '../simlab/types';
-import { ALL_TAGS, Tag, TagTier, MAX_TAGS_PER_DRIVER, isGenesisTag } from '../data/tags';
+import { ALL_TAGS, Tag, MAX_TAGS_PER_DRIVER, isGenesisTag } from '../data/tags';
 import { WEATHER_TYPES } from '../data/weather';
 
 export const RULESET_VERSION = 1 as const;
@@ -44,8 +44,6 @@ export interface CardPatch {
   tags?: {
     /** Restrict the pool to these ids (applied before add/remove). */
     only?: string[];
-    /** Restrict the pool to these tiers. */
-    tiers?: TagTier[];
     add?: string[];
     remove?: string[];
     genesisChance?: number;
@@ -132,10 +130,6 @@ export function applyCard(rs: Ruleset, card: Card): Ruleset {
   if (p.tags) {
     let pool = next.tags.pool;
     if (p.tags.only) pool = pool.filter(id => p.tags!.only!.includes(id));
-    if (p.tags.tiers) {
-      const byId = new Map(ALL_TAGS.map(t => [t.id, t]));
-      pool = pool.filter(id => p.tags!.tiers!.includes(byId.get(id)?.tier ?? 'quirk'));
-    }
     if (p.tags.remove) pool = pool.filter(id => !p.tags!.remove!.includes(id));
     if (p.tags.add) for (const id of p.tags.add) if (!pool.includes(id)) pool.push(id);
     next.tags.pool = pool;

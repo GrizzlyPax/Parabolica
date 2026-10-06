@@ -6,7 +6,7 @@
 // to open the full card underneath it.
 import { useMemo, useState, ReactNode } from 'react';
 import { buildGlossary, describeTrigger, describeInRaceRule, effectsOf, GlossaryTag, TagGroup } from './data/glossary';
-import { ALL_TAGS, TIER_LABELS } from './data/tags';
+import { ALL_TAGS } from './data/tags';
 import { intrinsicTrackTags } from './data/trackTags';
 import TagChips from './components/race/TagChips';
 import './RunSetup.css';
@@ -61,12 +61,12 @@ export default function Glossary({ onBack }: GlossaryProps) {
   const tagRow = (t: GlossaryTag) => (
     <Row key={t.tag.id} id={`tag:${t.tag.id}`} open={isOpen(`tag:${t.tag.id}`)} onToggle={toggle}
       lead={<TagChips tags={[t.tag]} showName />}
-      note={<>{TIER_LABELS[t.tag.tier].split(' · ')[0]}{t.does.length > 0 && <span className="gl-does" title="Does something after a race">⚡</span>}</>}
+      note={<>{t.tag.target}{t.does.length > 0 && <span className="gl-does" title="Does something after a race">⚡</span>}</>}
       pills={<Pills effects={t.effects} />}>
       <p className="gl-desc">{t.tag.description}</p>
       <div className="gl-facts">
-        <Fact k="Tier">{TIER_LABELS[t.tag.tier]}</Fact>
         <Fact k="On">{t.tag.target}</Fact>
+        {t.group === 'genesis' && <Fact k="Rarity">{t.tag.rarity && t.tag.rarity > 1 ? `${t.tag.rarity}× rarer than common` : 'common'}</Fact>}
         <Fact k="Fires">{t.fires}</Fact>
         <Fact k="Lasts">{t.lasts}</Fact>
         {t.does.length > 0 && <Fact k="After a race">{t.does.join(' · ')}</Fact>}
