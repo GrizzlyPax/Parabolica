@@ -56,7 +56,7 @@ function DriverRow({ driver, columns, context, gridTemplate, isFocused, expandab
       {isFocused && expandable && (
         <div className="timing-row-expanded" style={{ '--team-color': driver.color } as React.CSSProperties}>
           <div className="expanded-content">
-            <span className="expanded-full-name" style={{ color: driver.color }}>{driver.name}</span>
+            <span className="expanded-full-name">{driver.name}</span>
             {context.fantasyTeam && <span className="expanded-fact"><span className="expanded-k">Fantasy</span> <span className="fantasy-badge" style={{ '--fantasy-color': context.fantasyTeam.color } as React.CSSProperties}>{context.fantasyTeam.name}</span></span>}
             <span className="expanded-fact"><span className="expanded-k">Driver</span> <RankChip r={context.driverRank} what="Driver skill" unit="drivers" /></span>
             <span className="expanded-fact"><span className="expanded-k">Car</span> <RankChip r={context.carRank} what="Car package (shared with the teammate)" unit="cars" /></span>

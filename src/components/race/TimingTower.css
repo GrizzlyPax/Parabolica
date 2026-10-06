@@ -171,6 +171,7 @@
   font-family: var(--font-display), var(--font-emoji);
   font-size: 1rem;
   font-weight: 700;
+  color: var(--pw-text-1);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -243,12 +244,13 @@
   font-size: 0.7rem;
 }
 
-/* Driver code */
+/* Driver code — white, like every name in the tower; the marble carries the team colour. */
 .driver-code {
   font-family: var(--font-display), var(--font-emoji);
   font-size: 0.85rem;
   font-weight: 700;
   letter-spacing: 0.5px;
+  color: var(--pw-text-1);
 }
 
 .driver-code.focused {
@@ -554,7 +556,7 @@
 .position-number.pitting { color: #5aa9ff; font-size: 0.62rem; font-weight: 700; letter-spacing: 0.04em; }
 .position-number.finished { color: var(--pw-yellow); }
 
-/* Driver identity carries the only team colour in the row. */
+/* Names are white; the marble (and the row edge) carry the team colour. */
 .driver-code { font-weight: 700; font-size: 0.9rem; letter-spacing: 0.02em; }
 .driver-full-name { font-weight: 600; font-size: 0.9rem; }
 .team-name {
