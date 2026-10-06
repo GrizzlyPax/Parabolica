@@ -60,3 +60,8 @@
 /* Legacy lab panels live inside a row; soften their own paddings */
 .rc-legacy { padding: 4px 8px; }
 .rc-legacy .sim-lab, .rc-legacy .bet-lab { padding: 0.5rem; }
+
+.rc-explain p { margin: 0 0 8px; color: var(--pw-text-2); font-size: 14px; line-height: 1.5; max-width: 900px; }
+.rc-explain p:last-child { margin-bottom: 0; }
+.rc-explain b { color: var(--pw-text-1); }
+.rc-progress { margin-top: 12px; }

@@ -16,6 +16,10 @@ runLabRace(spec, { variables?, override? })  → createLeague(seed, …) + prepa
 
 Race *i* of a batch derives from `deriveSeed(batchSeed, 'lab', i)` — universe seed, team shuffle, track pick — so one race can be rebuilt on its own.
 
+## Running where workers are blocked
+
+Every lab job goes through `src/racecontrol/labRunner.ts`: it uses a Web Worker when the page allows one and falls back to the main thread when it doesn't (the artifact preview blocks workers). The UI says "running on the main thread" when that happens. Either way the same code and the same seeds run.
+
 ## Fingerprints
 
 `raceFingerprint(result)` hashes finish order + DNFs + race length; `batchFingerprint` hashes the batch. Sim Lab shows `#xxxxxxxx` beside its seed; `npm run lab -- <seed> <races> all [cards…]` prints the same one from the terminal. Equal fingerprints = the same races were run. Different = the engine changed (or a card/variable differs).
@@ -59,5 +63,5 @@ Race *i* of a batch derives from `deriveSeed(batchSeed, 'lab', i)` — universe 
 
 - The Heretic's variables replace the ruleset's simVars wholesale, so a card that patches simVars (tough-tyres) is overridden in a heretic run. Canon honours the card.
 - Sim Lab's safety-car count reads `unsafety_car_deployed`, which the engine logs twice (#246); halve it.
-- The Odds tab (BetLab) still runs its own unseeded, all-tracks setup. Move it onto the runner when the NPC-crowd work starts.
+- BetLab (odds) was removed from the app (git history has it); `src/betting/utils.ts` keeps the odds math for the NPC-crowd work.
 - Calibration measures a tag solo in a tag-free field. A tag's value in a real grid (other tags, cards) is a different question — the Sim Lab tags tab answers it, noisily.
