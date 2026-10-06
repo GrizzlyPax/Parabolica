@@ -22,7 +22,13 @@ Every lab job goes through `src/racecontrol/labRunner.ts`: it uses a Web Worker 
 
 ## Fingerprints
 
-`raceFingerprint(result)` hashes finish order + DNFs + race length; `batchFingerprint` hashes the batch. Sim Lab shows `#xxxxxxxx` beside its seed; `npm run lab -- <seed> <races> all [cards…]` prints the same one from the terminal. Equal fingerprints = the same races were run. Different = the engine changed (or a card/variable differs).
+`raceFingerprint(result)` hashes finish order + DNFs + race length; `batchFingerprint` hashes the batch. The Physics tab shows `#xxxxxxxx` beside its seed; `npm run lab -- <seed> <races> all [cards…]` prints the same one from the terminal. Equal fingerprints = the same races were run. Different = the engine changed (or a card/variable differs).
+
+## Physics calibration
+
+**Question:** do the race rules produce racing? `src/racecontrol/physics.ts` runs a seeded batch of untagged races (card `no-tags`, 100 races by default, current tracks in order) and reads the mechanics-probe metrics: pace→finish and grid→finish Spearman, pole wins, top-3-package wins, passes, battles, distinct leaders, winning margin, stops per finisher, first-stop distance, stop-lap spread, quick/slow stop share, DNF rate and split, safety cars, close calls, lapped and penalised finishers, race length. Each has a plain-words meaning and a band; out-of-band rows are flagged.
+
+The knobs table lists every `SimVariables` entry (`src/racecontrol/knobs.ts`: path, label, meaning, format, range). Click a knob, edit it (field or slider), **Measure**: the same seeded batch runs with your variables and the metrics table gains Yours and Δ columns (Δ above 10% is highlighted). Edits accumulate; **Copy as code** gives `path: value` lines for `CANON_VARIABLES`. **Re-roll** changes the seed so you can see how much of a number is dice.
 
 ## Tag calibration
 
@@ -42,13 +48,13 @@ Every lab job goes through `src/racecontrol/labRunner.ts`: it uses a Web Worker 
 
 **The gate:** `src/data/worldDeck.test.ts` fails when a genesis tag is missing from the file, when its mechanical definition (target, trigger, effects, condition, chance, duration — `effectsHash`) changed since it was measured, or when it is out of band. Fix: tune the tag → `npm run calibrate` → commit the tag, the JSON and `npm run glossary`.
 
-**Replicate in the browser:** Race Control → Tag calibration → "Replicate it here" runs one tag's calibration in a worker. With the full 200 races the numbers must equal the file exactly; fewer races gives a noisier read.
+**Try a change:** click a tag row, edit its effect numbers (and trigger chance), **Measure**: your version is calibrated the same way (same seeds, same pairing) and shown beside the shipped row with a verdict (real change / within noise / out of band) and **Copy as code**. Leaving the numbers alone and measuring at 200 races lands exactly on the table's row — the parity check. **Re-roll** re-measures every tag on a fresh seed (25–100 races each) and adds a Δ column, flagged when the difference is beyond the noise.
 
 ## Commands
 
 | | |
 |---|---|
-| `npm run lab -- 2026 100 all` | replay a Sim Lab batch, print fingerprint + headline numbers |
+| `npm run lab -- 2026 100 all no-tags` | replay a Physics batch, print fingerprint + headline numbers |
 | `npm run lab -- 2026 100 all no-tags rain` | …under a card hand |
 | `npm run calibrate` | re-measure every genesis tag, rewrite the JSON (~15 min) |
 | `npm run calibrate -- 50 glass-cannon the-natural` | quick read of named tags, nothing written |
@@ -57,11 +63,11 @@ Every lab job goes through `src/racecontrol/labRunner.ts`: it uses a Web Worker 
 ## Exports
 
 - Calibration: Copy as markdown (the table with seed, cards, fingerprint) · Download JSON (the file itself).
-- Sim Lab: JSON and TSV; the config block carries seed, cards and fingerprint.
+- Physics: Copy as code for edited knobs; the seed, race count and fingerprint are on screen and in `npm run lab`.
 
 ## Known gaps (parked)
 
 - The Heretic's variables replace the ruleset's simVars wholesale, so a card that patches simVars (tough-tyres) is overridden in a heretic run. Canon honours the card.
-- Sim Lab's safety-car count reads `unsafety_car_deployed`, which the engine logs twice (#246); halve it.
+- The safety-car count reads `unsafety_car_deployed`, which the engine logs twice (#246); the lab halves it.
 - BetLab (odds) was removed from the app (git history has it); `src/betting/utils.ts` keeps the odds math for the NPC-crowd work.
-- Calibration measures a tag solo in a tag-free field. A tag's value in a real grid (other tags, cards) is a different question — the Sim Lab tags tab answers it, noisily.
+- Calibration measures a tag solo in a tag-free field. A tag's value in a real grid (other tags, cards) is a different question, not yet measured.
