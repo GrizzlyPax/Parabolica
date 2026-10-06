@@ -1,14 +1,10 @@
-import { useState, useMemo } from 'react';
-import { SimVariables, CANON_VARIABLES, cloneVariables } from './types';
-
-interface SimLabVariablesProps {
-  hereticVariables: SimVariables;
-  onVariablesChange: (variables: SimVariables) => void;
-  onReset: () => void;
-}
+// The simulation knobs, as a flat registry: path into SimVariables, label,
+// one-line meaning, format and a sane range. Race Control's Physics tab lists
+// these; the engine reads the values through resolveRuleset → simVars.
+import { SimVariables, CANON_VARIABLES, cloneVariables } from '../simlab/types';
 
 // Variable metadata for display
-interface VarDef {
+export interface VarDef {
   category: string;
   categoryEmoji: string;
   path: string;           // e.g., "tires.soft.speedBonus" or "crashes.baseCrashChance"
@@ -21,7 +17,7 @@ interface VarDef {
 }
 
 // Build flat list of all variables
-function buildVariableList(): VarDef[] {
+export function buildVariableList(): VarDef[] {
   const vars: VarDef[] = [];
 
   // Tire compounds
@@ -191,52 +187,37 @@ function buildVariableList(): VarDef[] {
     vars.push({ category: 'Field Spread', categoryEmoji: '📊', path: `driverSpeed.${v.key}`, label: v.label, description: v.desc, format: v.format, min: v.min, max: v.max, step: v.step });
   }
 
-  // Betting Odds (Marble Mode) - Strength Weights
-  const bettingStrengthVars = [
-    { key: 'carPower', label: 'Car Power Weight', desc: 'How much car power affects odds ranking', format: 'decimal' as const, min: 0, max: 0.5, step: 0.01 },
-    { key: 'consistency', label: 'Consistency Weight', desc: 'How much consistency affects odds ranking', format: 'decimal' as const, min: 0, max: 0.5, step: 0.01 },
-    { key: 'speed', label: 'Speed Weight', desc: 'How much speed affects odds ranking', format: 'decimal' as const, min: 0, max: 0.5, step: 0.01 },
-    { key: 'pitCrew', label: 'Pit Crew Weight', desc: 'How much pit crew affects odds ranking', format: 'decimal' as const, min: 0, max: 0.3, step: 0.01 },
-    { key: 'carGrip', label: 'Car Grip Weight', desc: 'How much car grip affects odds ranking', format: 'decimal' as const, min: 0, max: 0.3, step: 0.01 },
-    { key: 'luck', label: 'Luck Weight', desc: 'How much luck affects odds ranking', format: 'decimal' as const, min: 0, max: 0.3, step: 0.01 },
-    { key: 'carReliability', label: 'Reliability Weight', desc: 'How much car reliability affects odds ranking', format: 'decimal' as const, min: 0, max: 0.3, step: 0.01 },
+  // Grid (#246 pass 2)
+  const gridVars = [
+    { key: 'slotSpacing', label: 'Slot Spacing', desc: 'Stagger between grid slots (share of a lap)', format: 'decimal' as const, min: 0.001, max: 0.02, step: 0.001 },
+    { key: 'qualiNoise', label: 'Quali Noise', desc: 'Qualifying lap noise (sd, share of pace)', format: 'decimal' as const, min: 0, max: 0.1, step: 0.005 },
+    { key: 'qualiFlubChance', label: 'Quali Flub', desc: 'Chance a qualifying is ruined', format: 'percent' as const, min: 0, max: 0.3, step: 0.01 },
   ];
-  for (const v of bettingStrengthVars) {
-    vars.push({ category: 'Betting (Strength)', categoryEmoji: '🎲', path: `betting.strengthWeights.${v.key}`, label: v.label, description: v.desc, format: v.format, min: v.min, max: v.max, step: v.step });
+  for (const v of gridVars) {
+    vars.push({ category: 'Grid', categoryEmoji: '🏁', path: `grid.${v.key}`, label: v.label, description: v.desc, format: v.format, min: v.min, max: v.max, step: v.step });
   }
 
-  // Betting Odds - Base Multipliers
-  const bettingMultiplierVars = [
-    { key: 'win', label: 'Win Base', desc: 'Base payout for picking the winner', format: 'multiplier' as const, min: 5, max: 20, step: 1 },
-    { key: 'podium', label: 'Podium Base', desc: 'Base payout for top 3 finish', format: 'multiplier' as const, min: 2, max: 10, step: 0.5 },
-    { key: 'points', label: 'Points Base', desc: 'Base payout for top 10 finish', format: 'multiplier' as const, min: 1, max: 5, step: 0.25 },
-    { key: 'finishes', label: 'Finishes Base', desc: 'Base payout for completing race', format: 'multiplier' as const, min: 1, max: 3, step: 0.1 },
-    { key: 'dnf', label: 'DNF Base', desc: 'Base payout for calling a DNF', format: 'multiplier' as const, min: 1, max: 8, step: 0.5 },
+  // Overtaking (#246 pass 3)
+  const otVars = [
+    { key: 'followGap', label: 'Follow Gap', desc: 'How close (share of a lap) counts as "on" the car ahead', format: 'decimal' as const, min: 0.001, max: 0.03, step: 0.001 },
+    { key: 'dirtyAir', label: 'Dirty Air', desc: 'Pace lost sitting behind a car', format: 'percent' as const, min: 0, max: 0.1, step: 0.005 },
+    { key: 'attemptBase', label: 'Pass Chance', desc: 'Per-tick chance of a pass at equal pace', format: 'decimal' as const, min: 0, max: 0.05, step: 0.001 },
+    { key: 'paceWeight', label: 'Pace Weight', desc: 'How much a pace edge helps a pass', format: 'integer' as const, min: 0, max: 40, step: 1 },
+    { key: 'tyreWeight', label: 'Tyre Weight', desc: 'How much fresher tyres help a pass', format: 'decimal' as const, min: 0, max: 3, step: 0.1 },
+    { key: 'aggressionSwing', label: 'Aggression Swing', desc: 'How much aggression changes pass chance', format: 'decimal' as const, min: 0, max: 2, step: 0.1 },
+    { key: 'defenderWeight', label: 'Defender Weight', desc: 'How much a consistent defender resists', format: 'decimal' as const, min: 0, max: 3, step: 0.1 },
+    { key: 'battleTicks', label: 'Battle Ticks', desc: 'Ticks held up before it counts as a battle', format: 'integer' as const, min: 5, max: 60, step: 5 },
+    { key: 'heldCrashFactor', label: 'Held Crash Factor', desc: 'Crash chance scale for a held-up pair', format: 'decimal' as const, min: 0, max: 1, step: 0.05 },
   ];
-  for (const v of bettingMultiplierVars) {
-    vars.push({ category: 'Betting (Payouts)', categoryEmoji: '🪙', path: `betting.baseMultipliers.${v.key}`, label: v.label, description: v.desc, format: v.format, min: v.min, max: v.max, step: v.step });
-  }
-
-  // Betting Odds - Driver Rating Weights
-  const bettingRatingVars = [
-    { key: 'consistency', label: 'Rating: Consistency', desc: 'Consistency weight for vibe rating', format: 'decimal' as const, min: 0, max: 0.7, step: 0.05 },
-    { key: 'speed', label: 'Rating: Speed', desc: 'Speed weight for vibe rating', format: 'decimal' as const, min: 0, max: 0.7, step: 0.05 },
-    { key: 'luck', label: 'Rating: Luck', desc: 'Luck weight for vibe rating', format: 'decimal' as const, min: 0, max: 0.5, step: 0.05 },
-  ];
-  for (const v of bettingRatingVars) {
-    vars.push({ category: 'Betting (Rating)', categoryEmoji: '⭐', path: `betting.driverRatingWeights.${v.key}`, label: v.label, description: v.desc, format: v.format, min: v.min, max: v.max, step: v.step });
+  for (const v of otVars) {
+    vars.push({ category: 'Overtaking', categoryEmoji: '⚔️', path: `overtaking.${v.key}`, label: v.label, description: v.desc, format: v.format, min: v.min, max: v.max, step: v.step });
   }
 
   return vars;
 }
 
-const ALL_VARIABLES = buildVariableList();
-
-// Get unique categories
-const CATEGORIES = [...new Set(ALL_VARIABLES.map(v => v.category))];
-
 // Helper to get value from nested path
-function getValueByPath(obj: SimVariables, path: string): number {
+export function getValueByPath(obj: SimVariables, path: string): number {
   const parts = path.split('.');
   let current: unknown = obj;
   for (const part of parts) {
@@ -246,7 +227,7 @@ function getValueByPath(obj: SimVariables, path: string): number {
 }
 
 // Helper to set value by nested path
-function setValueByPath(obj: SimVariables, path: string, value: number): SimVariables {
+export function setValueByPath(obj: SimVariables, path: string, value: number): SimVariables {
   const clone = cloneVariables(obj);
   const parts = path.split('.');
   let current: Record<string, unknown> = clone as unknown as Record<string, unknown>;
@@ -257,7 +238,7 @@ function setValueByPath(obj: SimVariables, path: string, value: number): SimVari
   return clone;
 }
 
-function formatValue(value: number, format: VarDef['format']): string {
+export function formatValue(value: number, format: VarDef['format']): string {
   switch (format) {
     case 'percent':
       return `${(value * 100).toFixed(1)}%`;
@@ -271,211 +252,7 @@ function formatValue(value: number, format: VarDef['format']): string {
   }
 }
 
-export function SimLabVariables({ hereticVariables, onVariablesChange, onReset }: SimLabVariablesProps) {
-  const [search, setSearch] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState<string>('all');
-  const [showChangedOnly, setShowChangedOnly] = useState(false);
-
-  // Calculate which variables have changed
-  const changedPaths = useMemo(() => {
-    const changed = new Set<string>();
-    for (const v of ALL_VARIABLES) {
-      const canonVal = getValueByPath(CANON_VARIABLES, v.path);
-      const hereticVal = getValueByPath(hereticVariables, v.path);
-      if (Math.abs(canonVal - hereticVal) > 0.0000001) {
-        changed.add(v.path);
-      }
-    }
-    return changed;
-  }, [hereticVariables]);
-
-  const totalChanges = changedPaths.size;
-
-  // Filter variables
-  const filteredVars = useMemo(() => {
-    return ALL_VARIABLES.filter(v => {
-      // Category filter
-      if (categoryFilter !== 'all' && v.category !== categoryFilter) return false;
-      // Search filter
-      if (search) {
-        const s = search.toLowerCase();
-        if (!v.label.toLowerCase().includes(s) &&
-            !v.description.toLowerCase().includes(s) &&
-            !v.path.toLowerCase().includes(s) &&
-            !v.category.toLowerCase().includes(s)) {
-          return false;
-        }
-      }
-      // Changed only filter
-      if (showChangedOnly && !changedPaths.has(v.path)) return false;
-      return true;
-    });
-  }, [categoryFilter, search, showChangedOnly, changedPaths]);
-
-  // Export heretic as JSON
-  const handleExport = () => {
-    const json = JSON.stringify(hereticVariables, null, 2);
-    navigator.clipboard.writeText(json);
-    alert('Heretic variables copied to clipboard as JSON!');
-  };
-
-  // Import heretic from JSON (deep merge to support partial presets)
-  const handleImport = () => {
-    const json = prompt('Paste JSON variables:');
-    if (json) {
-      try {
-        const parsed = JSON.parse(json) as Partial<SimVariables>;
-        // Deep merge: start with current heretic, overlay imported values
-        const merged = cloneVariables(hereticVariables);
-        for (const [section, values] of Object.entries(parsed)) {
-          if (typeof values === 'object' && values !== null && section in merged) {
-            const target = merged[section as keyof SimVariables];
-            if (typeof target === 'object' && target !== null) {
-              Object.assign(target, values);
-            }
-          }
-        }
-        onVariablesChange(merged);
-      } catch {
-        alert('Invalid JSON!');
-      }
-    }
-  };
-
-  // Export changes only as compact format
-  const handleExportChanges = () => {
-    const changes: Record<string, number> = {};
-    for (const path of changedPaths) {
-      changes[path] = getValueByPath(hereticVariables, path);
-    }
-    navigator.clipboard.writeText(JSON.stringify(changes, null, 2));
-    alert(`${changedPaths.size} changes copied to clipboard!`);
-  };
-
-  // Count changes per category
-  const categoryChangeCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    for (const v of ALL_VARIABLES) {
-      if (!counts[v.category]) counts[v.category] = 0;
-      if (changedPaths.has(v.path)) counts[v.category]++;
-    }
-    return counts;
-  }, [changedPaths]);
-
-  return (
-    <div className="simlab-variables spreadsheet">
-      <div className="variables-header">
-        <h2>Simulation Variables</h2>
-        <div className="variables-actions">
-          {totalChanges > 0 && (
-            <span className="total-changes">{totalChanges} changed</span>
-          )}
-          <button className="action-btn" onClick={handleExportChanges} disabled={totalChanges === 0} title="Copy changes only">
-            📋 Copy Changes
-          </button>
-          <button className="action-btn" onClick={handleExport} title="Copy full Heretic config">
-            💾 Export
-          </button>
-          <button className="action-btn" onClick={handleImport} title="Import Heretic config">
-            📂 Import
-          </button>
-          <button className="reset-btn" onClick={onReset} disabled={totalChanges === 0}>
-            Reset
-          </button>
-        </div>
-      </div>
-
-      <div className="variables-filters">
-        <input
-          type="text"
-          className="search-input"
-          placeholder="Search variables..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <div className="filter-row">
-          <label className="checkbox-label">
-            <input
-              type="checkbox"
-              checked={showChangedOnly}
-              onChange={(e) => setShowChangedOnly(e.target.checked)}
-            />
-            Changed only
-          </label>
-          <select
-            className="category-select"
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-          >
-            <option value="all">All Categories ({ALL_VARIABLES.length})</option>
-            {CATEGORIES.map(cat => (
-              <option key={cat} value={cat}>
-                {cat} ({ALL_VARIABLES.filter(v => v.category === cat).length})
-                {categoryChangeCounts[cat] > 0 ? ` [${categoryChangeCounts[cat]} changed]` : ''}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      <div className="variables-table-container">
-        <table className="variables-table">
-          <thead>
-            <tr>
-              <th className="col-category">Category</th>
-              <th className="col-variable">Variable</th>
-              <th className="col-desc">Description</th>
-              <th className="col-canon">Canon</th>
-              <th className="col-heretic">Heretic</th>
-              <th className="col-delta">Δ</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredVars.map(v => {
-              const canonVal = getValueByPath(CANON_VARIABLES, v.path);
-              const hereticVal = getValueByPath(hereticVariables, v.path);
-              const isChanged = changedPaths.has(v.path);
-              const delta = canonVal !== 0 ? ((hereticVal - canonVal) / canonVal) * 100 : 0;
-
-              return (
-                <tr key={v.path} className={isChanged ? 'changed' : ''}>
-                  <td className="col-category">
-                    <span className="category-badge">{v.categoryEmoji} {v.category}</span>
-                  </td>
-                  <td className="col-variable">{v.label}</td>
-                  <td className="col-desc">{v.description}</td>
-                  <td className="col-canon">{formatValue(canonVal, v.format)}</td>
-                  <td className="col-heretic">
-                    <input
-                      type="number"
-                      value={hereticVal}
-                      onChange={(e) => {
-                        const newVal = parseFloat(e.target.value);
-                        if (!isNaN(newVal)) {
-                          onVariablesChange(setValueByPath(hereticVariables, v.path, newVal));
-                        }
-                      }}
-                      min={v.min}
-                      max={v.max}
-                      step={v.step}
-                      className="heretic-input"
-                    />
-                  </td>
-                  <td className={`col-delta ${delta > 0 ? 'positive' : delta < 0 ? 'negative' : ''}`}>
-                    {isChanged ? `${delta > 0 ? '+' : ''}${delta.toFixed(1)}%` : '—'}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-        {filteredVars.length === 0 && (
-          <div className="no-results">No variables match your filters</div>
-        )}
-      </div>
-      <div className="variables-footer">
-        Showing {filteredVars.length} of {ALL_VARIABLES.length} variables
-      </div>
-    </div>
-  );
-}
+export const ALL_KNOBS: VarDef[] = buildVariableList();
+export const KNOB_CATEGORIES = [...new Set(ALL_KNOBS.map(v => v.category))];
+export function canonValue(path: string): number { return getValueByPath(CANON_VARIABLES, path); }
+export { cloneVariables };

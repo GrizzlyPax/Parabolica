@@ -47,19 +47,6 @@
 .rc-cmds .rs-k { grid-column: 1 / -1; }
 .rc-cmds code { justify-self: start; }
 
-/* Seed + cards controls inside Sim Lab's config */
-.rc-seed { display: inline-flex; gap: 8px; }
-.rc-seed input { width: 150px; background: var(--pw-ground); color: var(--pw-text-1); border: 1px solid var(--pw-border-strong); border-radius: var(--pw-radius-s); padding: 6px 8px; font-family: var(--font-mono); font-size: 13px; }
-.rc-seed button { background: var(--pw-raised); border: 1px solid var(--pw-border-strong); color: var(--pw-text-2); border-radius: var(--pw-radius-s); padding: 6px 10px; cursor: pointer; }
-.rc-hint { font-weight: 400; text-transform: none; letter-spacing: 0; margin-left: 8px; color: var(--pw-text-3); }
-.rc-cards { flex: 1 1 100%; }
-.rc-card-list { display: flex; flex-wrap: wrap; gap: 6px; }
-.rc-card-list button { background: var(--pw-raised); border: 1px solid var(--pw-border-strong); color: var(--pw-text-2); border-radius: 999px; padding: 4px 10px; font-size: 12px; cursor: pointer; }
-.rc-card-list button.active { border-color: var(--pw-purple); color: var(--pw-text-1); background: rgba(169, 139, 255, 0.12); }
-
-/* Legacy lab panels live inside a row; soften their own paddings */
-.rc-legacy { padding: 4px 8px; }
-.rc-legacy .sim-lab, .rc-legacy .bet-lab { padding: 0.5rem; }
 
 .rc-explain p { margin: 0 0 8px; color: var(--pw-text-2); font-size: 14px; line-height: 1.5; max-width: 900px; }
 .rc-explain p:last-child { margin-bottom: 0; }

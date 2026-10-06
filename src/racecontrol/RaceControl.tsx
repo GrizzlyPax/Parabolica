@@ -3,17 +3,19 @@
 // the browser (`npm run lab`, `npm run calibrate`), and exports what it shows.
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import './RaceControl.css';
-import SimLab from '../simlab/SimLab';
+import { PhysicsTab } from './PhysicsTab';
+import { useLabRunner } from './useLabRunner';
+import { randomSeed } from '../engine/rng';
 import { getTagById, describeCondition, type Tag } from '../data/tags';
 import { TAG_CALIBRATION } from '../data/tagCalibration';
 import { bandViolation, calibrateTagsAsync, CALIBRATION_BANDS, CALIBRATION_RACES, type CalibrationFile, type TagCalibration, type CalibrateProgress } from './calibrate';
 import type { CalibrateInMessage, CalibrateOutMessage } from './calibrateWorker';
 import { LabRunner } from './labRunner';
 
-type TabId = 'calibration' | 'lab' | 'method';
+type TabId = 'calibration' | 'physics' | 'method';
 const TABS: { id: TabId; label: string; hint: string }[] = [
   { id: 'calibration', label: 'Tag calibration', hint: 'what each tag does, measured' },
-  { id: 'lab', label: 'Sim Lab', hint: 'seeded batches, canon vs heretic' },
+  { id: 'physics', label: 'Physics calibration', hint: 'what the race rules produce, measured; change a knob and re-measure' },
   { id: 'method', label: 'Method', hint: 'why these numbers can be trusted' },
 ];
 
@@ -34,7 +36,7 @@ export default function RaceControl({ onBack }: { onBack: () => void }) {
         ))}
       </nav>
       {tab === 'calibration' && <CalibrationTab />}
-      {tab === 'lab' && <section className="rs-row rc-legacy"><SimLab /></section>}
+      {tab === 'physics' && <PhysicsTab />}
       {tab === 'method' && <MethodTab />}
     </div>
   );
@@ -63,6 +65,23 @@ function CalibrationTab() {
   const [desc, setDesc] = useState(true);
   const [picked, setPicked] = useState<string>('');
   const [copied, setCopied] = useState(false);
+  // Re-roll: the whole table again on a fresh seed, fewer races, to see how
+  // much of any number is the dice.
+  const [rerollSeed, setRerollSeed] = useState<number>(() => randomSeed());
+  const [rerollRaces, setRerollRaces] = useState(50);
+  const reroll = useLabRunner<CalibrateInMessage, CalibrateOutMessage, CalibrateProgress, CalibrationFile>({
+    makeWorker: () => new Worker(new URL('./calibrateWorker.ts', import.meta.url), { type: 'module' }),
+    inline: async (msg, sink) => {
+      if (msg.type !== 'START') return;
+      const out = await calibrateTagsAsync(msg.tagIds, { races: msg.races, batchSeed: msg.batchSeed, cards: msg.cards, onProgress: p => { sink.post({ type: 'PROGRESS', progress: p }); return !sink.aborted(); } });
+      if (!sink.aborted()) sink.post({ type: 'COMPLETE', file: out.file });
+    },
+    read: m => m.type === 'PROGRESS' ? { progress: m.progress } : m.type === 'COMPLETE' ? { result: m.file } : { error: m.message },
+    abort: { type: 'ABORT' },
+  });
+  const rolled = reroll.result;
+  const rolledBy = useMemo(() => new Map((rolled?.tags ?? []).map(c => [c.tagId, c])), [rolled]);
+  const startReroll = () => reroll.start({ type: 'START', tagIds: file.tags.map(c => c.tagId), races: rerollRaces, batchSeed: rerollSeed, cards: file.cards }, { done: 0, total: rerollRaces * (file.tags.length + 1), label: 'baseline', race: 0, races: rerollRaces });
   const rows = useMemo(() => {
     const r = file.tags.map(c => ({ c, tag: getTagById(c.tagId) })).filter((x): x is Row => !!x.tag).sort(SORTERS[sort]);
     return desc ? r : r.reverse();
@@ -91,6 +110,23 @@ function CalibrationTab() {
             <button type="button" className="rs-link" onClick={download}>Download JSON</button>
           </span>
         </div>
+        <div className="rc-reroll">
+          <span className="rs-k">Re-roll</span>
+          <span className="rs-hint">Same test, fresh dice: every tag again on a new seed, so you can see how much of a number is luck. A second column appears with the difference.</span>
+          <input type="number" value={rerollSeed} disabled={!!reroll.progress} onChange={e => setRerollSeed(Number(e.target.value) >>> 0)} aria-label="Re-roll seed" />
+          <button type="button" className="rs-link" disabled={!!reroll.progress} onClick={() => setRerollSeed(randomSeed())}>new seed</button>
+          <select value={rerollRaces} disabled={!!reroll.progress} onChange={e => setRerollRaces(Number(e.target.value))}>
+            <option value={25}>25 races per tag · ~2 min</option>
+            <option value={50}>50 races per tag · ~4 min</option>
+            <option value={100}>100 races per tag · ~8 min</option>
+          </select>
+          {reroll.progress
+            ? <button type="button" className="rs-btn rs-btn-ghost" onClick={reroll.stop}>Stop</button>
+            : <button type="button" className="rs-btn rs-btn-primary" onClick={startReroll}>Re-roll</button>}
+          {reroll.progress && <span className="rc-progress"><span className="rc-progress-bar"><span style={{ width: `${(reroll.progress.done / reroll.progress.total) * 100}%` }} /></span><span>{reroll.progress.label === 'baseline' ? 'Untagged baseline' : reroll.progress.label} · {reroll.progress.done}/{reroll.progress.total}{reroll.mode === 'main thread' ? ' · on the main thread' : ''}</span></span>}
+          {reroll.error && <span className="rc-bad">{reroll.error}</span>}
+          {rolled && !reroll.progress && <span className="rc-good">✓ seed {rolled.batchSeed} · {rolled.races} races per tag · baseline #{rolled.baselineFingerprint}</span>}
+        </div>
       </section>
       <section className="rs-row rc-table-row">
         <div className="rc-table-wrap">
@@ -101,6 +137,7 @@ function CalibrationTab() {
                 <th><SortBtn k="target" cur={sort} desc={desc} set={setSortKey}>On</SortBtn></th>
                 <th><SortBtn k="rarity" cur={sort} desc={desc} set={setSortKey}>Rarity</SortBtn></th>
                 <th className="rc-th-places"><SortBtn k="places" cur={sort} desc={desc} set={setSortKey}>Places</SortBtn></th>
+                {rolled && <th title={`Re-rolled on seed ${rolled.batchSeed}, ${rolled.races} races per tag`}>Re-roll · Δ</th>}
                 <th><SortBtn k="wins" cur={sort} desc={desc} set={setSortKey}>Wins</SortBtn></th>
                 <th><SortBtn k="podiums" cur={sort} desc={desc} set={setSortKey}>Podiums</SortBtn></th>
                 <th><SortBtn k="dnf" cur={sort} desc={desc} set={setSortKey}>DNF</SortBtn></th>
@@ -118,12 +155,13 @@ function CalibrationTab() {
                     <td className="rc-dim">{c.target}</td>
                     <td><span className="rc-rarity" style={{ color: `var(--rarity-${c.rarity})` }}>{c.rarity}</span></td>
                     <td className="rc-places"><PlacesBar value={c.places} max={maxPlaces} /><span className={`rc-num ${c.places > 0.05 ? 'rc-good' : c.places < -0.05 ? 'rc-bad' : ''}`}>{fmtSigned(c.places)}</span><span className="rc-se">±{c.placesSe.toFixed(1)}</span></td>
+                    {rolled && <td>{(() => { const r = rolledBy.get(c.tagId); if (!r) return <span className="rc-dim">—</span>; const d = r.places - c.places; const noise = 2 * Math.sqrt(r.placesSe ** 2 + c.placesSe ** 2); return <><span className="rc-num">{fmtSigned(r.places)}</span><span className={`rc-se ${Math.abs(d) > noise ? 'rc-bad' : ''}`}>{d > 0 ? '+' : ''}{d.toFixed(1)}{Math.abs(d) > noise ? ' ⚠' : ''}</span></>; })()}</td>}
                     <td><span className="rc-num">{pct(c.winRate)}</span><span className="rc-se">{pct(c.baseWinRate)}</span></td>
                     <td><span className="rc-num">{pct(c.podiumRate)}</span><span className="rc-se">{pct(c.basePodiumRate)}</span></td>
                     <td><span className={`rc-num ${c.dnfRate > c.baseDnfRate + 0.05 ? 'rc-bad' : ''}`}>{pct(c.dnfRate)}</span><span className="rc-se">{pct(c.baseDnfRate)}</span></td>
                     <td><span className="rc-num rc-dim">{tag.trigger === 'passive' ? '—' : c.activationsPerRace.toFixed(2)}</span><span className="rc-chev">{open ? '▾' : '▸'}</span></td>
                   </tr>
-                  {open && <tr className="rc-try-row"><td colSpan={8}><TryPanel file={file} tagId={c.tagId} /></td></tr>}
+                  {open && <tr className="rc-try-row"><td colSpan={rolled ? 9 : 8}><TryPanel file={file} tagId={c.tagId} /></td></tr>}
                   </Fragment>
                 );
               })}
@@ -337,20 +375,22 @@ function MethodTab() {
       <ol>
         <li><b>A lab race is a league race.</b> Every batch goes through <code>src/racecontrol/runner.ts</code>, which builds a one-race league with <code>createLeague</code> and prepares the engine with <code>prepareScheduledRace</code> — the same two calls the live broadcast and the wall-clock settle use. Current tracks only, genesis roster per universe, seeded weather, the chosen card hand.</li>
         <li><b>Everything is seeded.</b> A batch is (seed, size, cards). Race <i>i</i> derives from <code>deriveSeed(seed, 'lab', i)</code>; nothing in the lab touches <code>Math.random</code>. The same spec gives the same race in this browser, in a vitest, and in the terminal.</li>
-        <li><b>Every result carries a fingerprint.</b> Sim Lab shows <code>#xxxxxxxx</code> next to its seed; <code>npm run lab -- &lt;seed&gt; &lt;races&gt; all</code> prints the same one when it ran the same races. Calibration carries the baseline batch's fingerprint.</li>
+        <li><b>Every result carries a fingerprint.</b> Physics shows <code>#xxxxxxxx</code> next to its seed; <code>npm run lab -- &lt;seed&gt; &lt;races&gt; all no-tags</code> prints the same one when it ran the same races. Tag calibration carries the baseline batch's fingerprint.</li>
+        <li><b>Physics is measured on untagged races.</b> The <code>no-tags</code> card, so the rules are read without personalities on top. Change a knob and the same seeded batch runs with your value — only the knob differs.</li>
         <li><b>Tags are measured paired and solo.</b> One tag, one carrier, the <code>no-tags</code> card for everyone else, against the identical untagged race. "Places gained" is the carrier's finishing position with the tag minus without, averaged; the ± is the standard error.</li>
         <li><b>The deck is gated.</b> <code>src/data/tagCalibration.json</code> is committed. <code>npm test</code> fails if a genesis tag is missing from it, if a tag's effects changed since it was measured, or if a tag is out of band. Fix: tune the tag, <code>npm run calibrate</code>, commit both.</li>
-        <li><b>Export what you see.</b> Calibration copies as markdown or downloads as JSON; Sim Lab exports JSON and TSV with seed, cards and fingerprint in the header. Paste either into an issue and anyone can rerun it.</li>
+        <li><b>Re-roll to see the dice.</b> Both tabs can re-run on a fresh seed. A number that moves a lot between seeds is mostly luck; the ± and the Δ flag tell you when a difference is bigger than the noise.</li>
+        <li><b>Export what you see.</b> Tag calibration copies as markdown or downloads as JSON; both tabs give you the code for an edit you liked (Copy as code). Paste it into an issue and anyone can rerun it.</li>
       </ol>
       <div className="rc-cmds">
         <span className="rs-k">Commands</span>
-        <code>npm run lab -- 2026 100 all</code><span className="rs-hint">replay a Sim Lab batch, print its fingerprint</span>
+        <code>npm run lab -- 2026 100 all</code><span className="rs-hint">replay a physics batch, print its fingerprint</span>
         <code>npm run lab -- 2026 100 all no-tags rain</code><span className="rs-hint">…under a card hand</span>
         <code>npm run calibrate</code><span className="rs-hint">re-measure every genesis tag, rewrite the JSON</span>
         <code>npm run calibrate -- 50 glass-cannon</code><span className="rs-hint">one tag, quick read, nothing written</span>
         <code>npx tsx scripts/mechanics-probe.mjs 200</code><span className="rs-hint">the no-tag mechanics gates (#246)</span>
       </div>
-      <p className="rs-hint">Known gaps, parked: the Heretic's variables override a card's own simVars patches; Sim Lab's safety-car count reads a double-logged event (halve it). BetLab (odds) is gone; src/betting/utils keeps the odds math.</p>
+      <p className="rs-hint">Known gaps, parked: the safety-car count reads a double-logged event (halved here); tags are measured solo in a tag-free field, their value in a real grid is a different question. BetLab (odds) is gone; src/betting/utils keeps the odds math.</p>
     </section>
   );
 }
