@@ -77,7 +77,7 @@ describe('the four #156 tags are gated', () => {
   it('rain-dancer is gated to rain (dormant until weather)', () => {
     const t = getTagById('rain-dancer')!;
     expect(t.condition).toEqual({ when: 'condition', has: 'rain' });
-    expect(t.rarity).toBe(6);
+    expect(t.rarity).toBe('rare');
   });
 
   it('sunday-driver surges late instead of a permanent penalty', () => {

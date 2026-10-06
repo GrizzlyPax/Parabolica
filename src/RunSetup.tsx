@@ -14,7 +14,7 @@ import { generateTrack, getDynamicEventDescription, CURRENT_TRACKS, Track } from
 import { getRandomTeams, Team } from './data/teams';
 import { mulberry32, deriveSeed, randomSeed } from './engine/rng';
 import { CARDS_BY_ID, cardsForScope } from './data/cards';
-import { resolveRuleset, describeRuleset, serializeRuleset, Ruleset } from './rules/ruleset';
+import { resolveRuleset, describeRuleset, describeChance, describeOdds, serializeRuleset, Ruleset } from './rules/ruleset';
 import { buildRoster } from './rules/genesis';
 import { weatherForRace } from './data/weather';
 import { intrinsicTrackTags } from './data/trackTags';
@@ -154,7 +154,7 @@ export default function RunSetup({ onStartRace, onBack }: RunSetupProps) {
         </div>
         {showRules && (
           <div className="rs-rules">
-            {rulesLines.length === 0 ? <div className="rs-rule">Default rules: {ruleset.tags.pool.length} tags in the pool, {Math.round(ruleset.tags.genesisChance * 100)}% born with one, up to {ruleset.tags.slotCap} each; canon physics.</div>
+            {rulesLines.length === 0 ? <div className="rs-rule">Default rules: {ruleset.tags.pool.length} tags in the pool, {describeChance(ruleset.tags.genesisChance)} per slot to be born with one ({describeOdds(ruleset.tags.rarityOdds)}), up to {ruleset.tags.slotCap} each; canon physics.</div>
               : rulesLines.map(l => <div key={l} className="rs-rule">{l}</div>)}
             <div className="rs-rules-actions">
               <button type="button" className="rs-link" onClick={() => navigator.clipboard?.writeText(serializeRuleset(ruleset))}>Copy ruleset JSON</button>

@@ -6,7 +6,7 @@ import { GODS } from '../gods';
 import { CURRENT_TEAMS, HISTORIC_TEAMS, makeCustomTeam, Team } from '../../data/teams';
 import { generateTeamIdentities } from '../../generators/teamIdentity';
 import { cardsForScope, CARDS_BY_ID } from '../../data/cards';
-import { resolveRuleset, describeRuleset, Ruleset } from '../../rules/ruleset';
+import { resolveRuleset, describeRuleset, describeChance, describeOdds, Ruleset } from '../../rules/ruleset';
 import './League.css';
 import '../../RunSetup.css';
 
@@ -287,7 +287,7 @@ function FoundingScreen({ onFound, onBack }: FoundingScreenProps) {
           {showRules && (
             <div className="rs-rules">
               {rulesLines.length === 0
-                ? <div className="rs-rule">Default rules: {ruleset.tags.pool.length} tags in the pool, {Math.round(ruleset.tags.genesisChance * 100)}% born with one, up to {ruleset.tags.slotCap} each; canon physics.</div>
+                ? <div className="rs-rule">Default rules: {ruleset.tags.pool.length} tags in the pool, {describeChance(ruleset.tags.genesisChance)} per slot to be born with one ({describeOdds(ruleset.tags.rarityOdds)}), up to {ruleset.tags.slotCap} each; canon physics.</div>
                 : rulesLines.map(l => <div key={l} className="rs-rule">{l}</div>)}
             </div>
           )}

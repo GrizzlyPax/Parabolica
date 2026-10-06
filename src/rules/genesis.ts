@@ -9,23 +9,23 @@
 //          (shared by both of a team's drivers, as before)
 
 import { mulberry32, deriveSeed } from '../engine/rng';
-import { Tag, TagTarget, pickTagWeighted } from '../data/tags';
+import { Tag, TagTarget, pickTagByRarity } from '../data/tags';
 import type { GeneratedDriver } from '../generators/drivers';
 import type { GeneratedCar } from '../generators/cars';
 import type { RosterDriver } from '../RaceEngine';
 import { Ruleset, poolTags } from './ruleset';
 
-function maybe(target: TagTarget, pool: Tag[], chance: number, rng: () => number): Tag | null {
-  // Always draw both numbers so the stream shape is stable whatever the chance.
+/** One slot: does it hit? → which bucket? → which tag in it? Always three
+ * rng() draws so the stream shape is stable whatever the odds. */
+function maybe(target: TagTarget, pool: Tag[], rs: Ruleset, rng: () => number): Tag | null {
   const roll = rng();
-  const pick = pickTagWeighted(pool.filter(t => t.target === target), rng);
-  return roll < chance ? pick : null;
+  const pick = pickTagByRarity(pool.filter(t => t.target === target), rs.tags.rarityOdds, rng);
+  return roll < rs.tags.genesisChance ? pick : null;
 }
 
 /** Roll genesis tags for every driver. Pure; same inputs → same tags. */
 export function rollGenesisTags(roster: GeneratedDriver[], seed: number, rs: Ruleset): Map<number, Tag[]> {
   const pool = poolTags(rs);
-  const chance = rs.tags.genesisChance;
   const cap = rs.tags.slotCap;
   const teamRolls = new Map<string, Tag[]>();
   const out = new Map<number, Tag[]>();
@@ -33,11 +33,11 @@ export function rollGenesisTags(roster: GeneratedDriver[], seed: number, rs: Rul
     let team = teamRolls.get(d.kingdomId);
     if (!team) {
       const rng = mulberry32(deriveSeed(seed, 'tags', 'team', d.kingdomId));
-      team = [maybe('car', pool, chance, rng), maybe('team', pool, chance, rng)].filter((t): t is Tag => !!t);
+      team = [maybe('car', pool, rs, rng), maybe('team', pool, rs, rng)].filter((t): t is Tag => !!t);
       teamRolls.set(d.kingdomId, team);
     }
     const rng = mulberry32(deriveSeed(seed, 'tags', 'driver', d.id));
-    const own = maybe('driver', pool, chance, rng);
+    const own = maybe('driver', pool, rs, rng);
     const tags = [...(own ? [own] : []), ...team].slice(0, cap);
     out.set(d.id, tags);
   }

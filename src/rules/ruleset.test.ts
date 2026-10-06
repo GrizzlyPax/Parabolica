@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { defaultRuleset, resolveRuleset, isDefaultRuleset, serializeRuleset, parseRuleset, describeRuleset } from './ruleset';
+import { defaultRuleset, resolveRuleset, isDefaultRuleset, serializeRuleset, parseRuleset, describeRuleset, describeChance, describeOdds } from './ruleset';
+import { Tag, Rarity, pickTagByRarity } from '../data/tags';
 import { CARDS, CARDS_BY_ID, cardsForScope } from '../data/cards';
 import { CANON_VARIABLES } from '../simlab/types';
 import { rollGenesisTags, buildRoster } from './genesis';
@@ -61,5 +62,29 @@ describe('ruleset (#241)', () => {
     expect(tagsB).toBeGreaterThan(tagsA);
     // and the same ruleset + seed is reproducible
     expect(buildRoster(roster, cars, 5, defaultRuleset())).toEqual(a);
+  });
+});
+
+describe('genesis roll odds (#241 → rarity buckets)', () => {
+  it('defaults: 1 in 6 per slot, 60/30/9/1 buckets', () => {
+    const rs = defaultRuleset();
+    expect(rs.tags.genesisChance).toBeCloseTo(1 / 6);
+    expect(rs.tags.rarityOdds).toEqual({ common: 60, uncommon: 30, rare: 9, legendary: 1 });
+    expect(describeChance(rs.tags.genesisChance)).toBe('1 in 6');
+    expect(describeOdds(rs.tags.rarityOdds)).toBe('60% common · 30% uncommon · 9% rare · 1% legendary');
+  });
+  it('bucket odds do not move when a bucket gets more tags', () => {
+    const odds = { common: 60, uncommon: 30, rare: 9, legendary: 1 };
+    const mk = (id: string, rarity: Rarity): Tag => ({ id, name: id, emoji: '·', description: '', target: 'driver', trigger: 'passive', rarity, effects: {} });
+    const small = [mk('c1', 'common'), mk('r1', 'rare')];
+    const big = [...small, mk('c2', 'common'), mk('c3', 'common'), mk('c4', 'common'), mk('c5', 'common')];
+    const count = (pool: Tag[]) => {
+      const rng = mulberry32(7); let rare = 0;
+      for (let i = 0; i < 20000; i++) if (pickTagByRarity(pool, odds, rng)?.rarity === 'rare') rare++;
+      return rare / 20000;
+    };
+    // rare bucket is 9% of hits; legendary (empty) falls into it, so ~10%
+    expect(count(small)).toBeCloseTo(0.10, 1);
+    expect(count(big)).toBeCloseTo(count(small), 2);
   });
 });

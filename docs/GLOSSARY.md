@@ -1,8 +1,18 @@
 # Parabolica Glossary
 
-*Generated from the data modules by `npm run glossary` — do not edit by hand. Engine v0.3.37.*
+*Generated from the data modules by `npm run glossary` — do not edit by hand. Engine v0.3.38.*
 
 39 tags (9 genesis · 8 acquired · 5 in-race · 17 condition) · 11 cards · 12 rules · 5 weathers · 3 track characters · 5 inflictions · 24 tracks
+
+## How genesis tags are rolled
+
+Each driver gets three slots: driver, car, team (car and team are shared by teammates). Per slot:
+
+1. **Does it hit?** 1 in 6.
+2. **Which bucket?** 60% common · 30% uncommon · 9% rare · 1% legendary. Fixed odds — adding tags to a bucket never changes how often it comes up, only which tag you get.
+3. **Which tag?** An even pick inside the bucket. An empty bucket falls to the next more common one.
+
+Bucket sizes in the default pool: common 3 · uncommon 5 · rare 1 · legendary 0. Cards change the hit chance and the odds.
 
 ## How tags enter the world
 
@@ -18,60 +28,60 @@
 
 | Tag | Rarity | Target | Fires | Effect | Lasts | After a race | How you get it |
 |---|---|---|---|---|---|---|---|
-| 🎯 **Clutch Performer** `clutch-performer` — Raises their game when it matters most | 3× | driver | on the final lap (70% chance) | +8% speed, +15% consistency | for good | — | born with it (in the genesis pool), or granted by the Commissionary |
-| 🌧️ **Rain Dancer** `rain-dancer` — Mysteriously faster when the skies open | 6× | driver | while in rain | +8% consistency, −15% crash risk | for good | — | born with it (in the genesis pool), or granted by the Commissionary |
-| 🐢 **Sunday Driver** `sunday-driver` — Slow starter who builds to a strong finish | 3× | driver | while last 40% of the race | +5% speed | for good | — | born with it (in the genesis pool), or granted by the Commissionary |
-| 💎 **Glass Cannon** `glass-cannon` — Blazingly fast but fragile | 3× | car | always on | +3% speed, +25% crash risk | for good | — | born with it (in the genesis pool), or granted by the Commissionary |
-| 👻 **Cursed Chassis** `cursed-chassis` — Something is wrong with this car. Nobody knows what. | 3× | car | always on | -2% consistency, -12% luck | for good | — | born with it (in the genesis pool), or granted by the Commissionary |
-| 🔧 **Pit Lane Special** `pit-lane-special` — Optimized for quick pit stops | 1.5× | car | on a pit stop | -25% pit time | for good | — | born with it (in the genesis pool), or granted by the Commissionary |
-| 🐕 **Underdog Spirit** `underdog-spirit` — Performs better when behind | 1.5× | team | while bottom 50% of the field | +3% speed, +10% luck | for good | — | born with it (in the genesis pool), or granted by the Commissionary |
-| 👑 **Front Runners** `front-runners` — Thrives when leading the pack | 1.5× | team | while running top 5 | +4% consistency, −8% crash risk | for good | — | born with it (in the genesis pool), or granted by the Commissionary |
-| 🌀 **Chaotic Energy** `chaotic-energy` — Unpredictable - could be brilliant or disastrous | 3× | team | at the start (50% chance) | -20% consistency | for good | — | born with it (in the genesis pool), or granted by the Commissionary |
+| 🎯 **Clutch Performer** `clutch-performer` — Raises their game when it matters most | uncommon | driver | on the final lap (70% chance) | +8% speed, +15% consistency | for good | — | born with it (in the genesis pool), or granted by the Commissionary |
+| 🌧️ **Rain Dancer** `rain-dancer` — Mysteriously faster when the skies open | rare | driver | while in rain | +8% consistency, −15% crash risk | for good | — | born with it (in the genesis pool), or granted by the Commissionary |
+| 🐢 **Sunday Driver** `sunday-driver` — Slow starter who builds to a strong finish | uncommon | driver | while last 40% of the race | +5% speed | for good | — | born with it (in the genesis pool), or granted by the Commissionary |
+| 💎 **Glass Cannon** `glass-cannon` — Blazingly fast but fragile | uncommon | car | always on | +3% speed, +25% crash risk | for good | — | born with it (in the genesis pool), or granted by the Commissionary |
+| 👻 **Cursed Chassis** `cursed-chassis` — Something is wrong with this car. Nobody knows what. | uncommon | car | always on | -2% consistency, -12% luck | for good | — | born with it (in the genesis pool), or granted by the Commissionary |
+| 🔧 **Pit Lane Special** `pit-lane-special` — Optimized for quick pit stops | common | car | on a pit stop | -25% pit time | for good | — | born with it (in the genesis pool), or granted by the Commissionary |
+| 🐕 **Underdog Spirit** `underdog-spirit` — Performs better when behind | common | team | while bottom 50% of the field | +3% speed, +10% luck | for good | — | born with it (in the genesis pool), or granted by the Commissionary |
+| 👑 **Front Runners** `front-runners` — Thrives when leading the pack | common | team | while running top 5 | +4% consistency, −8% crash risk | for good | — | born with it (in the genesis pool), or granted by the Commissionary |
+| 🌀 **Chaotic Energy** `chaotic-energy` — Unpredictable - could be brilliant or disastrous | uncommon | team | at the start (50% chance) | -20% consistency | for good | — | born with it (in the genesis pool), or granted by the Commissionary |
 
 ## Acquired tags
 
 | Tag | Rarity | Target | Fires | Effect | Lasts | After a race | How you get it |
 |---|---|---|---|---|---|---|---|
-| 🔥 **Hot Streak** `hot-streak` — Two wins on the bounce. Everything is coming easy. | 1.5× | driver | always on | +2% speed, +5% consistency | 3 races | 15%: gives 🐎 The Charger to themselves | earned: 2 wins in a row |
-| 🐎 **The Charger** `the-charger` — Came through the field like it owed them money. Faster in traffic. | 1.5× | driver | while bottom 50% of the field | +3% speed | rest of the season | — | earned: gained 10+ places from the grid and finished top 5; passed on by 🔥 Hot Streak |
-| 🛡️ **Unkillable** `unkillable` — Walked away from a wreck and kept racing. Harder to put out now. | 1.5× | driver | always on | −12% crash risk | for good | — | earned: damaged in a crash and still classified in the top 8 |
-| 👻 **Haunted** `haunted` — Three retirements in a row. Something followed them home. | 3× | driver | always on | -20% luck, +5% crash risk | 4 races | 10%: gives 👻 Haunted to their teammate | inflicted: 3 retirements in a row; passed on by 👻 Haunted |
-| 😵 **Shaken** `shaken` — Crashed out last time. The hands are not quite steady yet. | 1.5× | driver | always on | -6% consistency | 2 races | 50%: gives 👊 Bad Blood to whoever they crashed with | inflicted: retired in a crash |
-| 👂 **Hears the Track** `hears-the-track` — They say the asphalt talks to them. It has not said anything useful yet. | 1× | driver | always on | — | rest of the season | always: shakes off 😵 Shaken | cosmic: 0.5% lottery per driver per race |
-| 🕳️ **Marked by the Void** `marked-by-the-void` — The universe simply decided. Fortune looks the other way for a while. | 1.5× | driver | always on | -10% luck | 2 races | 10%: gives 🕳️ Marked by the Void to a random driver; 10%: wears off | cosmic: 0.3% lottery per driver per race; passed on by 🕳️ Marked by the Void |
-| 👊 **Bad Blood** `bad-blood` — Someone is driving angry. Quicker, and less careful about it. | 1.5× | driver | always on | +2% speed, +6% crash risk | 3 races | — | passed on by 😵 Shaken |
+| 🔥 **Hot Streak** `hot-streak` — Two wins on the bounce. Everything is coming easy. | uncommon | driver | always on | +2% speed, +5% consistency | 3 races | 15%: gives 🐎 The Charger to themselves | earned: 2 wins in a row |
+| 🐎 **The Charger** `the-charger` — Came through the field like it owed them money. Faster in traffic. | uncommon | driver | while bottom 50% of the field | +3% speed | rest of the season | — | earned: gained 10+ places from the grid and finished top 5; passed on by 🔥 Hot Streak |
+| 🛡️ **Unkillable** `unkillable` — Walked away from a wreck and kept racing. Harder to put out now. | uncommon | driver | always on | −12% crash risk | for good | — | earned: damaged in a crash and still classified in the top 8 |
+| 👻 **Haunted** `haunted` — Three retirements in a row. Something followed them home. | rare | driver | always on | -20% luck, +5% crash risk | 4 races | 10%: gives 👻 Haunted to their teammate | inflicted: 3 retirements in a row; passed on by 👻 Haunted |
+| 😵 **Shaken** `shaken` — Crashed out last time. The hands are not quite steady yet. | uncommon | driver | always on | -6% consistency | 2 races | 50%: gives 👊 Bad Blood to whoever they crashed with | inflicted: retired in a crash |
+| 👂 **Hears the Track** `hears-the-track` — They say the asphalt talks to them. It has not said anything useful yet. | common | driver | always on | — | rest of the season | always: shakes off 😵 Shaken | cosmic: 0.5% lottery per driver per race |
+| 🕳️ **Marked by the Void** `marked-by-the-void` — The universe simply decided. Fortune looks the other way for a while. | uncommon | driver | always on | -10% luck | 2 races | 10%: gives 🕳️ Marked by the Void to a random driver; 10%: wears off | cosmic: 0.3% lottery per driver per race; passed on by 🕳️ Marked by the Void |
+| 👊 **Bad Blood** `bad-blood` — Someone is driving angry. Quicker, and less careful about it. | uncommon | driver | always on | +2% speed, +6% crash risk | 3 races | — | passed on by 😵 Shaken |
 
 ## In-race tags
 
 | Tag | Rarity | Target | Fires | Effect | Lasts | After a race | How you get it |
 |---|---|---|---|---|---|---|---|
-| 🔧 **Damaged** `damaged` — Survived a crash. The car is 15% slower for the rest of the race. | 3× | driver | always on | -15% speed | rest of the race | — | mid-race, after surviving a crash |
-| 🌀 **Spun** `spun` — Just swapped ends. The next couple of laps are ragged. | 1.5× | driver | always on | -10% consistency | 2 laps | — | mid-race, after a driver error |
-| 🔥 **Cooked Tyres** `cooked-tyres` — Past the cliff. Slower until the next stop. | 1.5× | driver | always on | -3% speed | until the next pit stop | — | mid-race, after tyres falling off the cliff |
-| 🐢 **Sulking** `sulking` — That stop was slow and everyone knows it. | 1× | driver | always on | -4% consistency | 1 lap | — | mid-race, after a slow pit stop |
-| ⚡ **Fired Up** `fired-up` — A lightning stop. The whole crew is buzzing. | 1× | driver | always on | +1% speed | 1 lap | — | mid-race, after a lightning pit stop |
+| 🔧 **Damaged** `damaged` — Survived a crash. The car is 15% slower for the rest of the race. | rare | driver | always on | -15% speed | rest of the race | — | mid-race, after surviving a crash |
+| 🌀 **Spun** `spun` — Just swapped ends. The next couple of laps are ragged. | uncommon | driver | always on | -10% consistency | 2 laps | — | mid-race, after a driver error |
+| 🔥 **Cooked Tyres** `cooked-tyres` — Past the cliff. Slower until the next stop. | uncommon | driver | always on | -3% speed | until the next pit stop | — | mid-race, after tyres falling off the cliff |
+| 🐢 **Sulking** `sulking` — That stop was slow and everyone knows it. | common | driver | always on | -4% consistency | 1 lap | — | mid-race, after a slow pit stop |
+| ⚡ **Fired Up** `fired-up` — A lightning stop. The whole crew is buzzing. | common | driver | always on | +1% speed | 1 lap | — | mid-race, after a lightning pit stop |
 
 ## Condition tags
 
 | Tag | Rarity | Target | Fires | Effect | Lasts | After a race | How you get it |
 |---|---|---|---|---|---|---|---|
-| 🌫️ **Low Visibility** `low-visibility` — Fog, mist, or smoke reducing driver visibility | 1.5× | condition | on a track event | -8% consistency, +15% crash risk | one race | — | stamped by a track event for one race |
-| 💧 **Slippery Surface** `slippery-surface` — Oil, water, or debris on the track | 3× | condition | on a track event | -12% consistency, +20% crash risk | one race | — | stamped by a track event for one race |
-| ⚠️ **Debris Hazard** `debris-hazard` — Track debris creating danger | 3× | condition | on a track event | +25% crash risk | one race | — | stamped by a track event for one race |
-| 💨 **Dust Cloud** `dust-cloud` — Kicked-up dust reducing visibility | 1.5× | condition | on a track event | -6% consistency, +12% crash risk | one race | — | stamped by a track event for one race |
-| ⚡ **Adrenaline Surge** `adrenaline-surge` — A burst of speed from the excitement | 1.5× | condition | on a track event | +8% speed | one race | — | stamped by a track event for one race |
-| 🌀 **Slipstream Boost** `slipstream-boost` — Caught a powerful slipstream | 1× | condition | on a track event | +5% speed | one race | — | stamped by a track event for one race |
-| 📈 **Track Evolution** `track-evolution` — Track grip improving with rubber buildup | 1× | condition | on a track event | +4% speed, +5% consistency | one race | — | stamped by a track event for one race |
-| 🍃 **Headwind** `headwind` — Strong headwind reducing straight-line speed | 1.5× | condition | on a track event | -6% speed | one race | — | stamped by a track event for one race |
-| 🌡️ **Cooling Issues** `cooling-issues` — High temperatures forcing reduced pace | 1.5× | condition | on a track event | -8% speed, -5% consistency | one race | — | stamped by a track event for one race |
-| 🛞 **Tire Graining** `tire-graining` — Temporary loss of tire grip | 1.5× | condition | on a track event | -5% speed, +8% crash risk | one race | — | stamped by a track event for one race |
-| 😵 **Distracted** `distracted` — Lost focus, making small mistakes | 1.5× | condition | on a track event | -4% speed, -10% consistency | one race | — | stamped by a track event for one race |
-| 🎯 **In The Zone** `in-the-zone` — Perfect focus, hitting every apex | 1.5× | condition | on a track event | +6% speed, +10% consistency | one race | — | stamped by a track event for one race |
-| 😰 **Rattled** `rattled` — Shaken up, driving cautiously | 1.5× | condition | on a track event | -7% speed, −15% crash risk | one race | — | stamped by a track event for one race |
-| 🔥 **Desperate Push** `desperate-push` — Nothing to lose, pushing hard | 3× | condition | on a track event | +10% speed, +20% crash risk | one race | — | stamped by a track event for one race |
-| 🚧 **Pit Congestion** `pit-congestion` — Heavy pit lane traffic | 1.5× | condition | on a track event | +25% pit time | one race | — | stamped by a track event for one race |
-| 🔧 **Equipment Malfunction** `equipment-malfunction` — Pit equipment issues causing delays | 3× | condition | on a track event | +40% pit time | one race | — | stamped by a track event for one race |
-| 👐 **Fast Hands** `fast-hands` — Pit crew on fire today | 1.5× | condition | on a track event | -20% pit time | one race | — | stamped by a track event for one race |
+| 🌫️ **Low Visibility** `low-visibility` — Fog, mist, or smoke reducing driver visibility | common | condition | on a track event | -8% consistency, +15% crash risk | one race | — | stamped by a track event for one race |
+| 💧 **Slippery Surface** `slippery-surface` — Oil, water, or debris on the track | rare | condition | on a track event | -12% consistency, +20% crash risk | one race | — | stamped by a track event for one race |
+| ⚠️ **Debris Hazard** `debris-hazard` — Track debris creating danger | rare | condition | on a track event | +25% crash risk | one race | — | stamped by a track event for one race |
+| 💨 **Dust Cloud** `dust-cloud` — Kicked-up dust reducing visibility | uncommon | condition | on a track event | -6% consistency, +12% crash risk | one race | — | stamped by a track event for one race |
+| ⚡ **Adrenaline Surge** `adrenaline-surge` — A burst of speed from the excitement | uncommon | condition | on a track event | +8% speed | one race | — | stamped by a track event for one race |
+| 🌀 **Slipstream Boost** `slipstream-boost` — Caught a powerful slipstream | common | condition | on a track event | +5% speed | one race | — | stamped by a track event for one race |
+| 📈 **Track Evolution** `track-evolution` — Track grip improving with rubber buildup | common | condition | on a track event | +4% speed, +5% consistency | one race | — | stamped by a track event for one race |
+| 🍃 **Headwind** `headwind` — Strong headwind reducing straight-line speed | uncommon | condition | on a track event | -6% speed | one race | — | stamped by a track event for one race |
+| 🌡️ **Cooling Issues** `cooling-issues` — High temperatures forcing reduced pace | uncommon | condition | on a track event | -8% speed, -5% consistency | one race | — | stamped by a track event for one race |
+| 🛞 **Tire Graining** `tire-graining` — Temporary loss of tire grip | uncommon | condition | on a track event | -5% speed, +8% crash risk | one race | — | stamped by a track event for one race |
+| 😵 **Distracted** `distracted` — Lost focus, making small mistakes | uncommon | condition | on a track event | -4% speed, -10% consistency | one race | — | stamped by a track event for one race |
+| 🎯 **In The Zone** `in-the-zone` — Perfect focus, hitting every apex | uncommon | condition | on a track event | +6% speed, +10% consistency | one race | — | stamped by a track event for one race |
+| 😰 **Rattled** `rattled` — Shaken up, driving cautiously | uncommon | condition | on a track event | -7% speed, −15% crash risk | one race | — | stamped by a track event for one race |
+| 🔥 **Desperate Push** `desperate-push` — Nothing to lose, pushing hard | rare | condition | on a track event | +10% speed, +20% crash risk | one race | — | stamped by a track event for one race |
+| 🚧 **Pit Congestion** `pit-congestion` — Heavy pit lane traffic | uncommon | condition | on a track event | +25% pit time | one race | — | stamped by a track event for one race |
+| 🔧 **Equipment Malfunction** `equipment-malfunction` — Pit equipment issues causing delays | rare | condition | on a track event | +40% pit time | one race | — | stamped by a track event for one race |
+| 👐 **Fast Hands** `fast-hands` — Pit crew on fire today | uncommon | condition | on a track event | -20% pit time | one race | — | stamped by a track event for one race |
 
 ## Cards
 

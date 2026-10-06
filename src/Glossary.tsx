@@ -7,6 +7,7 @@
 import { useMemo, useState, ReactNode } from 'react';
 import { buildGlossary, describeTrigger, describeInRaceRule, effectsOf, GlossaryTag, TagGroup } from './data/glossary';
 import { ALL_TAGS } from './data/tags';
+import { defaultRuleset, describeChance, describeOdds } from './rules/ruleset';
 import { intrinsicTrackTags } from './data/trackTags';
 import TagChips from './components/race/TagChips';
 import './RunSetup.css';
@@ -50,6 +51,7 @@ function Fact({ k, children }: { k: string; children: ReactNode }) {
 
 export default function Glossary({ onBack }: GlossaryProps) {
   const g = useMemo(() => buildGlossary(), []);
+  const rs = useMemo(() => defaultRuleset(), []);
   const [q, setQ] = useState('');
   const [open, setOpen] = useState<Set<string>>(() => new Set());
   const toggle = (id: string) => setOpen(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
@@ -61,12 +63,12 @@ export default function Glossary({ onBack }: GlossaryProps) {
   const tagRow = (t: GlossaryTag) => (
     <Row key={t.tag.id} id={`tag:${t.tag.id}`} open={isOpen(`tag:${t.tag.id}`)} onToggle={toggle}
       lead={<TagChips tags={[t.tag]} showName />}
-      note={<>{t.tag.target}{t.does.length > 0 && <span className="gl-does" title="Does something after a race">⚡</span>}</>}
+      note={<>{t.tag.rarity}{t.does.length > 0 && <span className="gl-does" title="Does something after a race">⚡</span>}</>}
       pills={<Pills effects={t.effects} />}>
       <p className="gl-desc">{t.tag.description}</p>
       <div className="gl-facts">
         <Fact k="On">{t.tag.target}</Fact>
-        {t.group === 'genesis' && <Fact k="Rarity">{t.tag.rarity && t.tag.rarity > 1 ? `${t.tag.rarity}× rarer than common` : 'common'}</Fact>}
+        <Fact k="Rarity">{t.tag.rarity}</Fact>
         <Fact k="Fires">{t.fires}</Fact>
         <Fact k="Lasts">{t.lasts}</Fact>
         {t.does.length > 0 && <Fact k="After a race">{t.does.join(' · ')}</Fact>}
@@ -88,6 +90,15 @@ export default function Glossary({ onBack }: GlossaryProps) {
           <input type="search" value={q} onChange={e => setQ(e.target.value)} placeholder="rain, pit, haunted…" />
         </label>
       </header>
+
+      <section className="rs-row">
+        <div className="rs-row-head"><span className="rs-k">How a driver is born with tags</span><span className="rs-hint">Three slots: driver, car, team. Car and team are shared by teammates.</span></div>
+        <ol className="gl-roll">
+          <li><b>Does the slot hit?</b> {describeChance(rs.tags.genesisChance)}.</li>
+          <li><b>Which bucket?</b> {describeOdds(rs.tags.rarityOdds)}. Fixed odds — more tags in a bucket just means more variety, not more of that bucket.</li>
+          <li><b>Which tag?</b> An even pick inside the bucket.</li>
+        </ol>
+      </section>
 
       {GROUPS.map(grp => {
         const rows = g.tags.filter(t => t.group === grp.id && match(t.tag.name, t.tag.id, t.tag.description, t.fires, t.source));

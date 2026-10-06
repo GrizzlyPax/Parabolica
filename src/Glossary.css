@@ -40,3 +40,5 @@
   .gl-chev { grid-row: 1; grid-column: 2; }
 }
 .gl-does { margin-left: 6px; color: var(--pw-purple); }
+.gl-roll { margin: 4px 0 0; padding-left: 22px; color: var(--pw-text-2); font-size: 13.5px; line-height: 1.6; }
+.gl-roll b { color: var(--pw-text-1); font-weight: 600; }

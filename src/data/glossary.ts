@@ -2,7 +2,8 @@
 // the data modules so it can never drift. docs/GLOSSARY.md (npm run
 // glossary) and the in-game Glossary screen both render this.
 
-import { ALL_TAGS, ActionTarget, Tag, TagAction, TRIGGER_LABELS, describeCondition, describeDuration, getTagById, isGenesisTag } from './tags';
+import { ALL_TAGS, ActionTarget, Tag, TagAction, TRIGGER_LABELS, RARITIES, describeCondition, describeDuration, getTagById, isGenesisTag } from './tags';
+import { defaultRuleset, describeChance, describeOdds } from '../rules/ruleset';
 import { CARDS } from './cards';
 import type { Card } from '../rules/ruleset';
 import { ACQUISITION_RULES, AcquisitionRule, AcquisitionTrigger } from './acquisitions';
@@ -148,6 +149,13 @@ export function renderGlossaryMd(g: Glossary, version: string): string {
   const fx = (e: GlossaryEffect[]) => e.length ? e.map(x => `${x.value} ${x.label}`).join(', ') : '—';
   L.push(`# Parabolica Glossary`, '', `*Generated from the data modules by \`npm run glossary\` — do not edit by hand. Engine v${version}.*`, '');
   L.push(`${g.counts.tags} tags (${g.counts.genesis} genesis · ${g.counts.acquired} acquired · ${g.counts.inRace} in-race · ${g.counts.condition} condition) · ${g.counts.cards} cards · ${g.counts.rules} rules · ${g.counts.weather} weathers · ${g.counts.trackTags} track characters · ${g.counts.inflictions} inflictions · ${g.counts.tracks} tracks`, '');
+  const rs = defaultRuleset();
+  L.push('## How genesis tags are rolled', '',
+    `Each driver gets three slots: driver, car, team (car and team are shared by teammates). Per slot:`, '',
+    `1. **Does it hit?** ${describeChance(rs.tags.genesisChance)}.`,
+    `2. **Which bucket?** ${describeOdds(rs.tags.rarityOdds)}. Fixed odds — adding tags to a bucket never changes how often it comes up, only which tag you get.`,
+    `3. **Which tag?** An even pick inside the bucket. An empty bucket falls to the next more common one.`, '',
+    `Bucket sizes in the default pool: ${RARITIES.map(r => `${r} ${g.tags.filter(t => t.group === 'genesis' && isGenesisTag(t.tag) && t.tag.rarity === r).length}`).join(' · ')}. Cards change the hit chance and the odds.`, '');
   L.push('## How tags enter the world', '', '| Door | What it means |', '|---|---|',
     '| Genesis | Rolled when a driver, car or team is born (chance and pool set by the ruleset) |',
     '| Commissionary | Attached by you, from the next race (`attach-tag`) |',
@@ -158,7 +166,7 @@ export function renderGlossaryMd(g: Glossary, version: string): string {
   for (const [grp, title] of groups) {
     L.push(`## ${title}`, '', '| Tag | Rarity | Target | Fires | Effect | Lasts | After a race | How you get it |', '|---|---|---|---|---|---|---|---|');
     for (const t of g.tags.filter(x => x.group === grp)) {
-      L.push(`| ${t.tag.emoji} **${t.tag.name}** \`${t.tag.id}\` — ${t.tag.description} | ${t.tag.rarity ?? 1}× | ${t.tag.target} | ${t.fires} | ${fx(t.effects)} | ${t.lasts} | ${t.does.join('; ') || '—'} | ${t.source} |`);
+      L.push(`| ${t.tag.emoji} **${t.tag.name}** \`${t.tag.id}\` — ${t.tag.description} | ${t.tag.rarity} | ${t.tag.target} | ${t.fires} | ${fx(t.effects)} | ${t.lasts} | ${t.does.join('; ') || '—'} | ${t.source} |`);
     }
     L.push('');
   }

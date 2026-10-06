@@ -10,7 +10,7 @@
 // toss-in: an object in data/cards.ts, no engine edits.
 
 import { SimVariables, CANON_VARIABLES } from '../simlab/types';
-import { ALL_TAGS, Tag, MAX_TAGS_PER_DRIVER, isGenesisTag } from '../data/tags';
+import { ALL_TAGS, Tag, MAX_TAGS_PER_DRIVER, isGenesisTag, RarityOdds, DEFAULT_RARITY_ODDS, RARITIES } from '../data/tags';
 import { WEATHER_TYPES } from '../data/weather';
 
 export const RULESET_VERSION = 1 as const;
@@ -26,6 +26,8 @@ export interface Ruleset {
     pool: string[];
     /** Chance each slot (driver / car / team) is born with a tag. */
     genesisChance: number;
+    /** Once a slot hits, the odds of each rarity bucket. */
+    rarityOdds: RarityOdds;
     /** Max tags per driver, all sources. */
     slotCap: number;
   };
@@ -47,6 +49,8 @@ export interface CardPatch {
     add?: string[];
     remove?: string[];
     genesisChance?: number;
+    /** Override some or all bucket odds. */
+    rarityOdds?: Partial<RarityOdds>;
     slotCap?: number;
   };
   /** Weight overrides per weather id; ids not named keep their weight. */
@@ -89,7 +93,8 @@ export function defaultRuleset(): Ruleset {
     cards: [],
     tags: {
       pool: ALL_TAGS.filter(isGenesisTag).map(t => t.id),
-      genesisChance: 0.15,
+      genesisChance: 1 / 6,
+      rarityOdds: { ...DEFAULT_RARITY_ODDS },
       slotCap: MAX_TAGS_PER_DRIVER,
     },
     weather: {
@@ -134,6 +139,7 @@ export function applyCard(rs: Ruleset, card: Card): Ruleset {
     if (p.tags.add) for (const id of p.tags.add) if (!pool.includes(id)) pool.push(id);
     next.tags.pool = pool;
     if (p.tags.genesisChance !== undefined) next.tags.genesisChance = p.tags.genesisChance;
+    if (p.tags.rarityOdds) next.tags.rarityOdds = { ...next.tags.rarityOdds, ...p.tags.rarityOdds };
     if (p.tags.slotCap !== undefined) next.tags.slotCap = p.tags.slotCap;
   }
   if (p.weather) {
@@ -181,6 +187,7 @@ export function parseRuleset(json: string): Ruleset | null {
     if (!o || o.v !== RULESET_VERSION) return null;
     if (!Array.isArray(o.cards) || !o.tags || !o.weather || !o.simVars) return null;
     if (!Array.isArray(o.tags.pool) || typeof o.tags.genesisChance !== 'number' || typeof o.tags.slotCap !== 'number') return null;
+    if (!o.tags.rarityOdds) o.tags.rarityOdds = { ...DEFAULT_RARITY_ODDS }; // pre-rarity saves
     if (typeof o.weather.weights !== 'object' || typeof o.weather.quickRace !== 'boolean') return null;
     // simVars: deep-merge over CANON so a partial or stale file still resolves
     return { ...o, simVars: deepMerge(structuredClone(CANON_VARIABLES), o.simVars) };
@@ -189,12 +196,27 @@ export function parseRuleset(json: string): Ruleset | null {
   }
 }
 
+/** "1 in 6" for 0.1667, "25%" otherwise. */
+export function describeChance(c: number): string {
+  if (c <= 0) return 'never';
+  if (c >= 1) return 'always';
+  const n = 1 / c;
+  return Math.abs(n - Math.round(n)) < 0.01 ? `1 in ${Math.round(n)}` : `${Math.round(c * 100)}%`;
+}
+
+/** "60% common · 30% uncommon · 9% rare · 1% legendary" */
+export function describeOdds(o: RarityOdds): string {
+  const total = RARITIES.reduce((s, r) => s + Math.max(0, o[r]), 0) || 1;
+  return RARITIES.filter(r => o[r] > 0).map(r => `${Math.round(o[r] / total * 100)}% ${r}`).join(' · ');
+}
+
 /** The differences from default, in plain words — the "layer underneath". */
 export function describeRuleset(rs: Ruleset): string[] {
   const d = defaultRuleset();
   const lines: string[] = [];
   if (rs.tags.pool.length !== d.tags.pool.length) lines.push(`Tag pool: ${rs.tags.pool.length} of ${d.tags.pool.length} tags`);
-  if (rs.tags.genesisChance !== d.tags.genesisChance) lines.push(`Born with a tag: ${Math.round(rs.tags.genesisChance * 100)}% per slot (default ${Math.round(d.tags.genesisChance * 100)}%)`);
+  if (rs.tags.genesisChance !== d.tags.genesisChance) lines.push(`Born with a tag: ${describeChance(rs.tags.genesisChance)} per slot (default ${describeChance(d.tags.genesisChance)})`);
+  if (RARITIES.some(r => rs.tags.rarityOdds[r] !== d.tags.rarityOdds[r])) lines.push(`Rarity odds: ${describeOdds(rs.tags.rarityOdds)}`);
   if (rs.tags.slotCap !== d.tags.slotCap) lines.push(`Tags per driver: up to ${rs.tags.slotCap} (default ${d.tags.slotCap})`);
   const wChanged = Object.keys(rs.weather.weights).filter(id => rs.weather.weights[id] !== d.weather.weights[id]);
   if (wChanged.length) {
