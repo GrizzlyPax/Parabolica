@@ -4,6 +4,8 @@
 // Tabs at the top, collapsible sections, one line per entry that opens on
 // click, a sort for tags, and an Add tab: a drafting space whose drafts
 // live in this browser and export as code or as a prompt for an agent.
+import { calibrationFor } from './data/tagCalibration';
+import { describeCalibration } from './racecontrol/calibrate';
 import { useEffect, useMemo, useState, ReactNode } from 'react';
 import { buildGlossary, describeTrigger, describeInRaceRule, effectsOf, GlossaryTag } from './data/glossary';
 import { ALL_TAGS, RARITIES, Rarity, Tag, TagTarget, isGenesisTag } from './data/tags';
@@ -284,6 +286,7 @@ export default function Glossary({ onBack }: GlossaryProps) {
         <Fact k="Fires">{t.fires}</Fact>
         <Fact k="Lasts">{t.lasts}</Fact>
         {t.does.length > 0 && <Fact k="After a race">{t.does.join(' · ')}</Fact>}
+        {calibrationFor(t.tag.id) && <Fact k="Measured"><span title="Alone on one driver vs the same races untagged — Race Control → Tag calibration">{describeCalibration(calibrationFor(t.tag.id)!)}</span></Fact>}
       </div>
       <div className="gl-src">{t.source}</div>
     </Row>

@@ -43,6 +43,9 @@ export default function SimLabResults({ results, comparisonResults, onReset, onE
         <div className="results-summary">
           <span className="summary-item">{activeResults.totalRaces} races</span>
           <span className="summary-item">{(activeResults.executionTimeMs / 1000).toFixed(1)}s</span>
+          <span className="summary-item" title="Batch seed — replicate with npm run lab">seed {activeResults.config.seed}</span>
+          {activeResults.fingerprint && <span className="summary-item" title="Outcome fingerprint — equal across runtimes for the same seed/size/cards">#{activeResults.fingerprint}</span>}
+          {(activeResults.config.cardIds?.length ?? 0) > 0 && <span className="summary-item">cards: {activeResults.config.cardIds!.join(', ')}</span>}
           {hasComparison && (
             <span className="summary-item dataset-label">
               Viewing: <strong className={activeDataset}>{activeDataset === 'canon' ? 'Canon' : 'Heretic'}</strong>

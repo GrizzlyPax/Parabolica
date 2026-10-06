@@ -2,16 +2,11 @@
 // Runs headless race simulations and aggregates results
 
 import RaceEngine, { Driver, RaceState, RaceEvent } from '../RaceEngine';
-import { randomSeed } from '../engine/rng';
-import { generateRoster, GeneratedDriver } from '../generators/drivers';
-import { generateCarsForKingdoms, GeneratedCar } from '../generators/cars';
-import { ALL_TRACKS, Track } from '../generators/tracks';
-import { TEAMS } from '../data/teams';
+import { Track } from '../generators/tracks';
 import { Tag } from '../data/tags';
-import { rollWeather, WeatherState } from '../data/weather';
-import { intrinsicTrackTags, TrackTag } from '../data/trackTags';
-import { buildRoster } from '../rules/genesis';
-import { Ruleset, defaultRuleset } from '../rules/ruleset';
+import { WeatherState } from '../data/weather';
+import { TrackTag } from '../data/trackTags';
+import { labSpec, runLabRace, raceFingerprint, batchFingerprint } from '../racecontrol/runner';
 import type {
   SimLabConfig,
   WorkerInMessage,
@@ -21,11 +16,6 @@ import type {
   StatBucket,
   SimVariables,
 } from './types';
-
-// Helper to merge roster with car data (like LeagueSetup does)
-function createRosterWithCars(roster: GeneratedDriver[], cars: Map<string, GeneratedCar>, seed: number = randomSeed(), rs: Ruleset = defaultRuleset()) {
-  return buildRoster(roster, cars, seed, rs);
-}
 
 let aborted = false;
 
@@ -781,20 +771,22 @@ function finalizeResults(acc: SimLabAccumulators, config: SimLabConfig, executio
   };
 }
 
-// Main simulation loop
-async function runSimulation(config: SimLabConfig, variables?: SimVariables, _label?: 'canon' | 'heretic') {
+// Main simulation loop — every race goes through the Race Control runner, so
+// a lab race is built exactly like a league race (createLeague +
+// prepareScheduledRace): seeded, current tracks only, genesis roster per
+// universe, seeded weather, the chosen card hand. Same config.seed → same
+// batch, here or in `npm run calibrate`/vitest.
+async function runSimulation(config: SimLabConfig, variables?: SimVariables, label?: 'canon' | 'heretic') {
   const startTime = performance.now();
+  // Canon plays the ruleset's own variables (cards may patch them); only the
+  // Heretic overrides.
+  if (label === 'canon') variables = undefined;
 
   try {
     const acc = createAccumulators();
-
-    // Get tracks to use
-    const tracks = config.trackSelection === 'all'
-      ? ALL_TRACKS
-      : ALL_TRACKS; // For 'random', we'll pick randomly each race
-
-    // Create a reusable engine instance with optional variable overrides
-    const engine = RaceEngine.createForWorker(variables);
+    const engine = RaceEngine.createForWorker();
+    const fingerprints: string[] = [];
+    const cards = config.cardIds ?? [];
 
     for (let i = 0; i < config.batchSize; i++) {
       if (aborted) {
@@ -802,76 +794,24 @@ async function runSimulation(config: SimLabConfig, variables?: SimVariables, _la
         return;
       }
 
-      // Pick track for this race
-      const track = config.trackSelection === 'all'
-        ? tracks[i % tracks.length]
-        : tracks[Math.floor(Math.random() * tracks.length)];
+      const spec = labSpec(config.seed, i, cards, config.trackSelection);
+      const result = runLabRace(spec, { engine, variables });
+      fingerprints.push(raceFingerprint(result));
 
-      // Generate fresh roster and cars for this race
-      const roster = generateRoster();
-      const teamIds = TEAMS.map(t => t.id);
-      const cars = generateCarsForKingdoms(teamIds);
-      const rosterWithCars = createRosterWithCars(roster, cars);
-
-      // Load roster into engine
-      engine.loadGeneratedRoster(rosterWithCars);
-
-      // Configure engine - use track's lap count AND length
-      engine.updateConfig({
-        totalLaps: track.laps,
-        lapLength: track.length,
-        // The lab counts quick stops / SC deploys / tag & track events from
-        // the event log. The 500-event live-UI cap silently evicts most of a
-        // race (luck procs alone log ~1200 events/race), which skewed every
-        // event-derived metric. Keep the whole log.
-        maxStoredEvents: Number.MAX_SAFE_INTEGER,
-      });
-
-      // Set track info (TrackInfo interface expects separate eventTrigger/eventEffect)
-      engine.setTrackInfo({
-        id: track.id,
-        name: track.name,
-        emoji: track.emoji,
-        funEmoji: track.funEmoji,
-        description: track.description ?? '',
-        laps: track.laps,
-        event: track.event ? {
-          id: track.event.id,
-          name: track.event.name,
-          emoji: track.event.emoji,
-          description: track.event.description,
-          flavorText: track.event.flavorText,
-        } : undefined,
-        eventTrigger: track.event?.trigger,
-        eventEffect: track.event?.effect,
-      });
-
-      // Roll weather per race so the conditions layer (and weather-gated tags
-      // like Rain Dancer) are exercised and measured, not dormant.
-      const weather = rollWeather();
-      engine.setWeather(weather);
-      // Apply the track's intrinsic tags (C3) so they're exercised + measured.
-      const trackTags = intrinsicTrackTags(track.id);
-      engine.setTrackTags(trackTags);
-
-      // Run the race headlessly
-      const result = engine.runHeadless();
-
-      // Aggregate results
       aggregateRaceResult(
         acc,
         result.drivers,
         result.raceState,
         result.events,
-        track,
-        weather,
-        trackTags
+        result.track,
+        result.weather,
+        result.trackTags
       );
 
       // Report progress periodically
       const progressInterval = Math.max(1, Math.floor(config.batchSize / 100));
       if ((i + 1) % progressInterval === 0 || i === config.batchSize - 1) {
-        postProgress(i + 1, config.batchSize, track.name);
+        postProgress(i + 1, config.batchSize, result.track.name);
         // Yield to allow abort messages to be processed
         await new Promise(resolve => setTimeout(resolve, 0));
       }
@@ -880,6 +820,7 @@ async function runSimulation(config: SimLabConfig, variables?: SimVariables, _la
     // Finalize and send results
     const executionTimeMs = performance.now() - startTime;
     const results = finalizeResults(acc, config, executionTimeMs);
+    results.fingerprint = batchFingerprint(fingerprints);
     postComplete(results);
 
   } catch (error) {

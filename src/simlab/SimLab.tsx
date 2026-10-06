@@ -1,3 +1,5 @@
+import { randomSeed } from '../engine/rng';
+import { CARDS } from '../data/cards';
 import { useState, useEffect, useRef } from 'react';
 import SimLabResults from './SimLabResults';
 import { SimLabVariables } from './SimLabVariables';
@@ -155,6 +157,9 @@ export default function SimLab() {
   // Config state (moved from SimLabConfig)
   const [batchSize, setBatchSize] = useState(100);
   const [trackSelection, setTrackSelection] = useState<'random' | 'all'>('all');
+  // The replication key: same seed + size + cards → the same batch, anywhere.
+  const [seed, setSeed] = useState<number>(() => randomSeed());
+  const [cardIds, setCardIds] = useState<string[]>([]);
 
   // Heretic variables
   const [hereticVariables, setHereticVariables] = useState<SimVariables>(cloneVariables(CANON_VARIABLES));
@@ -283,7 +288,7 @@ export default function SimLab() {
   }, [completedWorkers, hereticVariables, isComparisonMode]);
 
   const handleStartSimulation = () => {
-    const config: Config = { batchSize, trackSelection };
+    const config: Config = { batchSize, trackSelection, seed, cardIds };
     const runComparison = hasChanges;
 
     setError(null);
@@ -788,6 +793,9 @@ export default function SimLab() {
     addRow('CONFIG');
     addRow('Batch Size', canon.config.batchSize);
     addRow('Track Selection', canon.config.trackSelection);
+    addRow('Seed', canon.config.seed);
+    addRow('Cards', (canon.config.cardIds ?? []).join(' ') || 'none');
+    addRow('Fingerprint', canon.fingerprint ?? '');
 
     const tsv = rows.join('\n');
     try {
@@ -857,6 +865,24 @@ export default function SimLab() {
                   >
                     Random
                   </button>
+                </div>
+              </div>
+              <div className="config-group">
+                <label>Seed <span className="rc-hint">same seed, size and cards → the same races, here or in <code>npm run lab</code></span></label>
+                <div className="rc-seed">
+                  <input type="number" value={seed} onChange={e => setSeed(Number(e.target.value) >>> 0)} />
+                  <button type="button" onClick={() => setSeed(randomSeed())}>New</button>
+                </div>
+              </div>
+              <div className="config-group rc-cards">
+                <label>Cards (the hand this batch plays under)</label>
+                <div className="rc-card-list">
+                  {CARDS.map(c => (
+                    <button key={c.id} type="button" className={cardIds.includes(c.id) ? 'active' : ''} title={c.readout}
+                      onClick={() => setCardIds(ids => ids.includes(c.id) ? ids.filter(x => x !== c.id) : [...ids, c.id])}>
+                      {c.emoji} {c.name}
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>

@@ -10,7 +10,7 @@ import { intrinsicTrackTags } from './data/trackTags';
 import MainMenu from './MainMenu';
 import RaceStartCountdown from './RaceStartCountdown';
 import WatchMode from './WatchMode';
-import Compendium from './Compendium';
+import RaceControl from './racecontrol/RaceControl';
 import FoundingScreen, { FoundingChoices } from './league/ui/FoundingScreen';
 import LeagueScreen from './league/ui/LeagueScreen';
 import GridScreen from './league/ui/GridScreen';
@@ -299,7 +299,7 @@ function App() {
   }
 
   if (screen === 'compendium') {
-    return <Compendium onBack={handleBackToMainMenu} />;
+    return <RaceControl onBack={handleBackToMainMenu} />;
   }
 
   // Commissioner Mode: founding
