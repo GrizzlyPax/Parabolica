@@ -1,13 +1,10 @@
 import { chromium } from 'playwright';
 const S='/tmp/claude-0/-home-claude-parabolica/b177d2b7-5438-5da6-880f-71494b669577/scratchpad';
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
-const p = await b.newPage({ viewport: { width: 1280, height: 900 } });
-p.on('pageerror', e => console.log('PAGEERROR', e.message));
+const p = await b.newPage({ viewport: { width: 1280, height: 700 } });
 await p.goto('http://localhost:4173');
 await p.getByText('Race Control').first().click();
-await p.locator('.rc-reroll select').selectOption('25');
-await p.getByRole('button', { name: 'Re-roll', exact: true }).click();
-await p.waitForTimeout(4000);
-console.log(await p.locator('.rc-reroll .rc-progress').innerText());
-await p.screenshot({ path: `${S}/r1.png` });
+await p.screenshot({ path: `${S}/s1.png` });
+await p.getByText('Physics calibration').first().click();
+await p.screenshot({ path: `${S}/s2.png` });
 await b.close();

@@ -97,3 +97,31 @@
 .rc-try-k { margin-bottom: 8px; }
 .rc-try-k .rs-hint { text-transform: none; letter-spacing: 0; font-family: var(--font-body); }
 .rc-chev { color: var(--pw-text-3); margin-left: 10px; font-size: 11px; }
+
+/* Seed / re-roll strip (both tabs) */
+.rc-reroll { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--pw-hairline); font-size: 13px; }
+.rc-reroll input[type=number] { width: 130px; background: var(--pw-ground); color: var(--pw-text-1); border: 1px solid var(--pw-border-strong); border-radius: var(--pw-radius-s); padding: 7px 9px; font-family: var(--font-mono); font-size: 13px; min-height: 36px; }
+.rc-reroll select { background: var(--pw-ground); color: var(--pw-text-1); border: 1px solid var(--pw-border-strong); border-radius: var(--pw-radius-s); padding: 6px 9px; font: inherit; font-size: 13px; min-height: 36px; }
+.rc-reroll .rs-link { margin-left: 0; }
+.rc-reroll .rs-btn { height: 36px; font-size: 14px; padding: 0 14px; }
+.rc-reroll .rc-progress { margin-top: 0; }
+.rc-reroll .rs-hint { flex-basis: 100%; }
+
+/* Physics */
+.rc-metrics .rc-tag { min-width: 200px; }
+.rc-th-hint, .rc-hint-cell { white-space: normal !important; color: var(--pw-text-3); font-size: 12px; cursor: default; }
+.rc-knobs .rc-hint-cell { cursor: pointer; }
+.rc-cat td { padding: 12px 8px 4px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--pw-text-2); cursor: default; border-top: 0; }
+.rc-cat:hover td { background: none; }
+.rc-path { font-family: var(--font-mono); font-size: 11px; }
+.rc-knob-head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 8px 4px 10px; }
+.rc-knob-head .rc-actions { margin-left: auto; align-items: center; }
+.rc-knob-head .rs-btn { height: 36px; font-size: 14px; padding: 0 14px; }
+.rc-knob-note { padding: 0 4px 8px; font-size: 13px; }
+.rc-knob-edit { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px 16px; }
+.rc-knob-edit label { display: flex; flex-direction: column; gap: 4px; }
+.rc-knob-edit input[type=number] { width: 120px; background: var(--pw-ground); color: var(--pw-text-1); border: 1px solid var(--pw-border-strong); border-radius: var(--pw-radius-m); padding: 8px 10px; font-family: var(--font-mono); font-size: 14px; min-height: 44px; }
+.rc-knob-edit input.rc-edited { border-color: var(--pw-purple); color: var(--pw-purple); }
+.rc-knob-edit input[type=range] { width: 240px; accent-color: var(--pw-purple); margin-bottom: 14px; }
+.rc-knob-edit .rs-hint, .rc-knob-edit .rs-link { margin-bottom: 14px; margin-left: 0; }
+@media (max-width: 799px) { .rc-th-hint, .rc-hint-cell { display: none; } }
