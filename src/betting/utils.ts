@@ -38,9 +38,8 @@ export function carPackageScore(driver: Pick<Driver, 'carStats'>): number {
 export type RankTone = 'best' | 'high' | 'mid' | 'low';
 
 export interface FieldRank {
-  /** 1 = best. Tied entries share the rank (competition ranking: 1, 2, 2, 4). */
+  /** 1 = best. Always unique: ties are broken (see fieldRanks). */
   rank: number;
-  tied: boolean;
   /** Field size. */
   of: number;
   tone: RankTone;
@@ -54,18 +53,42 @@ export function rankTone(rank: number, of: number): RankTone {
   return 'low';
 }
 
-/** Rank every item by score, highest first. Scores within 1e-9 are ties. */
-export function fieldRanks<T extends { id: number }>(items: T[], score: (t: T) => number): Map<number, FieldRank> {
-  const scored = items.map(t => ({ id: t.id, s: score(t) })).sort((a, b) => b.s - a.s);
-  const out = new Map<number, FieldRank>();
-  scored.forEach((x, i) => {
-    let rank = i + 1;
-    // Walk back to the first entry with the same score (competition ranking).
-    for (let j = i - 1; j >= 0 && Math.abs(scored[j].s - x.s) < 1e-9; j--) rank = j + 1;
-    const tied = (i > 0 && Math.abs(scored[i - 1].s - x.s) < 1e-9) || (i < scored.length - 1 && Math.abs(scored[i + 1].s - x.s) < 1e-9);
-    out.set(x.id, { rank, tied, of: items.length, tone: rankTone(rank, items.length) });
+/**
+ * Rank every item, best first. `score` returns one number or a list compared
+ * in order (the later entries break ties in the earlier ones). Anything still
+ * level is ordered by id, so every item gets its own rank — no ties.
+ */
+export function fieldRanks<T extends { id: number }>(items: T[], score: (t: T) => number | number[]): Map<number, FieldRank> {
+  const keyed = items.map(t => { const k = score(t); return { id: t.id, k: Array.isArray(k) ? k : [k] }; });
+  keyed.sort((a, b) => {
+    for (let i = 0; i < Math.max(a.k.length, b.k.length); i++) {
+      const d = (b.k[i] ?? 0) - (a.k[i] ?? 0);
+      if (Math.abs(d) > 1e-9) return d;
+    }
+    return a.id - b.id;
   });
+  const out = new Map<number, FieldRank>();
+  keyed.forEach((x, i) => out.set(x.id, { rank: i + 1, of: items.length, tone: rankTone(i + 1, items.length) }));
   return out;
+}
+
+/**
+ * Driver and car ranks for a whole grid. Drivers: skill score, then raw speed.
+ * Cars are shared by teammates, so they are ranked once per team: overall
+ * package, then power, grip, reliability, then the team's pit crew; anything
+ * still level falls back to roster order. Both teammates get their car's rank.
+ */
+export function rosterRanks(drivers: Pick<Driver, 'id' | 'stats' | 'carStats' | 'teamStats' | 'kingdomId'>[]): { driver: Map<number, FieldRank>; car: Map<number, FieldRank> } {
+  const teamOf = (d: typeof drivers[number]) => d.kingdomId ?? `solo-${d.id}`;
+  const teams = [...new Map(drivers.map(d => [teamOf(d), d])).values()];
+  const teamIndex = new Map(teams.map((d, i) => [teamOf(d), i]));
+  const carByTeam = fieldRanks(teams.map((d, i) => ({ id: i, d })), ({ d }) => [
+    carPackageScore(d), d.carStats?.power ?? 3, d.carStats?.grip ?? 3, d.carStats?.reliability ?? 3, d.teamStats?.pitCrew ?? 3,
+  ]);
+  return {
+    driver: fieldRanks(drivers, d => [driverSkillScore(d), d.stats.baseSpeed]),
+    car: new Map(drivers.map(d => [d.id, carByTeam.get(teamIndex.get(teamOf(d))!)!])),
+  };
 }
 
 /** 1 → "1st", 22 → "22nd", 13 → "13th". */
