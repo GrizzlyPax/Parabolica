@@ -219,15 +219,20 @@ export default function Glossary({ onBack }: GlossaryProps) {
   const [tab, setTab] = useState<TabId>('tags');
   const [q, setQ] = useState('');
   const [open, setOpen] = useState<Set<string>>(() => new Set());
-  const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set());
+  // Sections start collapsed. `mode` is the baseline; `flipped` are the
+  // exceptions the user toggled, so Collapse all / Expand all are one click.
+  const [mode, setMode] = useState<'collapsed' | 'expanded'>('collapsed');
+  const [flipped, setFlipped] = useState<Set<string>>(() => new Set());
   const [tagSort, setTagSort] = useState<'rarity' | 'name' | 'effect'>('rarity');
   const toggle = (id: string) => setOpen(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
-  const toggleSection = (id: string) => setCollapsed(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  const toggleSection = (id: string) => setFlipped(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  const isCollapsed = (id: string) => (mode === 'collapsed') !== flipped.has(id);
+  const setAll = (m: 'collapsed' | 'expanded') => { setMode(m); setFlipped(new Set()); };
   const needle = q.trim().toLowerCase();
   const match = (...parts: (string | undefined)[]) => !needle || parts.some(p => p?.toLowerCase().includes(needle));
   const tagById = (id: string) => ALL_TAGS.find(t => t.id === id);
   const isOpen = (id: string) => open.has(id);
-  const sec = (id: string) => ({ id, collapsed: collapsed.has(id), onToggle: toggleSection });
+  const sec = (id: string) => ({ id, collapsed: isCollapsed(id), onToggle: toggleSection });
 
   const sortTags = (rows: GlossaryTag[]) => [...rows].sort((a, b) =>
     tagSort === 'name' ? a.tag.name.localeCompare(b.tag.name)
@@ -291,6 +296,12 @@ export default function Glossary({ onBack }: GlossaryProps) {
 
       <nav className="gl-tabs" aria-label="World Deck sections">
         {TABS.map(t => <button key={t.id} type="button" className={`gl-tab ${tab === t.id ? 'on' : ''} ${t.id === 'add' ? 'gl-tab-add' : ''}`} onClick={() => setTab(t.id)}>{t.label}</button>)}
+        {tab !== 'add' && (
+          <span className="gl-fold">
+            <button type="button" className="rs-link" onClick={() => setAll('expanded')}>Expand all</button>
+            <button type="button" className="rs-link" onClick={() => setAll('collapsed')}>Collapse all</button>
+          </span>
+        )}
       </nav>
 
       {tab === 'tags' && (

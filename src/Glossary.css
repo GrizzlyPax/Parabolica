@@ -49,7 +49,9 @@
 .gl-tab { background: var(--pw-surface); color: var(--pw-text-2); border: 1px solid var(--pw-border); border-radius: 999px; padding: 6px 14px; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
 .gl-tab:hover { border-color: var(--pw-border-strong); color: var(--pw-text-1); }
 .gl-tab.on { background: rgba(169, 139, 255, 0.12); border-color: var(--pw-purple); color: var(--pw-text-1); }
-.gl-tab-add { margin-left: auto; border-style: dashed; }
+.gl-tab-add { border-style: dashed; }
+.gl-fold { margin-left: auto; display: inline-flex; gap: 12px; align-items: center; }
+.gl-fold .rs-link { margin-left: 0; font-size: 12px; }
 
 /* Collapsible sections */
 .gl-section-head { display: flex; align-items: center; gap: 10px; }
@@ -75,6 +77,6 @@
 .gl-draft-actions .rs-link, .gl-section-extra .rs-link { margin-left: 0; }
 .gl-add .gl-line { grid-template-columns: minmax(180px, 220px) 140px 1fr auto; }
 @media (max-width: 799px) {
-  .gl-tab-add { margin-left: 0; }
+  .gl-fold { margin-left: 0; width: 100%; }
   .gl-add .gl-line { grid-template-columns: 1fr; }
 }
