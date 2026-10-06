@@ -34,6 +34,7 @@ function TimingTower({
   effectStacks,
   histories,
   positionDeltas,
+  gridOrder,
   fastestLapOverall,
   className = '',
 }: TimingTowerProps) {
@@ -79,12 +80,16 @@ function TimingTower({
           const bTime = b.sectorTimes![bSectors - 1];
           if (aTime !== bTime) return aTime - bTime;
         }
-        // Final fallback: surname for equal times (race start)
+        // Race start: the grid order; then surname for equal times
+        if (gridOrder && gridOrder.length) {
+          const ga = gridOrder.indexOf(a.id), gb = gridOrder.indexOf(b.id);
+          if (ga !== gb) return ga - gb;
+        }
         return getSurname(a).localeCompare(getSurname(b));
       });
 
     return [...finished, ...racing, ...dnf];
-  }, [drivers, finishOrder, totalSectorCrossings]);
+  }, [drivers, finishOrder, totalSectorCrossings, gridOrder]);
 
   // Generate row context for each driver
   const getRowContext = (driver: Driver, index: number): RowContext => {
@@ -106,6 +111,8 @@ function TimingTower({
 
     // Position delta
     const positionDelta = positionDeltas?.get(driver.id);
+    const gridIdx = gridOrder ? gridOrder.indexOf(driver.id) : -1;
+    const gridSlot = gridIdx >= 0 ? gridIdx + 1 : undefined;
 
     // Gap calculations - SECTOR-based checkpoint timing
     // Gap = time difference at the DRIVER's last completed sector
@@ -208,6 +215,7 @@ function TimingTower({
     return {
       displayPosition,
       positionDelta,
+      gridSlot,
       intervalGap,
       leaderGap,
       lastLapTime,

@@ -1053,6 +1053,9 @@ function WatchMode({
     return out;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [drivers, engine]);
+  // Starting grid (set by qualifying on tick 1); cheap, read each render.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const gridOrder = useMemo(() => engine.getGridOrder(), [drivers, engine]);
   const effectStacksMap = useMemo(() => {
     const map = new Map<number, EffectStackEntry[]>();
     for (const d of drivers) map.set(d.id, engine.getEffectStack(d.id));
@@ -1206,6 +1209,7 @@ function WatchMode({
                   effectStacks={effectStacksMap}
                   histories={historiesMap}
                   positionDeltas={positionDeltasForTower}
+                  gridOrder={gridOrder}
                   fastestLapOverall={fastestLapOverall ?? undefined}
                   className="timing-tower-track"
                 />
@@ -1252,6 +1256,7 @@ function WatchMode({
                   effectStacks={effectStacksMap}
                   histories={historiesMap}
                   positionDeltas={positionDeltasForTower}
+                  gridOrder={gridOrder}
                   fastestLapOverall={fastestLapOverall ?? undefined}
                   className="timing-tower-detail"
                 />

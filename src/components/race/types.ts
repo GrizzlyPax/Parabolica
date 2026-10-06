@@ -24,6 +24,8 @@ export interface ColumnConfig {
 export interface RowContext {
   displayPosition: string;
   positionDelta?: number;
+  /** Starting grid slot (1 = pole), or undefined before qualifying. */
+  gridSlot?: number;
   intervalGap: string;
   leaderGap: string;
   lastLapTime: number | null;
@@ -75,6 +77,8 @@ export interface TimingTowerProps {
   /** Per-driver event history (see RowContext.history). */
   histories?: Map<number, DriverHistoryEntry[]>;
   positionDeltas?: Map<number, number>;
+  /** Driver ids in starting-grid order (engine.getGridOrder()). */
+  gridOrder?: number[];
   fastestLapOverall?: number;
   className?: string;
 }

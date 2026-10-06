@@ -3,49 +3,54 @@
   "track": "venhir",
   "rosterHash": "f9e8b6a2",
   "finishOrder": [
-    21,
-    7,
-    16,
-    13,
-    2,
-    0,
-    18,
-    3,
-    10,
-    17,
-    19,
-    15,
-    6,
-    5,
+    11,
     9,
-    8,
-    1
+    2,
+    16,
+    0,
+    20,
+    13,
+    19,
+    3,
+    4,
+    1,
+    18,
+    17,
+    15,
+    10,
+    5,
+    7,
+    6,
+    12
   ],
-  "totalTicks": 2060,
-  "leadChanges": 16,
-  "eventsHash": "aaa501b9",
+  "totalTicks": 1930,
+  "leadChanges": 12,
+  "eventsHash": "94215016",
   "tags": [
-    [],
     [
-      "sunday-driver",
       "chaotic-energy"
     ],
     [
-      "pit-lane-special"
+      "sunday-driver"
     ],
+    [],
     [
       "pit-lane-special"
-    ],
-    [
-      "spun"
     ],
     [
       "underdog-spirit"
     ],
     [],
+    [
+      "pit-lane-special"
+    ],
     [],
     [
-      "chaotic-energy"
+      "spun"
+    ],
+    [],
+    [
+      "underdog-spirit"
     ],
     [],
     [],
@@ -56,22 +61,18 @@
     [],
     [
       "sunday-driver",
-      "damaged"
+      "chaotic-energy"
     ],
-    [
-      "rain-dancer",
-      "damaged"
-    ],
-    [
-      "underdog-spirit",
-      "damaged"
-    ],
-    [],
     [
       "chaotic-energy"
     ],
+    [
+      "damaged"
+    ],
     [],
-    [],
+    [
+      "rain-dancer"
+    ],
     []
   ]
 }

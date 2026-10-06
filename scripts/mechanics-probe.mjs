@@ -21,7 +21,7 @@ const pace = d => (1 + (d.stats.baseSpeed - 1) * 0.12) * (0.942 + (d.carStats?.p
 const spearman = (a, b) => { const n = a.length; const ra = rank(a), rb = rank(b); let s = 0; for (let i = 0; i < n; i++) s += (ra[i] - rb[i]) ** 2; return 1 - 6 * s / (n * (n * n - 1)); };
 const rank = v => { const idx = v.map((x, i) => [x, i]).sort((p, q) => q[0] - p[0]); const r = new Array(v.length); idx.forEach(([, i], k) => r[i] = k + 1); return r; };
 
-const acc = { rho: [], winnerPaceRank: [], posChanges: [], netPlaceSwaps: [], stops: [], lapped: [], margin: [], dnf: 0, drivers: 0, sc: 0, ticks: [], lapTicks: [], pitTicks: [], compounds: { soft: 0, medium: 0, hard: 0 }, blowouts: 0, crashes: 0, mech: 0, penalties: 0, penaltyWinnerLoss: 0, reasons: {}, plans: {}, firstStopFrac: [], stopLapSpread: [], lapsPerStint: { soft: [], medium: [], hard: [] }, lapsLed: [], closeCalls: 0 };
+const acc = { rho: [], gridRho: [], gridPaceRho: [], poleWins: [], winnerGrid: [], winnerPaceRank: [], posChanges: [], netPlaceSwaps: [], stops: [], lapped: [], margin: [], dnf: 0, drivers: 0, sc: 0, ticks: [], lapTicks: [], pitTicks: [], compounds: { soft: 0, medium: 0, hard: 0 }, blowouts: 0, crashes: 0, mech: 0, penalties: 0, penaltyWinnerLoss: 0, reasons: {}, plans: {}, firstStopFrac: [], stopLapSpread: [], lapsPerStint: { soft: [], medium: [], hard: [] }, lapsLed: [], closeCalls: 0 };
 let laps = 0;
 
 for (let r = 0; r < RACES; r++) {
@@ -43,6 +43,14 @@ for (let r = 0; r < RACES; r++) {
   const finPos = classified.map((_, i) => classified.length - i);
   if (classified.length > 5) acc.rho.push(spearman(paces, finPos));
   const allPaceSorted = [...drivers].sort((a, b) => pace(b) - pace(a)).map(d => d.id);
+  const gridIds = engine.getGridOrder();
+  if (gridIds.length) {
+    acc.poleWins.push(gridIds[0] === finish[0] ? 1 : 0);
+    acc.winnerGrid.push(gridIds.indexOf(finish[0]) + 1);
+    const gPos = classified.map(id => classified.length - gridIds.indexOf(id)); // higher = better grid
+    acc.gridRho.push(spearman(gPos, finPos));
+    acc.gridPaceRho.push(spearman(gridIds.map(id => pace(byId.get(id))), gridIds.map((_, i) => gridIds.length - i)));
+  }
   acc.winnerPaceRank.push(allPaceSorted.indexOf(finish[0]) + 1);
   // running-order churn: sum over laps of |rank change| per driver
   let changes = 0;
@@ -83,6 +91,7 @@ const med = v => { const s = [...v].sort((a, b) => a - b); return s[Math.floor(s
 console.log(`\n== Mechanics probe · ${RACES} races · ${NO_TAGS ? 'NO TAGS' : 'tags on'} · ${laps}-ish laps ==`);
 console.log(`Pace rank → finish rank (Spearman): ${mean(acc.rho).toFixed(2)}  (1 = results are pure stats, 0 = lottery)`);
 console.log(`Winner's pace rank (median): P${med(acc.winnerPaceRank)}   top-3 package wins ${pct(acc.winnerPaceRank.map(x => x <= 3 ? 1 : 0))}, outside top-10 wins ${pct(acc.winnerPaceRank.map(x => x > 10 ? 1 : 0))}`);
+console.log(`Grid → finish (Spearman): ${mean(acc.gridRho).toFixed(2)}   grid vs package: ${mean(acc.gridPaceRho).toFixed(2)}   pole wins ${pct(acc.poleWins)}   winner from P${med(acc.winnerGrid)} (median)`);
 console.log(`Running-order changes per lap (all drivers): ${mean(acc.posChanges).toFixed(1)}   avg |grid − finish|: ${mean(acc.netPlaceSwaps).toFixed(1)} places`);
 console.log(`Distinct leaders per race: ${mean(acc.lapsLed).toFixed(1)}   winning margin: ${(100 * mean(acc.margin)).toFixed(0)}% of a lap`);
 console.log(`Stops per finisher: ${mean(acc.stops).toFixed(2)}   first stop at ${pct(acc.firstStopFrac)} distance   stop-lap spread (sd): ${mean(acc.stopLapSpread).toFixed(2)} laps`);

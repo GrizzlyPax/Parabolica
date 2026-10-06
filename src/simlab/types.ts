@@ -555,6 +555,16 @@ export interface SimVariables {
     pitCrewPerStar: number;           // Pit crew per star reduction (0.08)
   };
 
+  // === QUALIFYING & GRID (#246 pass 2) ===
+  grid: {
+    /** Stagger between grid slots, as a share of a lap (0.004 ≈ 8 m of a 2 km lap). */
+    slotSpacing: number;
+    /** Qualifying lap noise: sd as a share of pace at consistency 0, scaled by (1.2 − consistency). */
+    qualiNoise: number;
+    /** Chance a driver's qualifying is ruined (traffic, a mistake) and they drop to the back half. */
+    qualiFlubChance: number;
+  };
+
   // === SAFETY CAR ===
   safetyCar: {
     targetGap: number;                // Target spacing between queued cars, in laps (0.02 ≈ 0.25s)
@@ -707,6 +717,11 @@ export const CANON_VARIABLES: SimVariables = {
     tireManagementPerStar: 0.06,        // Reduced spread
     pitCrewBase: 0.5,                   // Slightly higher base
     pitCrewPerStar: 0.07,               // Reduced spread
+  },
+  grid: {
+    slotSpacing: 0.005,
+    qualiNoise: 0.02,
+    qualiFlubChance: 0.06,
   },
   safetyCar: {
     // 0.02 laps ≈ a 0.25s gap at typical lap times. The old value (0.16 laps

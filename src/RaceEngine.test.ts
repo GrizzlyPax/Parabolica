@@ -678,3 +678,42 @@ describe('the stop rule at the flag (#249 / #246)', () => {
     expect(go(32)).toBeGreaterThan(go(16) + 1);
   });
 });
+
+describe('qualifying and the grid (#246 pass 2)', () => {
+  const track = CURRENT_TRACKS[0];
+  const build = (seed: number) => {
+    const engine = RaceEngine.createForWorker(CANON_VARIABLES, seed);
+    engine.loadGeneratedRoster(generateGenesisRoster(seed, TEAMS.map(t => t.id)));
+    engine.updateConfig({ totalLaps: track.laps, lapLength: track.length });
+    return engine;
+  };
+  const pace = (d: { stats: { baseSpeed: number }; carStats?: { power: number } }) => (1 + (d.stats.baseSpeed - 1) * 0.12) * (0.942 + (d.carStats?.power ?? 3) * 0.014);
+
+  it('sets a staggered grid on tick 1, from the seed, mostly by package', () => {
+    const e = build(11);
+    expect(e.getGridOrder()).toEqual([]);
+    e.fastForward(1);
+    const grid = e.getGridOrder();
+    const drivers = e.getDrivers();
+    expect(grid).toHaveLength(drivers.length);
+    // Staggered: pole furthest forward, each slot behind the last
+    const pos = grid.map(id => drivers.find(d => d.id === id)!.position);
+    for (let i = 1; i < pos.length; i++) expect(pos[i]).toBeLessThan(pos[i - 1]);
+    // Mostly package: the top-3 package is in the top half of the grid
+    const byPace = [...drivers].sort((a, b) => pace(b) - pace(a)).slice(0, 3);
+    for (const d of byPace) expect(grid.indexOf(d.id)).toBeLessThan(drivers.length / 2);
+    // Replays
+    const e2 = build(11); e2.fastForward(1);
+    expect(e2.getGridOrder()).toEqual(grid);
+    // Different seed, different grid
+    const e3 = build(12); e3.fastForward(1);
+    expect(e3.getGridOrder()).not.toEqual(grid);
+  });
+
+  it('the lap-0 snapshot is the grid, so digests and reports see a real grid', () => {
+    const e = build(11);
+    e.fastForward(5);
+    expect(e.getLapHistory()[0].order).toEqual(e.getGridOrder());
+    expect(e.getGridSlot(e.getGridOrder()[0])).toBe(1);
+  });
+});

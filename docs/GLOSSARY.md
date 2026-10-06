@@ -1,6 +1,6 @@
 # Parabolica Glossary
 
-*Generated from the data modules by `npm run glossary` — do not edit by hand. Engine v0.4.0.*
+*Generated from the data modules by `npm run glossary` — do not edit by hand. Engine v0.4.1.*
 
 39 tags (9 genesis · 8 acquired · 5 in-race · 17 condition) · 12 cards · 12 rules · 5 weathers · 3 track characters · 5 inflictions · 24 tracks
 

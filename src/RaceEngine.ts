@@ -223,6 +223,7 @@ export type RaceEventType =
   | 'overtake'         // Driver passed another
   | 'race_finish'      // Driver crossed finish line
   | 'penalty'          // Time penalty applied at the flag (stop rule)
+  | 'grid_set'         // Qualifying done, grid staggered
   // Tire/Pit/Crash events
   | 'pit_entry'        // Driver enters pit lane
   | 'pit_exit'         // Driver exits with fresh tires
@@ -1148,6 +1149,8 @@ class RaceEngine {
     this.lastEventCheckLap = 0;
     this.leaderLapCount = new Map();
     this.lapPositionHistory = [];
+    this.gridOrder = [];
+    this.qualiScores.clear();
     this.lastRecordedLap = 0;
     // Reset tag activation state
     this.activeTagEffects = new Map();
@@ -1470,6 +1473,54 @@ class RaceEngine {
 
   /** Why each driver last boxed — read by the pit_entry event. */
   private pitReasons = new Map<number, string>();
+
+  // === QUALIFYING (#246 pass 2) ===
+  /** Grid order (driver ids, P1 first) and each driver's qualifying score,
+   * set by runQualifying() on the first tick. Empty until then. */
+  private gridOrder: number[] = [];
+  private qualiScores = new Map<number, number>();
+  getGridOrder(): number[] { return [...this.gridOrder]; }
+  getGridSlot(driverId: number): number { const i = this.gridOrder.indexOf(driverId); return i < 0 ? -1 : i + 1; }
+
+  private getGridVars() {
+    if (this.simVars) return this.simVars.grid;
+    return CANON_VARIABLES.grid;
+  }
+
+  /** Each driver's deterministic pace from the package (speed stat × car power). */
+  private packagePace(driver: Driver): number {
+    const speedVars = this.getDriverSpeedVars();
+    const carStatVars = this.getCarStatVars();
+    const carPowerModifier = carStatVars.powerBase + (driver.carStats?.power ?? 3) * carStatVars.powerPerStar;
+    return (1 + (driver.stats.baseSpeed - 1) * speedVars.speedStatMultiplier) * carPowerModifier;
+  }
+
+  /**
+   * Qualifying: one hot lap per driver, scored from the package plus a noise
+   * roll the driver's consistency shrinks, with a small chance of a ruined
+   * lap. Draws from a side seed stream (deriveSeed(seed,'quali',id)) so the
+   * race's main RNG is untouched. Sets the grid and staggers the start:
+   * P1 on the line, each slot `slotSpacing` of a lap behind.
+   */
+  private runQualifying(): void {
+    const g = this.getGridVars();
+    const scored = this.drivers.map(d => {
+      const r = mulberry32(deriveSeed(this.strategySeed, 'quali', d.id));
+      const z = (r() + r() + r() - 1.5) * 2; // ~N(0,1)
+      const sd = g.qualiNoise * (1.2 - d.stats.consistency);
+      const flub = r() < g.qualiFlubChance ? 0.95 : 1;
+      const grip = (this.getCarStatVars().gripBase + (d.carStats?.grip ?? 3) * this.getCarStatVars().gripPerStar);
+      const score = this.packagePace(d) * (1 + z * sd) * flub * (0.98 + 0.02 * grip);
+      return { id: d.id, score };
+    });
+    scored.sort((a, b) => b.score - a.score);
+    this.gridOrder = scored.map(x => x.id);
+    this.qualiScores = new Map(scored.map(x => [x.id, x.score]));
+    const slot = new Map(this.gridOrder.map((id, i) => [id, i]));
+    this.drivers = this.drivers.map(d => ({ ...d, position: -(slot.get(d.id) ?? 0) * g.slotSpacing * this.config.lapLength }));
+    const pole = this.drivers.find(d => d.id === this.gridOrder[0]);
+    if (pole) this.logEvent('grid_set', pole, `takes pole; ${this.drivers.length} cars on the grid`, 'positive', 0.6);
+  }
   private readonly PIT_ENTRY_POSITION = 0.85; // Near end of lap
   private readonly PIT_EXIT_POSITION = 0.15;  // Early in lap
 
@@ -2466,6 +2517,7 @@ class RaceEngine {
   private tick(): void {
     this.raceState.totalTicks++;
     const previousLeader = this.raceState.currentLeader;
+    if (this.raceState.totalTicks === 1) this.runQualifying();
 
     // === TRACK EVENT SYSTEM ===
     // Clean up expired effects
@@ -3070,7 +3122,7 @@ class RaceEngine {
     // snapshot (the starting grid) lands on the first tick, so the chart has
     // content the moment a race begins.
     if (this.lapPositionHistory.length === 0 && sorted.length > 0) {
-      this.lapPositionHistory.push({ lap: 0, order: sorted.map(d => d.id), sc: false });
+      this.lapPositionHistory.push({ lap: 0, order: this.gridOrder.length ? [...this.gridOrder] : sorted.map(d => d.id), sc: false });
     }
     const leaderLap = sorted.length
       ? Math.max(0, ...sorted.filter(d => d.status !== 'dnf').map(d => d.currentLap))

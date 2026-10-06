@@ -143,6 +143,25 @@ export const COLUMN_DELTA_POS: ColumnConfig = {
   ),
 };
 
+// Places gained/lost vs the starting grid (#246 pass 2)
+export const COLUMN_GRID: ColumnConfig = {
+  id: 'grid',
+  header: 'Grid',
+  width: '46px',
+  align: 'center',
+  render: (_driver: Driver, ctx: RowContext) => {
+    if (ctx.gridSlot === undefined || ctx.isDNF) return <span className="muted-cell">—</span>;
+    const now = Number(ctx.displayPosition);
+    const d = Number.isFinite(now) ? ctx.gridSlot - now : 0;
+    return (
+      <span className="grid-cell" title={`Started P${ctx.gridSlot}`}>
+        <span className="grid-slot">P{ctx.gridSlot}</span>
+        {d !== 0 && <span className={`grid-delta ${d > 0 ? 'up' : 'down'}`}>{d > 0 ? '▲' : '▼'}{Math.abs(d)}</span>}
+      </span>
+    );
+  },
+};
+
 // Interval to the car ahead (the racing battle)
 export const COLUMN_GAP_AHEAD: ColumnConfig = {
   id: 'gapAhead',
@@ -338,6 +357,7 @@ export const DETAIL_COLUMNS: ColumnConfig[] = [
   COLUMN_TEAM_MARBLE,
   COLUMN_DRIVER_FULL_NAME,
   COLUMN_TEAM_NAME,
+  COLUMN_GRID,
   COLUMN_GAP_AHEAD,
   COLUMN_GAP_LEADER,
   COLUMN_LAST_LAP,
