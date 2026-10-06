@@ -48,5 +48,6 @@ and BetLab for the future NPC-crowd system.
 - `docs/BALANCE_HANDOFF.md` - Game-dev handoff: data exports, tuning surface, balance state, workflow
 - `docs/TAG_SYSTEM.md` - Tag system design framework (five sources, magnitude ladder, acquisition engine, interview)
 - `docs/CONDITIONS_LAYER.md` - Track tags + weather design build (the conditions stack; companion to TAG_SYSTEM)
-- `docs/GLOSSARY.md` - GENERATED source of truth: every tag, card, rule, weather, track character, infliction (`npm run glossary`)
+- `docs/WORLD_DECK.md` - Content framework: how to add teams, tracks, names, tags, cards, weather, gods, commentary (shapes, rules, voice, backlog, agent prompt)
+- `docs/GLOSSARY.md` - GENERATED World Deck: every team, track, tag, card, rule, weather, infliction, god and flavour pool (`npm run glossary`; `src/data/worldDeck.test.ts` checks content)
 - `docs/PROCEDURAL_IDENTITY.md` - Procedural universe identity (driver names #191, league names #185, team identity #183)

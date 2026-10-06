@@ -11,7 +11,14 @@ import { IN_RACE_RULES, InRaceRule, InRaceDuration } from './inRace';
 import { WEATHER_TYPES } from './weather';
 import { TRACK_TAGS, intrinsicTrackTags } from './trackTags';
 import { INFLICTIONS } from './inflictions';
-import { CURRENT_TRACKS } from '../generators/tracks';
+import { CURRENT_TRACKS, HISTORIC_TRACKS, LAYOUTS } from '../generators/tracks';
+import { CURRENT_TEAMS, HISTORIC_TEAMS } from './teams';
+import { GODS } from '../league/gods';
+import { INTL_FIRST_NAMES, INTL_LAST_NAMES, ABSURD_FIRST_NAMES, ABSURD_LAST_NAMES, MONONYMS, NAME_TIER_WEIGHTS } from '../generators/names';
+import { LEAGUE_ADJECTIVES, LEAGUE_NOUNS } from '../generators/leagueName';
+import { BACKSTORY_TEMPLATES, BACKSTORY_FILLS, QUIRKS } from '../generators/drivers';
+import { CAR_QUIRKS, CAR_PREFIXES_GENERIC, CAR_SUFFIXES, CAR_ACRONYMS } from '../generators/cars';
+import { IDENTITY_EMOJI } from '../generators/teamIdentity';
 
 export interface GlossaryEffect { label: string; value: string; good: boolean }
 
@@ -123,6 +130,12 @@ export interface Glossary {
   trackTags: typeof TRACK_TAGS;
   inflictions: typeof INFLICTIONS;
   tracks: typeof CURRENT_TRACKS;
+  historicTracks: typeof HISTORIC_TRACKS;
+  teams: typeof CURRENT_TEAMS;
+  historicTeams: typeof HISTORIC_TEAMS;
+  gods: typeof GODS;
+  /** Flavour pools, each with its size and a few samples. */
+  pools: { id: string; title: string; where: string; size: number; samples: string[] }[];
   counts: Record<string, number>;
 }
 
@@ -131,6 +144,22 @@ export function buildGlossary(): Glossary {
   return {
     tags, cards: CARDS, acquisitionRules: ACQUISITION_RULES, inRaceRules: IN_RACE_RULES,
     weather: WEATHER_TYPES, trackTags: TRACK_TAGS, inflictions: INFLICTIONS, tracks: CURRENT_TRACKS,
+    historicTracks: HISTORIC_TRACKS, teams: CURRENT_TEAMS, historicTeams: HISTORIC_TEAMS, gods: GODS,
+    pools: [
+      { id: 'names-intl-first', title: `Driver first names · international (${Math.round(NAME_TIER_WEIGHTS.international * 100)}% of drivers)`, where: 'src/generators/names.ts INTL_FIRST_NAMES', size: INTL_FIRST_NAMES.length, samples: INTL_FIRST_NAMES.slice(0, 8) },
+      { id: 'names-intl-last', title: 'Driver last names · international', where: 'src/generators/names.ts INTL_LAST_NAMES', size: INTL_LAST_NAMES.length, samples: INTL_LAST_NAMES.slice(0, 8) },
+      { id: 'names-absurd-first', title: `Driver first names · absurd (${Math.round(NAME_TIER_WEIGHTS.absurd * 100)}%)`, where: 'src/generators/names.ts ABSURD_FIRST_NAMES', size: ABSURD_FIRST_NAMES.length, samples: ABSURD_FIRST_NAMES.slice(0, 8) },
+      { id: 'names-absurd-last', title: 'Driver last names · absurd', where: 'src/generators/names.ts ABSURD_LAST_NAMES', size: ABSURD_LAST_NAMES.length, samples: ABSURD_LAST_NAMES.slice(0, 8) },
+      { id: 'names-mononym', title: `Driver mononyms (${Math.round(NAME_TIER_WEIGHTS.mononym * 100)}%)`, where: 'src/generators/names.ts MONONYMS', size: MONONYMS.length, samples: MONONYMS.slice(0, 8) },
+      { id: 'league-adjectives', title: 'League names · adjectives ("The ___ Circuit")', where: 'src/generators/leagueName.ts LEAGUE_ADJECTIVES', size: LEAGUE_ADJECTIVES.length, samples: LEAGUE_ADJECTIVES.slice(0, 8) },
+      { id: 'league-nouns', title: 'League names · nouns', where: 'src/generators/leagueName.ts LEAGUE_NOUNS', size: LEAGUE_NOUNS.length, samples: LEAGUE_NOUNS.slice(0, 8) },
+      { id: 'backstory-templates', title: 'Driver backstory templates ({slot} fills below)', where: 'src/generators/drivers.ts BACKSTORY_TEMPLATES', size: BACKSTORY_TEMPLATES.length, samples: BACKSTORY_TEMPLATES.slice(0, 4) },
+      { id: 'backstory-fills', title: `Backstory fills (${Object.keys(BACKSTORY_FILLS).length} slots)`, where: 'src/generators/drivers.ts BACKSTORY_FILLS', size: Object.values(BACKSTORY_FILLS).reduce((n, v) => n + v.length, 0), samples: Object.entries(BACKSTORY_FILLS).slice(0, 4).map(([k, v]) => `{${k}}: ${v.slice(0, 3).join(' / ')}`) },
+      { id: 'driver-quirks', title: 'Driver quirks', where: 'src/generators/drivers.ts QUIRKS', size: QUIRKS.length, samples: QUIRKS.slice(0, 5) },
+      { id: 'car-quirks', title: 'Car quirks', where: 'src/generators/cars.ts CAR_QUIRKS', size: CAR_QUIRKS.length, samples: CAR_QUIRKS.slice(0, 4) },
+      { id: 'car-names', title: 'Car name parts (prefix · suffix · acronym)', where: 'src/generators/cars.ts CAR_PREFIXES_GENERIC / CAR_SUFFIXES / CAR_ACRONYMS', size: CAR_PREFIXES_GENERIC.length + CAR_SUFFIXES.length + CAR_ACRONYMS.length, samples: [...CAR_PREFIXES_GENERIC.slice(0, 3), ...CAR_SUFFIXES.slice(0, 3), ...CAR_ACRONYMS.slice(0, 3)] },
+      { id: 'identity-emoji', title: 'Procedural team emoji', where: 'src/generators/teamIdentity.ts IDENTITY_EMOJI', size: IDENTITY_EMOJI.length, samples: IDENTITY_EMOJI.slice(0, 10) },
+    ],
     counts: {
       tags: tags.length,
       genesis: tags.filter(t => t.group === 'genesis').length,
@@ -139,6 +168,7 @@ export function buildGlossary(): Glossary {
       condition: tags.filter(t => t.group === 'condition').length,
       cards: CARDS.length, rules: ACQUISITION_RULES.length + IN_RACE_RULES.length,
       weather: WEATHER_TYPES.length, trackTags: TRACK_TAGS.length, inflictions: INFLICTIONS.length, tracks: CURRENT_TRACKS.length,
+      historicTracks: HISTORIC_TRACKS.length, teams: CURRENT_TEAMS.length, historicTeams: HISTORIC_TEAMS.length, gods: GODS.length,
     },
   };
 }
@@ -147,8 +177,15 @@ export function buildGlossary(): Glossary {
 export function renderGlossaryMd(g: Glossary, version: string): string {
   const L: string[] = [];
   const fx = (e: GlossaryEffect[]) => e.length ? e.map(x => `${x.value} ${x.label}`).join(', ') : '—';
-  L.push(`# Parabolica Glossary`, '', `*Generated from the data modules by \`npm run glossary\` — do not edit by hand. Engine v${version}.*`, '');
-  L.push(`${g.counts.tags} tags (${g.counts.genesis} genesis · ${g.counts.acquired} acquired · ${g.counts.inRace} in-race · ${g.counts.condition} condition) · ${g.counts.cards} cards · ${g.counts.rules} rules · ${g.counts.weather} weathers · ${g.counts.trackTags} track characters · ${g.counts.inflictions} inflictions · ${g.counts.tracks} tracks`, '');
+  L.push(`# Parabolica World Deck`, '', `*Everything in the sim and the world, generated from the data modules by \`npm run glossary\` — do not edit by hand; edit the source files named in each section and re-run. Engine v${version}. How to add content: docs/WORLD_DECK.md.*`, '');
+  L.push(`${g.counts.teams} teams (+${g.counts.historicTeams} historic) · ${g.counts.tracks} tracks (+${g.counts.historicTracks} historic) · ${g.counts.tags} tags (${g.counts.genesis} genesis · ${g.counts.acquired} acquired · ${g.counts.inRace} in-race · ${g.counts.condition} condition) · ${g.counts.cards} cards · ${g.counts.rules} rules · ${g.counts.weather} weathers · ${g.counts.trackTags} track characters · ${g.counts.inflictions} inflictions · ${g.counts.gods} gods`, '');
+  L.push('## Teams', '', '*Source: `src/data/teams.ts`. Two drivers each; colours are the team livery everywhere.*', '', '| Team | Colours | Vibe |', '|---|---|---|');
+  for (const t of g.teams) L.push(`| ${t.emoji} **${t.name}** \`${t.id}\` | ${t.color} / ${t.accentColor} | ${t.description} |`);
+  L.push('', '### Historic teams (unlockable)', '', '| Team | Colours | Vibe |', '|---|---|---|');
+  for (const t of g.historicTeams) L.push(`| ${t.emoji} **${t.name}** \`${t.id}\` | ${t.color} / ${t.accentColor} | ${t.description} |`);
+  L.push('', '## Gods', '', '*Source: `src/league/gods.ts`. A league picks a patron at founding; appetites and smiting come later.*', '', '| God | Epithet | Hunger | Appetite |', '|---|---|---|---|');
+  for (const d of g.gods) L.push(`| ${d.emoji} **${d.name}** \`${d.id}\` | ${d.epithet} | ${d.hunger} | ${d.appetite} |`);
+  L.push('');
   const rs = defaultRuleset();
   L.push('## How genesis tags are rolled', '',
     `Each driver gets three slots: driver, car (their own chassis), team (one roll, shared by teammates). Per slot:`, '',
@@ -183,8 +220,14 @@ export function renderGlossaryMd(g: Glossary, version: string): string {
   for (const t of g.trackTags) L.push(`| ${t.emoji} **${t.name}** \`${t.id}\` | ${fx(effectsOf(t.passive ?? {}))} | ${(t.conditions ?? []).join(', ') || '—'} |`);
   L.push('', '## Inflictions (mid-race, from conditions)', '', '| Infliction | Needs | Effect | Lasts |', '|---|---|---|---|');
   for (const i of g.inflictions) L.push(`| ${i.emoji} **${i.name}** \`${i.id}\` | ${i.requiresCondition.join(', ')} | ${fx(effectsOf(i.effects))} | ~${Math.round(i.durationTicks / 10)}s |`);
-  L.push('', '## Tracks', '', '| Track | Laps | Length | Character | Event |', '|---|---|---|---|---|');
-  for (const t of g.tracks) { const tt = g.trackTags.filter(x => intrinsicTrackTags(t.id).some(i => i.id === x.id)); L.push(`| ${t.funEmoji} **${t.name}** \`${t.id}\` | ${t.laps} | ${t.length}m | ${tt.map(x => `${x.emoji} ${x.name}`).join(', ') || '—'} | ${t.event ? `${t.event.emoji} ${t.event.name}` : '—'} |`); }
+  const layoutName = (t: { layout: { id: string } }) => Object.entries(LAYOUTS).find(([, v]) => v.id === t.layout.id)?.[0] ?? t.layout.id;
+  const trackRow = (t: typeof g.tracks[number]) => { const tt = g.trackTags.filter(x => intrinsicTrackTags(t.id).some(i => i.id === x.id)); return `| ${t.emoji} ${t.funEmoji} **${t.name}** \`${t.id}\` | ${t.laps} | ${t.length}m | ${layoutName(t)} | ${tt.map(x => `${x.emoji} ${x.name}`).join(', ') || '—'} | ${t.event ? `${t.event.emoji} ${t.event.name}` : '—'} | ${t.description} |`; };
+  L.push('', '## Tracks', '', `*Source: \`src/generators/tracks.ts\`. Layouts: ${Object.keys(LAYOUTS).join(', ')}. Character is assigned by hashing the id until tracks declare their own.*`, '', '| Track | Laps | Length | Layout | Character | Event | Vibe |', '|---|---|---|---|---|---|---|');
+  for (const t of g.tracks) L.push(trackRow(t));
+  L.push('', '### Historic tracks (unlockable)', '', '| Track | Laps | Length | Layout | Character | Event | Vibe |', '|---|---|---|---|---|---|---|');
+  for (const t of g.historicTracks) L.push(trackRow(t));
+  L.push('', '## Flavour pools', '', '*Names, backstories, quirks. Each is a plain list in the file named; add lines, keep the voice.*', '', '| Pool | Size | Where | Samples |', '|---|---|---|---|');
+  for (const p of g.pools) L.push(`| **${p.title}** | ${p.size} | \`${p.where}\` | ${p.samples.map(x => x.replace(/\|/g, '\\|')).join(' · ')} |`);
   L.push('');
   return L.join('\n');
 }

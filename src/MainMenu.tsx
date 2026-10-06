@@ -113,8 +113,8 @@ function MainMenu({ onSingleRace, onCommissioner, onCompendium, onGlossary, leag
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M4 4h5a2 2 0 0 1 2 2v11a1.5 1.5 0 0 0-1.5-1.5H4zM16 4h-5a2 2 0 0 0-2 2v11a1.5 1.5 0 0 1 1.5-1.5H16z" /></svg>
             </span>
             <span className="mm-row-text">
-              <span className="mm-row-title">Glossary</span>
-              <span className="mm-row-sub">Every tag, card and rule in the sim, read from the data.</span>
+              <span className="mm-row-title">World Deck</span>
+              <span className="mm-row-sub">Every team, track, tag, card and god in the world, read from the data.</span>
             </span>
             <span className="mm-row-chev">›</span>
           </button>

@@ -82,8 +82,8 @@ export default function Glossary({ onBack }: GlossaryProps) {
       <header className="rs-top">
         <div className="rs-title-block">
           <button type="button" className="rs-back" onClick={onBack}>← Menu</button>
-          <h1 className="rs-title">Glossary</h1>
-          <span className="rs-sub">Everything in the sim, read straight from the data. {g.counts.tags} tags · {g.counts.cards} cards · {g.counts.rules} rules. Click a line to open it.</span>
+          <h1 className="rs-title">World Deck</h1>
+          <span className="rs-sub">Everything in the world, read straight from the data. {g.counts.teams} teams · {g.counts.tracks} tracks · {g.counts.tags} tags · {g.counts.cards} cards · {g.counts.gods} gods. Click a line to open it.</span>
         </div>
         <label className="gl-search">
           <span className="rs-k">Find</span>
@@ -110,6 +110,61 @@ export default function Glossary({ onBack }: GlossaryProps) {
           </section>
         );
       })}
+
+      {g.teams.concat(g.historicTeams).some(t => match(t.name, t.id, t.description)) && (
+        <section className="rs-row">
+          <div className="rs-row-head"><span className="rs-k">Teams <span className="gl-count">{g.teams.length} + {g.historicTeams.length} historic</span></span><span className="rs-hint">The tribes. Two drivers each; the colours are the livery.</span></div>
+          <div className="gl-list">
+            {[...g.teams, ...g.historicTeams].filter(t => match(t.name, t.id, t.description)).map(t => (
+              <Row key={t.id} id={`team:${t.id}`} open={isOpen(`team:${t.id}`)} onToggle={toggle}
+                lead={<span className="gl-plain"><span className="gl-swatch" style={{ background: t.color, boxShadow: `inset 0 0 0 2px ${t.accentColor}` }} />{t.emoji} {t.name}</span>}
+                note={t.isHistoric ? 'historic' : 'current'}
+                pills={<span className="gl-readout">{t.description}</span>}>
+                <p className="gl-desc">{t.description}</p>
+                <div className="gl-facts"><Fact k="Colours">{t.color} / {t.accentColor}</Fact><Fact k="Id">{t.id}</Fact></div>
+              </Row>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {g.tracks.concat(g.historicTracks).some(t => match(t.name, t.id, t.description)) && (
+        <section className="rs-row">
+          <div className="rs-row-head"><span className="rs-k">Tracks <span className="gl-count">{g.tracks.length} + {g.historicTracks.length} historic</span></span><span className="rs-hint">Every circuit is a pun. Laps × length sets the race; layout sets the shape.</span></div>
+          <div className="gl-list">
+            {[...g.tracks, ...g.historicTracks].filter(t => match(t.name, t.id, t.description)).map(t => (
+              <Row key={t.id} id={`track:${t.id}`} open={isOpen(`track:${t.id}`)} onToggle={toggle}
+                lead={<span className="gl-plain">{t.emoji} {t.funEmoji} {t.name}</span>}
+                note={`${t.laps} laps · ${t.length}m`}
+                pills={<span className="gl-readout">{t.description}</span>}>
+                <p className="gl-desc">{t.description}</p>
+                <div className="gl-facts">
+                  <Fact k="Layout">{t.layout.id}</Fact>
+                  <Fact k="Character">{intrinsicTrackTags(t.id).map(x => `${x.emoji} ${x.name}`).join(', ') || '—'}</Fact>
+                  <Fact k="Event">{t.event ? `${t.event.emoji} ${t.event.name}` : 'none yet'}</Fact>
+                </div>
+              </Row>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {g.gods.some(d => match(d.name, d.id, d.hunger, d.appetite)) && (
+        <section className="rs-row">
+          <div className="rs-row-head"><span className="rs-k">Gods</span><span className="rs-hint">A league picks a patron at founding. Appetites and smiting come later.</span></div>
+          <div className="gl-list">
+            {g.gods.filter(d => match(d.name, d.id, d.hunger, d.appetite)).map(d => (
+              <Row key={d.id} id={`god:${d.id}`} open={isOpen(`god:${d.id}`)} onToggle={toggle}
+                lead={<span className="gl-plain">{d.emoji} {d.name}</span>}
+                note={d.epithet}
+                pills={<span className="gl-readout">{d.appetite}</span>}>
+                <p className="gl-desc">“{d.hunger}”</p>
+                <div className="gl-facts"><Fact k="Appetite">{d.appetite}</Fact></div>
+              </Row>
+            ))}
+          </div>
+        </section>
+      )}
 
       {g.cards.some(c => match(c.name, c.id, c.readout, c.blurb)) && (
         <section className="rs-row">
@@ -192,6 +247,23 @@ export default function Glossary({ onBack }: GlossaryProps) {
                   <Fact k="Stamps">{(t.conditions ?? []).join(', ') || '—'}</Fact>
                   <Fact k="Tracks">{g.tracks.filter(tr => intrinsicTrackTags(tr.id).some(i => i.id === t.id)).map(tr => `${tr.funEmoji} ${tr.name}`).join(' · ') || '—'}</Fact>
                 </div>
+              </Row>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {g.pools.some(p => match(p.title, ...p.samples)) && (
+        <section className="rs-row">
+          <div className="rs-row-head"><span className="rs-k">Flavour pools</span><span className="rs-hint">Names, backstories, quirks — plain lists. docs/WORLD_DECK.md says how to add.</span></div>
+          <div className="gl-list">
+            {g.pools.filter(p => match(p.title, ...p.samples)).map(p => (
+              <Row key={p.id} id={`pool:${p.id}`} open={isOpen(`pool:${p.id}`)} onToggle={toggle}
+                lead={<span className="gl-plain">{p.title}</span>}
+                note={`${p.size}`}
+                pills={<span className="gl-readout">{p.samples.slice(0, 5).join(' · ')}</span>}>
+                <p className="gl-desc">{p.samples.join(' · ')}{p.size > p.samples.length ? ` · … ${p.size - p.samples.length} more` : ''}</p>
+                <div className="gl-src">{p.where}</div>
               </Row>
             ))}
           </div>

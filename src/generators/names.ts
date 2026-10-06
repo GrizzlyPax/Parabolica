@@ -23,7 +23,7 @@ export const INTL_FIRST_NAMES = [
   'Javier', 'Isabella', 'Carlos', 'Daniela', 'Andrés', 'Gabriela', 'Rafael', 'Mariana',
   // Portuguese / Brazilian
   'João', 'Beatriz', 'Pedro', 'Larissa', 'Gustavo', 'Letícia', 'Rodrigo', 'Fernanda',
-  'Thiago', 'Juliana', 'Bruno', 'Camila', 'Caio', 'Renata',
+  'Thiago', 'Juliana', 'Bruno', 'Caio', 'Renata',
   // Arabic
   'Omar', 'Layla', 'Yusuf', 'Fatima', 'Khalid', 'Aisha', 'Tariq', 'Noor',
   'Hassan', 'Mariam', 'Karim', 'Zara', 'Samir', 'Amina', 'Bilal', 'Salma',
@@ -35,7 +35,7 @@ export const INTL_FIRST_NAMES = [
   'Kabir', 'Meera', 'Rahul', 'Saanvi', 'Dev', 'Nisha', 'Aryan', 'Kavya',
   // Nigerian / West African
   'Chidi', 'Amara', 'Emeka', 'Ngozi', 'Tunde', 'Folake', 'Obi', 'Zainab',
-  'Yusuf', 'Adaeze', 'Kunle', 'Ifeoma', 'Bayo', 'Temi',
+  'Adaeze', 'Kunle', 'Ifeoma', 'Bayo', 'Temi',
   // Japanese (romanized)
   'Haruki', 'Yuki', 'Sora', 'Aoi', 'Ren', 'Hana', 'Kaito', 'Rin',
   'Daiki', 'Mio', 'Takumi', 'Saki', 'Riku', 'Nao',
@@ -49,7 +49,7 @@ export const INTL_FIRST_NAMES = [
   'Piotr', 'Zofia', 'Dmitri', 'Katarzyna', 'Ivan', 'Milena', 'Marek', 'Vesna',
   'Andrei', 'Ola', 'Tomas', 'Nadia', 'Luka', 'Petra', 'Nikola', 'Ana',
   // Korean / SE Asian additions
-  'Minjun', 'Seoyeon', 'Jihoon', 'Hana', 'Linh', 'Anh', 'Ravi', 'Indah',
+  'Minjun', 'Seoyeon', 'Jihoon', 'Linh', 'Anh', 'Ravi', 'Indah',
 ];
 
 export const INTL_LAST_NAMES = [

@@ -22,7 +22,7 @@ export interface GeneratedDriver {
 }
 
 // Absurdist backstory templates - Blaseball-inspired
-const BACKSTORY_TEMPLATES = [
+export const BACKSTORY_TEMPLATES = [
   "Appeared one day in the {place}. Nobody asked questions.",
   "Claims to have been born {age} ago in {location}. Records say otherwise.",
   "Found driving a {vehicle} through {place} with no explanation.",
@@ -40,7 +40,7 @@ const BACKSTORY_TEMPLATES = [
   "Remembered by {number} people. The number {verb} daily."
 ];
 
-const BACKSTORY_FILLS = {
+export const BACKSTORY_FILLS = {
   place: ["the parking lot", "aisle 7", "the storage unit", "the breakroom", "a roundabout", "the waiting room", "the elevator", "sector 7G", "the supply closet", "an unnamed hallway"],
   age: ["several Tuesdays", "an undisclosed amount of time", "47 minutes", "before the incident", "after the reckoning", "during the interval", "between commercials"],
   location: ["a place that no longer exists", "somewhere overhead", "the back of a receipt", "an unmarked location", "coordinates that don't resolve"],
@@ -65,7 +65,7 @@ const BACKSTORY_FILLS = {
 };
 
 // Absurdist quirks - Blaseball-inspired
-const QUIRKS = [
+export const QUIRKS = [
   "Only races during approved hours",
   "Their car makes a sound no one can describe",
   "Technically two drivers in an agreement",

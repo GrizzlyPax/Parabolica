@@ -1,8 +1,52 @@
-# Parabolica Glossary
+# Parabolica World Deck
 
-*Generated from the data modules by `npm run glossary` — do not edit by hand. Engine v0.4.2.*
+*Everything in the sim and the world, generated from the data modules by `npm run glossary` — do not edit by hand; edit the source files named in each section and re-run. Engine v0.4.2. How to add content: docs/WORLD_DECK.md.*
 
-39 tags (9 genesis · 8 acquired · 5 in-race · 17 condition) · 12 cards · 12 rules · 5 weathers · 3 track characters · 5 inflictions · 24 tracks
+11 teams (+11 historic) · 24 tracks (+7 historic) · 39 tags (9 genesis · 8 acquired · 5 in-race · 17 condition) · 12 cards · 12 rules · 5 weathers · 3 track characters · 5 inflictions · 3 gods
+
+## Teams
+
+*Source: `src/data/teams.ts`. Two drivers each; colours are the team livery everywhere.*
+
+| Team | Colours | Vibe |
+|---|---|---|
+| 🐴 **For Rory** `for-rory` | #E63946 / #FFB800 | Horse girls in velvet ribbons, barn coat glamour, equestrian prep with hay in their hair. |
+| 🍞 **Breadbowl** `breadbowl` | #3671C6 / #E63946 | Sourdough starters with names, carb worship, "she's been fermenting for six years." |
+| 📼 **Mcelodeon** `mcelodeon` | #FF8000 / #3671C6 | 90s Nickelodeon slime energy, orange VHS tapes, Saturday morning chaos. |
+| 🥽 **Haazmat** `haazmat` | #FFFFFF / #E63946 | Mad scientists, safety goggles, "what's that smell," controlled chaos, garage lab explosions. |
+| 👖 **Daddyslacks** `daddyslacks` | #CFA540 / #C0C0C0 | Cargo shorts, thermostat police, grill sergeants, New Balance pilgrimage. |
+| ☄️ **Asteroid Martian** `asteroid-martian` | #005C38 / #D9FF00 | Space camp dropouts, tinfoil couture, "the government knows" energy. |
+| 🐾 **Furbabies** `furbabies` | #27F4D2 / #C0C0C0 | Pet stroller pushers, matching outfits, "my child has four legs" bumper stickers. |
+| 👢 **Haüdy** `haudy` | #FF4500 / #E8E8E8 | Cowboy techno, ranch raves, bolo ties with LED lights, yeehaw engineering. |
+| 🌲 **Allpine** `allpine` | #FF87BC / #3671C6 | Flannel layering, coffee snobs, "it's just misting," REI membership as personality, Sasquatch agnostic. |
+| 🧶 **Lacing Wools** `lacing-wools` | #FFFFFF / #3671C6 | Knitting circles, yarn hoarders, "I made this," Ravelry drama, grandma energy with an edge. |
+| 🐟 **Gilliams** `gilliams` | #00A3E0 / #FFFFFF | Aquarium nerds, "actually that's a cichlid," fish tank pilgrimages, gill breathers in a land world. |
+
+### Historic teams (unlockable)
+
+| Team | Colours | Vibe |
+|---|---|---|
+| 🍤 **Prawn** `prawn` | #D9FF00 / #FFFFFF | Cocktail sauce sommeliers, shrimp ring elegance, "actually, it's prawn." |
+| 💅🏼 **Flotus** `flotus` | #FFB800 / #E63946 | Pantsuit power, motorcade waves, diplomatic smiles hiding chaos. |
+| 🐿️ **Sqyrrell** `sqyrrell` | #002E5B / #FFFFFF | Autumn hoarders, "I buried it somewhere," acorn-based economy. |
+| 🦑 **Calamardi** `calamardi` | #1E1E1E / #FFB800 | Deep sea ink, tentacle melodrama, perpetual underdogs who embrace the void. |
+| 🥖 **Baguetton** `baguetton` | #00B89F / #FFF500 | French bread purists, Breadbowl's chic Parisian aunt, crust discourse. |
+| 🔧 **Wrenchault** `wrenchault` | #FFF500 / #3671C6 | Grease-stained hands, "I can fix her," garage goblins, torque specs as love language. |
+| 🩰 **Bracing Pointe** `bracing-pointe` | #FF87BC / #FFFFFF | Ballet moms, recital warfare, "she's been dancing since she was three," tutu tyrants. |
+| 🐷 **Sow Blur** `sow-blur` | #0054A0 / #FFFFFF | Pig farmers, county fair chaos, mud season enthusiasts, "that'll do" energy. |
+| 🌱 **Alphalpha Camo** `alphalpha-camo` | #900000 / #FFFFFF | Sprout snackers, farm kids, 4-H devotees, "it's actually very nutritious." |
+| 🎁 **Toy Quota** `toy-quota` | #C0C0C0 / #E63946 | Gift wrappers, holiday stress, "I have a system," Black Friday strategists. |
+| 🎸 **Jazz Guitar** `jazz-guitar` | #006633 / #FFB800 | Smooth jazz dads, open mic courage, "anyway here's Wonderwall" but sophisticated. |
+
+## Gods
+
+*Source: `src/league/gods.ts`. A league picks a patron at founding; appetites and smiting come later.*
+
+| God | Epithet | Hunger | Appetite |
+|---|---|---|---|
+| 🔥 **The Scrap Heap** `the-scrap-heap` | That Which Collects | Bring me the bent chassis and the blown engine. A clean race is a wasted race. | Hungers for carnage — crashes, blowouts, DNFs. Safe seasons starve it. |
+| ⚖️ **The Stewards** `the-stewards` | The Ones Who Watch | Order. Procession. The strong shall finish ahead of the weak, as is written. | Hungers for order — favorites winning, clean finishes. Chaos offends it. |
+| 📸 **The Photo Finish** `the-photo-finish` | Witness of the Margin | Let no one pull away. I want ten winners in sixteen races and a title decided by a lap. | Hungers for parity — different winners, tight championships. Dynasties bore it. |
 
 ## How genesis tags are rolled
 
@@ -152,29 +196,63 @@ Bucket sizes in the default pool: common 3 · uncommon 5 · rare 1 · legendary 
 
 ## Tracks
 
-| Track | Laps | Length | Character | Event |
-|---|---|---|---|---|
-| 🦷 **Venhir** `venhir` | 15 | 850m | 🏎️ High-Speed | — |
-| 🧀 **Cheddah** `cheddah` | 14 | 900m | 🏎️ High-Speed | — |
-| 🦜 **All Bird Park** `all-bird-park` | 16 | 820m | ⚠️ Hazardous | — |
-| 🚂 **Choo-Choo-Ka** `choo-choo-ka` | 15 | 880m | 🏎️ High-Speed | — |
-| 🧛 **Fang High** `fang-high` | 15 | 850m | 🌀 Technical | — |
-| 🕵️‍♂️ **Spyami** `spyami` | 16 | 800m | ⚠️ Hazardous | — |
-| 💀 **Grimola** `grimola` | 17 | 780m | 🌀 Technical | — |
-| 🍫 **Monacoco** `monacoco` | 18 | 700m | ⚠️ Hazardous | — |
-| 🐱 **Cattylosers** `cattylosers` | 16 | 820m | ⚠️ Hazardous | — |
-| 🚙 **Mini-Vanada** `mini-vanada` | 16 | 800m | ⚠️ Hazardous | — |
-| ⚡️ **Eelburg** `eelburg` | 18 | 720m | 🌀 Technical | — |
-| 🤖 **Silverclone** `silverclone` | 15 | 880m | 🏎️ High-Speed | — |
-| 🧟‍♂️ **Spa Frankenstein** `spa-frankenstein` | 14 | 950m | 🏎️ High-Speed | — |
-| 👅 **Tonguearoring** `tonguearoring` | 17 | 780m | 🌀 Technical | — |
-| 🏖️ **Sandforts** `sandforts` | 17 | 760m | ⚠️ Hazardous | — |
-| 🧌 **Monsta** `monsta` | 14 | 900m | 🏎️ High-Speed | — |
-| 🧢 **Snapbaku** `snapbaku` | 14 | 920m | 🏎️ High-Speed | — |
-| 👩‍⚖️ **Subpoena Day** `subpoena-day` | 15 | 850m | 🌀 Technical | — |
-| 🏰 **MOTA** `mota` | 15 | 880m | 🏎️ High-Speed | — |
-| 🦖 **T-Rex & Co.** `t-rex-and-co` | 16 | 800m | 🌀 Technical | — |
-| 🧊 **Winter Igloos** `winter-igloos` | 17 | 780m | 🏎️ High-Speed | — |
-| 🧮 **Las PEMDAS** `las-pemdas` | 14 | 920m | 🏎️ High-Speed | — |
-| 🦄 **Rainbowha** `rainbowha` | 15 | 850m | ⚠️ Hazardous | — |
-| 💃 **Yas Christina!** `yas-christina` | 15 | 880m | ⚠️ Hazardous | — |
+*Source: `src/generators/tracks.ts`. Layouts: street, power, flowing, modern, technical, classic. Character is assigned by hashing the id until tracks declare their own.*
+
+| Track | Laps | Length | Layout | Character | Event | Vibe |
+|---|---|---|---|---|---|---|
+| 🇧🇭 🦷 **Venhir** `venhir` | 15 | 850m | modern | 🏎️ High-Speed | — | Fangs gleaming under the lights, dentist chairs in every garage, open wide for inspection, floss mandatory. |
+| 🇸🇦 🧀 **Cheddah** `cheddah` | 14 | 900m | power | 🏎️ High-Speed | — | Cheese caves as far as the eye can see, wheels aging in silence, the sharpest place on earth, brie breezes. |
+| 🇦🇺 🦜 **All Bird Park** `all-bird-park` | 16 | 820m | flowing | ⚠️ Hazardous | — | Feathers everywhere, constant squawking, birds judging your racing line, someone's cracker got stolen. |
+| 🇯🇵 🚂 **Choo-Choo-Ka** `choo-choo-ka` | 15 | 880m | technical | 🏎️ High-Speed | — | Train heaven, steam galore, where all your ticket-punching dreams come true, eternal platform announcements. |
+| 🇨🇳 🧛 **Fang High** `fang-high` | 15 | 850m | modern | 🌀 Technical | — | Lockers full of capes, prom is at midnight, the cafeteria only serves red, yearbook photos won't develop. |
+| 🇺🇸 🕵️‍♂️ **Spyami** `spyami` | 16 | 800m | street | ⚠️ Hazardous | — | Trench coats in the shadows, dead drops in the pit lane, everyone's got a handler, the walls have ears. |
+| 🇮🇹 💀 **Grimola** `grimola` | 17 | 780m | classic | 🌀 Technical | — | Fog rolling through the chicanes, skulls grinning from the grandstands, beautiful but haunted, don't look back. |
+| 🇲🇨 🍫 **Monacoco** `monacoco` | 18 | 700m | street | ⚠️ Hazardous | — | Chocolate waterfalls, cocoa fog in the streets, everything melts eventually, sweet sweet surrender. |
+| 🇪🇸 🐱 **Cattylosers** `cattylosers` | 16 | 820m | technical | ⚠️ Hazardous | — | Scratching posts for miles, hairball alley, where trophies go to fall, eternal hissing in the distance. |
+| 🇨🇦 🚙 **Mini-Vanada** `mini-vanada` | 16 | 800m | power | ⚠️ Hazardous | — | Sliding doors and Cheerios in the seats, snack distribution from the front, "don't make me turn this around." |
+| 🇦🇹 ⚡️ **Eelburg** `eelburg` | 18 | 720m | flowing | 🌀 Technical | — | Electric eels in the walls, everything's buzzing, don't touch the barriers, shockingly fast. |
+| 🇬🇧 🤖 **Silverclone** `silverclone` | 15 | 880m | flowing | 🏎️ High-Speed | — | Robots everywhere, uncanny valley vibes, everyone looks familiar, are you the original or the copy? |
+| 🇧🇪 🧟‍♂️ **Spa Frankenstein** `spa-frankenstein` | 14 | 950m | classic | 🏎️ High-Speed | — | Frankenstein runs a surprisingly lovely spa here, hot springs and lightning therapy, monster hospitality, bolts on the house. |
+| 🇭🇺 👅 **Tonguearoring** `tonguearoring` | 17 | 780m | technical | 🌀 Technical | — | Flavor country, everything is a taste test, suspiciously sticky grandstands, lick at your own risk. |
+| 🇳🇱 🏖️ **Sandforts** `sandforts` | 17 | 760m | modern | ⚠️ Hazardous | — | Moats around every corner, bucket and spade engineering, tides come in without warning, your castle will fall. |
+| 🇮🇹 🧌 **Monsta** `monsta` | 14 | 900m | power | 🏎️ High-Speed | — | Something roaring in the temple, speed demons welcome, the creature under the track hungers, feed it laps. |
+| 🇦🇿 🧢 **Snapbaku** `snapbaku` | 14 | 920m | street | 🏎️ High-Speed | — | Hats flying everywhere, brims bent just right, backwards cap energy, fitted or nothing. |
+| 🇸🇬 👩‍⚖️ **Subpoena Day** `subpoena-day` | 15 | 850m | street | 🌀 Technical | — | Court is in session, gavels banging, everyone's serving papers, the verdict is always dramatic. |
+| 🇺🇸 🏰 **MOTA** `mota` | 15 | 880m | modern | 🏎️ High-Speed | — | Castle on a hill, drawbridge pit entry, jousting but faster, someone brought a trebuchet. |
+| 🇲🇽 🦖 **T-Rex & Co.** `t-rex-and-co` | 16 | 800m | flowing | 🌀 Technical | — | Family business since the Jurassic, tiny arms big dreams, the siblings run this town, meteor-proof since '65. |
+| 🇧🇷 🧊 **Winter Igloos** `winter-igloos` | 17 | 780m | classic | 🏎️ High-Speed | — | Frozen paradise, penguins in the paddock, everything's chill, ice sculptures judging you. |
+| 🇺🇸 🧮 **Las PEMDAS** `las-pemdas` | 14 | 920m | power | 🏎️ High-Speed | — | Please excuse my dear aunt Sally, parentheses everywhere, order of operations strictly enforced, show your work. |
+| 🇶🇦 🦄 **Rainbowha** `rainbowha` | 15 | 850m | modern | ⚠️ Hazardous | — | Unicorns grazing in the infield, glitter in the air vents, manes flowing at 200mph, sparkle mandatory. |
+| 🇦🇪 💃 **Yas Christina!** `yas-christina` | 15 | 880m | modern | ⚠️ Hazardous | — | Dance floor pit stops, someone's always spinning, heels on the podium, the crowd moves as one. |
+
+### Historic tracks (unlockable)
+
+| Track | Laps | Length | Layout | Character | Event | Vibe |
+|---|---|---|---|---|---|---|
+| 🇺🇸 🤸 **Bendy 500** `bendy-500` | 15 | 850m | power | 🌀 Technical | — | Contortionists in every corner, limbo under the checkered flag, stretch before entry, flexibility required. |
+| 🇩🇪 🍔 **Hamburgring** `hamburgring` | 14 | 950m | classic | 🌀 Technical | — | Patties sizzling in the paddock, ketchup or mustard wars, the grill never closes, medium rare only. |
+| 🇩🇪 🎻 **Bachenheim** `bachenheim` | 16 | 800m | technical | ⚠️ Hazardous | — | Orchestras in the grandstands, engines tuned to concert pitch, classical gas, the conductor sets the pace. |
+| 🇫🇷 👮‍♂️ **Paul-the-Guard** `paul-the-guard` | 15 | 880m | flowing | ⚠️ Hazardous | — | Security everywhere, badge checks at every corner, "papers please," Paul sees all. |
+| 🇲🇾 🪙 **See Change?** `see-change` | 15 | 870m | modern | ⚠️ Hazardous | — | Coins rolling through the paddock, interest rates posted at every turn, the bank always wins, exact change only. |
+| 🇿🇦 🥧 **Pielami** `pielami` | 17 | 780m | flowing | 🏎️ High-Speed | — | Crusts flaking in the wind, filling debates that never end, lattice or solid top discourse, à la mode mandatory. |
+| 🇵🇹 🐭 **Portimouse** `portimouse` | 16 | 820m | classic | 🌀 Technical | — | Tiny paws on tiny wheels, cheese at every checkpoint, squeaking through the chicanes, the cat is always watching. |
+
+## Flavour pools
+
+*Names, backstories, quirks. Each is a plain list in the file named; add lines, keep the voice.*
+
+| Pool | Size | Where | Samples |
+|---|---|---|---|
+| **Driver first names · international (72% of drivers)** | 169 | `src/generators/names.ts INTL_FIRST_NAMES` | James · Mary · William · Sarah · Thomas · Emily · George · Grace |
+| **Driver last names · international** | 166 | `src/generators/names.ts INTL_LAST_NAMES` | Smith · Walker · Hughes · Foster · Bennett · Coleman · Hayes · Wells |
+| **Driver first names · absurd (17%)** | 64 | `src/generators/names.ts ABSURD_FIRST_NAMES` | Brisket · Sandwich · Crouton · Noodle · Pretzel · Waffle · Dumpling · Peanut |
+| **Driver last names · absurd** | 56 | `src/generators/names.ts ABSURD_LAST_NAMES` | Marshall · Lamppost · Sidewalk · Elevator · Hallway · Cubicle · Vestibule · Mezzanine |
+| **Driver mononyms (9%)** | 40 | `src/generators/names.ts MONONYMS` | Indigo · Blaze · Nugget · Vesper · Echo · Onyx · Sol · Wren |
+| **League names · adjectives ("The ___ Circuit")** | 90 | `src/generators/leagueName.ts LEAGUE_ADJECTIVES` | Molten · Hollow · Furious · Gilded · Fractured · Relentless · Gleaming · Radiant |
+| **League names · nouns** | 66 | `src/generators/leagueName.ts LEAGUE_NOUNS` | Circuit · Grand Prix · Compact · Order · Assembly · Commission · Collective · Championship |
+| **Driver backstory templates ({slot} fills below)** | 15 | `src/generators/drivers.ts BACKSTORY_TEMPLATES` | Appeared one day in the {place}. Nobody asked questions. · Claims to have been born {age} ago in {location}. Records say otherwise. · Found driving a {vehicle} through {place} with no explanation. · Woke up one morning knowing how to race. Previously was a {profession}. |
+| **Backstory fills (21 slots)** | 115 | `src/generators/drivers.ts BACKSTORY_FILLS` | {place}: the parking lot / aisle 7 / the storage unit · {age}: several Tuesdays / an undisclosed amount of time / 47 minutes · {location}: a place that no longer exists / somewhere overhead / the back of a receipt · {vehicle}: a shopping cart / a office chair / a moving walkway |
+| **Driver quirks** | 25 | `src/generators/drivers.ts QUIRKS` | Only races during approved hours · Their car makes a sound no one can describe · Technically two drivers in an agreement · Receives instructions from somewhere · Has never been photographed from the left |
+| **Car quirks** | 24 | `src/generators/cars.ts CAR_QUIRKS` | The engine hums at a frequency only dogs can hear. · Assembled entirely on a Tuesday. Nobody knows why that matters. · The previous owner was a time traveler. Probably. · Handles corners like it knows something you don't. |
+| **Car name parts (prefix · suffix · acronym)** | 71 | `src/generators/cars.ts CAR_PREFIXES_GENERIC / CAR_SUFFIXES / CAR_ACRONYMS` | Apex · Vector · Pulse · GT · RS · LM · XR · GT · RS |
+| **Procedural team emoji** | 48 | `src/generators/teamIdentity.ts IDENTITY_EMOJI` | 🦆 · 🔥 · 🦂 · 🐙 · 🦅 · 🐊 · 🦊 · 🐺 · 🦉 · 🦇 |

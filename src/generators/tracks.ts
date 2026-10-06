@@ -72,7 +72,7 @@ export interface Track {
 // Pit lane midpoint aligns with start/finish line
 // ============================================
 
-const LAYOUTS: Record<string, TrackLayout> = {
+export const LAYOUTS: Record<string, TrackLayout> = {
   // Monaco-style: Tight street circuit, technical corners
   // Character: Slow, twisty, lots of 90-degree turns
   street: {
