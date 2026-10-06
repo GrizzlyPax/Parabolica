@@ -119,9 +119,11 @@ function TimingTower({
     // Position delta
     const positionDelta = positionDeltas?.get(driver.id);
     let speedTone: RowContext['speedTone'];
+    let speedRel: number | undefined;
     if (packSpeed > 0 && driver.status === 'racing' && driver.speedSmooth > 0) {
       const r = driver.speedSmooth / packSpeed - 1;
       speedTone = r >= 0.04 ? 'hot' : r >= 0.01 ? 'quick' : r <= -0.03 ? 'slow' : 'pack';
+      speedRel = Math.max(-1, Math.min(1, r / 0.08));
     }
     const gridIdx = gridOrder ? gridOrder.indexOf(driver.id) : -1;
     const gridSlot = gridIdx >= 0 ? gridIdx + 1 : undefined;
@@ -237,6 +239,7 @@ function TimingTower({
       gridSlot,
       battle,
       speedTone,
+      speedRel,
       intervalGap,
       leaderGap,
       lastLapTime,

@@ -28,6 +28,8 @@ export interface RowContext {
   gridSlot?: number;
   /** Speed vs the running pack's median this tick: 'hot' ≥ +4%, 'quick' ≥ +1%, 'slow' ≤ −3%, else 'pack'. */
   speedTone?: 'hot' | 'quick' | 'pack' | 'slow';
+  /** Speed relative to the pack median, −1…+1 over ±8%. */
+  speedRel?: number;
   /** In a fight right now: attacking the car ahead or defending from the car behind. */
   battle?: { role: 'attacking' | 'defending'; ticks: number; otherId: number };
   intervalGap: string;

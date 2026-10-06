@@ -184,12 +184,21 @@ export function kmh(unitsPerTick: number): number { return Math.round(unitsPerTi
 export const COLUMN_SPEED: ColumnConfig = {
   id: 'speed',
   header: 'km/h',
-  width: '52px',
+  width: '54px',
   align: 'right',
   render: (driver: Driver, ctx: RowContext) => {
     if (driver.status !== 'racing' || driver.speedSmooth <= 0) return <span className="muted-cell">—</span>;
     const titles = { hot: 'Flying — well above the pack', quick: 'Quicker than the pack', pack: 'Pack pace', slow: 'Slower than the pack' };
-    return <span className={`speed-value tone-${ctx.speedTone ?? 'pack'}`} title={ctx.speedTone ? titles[ctx.speedTone] : undefined}>{kmh(driver.speedSmooth)}</span>;
+    const rel = ctx.speedRel ?? 0;
+    return (
+      <span className={`speed-cell tone-${ctx.speedTone ?? 'pack'}`} title={ctx.speedTone ? titles[ctx.speedTone] : undefined}>
+        <span className="speed-value">{kmh(driver.speedSmooth)}</span>
+        <span className="speed-tach" aria-hidden="true">
+          <span className="speed-tach-mid" />
+          <span className={`speed-tach-fill ${rel >= 0 ? 'pos' : 'neg'}`} style={rel >= 0 ? { left: '50%', width: `${rel * 50}%` } : { right: '50%', width: `${-rel * 50}%` }} />
+        </span>
+      </span>
+    );
   },
 };
 

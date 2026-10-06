@@ -697,7 +697,12 @@
 .grid-delta.flat { color: var(--pw-text-3); }
 
 /* Live speed, toned against the pack: purple flying, green quick, dim pack, red slow */
-.speed-value { font-variant-numeric: tabular-nums; font-weight: 700; font-size: 0.86rem; color: var(--pw-text-2); }
-.speed-value.tone-hot { color: var(--pw-purple); }
-.speed-value.tone-quick { color: var(--pw-green); }
-.speed-value.tone-slow { color: var(--pw-red-soft); }
+.speed-cell { display: inline-flex; flex-direction: column; align-items: flex-end; gap: 2px; color: var(--pw-text-2); min-width: 44px; }
+.speed-value { font-variant-numeric: tabular-nums; font-weight: 700; font-size: 0.86rem; line-height: 1; }
+.speed-cell.tone-hot { color: var(--pw-purple); }
+.speed-cell.tone-quick { color: var(--pw-green); }
+.speed-cell.tone-slow { color: var(--pw-red-soft); }
+/* mini tach: centre tick = pack pace, fills right when quicker, left when slower */
+.speed-tach { position: relative; width: 100%; height: 3px; background: var(--pw-border); border-radius: 2px; }
+.speed-tach-mid { position: absolute; left: 50%; top: -1px; bottom: -1px; width: 1px; background: var(--pw-text-3); }
+.speed-tach-fill { position: absolute; top: 0; bottom: 0; background: currentColor; border-radius: 2px; transition: width 0.25s, left 0.25s, right 0.25s; }
