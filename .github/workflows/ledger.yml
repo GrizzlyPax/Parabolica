@@ -6,13 +6,15 @@
 name: ledger
 on:
   issues:
-    types: [opened, labeled]
+    # `labeled` fires once per label, including labels set at creation, so
+    # an issue opened from the prefilled URL triggers exactly one run.
+    types: [labeled]
 permissions:
   contents: write
   issues: write
 jobs:
   ingest:
-    if: contains(github.event.issue.labels.*.name, 'ledger')
+    if: github.event.label.name == 'ledger'
     runs-on: ubuntu-latest
     concurrency: ledger
     steps:
