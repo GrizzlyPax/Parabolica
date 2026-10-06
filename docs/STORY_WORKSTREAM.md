@@ -7,6 +7,7 @@
 > - **Fantasy teams exist** (`src/fantasy/`, `docs/FANTASY.md`). Players name 2–6 teams, pick colours, and snake-draft 3 drivers each. Team names are player-made, not World Deck content; the draft copy and labels ("front third", "midfield", "back third") are strings you can restyle.
 > - **Leagues are online** (`docs/LEAGUE_SERVER.md`): a published league is watched from any device by code or link. No story impact, but seasons are now long-running and shared, so the season chronicle and headlines are read by more than one person.
 > - **Names in the UI are white**; team colour lives on the marbles. Flavour that relied on coloured names won't show.
+> - **Story brainstorms** are in `docs/story/` (not canon). The first, `docs/story/2026-10-06-ideation.md`, sets a direction: you run a TV channel, then the league; Management's cheerful, subtly-wrong voice; Severance-style eeriness. Read it for tone; the bible decides what's real.
 
 ---
 

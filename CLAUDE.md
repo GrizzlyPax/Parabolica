@@ -55,6 +55,7 @@ for the future NPC-crowd system (BetLab was removed Oct 2026; git history has it
 - `docs/CONDITIONS_LAYER.md` - Track tags + weather design build (the conditions stack; companion to TAG_SYSTEM)
 - `docs/STORY_WORKSTREAM.md` - Handoff for ANY agent/collaborator: orientation, where things are, fixed vs flexible, flavour pass vs theme change, the loop, prompts
 - `docs/STORY_BIBLE.md` - Pax's theme/voice bible; agents read it before any flavour pass (story workstream)
+- `docs/story/` - Story brainstorms and working notes (NOT canon until moved into the bible); index in `docs/story/README.md`
 - `docs/WORLD_DECK.md` - Content framework: how to add teams, tracks, names, tags, cards, weather, gods, commentary (shapes, rules, voice, backlog, agent prompt)
 - `docs/GLOSSARY.md` - GENERATED World Deck: every team, track, tag, card, rule, weather, infliction, god and flavour pool (`npm run glossary`; `src/data/worldDeck.test.ts` checks content)
 - `docs/FANTASY.md` - Fantasy teams: snake draft, obfuscated draft info, scoring, where it shows

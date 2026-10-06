@@ -4,6 +4,8 @@
 
 **Status:** draft. The six theme questions below are unanswered; today's content is placeholder written to prove the machine works.
 
+**Working notes (not canon):** brainstorms live in `docs/story/` — start with [2026-10-06 ideation](story/2026-10-06-ideation.md) (TV channel → commissioner, Management's voice, Severance texture).
+
 ## The theme in a paragraph
 
 *(What is this world? One paragraph, in your words.)*
