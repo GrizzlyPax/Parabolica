@@ -7,6 +7,7 @@ import PositionDelta from './PositionDelta';
 import TireHistory from './TireHistory';
 import type { ColumnConfig, RowContext } from './types';
 import { Driver } from '../../RaceEngine';
+import TagChips, { EffectChips } from './TagChips';
 
 // Suffixes to ignore when extracting surname
 const NAME_SUFFIXES = new Set(['JR', 'JR.', 'SR', 'SR.', 'II', 'III', 'IV', 'V']);
@@ -101,7 +102,7 @@ export const COLUMN_DRIVER_CODE: ColumnConfig = {
 export const COLUMN_DRIVER_FULL_NAME: ColumnConfig = {
   id: 'driverFullName',
   header: 'Driver',
-  width: '156px',
+  width: 'minmax(140px, 1.4fr)',
   align: 'left',
   render: (driver: Driver, ctx: RowContext) => (
     <span
@@ -117,7 +118,7 @@ export const COLUMN_DRIVER_FULL_NAME: ColumnConfig = {
 export const COLUMN_TEAM_NAME: ColumnConfig = {
   id: 'teamName',
   header: 'Team',
-  width: '112px',
+  width: 'minmax(96px, 1fr)',
   align: 'left',
   render: (driver: Driver) => (
     <span className="team-name" style={{ color: driver.color }}>
@@ -261,44 +262,29 @@ export const COLUMN_TIRES: ColumnConfig = {
 export const COLUMN_TAGS: ColumnConfig = {
   id: 'tags',
   header: 'Tags',
-  width: '54px',
+  width: '92px',
   align: 'center',
-  render: (driver: Driver, ctx: RowContext) => {
-    const tags = driver.tags;
-    if (tags.length === 0) return <span className="muted-cell">—</span>;
-    return (
-      <span className="tag-chips">
-        {tags.slice(0, 4).map(tag => {
-          const isActive = ctx.activeTagIds?.has(tag.id) ?? false;
-          // Ungated passives are always-on: show them lit.
-          const alwaysOn = tag.trigger === 'passive' && !tag.condition;
-          return (
-            <span
-              key={tag.id}
-              className={`tag-chip ${isActive || alwaysOn ? 'active' : 'dormant'}`}
-              title={`${tag.name} — ${tag.description}`}
-            >
-              {tag.emoji}
-            </span>
-          );
-        })}
-      </span>
-    );
-  },
-};
-
-// Status icon (mid-race inflictions / effects)
-export const COLUMN_STATUS: ColumnConfig = {
-  id: 'status',
-  header: '!',
-  width: '30px',
-  align: 'center',
-  render: (_driver: Driver, ctx: RowContext) => (
-    ctx.statusEmoji ? <span className="status-icon">{ctx.statusEmoji}</span> : <span className="muted-cell">—</span>
+  render: (driver: Driver, ctx: RowContext) => (
+    <TagChips tags={driver.tags} stack={ctx.effectStack} />
   ),
 };
 
-// Tire history chart (F1 style stint visualization)
+// Status icon (mid-race inflictions / effects)
+// Mid-race things that happened TO the car (track events, inflictions,
+// damage). Read from the effect stack so each one has a name and a reason on
+// hover; the focus row spells them out in full.
+export const COLUMN_STATUS: ColumnConfig = {
+  id: 'status',
+  header: 'Event',
+  width: '52px',
+  align: 'center',
+  render: (_driver: Driver, ctx: RowContext) => {
+    const hits = (ctx.effectStack ?? []).filter(e => e.source === 'track_event' || e.source === 'infliction' || e.source === 'damage');
+    if (hits.length === 0 && ctx.statusEmoji) return <span className="status-icon">{ctx.statusEmoji}</span>;
+    return <EffectChips entries={hits} />;
+  },
+};
+
 export const COLUMN_TIRE_HISTORY: ColumnConfig = {
   id: 'tireHistory',
   header: 'Tires',
@@ -313,12 +299,6 @@ export const COLUMN_TIRE_HISTORY: ColumnConfig = {
   ),
 };
 
-// ============================================
-// VIEW-SPECIFIC COLUMN SETS
-// ============================================
-
-// Track View: floating panel — the live-racing essentials.
-// P | Marble | Code | Interval | Leader | Last | Tags
 export const TRACK_COLUMNS: ColumnConfig[] = [
   COLUMN_POSITION,
   COLUMN_TEAM_MARBLE,
@@ -327,6 +307,7 @@ export const TRACK_COLUMNS: ColumnConfig[] = [
   COLUMN_GAP_LEADER,
   COLUMN_LAST_LAP,
   COLUMN_TAGS,
+  COLUMN_STATUS,
 ];
 
 // Detail View: the rich broadcast data screen (F1 timing).
