@@ -4,9 +4,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import './RaceControl.css';
 import SimLab from '../simlab/SimLab';
-import { ALL_TAGS, getTagById, type Tag } from '../data/tags';
+import { ALL_TAGS, getTagById, describeCondition, type Tag } from '../data/tags';
 import { TAG_CALIBRATION } from '../data/tagCalibration';
-import { bandViolation, describeCalibration, calibrateTagsAsync, CALIBRATION_BANDS, type CalibrationFile, type TagCalibration, type CalibrateProgress } from './calibrate';
+import { bandViolation, calibrateTagsAsync, CALIBRATION_BANDS, CALIBRATION_RACES, type CalibrationFile, type TagCalibration, type CalibrateProgress } from './calibrate';
 import type { CalibrateInMessage, CalibrateOutMessage } from './calibrateWorker';
 import { LabRunner } from './labRunner';
 
@@ -43,30 +43,36 @@ export default function RaceControl({ onBack }: { onBack: () => void }) {
 // ---------------------------------------------------------------------------
 // Calibration
 
-type SortKey = 'places' | 'wins' | 'dnf' | 'name' | 'rarity';
+type SortKey = 'name' | 'target' | 'rarity' | 'places' | 'wins' | 'podiums' | 'dnf' | 'fires';
 const RARITY_RANK = { common: 0, uncommon: 1, rare: 2, legendary: 3 } as const;
+type Row = { c: TagCalibration; tag: Tag };
+const SORTERS: Record<SortKey, (a: Row, b: Row) => number> = {
+  name: (a, b) => a.tag.name.localeCompare(b.tag.name),
+  target: (a, b) => a.c.target.localeCompare(b.c.target) || b.c.places - a.c.places,
+  rarity: (a, b) => RARITY_RANK[b.c.rarity] - RARITY_RANK[a.c.rarity] || b.c.places - a.c.places,
+  places: (a, b) => b.c.places - a.c.places,
+  wins: (a, b) => b.c.winRate - a.c.winRate,
+  podiums: (a, b) => b.c.podiumRate - a.c.podiumRate,
+  dnf: (a, b) => b.c.dnfRate - a.c.dnfRate,
+  fires: (a, b) => b.c.activationsPerRace - a.c.activationsPerRace,
+};
 
 function CalibrationTab() {
   const file = TAG_CALIBRATION;
   const [sort, setSort] = useState<SortKey>('places');
+  const [desc, setDesc] = useState(true);
+  const [picked, setPicked] = useState<string>(file.tags[0]?.tagId ?? '');
   const [copied, setCopied] = useState(false);
   const rows = useMemo(() => {
-    const r = file.tags.map(c => ({ c, tag: getTagById(c.tagId) })).filter((x): x is { c: TagCalibration; tag: Tag } => !!x.tag);
-    const by: Record<SortKey, (a: typeof r[number], b: typeof r[number]) => number> = {
-      places: (a, b) => b.c.places - a.c.places,
-      wins: (a, b) => b.c.winRate - a.c.winRate,
-      dnf: (a, b) => b.c.dnfRate - a.c.dnfRate,
-      name: (a, b) => a.tag.name.localeCompare(b.tag.name),
-      rarity: (a, b) => RARITY_RANK[b.c.rarity] - RARITY_RANK[a.c.rarity] || b.c.places - a.c.places,
-    };
-    return r.sort(by[sort]);
-  }, [file, sort]);
+    const r = file.tags.map(c => ({ c, tag: getTagById(c.tagId) })).filter((x): x is Row => !!x.tag).sort(SORTERS[sort]);
+    return desc ? r : r.reverse();
+  }, [file, sort, desc]);
   const violations = rows.filter(r => bandViolation(r.c));
   const maxPlaces = Math.max(1, ...rows.map(r => Math.abs(r.c.places)));
+  const setSortKey = (k: SortKey) => { if (k === sort) setDesc(d => !d); else { setSort(k); setDesc(true); } };
 
   const copyMd = async () => {
-    const md = calibrationMarkdown(file);
-    try { await navigator.clipboard.writeText(md); setCopied(true); setTimeout(() => setCopied(false), 1500); } catch { /* no clipboard */ }
+    try { await navigator.clipboard.writeText(calibrationMarkdown(file)); setCopied(true); setTimeout(() => setCopied(false), 1500); } catch { /* no clipboard */ }
   };
   const download = () => {
     const blob = new Blob([JSON.stringify(file, null, 2)], { type: 'application/json' });
@@ -77,64 +83,43 @@ function CalibrationTab() {
   return (
     <>
       <section className="rs-row rc-explain">
-        <div className="rs-row-head"><span className="rs-k">How to read this</span></div>
-        <p><b>What was done.</b> Every tag in the game was tested the same way: put on one driver, alone, in {file.races} races — then the same {file.races} races again with nobody tagged. The difference is what the tag does. Nothing here is a guess from the tag's numbers; it is what happened on track.</p>
-        <p><b>Places gained</b> is the headline: how many finishing positions the tagged driver gained over the untagged version of themselves, averaged. <span className="rc-good">+2.6</span> means two and a half places better; <span className="rc-bad">−1.0</span> means the tag hurts. The ± is how sure we are (two of those either side). <b>Wins / Podiums / DNF</b> show the carrier's rate next to the untagged rate ("field").</p>
-        <p><b>Nothing to set up.</b> Sort by any column. If a number looks wrong, the panel at the bottom re-runs one tag in your browser so you can see it come out the same.</p>
-      </section>
-      <section className="rs-row">
-        <div className="rs-row-head">
-          <span className="rs-k">The committed calibration</span>
-          <span className="rs-hint">
-            Each genesis tag was forced, alone, onto one driver in {file.races} seeded races and compared with the same races untagged.
-            Batch seed <code>{file.batchSeed}</code> · cards <code>{file.cards.join(' ') || 'none'}</code> · baseline <code>#{file.baselineFingerprint}</code> · {new Date(file.generatedAt).toLocaleDateString()}
-          </span>
+        <p><b>Every tag, measured.</b> Each one was put on a single driver, alone, in {file.races} races, then the same {file.races} races with nobody tagged. <b>Places</b> = how many finishing positions the tag was worth (<span className="rc-good">+2.6</span> good, <span className="rc-bad">−1.0</span> hurts; ± is the uncertainty). Wins, podiums and DNF show the carrier's rate with the untagged rate in grey. Click a header to sort; click a row to try a change below.</p>
+        <div className="rc-bands">
+          <span className="rs-hint">Batch <code>{file.batchSeed}</code> · cards <code>{file.cards.join(' ') || 'none'}</code> · {new Date(file.generatedAt).toLocaleDateString()} · bands |places| ≤ {CALIBRATION_BANDS.maxPlaces}, DNF ≤ {Math.round(CALIBRATION_BANDS.maxDnfRate * 100)}%, wins ≤ {Math.round(CALIBRATION_BANDS.maxWinRate * 100)}% · <span className={violations.length ? 'rc-bad' : 'rc-good'}>{violations.length ? `${violations.length} out of band` : 'all in band'}</span></span>
           <span className="rc-actions">
             <button type="button" className="rs-link" onClick={copyMd}>{copied ? 'Copied' : 'Copy as markdown'}</button>
             <button type="button" className="rs-link" onClick={download}>Download JSON</button>
           </span>
         </div>
-        <div className="rc-bands">
-          <span className="rs-k">Bands</span>
-          <span>|places| ≤ {CALIBRATION_BANDS.maxPlaces}</span>
-          <span>DNF ≤ {Math.round(CALIBRATION_BANDS.maxDnfRate * 100)}%</span>
-          <span>wins ≤ {Math.round(CALIBRATION_BANDS.maxWinRate * 100)}%</span>
-          <span className={violations.length ? 'rc-bad' : 'rc-good'}>{violations.length ? `${violations.length} out of band` : 'all in band'}</span>
-          <span className="rs-hint">— <code>npm test</code> fails on a tag outside these, or whose effects changed since this run. Re-run with <code>npm run calibrate</code>.</span>
-        </div>
+      </section>
+      <section className="rs-row rc-table-row">
         <div className="rc-table-wrap">
-          <table className="rc-table">
+          <table className="rc-table rc-compact">
             <thead>
               <tr>
-                <th><SortBtn k="name" cur={sort} set={setSort}>Tag</SortBtn></th>
-                <th>On</th>
-                <th><SortBtn k="rarity" cur={sort} set={setSort}>Rarity</SortBtn></th>
-                <th><SortBtn k="places" cur={sort} set={setSort}>Places gained</SortBtn></th>
-                <th><SortBtn k="wins" cur={sort} set={setSort}>Wins</SortBtn></th>
-                <th>Podiums</th>
-                <th><SortBtn k="dnf" cur={sort} set={setSort}>DNF</SortBtn></th>
-                <th title="How often the tag fired per race (passive tags are always on)">Fires / race</th>
-                <th>Band</th>
+                <th><SortBtn k="name" cur={sort} desc={desc} set={setSortKey}>Tag</SortBtn></th>
+                <th><SortBtn k="target" cur={sort} desc={desc} set={setSortKey}>On</SortBtn></th>
+                <th><SortBtn k="rarity" cur={sort} desc={desc} set={setSortKey}>Rarity</SortBtn></th>
+                <th className="rc-th-places"><SortBtn k="places" cur={sort} desc={desc} set={setSortKey}>Places</SortBtn></th>
+                <th><SortBtn k="wins" cur={sort} desc={desc} set={setSortKey}>Wins</SortBtn></th>
+                <th><SortBtn k="podiums" cur={sort} desc={desc} set={setSortKey}>Podiums</SortBtn></th>
+                <th><SortBtn k="dnf" cur={sort} desc={desc} set={setSortKey}>DNF</SortBtn></th>
+                <th><SortBtn k="fires" cur={sort} desc={desc} set={setSortKey}>Fires</SortBtn></th>
               </tr>
             </thead>
             <tbody>
               {rows.map(({ c, tag }) => {
                 const v = bandViolation(c);
                 return (
-                  <tr key={c.tagId} className={v ? 'rc-row-bad' : ''}>
-                    <td className="rc-tag"><span className="rc-emoji">{tag.emoji}</span> {tag.name}<span className="rc-sub">{tag.description}</span></td>
-                    <td>{c.target}</td>
+                  <tr key={c.tagId} className={`${v ? 'rc-row-bad' : ''} ${picked === c.tagId ? 'rc-row-on' : ''}`} onClick={() => setPicked(c.tagId)} title={`${tag.description}${v ? ` — ⚠ ${v}` : ''}`}>
+                    <td className="rc-tag"><span className="rc-emoji">{tag.emoji}</span> {tag.name}{v && <span className="rc-bad"> ⚠</span>}</td>
+                    <td className="rc-dim">{c.target}</td>
                     <td><span className="rc-rarity" style={{ color: `var(--rarity-${c.rarity})` }}>{c.rarity}</span></td>
-                    <td className="rc-places">
-                      <PlacesBar value={c.places} max={maxPlaces} />
-                      <span className={`rc-num ${c.places > 0 ? 'rc-good' : c.places < 0 ? 'rc-bad' : ''}`}>{fmtSigned(c.places)}</span>
-                      <span className="rc-se">± {c.placesSe.toFixed(1)}</span>
-                    </td>
-                    <td><span className="rc-num">{pct(c.winRate)}</span><span className="rc-se">field {pct(c.baseWinRate)} · {mult(c.winRate, c.baseWinRate)}</span></td>
-                    <td><span className="rc-num">{pct(c.podiumRate)}</span><span className="rc-se">field {pct(c.basePodiumRate)}</span></td>
-                    <td><span className={`rc-num ${c.dnfRate > c.baseDnfRate + 0.05 ? 'rc-bad' : ''}`}>{pct(c.dnfRate)}</span><span className="rc-se">field {pct(c.baseDnfRate)}</span></td>
-                    <td><span className="rc-num">{c.activationsPerRace ? c.activationsPerRace.toFixed(2) : tag.trigger === 'passive' ? 'passive' : '0'}</span></td>
-                    <td>{v ? <span className="rc-bad" title={v}>⚠ {v}</span> : <span className="rc-good">✓</span>}</td>
+                    <td className="rc-places"><PlacesBar value={c.places} max={maxPlaces} /><span className={`rc-num ${c.places > 0.05 ? 'rc-good' : c.places < -0.05 ? 'rc-bad' : ''}`}>{fmtSigned(c.places)}</span><span className="rc-se">±{c.placesSe.toFixed(1)}</span></td>
+                    <td><span className="rc-num">{pct(c.winRate)}</span><span className="rc-se">{pct(c.baseWinRate)}</span></td>
+                    <td><span className="rc-num">{pct(c.podiumRate)}</span><span className="rc-se">{pct(c.basePodiumRate)}</span></td>
+                    <td><span className={`rc-num ${c.dnfRate > c.baseDnfRate + 0.05 ? 'rc-bad' : ''}`}>{pct(c.dnfRate)}</span><span className="rc-se">{pct(c.baseDnfRate)}</span></td>
+                    <td><span className="rc-num rc-dim">{tag.trigger === 'passive' ? '—' : c.activationsPerRace.toFixed(2)}</span></td>
                   </tr>
                 );
               })}
@@ -142,13 +127,13 @@ function CalibrationTab() {
           </table>
         </div>
       </section>
-      <VerifyPanel file={file} />
+      <TryPanel file={file} tagId={picked} onPick={setPicked} />
     </>
   );
 }
 
-function SortBtn({ k, cur, set, children }: { k: SortKey; cur: SortKey; set: (k: SortKey) => void; children: React.ReactNode }) {
-  return <button type="button" className={`rc-sort ${cur === k ? 'on' : ''}`} onClick={() => set(k)}>{children}{cur === k ? ' ▾' : ''}</button>;
+function SortBtn({ k, cur, desc, set, children }: { k: SortKey; cur: SortKey; desc: boolean; set: (k: SortKey) => void; children: React.ReactNode }) {
+  return <button type="button" className={`rc-sort ${cur === k ? 'on' : ''}`} onClick={() => set(k)}>{children}{cur === k ? (desc ? ' ▾' : ' ▴') : ''}</button>;
 }
 
 function PlacesBar({ value, max }: { value: number; max: number }) {
@@ -162,11 +147,10 @@ function PlacesBar({ value, max }: { value: number; max: number }) {
 }
 
 const pct = (x: number) => `${(x * 100).toFixed(x < 0.1 ? 1 : 0)}%`;
-const mult = (a: number, b: number) => b > 0 ? `${(a / b).toFixed(1)}×` : '—';
 const fmtSigned = (x: number) => `${x > 0 ? '+' : ''}${x.toFixed(1)}`;
 
 export function calibrationMarkdown(file: CalibrationFile): string {
-  const head = `| Tag | On | Rarity | Places | Wins (field) | Podiums (field) | DNF (field) | Procs/race | Band |\n|---|---|---|---:|---:|---:|---:|---:|---|`;
+  const head = `| Tag | On | Rarity | Places | Wins (field) | Podiums (field) | DNF (field) | Fires/race | Band |\n|---|---|---|---:|---:|---:|---:|---:|---|`;
   const rows = file.tags.map(c => {
     const t = getTagById(c.tagId);
     return `| ${t?.emoji ?? ''} ${t?.name ?? c.tagId} | ${c.target} | ${c.rarity} | ${fmtSigned(c.places)} ± ${c.placesSe.toFixed(1)} | ${pct(c.winRate)} (${pct(c.baseWinRate)}) | ${pct(c.podiumRate)} (${pct(c.basePodiumRate)}) | ${pct(c.dnfRate)} (${pct(c.baseDnfRate)}) | ${c.activationsPerRace.toFixed(2)} | ${bandViolation(c) ?? 'ok'} |`;
@@ -175,29 +159,46 @@ export function calibrationMarkdown(file: CalibrationFile): string {
 }
 
 // ---------------------------------------------------------------------------
-// Verify: run the calibration for one tag in this browser and compare.
+// Try a change: edit a tag's numbers, measure it the same way, compare.
 
-function VerifyPanel({ file }: { file: CalibrationFile }) {
+type Knob = 'speedModifier' | 'consistencyModifier' | 'luckModifier' | 'pitSpeedModifier' | 'crashResistance';
+const KNOBS: { k: Knob; label: string; hint: string }[] = [
+  { k: 'speedModifier', label: 'Speed', hint: '% faster every tick' },
+  { k: 'consistencyModifier', label: 'Consistency', hint: '% less lap-to-lap noise' },
+  { k: 'luckModifier', label: 'Luck', hint: '% more lucky breaks' },
+  { k: 'pitSpeedModifier', label: 'Pit work', hint: '% quicker stationary time' },
+  { k: 'crashResistance', label: 'Crash resistance', hint: 'points of crash avoidance (±50)' },
+];
+const toPct = (k: Knob, v: number | undefined) => v === undefined ? 0 : k === 'crashResistance' ? Math.round(v * 100) : Math.round((v - 1) * 100);
+const fromPct = (k: Knob, p: number) => k === 'crashResistance' ? p / 100 : 1 + p / 100;
+
+function TryPanel({ file, tagId, onPick }: { file: CalibrationFile; tagId: string; onPick: (id: string) => void }) {
   const genesis = useMemo(() => ALL_TAGS.filter(t => file.tags.some(c => c.tagId === t.id)), [file]);
-  const [tagId, setTagId] = useState(genesis[0]?.id ?? '');
-  const [races, setRaces] = useState(file.races);
+  const base = getTagById(tagId);
+  const [knobs, setKnobs] = useState<Record<Knob, number>>(() => readKnobs(base));
+  const [chance, setChance] = useState<number>(Math.round((base?.triggerChance ?? 1) * 100));
+  const [races, setRaces] = useState(50);
   const [progress, setProgress] = useState<CalibrateProgress | null>(null);
-  const [result, setResult] = useState<CalibrationFile | null>(null);
+  const [result, setResult] = useState<{ tag: Tag; file: CalibrationFile } | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [mode, setMode] = useState<string>('');
+  const [mode, setMode] = useState('');
+  const [copied, setCopied] = useState(false);
   const runner = useRef<LabRunner<CalibrateInMessage, CalibrateOutMessage> | null>(null);
+  const pendingTag = useRef<Tag | null>(null);
+
+  useEffect(() => { setKnobs(readKnobs(base)); setChance(Math.round((base?.triggerChance ?? 1) * 100)); setResult(null); setError(null); }, [tagId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     runner.current = new LabRunner<CalibrateInMessage, CalibrateOutMessage>(
       () => new Worker(new URL('./calibrateWorker.ts', import.meta.url), { type: 'module' }),
       async (msg, sink) => {
         if (msg.type !== 'START') return;
-        const { file } = await calibrateTagsAsync(msg.tagIds, { races: msg.races, batchSeed: msg.batchSeed, cards: msg.cards, onProgress: p => { sink.post({ type: 'PROGRESS', progress: p }); return !sink.aborted(); } });
-        if (!sink.aborted()) sink.post({ type: 'COMPLETE', file });
+        const out = await calibrateTagsAsync(msg.tagIds, { races: msg.races, batchSeed: msg.batchSeed, cards: msg.cards, onProgress: p => { sink.post({ type: 'PROGRESS', progress: p }); return !sink.aborted(); } });
+        if (!sink.aborted()) sink.post({ type: 'COMPLETE', file: out.file });
       },
       m => {
         if (m.type === 'PROGRESS') setProgress(m.progress);
-        else if (m.type === 'COMPLETE') { setResult(m.file); setProgress(null); }
+        else if (m.type === 'COMPLETE') { setResult(pendingTag.current ? { tag: pendingTag.current, file: m.file } : null); setProgress(null); }
         else { setError(m.message); setProgress(null); }
         setMode(runner.current?.mode ?? '');
       },
@@ -206,56 +207,124 @@ function VerifyPanel({ file }: { file: CalibrationFile }) {
     return () => runner.current?.terminate();
   }, []);
 
+  if (!base) return null;
+  const edited: Tag = {
+    ...base,
+    effects: Object.fromEntries(KNOBS.map(({ k }) => [k, knobs[k] === 0 ? undefined : fromPct(k, knobs[k])]).filter(([, v]) => v !== undefined)),
+    ...(base.triggerChance !== undefined || chance !== 100 ? { triggerChance: chance / 100 } : {}),
+  };
+  const changed = KNOBS.some(({ k }) => knobs[k] !== toPct(k, base.effects[k])) || chance !== Math.round((base.triggerChance ?? 1) * 100);
+  const theirs = file.tags.find(c => c.tagId === tagId);
+  // The last measurement belongs to the version it measured; editing after a
+  // run clears it so a stale number never sits beside new knobs.
+  const mineFor = result && JSON.stringify(result.tag) === JSON.stringify(edited) ? result.file.tags[0] : undefined;
+
   const run = () => {
+    pendingTag.current = edited;
     setResult(null); setError(null); setProgress({ done: 0, total: races * 2, label: 'baseline', race: 0, races });
-    runner.current?.start({ type: 'START', tagIds: [tagId], races, batchSeed: file.batchSeed, cards: file.cards });
+    runner.current?.start({ type: 'START', tagIds: [edited], races, batchSeed: file.batchSeed, cards: file.cards });
   };
   const stop = () => { runner.current?.terminate(); setProgress(null); };
-
-  const mine = result?.tags[0];
-  const theirs = file.tags.find(c => c.tagId === tagId);
-  const tag = getTagById(tagId);
-  const exact = races === file.races;
-  const same = mine && theirs && exact && mine.places === theirs.places && mine.winRate === theirs.winRate && mine.dnfRate === theirs.dnfRate && result?.baselineFingerprint === file.baselineFingerprint;
-  const phase = progress ? (progress.label === 'baseline' ? 'Untagged baseline' : `With ${progress.label}`) : '';
+  const reset = () => { setKnobs(readKnobs(base)); setChance(Math.round((base.triggerChance ?? 1) * 100)); };
+  const copyCode = async () => {
+    const fx = KNOBS.filter(({ k }) => knobs[k] !== 0).map(({ k }) => `${k}: ${k === 'crashResistance' ? (knobs[k] / 100).toFixed(2) : (1 + knobs[k] / 100).toFixed(3)}`);
+    const code = `// ${base.name} (${base.id}) — src/data/tags.ts\n    effects: { ${fx.join(', ')} },${base.triggerChance !== undefined || chance !== 100 ? `\n    triggerChance: ${(chance / 100).toFixed(2)},` : ''}`;
+    try { await navigator.clipboard.writeText(code); setCopied(true); setTimeout(() => setCopied(false), 1500); } catch { /* no clipboard */ }
+  };
+  const phase = progress ? (progress.label === 'baseline' ? 'Untagged baseline' : `With your ${progress.label}`) : '';
 
   return (
-    <section className="rs-row">
+    <section className="rs-row rc-try">
       <div className="rs-row-head">
-        <span className="rs-k">Check a number yourself</span>
-        <span className="rs-hint">Pick a tag and press Run. Your browser replays the same {file.races} races twice — first with nobody tagged, then with the tag on — so the bar counts to {file.races * 2}. About a minute. The result must match the table exactly.</span>
+        <span className="rs-k">Try a change</span>
+        <span className="rs-hint">This is the lab part. Change a tag's numbers, press Measure, and see what it would be worth on track — measured exactly like the table. Leave the numbers alone and the result should land on the table's row (that's the parity check).</span>
       </div>
-      <div className="rc-verify">
+      <div className="rc-try-grid">
         <label><span className="rs-k">Tag</span>
-          <select value={tagId} onChange={e => setTagId(e.target.value)} disabled={!!progress}>{genesis.map(t => <option key={t.id} value={t.id}>{t.emoji} {t.name}</option>)}</select>
+          <select value={tagId} onChange={e => onPick(e.target.value)} disabled={!!progress}>{genesis.map(t => <option key={t.id} value={t.id}>{t.emoji} {t.name}</option>)}</select>
         </label>
+        {KNOBS.map(({ k, label, hint }) => (
+          <label key={k} title={hint}><span className="rs-k">{label} <span className="rc-dim">{k === 'crashResistance' ? 'pts' : '%'}</span></span>
+            <input type="number" step={1} value={knobs[k]} disabled={!!progress} onChange={e => setKnobs(prev => ({ ...prev, [k]: Number(e.target.value) || 0 }))} className={knobs[k] !== toPct(k, base.effects[k]) ? 'rc-edited' : ''} />
+          </label>
+        ))}
+        {base.trigger !== 'passive' && (
+          <label title="How often the trigger actually fires"><span className="rs-k">Fires <span className="rc-dim">%</span></span>
+            <input type="number" step={5} min={1} max={100} value={chance} disabled={!!progress} onChange={e => setChance(Math.max(1, Math.min(100, Number(e.target.value) || 100)))} className={chance !== Math.round((base.triggerChance ?? 1) * 100) ? 'rc-edited' : ''} />
+          </label>
+        )}
         <label><span className="rs-k">Races</span>
           <select value={races} onChange={e => setRaces(Number(e.target.value))} disabled={!!progress}>
-            <option value={file.races}>{file.races} — exact match, ~1 min</option>
-            <option value={50}>50 — quick look, rougher</option>
+            <option value={50}>50 — quick, ~15 s</option>
+            <option value={file.races}>{file.races} — same as the table, ~1 min</option>
           </select>
         </label>
-        {progress
-          ? <button type="button" className="rs-btn rs-btn-ghost" onClick={stop}>Stop</button>
-          : <button type="button" className="rs-btn rs-btn-primary" onClick={run} disabled={!tagId}>Run</button>}
+        <span className="rc-try-actions">
+          {progress
+            ? <button type="button" className="rs-btn rs-btn-ghost" onClick={stop}>Stop</button>
+            : <button type="button" className="rs-btn rs-btn-primary" onClick={run}>Measure</button>}
+          {changed && !progress && <button type="button" className="rs-link" onClick={reset}>Reset</button>}
+        </span>
+      </div>
+      <div className="rc-try-readout">
+        <span className="rs-k">Fires</span> {base.trigger === 'passive' ? 'always on' : base.trigger.replace('_', ' ')}{base.condition ? ` · only when ${describeCond(base)}` : ''} · <span className="rs-k">Was</span> {describeFx(base)}{changed && <> · <span className="rs-k">Now</span> <span className="rc-edited-text">{describeFx(edited)}</span></>}
       </div>
       {progress && (
         <div className="rc-progress">
           <span className="rc-progress-bar"><span style={{ width: `${(progress.done / progress.total) * 100}%` }} /></span>
-          <span>{phase} · race {progress.race} of {progress.races} · {progress.done}/{progress.total}{mode === 'main thread' ? ' · running on the main thread' : ''}</span>
+          <span>{phase} · race {progress.race} of {progress.races}{mode === 'main thread' ? ' · on the main thread' : ''}</span>
         </div>
       )}
       {error && <div className="rc-bad">{error}</div>}
-      {mine && theirs && tag && (
-        <div className="rc-compare">
-          <div><span className="rs-k">Your browser · {tag.name} · {mine.races} races</span><div>{describeCalibration(mine)}</div><span className="rc-se">baseline #{result?.baselineFingerprint}</span></div>
-          <div><span className="rs-k">The table · {tag.name} · {theirs.races} races</span><div>{describeCalibration(theirs)}</div><span className="rc-se">baseline #{file.baselineFingerprint}</span></div>
-          <div className={same ? 'rc-good' : exact ? 'rc-bad' : 'rs-hint'}>
-            {same ? '✓ Identical. Your browser ran the same races and got the same answer.' : exact ? '⚠ Different. The engine or the tag changed since the table was written — run npm run calibrate and commit.' : `Quick look only: anything within ±${(2 * mine.placesSe).toFixed(1)} places of the table is the same tag. Pick ${file.races} races for an exact match.`}
+      {mineFor && theirs && (
+        <div className="rc-compare rc-compare-3">
+          <div><span className="rs-k">Table · as shipped · {theirs.races} races</span><Big c={theirs} /></div>
+          <div><span className="rs-k">{changed ? 'Your version' : 'Re-measured'} · {mineFor.races} races</span><Big c={mineFor} /></div>
+          <div className="rc-verdict">
+            {changed
+              ? <Verdict mine={mineFor} theirs={theirs} />
+              : (mineFor.races === theirs.races
+                ? (mineFor.places === theirs.places && mineFor.winRate === theirs.winRate && mineFor.dnfRate === theirs.dnfRate
+                  ? <span className="rc-good">✓ Same races, same answer. The table is live, not stale.</span>
+                  : <span className="rc-bad">⚠ Different from the table — the engine or this tag changed since it was measured. Run npm run calibrate.</span>)
+                : <span className="rs-hint">Quick read of the same tag: within ±{(2 * mineFor.placesSe).toFixed(1)} places of the table is the same thing. Pick {theirs.races} races for an exact match.</span>)}
+            {changed && <button type="button" className="rs-link" onClick={copyCode}>{copied ? 'Copied' : 'Copy as code'}</button>}
           </div>
         </div>
       )}
     </section>
+  );
+}
+
+function readKnobs(t: Tag | undefined): Record<Knob, number> {
+  return Object.fromEntries(KNOBS.map(({ k }) => [k, toPct(k, t?.effects[k])])) as Record<Knob, number>;
+}
+function describeFx(t: Tag): string {
+  const parts = KNOBS.filter(({ k }) => t.effects[k] !== undefined).map(({ k, label }) => `${label} ${toPct(k, t.effects[k]) > 0 ? '+' : ''}${toPct(k, t.effects[k])}${k === 'crashResistance' ? '' : '%'}`);
+  return (parts.join(', ') || 'no effects') + (t.triggerChance !== undefined && t.triggerChance < 1 ? ` · fires ${Math.round(t.triggerChance * 100)}%` : '');
+}
+function describeCond(t: Tag): string {
+  const c = t.condition; if (!c) return '';
+  return describeCondition(c);
+}
+function Big({ c }: { c: TagCalibration }) {
+  return (
+    <div className="rc-big">
+      <span><b className={c.places > 0.05 ? 'rc-good' : c.places < -0.05 ? 'rc-bad' : ''}>{fmtSigned(c.places)}</b><small>places ±{c.placesSe.toFixed(1)}</small></span>
+      <span><b>{pct(c.winRate)}</b><small>wins · field {pct(c.baseWinRate)}</small></span>
+      <span><b>{pct(c.podiumRate)}</b><small>podiums · field {pct(c.basePodiumRate)}</small></span>
+      <span><b className={c.dnfRate > c.baseDnfRate + 0.05 ? 'rc-bad' : ''}>{pct(c.dnfRate)}</b><small>DNF · field {pct(c.baseDnfRate)}</small></span>
+    </div>
+  );
+}
+function Verdict({ mine, theirs }: { mine: TagCalibration; theirs: TagCalibration }) {
+  const d = mine.places - theirs.places;
+  const sig = Math.abs(d) > 2 * Math.sqrt(mine.placesSe ** 2 + theirs.placesSe ** 2);
+  const v = bandViolation(mine);
+  return (
+    <span className={v ? 'rc-bad' : sig ? 'rc-good' : 'rs-hint'}>
+      {v ? `⚠ Out of band: ${v}.` : sig ? `${d > 0 ? 'Stronger' : 'Weaker'} by ${Math.abs(d).toFixed(1)} places — a real change.` : `Within noise of the shipped version (${d > 0 ? '+' : ''}${d.toFixed(1)} places). Push harder or run ${CALIBRATION_RACES} races.`}
+    </span>
   );
 }
 
