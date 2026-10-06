@@ -39,6 +39,9 @@ export interface Ruleset {
   };
   /** Physics, fully resolved (CANON with card patches applied). */
   simVars: SimVariables;
+  /** A Race Control preset applied on top: edited tag definitions and knob
+   * values. Genesis draws the edited tags; simVars already carry the knobs. */
+  lab?: { name: string; tagEdits: Record<string, Tag>; knobEdits: Record<string, number> };
 }
 
 /** A card's patch: the small vocabulary cards speak. All optional. */
@@ -164,7 +167,20 @@ export function resolveRuleset(cardIds: string[], cardsById: Map<string, Card>):
 /** The tag pool as Tag objects, for generators. */
 export function poolTags(rs: Ruleset): Tag[] {
   const set = new Set(rs.tags.pool);
-  return ALL_TAGS.filter(t => set.has(t.id));
+  return ALL_TAGS.filter(t => set.has(t.id)).map(t => rs.lab?.tagEdits[t.id] ?? t);
+}
+
+/** Apply a Race Control preset: knob edits into simVars, tag edits for genesis. */
+export function applyLabPreset(rs: Ruleset, preset: { name: string; tagEdits: Record<string, Tag>; knobEdits: Record<string, number> } | null): Ruleset {
+  if (!preset || (Object.keys(preset.tagEdits).length === 0 && Object.keys(preset.knobEdits).length === 0)) return rs;
+  const simVars = structuredClone(rs.simVars);
+  for (const [path, value] of Object.entries(preset.knobEdits)) {
+    const parts = path.split('.');
+    let cur: Record<string, unknown> = simVars as unknown as Record<string, unknown>;
+    for (let i = 0; i < parts.length - 1; i++) cur = cur[parts[i]] as Record<string, unknown>;
+    if (typeof cur[parts[parts.length - 1]] === 'number') cur[parts[parts.length - 1]] = value;
+  }
+  return { ...rs, simVars, lab: { name: preset.name, tagEdits: preset.tagEdits, knobEdits: preset.knobEdits } };
 }
 
 /** Is this ruleset byte-for-byte the default (no cards, nothing tweaked)? */
@@ -214,6 +230,7 @@ export function describeOdds(o: RarityOdds): string {
 export function describeRuleset(rs: Ruleset): string[] {
   const d = defaultRuleset();
   const lines: string[] = [];
+  if (rs.lab) lines.push(`Lab preset "${rs.lab.name}": ${Object.keys(rs.lab.tagEdits).length} tag edit(s), ${Object.keys(rs.lab.knobEdits).length} knob edit(s)`);
   if (rs.tags.pool.length !== d.tags.pool.length) lines.push(`Tag pool: ${rs.tags.pool.length} of ${d.tags.pool.length} tags`);
   if (rs.tags.genesisChance !== d.tags.genesisChance) lines.push(`Born with a tag: ${describeChance(rs.tags.genesisChance)} per slot (default ${describeChance(d.tags.genesisChance)})`);
   if (RARITIES.some(r => rs.tags.rarityOdds[r] !== d.tags.rarityOdds[r])) lines.push(`Rarity odds: ${describeOdds(rs.tags.rarityOdds)}`);

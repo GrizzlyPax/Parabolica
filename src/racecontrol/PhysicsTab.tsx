@@ -8,6 +8,8 @@ import { measurePhysicsAsync, formatMetric, metricOutOfBand, PHYSICS_CARDS, PHYS
 import type { PhysicsInMessage, PhysicsOutMessage } from './physicsWorker';
 import { useLabRunner } from './useLabRunner';
 import { randomSeed } from '../engine/rng';
+import { newId } from './notebook';
+import { SaveBar, type LabProps } from './lab';
 
 export const PHYSICS_SEED = 2026;
 
@@ -22,10 +24,11 @@ const RUNNER_SPEC = {
   abort: { type: 'ABORT' } as PhysicsInMessage,
 };
 
-export function PhysicsTab() {
+export function PhysicsTab({ lab }: { lab: LabProps }) {
   const [seed, setSeed] = useState(PHYSICS_SEED);
   const [races, setRaces] = useState(PHYSICS_RACES);
-  const [edits, setEdits] = useState<Record<string, number>>({});
+  const edits = lab.working.knobEdits;
+  const setEdits = (f: (prev: Record<string, number>) => Record<string, number>) => lab.setWorking(w => ({ ...w, knobEdits: f(w.knobEdits) }));
   const [open, setOpen] = useState<string>('');
   const [copied, setCopied] = useState(false);
   const [canonBy, setCanonBy] = useState<Record<string, PhysicsReport>>({});
@@ -53,7 +56,11 @@ export function PhysicsTab() {
     yoursRun.start({ type: 'START', batchSeed: seed, races, cards: PHYSICS_CARDS, variables }, { done: 0, total: races, track: '' });
   };
   const yours = edited ? yoursRun.result : null;
-  const setEdit = (path: string, value: number) => setEdits(prev => {
+  const preset = lab.working.preset;
+  useEffect(() => { if (canonResult) lab.logRun({ id: newId(), at: Date.now(), kind: 'physics', seed: canonResult.batchSeed, races: canonResult.races, note: 'current rules', result: canonResult }); }, [canonResult]); // eslint-disable-line react-hooks/exhaustive-deps
+  const yoursResult = yoursRun.result;
+  useEffect(() => { if (yoursResult) lab.logRun({ id: newId(), at: Date.now(), kind: 'physics', seed: yoursResult.batchSeed, races: yoursResult.races, presetId: preset?.id, presetName: preset?.name, note: `${Object.keys(edits).length} knob edit${Object.keys(edits).length > 1 ? 's' : ''}`, result: yoursResult }); }, [yoursResult]); // eslint-disable-line react-hooks/exhaustive-deps
+  const setEdit = (path: string, value: number) => setEdits((prev: Record<string, number>) => {
     const next = { ...prev };
     if (Math.abs(value - canonValue(path)) < 1e-12) delete next[path]; else next[path] = value;
     return next;
@@ -79,9 +86,18 @@ export function PhysicsTab() {
           {canonRun.progress
             ? <button type="button" className="rs-btn rs-btn-ghost" onClick={canonRun.stop}>Stop</button>
             : <button type="button" className={`rs-btn ${canon ? 'rs-btn-ghost' : 'rs-btn-primary'}`} onClick={measureCanon} disabled={busy}>{canon ? 'Measure again' : 'Measure the current rules'}</button>}
+          {yoursRun.progress
+            ? <button type="button" className="rs-btn rs-btn-ghost" onClick={yoursRun.stop}>Stop</button>
+            : <button type="button" className="rs-btn rs-btn-primary" onClick={measureYours} disabled={!edited || busy}>Measure {edited ? `${Object.keys(edits).length} edit${Object.keys(edits).length > 1 ? 's' : ''}` : 'edits'}</button>}
+          {edited && <button type="button" className="rs-link" onClick={copyCode}>{copied ? 'Copied' : 'Copy edits as code'}</button>}
+          <SaveBar lab={lab} busy={busy} />
           {canonRun.progress && <Progress p={canonRun.progress} what="current rules" mode={canonRun.mode} />}
+          {yoursRun.progress && <Progress p={yoursRun.progress} what="your rules" mode={yoursRun.mode} />}
           {canonRun.error && <span className="rc-bad">{canonRun.error}</span>}
-          {canon && !canonRun.progress && <span className="rc-good">✓ seed {canon.batchSeed} · {canon.races} races · #{canon.fingerprint} · <code>npm run lab -- {canon.batchSeed} {canon.races} all no-tags</code></span>}
+          {yoursRun.error && <span className="rc-bad">{yoursRun.error}</span>}
+          {canon && !canonRun.progress && <span className="rc-good">✓ current rules · seed {canon.batchSeed} · {canon.races} races · #{canon.fingerprint}</span>}
+          {yours && !yoursRun.progress && <span className="rc-good">✓ your rules · same {yours.races} races · #{yours.fingerprint} — see Yours and Δ below</span>}
+          <span className="rc-actions"><code>npm run lab -- {seed} {races} all no-tags</code></span>
         </div>
       </section>
 
@@ -116,19 +132,9 @@ export function PhysicsTab() {
       <section className="rs-row rc-table-row">
         <div className="rc-knob-head">
           <span className="rs-k">The knobs</span>
-          <span className="rs-hint">Click one to change it. Edited knobs stay purple; Measure runs them all together.</span>
-          <span className="rc-actions">
-            {edited && <span className="rc-edited-text">{Object.keys(edits).length} edited</span>}
-            {edited && !busy && <button type="button" className="rs-link" onClick={() => { setEdits({}); yoursRun.clear(); }}>Reset all</button>}
-            {edited && <button type="button" className="rs-link" onClick={copyCode}>{copied ? 'Copied' : 'Copy as code'}</button>}
-            {yoursRun.progress
-              ? <button type="button" className="rs-btn rs-btn-ghost" onClick={yoursRun.stop}>Stop</button>
-              : <button type="button" className="rs-btn rs-btn-primary" onClick={measureYours} disabled={!edited || busy}>Measure</button>}
-          </span>
+          <span className="rs-hint">Click one to change it. Edited knobs stay purple; Measure at the top runs them all together.</span>
+          {edited && <span className="rc-edited-text rc-actions">{Object.keys(edits).length} edited</span>}
         </div>
-        {yoursRun.progress && <Progress p={yoursRun.progress} what="your rules" mode={yoursRun.mode} />}
-        {yoursRun.error && <div className="rc-bad">{yoursRun.error}</div>}
-        {yours && !yoursRun.progress && <div className="rc-good rc-knob-note">✓ your rules measured on the same {yours.races} races · #{yours.fingerprint} — read the Yours and Δ columns above.</div>}
         <div className="rc-table-wrap">
           <table className="rc-table rc-compact rc-knobs">
             <thead><tr><th>Knob</th><th>Current</th><th>Yours</th><th className="rc-th-hint">Meaning</th></tr></thead>

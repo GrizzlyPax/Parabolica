@@ -14,7 +14,8 @@ import { generateTrack, getDynamicEventDescription, CURRENT_TRACKS, Track } from
 import { getRandomTeams, Team } from './data/teams';
 import { mulberry32, deriveSeed, randomSeed } from './engine/rng';
 import { CARDS_BY_ID, cardsForScope } from './data/cards';
-import { resolveRuleset, describeRuleset, describeChance, describeOdds, serializeRuleset, Ruleset } from './rules/ruleset';
+import { resolveRuleset, applyLabPreset, describeRuleset, describeChance, describeOdds, serializeRuleset, Ruleset } from './rules/ruleset';
+import { loadNotebook, presetSummary } from './racecontrol/notebook';
 import { buildRoster } from './rules/genesis';
 import { weatherForRace } from './data/weather';
 import { intrinsicTrackTags } from './data/trackTags';
@@ -43,7 +44,11 @@ export default function RunSetup({ onStartRace, onBack }: RunSetupProps) {
   const [trackOverride, setTrackOverride] = useState<Track | null>(null);
   const [showRules, setShowRules] = useState(false);
 
-  const ruleset = useMemo(() => resolveRuleset(hand, CARDS_BY_ID), [hand]);
+  // Race Control presets (edited tags + knobs) saved in this browser.
+  const presets = useMemo(() => loadNotebook().presets, []);
+  const [presetId, setPresetId] = useState<string>('');
+  const preset = presets.find(p => p.id === presetId) ?? null;
+  const ruleset = useMemo(() => applyLabPreset(resolveRuleset(hand, CARDS_BY_ID), preset), [hand, preset]);
 
   // The universe for this seed (teams, track, people, cars) — independent of cards.
   const universe = useMemo(() => {
@@ -152,6 +157,16 @@ export default function RunSetup({ onStartRace, onBack }: RunSetupProps) {
             );
           })}
         </div>
+        {presets.length > 0 && (
+          <div className="rs-preset">
+            <span className="rs-k">Lab preset</span>
+            <select value={presetId} onChange={e => setPresetId(e.target.value)} aria-label="Lab preset">
+              <option value="">none — the rules as shipped</option>
+              {presets.map(p => <option key={p.id} value={p.id}>{p.name} · {presetSummary(p)}</option>)}
+            </select>
+            <span className="rs-hint">{preset ? `Racing under "${preset.name}": its tag edits are what genesis draws, its knobs are the physics. From Race Control → Notebook.` : 'A setup you saved in Race Control. Pick one to race under it.'}</span>
+          </div>
+        )}
         {showRules && (
           <div className="rs-rules">
             {rulesLines.length === 0 ? <div className="rs-rule">Default rules: {ruleset.tags.pool.length} tags in the pool, {describeChance(ruleset.tags.genesisChance)} per slot to be born with one ({describeOdds(ruleset.tags.rarityOdds)}), up to {ruleset.tags.slotCap} each; pit rule: {ruleset.simVars.pits.minStops} stops{ruleset.simVars.pits.requireAllCompounds ? ', all 3 compounds' : ''}; canon physics.</div>

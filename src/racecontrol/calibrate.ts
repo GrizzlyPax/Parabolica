@@ -12,6 +12,7 @@
 import { ALL_TAGS, isGenesisTag, type Rarity, type Tag, type TagTarget } from '../data/tags';
 import { labSpec, runLabRace, carriersOf, finishPosition, raceFingerprint, batchFingerprint, type LabRaceResult } from './runner';
 import RaceEngine from '../RaceEngine';
+import type { SimVariables } from '../simlab/types';
 
 export const CALIBRATION_CARDS = ['no-tags'];
 export const CALIBRATION_BATCH_SEED = 2026;
@@ -82,6 +83,8 @@ export interface CalibrateOptions {
   batchSeed?: number;
   races?: number;
   cards?: string[];
+  /** Physics to run under (a preset's knob edits). Default: the ruleset's own. */
+  variables?: SimVariables;
   /** Called after every race; return false to abort. */
   onProgress?: (done: number, total: number, label: string) => boolean | void;
 }
@@ -117,7 +120,7 @@ export function* calibrateSteps(tagIds: (string | Tag)[] = genesisTagIds(), opti
   // Baseline: every race once, untagged.
   const baseline: Baseline[] = [];
   for (let i = 0; i < races; i++) {
-    const r = runLabRace(labSpec(batchSeed, i, cards), { engine });
+    const r = runLabRace(labSpec(batchSeed, i, cards), { engine, variables: options.variables });
     baseline.push(summarize(r));
     const go = yield { done: ++done, total, label: 'baseline', race: i + 1, races };
     if (go === false) return { file: emptyFile(batchSeed, races, cards, baseline), aborted: true };
@@ -132,7 +135,7 @@ export function* calibrateSteps(tagIds: (string | Tag)[] = genesisTagIds(), opti
     let wins = 0, baseWins = 0, podiums = 0, basePodiums = 0, dnfs = 0, baseDnfs = 0, carrierRaces = 0, activations = 0;
     for (let i = 0; i < races; i++) {
       const override = { driverIndex: i % (GRID * 2), tagId, tag };
-      const r = runLabRace(labSpec(batchSeed, i, cards), { engine, override });
+      const r = runLabRace(labSpec(batchSeed, i, cards), { engine, override, variables: options.variables });
       const base = baseline[i];
       for (const id of carriersOf(r, override)) {
         const pos = finishPosition(r, id);
