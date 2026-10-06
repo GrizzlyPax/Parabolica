@@ -110,6 +110,9 @@ export interface RaceDigest {
   /** Tags the sim handed out or took away because of this race (#232).
    * Take effect from the NEXT race. */
   tagChanges?: TagChange[];
+  /** Tags picked up mid-race with a {races:n} duration (#232b) — settle
+   * turns these into acquire/expire log entries. */
+  inRaceCarryovers?: { driverId: number; tagId: string; races: number; lap: number }[];
   /** Top-magnitude events, always retained (gods and chronicles eat these). */
   highlights: RaceEvent[];
   /** Full event log; only retained for the most recent races (see settle). */

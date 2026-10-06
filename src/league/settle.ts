@@ -14,7 +14,7 @@ import { getTrackById, getDynamicEventDescription, Track } from '../generators/t
 import { updateSeasonWithRaceResult } from '../types/season';
 import { LeagueState, RaceDigest, SettleResult, LiveRace } from './types';
 import { rosterStateAt } from './league';
-import { evaluateAcquisitions, expiriesAt } from './acquisition';
+import { evaluateAcquisitions, expiriesAt, carryoverEntries } from './acquisition';
 import { pickHighlights } from './highlights';
 import { weatherForRace } from '../data/weather';
 import { intrinsicTrackTags } from '../data/trackTags';
@@ -161,6 +161,7 @@ function runScheduledRace(
       : undefined,
     highlights: pickHighlights(events),
     events,
+    inRaceCarryovers: engine.getInRaceCarryovers(),
   };
   return { digest, drivers };
 }
@@ -242,10 +243,12 @@ export function settleLeague(league: LeagueState, options: SettleOptions): Settl
     // the same append-only log as interventions and take effect next race.
     const rosterIn = rosterStateAt(working, race.index);
     const acquired = evaluateAcquisitions(working, digest, season, rosterIn);
+    const carried = carryoverEntries(working, digest, rosterIn);
     const expired = expiriesAt(working, race.index, rosterIn);
-    digest.tagChanges = [...expired, ...acquired.changes];
-    if (acquired.entries.length) {
-      working = { ...working, interventionLog: [...working.interventionLog, ...acquired.entries] };
+    digest.tagChanges = [...expired, ...acquired.changes, ...carried.changes];
+    const newEntries = [...acquired.entries, ...carried.entries];
+    if (newEntries.length) {
+      working = { ...working, interventionLog: [...working.interventionLog, ...newEntries] };
     }
     newlySettled.push(digest);
     prevEnd = endedAt;

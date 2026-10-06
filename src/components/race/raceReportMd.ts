@@ -146,12 +146,12 @@ export function buildRaceReportMd(meta: RaceReportMeta, drivers: Driver[], sampl
   const ev = extras.events ?? [];
   if (ev.length) {
     const byDriver = new Map(drivers.map(d => [d.id, d]));
-    const fired = ev.filter(e => e.type === 'tag_activation');
+    const fired = ev.filter(e => e.type === 'tag_activation' || e.type === 'tag_acquired');
     const hits = ev.filter(e => e.type === 'track_event' || e.type === 'track_event_effect');
     lines.push('## What the oddities did');
     lines.push('');
     if (fired.length) {
-      lines.push('Tag activations (triggered tags only; passive and gated tags act silently):');
+      lines.push('Tag activations and mid-race pickups (passive and gated tags act silently):');
       for (const e of fired) lines.push(`- L${e.lap ?? '?'} ${e.emoji} ${byDriver.get(e.driverId)?.name ?? e.driverName}: ${e.description}`);
     } else {
       lines.push('- No triggered tag fired this race.');

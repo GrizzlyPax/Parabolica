@@ -123,7 +123,7 @@ export type TagDuration = 'permanent' | 'season' | { races: number };
 
 /** Which doors may hand a tag out. Absent = genesis + intervention (the
  * classic tags). Acquired-only tags never appear in the genesis pool. */
-export type TagSource = 'genesis' | 'acquired' | 'intervention' | 'decree' | 'divine';
+export type TagSource = 'genesis' | 'acquired' | 'in-race' | 'intervention' | 'decree' | 'divine';
 
 export interface Tag {
   id: string;
@@ -653,8 +653,24 @@ export const ACQUIRED_TAGS: Tag[] = [
   },
 ];
 
+// ============ IN-RACE TAGS (#232b) ============
+// Picked up mid-race by data/inRace.ts rules. Transient states, so they
+// bypass the slot cap; `duration` here is informational (the rule decides).
+export const IN_RACE_TAGS: Tag[] = [
+  { id: 'damaged', name: 'Damaged', emoji: '🔧', description: 'Survived a crash. The car is 15% slower for the rest of the race.',
+    target: 'driver', trigger: 'passive', tier: 'power', sources: ['in-race'], effects: { speedModifier: 0.85 } },
+  { id: 'spun', name: 'Spun', emoji: '🌀', description: 'Just swapped ends. The next couple of laps are ragged.',
+    target: 'driver', trigger: 'passive', tier: 'trait', sources: ['in-race'], effects: { consistencyModifier: 0.9 } },
+  { id: 'cooked-tyres', name: 'Cooked Tyres', emoji: '🔥', description: 'Past the cliff. Slower until the next stop.',
+    target: 'driver', trigger: 'passive', tier: 'trait', sources: ['in-race'], effects: { speedModifier: 0.97 } },
+  { id: 'sulking', name: 'Sulking', emoji: '🐢', description: 'That stop was slow and everyone knows it.',
+    target: 'driver', trigger: 'passive', tier: 'quirk', sources: ['in-race'], effects: { consistencyModifier: 0.96 } },
+  { id: 'fired-up', name: 'Fired Up', emoji: '⚡', description: 'A lightning stop. The whole crew is buzzing.',
+    target: 'driver', trigger: 'passive', tier: 'quirk', sources: ['in-race'], effects: { speedModifier: 1.01 } },
+];
+
 // All tags combined for easy lookup
-export const ALL_TAGS: Tag[] = [...DRIVER_TAGS, ...CAR_TAGS, ...TEAM_TAGS, ...CONDITION_TAGS, ...ACQUIRED_TAGS];
+export const ALL_TAGS: Tag[] = [...DRIVER_TAGS, ...CAR_TAGS, ...TEAM_TAGS, ...CONDITION_TAGS, ...ACQUIRED_TAGS, ...IN_RACE_TAGS];
 
 /** May this tag be rolled at genesis? Classic tags (no `sources`) yes. */
 export function isGenesisTag(t: Tag): boolean {

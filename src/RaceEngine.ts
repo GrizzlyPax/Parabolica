@@ -1,4 +1,5 @@
 import { Tag, getTagById, RaceContext, evaluateTagCondition, describeCondition, TRIGGER_LABELS } from './data/tags';
+import { IN_RACE_RULES, InRaceRule, InRaceDuration } from './data/inRace';
 import { WeatherState } from './data/weather';
 import { TrackTag } from './data/trackTags';
 import { INFLICTIONS } from './data/inflictions';
@@ -238,7 +239,9 @@ export type RaceEventType =
   | 'unsafety_car_deployed'  // The Unsafety Car has been deployed
   | 'unsafety_car_recalled'  // The Unsafety Car is returning to the void
   // Mistakes layer (#82)
-  | 'driver_error';    // Non-terminal mistake: spin / lock-up / wide moment
+  | 'driver_error'     // Non-terminal mistake: spin / lock-up / wide moment
+  | 'tag_acquired'     // A tag was picked up mid-race (#232b)
+  | 'tag_expired';     // …and ran out
 
 export interface RaceEvent {
   tick: number;
@@ -444,6 +447,11 @@ class RaceEngine {
   // Tag activation state - tracks which tags have activated and when
   private activeTagEffects: Map<number, { tagId: string; speedModifier: number; consistencyModifier: number; luckModifier: number; expiresAtTick: number | null }[]> = new Map();
   private tagActivatedThisRace: Set<string> = new Set();  // "driverId-tagId" to track one-time activations
+  // In-race tags (#232b): what each driver picked up mid-race and when it ends.
+  private inRaceRules: InRaceRule[] = IN_RACE_RULES;
+  private inRaceTags: Map<number, { tagId: string; sinceLap: number; duration: InRaceDuration; expiresAtLap: number | null }[]> = new Map();
+  /** Tags picked up with a {races:n} duration — the league carries them over. */
+  private inRaceCarryovers: { driverId: number; tagId: string; races: number; lap: number }[] = [];
   /** Events trimmed off raceEvents by the UI cap, in order — so getFullEvents()
    * can hand reports the whole race (#245). Cleared with raceEvents. */
   private droppedEvents: RaceEvent[] = [];
@@ -808,6 +816,77 @@ class RaceEngine {
       impact,
       magnitude: Math.min(1, Math.max(0, magnitude)),
     });
+    if (driver && type !== 'tag_acquired' && type !== 'tag_expired') this.applyInRaceRules(type, driver, description);
+  }
+
+  // === IN-RACE ACQUISITION (#232b) ===
+
+  /** Replace the rule set (rulesets/cards will plumb this). */
+  setInRaceRules(rules: InRaceRule[]): void { this.inRaceRules = rules; }
+
+  private applyInRaceRules(type: RaceEventType, driver: Driver, description: string): void {
+    if (type === 'pit_exit') this.expireInRaceTags(driver, e => e.duration === 'until-pit');
+    for (const rule of this.inRaceRules) {
+      if (rule.on !== type) continue;
+      if (rule.match && !rule.match.test(description)) continue;
+      const tag = getTagById(rule.tagId);
+      if (!tag) continue;
+      this.attachInRaceTag(driver, tag, rule);
+    }
+  }
+
+  /** Put a tag on a driver mid-race. Transient states bypass the slot cap.
+   * Mutates the driver object passed in (the one the caller holds). */
+  private attachInRaceTag(driver: Driver, tag: Tag, rule: InRaceRule): void {
+    if (driver.tags.some(t => t.id === tag.id)) return;
+    driver.tags = [...driver.tags, tag];
+    const lap = driver.currentLap;
+    const d = rule.duration;
+    const expiresAtLap = typeof d === 'object' && 'laps' in d ? lap + d.laps : null;
+    const list = this.inRaceTags.get(driver.id) ?? [];
+    list.push({ tagId: tag.id, sinceLap: lap, duration: d, expiresAtLap });
+    this.inRaceTags.set(driver.id, list);
+    if (typeof d === 'object' && 'races' in d) this.inRaceCarryovers.push({ driverId: driver.id, tagId: tag.id, races: d.races, lap });
+    // Passive, ungated tags act through the unified effect system; a gated
+    // one is read live by getConditionalModifier, so it needs no activation.
+    if (tag.trigger === 'passive' && !tag.condition) this.tryActivateTag(driver, tag, {});
+    this.logEvent('tag_acquired', driver, `${tag.name}: ${rule.text}`, tag.effects.speedModifier && tag.effects.speedModifier > 1 ? 'positive' : 'negative', 0.6, tag.emoji);
+  }
+
+  private expireInRaceTags(driver: Driver, pred: (e: { tagId: string; duration: InRaceDuration; expiresAtLap: number | null }) => boolean): void {
+    const list = this.inRaceTags.get(driver.id);
+    if (!list) return;
+    const keep: typeof list = [];
+    for (const e of list) {
+      if (!pred(e)) { keep.push(e); continue; }
+      driver.tags = driver.tags.filter(t => t.id !== e.tagId);
+      const effects = this.unifiedEffects.get(driver.id);
+      if (effects) for (const fx of effects) if (fx.source === 'tag' && fx.sourceId === e.tagId) fx.expiresAtTick = this.raceState.totalTicks;
+      this.tagActivatedThisRace.delete(`${driver.id}-${e.tagId}`); // may be picked up again
+      const tag = getTagById(e.tagId);
+      this.logEvent('tag_expired', driver, `${tag?.name ?? e.tagId} wears off`, 'neutral', 0.3, tag?.emoji);
+    }
+    if (keep.length) this.inRaceTags.set(driver.id, keep); else this.inRaceTags.delete(driver.id);
+  }
+
+  /** Lap-based expiries, checked every tick. */
+  private expireInRaceTagsByLap(): void {
+    for (const [driverId, list] of this.inRaceTags) {
+      if (!list.some(e => e.expiresAtLap !== null)) continue;
+      const driver = this.drivers.find(d => d.id === driverId);
+      if (!driver) continue;
+      this.expireInRaceTags(driver, e => e.expiresAtLap !== null && driver.currentLap >= e.expiresAtLap);
+    }
+  }
+
+  /** How a mid-race tag got there and how long it has left (for the card). */
+  getInRaceTagInfo(driverId: number, tagId: string): { sinceLap: number; duration: InRaceDuration; expiresAtLap: number | null } | null {
+    return this.inRaceTags.get(driverId)?.find(e => e.tagId === tagId) ?? null;
+  }
+
+  /** Tags picked up mid-race that the league should carry into coming races. */
+  getInRaceCarryovers(): { driverId: number; tagId: string; races: number; lap: number }[] {
+    return [...this.inRaceCarryovers];
   }
 
   // Calculate pit box positions for all drivers based on team names (alphabetical)
@@ -1063,6 +1142,8 @@ class RaceEngine {
     // Reset tag activation state
     this.activeTagEffects = new Map();
     this.tagActivatedThisRace = new Set();
+    this.inRaceTags = new Map();
+    this.inRaceCarryovers = [];
     // Reset unified effect storage
     this.unifiedEffects = new Map();
     // Conditional-tag context is rebuilt each tick; clear stale data (the active
@@ -1219,8 +1300,7 @@ class RaceEngine {
       modifier -= tireVars.flatPenalty;
     }
 
-    // Apply damage penalty if car is damaged
-    modifier *= driver.damageSpeedPenalty;
+    // (Crash damage is the 'damaged' in-race tag now — #232b.)
 
     // Floor at minSpeedFloor (allows for truly punishing degradation)
     return Math.max(tireVars.minSpeedFloor, modifier);
@@ -2261,7 +2341,15 @@ class RaceEngine {
         continue;
       }
       if (tag.trigger === 'passive') {
-        out.push({ ...base, active: true, reason: 'always on' });
+        const ir = this.getInRaceTagInfo(driverId, tag.id);
+        if (ir) {
+          const left = ir.duration === 'until-pit' ? 'until the next stop' : ir.duration === 'race' ? 'rest of race'
+            : ir.expiresAtLap !== null ? `${Math.max(0, ir.expiresAtLap - driver.currentLap)} lap${ir.expiresAtLap - driver.currentLap === 1 ? '' : 's'} left`
+            : 'carries into the next race';
+          out.push({ ...base, active: true, reason: `picked up L${ir.sinceLap + 1} · ${left}` });
+        } else {
+          out.push({ ...base, active: true, reason: 'always on' });
+        }
         continue;
       }
       const live = liveTagEffects.find(e => e.sourceId === tag.id && (e.expiresAtTick === null || e.expiresAtTick > now));
@@ -2300,10 +2388,7 @@ class RaceEngine {
         active: true, reason: left, speed: e.speedModifier, consistency: e.consistencyModifier, luck: e.luckModifier, crash: e.crashResistance, pit: e.pitSpeedModifier });
     }
 
-    if (driver.isDamaged) {
-      out.push({ source: 'damage', id: 'damage', name: 'Damaged car', emoji: '🔧', active: true, reason: 'survived a crash',
-        speed: driver.damageSpeedPenalty, consistency: 1, luck: 1, crash: 0, pit: 1 });
-    }
+
     if (this.raceState.unsafetyCarActive) {
       out.push({ source: 'safety_car', id: 'safety-car', name: 'Safety car', emoji: '🚨', active: true, reason: 'field held to the SC speed limit',
         speed: 1, consistency: 1, luck: 1, crash: 0, pit: 1 });
@@ -2441,6 +2526,7 @@ class RaceEngine {
     // === TRACK EVENT SYSTEM ===
     // Clean up expired effects
     this.cleanupExpiredEffects();
+    this.expireInRaceTagsByLap();
 
     // === TAG TRIGGER EVALUATION ===
     const isRaceStart = this.raceState.totalTicks === 1;
@@ -2533,7 +2619,6 @@ class RaceEngine {
         return {
           ...driver,
           isDamaged: true,
-          damageSpeedPenalty: 0.85,
         };
       }
       return driver;
@@ -3530,7 +3615,7 @@ class RaceEngine {
     return {
       drivers: this.getDrivers(),
       raceState: { ...this.raceState },
-      events: [...this.raceEvents],
+      events: this.getFullEvents().slice(), // uncapped: digests and reports see the whole race
     };
   }
 }

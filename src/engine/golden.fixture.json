@@ -4,67 +4,82 @@
   "rosterHash": "f9e8b6a2",
   "finishOrder": [
     8,
-    11,
-    20,
+    21,
     14,
-    9,
     19,
-    6,
+    16,
+    3,
+    20,
     2,
-    18,
-    15,
     4,
-    10,
-    0,
-    1,
-    5,
+    13,
     17,
-    3
+    10,
+    12,
+    6,
+    15,
+    7,
+    0,
+    5,
+    1
   ],
-  "totalTicks": 2184,
-  "leadChanges": 13,
-  "eventsHash": "37fc0e07",
+  "totalTicks": 2114,
+  "leadChanges": 18,
+  "eventsHash": "143a4d83",
   "tags": [
     [
-      "sunday-driver"
+      "sunday-driver",
+      "cooked-tyres"
     ],
+    [],
+    [
+      "cooked-tyres"
+    ],
+    [],
+    [
+      "cooked-tyres"
+    ],
+    [],
+    [],
+    [],
+    [
+      "cooked-tyres",
+      "damaged"
+    ],
+    [],
+    [],
     [
       "pit-lane-special"
     ],
     [],
-    [],
     [
-      "rain-dancer"
+      "pit-lane-special",
+      "cooked-tyres"
     ],
-    [],
-    [
-      "pit-lane-special"
-    ],
-    [],
-    [],
-    [],
-    [],
-    [
-      "pit-lane-special"
-    ],
-    [
-      "cursed-chassis",
-      "chaotic-energy"
-    ],
-    [
-      "cursed-chassis",
-      "chaotic-energy"
-    ],
-    [],
-    [],
-    [],
     [],
     [
       "sunday-driver",
       "pit-lane-special"
     ],
+    [
+      "cursed-chassis",
+      "chaotic-energy"
+    ],
     [],
-    [],
-    []
+    [
+      "cursed-chassis",
+      "chaotic-energy",
+      "cooked-tyres"
+    ],
+    [
+      "cooked-tyres"
+    ],
+    [
+      "rain-dancer",
+      "cooked-tyres"
+    ],
+    [
+      "pit-lane-special"
+    ]
   ]
 }

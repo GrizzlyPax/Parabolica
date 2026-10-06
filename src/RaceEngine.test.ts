@@ -574,3 +574,54 @@ describe('tag stacks (#231)', () => {
     }
   });
 });
+
+describe('in-race acquisition (#232b)', () => {
+  const track = ALL_TRACKS[0];
+  function cleanGrid(seed: number): RosterDriver[] {
+    const rng = mulberry32(seed);
+    const roster = generateRoster(rng);
+    const cars = generateCarsForKingdoms(TEAMS.map(t => t.id), rng);
+    return createRosterWithCars(roster, cars).map(d => ({ ...d, tags: [] }));
+  }
+  function run(grid: RosterDriver[], seed: number) {
+    const engine = RaceEngine.createForWorker(CANON_VARIABLES, seed);
+    engine.loadGeneratedRoster(structuredClone(grid));
+    engine.updateConfig({ totalLaps: track.laps, lapLength: track.length });
+    engine.setTrackInfo({ id: track.id, name: track.name, emoji: track.emoji, funEmoji: track.funEmoji, description: track.description, laps: track.laps });
+    return { engine, result: engine.runHeadless() };
+  }
+
+  it('damage is a tag: a crash survivor carries 🔧 Damaged for the rest of the race', () => {
+    for (const seed of [31, 32, 33, 34, 35, 36, 37, 38]) {
+      const { result } = run(cleanGrid(seed), seed);
+      const survivor = result.drivers.find(d => d.isDamaged && d.status !== 'dnf');
+      if (!survivor) continue;
+      expect(survivor.tags.some(t => t.id === 'damaged')).toBe(true);
+      expect(result.events.some(e => e.type === 'tag_acquired' && e.driverId === survivor.id && e.description.startsWith('Damaged'))).toBe(true);
+      return;
+    }
+    throw new Error('no crash survivor in eight seeds');
+  });
+
+  it('a spin attaches 🌀 Spun and it wears off two laps later', () => {
+    for (const seed of [41, 42, 43, 44, 45, 46, 47, 48]) {
+      const { result } = run(cleanGrid(seed), seed);
+      const got = result.events.find(e => e.type === 'tag_acquired' && e.description.startsWith('Spun'));
+      if (!got) continue;
+      const gone = result.events.find(e => e.type === 'tag_expired' && e.driverId === got.driverId && e.description.startsWith('Spun') && e.tick > got.tick);
+      expect(gone, 'Spun should expire').toBeDefined();
+      expect((gone!.lap ?? 0) - (got.lap ?? 0)).toBeGreaterThanOrEqual(1);
+      expect((gone!.lap ?? 0) - (got.lap ?? 0)).toBeLessThanOrEqual(3);
+      // and the driver's final stack no longer carries it (unless they spun again late)
+      return;
+    }
+    throw new Error('no spin in eight seeds');
+  });
+
+  it('in-race pickups are deterministic and leave the race replayable', () => {
+    const grid = cleanGrid(51);
+    const a = run(grid, 9).result, b = run(grid, 9).result;
+    expect(b.events).toEqual(a.events);
+    expect(b.drivers.map(d => d.tags.map(t => t.id))).toEqual(a.drivers.map(d => d.tags.map(t => t.id)));
+  });
+});

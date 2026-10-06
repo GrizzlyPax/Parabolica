@@ -129,3 +129,24 @@ export function expiriesAt(league: LeagueState, raceIndex: number, roster: Roste
   }
   return out;
 }
+
+
+/** Mid-race pickups with a {races:n} duration become league log entries, so
+ * the driver carries them into the next race(s) (#232b). */
+export function carryoverEntries(league: LeagueState, digest: RaceDigest, roster: RosterDriver[]): AcquisitionResult {
+  const cap = (league.setup.ruleset ?? defaultRuleset()).tags.slotCap;
+  const nextRace = digest.index + 1;
+  const entries: Intervention[] = [];
+  const changes: TagChange[] = [];
+  for (const c of digest.inRaceCarryovers ?? []) {
+    const tag = getTagById(c.tagId);
+    const d = roster.find(x => x.id === c.driverId);
+    if (!tag || !d) continue;
+    if (!canAttachTag(d.tags, tag, cap)) continue;
+    const headline = `${d.fullName} carries ${tag.emoji} ${tag.name} into the next race (picked up on lap ${c.lap + 1})`;
+    entries.push({ type: 'acquire-tag', atRaceIndex: nextRace, targetDriverId: d.id, tagId: tag.id, ruleId: 'in-race-carryover', reason: headline, earnedAtRaceIndex: digest.index });
+    entries.push({ type: 'expire-tag', atRaceIndex: nextRace + c.races, targetDriverId: d.id, tagId: tag.id });
+    changes.push({ kind: 'acquire', driverId: d.id, tagId: tag.id, headline });
+  }
+  return { entries, changes };
+}

@@ -1014,7 +1014,7 @@ function WatchMode({
     const map = new Map<number, Map<string, DriverHistoryEntry>>();
     const kindOf = (t: RaceEvent['type']): DriverHistoryEntry['kind'] | null => {
       switch (t) {
-        case 'tag_activation': return 'tag';
+        case 'tag_activation': case 'tag_acquired': return 'tag';
         case 'track_event_effect': return 'event';
         case 'driver_error': return 'error';
         case 'slow_pit_stop': case 'quick_pit_stop': return 'pit';
@@ -1028,6 +1028,7 @@ function WatchMode({
       // Name = the part before ':' for tags/errors ("Pit Lane Special: flies…" → "Pit Lane Special")
       let name = e.description;
       if (kind === 'tag' || kind === 'error') name = e.description.split(':')[0].trim();
+      if (e.type === 'tag_acquired') name = `+${name}`;
       else if (kind === 'pit') name = e.type === 'slow_pit_stop' ? 'Slow stop' : 'Quick stop';
       else if (kind === 'crash') name = e.type === 'dnf' ? 'Retired' : e.type === 'crash' ? 'Crash' : e.type === 'mechanical_failure' ? 'Mechanical failure' : 'Tyre failure';
       else name = e.description.replace(/[!.]+$/, '').slice(0, 40);
