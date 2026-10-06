@@ -19,3 +19,5 @@ new_sqlite_classes = ["LeagueObject"]
 
 [observability]
 enabled = true
+
+# Deploys on every push to main that touches server/ (see .github/workflows/deploy-api.yml).
