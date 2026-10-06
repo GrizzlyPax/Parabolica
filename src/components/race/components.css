@@ -423,6 +423,13 @@
 /* === Focus row: facts + effect stack === */
 .expanded-fact { font-size: 12px; color: var(--pw-text-2); white-space: nowrap; }
 .expanded-k { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; color: var(--pw-text-3); text-transform: uppercase; margin-right: 4px; }
+/* Field rank: where this driver / car stacks up on this grid. 1st purple, then thirds green / yellow / red. */
+.rank-chip { display: inline-block; white-space: nowrap; padding: 1px 7px; border-radius: 999px; border: 1px solid currentColor; font-family: var(--font-mono); font-size: 11.5px; font-weight: 600; line-height: 1.5; cursor: help; }
+.rank-chip .rank-of { font-weight: 400; opacity: 0.7; }
+.rank-chip.tone-best { color: var(--pw-purple); background: rgba(169, 139, 255, 0.12); }
+.rank-chip.tone-high { color: var(--pw-green); background: rgba(52, 210, 122, 0.10); }
+.rank-chip.tone-mid { color: var(--pw-yellow); background: rgba(242, 194, 48, 0.10); }
+.rank-chip.tone-low { color: var(--pw-red); background: rgba(255, 90, 79, 0.10); }
 .effect-stack { display: flex; flex-direction: column; gap: 2px; padding: 6px 10px 8px 14px; }
 .effect-row {
   display: flex; flex-wrap: wrap; column-gap: 8px; row-gap: 3px; align-items: center;

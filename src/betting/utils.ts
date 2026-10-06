@@ -10,86 +10,69 @@ import { CANON_VARIABLES, SimVariables } from '../simlab/types';
 
 export type BetType = 'win' | 'podium' | 'points' | 'finishes' | 'dnf';
 
-// Rating system types
-export type RatingTier = 'legendary' | 'elite' | 'solid' | 'hopeless';
+// ============================================
+// FIELD RANK (how a driver / car stacks up against this grid)
+// ============================================
+// Shown instead of absolute ratings: "3rd of 22" says how you compare
+// without handing out an overall number. Ties share a rank ("=5th").
 
-export interface RatingDescriptor {
-  tier: RatingTier;
-  label: string;
-}
-
-// Vibe-based rating descriptors
-const DRIVER_DESCRIPTORS: Record<RatingTier, string[]> = {
-  legendary: ['Otherworldly', 'Phenomenal', 'Transcendent', 'Untouchable', 'Generational'],
-  elite: ['Exceptional', 'Dominant', 'Fearsome', 'Formidable', 'Commanding'],
-  solid: ['Capable', 'Steady', 'Respectable', 'Dependable', 'Workmanlike'],
-  hopeless: ['Struggling', 'Erratic', 'Hapless', 'Outmatched', 'Lost'],
-};
-
-const CAR_DESCRIPTORS: Record<RatingTier, string[]> = {
-  legendary: ['Monster', 'Rocket Ship', 'Engineering Marvel', 'Dominant Machine'],
-  elite: ['Powerful', 'Race-Winning', 'Top-Tier', 'Championship-Ready'],
-  solid: ['Competitive', 'Reliable', 'Midfield Weapon', 'Points-Capable'],
-  hopeless: ['Struggling', 'Underpowered', 'Unreliable', 'Backmarker'],
-};
-
-function getRandomDescriptor(descriptors: string[]): string {
-  return descriptors[Math.floor(Math.random() * descriptors.length)];
-}
-
-/**
- * Calculate a driver's overall rating tier based on their stats
- * Returns a vibe-based descriptor instead of numbers
- */
-export function getDriverRating(driver: Driver, simVars?: SimVariables): RatingDescriptor {
+/** Driver skill on a 0–1 scale (weights: simVars.betting.driverRatingWeights). */
+export function driverSkillScore(driver: Pick<Driver, 'stats'>, simVars?: SimVariables): number {
   const w = (simVars ?? CANON_VARIABLES).betting.driverRatingWeights;
-  // Combine driver stats into overall score (0-1 scale)
   const speedScore = (driver.stats.baseSpeed - 0.85) / 0.30;
   const consistencyScore = (driver.stats.consistency - 0.3) / 0.50;
   const luckScore = (driver.stats.luck - 0.3) / 0.50;
-
-  // Weighted average using canon variables (dynamic!)
-  const overall = consistencyScore * w.consistency + speedScore * w.speed + luckScore * w.luck;
-
-  let tier: RatingTier;
-  if (overall >= 0.75) tier = 'legendary';
-  else if (overall >= 0.5) tier = 'elite';
-  else if (overall >= 0.25) tier = 'solid';
-  else tier = 'hopeless';
-
-  return {
-    tier,
-    label: getRandomDescriptor(DRIVER_DESCRIPTORS[tier]),
-  };
+  return consistencyScore * w.consistency + speedScore * w.speed + luckScore * w.luck;
 }
 
-/**
- * Calculate a car's overall rating tier based on its stats
- * Returns a vibe-based descriptor instead of numbers
- */
-export function getCarRating(driver: Driver): RatingDescriptor {
-  if (!driver.carStats) {
-    return { tier: 'solid', label: getRandomDescriptor(CAR_DESCRIPTORS.solid) };
-  }
+/** Car package on a 0–1 scale: power 40%, grip 35%, reliability 25%. Missing stats read as mid (3★). */
+export function carPackageScore(driver: Pick<Driver, 'carStats'>): number {
+  const c = driver.carStats;
+  const power = ((c?.power ?? 3) - 1) / 4;
+  const grip = ((c?.grip ?? 3) - 1) / 4;
+  const reliability = ((c?.reliability ?? 3) - 1) / 4;
+  return power * 0.4 + grip * 0.35 + reliability * 0.25;
+}
 
-  // Car stats are 1-5 scale, normalize to 0-1
-  const powerScore = (driver.carStats.power - 1) / 4;
-  const gripScore = (driver.carStats.grip - 1) / 4;
-  const reliabilityScore = (driver.carStats.reliability - 1) / 4;
+/** purple = 1st; then thirds of the rest of the field: green, yellow, red. */
+export type RankTone = 'best' | 'high' | 'mid' | 'low';
 
-  // Weighted average
-  const overall = powerScore * 0.4 + gripScore * 0.35 + reliabilityScore * 0.25;
+export interface FieldRank {
+  /** 1 = best. Tied entries share the rank (competition ranking: 1, 2, 2, 4). */
+  rank: number;
+  tied: boolean;
+  /** Field size. */
+  of: number;
+  tone: RankTone;
+}
 
-  let tier: RatingTier;
-  if (overall >= 0.75) tier = 'legendary';
-  else if (overall >= 0.5) tier = 'elite';
-  else if (overall >= 0.25) tier = 'solid';
-  else tier = 'hopeless';
+export function rankTone(rank: number, of: number): RankTone {
+  if (rank <= 1) return 'best';
+  const frac = (rank - 1) / Math.max(1, of - 1);
+  if (frac <= 1 / 3) return 'high';
+  if (frac <= 2 / 3) return 'mid';
+  return 'low';
+}
 
-  return {
-    tier,
-    label: getRandomDescriptor(CAR_DESCRIPTORS[tier]),
-  };
+/** Rank every item by score, highest first. Scores within 1e-9 are ties. */
+export function fieldRanks<T extends { id: number }>(items: T[], score: (t: T) => number): Map<number, FieldRank> {
+  const scored = items.map(t => ({ id: t.id, s: score(t) })).sort((a, b) => b.s - a.s);
+  const out = new Map<number, FieldRank>();
+  scored.forEach((x, i) => {
+    let rank = i + 1;
+    // Walk back to the first entry with the same score (competition ranking).
+    for (let j = i - 1; j >= 0 && Math.abs(scored[j].s - x.s) < 1e-9; j--) rank = j + 1;
+    const tied = (i > 0 && Math.abs(scored[i - 1].s - x.s) < 1e-9) || (i < scored.length - 1 && Math.abs(scored[i + 1].s - x.s) < 1e-9);
+    out.set(x.id, { rank, tied, of: items.length, tone: rankTone(rank, items.length) });
+  });
+  return out;
+}
+
+/** 1 → "1st", 22 → "22nd", 13 → "13th". */
+export function ordinal(n: number): string {
+  const v = n % 100;
+  if (v >= 11 && v <= 13) return `${n}th`;
+  return `${n}${({ 1: 'st', 2: 'nd', 3: 'rd' } as Record<number, string>)[n % 10] ?? 'th'}`;
 }
 
 export interface DriverOdds {

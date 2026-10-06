@@ -5,6 +5,7 @@ import DriverRow from './DriverRow';
 import { getGridTemplate } from './columns';
 import { formatGap, formatLapGap } from '../../utils/raceTime';
 import type { TimingTowerProps, RowContext, LapTimeClass } from './types';
+import { fieldRanks, driverSkillScore, carPackageScore } from '../../betting/utils';
 import type { Driver } from '../../RaceEngine';
 import './TimingTower.css';
 import './components.css';
@@ -99,6 +100,22 @@ function TimingTower({
   }, [drivers]);
 
   // Generate row context for each driver
+  // How each driver and car stacks up against this grid. Keyed on the stats
+  // themselves (a new universe can reuse the same driver ids), so it only
+  // recomputes when the roster's numbers change, not every tick.
+  const rosterKey = drivers.map(d => `${d.id}:${d.stats.baseSpeed}:${d.stats.consistency}:${d.stats.luck}:${d.carStats?.power}:${d.carStats?.grip}:${d.carStats?.reliability}`).join('|');
+  const fieldRanking = useMemo(() => {
+    // Teammates share a car, so cars are ranked per team (one entry each).
+    const teamOf = (d: Driver) => d.kingdomId ?? `solo-${d.id}`;
+    const teams = [...new Map(drivers.map(d => [teamOf(d), d])).values()];
+    const teamIndex = new Map(teams.map((d, i) => [teamOf(d), i]));
+    const carByTeam = fieldRanks(teams.map((d, i) => ({ id: i, d })), t => carPackageScore(t.d));
+    return {
+      driver: fieldRanks(drivers, d => driverSkillScore(d)),
+      car: new Map(drivers.map(d => [d.id, carByTeam.get(teamIndex.get(teamOf(d))!)!])),
+    };
+  }, [rosterKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const getRowContext = (driver: Driver, index: number): RowContext => {
     const isFinished = driver.status === 'finished';
     const isDNF = driver.status === 'dnf';
@@ -237,6 +254,8 @@ function TimingTower({
       displayPosition,
       positionDelta,
       gridSlot,
+      driverRank: fieldRanking.driver.get(driver.id),
+      carRank: fieldRanking.car.get(driver.id),
       battle,
       speedTone,
       speedRel,

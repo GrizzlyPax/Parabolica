@@ -1,17 +1,22 @@
 // Single row in the timing tower
 // Renders columns dynamically based on configuration
 // Expands when focused to show driver details
-import { useMemo } from 'react';
 import type { DriverRowProps } from './types';
-import { getDriverRating, getCarRating } from '../../betting/utils';
+import { ordinal, type FieldRank } from '../../betting/utils';
 import { effectPills } from './TagChips';
+
+/** "3rd of 22" as a chip coloured by where that sits in the field. */
+function RankChip({ r, what, unit }: { r?: FieldRank; what: string; unit: string }) {
+  if (!r) return null;
+  return (
+    <span className={`rank-chip tone-${r.tone}`} title={`${what}: ${r.tied ? 'tied ' : ''}${ordinal(r.rank)} of ${r.of} ${unit} on this grid`}>
+      {r.tied ? '=' : ''}{ordinal(r.rank)}<span className="rank-of"> of {r.of}</span>
+    </span>
+  );
+}
 
 function DriverRow({ driver, columns, context, gridTemplate, isFocused, expandable = true, onClick }: DriverRowProps) {
   const { isFinished, isDNF, isPitting } = context;
-
-  // Calculate ratings for expanded view (memoized to avoid recalc on every render)
-  const driverRating = useMemo(() => getDriverRating(driver), [driver.stats]);
-  const carRating = useMemo(() => getCarRating(driver), [driver.carStats]);
 
   // Build style with grid template and team color for focus glow
   const rowStyle: React.CSSProperties = {
@@ -51,8 +56,8 @@ function DriverRow({ driver, columns, context, gridTemplate, isFocused, expandab
         <div className="timing-row-expanded" style={{ '--team-color': driver.color } as React.CSSProperties}>
           <div className="expanded-content">
             <span className="expanded-full-name" style={{ color: driver.color }}>{driver.name}</span>
-            <span className="expanded-fact"><span className="expanded-k">Driver</span> {driverRating.label}</span>
-            <span className="expanded-fact"><span className="expanded-k">Car</span> {carRating.label}</span>
+            <span className="expanded-fact"><span className="expanded-k">Driver</span> <RankChip r={context.driverRank} what="Driver skill" unit="drivers" /></span>
+            <span className="expanded-fact"><span className="expanded-k">Car</span> <RankChip r={context.carRank} what="Car package (shared with the teammate)" unit="cars" /></span>
             {driver.tireState && (
               <span className="expanded-fact"><span className="expanded-k">Tyre</span>
                 <span className="expanded-tire" data-compound={driver.tireState.compound}>{driver.tireState.compound.charAt(0).toUpperCase()}</span>

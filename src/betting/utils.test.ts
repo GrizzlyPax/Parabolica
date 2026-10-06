@@ -3,7 +3,10 @@ import {
   calcDriverStrength,
   computeDriverRankings,
   calculateDriverOdds,
-  getDriverRating,
+  fieldRanks,
+  rankTone,
+  ordinal,
+  driverSkillScore,
 } from './utils';
 import { Driver } from '../RaceEngine';
 
@@ -114,11 +117,33 @@ describe('calculateDriverOdds', () => {
   });
 });
 
-describe('getDriverRating', () => {
-  it('rates a maxed driver legendary and a floor driver hopeless', () => {
-    const ace = makeDriver({ baseSpeed: 1.15, consistency: 0.8, luck: 0.8 });
-    const dud = makeDriver({ baseSpeed: 0.85, consistency: 0.3, luck: 0.3 });
-    expect(getDriverRating(ace).tier).toBe('legendary');
-    expect(getDriverRating(dud).tier).toBe('hopeless');
+describe('field rank', () => {
+  it('orders drivers by skill, best first', () => {
+    const ace = makeDriver({ id: 1, baseSpeed: 1.15, consistency: 0.8, luck: 0.8 });
+    const mid = makeDriver({ id: 2, baseSpeed: 1.0, consistency: 0.55, luck: 0.55 });
+    const dud = makeDriver({ id: 3, baseSpeed: 0.85, consistency: 0.3, luck: 0.3 });
+    const r = fieldRanks([dud, ace, mid], d => driverSkillScore(d));
+    expect([r.get(1)!.rank, r.get(2)!.rank, r.get(3)!.rank]).toEqual([1, 2, 3]);
+    expect(r.get(1)!.tone).toBe('best');
+    expect(r.get(3)!.tone).toBe('low');
+    expect(r.get(1)!.of).toBe(3);
+  });
+  it('ties share a rank and the next rank skips (1, 2, 2, 4)', () => {
+    const items = [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }];
+    const score: Record<number, number> = { 1: 0.9, 2: 0.5, 3: 0.5, 4: 0.1 };
+    const r = fieldRanks(items, t => score[t.id]);
+    expect([1, 2, 3, 4].map(id => r.get(id)!.rank)).toEqual([1, 2, 2, 4]);
+    expect(r.get(2)!.tied && r.get(3)!.tied).toBe(true);
+    expect(r.get(1)!.tied || r.get(4)!.tied).toBe(false);
+  });
+  it('colours a 22-car grid: 1st purple, then thirds green / yellow / red', () => {
+    const tones = Array.from({ length: 22 }, (_, i) => rankTone(i + 1, 22));
+    expect(tones[0]).toBe('best');
+    expect(tones.slice(1, 8).every(t => t === 'high')).toBe(true);   // 2nd–8th
+    expect(tones.slice(8, 15).every(t => t === 'mid')).toBe(true);   // 9th–15th
+    expect(tones.slice(15).every(t => t === 'low')).toBe(true);      // 16th–22nd
+  });
+  it('writes ordinals', () => {
+    expect([1, 2, 3, 4, 11, 12, 13, 21, 22, 23, 101, 111].map(ordinal)).toEqual(['1st', '2nd', '3rd', '4th', '11th', '12th', '13th', '21st', '22nd', '23rd', '101st', '111th']);
   });
 });

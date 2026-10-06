@@ -1,4 +1,5 @@
 // Shared types for race components
+import type { FieldRank } from '../../betting/utils';
 
 import { Driver, RaceState, EffectStackEntry } from '../../RaceEngine';
 
@@ -26,6 +27,9 @@ export interface RowContext {
   positionDelta?: number;
   /** Starting grid slot (1 = pole), or undefined before qualifying. */
   gridSlot?: number;
+  /** Where this driver's skill / car package ranks in this field (stats only, not race form). */
+  driverRank?: FieldRank;
+  carRank?: FieldRank;
   /** Speed vs the running pack's median this tick: 'hot' ≥ +4%, 'quick' ≥ +1%, 'slow' ≤ −3%, else 'pack'. */
   speedTone?: 'hot' | 'quick' | 'pack' | 'slow';
   /** Speed relative to the pack median, −1…+1 over ±8%. */
