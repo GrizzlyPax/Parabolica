@@ -27,6 +27,8 @@ interface TrackMapProps {
   highlightedDriverIds?: number[]; // Always-visible drivers (e.g. the current podium): bigger marker + team emoji
   unsafetyCarActive?: boolean; // Show Safety Carl when true
   unsafetyCarPosition?: number; // Position on track (0-1 percentage)
+  /** Live fights: the defender gets a pulsing ring, the attacker a sword. */
+  battles?: { chaserId: number; aheadId: number; ticks: number }[];
   className?: string;
 }
 
@@ -76,6 +78,7 @@ function TrackMap({
   unsafetyCarActive = false,
   unsafetyCarPosition = 0,
   className = '',
+  battles,
 }: TrackMapProps) {
   // Store track path element in state to ensure useMemo re-runs when it's attached
   // Using state instead of refs ensures React knows about the element
@@ -383,6 +386,14 @@ function TrackMap({
                   opacity={0.3}
                   className="marker-glow-subtle"
                 />
+              )}
+
+              {/* Battle: defender ring (pulsing) and attacker sword */}
+              {battles?.some(b => b.aheadId === driver.id) && !isDNF && (
+                <circle cx={0} cy={0} r={radius + 4} fill="none" stroke="var(--pw-yellow)" strokeWidth={2} className="marker-battle-ring" />
+              )}
+              {battles?.some(b => b.chaserId === driver.id) && !isDNF && (
+                <text x={radius + 3} y={-radius + 2} className="marker-swords" fontSize="10">⚔</text>
               )}
 
               {/* Main marker circle */}

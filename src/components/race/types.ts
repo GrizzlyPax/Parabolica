@@ -8,7 +8,7 @@ export interface DriverHistoryEntry {
   emoji: string;
   name: string;
   laps: number[];
-  kind: 'tag' | 'event' | 'error' | 'pit' | 'crash';
+  kind: 'tag' | 'event' | 'error' | 'pit' | 'crash' | 'pass' | 'penalty';
 }
 
 // Column configuration for TimingTower
@@ -26,6 +26,8 @@ export interface RowContext {
   positionDelta?: number;
   /** Starting grid slot (1 = pole), or undefined before qualifying. */
   gridSlot?: number;
+  /** In a fight right now: attacking the car ahead or defending from the car behind. */
+  battle?: { role: 'attacking' | 'defending'; ticks: number; otherId: number };
   intervalGap: string;
   leaderGap: string;
   lastLapTime: number | null;
@@ -79,6 +81,8 @@ export interface TimingTowerProps {
   positionDeltas?: Map<number, number>;
   /** Driver ids in starting-grid order (engine.getGridOrder()). */
   gridOrder?: number[];
+  /** Live fights (engine.getBattles()). */
+  battles?: { chaserId: number; aheadId: number; ticks: number }[];
   fastestLapOverall?: number;
   className?: string;
 }

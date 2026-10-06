@@ -676,8 +676,9 @@
   .timing-tower.timing-tower-track .col-gapLeader { display: none; }
   .timing-tower.timing-tower-track .timing-row,
   .timing-tower.timing-tower-track .timing-tower-header {
-    grid-template-columns: 30px 26px 46px 56px 56px 64px !important;
+    grid-template-columns: 28px 24px 24px 44px 54px 52px 46px 60px !important;
   }
+  .timing-tower.timing-tower-track .col-gridDelta .grid-delta { font-size: 0.6rem; }
   .timing-tower.timing-tower-track .col-tags .tag-chip:nth-child(n+3) { display: none; }
   .tag-chip { padding: 2px 2px; }
 }
@@ -688,3 +689,9 @@
 .grid-delta { font-size: 0.68rem; font-weight: 700; }
 .grid-delta.up { color: var(--pw-green); }
 .grid-delta.down { color: var(--pw-red); }
+
+/* A live fight: swords on the attacker's interval */
+.gap-fight { color: var(--pw-yellow); font-weight: 700; }
+.gap-swords { margin-right: 3px; font-size: 0.8em; animation: swords-pulse 1.2s ease-in-out infinite; }
+@keyframes swords-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+.grid-delta.flat { color: var(--pw-text-3); }

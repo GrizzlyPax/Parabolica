@@ -1019,6 +1019,8 @@ function WatchMode({
         case 'driver_error': return 'error';
         case 'slow_pit_stop': case 'quick_pit_stop': return 'pit';
         case 'crash': case 'dnf': case 'mechanical_failure': case 'tire_failure': return 'crash';
+        case 'overtake': return 'pass';
+        case 'penalty': return 'penalty';
         default: return null;
       }
     };
@@ -1031,6 +1033,8 @@ function WatchMode({
       if (e.type === 'tag_acquired') name = `+${name}`;
       else if (kind === 'pit') name = e.type === 'slow_pit_stop' ? 'Slow stop' : 'Quick stop';
       else if (kind === 'crash') name = e.type === 'dnf' ? 'Retired' : e.type === 'crash' ? 'Crash' : e.type === 'mechanical_failure' ? 'Mechanical failure' : 'Tyre failure';
+      else if (kind === 'pass') name = /passes/.test(e.description) ? 'Passes' : 'Gains places';
+      else if (kind === 'penalty') name = 'Penalty';
       else name = e.description.replace(/[!.]+$/, '').slice(0, 40);
       const key = `${kind}:${name}`;
       let per = map.get(e.driverId);
@@ -1056,6 +1060,8 @@ function WatchMode({
   // Starting grid (set by qualifying on tick 1); cheap, read each render.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const gridOrder = useMemo(() => engine.getGridOrder(), [drivers, engine]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const battles = useMemo(() => engine.getBattles().filter(b => b.ticks >= 20), [drivers, engine]);
   const effectStacksMap = useMemo(() => {
     const map = new Map<number, EffectStackEntry[]>();
     for (const d of drivers) map.set(d.id, engine.getEffectStack(d.id));
@@ -1210,6 +1216,7 @@ function WatchMode({
                   histories={historiesMap}
                   positionDeltas={positionDeltasForTower}
                   gridOrder={gridOrder}
+                  battles={battles}
                   fastestLapOverall={fastestLapOverall ?? undefined}
                   className="timing-tower-track"
                 />
@@ -1225,6 +1232,7 @@ function WatchMode({
                   highlightedDriverIds={podiumIds}
                   unsafetyCarActive={raceState.unsafetyCarActive}
                   unsafetyCarPosition={raceState.unsafetyCarPosition}
+                  battles={battles}
                 />
               </section>
             </>
@@ -1257,6 +1265,7 @@ function WatchMode({
                   histories={historiesMap}
                   positionDeltas={positionDeltasForTower}
                   gridOrder={gridOrder}
+                  battles={battles}
                   fastestLapOverall={fastestLapOverall ?? undefined}
                   className="timing-tower-detail"
                 />

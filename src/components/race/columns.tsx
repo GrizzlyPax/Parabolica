@@ -162,6 +162,21 @@ export const COLUMN_GRID: ColumnConfig = {
   },
 };
 
+// Track view: just the places gained/lost since the grid
+export const COLUMN_GRID_DELTA: ColumnConfig = {
+  id: 'gridDelta',
+  header: '',
+  width: '30px',
+  align: 'center',
+  render: (_driver: Driver, ctx: RowContext) => {
+    if (ctx.gridSlot === undefined || ctx.isDNF) return null;
+    const now = Number(ctx.displayPosition);
+    const d = Number.isFinite(now) ? ctx.gridSlot - now : 0;
+    if (d === 0) return <span className="grid-delta flat" title={`Started P${ctx.gridSlot}`}>·</span>;
+    return <span className={`grid-delta ${d > 0 ? 'up' : 'down'}`} title={`Started P${ctx.gridSlot}`}>{d > 0 ? '▲' : '▼'}{Math.abs(d)}</span>;
+  },
+};
+
 // Interval to the car ahead (the racing battle)
 export const COLUMN_GAP_AHEAD: ColumnConfig = {
   id: 'gapAhead',
@@ -169,9 +184,16 @@ export const COLUMN_GAP_AHEAD: ColumnConfig = {
   width: '62px',
   align: 'right',
   render: (_driver: Driver, ctx: RowContext) => {
-    // Highlight a live battle: within 0.5s of the car ahead.
+    // A real fight (engine says this car is held behind the one ahead) gets
+    // the swords; merely close gets the warm colour.
+    const fighting = ctx.battle?.role === 'attacking';
     const close = /^\+0\.[0-4]/.test(ctx.intervalGap);
-    return <span className={`gap-value gap-ahead ${close ? 'gap-battle' : ''}`}>{ctx.intervalGap}</span>;
+    const title = fighting ? `Stuck behind the car ahead for ${Math.round((ctx.battle?.ticks ?? 0) / 10)}s` : ctx.battle?.role === 'defending' ? 'Under attack from behind' : undefined;
+    return (
+      <span className={`gap-value gap-ahead ${fighting ? 'gap-fight' : close ? 'gap-battle' : ''}`} title={title}>
+        {fighting && <span className="gap-swords" aria-label="attacking">⚔</span>}{ctx.intervalGap}
+      </span>
+    );
   },
 };
 
@@ -342,11 +364,13 @@ export const COLUMN_TIRE_HISTORY: ColumnConfig = {
 
 export const TRACK_COLUMNS: ColumnConfig[] = [
   COLUMN_POSITION,
+  COLUMN_GRID_DELTA,
   COLUMN_TEAM_MARBLE,
   COLUMN_DRIVER_CODE,
   COLUMN_GAP_AHEAD,
   COLUMN_GAP_LEADER,
   COLUMN_LAST_LAP,
+  COLUMN_TIRE_AGE,
   COLUMN_TAGS,
 ];
 
@@ -363,6 +387,7 @@ export const DETAIL_COLUMNS: ColumnConfig[] = [
   COLUMN_LAST_LAP,
   COLUMN_BEST_LAP,
   COLUMN_TIRE_AGE,
+  COLUMN_TIRES,
   COLUMN_PITS,
   COLUMN_TAGS,
 ];

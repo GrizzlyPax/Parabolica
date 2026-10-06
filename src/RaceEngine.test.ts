@@ -717,3 +717,39 @@ describe('qualifying and the grid (#246 pass 2)', () => {
     expect(e.getGridSlot(e.getGridOrder()[0])).toBe(1);
   });
 });
+
+describe('overtaking is an event (#246 pass 3)', () => {
+  const track = CURRENT_TRACKS[0];
+  const run = (seed: number, over: Partial<typeof CANON_VARIABLES.overtaking> = {}) => {
+    const engine = RaceEngine.createForWorker({ ...CANON_VARIABLES, overtaking: { ...CANON_VARIABLES.overtaking, ...over } }, seed);
+    engine.loadGeneratedRoster(generateGenesisRoster(seed, TEAMS.map(t => t.id)));
+    engine.updateConfig({ totalLaps: track.laps, lapLength: track.length, maxStoredEvents: Number.MAX_SAFE_INTEGER });
+    const out = engine.runHeadless(seed);
+    return { engine, ...out };
+  };
+
+  it('passes are logged as events and a car is held until it earns one', () => {
+    const { events } = run(31);
+    const passes = events.filter(e => e.type === 'overtake' && /passes/.test(e.description));
+    expect(passes.length).toBeGreaterThan(5);
+    expect(events.some(e => e.type === 'battle')).toBe(true);
+  });
+
+  it('a harder track means fewer passes', () => {
+    const easy = [1, 2, 3].reduce((n, s) => n + run(s, { attemptBase: 0.03 }).events.filter(e => e.type === 'overtake').length, 0);
+    const hard = [1, 2, 3].reduce((n, s) => n + run(s, { attemptBase: 0.003 }).events.filter(e => e.type === 'overtake').length, 0);
+    expect(hard).toBeLessThan(easy);
+  });
+
+  it('the grid predicts the result better than a lottery', () => {
+    // Over a few seeds, the pole-sitter finishes in the top half far more often than 50%.
+    let topHalf = 0, n = 0;
+    for (const seed of [41, 42, 43, 44, 45, 46]) {
+      const { engine, raceState } = run(seed);
+      const pole = engine.getGridOrder()[0];
+      const pos = raceState.finishOrder.indexOf(pole);
+      if (pos >= 0) { n++; if (pos < raceState.finishOrder.length / 2) topHalf++; }
+    }
+    expect(topHalf / n).toBeGreaterThan(0.6);
+  });
+});

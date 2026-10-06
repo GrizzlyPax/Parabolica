@@ -137,6 +137,45 @@ rule 3%. Plans seen: M→S→H, S→M→H, M→H→S, H→S→M, H→M→S.
 Still open from the audit: no grid, no overtaking, no undercut (position
 has no value yet), weather/wets, the consistency formula.
 
+## 4b. Qualifying, the grid and overtaking — new in v0.4.1–0.4.2 (#246 passes 2–3)
+
+**Qualifying (`runQualifying`, tick 1).** One scored hot lap per driver:
+`packagePace × (1 + z·qualiNoise·(1.2 − consistency)) × flub × (0.98 + 0.02·grip)`,
+z ~ N(0,1) from `deriveSeed(seed,'quali',id)` (a side stream; the race RNG
+is untouched), `qualiFlubChance` 6% of a ruined lap (×0.95). The grid
+staggers the start: P1 on the line, each slot `grid.slotSpacing` (0.5%) of
+a lap back. `engine.getGridOrder()`; the lap-0 snapshot is the grid.
+Measured: grid vs package Spearman 0.70.
+
+**Overtaking (`resolveOvertake`).** Drivers move front-to-back each tick.
+A chaser that would come within `followGap` (0.6% of a lap) of the racing
+car directly ahead *on the same lap* is held there until a per-tick pass
+roll lands:
+
+```
+p = attemptBase (0.008)
+  × max(0, 1 + (steadyPace_chaser / steadyPace_ahead − 1) × paceWeight (15))
+  × (1 + (wear_ahead − wear_chaser)/100 × tyreWeight (1))
+  × (0.6 … 1.4 by aggression)
+  ÷ (1 + (consistency_ahead − 0.55) × defenderWeight (1.2))
+  ÷ track difficulty (high-speed 0.75 · technical 1.5 · hazardous 1.1)
+```
+`steadyPace` = package × tyre modifier (not the tick's noisy roll). Under
+the Unsafety Car p = 0. A held car runs in dirty air next tick (−3%).
+After `battleTicks` (20) stuck behind the same car the feed logs a
+`battle`; a pass logs `overtake` ("passes X after a fight"). Lapping is
+free (different lap). Cars held in line crash at ×`heldCrashFactor`
+(0.25) — the risk lives in the pass, not the queue. `engine.getBattles()`
+feeds the tower (⚔ on the attacker's interval) and the map (pulsing ring
+on the defender).
+
+Measured (100 no-tag races): grid→finish 0.35 → **0.66**, pole wins 13% →
+**26%**, package→finish 0.43 → **0.61**, ~70 passes and ~50 battles a race,
+DNF 17.6%, SC 0.72/race. Leader margin widened (12% of a lap): clean air
+is worth something now. Lapped finishers 34% — trains hold the midfield
+back; a DRS-style straight-line boost and the grid/launch pass are the
+next levers.
+
 ## 5. THE STAT TRUTH TABLE
 
 *Numbers below are the **rebalance v3 canon** (v0.3.31: #162 power

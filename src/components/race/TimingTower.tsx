@@ -35,6 +35,7 @@ function TimingTower({
   histories,
   positionDeltas,
   gridOrder,
+  battles,
   fastestLapOverall,
   className = '',
 }: TimingTowerProps) {
@@ -113,6 +114,13 @@ function TimingTower({
     const positionDelta = positionDeltas?.get(driver.id);
     const gridIdx = gridOrder ? gridOrder.indexOf(driver.id) : -1;
     const gridSlot = gridIdx >= 0 ? gridIdx + 1 : undefined;
+    let battle: RowContext['battle'];
+    if (battles) {
+      const att = battles.find(b => b.chaserId === driver.id);
+      const def = battles.find(b => b.aheadId === driver.id);
+      if (att) battle = { role: 'attacking', ticks: att.ticks, otherId: att.aheadId };
+      else if (def) battle = { role: 'defending', ticks: def.ticks, otherId: def.chaserId };
+    }
 
     // Gap calculations - SECTOR-based checkpoint timing
     // Gap = time difference at the DRIVER's last completed sector
@@ -216,6 +224,7 @@ function TimingTower({
       displayPosition,
       positionDelta,
       gridSlot,
+      battle,
       intervalGap,
       leaderGap,
       lastLapTime,

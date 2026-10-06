@@ -565,6 +565,30 @@ export interface SimVariables {
     qualiFlubChance: number;
   };
 
+  // === OVERTAKING (#246 pass 3) ===
+  overtaking: {
+    /** How close (share of a lap) a chaser can get before it is "on" the car ahead. */
+    followGap: number;
+    /** Pace lost while sitting in the car ahead's dirty air (0.03 = −3%). */
+    dirtyAir: number;
+    /** Per-tick chance of a pass at equal pace, mid aggression, neutral track. */
+    attemptBase: number;
+    /** How much a pace edge helps: p × (1 + (ratio − 1) × paceWeight). */
+    paceWeight: number;
+    /** How much fresher tyres help: p × (1 + Δwear/100 × tyreWeight). */
+    tyreWeight: number;
+    /** Aggression swing: p × (1 − swing/2 … 1 + swing/2) across 0.3–0.8. */
+    aggressionSwing: number;
+    /** A consistent defender is harder to pass: p ÷ (1 + (consistency − 0.55) × defenderWeight). */
+    defenderWeight: number;
+    /** Per-track difficulty multipliers by track character id; default 1. */
+    trackDifficulty: Record<string, number>;
+    /** Ticks stuck behind the same car before the feed calls it a battle. */
+    battleTicks: number;
+    /** Crash-chance multiplier for a pair where one is held behind the other (0.25). */
+    heldCrashFactor: number;
+  };
+
   // === SAFETY CAR ===
   safetyCar: {
     targetGap: number;                // Target spacing between queued cars, in laps (0.02 ≈ 0.25s)
@@ -722,6 +746,18 @@ export const CANON_VARIABLES: SimVariables = {
     slotSpacing: 0.005,
     qualiNoise: 0.02,
     qualiFlubChance: 0.06,
+  },
+  overtaking: {
+    followGap: 0.006,
+    dirtyAir: 0.03,
+    attemptBase: 0.008,
+    paceWeight: 15,
+    tyreWeight: 1.0,
+    aggressionSwing: 0.8,
+    defenderWeight: 1.2,
+    trackDifficulty: { 'high-speed': 0.75, technical: 1.5, hazardous: 1.1 },
+    battleTicks: 20,
+    heldCrashFactor: 0.25,
   },
   safetyCar: {
     // 0.02 laps ≈ a 0.25s gap at typical lap times. The old value (0.16 laps

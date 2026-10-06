@@ -528,6 +528,8 @@
 .history-chip .history-laps { font-family: var(--font-mono); font-size: 11px; color: var(--pw-text-3); }
 .history-chip.kind-tag { border-color: rgba(169, 139, 255, 0.4); }
 .history-chip.kind-crash { border-color: rgba(255, 90, 79, 0.45); }
+.history-chip.kind-pass { border-color: rgba(52, 210, 122, 0.45); }
+.history-chip.kind-penalty { border-color: rgba(255, 90, 79, 0.7); color: var(--pw-red-soft); }
 .history-chip.kind-error { border-color: rgba(242, 194, 48, 0.4); }
 .tag-chip.named { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px 3px 6px; border-radius: 999px; border-color: var(--pw-border); background: rgba(255,255,255,0.05); font-size: 12px; }
 .tag-chip.named .tag-chip-name { font-family: var(--font-body); font-size: 12px; color: #d9d8d4; }

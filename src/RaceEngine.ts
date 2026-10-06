@@ -224,6 +224,7 @@ export type RaceEventType =
   | 'race_finish'      // Driver crossed finish line
   | 'penalty'          // Time penalty applied at the flag (stop rule)
   | 'grid_set'         // Qualifying done, grid staggered
+  | 'battle'           // Stuck behind the same car long enough to call it one
   // Tire/Pit/Crash events
   | 'pit_entry'        // Driver enters pit lane
   | 'pit_exit'         // Driver exits with fresh tires
@@ -1151,6 +1152,7 @@ class RaceEngine {
     this.lapPositionHistory = [];
     this.gridOrder = [];
     this.qualiScores.clear();
+    this.stuckBehind.clear();
     this.lastRecordedLap = 0;
     // Reset tag activation state
     this.activeTagEffects = new Map();
@@ -1487,6 +1489,76 @@ class RaceEngine {
     return CANON_VARIABLES.grid;
   }
 
+  // === OVERTAKING (#246 pass 3) ===
+  private getOvertakingVars() {
+    if (this.simVars) return this.simVars.overtaking;
+    return CANON_VARIABLES.overtaking;
+  }
+  /** Who each driver is stuck behind right now, and for how many ticks. */
+  private stuckBehind = new Map<number, { aheadId: number; ticks: number }>();
+  /** Speeds resolved this tick, by driver, for the pace comparison. */
+  private tickSpeeds = new Map<number, number>();
+  /** Resolved total distance (lap × L + position) this tick, for cars already moved. */
+  private tickDistance = new Map<number, number>();
+  getBattles(): { chaserId: number; aheadId: number; ticks: number }[] {
+    return [...this.stuckBehind.entries()].map(([chaserId, v]) => ({ chaserId, aheadId: v.aheadId, ticks: v.ticks }));
+  }
+  private trackOvertakingDifficulty(): number {
+    const table = this.getOvertakingVars().trackDifficulty;
+    let d = 1;
+    for (const t of this.trackTags) d *= table[t.id] ?? 1;
+    return d;
+  }
+
+  /**
+   * Resolve a chaser against the car directly ahead on the same lap. Returns
+   * the position the chaser actually reaches this tick. A pass is an event:
+   * while the chaser is on the car ahead it rolls to get by — pace edge,
+   * fresher tyres and aggression help, a consistent defender and a technical
+   * track hurt — and until the roll lands it is held in the dirty air.
+   */
+  private resolveOvertake(driver: Driver, intended: number, _speed: number): number {
+    const L = this.config.lapLength;
+    const ov = this.getOvertakingVars();
+    const myLap = driver.currentLap;
+    const intendedTotal = myLap * L + intended;
+    // Nearest racing car ahead on the same lap at the start of the tick.
+    let ahead: Driver | null = null;
+    let aheadStart = Infinity;
+    for (const o of this.drivers) {
+      if (o.id === driver.id || o.status !== 'racing' || o.currentLap !== myLap) continue;
+      if (o.position > driver.position && o.position < aheadStart) { ahead = o; aheadStart = o.position; }
+    }
+    if (!ahead) { this.stuckBehind.delete(driver.id); return intended; }
+    const aheadTotal = this.tickDistance.get(ahead.id) ?? (myLap * L + ahead.position);
+    const gap = ov.followGap * L;
+    if (intendedTotal < aheadTotal - gap) { this.stuckBehind.delete(driver.id); return intended; }
+
+    // On the car ahead. Under the Unsafety Car nobody passes.
+    const prev = this.stuckBehind.get(driver.id);
+    const ticks = prev && prev.aheadId === ahead.id ? prev.ticks + 1 : 1;
+    let p = 0;
+    if (!this.raceState.unsafetyCarActive) {
+      // Steady pace (package × tyre state), not this tick's noisy roll.
+      const steady = (d: Driver) => this.packagePace(d) * this.getTireSpeedModifier(d);
+      const pace = Math.max(0, 1 + (steady(driver) / Math.max(0.01, steady(ahead)) - 1) * ov.paceWeight);
+      const tyre = Math.max(0.2, 1 + ((ahead.tireState.wear - driver.tireState.wear) / 100) * ov.tyreWeight);
+      const aggrN = (driver.stats.aggression - 0.3) / 0.5;
+      const aggr = 1 - ov.aggressionSwing / 2 + aggrN * ov.aggressionSwing;
+      const defend = 1 + (ahead.stats.consistency - 0.55) * ov.defenderWeight;
+      p = Math.min(0.6, ov.attemptBase * pace * tyre * aggr / Math.max(0.2, defend) / this.trackOvertakingDifficulty());
+    }
+    if (p > 0 && this.rng() < p) {
+      this.stuckBehind.delete(driver.id);
+      this.logEvent('overtake', driver, `passes ${ahead.shortName}${ticks >= ov.battleTicks ? ' after a fight' : ''}`, 'positive', 0.6);
+      this.evaluateDriverTags(driver, { isOvertaking: true });
+      return Math.max(intended, aheadTotal - myLap * L + gap * 0.5);
+    }
+    this.stuckBehind.set(driver.id, { aheadId: ahead.id, ticks });
+    if (ticks === ov.battleTicks) this.logEvent('battle', driver, `is all over ${ahead.shortName}`, 'neutral', 0.5);
+    return Math.min(intended, aheadTotal - myLap * L - gap);
+  }
+
   /** Each driver's deterministic pace from the package (speed stat × car power). */
   private packagePace(driver: Driver): number {
     const speedVars = this.getDriverSpeedVars();
@@ -1693,6 +1765,10 @@ class RaceEngine {
     // Positive resistance = less likely to crash, negative resistance = more likely
     const avgCrashResistance = (this.getTagCrashResistance(d1.id) + this.getTagCrashResistance(d2.id)) / 2;
     crashChance *= (1 - avgCrashResistance);
+    // A car held in line behind another (#246 pass 3) is following, not
+    // wrecking: the risk of a battle lives in the pass attempts, not the queue.
+    const held = this.stuckBehind.has(d1.id) || this.stuckBehind.has(d2.id);
+    if (held) crashChance *= this.getOvertakingVars().heldCrashFactor;
 
     // Random roll
     if (this.rng() < crashChance) {
@@ -2634,6 +2710,11 @@ class RaceEngine {
     // Track drivers who crossed start/finish while in pit lane after winner finished
     const pitLapFinishers: Array<{ driverId: number; newLap: number; newLapTimes: number[]; lapsBehind: number; newPitProgress: number }> = [];
 
+    // Move front-to-back so each chaser can see where the car ahead ended up.
+    const Lm = this.config.lapLength;
+    this.drivers = [...this.drivers].sort((a, b) => (b.currentLap * Lm + b.position) - (a.currentLap * Lm + a.position));
+    this.tickSpeeds.clear();
+    this.tickDistance.clear();
     this.drivers = this.drivers.map(driver => {
       // Skip DNF drivers
       if (driver.status === 'dnf') {
@@ -2825,12 +2906,16 @@ class RaceEngine {
       // Apply Unsafety Car speed limit if active and driver is behind it
       const unsafetyCarLimit = this.getUnsafetyCarSpeedLimit(driver);
 
-      const adjustedSpeed = factors.finalSpeed * tireModifier * powerMultiplier * unsafetyCarLimit;
+      // Dirty air: a car that spent last tick stuck behind someone loses pace.
+      const dirtyAir = this.stuckBehind.has(driver.id) ? 1 - this.getOvertakingVars().dirtyAir : 1;
+      const adjustedSpeed = factors.finalSpeed * tireModifier * powerMultiplier * unsafetyCarLimit * dirtyAir;
 
       // Update factors with tire modifier for analytics
       factors.tireModifier = tireModifier;
 
-      let newPosition = driver.position + adjustedSpeed;
+      this.tickSpeeds.set(driver.id, adjustedSpeed);
+      let newPosition = this.resolveOvertake(driver, driver.position + adjustedSpeed, adjustedSpeed);
+      this.tickDistance.set(driver.id, driver.currentLap * this.config.lapLength + newPosition);
       let newLap = driver.currentLap;
       const newLapTimes = [...driver.lapTimes];
 
@@ -3149,17 +3234,10 @@ class RaceEngine {
       if (prevRank !== undefined && currRank !== undefined && prevRank > currRank) {
         const positionsGained = prevRank - currRank;
 
-        // Evaluate overtake tags when a driver gains positions
-        this.evaluateDriverTags(driver, { isOvertaking: true });
-
-        if (positionsGained >= 2) {  // Only log if gained 2+ positions
-          this.logEvent(
-            'overtake',
-            driver,
-            `Surged forward ${positionsGained} positions!`,
-            'positive',
-            Math.min(1, positionsGained / 5)
-          );
+        // Real passes are logged where they happen (resolveOvertake); a jump of
+        // 3+ places in one tick is someone else's misfortune, worth a line.
+        if (positionsGained >= 3) {
+          this.logEvent('overtake', driver, `gains ${positionsGained} places in one go`, 'positive', Math.min(1, positionsGained / 5));
         }
       }
     }
