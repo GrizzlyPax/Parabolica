@@ -1,5 +1,6 @@
 // Shared types for race components
 import type { FieldRank } from '../../betting/utils';
+import type { FantasyConfig } from '../../fantasy/types';
 
 import { Driver, RaceState, EffectStackEntry } from '../../RaceEngine';
 
@@ -30,6 +31,8 @@ export interface RowContext {
   /** Where this driver's skill / car package ranks in this field (stats only, not race form). */
   driverRank?: FieldRank;
   carRank?: FieldRank;
+  /** The fantasy team that drafted this driver, if any. */
+  fantasyTeam?: { name: string; color: string };
   /** Speed vs the running pack's median this tick: 'hot' ≥ +4%, 'quick' ≥ +1%, 'slow' ≤ −3%, else 'pack'. */
   speedTone?: 'hot' | 'quick' | 'pack' | 'slow';
   /** Speed relative to the pack median, −1…+1 over ±8%. */
@@ -92,6 +95,8 @@ export interface TimingTowerProps {
   /** Live fights (engine.getBattles()). */
   battles?: { chaserId: number; aheadId: number; ticks: number }[];
   fastestLapOverall?: number;
+  /** Fantasy teams in play: drafted rows carry their team's colour. */
+  fantasy?: FantasyConfig;
   className?: string;
 }
 

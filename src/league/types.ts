@@ -5,6 +5,7 @@
 // (leagueSeed, setup, interventionLog). Everything else here is derived
 // cache that can be deleted and recomputed from those inputs.
 
+import type { FantasyConfig } from '../fantasy/types';
 import { RosterDriver, RaceEvent } from '../RaceEngine';
 import { SeasonState } from '../types/season';
 import { Team } from '../data/teams';
@@ -25,6 +26,8 @@ export interface LeagueSetupConfig {
   trackIds: string[];
   /** Wall-clock ms between race starts (e.g. 3h = 10_800_000). */
   raceIntervalMs: number;
+  /** Fantasy teams drafted at founding (src/fantasy). Facts: they travel with a published league. */
+  fantasy?: FantasyConfig;
   /** The rules this run plays under (#241). Absent = defaults (pre-ruleset saves). */
   ruleset?: Ruleset;
   /** Epoch ms of league founding; race i is scheduled at createdAt + i*interval

@@ -6,6 +6,8 @@ import { getGridTemplate } from './columns';
 import { formatGap, formatLapGap } from '../../utils/raceTime';
 import type { TimingTowerProps, RowContext, LapTimeClass } from './types';
 import { rosterRanks } from '../../betting/utils';
+import { fantasyOwners, fantasyHex } from '../../fantasy/types';
+import '../../fantasy/Fantasy.css';
 import type { Driver } from '../../RaceEngine';
 import './TimingTower.css';
 import './components.css';
@@ -38,6 +40,7 @@ function TimingTower({
   gridOrder,
   battles,
   fastestLapOverall,
+  fantasy,
   className = '',
 }: TimingTowerProps) {
   const { finishOrder } = raceState;
@@ -105,6 +108,7 @@ function TimingTower({
   // recomputes when the roster's numbers change, not every tick.
   const rosterKey = drivers.map(d => `${d.id}:${d.stats.baseSpeed}:${d.stats.consistency}:${d.stats.luck}:${d.carStats?.power}:${d.carStats?.grip}:${d.carStats?.reliability}:${d.teamStats?.pitCrew}`).join('|');
   const fieldRanking = useMemo(() => rosterRanks(drivers), [rosterKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  const fantasyBy = useMemo(() => { const m = new Map<number, { name: string; color: string }>(); for (const [id, t] of fantasyOwners(fantasy)) m.set(id, { name: t.name, color: fantasyHex(t.color) }); return m; }, [fantasy]);
 
   const getRowContext = (driver: Driver, index: number): RowContext => {
     const isFinished = driver.status === 'finished';
@@ -246,6 +250,7 @@ function TimingTower({
       gridSlot,
       driverRank: fieldRanking.driver.get(driver.id),
       carRank: fieldRanking.car.get(driver.id),
+      fantasyTeam: fantasyBy.get(driver.id),
       battle,
       speedTone,
       speedRel,

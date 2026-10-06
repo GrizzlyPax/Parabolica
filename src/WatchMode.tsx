@@ -1,3 +1,4 @@
+import { fantasyStandings, fantasyHex, type FantasyConfig } from './fantasy/types';
 import RaceEngine, { Driver, RaceConfig, RaceState, TrackInfo, RaceEvent, EffectStackEntry } from './RaceEngine';
 import { useMemo, useRef, useEffect, useState } from 'react';
 import {
@@ -53,6 +54,8 @@ interface WatchModeProps {
   /** Live broadcast mode: no pause/speed/reset — you're a spectator of
    * something really happening. Exit reads "Back to League". */
   spectator?: boolean;
+  /** Fantasy teams in play: drafted rows carry their colour in the tower. */
+  fantasy?: FantasyConfig;
   // Race controls
   isRunning?: boolean;
   raceSpeed?: RaceSpeed;
@@ -109,6 +112,7 @@ function WatchMode({
   onStop,
   onReset,
   onSpeedChange,
+  fantasy,
 }: WatchModeProps) {
   const trackLength = config.lapLength;
   const totalLaps = config.totalLaps;
@@ -1189,6 +1193,13 @@ function WatchMode({
             onNextRace={onNextRace}
             onExit={onExit}
             exitLabel={spectator ? '⚜️ Back to League' : 'Menu'}
+            fantasy={fantasy ? (() => {
+              const digest = { finishOrder: raceState.finishOrder, dnfDriverIds: drivers.filter(d => d.status === 'dnf').map(d => d.id) };
+              return fantasyStandings(fantasy, [digest]).map(l => ({
+                name: l.team.name, color: fantasyHex(l.team.color), points: l.points,
+                drivers: l.drivers.map(d => { const dr = drivers.find(x => x.id === d.driverId); return { name: dr?.shortName ?? `#${d.driverId}`, color: dr?.color ?? '#fff', points: d.points }; }),
+              }));
+            })() : undefined}
           />
         )}
         <div className={`broadcast-frame frame-${activeView}`}>
@@ -1218,6 +1229,7 @@ function WatchMode({
                   gridOrder={gridOrder}
                   battles={battles}
                   fastestLapOverall={fastestLapOverall ?? undefined}
+                  fantasy={fantasy}
                   className="timing-tower-track"
                 />
               </section>
@@ -1267,6 +1279,7 @@ function WatchMode({
                   gridOrder={gridOrder}
                   battles={battles}
                   fastestLapOverall={fastestLapOverall ?? undefined}
+                  fantasy={fantasy}
                   className="timing-tower-detail"
                 />
               </section>

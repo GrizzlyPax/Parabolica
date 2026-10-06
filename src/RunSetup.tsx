@@ -16,6 +16,8 @@ import { mulberry32, deriveSeed, randomSeed } from './engine/rng';
 import { CARDS_BY_ID, cardsForScope } from './data/cards';
 import { resolveRuleset, applyLabPreset, describeRuleset, describeChance, describeOdds, serializeRuleset, Ruleset } from './rules/ruleset';
 import { loadNotebook, fetchLedger, presetSummary, type LabPreset } from './racecontrol/notebook';
+import { DraftPanel, emptyFantasy } from './fantasy/DraftPanel';
+import { draftComplete, type FantasyConfig } from './fantasy/types';
 import { buildRoster } from './rules/genesis';
 import { weatherForRace } from './data/weather';
 import { intrinsicTrackTags } from './data/trackTags';
@@ -23,7 +25,7 @@ import { GenesisSlots } from './components/race/TagChips';
 import './RunSetup.css';
 
 interface RunSetupProps {
-  onStartRace: (roster: RosterDriver[], ruleset: Ruleset, seed: number) => void;
+  onStartRace: (roster: RosterDriver[], ruleset: Ruleset, seed: number, fantasy?: FantasyConfig) => void;
   onBack?: () => void;
 }
 
@@ -69,6 +71,14 @@ export default function RunSetup({ onStartRace, onBack }: RunSetupProps) {
   // Tags depend on the cards; everything else above does not.
   const roster = useMemo(() => buildRoster(universe.drivers, universe.cars, seed, ruleset), [universe, seed, ruleset]);
   const weather = useMemo(() => ruleset.weather.quickRace ? weatherForRace(seed, 0, ruleset.weather.weights) : null, [seed, ruleset]);
+  // Fantasy draft for this race; picks are cleared if the grid changes under them.
+  const [fantasy, setFantasy] = useState<FantasyConfig | null>(null);
+  const rosterKey = roster.map(d => d.id).join(',');
+  const [draftedFor, setDraftedFor] = useState(rosterKey);
+  if (draftedFor !== rosterKey) {
+    setDraftedFor(rosterKey);
+    if (fantasy?.teams.some(t => t.driverIds.length)) setFantasy({ ...fantasy, teams: fantasy.teams.map(t => ({ ...t, driverIds: [] })) });
+  }
   const rulesLines = useMemo(() => describeRuleset(ruleset), [ruleset]);
   const trackTags = intrinsicTrackTags(track.id);
 
@@ -96,7 +106,7 @@ export default function RunSetup({ onStartRace, onBack }: RunSetupProps) {
       eventEffect: track.event?.effect,
     });
     engine.updateConfig({ lapLength: track.length, totalLaps: track.laps });
-    onStartRace(roster, ruleset, seed);
+    onStartRace(roster, ruleset, seed, fantasy && draftComplete(fantasy) ? fantasy : undefined);
   };
 
   const byTeam = useMemo(() => {
@@ -180,6 +190,17 @@ export default function RunSetup({ onStartRace, onBack }: RunSetupProps) {
             </div>
           </div>
         )}
+      </section>
+
+      <section className="rs-row">
+        <div className="rs-row-head">
+          <span className="rs-k">Fantasy</span>
+          <span className="rs-hint">{fantasy ? (draftComplete(fantasy) ? `${fantasy.teams.length} teams drafted — their drivers light up in the timing tower.` : 'Finish the draft, or skip it; the race runs either way.') : 'Optional: a few of you draft 3 drivers each and score their race points.'}</span>
+          {fantasy && <button type="button" className="rs-link" onClick={() => setFantasy(null)}>skip fantasy</button>}
+        </div>
+        {!fantasy
+          ? <button type="button" className="rs-btn rs-btn-ghost" onClick={() => setFantasy(emptyFantasy())}>+ Set up fantasy teams</button>
+          : <DraftPanel roster={roster} value={fantasy} onChange={setFantasy} context="race" />}
       </section>
 
       <section className="rs-row rs-grid">

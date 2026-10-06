@@ -19,7 +19,8 @@ import { publishLeague, syncRemote, postDigest, leagueLink, RemoteError } from '
 import { getSeasonStandings, calculatePointsForPosition } from '../../types/season';
 import { getTrackById } from '../../generators/tracks';
 import { getTeamById } from '../../data/teams';
-import { getGodById } from '../gods';
+import { FantasyStandings } from '../../fantasy/FantasyStandings';
+import { fantasyStandings, fantasyHex } from '../../fantasy/types';
 import PointsChart, { ChartSeries } from './PointsChart';
 import { LapChart } from '../../components/race';
 import { traceRace, raceReportForLeague } from '../raceTrace';
@@ -279,7 +280,8 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onOpenGrid,
   const settlingRef = useRef(false);
   const liveRef = useRef<LiveRace | null>(null);
 
-  const god = getGodById(league.setup.godId);
+  const fantasy = league.setup.fantasy;
+  const fantasyLines = useMemo(() => fantasy ? fantasyStandings(fantasy, league.digests) : [], [fantasy, league.digests]);
   const over = isSeasonOver(league);
   const nextAt = nextRaceAt(league);
 
@@ -538,9 +540,11 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onOpenGrid,
 
         <header className="league-header">
           <h1 className="league-title">{league.setup.name}</h1>
-          <p className="league-god-line">
-            {god.emoji} Under the gaze of <strong>{god.name}</strong>, {god.epithet}
-          </p>
+          {fantasy && (
+            <p className="league-god-line">
+              Fantasy: {fantasy.teams.map((t, i) => <span key={t.id}>{i > 0 ? ' · ' : ''}<span className="fd-swatch" style={{ background: fantasyHex(t.color) }} /> {t.name}</span>)}
+            </p>
+          )}
           <div className="league-remote">
             {league.remote ? (
               <>
@@ -569,6 +573,13 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onOpenGrid,
                   emoji={champion.emoji} size={24} slot={champion.driverSlot} />{' '}
                 <strong style={{ color: champion.color }}>{champion.fullName}</strong>
                 {' '}— {standings[0].points} pts, {standings[0].wins} wins
+              </p>
+            )}
+            {fantasyLines.length > 0 && (
+              <p className="league-champion">
+                Fantasy champion: <span className="fd-swatch" style={{ background: fantasyHex(fantasyLines[0].team.color) }} />{' '}
+                <strong style={{ color: fantasyHex(fantasyLines[0].team.color) }}>{fantasyLines[0].team.name}</strong>
+                {' '}— {fantasyLines[0].points} pts
               </p>
             )}
             <button
@@ -748,6 +759,12 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onOpenGrid,
           </div>
 
           <aside className="league-rail">
+            {fantasy && (
+              <section className="league-section">
+                <div className="league-subhead"><h2 className="league-section-title">Fantasy</h2></div>
+                <FantasyStandings cfg={fantasy} digests={league.digests} roster={league.roster} />
+              </section>
+            )}
             {/* Standings: drivers ↔ constructors, with the points race below */}
             {hasStandings && (
               <section className="league-section league-standings-section" ref={standingsSecRef}>

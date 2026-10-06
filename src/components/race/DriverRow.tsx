@@ -22,12 +22,13 @@ function DriverRow({ driver, columns, context, gridTemplate, isFocused, expandab
   const rowStyle: React.CSSProperties = {
     gridTemplateColumns: gridTemplate,
     '--team-color': driver.color,
+    ...(context.fantasyTeam ? { '--fantasy-color': context.fantasyTeam.color } : {}),
   } as React.CSSProperties;
 
   return (
     <div className={`timing-row-container ${isFocused ? 'expanded' : ''}`}>
       <div
-        className={`timing-row ${isFinished ? 'finished' : ''} ${isDNF ? 'dnf' : ''} ${isPitting ? 'pitting' : ''} ${isFocused ? 'focused' : ''}`}
+        className={`timing-row ${isFinished ? 'finished' : ''} ${isDNF ? 'dnf' : ''} ${isPitting ? 'pitting' : ''} ${isFocused ? 'focused' : ''} ${context.fantasyTeam ? 'fantasy' : ''}`}
         style={rowStyle}
         onClick={onClick}
         role="button"
@@ -56,6 +57,7 @@ function DriverRow({ driver, columns, context, gridTemplate, isFocused, expandab
         <div className="timing-row-expanded" style={{ '--team-color': driver.color } as React.CSSProperties}>
           <div className="expanded-content">
             <span className="expanded-full-name" style={{ color: driver.color }}>{driver.name}</span>
+            {context.fantasyTeam && <span className="expanded-fact"><span className="expanded-k">Fantasy</span> <span className="fantasy-badge" style={{ '--fantasy-color': context.fantasyTeam.color } as React.CSSProperties}>{context.fantasyTeam.name}</span></span>}
             <span className="expanded-fact"><span className="expanded-k">Driver</span> <RankChip r={context.driverRank} what="Driver skill" unit="drivers" /></span>
             <span className="expanded-fact"><span className="expanded-k">Car</span> <RankChip r={context.carRank} what="Car package (shared with the teammate)" unit="cars" /></span>
             {driver.tireState && (

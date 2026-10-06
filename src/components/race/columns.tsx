@@ -108,12 +108,15 @@ export const COLUMN_DRIVER_FULL_NAME: ColumnConfig = {
   width: 'minmax(140px, 1.4fr)',
   align: 'left',
   render: (driver: Driver, ctx: RowContext) => (
-    <span
-      className={`driver-full-name ${ctx.isFocused ? 'focused' : ''}`}
-      style={{ color: driver.color }}
-    >
-      {driver.name}
-    </span>
+    <>
+      <span
+        className={`driver-full-name ${ctx.isFocused ? 'focused' : ''}`}
+        style={{ color: driver.color }}
+      >
+        {driver.name}
+      </span>
+      {ctx.fantasyTeam && <span className="fantasy-badge" style={{ '--fantasy-color': ctx.fantasyTeam.color } as React.CSSProperties}>{ctx.fantasyTeam.name}</span>}
+    </>
   ),
 };
 
