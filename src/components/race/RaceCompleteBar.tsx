@@ -62,12 +62,12 @@ export default function RaceCompleteBar({ podium, dnfCount, fastestLap, seed, bu
             <li key={d.id} className={`rc-p rc-p${i + 1}`}>
               <span className="rc-pos">{i + 1}</span>
               <span className="rc-marble" style={{ '--team-color': d.color } as React.CSSProperties}>{d.emoji}</span>
-              <span className="rc-name" style={{ color: d.color }}>{d.name}</span>
+              <span className="rc-name">{d.name}</span>
             </li>
           ))}
         </ol>
         <span className="race-complete-facts">
-          {fastestLap && <span className="rc-fact"><span className="rc-k">Fastest</span> <span style={{ color: fastestLap.driver.color }}>{fastestLap.driver.shortName}</span> {(fastestLap.ticks / 10).toFixed(1)}s</span>}
+          {fastestLap && <span className="rc-fact"><span className="rc-k">Fastest</span> <span className="rc-name">{fastestLap.driver.shortName}</span> {(fastestLap.ticks / 10).toFixed(1)}s</span>}
           <span className="rc-fact"><span className="rc-k">DNF</span> {dnfCount}</span>
           <span className="rc-fact"><span className="rc-k">Seed</span> {seed === null ? '—' : <code>{seed}</code>}</span>
         </span>

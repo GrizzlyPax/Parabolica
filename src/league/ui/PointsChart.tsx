@@ -150,7 +150,6 @@ function PointsChart({ series, raceCount, viewH }: PointsChartProps) {
           x={W - PAD.right + 6}
           y={l.y + 3}
           className={`chart-code ${l.dashed ? 'dashed' : ''}`}
-          fill={l.color}
         >
           {l.dashed ? `${l.code}*` : l.code}
         </text>

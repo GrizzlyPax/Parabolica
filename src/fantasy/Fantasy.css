@@ -29,7 +29,7 @@
 .fd-squad-slot.empty { color: var(--pw-text-3); font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; }
 .fd-board { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
 .fd-constructor { display: flex; flex-direction: column; gap: 4px; }
-.fd-constructor-name { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; padding: 0 2px; }
+.fd-constructor-name { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; padding: 0 2px; color: var(--pw-text-2); }
 .fd-card { display: grid; grid-template-columns: 24px 1fr; grid-template-rows: auto auto; column-gap: 8px; row-gap: 3px; align-items: center; text-align: left; background: var(--pw-surface); border: 1px solid var(--pw-border); border-radius: var(--pw-radius-m); padding: 7px 9px; color: var(--pw-text-1); font: inherit; cursor: pointer; position: relative; }
 .fd-card:hover:not(:disabled) { border-color: var(--pw-purple); }
 .fd-card:disabled { cursor: default; }

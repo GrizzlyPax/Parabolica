@@ -119,7 +119,7 @@ function DigestCard({ league, digest, open, onToggle }: {
         <span className="digest-winner">
           <TeamMarble color={winner?.color} accentColor={winner?.accentColor}
             emoji={winner?.emoji} size={20} slot={winner?.driverSlot} />
-          <span style={{ color: winner?.color }}>{winner?.fullName ?? '—'}</span>
+          <span>{winner?.fullName ?? '—'}</span>
         </span>
         <span className="digest-toggle">{open ? '▾' : '▸'}</span>
       </button>
@@ -133,7 +133,7 @@ function DigestCard({ league, digest, open, onToggle }: {
                   {['🥇', '🥈', '🥉'][i]}
                   <TeamMarble color={d?.color} accentColor={d?.accentColor}
                     emoji={d?.emoji} size={20} slot={d?.driverSlot} />
-                  <span style={{ color: d?.color }}>{d?.fullName}</span>
+                  <span>{d?.fullName}</span>
                 </span>
               );
             })}
@@ -141,7 +141,7 @@ function DigestCard({ league, digest, open, onToggle }: {
           {digest.dnfDriverIds.length > 0 && (
             <div className="digest-dnfs">
               💀 {digest.dnfDriverIds.map(id => (
-                <span key={id} style={{ color: driver(id)?.color }}>{driver(id)?.fullName ?? `#${id}`}</span>
+                <span key={id}>{driver(id)?.fullName ?? `#${id}`}</span>
               )).reduce<React.ReactNode[]>((acc, el, i) => (i === 0 ? [el] : [...acc, ', ', el]), [])}
             </div>
           )}
@@ -151,7 +151,7 @@ function DigestCard({ league, digest, open, onToggle }: {
                 <li key={i} className={`digest-tag-change ${c.kind}`}>
                   <span className="digest-ev-emoji">{c.kind === 'acquire' ? '✨' : '⌛'}</span>
                   <span className="digest-ev-text">
-                    <strong style={{ color: driver(c.driverId)?.color }}>{driver(c.driverId)?.fullName}</strong>{' '}
+                    <strong>{driver(c.driverId)?.fullName}</strong>{' '}
                     {c.headline.replace(driver(c.driverId)?.fullName ?? '', '').trim()}
                   </span>
                 </li>
@@ -164,7 +164,7 @@ function DigestCard({ league, digest, open, onToggle }: {
                 <span className="digest-ev-emoji">{eventIcon(ev)}</span>
                 <span className="digest-ev-lap">{ev.lap !== undefined ? `L${ev.lap}` : ''}</span>
                 <span className="digest-ev-text">
-                  <strong style={{ color: driver(ev.driverId)?.color }}>{ev.driverName}</strong>{' '}
+                  <strong>{ev.driverName}</strong>{' '}
                   {ev.description}
                 </span>
               </li>
@@ -174,12 +174,12 @@ function DigestCard({ league, digest, open, onToggle }: {
             <div className="digest-stats">
               {fastest && (
                 <span className="digest-stat">
-                  ⏱ Fastest lap <strong style={{ color: fastest.color }}>{fastest.fullName}</strong>
+                  ⏱ Fastest lap <strong>{fastest.fullName}</strong>
                 </span>
               )}
               {climberDriver && climber !== null && (
                 <span className="digest-stat">
-                  📈 Biggest climber <strong style={{ color: climberDriver.color }}>
+                  📈 Biggest climber <strong>
                     {climberDriver.fullName}</strong> +{climber.gained}
                 </span>
               )}
@@ -233,7 +233,7 @@ function DigestCard({ league, digest, open, onToggle }: {
                     <tr key={s.driverId} className={s.finalPosition === null ? 'dnf' : ''}>
                       <td className="strategy-pos">{s.finalPosition ?? 'DNF'}</td>
                       <td><TeamMarble color={s.color} accentColor={s.accentColor} emoji={s.emoji} size={16} /></td>
-                      <td className="strategy-name" style={{ color: s.color }}>{s.name}</td>
+                      <td className="strategy-name">{s.name}</td>
                       <td className="strategy-stints">
                         {s.stints.map((c, i) => (
                           <span key={i} className={`tire-pip tire-pip-${c}`}>{c[0].toUpperCase()}</span>
@@ -571,7 +571,7 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onOpenGrid,
               <p className="league-champion">
                 Champion: <TeamMarble color={champion.color} accentColor={champion.accentColor}
                   emoji={champion.emoji} size={24} slot={champion.driverSlot} />{' '}
-                <strong style={{ color: champion.color }}>{champion.fullName}</strong>
+                <strong>{champion.fullName}</strong>
                 {' '}— {standings[0].points} pts, {standings[0].wins} wins
               </p>
             )}
@@ -630,7 +630,7 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onOpenGrid,
                         );
                       })}
                     </span>
-                    <span className="live-order-leader" style={{ color: leader?.color }}>
+                    <span className="live-order-leader">
                       {leader?.fullName} leads
                     </span>
                   </span>
@@ -797,7 +797,7 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onOpenGrid,
                               <TeamMarble color={d?.color} accentColor={d?.accentColor}
                                 emoji={d?.emoji} slot={d?.driverSlot} />
                             </td>
-                            <td className="standings-name" style={{ color: d?.color }}>{d?.fullName}</td>
+                            <td className="standings-name">{d?.fullName}</td>
                             <td className="standings-pts">{s.points}</td>
                             <td className="standings-num">{s.wins}</td>
                             <td className="standings-num">{s.podiums}</td>
@@ -819,7 +819,7 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onOpenGrid,
                           <td className="standings-marble">
                             <TeamMarble color={t.color} accentColor={t.accentColor} emoji={t.emoji} />
                           </td>
-                          <td className="standings-name" style={{ color: t.color }}>{t.name}</td>
+                          <td className="standings-name">{t.name}</td>
                           <td className="standings-pts">{t.points}</td>
                           <td className="standings-num">{t.wins}</td>
                           <td className="standings-num">{t.podiums}</td>

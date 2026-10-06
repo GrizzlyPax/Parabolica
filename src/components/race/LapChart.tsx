@@ -209,7 +209,7 @@ function LapChart({ series, laps, totalLaps, fieldSize, scSampleIdx, focusedDriv
                   {l.s.emoji || l.s.code.slice(0, 1)}
                 </text>
                 <text x={gx + 55} y={l.ly} dominantBaseline="central"
-                  className={`lap-name ${focused ? 'focused' : ''}`} fill={l.s.color}>
+                  className={`lap-name ${focused ? 'focused' : ''}`}>
                   {l.s.name.length > 18 ? l.s.name.slice(0, 17) + '…' : l.s.name}
                 </text>
               </>
@@ -222,7 +222,7 @@ function LapChart({ series, laps, totalLaps, fieldSize, scSampleIdx, focusedDriv
               </>
             ) : (
               <text x={gx + 8} y={l.ly} dominantBaseline="central"
-                className={`lap-code ${l.s.dashed ? 'dashed' : ''}`} fill={l.s.color}>
+                className={`lap-code ${l.s.dashed ? 'dashed' : ''}`}>
                 {l.s.dashed ? `${l.s.code}*` : l.s.code}
               </text>
             )}
