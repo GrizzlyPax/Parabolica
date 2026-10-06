@@ -48,6 +48,7 @@ and BetLab for the future NPC-crowd system.
 - `docs/BALANCE_HANDOFF.md` - Game-dev handoff: data exports, tuning surface, balance state, workflow
 - `docs/TAG_SYSTEM.md` - Tag system design framework (five sources, magnitude ladder, acquisition engine, interview)
 - `docs/CONDITIONS_LAYER.md` - Track tags + weather design build (the conditions stack; companion to TAG_SYSTEM)
+- `docs/STORY_WORKSTREAM.md` - Handoff for ANY agent/collaborator: orientation, where things are, fixed vs flexible, flavour pass vs theme change, the loop, prompts
 - `docs/STORY_BIBLE.md` - Pax's theme/voice bible; agents read it before any flavour pass (story workstream)
 - `docs/WORLD_DECK.md` - Content framework: how to add teams, tracks, names, tags, cards, weather, gods, commentary (shapes, rules, voice, backlog, agent prompt)
 - `docs/GLOSSARY.md` - GENERATED World Deck: every team, track, tag, card, rule, weather, infliction, god and flavour pool (`npm run glossary`; `src/data/worldDeck.test.ts` checks content)

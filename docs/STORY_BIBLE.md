@@ -1,6 +1,6 @@
 # Parabolica Story Bible
 
-*Pax's document. Agents read it before any flavour pass and propose edits as PRs, never silently. Workstream: the "Parabolica Story Workstream" doc in the Claude project. Shapes and rules for writing content: `docs/WORLD_DECK.md`.*
+*Pax's document. Agents read it before any flavour pass and propose edits as PRs, never silently. Workstream and orientation for any agent: `docs/STORY_WORKSTREAM.md`. Shapes and rules for writing content: `docs/WORLD_DECK.md`.*
 
 **Status:** draft. The six theme questions below are unanswered; today's content is placeholder written to prove the machine works.
 
