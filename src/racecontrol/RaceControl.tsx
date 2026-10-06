@@ -6,7 +6,7 @@ import './RaceControl.css';
 import { PhysicsTab } from './PhysicsTab';
 import { useLabRunner } from './useLabRunner';
 import { SaveBar, type LabProps, type Working } from './lab';
-import { loadNotebook, saveNotebook, newId, presetSummary, exportNotebook, type Notebook, type LabPreset, type LabRun } from './notebook';
+import { loadNotebook, saveNotebook, newId, presetSummary, exportNotebook, nextLedgerBatch, ledgerIssueUrl, markSent, fetchLedger, type Notebook, type LabPreset, type LabRun, type Ledger } from './notebook';
 import { formatMetric, metricOutOfBand } from './physics';
 import { CANON_VARIABLES } from '../simlab/types';
 import { cloneVariables, setValueByPath, ALL_KNOBS, formatValue, canonValue } from './knobs';
@@ -55,7 +55,7 @@ export default function RaceControl({ onBack }: { onBack: () => void }) {
       </nav>
       {tab === 'calibration' && <CalibrationTab lab={lab} />}
       {tab === 'physics' && <PhysicsTab lab={lab} />}
-      {tab === 'notebook' && <NotebookTab notebook={notebook} working={working} onLoad={p => { loadPreset(p); }} onDeletePreset={deletePreset} onDeleteRun={deleteRun} />}
+      {tab === 'notebook' && <NotebookTab notebook={notebook} setNotebook={setNotebook} working={working} onLoad={p => { loadPreset(p); }} onDeletePreset={deletePreset} onDeleteRun={deleteRun} />}
       {tab === 'method' && <MethodTab />}
     </div>
   );
@@ -363,9 +363,19 @@ function Verdict({ mine, theirs }: { mine: TagCalibration; theirs: TagCalibratio
 // ---------------------------------------------------------------------------
 // Notebook: presets you saved and every run you measured, in this browser.
 
-function NotebookTab({ notebook, working, onLoad, onDeletePreset, onDeleteRun }: { notebook: Notebook; working: Working; onLoad: (p: LabPreset) => void; onDeletePreset: (id: string) => void; onDeleteRun: (id: string) => void }) {
+function NotebookTab({ notebook, setNotebook, working, onLoad, onDeletePreset, onDeleteRun }: { notebook: Notebook; setNotebook: (f: (n: Notebook) => Notebook) => void; working: Working; onLoad: (p: LabPreset) => void; onDeletePreset: (id: string) => void; onDeleteRun: (id: string) => void }) {
   const [open, setOpen] = useState<string>('');
   const [copied, setCopied] = useState(false);
+  const [ledger, setLedger] = useState<Ledger | null>(null);
+  const [ledgerErr, setLedgerErr] = useState(false);
+  useEffect(() => { fetchLedger().then(setLedger).catch(() => setLedgerErr(true)); }, []);
+  const pending = nextLedgerBatch(notebook);
+  const unsent = notebook.runs.filter(r => !r.sentAt).length + notebook.presets.filter(p => !p.sentAt || p.sentAt < p.createdAt).length;
+  const send = () => {
+    if (!pending) return;
+    window.open(ledgerIssueUrl(pending.batch), '_blank', 'noopener');
+    setNotebook(n => markSent(n, pending.runIds, pending.presetIds, pending.batch.sentAt));
+  };
   const download = () => {
     const blob = new Blob([exportNotebook(notebook)], { type: 'application/json' });
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `parabolica-lab-notebook.json`; a.click();
@@ -380,10 +390,11 @@ function NotebookTab({ notebook, working, onLoad, onDeletePreset, onDeleteRun }:
   return (
     <>
       <section className="rs-row rc-explain">
-        <p><b>Your notebook.</b> Presets are setups you named — edited tags and knobs together. Load one to keep working on it, or pick it in <b>Quick Race → Run Setup</b> to race under it. Runs are every measurement you made, newest first, with the seed so anyone can repeat it. All of this lives in this browser; download it to keep or share.</p>
+        <p><b>Your notebook.</b> Presets are setups you named — edited tags and knobs together. Load one to keep working on it, or pick it in <b>Quick Race → Run Setup</b> to race under it. Runs are every measurement you made, newest first, with the seed so anyone can repeat it. This page is this browser's copy; <b>Send to ledger</b> pushes what's new into the repo as one GitHub issue (you press Submit there, an action folds it in and closes it), and it shows up below under <b>Shared ledger</b> on every device once the site redeploys.</p>
         <div className="rc-reroll">
-          <span className="rs-k">Presets</span><span className="rc-dim">{notebook.presets.length}</span>
-          <span className="rs-k">Runs</span><span className="rc-dim">{notebook.runs.length}</span>
+          <span className="rs-k">Here</span><span className="rc-dim">{notebook.presets.length} preset{notebook.presets.length === 1 ? '' : 's'} · {notebook.runs.length} run{notebook.runs.length === 1 ? '' : 's'}</span>
+          <span className="rs-k">Shared</span><span className="rc-dim">{ledger ? `${ledger.presets.length} preset${ledger.presets.length === 1 ? '' : 's'} · ${ledger.runs.length} run${ledger.runs.length === 1 ? '' : 's'}` : ledgerErr ? 'unreachable' : '…'}</span>
+          <button type="button" className="rs-btn rs-btn-primary" disabled={!pending} onClick={send} title="Opens one prefilled GitHub issue with everything new; you press Submit">Send {unsent ? `${unsent} new` : 'to ledger'}{pending && pending.left > 0 ? ` (${pending.runIds.length + pending.presetIds.length} now, ${pending.left} next press)` : ''}</button>
           <span className="rc-actions"><button type="button" className="rs-link" onClick={download}>Download notebook JSON</button></span>
         </div>
       </section>
@@ -394,7 +405,7 @@ function NotebookTab({ notebook, working, onLoad, onDeletePreset, onDeleteRun }:
             {notebook.presets.map(p => (
               <Fragment key={p.id}>
               <tr className={working.preset?.id === p.id ? 'rc-row-on' : ''} onClick={() => setOpen(o => o === p.id ? '' : p.id)}>
-                <td className="rc-tag">{p.name}{working.preset?.id === p.id && <span className="rc-edited-text"> · loaded</span>}</td>
+                <td className="rc-tag">{p.name}{working.preset?.id === p.id && <span className="rc-edited-text"> · loaded</span>}{p.sentAt && p.sentAt >= p.createdAt ? <span className="rc-dim" title="In the shared ledger"> ☁</span> : ''}</td>
                 <td className="rc-dim">{presetSummary(p)}</td>
                 <td className="rc-dim">{new Date(p.createdAt).toLocaleString()}</td>
                 <td><span className="rc-draft-actions"><button type="button" className="rs-link" onClick={e => { e.stopPropagation(); onLoad(p); }}>Load</button><button type="button" className="rs-link rc-bad" onClick={e => { e.stopPropagation(); onDeletePreset(p.id); }}>Delete</button></span></td>
@@ -417,7 +428,7 @@ function NotebookTab({ notebook, working, onLoad, onDeletePreset, onDeleteRun }:
               <Fragment key={r.id}>
               <tr onClick={() => setOpen(o => o === r.id ? '' : r.id)}>
                 <td className="rc-dim">{new Date(r.at).toLocaleString()}</td>
-                <td className="rc-tag">{r.kind === 'tags' ? 'Tags' : 'Physics'} <span className="rc-dim">{r.note}</span></td>
+                <td className="rc-tag">{r.kind === 'tags' ? 'Tags' : 'Physics'} <span className="rc-dim">{r.note}</span>{r.sentAt ? <span className="rc-dim" title="In the shared ledger"> ☁</span> : ''}</td>
                 <td><span className="rc-num">{r.seed}</span></td>
                 <td><span className="rc-num">{r.races}</span></td>
                 <td className="rc-dim">{r.presetName ?? '—'}</td>
@@ -429,6 +440,44 @@ function NotebookTab({ notebook, working, onLoad, onDeletePreset, onDeleteRun }:
                   ? r.result.metrics.map(m => <div key={m.id}><b>{m.label}</b> <span className={`rc-num ${metricOutOfBand(m) ? 'rc-bad' : ''}`}>{formatMetric(m.value, m.format)}</span></div>)
                   : r.result.tags.map(c => { const t = getTagById(c.tagId); return <div key={c.tagId}><span className="rc-emoji">{t?.emoji}</span> <b>{t?.name ?? c.tagId}</b> <span className={`rc-num ${c.places > 0.05 ? 'rc-good' : c.places < -0.05 ? 'rc-bad' : ''}`}>{fmtSigned(c.places)}</span> <span className="rc-se">±{c.placesSe.toFixed(1)} · wins {pct(c.winRate)} · DNF {pct(c.dnfRate)}</span></div>; })}
                 <div className="rs-hint">Repeat it: <code>npm run {r.kind === 'physics' ? `lab -- ${r.seed} ${r.races} all no-tags` : `calibrate -- ${r.races} ${r.result.tags.map(c => c.tagId).join(' ')}`}</code>{r.kind === 'tags' && r.seed !== TAG_CALIBRATION.batchSeed ? ` (the script uses batch ${TAG_CALIBRATION.batchSeed}; this run used ${r.seed})` : ''}</div>
+              </div></td></tr>}
+              </Fragment>
+            ))}
+          </tbody></table></div>
+        )}
+      </section>
+      <section className="rs-row rc-table-row">
+        <div className="rc-knob-head"><span className="rs-k">Shared ledger</span><span className="rs-hint">{ledger ? (ledger.runs.length || ledger.presets.length ? 'Everything anyone sent, from any device. Newest first.' : 'Empty so far — send something.') : ledgerErr ? 'Could not load public/ledger from the site.' : 'Loading…'}</span></div>
+        {ledger && ledger.presets.length > 0 && (
+          <div className="rc-table-wrap"><table className="rc-table rc-compact"><thead><tr><th>Shared preset</th><th>Changes</th><th>Saved</th><th>By</th><th></th></tr></thead><tbody>
+            {ledger.presets.map(p => (
+              <tr key={`l-${p.id}`}>
+                <td className="rc-tag">{p.name}</td>
+                <td className="rc-dim">{presetSummary(p)}</td>
+                <td className="rc-dim">{new Date(p.createdAt).toLocaleString()}</td>
+                <td className="rc-dim">{p.user ?? '—'}{p.issue ? ` · #${p.issue}` : ''}</td>
+                <td><button type="button" className="rs-link" onClick={() => onLoad(p)}>Load</button></td>
+              </tr>
+            ))}
+          </tbody></table></div>
+        )}
+        {ledger && ledger.runs.length > 0 && (
+          <div className="rc-table-wrap"><table className="rc-table rc-compact"><thead><tr><th>When</th><th>What</th><th>Seed</th><th>Races</th><th>Preset</th><th>Headline</th><th>By</th></tr></thead><tbody>
+            {ledger.runs.map(r => (
+              <Fragment key={`l-${r.id}`}>
+              <tr onClick={() => setOpen(o => o === `l-${r.id}` ? '' : `l-${r.id}`)}>
+                <td className="rc-dim">{new Date(r.at).toLocaleString()}</td>
+                <td className="rc-tag">{r.kind === 'tags' ? 'Tags' : 'Physics'} <span className="rc-dim">{r.note}</span></td>
+                <td><span className="rc-num">{r.seed}</span></td>
+                <td><span className="rc-num">{r.races}</span></td>
+                <td className="rc-dim">{r.presetName ?? '—'}</td>
+                <td className="rc-dim">{runHeadline(r)}</td>
+                <td className="rc-dim">{r.user ?? '—'}{r.issue ? ` · #${r.issue}` : ''}</td>
+              </tr>
+              {open === `l-${r.id}` && <tr className="rc-try-row"><td colSpan={7}><div className="rc-try rc-preset-detail">
+                {r.kind === 'physics'
+                  ? r.result.metrics.map(m => <div key={m.id}><b>{m.label}</b> <span className={`rc-num ${metricOutOfBand(m) ? 'rc-bad' : ''}`}>{formatMetric(m.value, m.format)}</span></div>)
+                  : r.result.tags.map(c => { const t = getTagById(c.tagId); return <div key={c.tagId}><span className="rc-emoji">{t?.emoji}</span> <b>{t?.name ?? c.tagId}</b> <span className={`rc-num ${c.places > 0.05 ? 'rc-good' : c.places < -0.05 ? 'rc-bad' : ''}`}>{fmtSigned(c.places)}</span> <span className="rc-se">±{c.placesSe.toFixed(1)} · wins {pct(c.winRate)} · DNF {pct(c.dnfRate)}</span></div>; })}
               </div></td></tr>}
               </Fragment>
             ))}

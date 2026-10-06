@@ -56,6 +56,10 @@ Both tabs edit one shared set of **working changes** (tag definitions + knob val
 
 **Race under a preset:** Quick Race → Run Setup → *Lab preset*. `applyLabPreset(ruleset, preset)` (`src/rules/ruleset.ts`) patches `simVars` with the knob edits and makes `poolTags` return the edited tag definitions, so genesis draws your versions. The rules readout names the preset. Acquired / in-race tags are not patched (presets edit genesis tags only).
 
+## The shared ledger (any device, readable by agents)
+
+The repo is the database. **Notebook → Send N new** opens one prefilled GitHub issue labelled `ledger` carrying every unsent run and preset as a JSON batch (compact; split across presses past ~7 KB). You press Submit. `.github/workflows/ledger.yml` runs `scripts/ledger-ingest.mjs`: it appends runs to `public/ledger/runs.jsonl` (deduped by id), upserts presets into `public/ledger/presets.json`, commits to main, comments a receipt and closes the issue. Main redeploys, the site serves `/ledger/*`, and the Notebook's **Shared ledger** section (and Run Setup's preset picker, as "(shared)") shows it everywhere. Closed `ledger` issues are receipts, not clutter. Agents read it with `cat public/ledger/runs.jsonl`.
+
 ## Commands
 
 | | |
