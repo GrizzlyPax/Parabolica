@@ -432,7 +432,7 @@ function TrackMap({
                   style={{
                     fontSize: '10px',
                     fontWeight: 700,
-                    fill: driver.color,
+                    fill: 'var(--pw-text-1)',
                     textShadow: '0 1px 2px rgba(0,0,0,0.8)',
                   }}
                 >
