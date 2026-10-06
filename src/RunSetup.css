@@ -83,6 +83,11 @@
 .rs-driver-tags { text-align: right; }
 .rs-driver-tags .tag-chip.named { font-size: 12px; padding: 2px 6px; }
 
+@media (max-width: 1500px) {
+  .rs-driver { grid-template-columns: minmax(0, 1fr) auto; row-gap: 2px; }
+  .rs-driver-tags { grid-column: 1 / -1; text-align: left; }
+}
+
 @media (max-width: 799px) {
   .run-setup { padding: 14px 12px 32px; gap: 12px; }
   .rs-title { font-size: 32px; }
