@@ -35,13 +35,13 @@
 
 .track-name-large {
   font-size: 2.5rem;
-  color: #fff;
+  color: var(--pw-text-1);
   margin: 0 0 0.5rem 0;
   text-shadow: 0 0 30px rgba(155, 89, 182, 0.5);
 }
 
 .formation-text {
-  color: #888;
+  color: var(--pw-text-3);
   font-size: 1.1rem;
   margin: 0;
 }
@@ -63,28 +63,28 @@
   flex-direction: column;
   gap: 0.5rem;
   padding: 0.75rem;
-  background: #1a1a1a;
+  background: var(--pw-surface);
   border-radius: 8px;
-  border: 2px solid #333;
+  border: 2px solid var(--pw-border);
 }
 
 .light {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: #2a2a2a;
-  border: 2px solid #444;
+  background: var(--pw-border);
+  border: 2px solid var(--pw-border-strong);
   transition: all 0.15s ease;
 }
 
 .light-column.on .light.red {
-  background: #e74c3c;
-  box-shadow: 0 0 20px #e74c3c, 0 0 40px #e74c3c;
-  border-color: #ff6b6b;
+  background: var(--pw-red);
+  box-shadow: 0 0 20px var(--pw-red), 0 0 40px var(--pw-red);
+  border-color: var(--pw-red-soft);
 }
 
 .lights-text {
-  color: #888;
+  color: var(--pw-text-3);
   font-size: 1.2rem;
   margin: 0;
 }
@@ -108,8 +108,8 @@
 .go-text {
   font-size: 2.5rem;
   font-weight: bold;
-  color: #2ecc71;
-  text-shadow: 0 0 30px #2ecc71, 0 0 60px #2ecc71;
+  color: var(--pw-green);
+  text-shadow: 0 0 30px var(--pw-green), 0 0 60px var(--pw-green);
   animation: pulse 0.3s ease infinite alternate;
 }
 

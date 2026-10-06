@@ -32,7 +32,10 @@ function TimingTower({
   statusEffects,
   activeTags,
   effectStacks,
+  histories,
   positionDeltas,
+  gridOrder,
+  battles,
   fastestLapOverall,
   className = '',
 }: TimingTowerProps) {
@@ -78,12 +81,22 @@ function TimingTower({
           const bTime = b.sectorTimes![bSectors - 1];
           if (aTime !== bTime) return aTime - bTime;
         }
-        // Final fallback: surname for equal times (race start)
+        // Race start: the grid order; then surname for equal times
+        if (gridOrder && gridOrder.length) {
+          const ga = gridOrder.indexOf(a.id), gb = gridOrder.indexOf(b.id);
+          if (ga !== gb) return ga - gb;
+        }
         return getSurname(a).localeCompare(getSurname(b));
       });
 
     return [...finished, ...racing, ...dnf];
-  }, [drivers, finishOrder, totalSectorCrossings]);
+  }, [drivers, finishOrder, totalSectorCrossings, gridOrder]);
+
+  // Pack speed: median smoothed speed of the cars still racing.
+  const packSpeed = useMemo(() => {
+    const v = drivers.filter(d => d.status === 'racing' && d.speedSmooth > 0).map(d => d.speedSmooth).sort((a, b) => a - b);
+    return v.length ? v[Math.floor(v.length / 2)] : 0;
+  }, [drivers]);
 
   // Generate row context for each driver
   const getRowContext = (driver: Driver, index: number): RowContext => {
@@ -105,6 +118,22 @@ function TimingTower({
 
     // Position delta
     const positionDelta = positionDeltas?.get(driver.id);
+    let speedTone: RowContext['speedTone'];
+    let speedRel: number | undefined;
+    if (packSpeed > 0 && driver.status === 'racing' && driver.speedSmooth > 0) {
+      const r = driver.speedSmooth / packSpeed - 1;
+      speedTone = r >= 0.04 ? 'hot' : r >= 0.01 ? 'quick' : r <= -0.03 ? 'slow' : 'pack';
+      speedRel = Math.max(-1, Math.min(1, r / 0.08));
+    }
+    const gridIdx = gridOrder ? gridOrder.indexOf(driver.id) : -1;
+    const gridSlot = gridIdx >= 0 ? gridIdx + 1 : undefined;
+    let battle: RowContext['battle'];
+    if (battles) {
+      const att = battles.find(b => b.chaserId === driver.id);
+      const def = battles.find(b => b.aheadId === driver.id);
+      if (att) battle = { role: 'attacking', ticks: att.ticks, otherId: att.aheadId };
+      else if (def) battle = { role: 'defending', ticks: def.ticks, otherId: def.chaserId };
+    }
 
     // Gap calculations - SECTOR-based checkpoint timing
     // Gap = time difference at the DRIVER's last completed sector
@@ -207,6 +236,10 @@ function TimingTower({
     return {
       displayPosition,
       positionDelta,
+      gridSlot,
+      battle,
+      speedTone,
+      speedRel,
       intervalGap,
       leaderGap,
       lastLapTime,
@@ -216,6 +249,7 @@ function TimingTower({
       statusEmoji,
       activeTagIds: activeTags?.get(driver.id),
       effectStack: effectStacks?.get(driver.id),
+      history: histories?.get(driver.id),
       isFocused,
       isFinished,
       isDNF,

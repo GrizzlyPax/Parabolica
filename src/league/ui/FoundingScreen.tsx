@@ -5,7 +5,10 @@ import { useState } from 'react';
 import { GODS } from '../gods';
 import { CURRENT_TEAMS, HISTORIC_TEAMS, makeCustomTeam, Team } from '../../data/teams';
 import { generateTeamIdentities } from '../../generators/teamIdentity';
+import { cardsForScope, CARDS_BY_ID } from '../../data/cards';
+import { resolveRuleset, describeRuleset, describeChance, describeOdds, Ruleset } from '../../rules/ruleset';
 import './League.css';
+import '../../RunSetup.css';
 
 export interface FoundingChoices {
   name: string;
@@ -16,6 +19,8 @@ export interface FoundingChoices {
   teamIds: string[];
   /** Player-created teams for the grid. */
   customTeams: Team[];
+  /** Season cards → the rules this league plays under (#241). */
+  ruleset: Ruleset;
 }
 
 const MIN_TEAMS = 2;
@@ -85,9 +90,16 @@ function FoundingScreen({ onFound, onBack }: FoundingScreenProps) {
     setDraft(null);
   };
 
+  const [hand, setHand] = useState<string[]>([]);
+  const [showRules, setShowRules] = useState(false);
+  const ruleset = resolveRuleset(hand, CARDS_BY_ID);
+  const rulesLines = describeRuleset(ruleset);
+  const toggleCard = (id: string) => setHand(h => (h.includes(id) ? h.filter(x => x !== id) : [...h, id]));
+
   const handleFound = () => {
     if (!canFound) return;
     onFound({
+      ruleset,
       // Blank → App fills a procedural name seeded from the league (#185).
       name: name.trim(),
       godId: godId!,
@@ -248,6 +260,37 @@ function FoundingScreen({ onFound, onBack }: FoundingScreenProps) {
             ))}
           </div>
           {god && <p className="god-hunger">“{god.hunger}”</p>}
+        </section>
+
+        <section className="founding-section">
+          <h2 className="founding-label">
+            Season cards
+            <span className="founding-team-count">{hand.length === 0 ? 'none — default rules' : `${hand.length} in play`}</span>
+          </h2>
+          <p className="founding-hint">The rules this whole season plays under. Pick none for the classic universe.</p>
+          <div className="rs-hand">
+            {cardsForScope('season').map(c => {
+              const on = hand.includes(c.id);
+              return (
+                <button type="button" key={c.id} className={`rs-card ${on ? 'on' : ''} w-${c.weight}`} onClick={() => toggleCard(c.id)} aria-pressed={on}>
+                  <span className="rs-card-emoji">{c.emoji}</span>
+                  <span className="rs-card-name">{c.name}</span>
+                  <span className="rs-card-readout">{c.readout}</span>
+                  <span className="rs-card-weight">{c.weight}</span>
+                </button>
+              );
+            })}
+          </div>
+          <button type="button" className="rs-link founding-rules-toggle" onClick={() => setShowRules(v => !v)}>
+            {showRules ? 'Hide the rules underneath' : 'Show the rules underneath'}
+          </button>
+          {showRules && (
+            <div className="rs-rules">
+              {rulesLines.length === 0
+                ? <div className="rs-rule">Default rules: {ruleset.tags.pool.length} tags in the pool, {describeChance(ruleset.tags.genesisChance)} per slot to be born with one ({describeOdds(ruleset.tags.rarityOdds)}), up to {ruleset.tags.slotCap} each; pit rule: {ruleset.simVars.pits.minStops} stops{ruleset.simVars.pits.requireAllCompounds ? ', all 3 compounds' : ''}; canon physics.</div>
+                : rulesLines.map(l => <div key={l} className="rs-rule">{l}</div>)}
+            </div>
+          )}
         </section>
 
         <section className="founding-section">

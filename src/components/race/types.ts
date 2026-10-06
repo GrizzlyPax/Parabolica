@@ -2,6 +2,15 @@
 
 import { Driver, RaceState, EffectStackEntry } from '../../RaceEngine';
 
+/** One kind of thing that happened to a driver, with the laps it happened on. */
+export interface DriverHistoryEntry {
+  key: string;
+  emoji: string;
+  name: string;
+  laps: number[];
+  kind: 'tag' | 'event' | 'error' | 'pit' | 'crash' | 'pass' | 'penalty';
+}
+
 // Column configuration for TimingTower
 export interface ColumnConfig {
   id: string;
@@ -15,6 +24,14 @@ export interface ColumnConfig {
 export interface RowContext {
   displayPosition: string;
   positionDelta?: number;
+  /** Starting grid slot (1 = pole), or undefined before qualifying. */
+  gridSlot?: number;
+  /** Speed vs the running pack's median this tick: 'hot' ≥ +4%, 'quick' ≥ +1%, 'slow' ≤ −3%, else 'pack'. */
+  speedTone?: 'hot' | 'quick' | 'pack' | 'slow';
+  /** Speed relative to the pack median, −1…+1 over ±8%. */
+  speedRel?: number;
+  /** In a fight right now: attacking the car ahead or defending from the car behind. */
+  battle?: { role: 'attacking' | 'defending'; ticks: number; otherId: number };
   intervalGap: string;
   leaderGap: string;
   lastLapTime: number | null;
@@ -27,6 +44,8 @@ export interface RowContext {
   activeTagIds?: Set<string>;
   /** Everything acting on this driver right now, with reasons (engine.getEffectStack). */
   effectStack?: EffectStackEntry[];
+  /** What has happened TO this driver so far, grouped: "🔧 Pit Lane Special · L3, L9". */
+  history?: DriverHistoryEntry[];
   isFocused: boolean;
   isFinished: boolean;
   isDNF: boolean;
@@ -61,7 +80,13 @@ export interface TimingTowerProps {
   activeTags?: Map<number, Set<string>>;
   /** Per-driver effect stacks (see RowContext.effectStack). */
   effectStacks?: Map<number, EffectStackEntry[]>;
+  /** Per-driver event history (see RowContext.history). */
+  histories?: Map<number, DriverHistoryEntry[]>;
   positionDeltas?: Map<number, number>;
+  /** Driver ids in starting-grid order (engine.getGridOrder()). */
+  gridOrder?: number[];
+  /** Live fights (engine.getBattles()). */
+  battles?: { chaserId: number; aheadId: number; ticks: number }[];
   fastestLapOverall?: number;
   className?: string;
 }

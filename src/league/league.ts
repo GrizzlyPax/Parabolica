@@ -3,7 +3,9 @@
 // generation step later never shifts existing ones.
 
 import { mulberry32, deriveSeed } from '../engine/rng';
-import { Tag, getTagById, genesisTags, MAX_TAGS_PER_DRIVER } from '../data/tags';
+import { Tag, getTagById } from '../data/tags';
+import { buildRoster } from '../rules/genesis';
+import { Ruleset, defaultRuleset } from '../rules/ruleset';
 import { getTeamsByIds, Team } from '../data/teams';
 import { generateRosterFromTeamList } from '../generators/drivers';
 import { generateCarsForKingdoms } from '../generators/cars';
@@ -18,24 +20,15 @@ import { version as engineVersion } from '../../package.json';
 export function generateGenesisRoster(
   leagueSeed: number,
   teamIds: string[],
-  customTeams: Team[] = []
+  customTeams: Team[] = [],
+  ruleset: Ruleset = defaultRuleset()
 ): RosterDriver[] {
   const teams = [...getTeamsByIds(teamIds), ...customTeams];
   const driverRng = mulberry32(deriveSeed(leagueSeed, 'genesis', 'drivers'));
   const carRng = mulberry32(deriveSeed(leagueSeed, 'genesis', 'cars'));
   const roster = generateRosterFromTeamList(teams, driverRng);
   const cars = generateCarsForKingdoms(teams.map(t => t.id), carRng);
-
-  return roster.map(driver => {
-    const car = cars.get(driver.kingdomId);
-    return {
-      ...driver,
-      carStats: car?.stats,
-      carName: car?.name,
-      teamStats: car?.teamStats,
-      tags: genesisTags(driver.tag, car?.carTag, car?.teamTag),
-    };
-  });
+  return buildRoster(roster, cars, leagueSeed, ruleset);
 }
 
 /** Fix the calendar: every race gets its wall-clock slot and seed at founding.
@@ -51,7 +44,7 @@ export function buildSchedule(leagueSeed: number, setup: LeagueSetupConfig): Sch
 }
 
 export function createLeague(leagueSeed: number, setup: LeagueSetupConfig): LeagueState {
-  const roster = generateGenesisRoster(leagueSeed, setup.teamIds, setup.customTeams);
+  const roster = generateGenesisRoster(leagueSeed, setup.teamIds, setup.customTeams, setup.ruleset ?? defaultRuleset());
   return {
     engineVersion,
     leagueSeed,
@@ -72,14 +65,20 @@ export function createLeague(leagueSeed: number, setup: LeagueSetupConfig): Leag
 export function rosterStateAt(league: LeagueState, raceIndex: number): RosterDriver[] {
   const applicable = league.interventionLog.filter(i => i.atRaceIndex <= raceIndex);
   if (applicable.length === 0) return league.roster;
+  const cap = (league.setup.ruleset ?? defaultRuleset()).tags.slotCap;
 
   return league.roster.map(driver => {
     let tags = driver.tags;
-    for (const intervention of applicable) {
-      if (intervention.type !== 'attach-tag' || intervention.targetDriverId !== driver.id) continue;
-      const tag = getTagById(intervention.tagId);
+    for (const entry of applicable) {
+      if (entry.targetDriverId !== driver.id) continue;
+      const tag = getTagById(entry.tagId);
       if (!tag) continue;
-      tags = attachTag(tags, tag);
+      if (entry.type === 'expire-tag') {
+        tags = tags.filter(t => t.id !== tag.id);
+      } else {
+        // attach-tag (Commissionary) and acquire-tag (the sim) land the same way
+        tags = attachTag(tags, tag, cap);
+      }
     }
     return tags === driver.tags ? driver : { ...driver, tags };
   });
@@ -91,12 +90,12 @@ export function rosterStateAt(league: LeagueState, raceIndex: number): RosterDri
  * append-only) but has no effect. Validate with canAttachTag before committing
  * so the UI never offers an attachment that would be ignored.
  */
-export function attachTag(tags: Tag[], tag: Tag): Tag[] {
-  if (!canAttachTag(tags, tag)) return tags;
+export function attachTag(tags: Tag[], tag: Tag, cap: number = defaultRuleset().tags.slotCap): Tag[] {
+  if (!canAttachTag(tags, tag, cap)) return tags;
   return [...tags, tag];
 }
 
-export function canAttachTag(tags: Tag[], tag: Tag): boolean {
+export function canAttachTag(tags: Tag[], tag: Tag, cap: number = defaultRuleset().tags.slotCap): boolean {
   if (tags.some(t => t.id === tag.id)) return false;
-  return tags.length < MAX_TAGS_PER_DRIVER;
+  return tags.length < cap;
 }

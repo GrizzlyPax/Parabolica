@@ -24,7 +24,7 @@ function computeVariablesDiff(canon: SimVariables, heretic: SimVariables): Varia
   // Tire compounds
   for (const compound of ['soft', 'medium', 'hard'] as const) {
     compare(`tires.${compound}.speedBonus`, `${compound} speed`, canon.tires[compound].speedBonus, heretic.tires[compound].speedBonus);
-    compare(`tires.${compound}.wearRate`, `${compound} wear`, canon.tires[compound].wearRate, heretic.tires[compound].wearRate);
+    compare(`tires.${compound}.lifeLaps`, `${compound} life (laps)`, canon.tires[compound].lifeLaps, heretic.tires[compound].lifeLaps);
     compare(`tires.${compound}.criticalAt`, `${compound} cliff`, canon.tires[compound].criticalAt, heretic.tires[compound].criticalAt);
     compare(`tires.${compound}.cliffSeverity`, `${compound} severity`, canon.tires[compound].cliffSeverity, heretic.tires[compound].cliffSeverity);
     compare(`tires.${compound}.blowoutRisk`, `${compound} blowout`, canon.tires[compound].blowoutRisk, heretic.tires[compound].blowoutRisk);
@@ -67,14 +67,9 @@ function computeVariablesDiff(canon: SimVariables, heretic: SimVariables): Varia
   compare('pits.slowStopPerStar', 'slow stop/star', canon.pits.slowStopPerStar, heretic.pits.slowStopPerStar);
   compare('pits.quickStopBase', 'quick stop base', canon.pits.quickStopBase, heretic.pits.quickStopBase);
   compare('pits.quickStopPerStar', 'quick stop/star', canon.pits.quickStopPerStar, heretic.pits.quickStopPerStar);
-  compare('pits.basePitChance', 'pit chance', canon.pits.basePitChance, heretic.pits.basePitChance);
-  compare('pits.wearPitBonus', 'wear pit bonus', canon.pits.wearPitBonus, heretic.pits.wearPitBonus);
-  compare('pits.wearPitDenominator', 'wear saturation', canon.pits.wearPitDenominator, heretic.pits.wearPitDenominator);
-  compare('pits.luckPitBase', 'luck pit base', canon.pits.luckPitBase, heretic.pits.luckPitBase);
-  compare('pits.luckPitAdjustment', 'luck pit adjust', canon.pits.luckPitAdjustment, heretic.pits.luckPitAdjustment);
+  compare('pits.minStops', 'min stops (rule)', canon.pits.minStops, heretic.pits.minStops);
+  compare('pits.penaltyLapFraction', 'rule penalty (laps)', canon.pits.penaltyLapFraction, heretic.pits.penaltyLapFraction);
   compare('pits.lastPitLapBuffer', 'last pit buffer', canon.pits.lastPitLapBuffer, heretic.pits.lastPitLapBuffer);
-  compare('pits.windowOffsetPerStat', 'window stagger', canon.pits.windowOffsetPerStat, heretic.pits.windowOffsetPerStat);
-  compare('pits.windowHalfWidth', 'window width', canon.pits.windowHalfWidth, heretic.pits.windowHalfWidth);
   compare('pits.strategyWearLean', 'strategy lean', canon.pits.strategyWearLean, heretic.pits.strategyWearLean);
   compare('pits.scPitChance', 'SC pit chance', canon.pits.scPitChance, heretic.pits.scPitChance);
   compare('pits.scPitMinWear', 'SC pit min wear', canon.pits.scPitMinWear, heretic.pits.scPitMinWear);

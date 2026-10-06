@@ -1,6 +1,11 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import RaceEngine, { Driver, RaceConfig, RaceState, TrackInfo, RaceEvent, RosterDriver } from './RaceEngine';
-import LeagueSetup from './LeagueSetup';
+import RunSetup from './RunSetup';
+import Glossary from './Glossary';
+import { Ruleset, describeRuleset } from './rules/ruleset';
+import { CARDS_BY_ID } from './data/cards';
+import { weatherForRace } from './data/weather';
+import { intrinsicTrackTags } from './data/trackTags';
 import MainMenu from './MainMenu';
 import RaceStartCountdown from './RaceStartCountdown';
 import WatchMode from './WatchMode';
@@ -18,7 +23,7 @@ import { mulberry32, deriveSeed, randomSeed } from './engine/rng';
 import { generateTrack, getRandomTracks, getTrackById, getDynamicEventDescription, Track } from './generators/tracks';
 import './App.css';
 
-type AppScreen = 'main-menu' | 'setup' | 'race' | 'compendium' | 'founding' | 'league' | 'broadcast' | 'grid';
+type AppScreen = 'main-menu' | 'setup' | 'race' | 'compendium' | 'founding' | 'league' | 'broadcast' | 'grid' | 'glossary';
 type RaceSpeed = 0.5 | 1 | 2 | 10;
 
 function App() {
@@ -104,6 +109,7 @@ function App() {
       trackIds,
       raceIntervalMs: choices.raceIntervalMs,
       createdAt: Date.now(),
+      ruleset: choices.ruleset,
     });
     saveLeagueState(newLeague);
     setLeague(newLeague);
@@ -128,7 +134,7 @@ function App() {
     if (!track) return;
 
     engine.stop();
-    prepareScheduledRace(engine, liveLeague, live.index, track, CANON_VARIABLES);
+    prepareScheduledRace(engine, liveLeague, live.index, track, liveLeague.setup.ruleset?.simVars ?? CANON_VARIABLES);
     // Sync the UI's track state (layout, pit lane) — WatchMode renders from
     // this React state, not from the engine, and falls back to a default
     // oval without it.
@@ -157,7 +163,12 @@ function App() {
 
   // === Quick Race ===
 
-  const handleStartRace = (_rosterWithCars: RosterDriver[]) => {
+  // The quick run in progress: one seed + the hand of cards; race N derives
+  // its own seed, track and weather from it (so Next Race stays replayable).
+  const [quickRun, setQuickRun] = useState<{ seed: number; ruleset: Ruleset; raceIndex: number } | null>(null);
+
+  const handleStartRace = (_roster: RosterDriver[], ruleset: Ruleset, seed: number) => {
+    setQuickRun({ seed, ruleset, raceIndex: 0 });
     setTrackInfo(engine.getTrackInfo());
     setScreen('race');
     setShowCountdown(true);
@@ -226,15 +237,25 @@ function App() {
       lapLength: track.length,
       totalLaps: track.laps,
     });
-    engine.setWeather(null); // Quick Race has no weather (league-only for now)
-    engine.setTrackTags([]);  // nor track tags
     setTrackInfo(engine.getTrackInfo());
   }, [engine]);
 
   // Quick Race "Next Race": same grid, fresh random track, straight to lights.
   const handleNextRace = () => {
     engine.reset();
-    applyTrackToEngine(generateTrack());
+    if (quickRun) {
+      const idx = quickRun.raceIndex + 1;
+      const rs = quickRun.ruleset;
+      applyTrackToEngine(generateTrack(mulberry32(deriveSeed(quickRun.seed, 'track', idx))));
+      engine.setSimVars(rs.simVars);
+      engine.setSeed(deriveSeed(quickRun.seed, 'race', idx));
+      engine.setWeather(rs.weather.quickRace ? weatherForRace(quickRun.seed, idx, rs.weather.weights) : null);
+      engine.setTrackTags(intrinsicTrackTags(engine.getTrackInfo()?.id ?? ''));
+      setTrackInfo(engine.getTrackInfo());
+      setQuickRun({ ...quickRun, raceIndex: idx });
+    } else {
+      applyTrackToEngine(generateTrack());
+    }
     setShowCountdown(true);
   };
 
@@ -263,12 +284,17 @@ function App() {
         onSingleRace={handleSingleRace}
         onCommissioner={handleCommissioner}
         onCompendium={handleCompendium}
+        onGlossary={() => setScreen('glossary')}
         league={leagueSummary}
       />
     );
   }
 
   // Show compendium
+  if (screen === 'glossary') {
+    return <Glossary onBack={handleBackToMainMenu} />;
+  }
+
   if (screen === 'compendium') {
     return <Compendium onBack={handleBackToMainMenu} />;
   }
@@ -323,7 +349,7 @@ function App() {
 
   // Show setup screen
   if (screen === 'setup') {
-    return <LeagueSetup onStartRace={handleStartRace} />;
+    return <RunSetup onStartRace={handleStartRace} onBack={handleBackToMainMenu} />;
   }
 
   if (!config || !raceState) return null;
@@ -348,6 +374,7 @@ function App() {
         onNextRace={handleNextRace}
         raceEvents={raceEvents}
         onExit={handleBackToMainMenu}
+        rulesLines={quickRun ? (quickRun.ruleset.cards.length ? quickRun.ruleset.cards.map(id => `${CARDS_BY_ID.get(id)?.emoji ?? ''} ${CARDS_BY_ID.get(id)?.name ?? id}`.trim()).concat(describeRuleset(quickRun.ruleset)) : ['default']) : undefined}
         // Race controls - now handled by UniversalHeader inside WatchMode
         isRunning={isRunning}
         raceSpeed={raceSpeed}

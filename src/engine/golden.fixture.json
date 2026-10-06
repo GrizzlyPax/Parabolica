@@ -1,64 +1,72 @@
 {
   "seed": 24301,
   "track": "venhir",
-  "rosterHash": "955a666c",
+  "rosterHash": "6ed404b2",
   "finishOrder": [
-    10,
-    16,
     8,
-    18,
-    2,
+    9,
     21,
-    6,
-    19,
-    3,
-    15,
-    0,
     12,
     11,
-    17,
-    20,
-    13,
+    18,
+    0,
     14,
     1,
+    16,
+    19,
+    13,
+    10,
+    17,
+    3,
+    4,
     7,
-    4
+    15,
+    6,
+    5
   ],
-  "totalTicks": 2243,
-  "leadChanges": 13,
-  "eventsHash": "b1f48861",
+  "totalTicks": 1875,
+  "leadChanges": 0,
+  "eventsHash": "dc6fcdba",
   "tags": [
     [
-      "sunday-driver"
+      "ice-veins"
     ],
     [
-      "clutch-performer",
-      "pit-lane-special"
-    ],
-    [],
-    [],
-    [],
-    [],
-    [
-      "cursed-chassis"
+      "crowd-favourite"
     ],
     [],
     [],
-    [],
-    [],
-    [],
+    [
+      "butterfingers"
+    ],
     [],
     [
-      "pit-lane-special"
+      "underdog-spirit"
+    ],
+    [],
+    [
+      "underdog-spirit"
+    ],
+    [
+      "built-like-a-tank"
+    ],
+    [],
+    [
+      "light-footed"
+    ],
+    [
+      "butterfingers"
     ],
     [],
     [],
     [],
     [
-      "clutch-performer"
+      "rain-shy",
+      "late-bloomers"
     ],
+    [],
     [
-      "cursed-chassis"
+      "late-bloomers"
     ],
     [],
     [],

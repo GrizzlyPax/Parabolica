@@ -2,13 +2,16 @@
 // Runs headless race simulations and aggregates results
 
 import RaceEngine, { Driver, RaceState, RaceEvent } from '../RaceEngine';
+import { randomSeed } from '../engine/rng';
 import { generateRoster, GeneratedDriver } from '../generators/drivers';
 import { generateCarsForKingdoms, GeneratedCar } from '../generators/cars';
 import { ALL_TRACKS, Track } from '../generators/tracks';
 import { TEAMS } from '../data/teams';
-import { Tag, genesisTags } from '../data/tags';
+import { Tag } from '../data/tags';
 import { rollWeather, WeatherState } from '../data/weather';
 import { intrinsicTrackTags, TrackTag } from '../data/trackTags';
+import { buildRoster } from '../rules/genesis';
+import { Ruleset, defaultRuleset } from '../rules/ruleset';
 import type {
   SimLabConfig,
   WorkerInMessage,
@@ -20,17 +23,8 @@ import type {
 } from './types';
 
 // Helper to merge roster with car data (like LeagueSetup does)
-function createRosterWithCars(roster: GeneratedDriver[], cars: Map<string, GeneratedCar>) {
-  return roster.map(driver => {
-    const car = cars.get(driver.kingdomId);
-    return {
-      ...driver,
-      carStats: car?.stats,
-      carName: car?.name,
-      teamStats: car?.teamStats,
-      tags: genesisTags(driver.tag, car?.carTag, car?.teamTag),
-    };
-  });
+function createRosterWithCars(roster: GeneratedDriver[], cars: Map<string, GeneratedCar>, seed: number = randomSeed(), rs: Ruleset = defaultRuleset()) {
+  return buildRoster(roster, cars, seed, rs);
 }
 
 let aborted = false;

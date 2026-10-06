@@ -1,7 +1,6 @@
 // Car and team generation for Parabolica teams
 // Each team has one car shared by both drivers, plus team-level stats
 
-import { Tag, maybeAssignTag } from '../data/tags';
 import { Rng, pick } from '../engine/rng';
 
 export interface CarStats {
@@ -22,12 +21,10 @@ export interface GeneratedCar {
   stats: CarStats;
   teamStats: TeamStats; // Team-level operational stats
   quirk: string;        // Flavor text about the car
-  carTag?: Tag;         // Optional tag for the car
-  teamTag?: Tag;        // Optional tag for the team
 }
 
 // Car quirks - absurdist racing flavor
-const CAR_QUIRKS = [
+export const CAR_QUIRKS = [
   'The engine hums at a frequency only dogs can hear.',
   'Assembled entirely on a Tuesday. Nobody knows why that matters.',
   'The previous owner was a time traveler. Probably.',
@@ -100,19 +97,19 @@ export function starToMultiplier(stars: number, statType: 'power' | 'grip' | 're
 }
 
 // Car name components for random generation
-const CAR_PREFIXES_GENERIC = [
+export const CAR_PREFIXES_GENERIC = [
   'Apex', 'Vector', 'Pulse', 'Nova', 'Vortex', 'Phantom', 'Specter', 'Zenith',
   'Flux', 'Cipher', 'Echo', 'Drift', 'Surge', 'Bolt', 'Razor', 'Stratos',
   'Nebula', 'Prism', 'Vertex', 'Torque', 'Thrust', 'Blitz', 'Fury', 'Storm',
   'Onyx', 'Cobalt', 'Crimson', 'Obsidian', 'Titan', 'Raptor', 'Falcon', 'Viper'
 ];
 
-const CAR_SUFFIXES = [
+export const CAR_SUFFIXES = [
   'GT', 'RS', 'LM', 'EVO', 'Pro', 'Sport', 'Turbo', 'X', 'S', 'R',
   'Elite', 'Prime', 'Max', 'Ultra', 'Plus', 'Zero', 'One', 'Alpha', 'Omega'
 ];
 
-const CAR_ACRONYMS = [
+export const CAR_ACRONYMS = [
   'XR', 'GT', 'RS', 'LM', 'GP', 'SS', 'ZX', 'RX', 'VX', 'MR', 'SR', 'TR',
   'FX', 'NX', 'QX', 'DX', 'HX', 'KX', 'PX', 'WX'
 ];
@@ -167,18 +164,13 @@ export function generateCarForKingdom(kingdomId: string, rng: Rng = Math.random)
   // Pick a random quirk
   const quirk = pick(CAR_QUIRKS, rng);
 
-  // Maybe assign tags (15% chance each)
-  const carTag = maybeAssignTag('car', rng) || undefined;
-  const teamTag = maybeAssignTag('team', rng) || undefined;
-
+  // Car/team tags are rolled from the ruleset (rules/genesis.ts), not here.
   return {
     kingdomId,
     name,
     stats,
     teamStats,
     quirk,
-    carTag,
-    teamTag,
   };
 }
 

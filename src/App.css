@@ -2,6 +2,32 @@
 
 /* Racing-inspired font stack */
 :root {
+  /* === Pit Wall tokens (the house style, Oct 2026). Neutral chrome, loud
+     teams; signal colours carry meaning only. New pages use these; old pages
+     migrate to them. === */
+  --pw-ground: #0a0a0c;
+  --pw-surface: #121216;
+  --pw-raised: #1a1a20;
+  --pw-hairline: #1e1e25;
+  --pw-border: #26262e;
+  --pw-border-strong: #34343e;
+  --pw-text-1: #f3f2ef;
+  --pw-text-2: #a6a6b0;
+  --pw-text-3: #7c7c88;
+  --pw-green: #34d27a;    /* live, racing, go */
+  --pw-yellow: #f2c230;   /* safety car, caution, countdowns */
+  --pw-red: #ff5a4f;      /* DNF, out, destructive */
+  --pw-red-soft: #ff8a80;
+  --pw-purple: #a98bff;   /* fastest lap; Commissioner identity */
+  /* Tag rarity, sector-colour order: common → legendary */
+  --rarity-common: var(--pw-red);
+  --rarity-uncommon: var(--pw-yellow);
+  --rarity-rare: var(--pw-green);
+  --rarity-legendary: var(--pw-purple);
+  --pw-radius-s: 6px;
+  --pw-radius-m: 10px;
+  --pw-radius-l: 14px;
+
   /* Headlines & Display - Barlow Condensed for that racing poster feel */
   --font-display: 'Barlow Condensed', 'Arial Narrow', sans-serif;
   /* Body text - Inter for readability */
@@ -62,7 +88,7 @@ a, button, input, select, textarea, [role="button"] {
 }
 
 body {
-  background: #000;
+  background: var(--pw-ground);
   min-height: 100vh;
   font-family: var(--font-body), var(--font-emoji);
   font-size: 16px;

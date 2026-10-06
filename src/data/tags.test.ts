@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   evaluateTagCondition, RaceContext, TagCondition,
-  getTagById, DRIVER_TAGS, CAR_TAGS, TEAM_TAGS,
+  getTagById,
 } from './tags';
 
 function ctx(overrides: Partial<RaceContext> = {}): RaceContext {
@@ -73,11 +73,11 @@ describe('evaluateTagCondition', () => {
   });
 });
 
-describe('the four #156 tags are gated and tiered', () => {
+describe('the four #156 tags are gated', () => {
   it('rain-dancer is gated to rain (dormant until weather)', () => {
     const t = getTagById('rain-dancer')!;
     expect(t.condition).toEqual({ when: 'condition', has: 'rain' });
-    expect(t.tier).toBe('destiny');
+    expect(t.rarity).toBe('rare');
   });
 
   it('sunday-driver surges late instead of a permanent penalty', () => {
@@ -89,11 +89,5 @@ describe('the four #156 tags are gated and tiered', () => {
   it('front-runners gates to top-5, underdog gates to the back', () => {
     expect(getTagById('front-runners')!.condition).toEqual({ when: 'position', max: 5 });
     expect(getTagById('underdog-spirit')!.condition).toEqual({ when: 'positionFraction', bottom: 0.5 });
-  });
-
-  it('every entity tag now declares a tier (the ladder exists)', () => {
-    for (const t of [...DRIVER_TAGS, ...CAR_TAGS, ...TEAM_TAGS]) {
-      expect(t.tier, `${t.id} needs a tier`).toBeDefined();
-    }
   });
 });

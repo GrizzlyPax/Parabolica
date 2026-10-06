@@ -1,4 +1,5 @@
 import { Tag, getTagById, RaceContext, evaluateTagCondition, describeCondition, TRIGGER_LABELS } from './data/tags';
+import { IN_RACE_RULES, InRaceRule, InRaceDuration } from './data/inRace';
 import { WeatherState } from './data/weather';
 import { TrackTag } from './data/trackTags';
 import { INFLICTIONS } from './data/inflictions';
@@ -67,6 +68,8 @@ export interface Driver {
   lapTimes: number[];     // Time (in ticks) for each completed lap
   sectorTimes: number[];  // Cumulative race time (in ticks) at each sector crossing (S1, S2, S3, S1, S2, S3, ...)
   lastTickSpeed: number;  // Speed from the most recent tick (for debug display)
+  /** Smoothed speed (units/tick, ~1s window) — what the SPEED column shows. */
+  speedSmooth: number;
   lastTickFactors: TickFactors | null; // Breakdown of what affected speed
   // Extended info for generated drivers
   firstName?: string;
@@ -105,6 +108,9 @@ export interface Driver {
   // Final classification
   lapsBehind: number;       // How many laps behind the winner (0 = on lead lap)
   finishTick: number | null; // Tick when this driver was classified
+  /** Time penalty added at the flag (#249 stop rule), in ticks, and why. */
+  penaltyTicks: number;
+  penaltyReason: string | null;
   // Tags — the full stack (driver + car + team), see RosterDriver.tags
   tags: Tag[];
 }
@@ -174,10 +180,10 @@ export interface TireState {
 
 export interface TireCompoundProperties {
   speedBonus: number;     // Multiplier when fresh
-  wearRate: number;       // How fast they degrade
   criticalAt: number;     // Wear % when performance cliff begins
   cliffSeverity: number;  // How steep the performance drop is (0-1, higher = steeper)
   blowoutRisk: number;    // Base blowout chance per tick when past critical (0-1)
+  lifeLaps: number;       // Laps from fresh to the cliff (#246)
 }
 
 // Tire tuning lives in CANON_VARIABLES (simlab/types.ts) — the single source of
@@ -208,6 +214,7 @@ export interface PitStopInfo {
   tiresBefore: TireCompound;
   tiresAfter: TireCompound;
   wasSlowStop: boolean;  // True if pit crew fumbled
+  wasQuickStop?: boolean; // True if the crew nailed it
 }
 
 // Event types for the analytics system
@@ -218,6 +225,9 @@ export type RaceEventType =
   | 'lead_change'      // New race leader
   | 'overtake'         // Driver passed another
   | 'race_finish'      // Driver crossed finish line
+  | 'penalty'          // Time penalty applied at the flag (stop rule)
+  | 'grid_set'         // Qualifying done, grid staggered
+  | 'battle'           // Stuck behind the same car long enough to call it one
   // Tire/Pit/Crash events
   | 'pit_entry'        // Driver enters pit lane
   | 'pit_exit'         // Driver exits with fresh tires
@@ -238,7 +248,9 @@ export type RaceEventType =
   | 'unsafety_car_deployed'  // The Unsafety Car has been deployed
   | 'unsafety_car_recalled'  // The Unsafety Car is returning to the void
   // Mistakes layer (#82)
-  | 'driver_error';    // Non-terminal mistake: spin / lock-up / wide moment
+  | 'driver_error'     // Non-terminal mistake: spin / lock-up / wide moment
+  | 'tag_acquired'     // A tag was picked up mid-race (#232b)
+  | 'tag_expired';     // …and ran out
 
 export interface RaceEvent {
   tick: number;
@@ -366,7 +378,7 @@ export const DEFAULT_CONFIG: RaceConfig = {
   randomEventChance: 0.05,
   // Tire/Pit/Crash defaults
   tireWearRate: 0.02,
-  pitLaneSpeedLimit: 4,        // Units/tick in pit lane (much slower than racing ~7-8)
+  pitLaneSpeedLimit: 6,        // Units/tick in pit lane (#246: a stop costs ~25% of a lap all-in)
   pitWorkBaseDuration: 30,     // Base ticks for stationary pit work
   mandatoryPitStops: 2,
   crashProximityThreshold: 0.03,
@@ -444,6 +456,14 @@ class RaceEngine {
   // Tag activation state - tracks which tags have activated and when
   private activeTagEffects: Map<number, { tagId: string; speedModifier: number; consistencyModifier: number; luckModifier: number; expiresAtTick: number | null }[]> = new Map();
   private tagActivatedThisRace: Set<string> = new Set();  // "driverId-tagId" to track one-time activations
+  // In-race tags (#232b): what each driver picked up mid-race and when it ends.
+  private inRaceRules: InRaceRule[] = IN_RACE_RULES;
+  private inRaceTags: Map<number, { tagId: string; sinceLap: number; duration: InRaceDuration; expiresAtLap: number | null }[]> = new Map();
+  /** Tags picked up with a {races:n} duration — the league carries them over. */
+  private inRaceCarryovers: { driverId: number; tagId: string; races: number; lap: number }[] = [];
+  /** Events trimmed off raceEvents by the UI cap, in order — so getFullEvents()
+   * can hand reports the whole race (#245). Cleared with raceEvents. */
+  private droppedEvents: RaceEvent[] = [];
 
   // Simulation variable overrides (for Sim Lab tuning)
   private simVars: SimVariables | null = null;
@@ -510,7 +530,12 @@ class RaceEngine {
     this.rng = mulberry32(seed);
     this.strategySeed = seed; // side streams replay with the race
     this.tagRngs.clear();
+    this.currentSeed = seed;
   }
+
+  /** The seed this race was built from, or null for an unseeded (Math.random) race. */
+  getSeed(): number | null { return this.currentSeed; }
+  private currentSeed: number | null = null;
 
   /** One roll from the side stream for (driver, tag) — see tagRngs. */
   private tagRoll(driverId: number, tagId: string): number {
@@ -528,6 +553,7 @@ class RaceEngine {
     this.rng = Math.random;
     this.strategySeed = randomSeed(); // stable within a live race, fresh each one
     this.tagRngs.clear();
+    this.currentSeed = null;
   }
 
   /**
@@ -548,7 +574,7 @@ class RaceEngine {
       const v = this.simVars.tires[compound];
       return {
         speedBonus: v.speedBonus,
-        wearRate: v.wearRate,
+        lifeLaps: v.lifeLaps,
         criticalAt: v.criticalAt,
         cliffSeverity: v.cliffSeverity,
         blowoutRisk: v.blowoutRisk,
@@ -618,6 +644,7 @@ class RaceEngine {
         lapTimes: [],
         sectorTimes: [],
         lastTickSpeed: 0,
+        speedSmooth: 0,
         lastTickFactors: null,
         // Tire/Pit/Crash initial state
         tireState: {
@@ -641,6 +668,8 @@ class RaceEngine {
         damageSpeedPenalty: 1.0,
         lapsBehind: 0,
         finishTick: null,
+        penaltyTicks: 0,
+        penaltyReason: null,
       };
     });
     // Assign pit box positions based on driver order (no teams for default drivers)
@@ -675,6 +704,7 @@ class RaceEngine {
         lapTimes: [],
         sectorTimes: [],
         lastTickSpeed: 0,
+        speedSmooth: 0,
         lastTickFactors: null,
         firstName: d.firstName,
         lastName: d.lastName,
@@ -709,6 +739,8 @@ class RaceEngine {
         damageSpeedPenalty: 1.0,
         lapsBehind: 0,
         finishTick: null,
+        penaltyTicks: 0,
+        penaltyReason: null,
       };
     });
     // Assign pit box positions based on team names (alphabetically)
@@ -732,6 +764,7 @@ class RaceEngine {
       unsafetyCarCooldownUntilLap: 0,
     };
     this.raceEvents = [];
+    this.droppedEvents = [];
     this.mistakeBlockedUntilTick.clear();
     this.notifyListeners();
     this.notifyStateListeners();
@@ -798,6 +831,77 @@ class RaceEngine {
       impact,
       magnitude: Math.min(1, Math.max(0, magnitude)),
     });
+    if (driver && type !== 'tag_acquired' && type !== 'tag_expired') this.applyInRaceRules(type, driver, description);
+  }
+
+  // === IN-RACE ACQUISITION (#232b) ===
+
+  /** Replace the rule set (rulesets/cards will plumb this). */
+  setInRaceRules(rules: InRaceRule[]): void { this.inRaceRules = rules; }
+
+  private applyInRaceRules(type: RaceEventType, driver: Driver, description: string): void {
+    if (type === 'pit_exit') this.expireInRaceTags(driver, e => e.duration === 'until-pit');
+    for (const rule of this.inRaceRules) {
+      if (rule.on !== type) continue;
+      if (rule.match && !rule.match.test(description)) continue;
+      const tag = getTagById(rule.tagId);
+      if (!tag) continue;
+      this.attachInRaceTag(driver, tag, rule);
+    }
+  }
+
+  /** Put a tag on a driver mid-race. Transient states bypass the slot cap.
+   * Mutates the driver object passed in (the one the caller holds). */
+  private attachInRaceTag(driver: Driver, tag: Tag, rule: InRaceRule): void {
+    if (driver.tags.some(t => t.id === tag.id)) return;
+    driver.tags = [...driver.tags, tag];
+    const lap = driver.currentLap;
+    const d = rule.duration;
+    const expiresAtLap = typeof d === 'object' && 'laps' in d ? lap + d.laps : null;
+    const list = this.inRaceTags.get(driver.id) ?? [];
+    list.push({ tagId: tag.id, sinceLap: lap, duration: d, expiresAtLap });
+    this.inRaceTags.set(driver.id, list);
+    if (typeof d === 'object' && 'races' in d) this.inRaceCarryovers.push({ driverId: driver.id, tagId: tag.id, races: d.races, lap });
+    // Passive, ungated tags act through the unified effect system; a gated
+    // one is read live by getConditionalModifier, so it needs no activation.
+    if (tag.trigger === 'passive' && !tag.condition) this.tryActivateTag(driver, tag, {});
+    this.logEvent('tag_acquired', driver, `${tag.name}: ${rule.text}`, tag.effects.speedModifier && tag.effects.speedModifier > 1 ? 'positive' : 'negative', 0.6, tag.emoji);
+  }
+
+  private expireInRaceTags(driver: Driver, pred: (e: { tagId: string; duration: InRaceDuration; expiresAtLap: number | null }) => boolean): void {
+    const list = this.inRaceTags.get(driver.id);
+    if (!list) return;
+    const keep: typeof list = [];
+    for (const e of list) {
+      if (!pred(e)) { keep.push(e); continue; }
+      driver.tags = driver.tags.filter(t => t.id !== e.tagId);
+      const effects = this.unifiedEffects.get(driver.id);
+      if (effects) for (const fx of effects) if (fx.source === 'tag' && fx.sourceId === e.tagId) fx.expiresAtTick = this.raceState.totalTicks;
+      this.tagActivatedThisRace.delete(`${driver.id}-${e.tagId}`); // may be picked up again
+      const tag = getTagById(e.tagId);
+      this.logEvent('tag_expired', driver, `${tag?.name ?? e.tagId} wears off`, 'neutral', 0.3, tag?.emoji);
+    }
+    if (keep.length) this.inRaceTags.set(driver.id, keep); else this.inRaceTags.delete(driver.id);
+  }
+
+  /** Lap-based expiries, checked every tick. */
+  private expireInRaceTagsByLap(): void {
+    for (const [driverId, list] of this.inRaceTags) {
+      if (!list.some(e => e.expiresAtLap !== null)) continue;
+      const driver = this.drivers.find(d => d.id === driverId);
+      if (!driver) continue;
+      this.expireInRaceTags(driver, e => e.expiresAtLap !== null && driver.currentLap >= e.expiresAtLap);
+    }
+  }
+
+  /** How a mid-race tag got there and how long it has left (for the card). */
+  getInRaceTagInfo(driverId: number, tagId: string): { sinceLap: number; duration: InRaceDuration; expiresAtLap: number | null } | null {
+    return this.inRaceTags.get(driverId)?.find(e => e.tagId === tagId) ?? null;
+  }
+
+  /** Tags picked up mid-race that the league should carry into coming races. */
+  getInRaceCarryovers(): { driverId: number; tagId: string; races: number; lap: number }[] {
+    return [...this.inRaceCarryovers];
   }
 
   // Calculate pit box positions for all drivers based on team names (alphabetical)
@@ -917,6 +1021,11 @@ class RaceEngine {
     return { ...this.raceState };
   }
 
+  /** Every event of the race, uncapped (the UI cap only trims getEvents). */
+  getFullEvents(): RaceEvent[] {
+    return this.droppedEvents.length ? [...this.droppedEvents, ...this.raceEvents] : this.raceEvents;
+  }
+
   getEvents(): RaceEvent[] {
     return [...this.raceEvents];
   }
@@ -991,6 +1100,7 @@ class RaceEngine {
         lapTimes: [],
         sectorTimes: [],
         lastTickSpeed: 0,
+        speedSmooth: 0,
         lastTickFactors: null,
         tireState: {
           compound: startingCompound,
@@ -1013,6 +1123,8 @@ class RaceEngine {
         damageSpeedPenalty: 1.0,
         lapsBehind: 0,
         finishTick: null,
+        penaltyTicks: 0,
+        penaltyReason: null,
       };
     });
     // Re-assign pit box positions in case roster changed
@@ -1036,6 +1148,7 @@ class RaceEngine {
       unsafetyCarCooldownUntilLap: 0,
     };
     this.raceEvents = [];
+    this.droppedEvents = [];
     this.mistakeBlockedUntilTick.clear();
     // Reset track event state
     this.activeTrackEffects = [];
@@ -1043,10 +1156,15 @@ class RaceEngine {
     this.lastEventCheckLap = 0;
     this.leaderLapCount = new Map();
     this.lapPositionHistory = [];
+    this.gridOrder = [];
+    this.qualiScores.clear();
+    this.stuckBehind.clear();
     this.lastRecordedLap = 0;
     // Reset tag activation state
     this.activeTagEffects = new Map();
     this.tagActivatedThisRace = new Set();
+    this.inRaceTags = new Map();
+    this.inRaceCarryovers = [];
     // Reset unified effect storage
     this.unifiedEffects = new Map();
     // Conditional-tag context is rebuilt each tick; clear stale data (the active
@@ -1203,8 +1321,7 @@ class RaceEngine {
       modifier -= tireVars.flatPenalty;
     }
 
-    // Apply damage penalty if car is damaged
-    modifier *= driver.damageSpeedPenalty;
+    // (Crash damage is the 'damaged' in-race tag now — #232b.)
 
     // Floor at minSpeedFloor (allows for truly punishing degradation)
     return Math.max(tireVars.minSpeedFloor, modifier);
@@ -1277,175 +1394,236 @@ class RaceEngine {
     return this.rng() < finalChance;
   }
 
+  /** Wear per tick, in "cliff units": a compound reaches criticalAt after
+   * lifeLaps laps at mid aggression and 3★ tyre management (#246). Life is in
+   * laps, not race share, so a long race means more stops — like racing. */
   private calculateTireWear(driver: Driver): number {
     if (!this.config.enableTireWear) return 0;
-
     const compound = this.getTireCompound(driver.tireState.compound);
     const tireVars = this.getTireVars();
-
-    // Calculate wear rate relative to total race distance
-    const totalRaceDistance = this.config.totalLaps * this.config.lapLength;
-    const distancePerTick = driver.lastTickSpeed || 10;
-
-    // Base wear per tick = (100 / expected ticks to hit 100%) * compound rate
-    const expectedTicksForRace = totalRaceDistance / distancePerTick;
-    const baseWearPerTick = 100 / expectedTicksForRace;
-
-    // Compound wear rate determines how fast they degrade relative to race distance
-    const compoundWear = baseWearPerTick * compound.wearRate;
-
-    // High aggression = pushes tires harder = more wear
-    // Aggression ranges from 0.3 to 0.8, so normalize it
-    const normalizedAggression = (driver.stats.aggression - 0.3) / 0.5; // 0 to 1
-    const aggressionFactor = 1 + normalizedAggression * tireVars.aggressionWearMultiplier;
-
-    // Team tire management: good crews preserve rubber (3★ = neutral)
+    const distancePerTick = driver.lastTickSpeed || 7;
+    const lapFraction = distancePerTick / this.config.lapLength;
+    const wearPerLap = compound.criticalAt / compound.lifeLaps;
+    // Aggression 0.3–0.8 → ×1.0–1.4; mid (0.55) is the calibration point.
+    const normalizedAggression = (driver.stats.aggression - 0.3) / 0.5;
+    const aggressionFactor = (1 + normalizedAggression * tireVars.aggressionWearMultiplier) / (1 + 0.5 * tireVars.aggressionWearMultiplier);
     const tireMgmtStars = driver.teamStats?.tireManagement ?? 3;
     const tireMgmtFactor = 1 + (3 - tireMgmtStars) * tireVars.teamTireMgmtWearPerStar;
-
-    return compoundWear * aggressionFactor * tireMgmtFactor;
+    return wearPerLap * lapFraction * aggressionFactor * tireMgmtFactor;
   }
 
-  // === PIT STOP METHODS ===
+  /** Wear this driver adds over one racing lap at their current pace. */
+  private wearPerLapFor(driver: Driver): number {
+    const perTick = this.calculateTireWear(driver);
+    const distancePerTick = driver.lastTickSpeed || 7;
+    return perTick * (this.config.lapLength / distancePerTick);
+  }
 
-  // Pit lane entry/exit positions as fraction of lap (0-1)
-  private readonly PIT_ENTRY_POSITION = 0.85; // Near end of lap
-  private readonly PIT_EXIT_POSITION = 0.15;  // Early in lap
+  /** The stop rule as it stands for this driver: stops and compounds still owed. */
+  private stopsOwed(driver: Driver): { stops: number; compounds: TireCompound[]; needed: number } {
+    const pitVars = this.getPitVars();
+    const all: TireCompound[] = ['soft', 'medium', 'hard'];
+    const used = driver.usedCompounds || [];
+    const compounds = pitVars.requireAllCompounds ? all.filter(c => !used.includes(c)) : [];
+    const stops = Math.max(0, pitVars.minStops - driver.pitStops.length);
+    return { stops, compounds, needed: Math.max(stops, compounds.length) };
+  }
 
+  /**
+   * The pit decision (#246 pass 1). Checked once per lap at the pit-entry zone,
+   * in this order — every path is a sentence you could say on the radio:
+   *   1. never on the last lap;
+   *   2. tyres are at the cliff → box ("cliff");
+   *   3. tyres WILL be at the cliff before the next chance → box ("ahead of
+   *      the cliff"), leaned by the driver's archetype: aggressive camps dip
+   *      into the cliff, conservative camps pit a lap early;
+   *   4. a stop is owed by the rule and the Unsafety Car is out → cheap stop;
+   *   5. a stop is owed and the room is running out → forced stop;
+   *   6. otherwise stay out.
+   * There is no random "window" roll any more: stops come from tyres and the
+   * rule, and the spread comes from archetypes, aggression and pace.
+   */
   private shouldDriverPit(driver: Driver): boolean {
     if (driver.status !== 'racing') return false;
-
-    // Only check for pit entry when driver is near the pit entry point (85% of lap)
     const lapProgress = driver.position / this.config.lapLength;
     const atPitEntry = lapProgress >= this.PIT_ENTRY_POSITION && lapProgress < this.PIT_ENTRY_POSITION + 0.05;
-
     if (!atPitEntry) return false;
-
-    // NO PITTING ON LAST LAP - too late!
-    const isLastLap = driver.currentLap >= this.config.totalLaps - 1;
-    if (isLastLap) {
-      return false;
-    }
+    if (driver.currentLap >= this.config.totalLaps - 1) return false; // last lap
 
     const compound = this.getTireCompound(driver.tireState.compound);
-    const wearPercent = driver.tireState.wear;
-    const pitStopsDone = driver.pitStops.length;
-    const mandatoryStops = this.config.mandatoryPitStops;
     const pitVars = this.getPitVars();
+    const wear = driver.tireState.wear;
+    const lapsLeft = this.config.totalLaps - driver.currentLap;
 
-    // Check if we need more stops for compound variety (must use all 3 compounds with 2 stops)
-    const allCompounds: TireCompound[] = ['soft', 'medium', 'hard'];
-    const usedCompounds = driver.usedCompounds || [];
-    const compoundsRemaining = allCompounds.filter(c => !usedCompounds.includes(c)).length;
-    const stopsRemaining = mandatoryStops - pitStopsDone;
-    const mustPitForCompounds = compoundsRemaining > 0 && stopsRemaining > 0;
-
-    // Force pit if tires critical (but not on last lap - handled above).
-    // Safety override: shot tires pit regardless of how late it is (blowout
-    // risk beats a short final stint).
-    //
-    // Strategy archetype (gated, #195): this wear trigger is what ACTUALLY
-    // times stops at canon (the probabilistic window below almost never fires
-    // first — verified by zeroing basePitChance/wearPitBonus: pits/race and
-    // stop timing don't move). Identical compounds hitting the same threshold
-    // on the same lap is why the field herds into one strategy. The archetype
-    // leans each camp's stop point: aggressive (-1) pits earlier on fresher
-    // rubber (sprint stints), conservative (+1) stretches into the cliff —
-    // paying cliff pace and blowout exposure for track position. Drawn from a
-    // SIDE seed stream, so the main roll ordering is untouched; 0 = off,
-    // byte-identical to today.
-    let pitAtWear = compound.criticalAt;
-    if (pitVars.strategyWearLean > 0) {
-      pitAtWear *= 1 + this.getStrategyArchetype(driver) * pitVars.strategyWearLean;
-    }
-    if (wearPercent >= pitAtWear) {
+    // 2 + 3. The cliff, now or next lap. Archetype leans the point.
+    const lean = 1 + this.getStrategyArchetype(driver) * pitVars.strategyWearLean;
+    const pitAtWear = compound.criticalAt * lean;
+    if (wear >= pitAtWear) { this.pitReasons.set(driver.id, 'cliff'); return true; }
+    if (lapsLeft > pitVars.lastPitLapBuffer && wear + this.wearPerLapFor(driver) >= pitAtWear) {
+      this.pitReasons.set(driver.id, 'ahead of the cliff');
       return true;
     }
 
-    // Unified late-race guard: with too few racing laps left, no non-critical
-    // stop is worth the pit-lane loss. This is the single source of truth for
-    // "too late to pit" — it makes the old "can't pit in last 2 laps" contract
-    // actually hold for BOTH the mandatory-compound force-pit and the
-    // probabilistic path. There is no penalty for unmet compound variety, so a
-    // farcical final-lap stop to "complete" it is strictly worse than running a
-    // compound short. (#195)
-    const lapsLeft = this.config.totalLaps - driver.currentLap;
-    if (lapsLeft <= pitVars.lastPitLapBuffer) {
-      return false;
+    const owed = this.stopsOwed(driver);
+    if (owed.needed === 0) return false;
+
+    // 4. Cheap stop under the Unsafety Car when a stop is owed.
+    if (pitVars.scPitChance > 0 && this.raceState.unsafetyCarActive && wear >= pitVars.scPitMinWear && lapsLeft > pitVars.lastPitLapBuffer) {
+      if (this.rng() < pitVars.scPitChance) { this.pitReasons.set(driver.id, 'safety car'); return true; }
     }
 
-    // Already done all mandatory stops and used all compounds? No need to pit again
-    if (pitStopsDone >= mandatoryStops && compoundsRemaining === 0) {
-      return false;
+    // 5. Forced: the room to complete the rule is running out (while there is room).
+    if (lapsLeft > pitVars.lastPitLapBuffer && lapsLeft - pitVars.lastPitLapBuffer <= owed.needed) {
+      this.pitReasons.set(driver.id, 'the rule'); return true;
     }
-
-    // Unsafety Car opportunism (gated, #195): a stop under the SC is cheap —
-    // the field circulates slowly, so a driver who still owes a stop takes it
-    // now instead of paying full price later. Reaching this line implies a
-    // stop is still owed (the early-return above filtered the done case); the
-    // wear floor stops a driver who JUST pitted from double-stopping. Draws
-    // main RNG only when the knob is live, so canon 0 stays byte-identical.
-    if (
-      pitVars.scPitChance > 0 &&
-      this.raceState.unsafetyCarActive &&
-      wearPercent >= pitVars.scPitMinWear
-    ) {
-      if (this.rng() < pitVars.scPitChance) return true;
-      // fall through: an SC doesn't make anyone skip their normal window
-    }
-
-    // Calculate pit windows for 2-stop strategy on 10 lap race:
-    // Stop 1: Around lap 3-4 (first third)
-    // Stop 2: Around lap 6-7 (second third)
-    const aggressiveness = (driver.stats.baseSpeed - driver.stats.consistency) / 2;
-
-    // For multiple stops, split race into segments
-    const stopsNeeded = mandatoryStops - pitStopsDone;
-    if (stopsNeeded <= 0) return false;
-
-    // Calculate window for next stop
-    const lapsRemaining = this.config.totalLaps - driver.currentLap;
-    const segmentLength = lapsRemaining / (stopsNeeded + 1); // +1 for final stint
-    const nextStopIdealLap = driver.currentLap + segmentLength;
-
-    // Driver personality staggers the target lap. NOTE (#195 finding): this
-    // whole voluntary-window path is nearly inert at canon — the wear trigger
-    // above fires first for ~all stops (zeroing basePitChance/wearPitBonus
-    // changes nothing measurable). The knobs here are honest lifts of the
-    // formula's literals (canon 2 / 1 reproduces the old behavior
-    // byte-for-byte), but the binding strategy levers are the wear-lean
-    // archetype above and the SC opportunism. Documented in SIM_MECHANICS §4.
-    const driverOffset = Math.floor(aggressiveness * pitVars.windowOffsetPerStat);
-    const adjustedIdealLap = Math.max(driver.currentLap + 1, nextStopIdealLap + driverOffset);
-
-    const windowStart = Math.max(2, Math.floor(adjustedIdealLap) - pitVars.windowHalfWidth);
-    const windowEnd = Math.min(this.config.totalLaps - 2, Math.floor(adjustedIdealLap) + pitVars.windowHalfWidth);
-
-    const isInPitWindow = driver.currentLap >= windowStart && driver.currentLap <= windowEnd;
-
-    // Force pit if we're in the last window for mandatory stops. The
-    // lastPitLapBuffer guard above already ruled out the farcically-late case;
-    // here we pull a still-needed mandatory stop forward as the room runs out.
-    const lapsUntilTooLate = lapsLeft - pitVars.lastPitLapBuffer;
-    if (mustPitForCompounds && lapsUntilTooLate <= stopsRemaining) {
-      return true; // Must pit now or won't complete mandatory stops
-    }
-
-    if (isInPitWindow) {
-      // Higher wear = more likely to pit now. Base chance climbs with wear up
-      // to (basePitChance + wearPitBonus) at the wear denominator. All knobs
-      // live in CANON_VARIABLES.pits (canon values reproduce the old literals
-      // byte-for-byte — this lift changed no behavior, see #195).
-      const wearFactor = Math.min(1, wearPercent / pitVars.wearPitDenominator);
-      const pitChance = pitVars.basePitChance + (wearFactor * pitVars.wearPitBonus);
-
-      // Luck affects pit timing too - lucky drivers might wait longer.
-      const adjustedChance = pitChance * (pitVars.luckPitBase - driver.stats.luck * pitVars.luckPitAdjustment);
-
-      return this.rng() < adjustedChance;
-    }
-
     return false;
+  }
+
+  /** Why each driver last boxed — read by the pit_entry event. */
+  private pitReasons = new Map<number, string>();
+
+  // === QUALIFYING (#246 pass 2) ===
+  /** Grid order (driver ids, P1 first) and each driver's qualifying score,
+   * set by runQualifying() on the first tick. Empty until then. */
+  private gridOrder: number[] = [];
+  private qualiScores = new Map<number, number>();
+  getGridOrder(): number[] { return [...this.gridOrder]; }
+  getGridSlot(driverId: number): number { const i = this.gridOrder.indexOf(driverId); return i < 0 ? -1 : i + 1; }
+
+  private getGridVars() {
+    if (this.simVars) return this.simVars.grid;
+    return CANON_VARIABLES.grid;
+  }
+
+  // === OVERTAKING (#246 pass 3) ===
+  private getOvertakingVars() {
+    if (this.simVars) return this.simVars.overtaking;
+    return CANON_VARIABLES.overtaking;
+  }
+  /** Who each driver is stuck behind right now, and for how many ticks. */
+  private stuckBehind = new Map<number, { aheadId: number; ticks: number }>();
+  /** Speeds resolved this tick, by driver, for the pace comparison. */
+  private tickSpeeds = new Map<number, number>();
+  /** Resolved total distance (lap × L + position) this tick, for cars already moved. */
+  private tickDistance = new Map<number, number>();
+  getBattles(): { chaserId: number; aheadId: number; ticks: number }[] {
+    return [...this.stuckBehind.entries()].map(([chaserId, v]) => ({ chaserId, aheadId: v.aheadId, ticks: v.ticks }));
+  }
+  private trackOvertakingDifficulty(): number {
+    const table = this.getOvertakingVars().trackDifficulty;
+    let d = 1;
+    for (const t of this.trackTags) d *= table[t.id] ?? 1;
+    return d;
+  }
+
+  /**
+   * Resolve a chaser against the car directly ahead on the same lap. Returns
+   * the position the chaser actually reaches this tick. A pass is an event:
+   * while the chaser is on the car ahead it rolls to get by — pace edge,
+   * fresher tyres and aggression help, a consistent defender and a technical
+   * track hurt — and until the roll lands it is held in the dirty air.
+   */
+  private resolveOvertake(driver: Driver, intended: number, _speed: number): number {
+    const L = this.config.lapLength;
+    const ov = this.getOvertakingVars();
+    const myLap = driver.currentLap;
+    const intendedTotal = myLap * L + intended;
+    // Nearest racing car ahead on the same lap at the start of the tick.
+    let ahead: Driver | null = null;
+    let aheadStart = Infinity;
+    for (const o of this.drivers) {
+      if (o.id === driver.id || o.status !== 'racing' || o.currentLap !== myLap) continue;
+      if (o.position > driver.position && o.position < aheadStart) { ahead = o; aheadStart = o.position; }
+    }
+    if (!ahead) { this.stuckBehind.delete(driver.id); return intended; }
+    const aheadTotal = this.tickDistance.get(ahead.id) ?? (myLap * L + ahead.position);
+    const gap = ov.followGap * L;
+    if (intendedTotal < aheadTotal - gap) { this.stuckBehind.delete(driver.id); return intended; }
+
+    // On the car ahead. Under the Unsafety Car nobody passes.
+    const prev = this.stuckBehind.get(driver.id);
+    const ticks = prev && prev.aheadId === ahead.id ? prev.ticks + 1 : 1;
+    let p = 0;
+    if (!this.raceState.unsafetyCarActive) {
+      // Steady pace (package × tyre state), not this tick's noisy roll.
+      const steady = (d: Driver) => this.packagePace(d) * this.getTireSpeedModifier(d);
+      const pace = Math.max(0, 1 + (steady(driver) / Math.max(0.01, steady(ahead)) - 1) * ov.paceWeight);
+      const tyre = Math.max(0.2, 1 + ((ahead.tireState.wear - driver.tireState.wear) / 100) * ov.tyreWeight);
+      const aggrN = (driver.stats.aggression - 0.3) / 0.5;
+      const aggr = 1 - ov.aggressionSwing / 2 + aggrN * ov.aggressionSwing;
+      const defend = 1 + (ahead.stats.consistency - 0.55) * ov.defenderWeight;
+      p = Math.min(0.6, ov.attemptBase * pace * tyre * aggr / Math.max(0.2, defend) / this.trackOvertakingDifficulty());
+    }
+    if (p > 0 && this.rng() < p) {
+      this.stuckBehind.delete(driver.id);
+      this.logEvent('overtake', driver, `passes ${ahead.shortName}${ticks >= ov.battleTicks ? ' after a fight' : ''}`, 'positive', 0.6);
+      this.evaluateDriverTags(driver, { isOvertaking: true });
+      return Math.max(intended, aheadTotal - myLap * L + gap * 0.5);
+    }
+    this.stuckBehind.set(driver.id, { aheadId: ahead.id, ticks });
+    if (ticks === ov.battleTicks) this.logEvent('battle', driver, `is all over ${ahead.shortName}`, 'neutral', 0.5);
+    return Math.min(intended, aheadTotal - myLap * L - gap);
+  }
+
+  /** Each driver's deterministic pace from the package (speed stat × car power). */
+  private packagePace(driver: Driver): number {
+    const speedVars = this.getDriverSpeedVars();
+    const carStatVars = this.getCarStatVars();
+    const carPowerModifier = carStatVars.powerBase + (driver.carStats?.power ?? 3) * carStatVars.powerPerStar;
+    return (1 + (driver.stats.baseSpeed - 1) * speedVars.speedStatMultiplier) * carPowerModifier;
+  }
+
+  /**
+   * Qualifying: one hot lap per driver, scored from the package plus a noise
+   * roll the driver's consistency shrinks, with a small chance of a ruined
+   * lap. Draws from a side seed stream (deriveSeed(seed,'quali',id)) so the
+   * race's main RNG is untouched. Sets the grid and staggers the start:
+   * P1 on the line, each slot `slotSpacing` of a lap behind.
+   */
+  private runQualifying(): void {
+    const g = this.getGridVars();
+    const scored = this.drivers.map(d => {
+      const r = mulberry32(deriveSeed(this.strategySeed, 'quali', d.id));
+      const z = (r() + r() + r() - 1.5) * 2; // ~N(0,1)
+      const sd = g.qualiNoise * (1.2 - d.stats.consistency);
+      const flub = r() < g.qualiFlubChance ? 0.95 : 1;
+      const grip = (this.getCarStatVars().gripBase + (d.carStats?.grip ?? 3) * this.getCarStatVars().gripPerStar);
+      const score = this.packagePace(d) * (1 + z * sd) * flub * (0.98 + 0.02 * grip);
+      return { id: d.id, score };
+    });
+    scored.sort((a, b) => b.score - a.score);
+    this.gridOrder = scored.map(x => x.id);
+    this.qualiScores = new Map(scored.map(x => [x.id, x.score]));
+    const slot = new Map(this.gridOrder.map((id, i) => [id, i]));
+    this.drivers = this.drivers.map(d => ({ ...d, position: -(slot.get(d.id) ?? 0) * g.slotSpacing * this.config.lapLength }));
+    const pole = this.drivers.find(d => d.id === this.gridOrder[0]);
+    if (pole) this.logEvent('grid_set', pole, `takes pole; ${this.drivers.length} cars on the grid`, 'positive', 0.6);
+  }
+  private readonly PIT_ENTRY_POSITION = 0.85; // Near end of lap
+  private readonly PIT_EXIT_POSITION = 0.15;  // Early in lap
+
+
+  /** The stop rule at the flag (#249): each unmet stop or compound costs a
+   * share of the driver's own average lap. Returns the penalty in ticks. */
+  private assessStopRule(driver: Driver): { ticks: number; reason: string | null } {
+    const pitVars = this.getPitVars();
+    const owed = this.stopsOwed(driver);
+    if (owed.needed === 0) return { ticks: 0, reason: null };
+    const avgLap = driver.lapTimes.length ? driver.lapTimes.reduce((a, b) => a + b, 0) / driver.lapTimes.length : this.config.lapLength / 7;
+    const ticks = Math.round(owed.needed * pitVars.penaltyLapFraction * avgLap);
+    const parts: string[] = [];
+    if (owed.stops > 0) parts.push(`${owed.stops} stop${owed.stops > 1 ? 's' : ''} short`);
+    if (owed.compounds.length > 0) parts.push(`never used ${owed.compounds.join(' or ')}`);
+    return { ticks, reason: parts.join(', ') };
+  }
+
+  /** Apply the stop rule to a driver being classified now. */
+  private classifyWithPenalty(driver: Driver, finishTick: number): Partial<Driver> {
+    const { ticks, reason } = this.assessStopRule(driver);
+    if (ticks > 0) {
+      this.logEvent('penalty', driver, `+${(ticks / Math.max(1, driver.lapTimes.at(-1) ?? 100)).toFixed(1)} laps penalty — ${reason}`, 'negative', 0.9);
+    }
+    return { finishTick, penaltyTicks: ticks, penaltyReason: reason };
   }
 
   /** Stable per-race strategy archetype: -1 (short stints, aggressive),
@@ -1503,39 +1681,30 @@ class RaceEngine {
     return this.config.pitLaneSpeedLimit / pitLaneDistance;
   }
 
+  /**
+   * Which compound goes on (#246). If the rule still owes compounds, pick
+   * from those; otherwise anything but the one coming off. Prefer the
+   * compound whose life best fits the laps left — the last stop wants one
+   * that can go the distance, earlier stops the shorter ones — with the
+   * archetype breaking ties softer (aggressive) or harder (conservative).
+   */
   private selectNewTires(driver: Driver): TireCompound {
-    const allCompounds: TireCompound[] = ['soft', 'medium', 'hard'];
-    const usedCompounds = driver.usedCompounds || [];
-    const remainingLaps = this.config.totalLaps - driver.currentLap;
-
-    // Filter to compounds not yet used
-    const unusedCompounds = allCompounds.filter(c => !usedCompounds.includes(c));
-
-    // If all compounds used (stops 3+), pick based on stint length — but never
-    // re-fit the compound just removed when a softer one covers the distance
-    // (the "M→M" report flag, #195): a late stop onto the identical tire is
-    // pointless; real late stops take the grippier rubber.
-    if (unusedCompounds.length === 0) {
-      let pick: TireCompound = remainingLaps <= 2 ? 'soft' : remainingLaps <= 4 ? 'medium' : 'hard';
-      if (pick === driver.tireState.compound && pick !== 'soft') {
-        pick = pick === 'hard' ? 'medium' : 'soft';
-      }
-      return pick;
-    }
-
-    // Must use an unused compound - pick strategically based on remaining laps
-    if (remainingLaps <= 3 && unusedCompounds.includes('soft')) {
-      return 'soft';  // Short sprint to finish
-    }
-    if (remainingLaps <= 5 && unusedCompounds.includes('medium')) {
-      return 'medium';  // Medium stint
-    }
-    if (unusedCompounds.includes('hard')) {
-      return 'hard';  // Long stint
-    }
-    // Fallback to whatever is unused
-    return unusedCompounds[0];
+    const all: TireCompound[] = ['soft', 'medium', 'hard'];
+    const owed = this.stopsOwed(driver);
+    const pool = owed.compounds.length ? owed.compounds : all.filter(c => c !== driver.tireState.compound);
+    const lapsLeft = this.config.totalLaps - driver.currentLap;
+    const stopsAfterThis = Math.max(0, owed.needed - 1);
+    const arch = this.getStrategyArchetype(driver); // -1 aggressive … +1 conservative
+    const stintTarget = lapsLeft / (stopsAfterThis + 1);
+    const score = (c: TireCompound) => {
+      const v = this.getTireCompound(c);
+      const shortfall = Math.max(0, stintTarget - v.lifeLaps - 0.5);
+      const pace = (1 - v.speedBonus) * 100;          // softer = lower = better
+      return shortfall * 4 + pace + arch * 0.6 * (2 - all.indexOf(c));
+    };
+    return [...pool].sort((a, b) => score(a) - score(b))[0] ?? 'medium';
   }
+
 
   // === CRASH DETECTION METHODS ===
 
@@ -1602,6 +1771,10 @@ class RaceEngine {
     // Positive resistance = less likely to crash, negative resistance = more likely
     const avgCrashResistance = (this.getTagCrashResistance(d1.id) + this.getTagCrashResistance(d2.id)) / 2;
     crashChance *= (1 - avgCrashResistance);
+    // A car held in line behind another (#246 pass 3) is following, not
+    // wrecking: the risk of a battle lives in the pass attempts, not the queue.
+    const held = this.stuckBehind.has(d1.id) || this.stuckBehind.has(d2.id);
+    if (held) crashChance *= this.getOvertakingVars().heldCrashFactor;
 
     // Random roll
     if (this.rng() < crashChance) {
@@ -2245,7 +2418,15 @@ class RaceEngine {
         continue;
       }
       if (tag.trigger === 'passive') {
-        out.push({ ...base, active: true, reason: 'always on' });
+        const ir = this.getInRaceTagInfo(driverId, tag.id);
+        if (ir) {
+          const left = ir.duration === 'until-pit' ? 'until the next stop' : ir.duration === 'race' ? 'rest of race'
+            : ir.expiresAtLap !== null ? `${Math.max(0, ir.expiresAtLap - driver.currentLap)} lap${ir.expiresAtLap - driver.currentLap === 1 ? '' : 's'} left`
+            : 'carries into the next race';
+          out.push({ ...base, active: true, reason: `picked up L${ir.sinceLap + 1} · ${left}` });
+        } else {
+          out.push({ ...base, active: true, reason: 'always on' });
+        }
         continue;
       }
       const live = liveTagEffects.find(e => e.sourceId === tag.id && (e.expiresAtTick === null || e.expiresAtTick > now));
@@ -2284,10 +2465,7 @@ class RaceEngine {
         active: true, reason: left, speed: e.speedModifier, consistency: e.consistencyModifier, luck: e.luckModifier, crash: e.crashResistance, pit: e.pitSpeedModifier });
     }
 
-    if (driver.isDamaged) {
-      out.push({ source: 'damage', id: 'damage', name: 'Damaged car', emoji: '🔧', active: true, reason: 'survived a crash',
-        speed: driver.damageSpeedPenalty, consistency: 1, luck: 1, crash: 0, pit: 1 });
-    }
+
     if (this.raceState.unsafetyCarActive) {
       out.push({ source: 'safety_car', id: 'safety-car', name: 'Safety car', emoji: '🚨', active: true, reason: 'field held to the SC speed limit',
         speed: 1, consistency: 1, luck: 1, crash: 0, pit: 1 });
@@ -2421,10 +2599,12 @@ class RaceEngine {
   private tick(): void {
     this.raceState.totalTicks++;
     const previousLeader = this.raceState.currentLeader;
+    if (this.raceState.totalTicks === 1) this.runQualifying();
 
     // === TRACK EVENT SYSTEM ===
     // Clean up expired effects
     this.cleanupExpiredEffects();
+    this.expireInRaceTagsByLap();
 
     // === TAG TRIGGER EVALUATION ===
     const isRaceStart = this.raceState.totalTicks === 1;
@@ -2489,9 +2669,12 @@ class RaceEngine {
           1.0
         );
 
-        // Check for pileup (2+ drivers involved) - deploy Unsafety Car
+        // Unsafety Car (#246): a car stranded on track brings it out some of the
+        // time; a real pileup (3+ cars) always does. Every crash used to summon it.
         const totalInvolved = result.dnfDriverIds.length + result.damagedDriverIds.length;
-        if (totalInvolved >= 2) {
+        const stranded = result.dnfDriverIds.length;
+        const scVars = this.getSafetyCarVars();
+        if (totalInvolved >= 3 || (stranded > 0 && this.rng() < scVars.deployChancePerDnf)) {
           this.deployUnsafetyCar(pair[0].currentLap);
         }
       }
@@ -2517,7 +2700,6 @@ class RaceEngine {
         return {
           ...driver,
           isDamaged: true,
-          damageSpeedPenalty: 0.85,
         };
       }
       return driver;
@@ -2534,6 +2716,11 @@ class RaceEngine {
     // Track drivers who crossed start/finish while in pit lane after winner finished
     const pitLapFinishers: Array<{ driverId: number; newLap: number; newLapTimes: number[]; lapsBehind: number; newPitProgress: number }> = [];
 
+    // Move front-to-back so each chaser can see where the car ahead ended up.
+    const Lm = this.config.lapLength;
+    this.drivers = [...this.drivers].sort((a, b) => (b.currentLap * Lm + b.position) - (a.currentLap * Lm + a.position));
+    this.tickSpeeds.clear();
+    this.tickDistance.clear();
     this.drivers = this.drivers.map(driver => {
       // Skip DNF drivers
       if (driver.status === 'dnf') {
@@ -2634,6 +2821,7 @@ class RaceEngine {
             tiresBefore: driver.tireState.compound,
             tiresAfter: newCompound,
             wasSlowStop: driver.currentPitIsSlowStop || false,
+            wasQuickStop: driver.currentPitIsQuickStop || false,
           };
 
           const exitMessage = driver.currentPitIsSlowStop
@@ -2691,7 +2879,7 @@ class RaceEngine {
         // Calculate pit WORK duration (stationary part) and slow/quick status
         const { duration, isSlowStop, isQuickStop } = this.calculatePitWorkDuration(driver);
 
-        this.logEvent('pit_entry', driver, `Entering pit lane for tire change`, 'neutral', 0.4);
+        this.logEvent('pit_entry', driver, `Boxes — ${this.pitReasons.get(driver.id) ?? 'tyres'}`, 'neutral', 0.4);
 
         // If slow stop, log it immediately so viewers know what's happening
         if (isSlowStop) {
@@ -2725,12 +2913,16 @@ class RaceEngine {
       // Apply Unsafety Car speed limit if active and driver is behind it
       const unsafetyCarLimit = this.getUnsafetyCarSpeedLimit(driver);
 
-      const adjustedSpeed = factors.finalSpeed * tireModifier * powerMultiplier * unsafetyCarLimit;
+      // Dirty air: a car that spent last tick stuck behind someone loses pace.
+      const dirtyAir = this.stuckBehind.has(driver.id) ? 1 - this.getOvertakingVars().dirtyAir : 1;
+      const adjustedSpeed = factors.finalSpeed * tireModifier * powerMultiplier * unsafetyCarLimit * dirtyAir;
 
       // Update factors with tire modifier for analytics
       factors.tireModifier = tireModifier;
 
-      let newPosition = driver.position + adjustedSpeed;
+      this.tickSpeeds.set(driver.id, adjustedSpeed);
+      let newPosition = this.resolveOvertake(driver, driver.position + adjustedSpeed, adjustedSpeed);
+      this.tickDistance.set(driver.id, driver.currentLap * this.config.lapLength + newPosition);
       let newLap = driver.currentLap;
       const newLapTimes = [...driver.lapTimes];
 
@@ -2850,6 +3042,7 @@ class RaceEngine {
         lapTimes: newLapTimes,
         sectorTimes: newSectorTimes,
         lastTickSpeed: adjustedSpeed,
+        speedSmooth: driver.speedSmooth > 0 ? driver.speedSmooth * 0.85 + adjustedSpeed * 0.15 : adjustedSpeed,
         lastTickFactors: factors,
         tireState: {
           ...driver.tireState,
@@ -2875,7 +3068,7 @@ class RaceEngine {
         this.drivers[driverIndex] = {
           ...this.drivers[driverIndex],
           status: 'finished' as DriverStatus,
-          finishTick: this.raceState.totalTicks,
+          ...this.classifyWithPenalty(this.drivers[driverIndex], this.raceState.totalTicks),
           lapsBehind: 0, // Finishers who complete all laps are on the lead lap
         };
         raceFinishes.push({ driver: this.drivers[driverIndex], position: this.raceState.finishOrder.length, lapsBehind: 0 });
@@ -2896,7 +3089,7 @@ class RaceEngine {
             this.drivers[driverIndex] = {
               ...this.drivers[driverIndex],
               status: 'finished' as DriverStatus,
-              finishTick: this.raceState.totalTicks,
+              ...this.classifyWithPenalty(this.drivers[driverIndex], this.raceState.totalTicks),
               lapsBehind,
             };
             raceFinishes.push({ driver: this.drivers[driverIndex], position: -1, lapsBehind }); // Position set after re-sort
@@ -2915,7 +3108,7 @@ class RaceEngine {
               status: 'finished' as DriverStatus,
               currentLap: newLap,
               lapTimes: newLapTimes,
-              finishTick: this.raceState.totalTicks,
+              ...this.classifyWithPenalty({ ...this.drivers[driverIndex], lapTimes: newLapTimes }, this.raceState.totalTicks),
               lapsBehind,
             };
             raceFinishes.push({ driver: this.drivers[driverIndex], position: -1, lapsBehind });
@@ -2933,8 +3126,8 @@ class RaceEngine {
         if (a.lapsBehind !== b.lapsBehind) {
           return a.lapsBehind - b.lapsBehind;
         }
-        // Then by finish tick (earlier = better position)
-        return (a.finishTick || 0) - (b.finishTick || 0);
+        // Then by finish tick plus any flag penalty (earlier = better position)
+        return ((a.finishTick || 0) + a.penaltyTicks) - ((b.finishTick || 0) + b.penaltyTicks);
       });
 
       // Update positions in raceFinishes for logging
@@ -3022,7 +3215,7 @@ class RaceEngine {
     // snapshot (the starting grid) lands on the first tick, so the chart has
     // content the moment a race begins.
     if (this.lapPositionHistory.length === 0 && sorted.length > 0) {
-      this.lapPositionHistory.push({ lap: 0, order: sorted.map(d => d.id), sc: false });
+      this.lapPositionHistory.push({ lap: 0, order: this.gridOrder.length ? [...this.gridOrder] : sorted.map(d => d.id), sc: false });
     }
     const leaderLap = sorted.length
       ? Math.max(0, ...sorted.filter(d => d.status !== 'dnf').map(d => d.currentLap))
@@ -3049,17 +3242,10 @@ class RaceEngine {
       if (prevRank !== undefined && currRank !== undefined && prevRank > currRank) {
         const positionsGained = prevRank - currRank;
 
-        // Evaluate overtake tags when a driver gains positions
-        this.evaluateDriverTags(driver, { isOvertaking: true });
-
-        if (positionsGained >= 2) {  // Only log if gained 2+ positions
-          this.logEvent(
-            'overtake',
-            driver,
-            `Surged forward ${positionsGained} positions!`,
-            'positive',
-            Math.min(1, positionsGained / 5)
-          );
+        // Real passes are logged where they happen (resolveOvertake); a jump of
+        // 3+ places in one tick is someone else's misfortune, worth a line.
+        if (positionsGained >= 3) {
+          this.logEvent('overtake', driver, `gains ${positionsGained} places in one go`, 'positive', Math.min(1, positionsGained / 5));
         }
       }
     }
@@ -3081,6 +3267,9 @@ class RaceEngine {
     // Cap stored events to prevent memory issues in long live races.
     // League settle raises maxStoredEvents so backfilled digests keep everything.
     if (this.raceEvents.length > this.config.maxStoredEvents) {
+      // Keep the trimmed head in the full log so reports see the whole race.
+      const dropped = this.raceEvents.length - this.config.maxStoredEvents;
+      this.droppedEvents.push(...this.raceEvents.slice(0, dropped));
       this.raceEvents = this.raceEvents.slice(-this.config.maxStoredEvents);
     }
 
@@ -3511,7 +3700,7 @@ class RaceEngine {
     return {
       drivers: this.getDrivers(),
       raceState: { ...this.raceState },
-      events: [...this.raceEvents],
+      events: this.getFullEvents().slice(), // uncapped: digests and reports see the whole race
     };
   }
 }

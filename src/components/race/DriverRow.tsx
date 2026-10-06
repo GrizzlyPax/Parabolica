@@ -63,7 +63,7 @@ function DriverRow({ driver, columns, context, gridTemplate, isFocused, expandab
           {/* The effect stack: everything acting on this driver, with the reason (#243) */}
           <div className="effect-stack">
             {(context.effectStack ?? []).length === 0 && (
-              <div className="effect-row inactive"><span className="effect-name">Nothing acting on this car</span></div>
+              <div className="effect-row inactive"><span className="effect-name">Nothing acting on this car right now</span></div>
             )}
             {(context.effectStack ?? []).map(e => {
               const pills = e.active ? effectPills(e) : [];
@@ -80,6 +80,19 @@ function DriverRow({ driver, columns, context, gridTemplate, isFocused, expandab
               );
             })}
           </div>
+          {/* History: what has happened to this car, with laps (#243) */}
+          {(context.history ?? []).length > 0 && (
+            <div className="driver-history">
+              <span className="expanded-k">History</span>
+              {(context.history ?? []).map(h => (
+                <span key={h.key} className={`history-chip kind-${h.kind}`} title={`${h.name} on lap${h.laps.length === 1 ? '' : 's'} ${h.laps.join(', ')}`}>
+                  <span className="history-emoji">{h.emoji}</span>
+                  <span className="history-name">{h.name}</span>
+                  <span className="history-laps">{h.laps.map(l => `L${l}`).join(' ')}</span>
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>

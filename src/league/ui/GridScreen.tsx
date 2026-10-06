@@ -7,11 +7,14 @@ import { useState } from 'react';
 import { RosterDriver } from '../../RaceEngine';
 import { LeagueState } from '../types';
 import { getTeamById } from '../../data/teams';
-import { Tag, tagsFor } from '../../data/tags';
+import { tagsFor } from '../../data/tags';
 import { getSeasonStandings, DriverSeasonStats } from '../../types/season';
 import { getGodById } from '../gods';
 import { TeamMarble } from './TeamMarble';
 import './League.css';
+import { rosterStateAt } from '../league';
+import TagChips from '../../components/race/TagChips';
+import '../../components/race/components.css';
 
 function stars(n: number): string {
   const filled = Math.max(0, Math.min(5, Math.round(n)));
@@ -32,9 +35,6 @@ const STAT_BARS: Array<{ label: string; key: keyof RosterDriver['stats']; min: n
   { label: 'Aggro', key: 'aggression', min: 0.3, max: 0.8 },
 ];
 
-function TagChip({ tag }: { tag: Tag }) {
-  return <span className="grid-tag-chip" title={tag.description}>{tag.emoji} {tag.name}</span>;
-}
 
 function bestFinish(stats: DriverSeasonStats | undefined): string {
   if (!stats) return '—';
@@ -51,7 +51,7 @@ function DriverEntry({ driver, stats }: { driver: RosterDriver; stats?: DriverSe
         <TeamMarble color={driver.color} accentColor={driver.accentColor}
           emoji={driver.emoji} size={24} slot={driver.driverSlot} />
         <span className="grid-driver-name">{driver.fullName}</span>
-        {tagsFor(driver.tags, 'driver').map(t => <TagChip key={t.id} tag={t} />)}
+        <TagChips tags={tagsFor(driver.tags, 'driver')} showName />
         {stats && <span className="grid-driver-pts">{stats.points} pts</span>}
         <span className="grid-driver-toggle">{open ? '▾' : '▸'}</span>
       </button>
@@ -94,7 +94,10 @@ function GridScreen({ league, onExit }: { league: LeagueState; onExit: () => voi
 
   // Group by team, preserving roster order.
   const teams: Array<{ kingdomId: string; drivers: RosterDriver[] }> = [];
-  for (const driver of league.roster) {
+  // The grid as it stands NOW — genesis plus every intervention and acquisition
+  // up to the next race (#232), not the genesis roster.
+  const current = rosterStateAt(league, league.settledThrough + 1);
+  for (const driver of current) {
     const kingdomId = driver.kingdomId ?? 'unknown';
     const existing = teams.find(t => t.kingdomId === kingdomId);
     if (existing) existing.drivers.push(driver);
@@ -124,7 +127,7 @@ function GridScreen({ league, onExit }: { league: LeagueState; onExit: () => voi
               <div key={kingdomId} className="grid-team-card" style={{ '--team-color': lead?.color } as React.CSSProperties}>
                 <div className="grid-team-header">
                   <span className="grid-team-name">{team?.emoji ?? lead?.emoji} {team?.name ?? lead?.teamName ?? kingdomId}</span>
-                  {tagsFor(lead?.tags, 'team').map(t => <TagChip key={t.id} tag={t} />)}
+                  <TagChips tags={tagsFor(lead?.tags, 'team')} showName />
                 </div>
                 {lead?.carName && (
                   <div className="grid-team-car">
@@ -134,7 +137,7 @@ function GridScreen({ league, onExit }: { league: LeagueState; onExit: () => voi
                         P {stars(lead.carStats.power)} · G {stars(lead.carStats.grip)} · R {stars(lead.carStats.reliability)}
                       </span>
                     )}
-                    {tagsFor(lead.tags, 'car').map(t => <TagChip key={t.id} tag={t} />)}
+                    <TagChips tags={tagsFor(lead.tags, 'car')} showName />
                   </div>
                 )}
                 <div className="grid-team-drivers">

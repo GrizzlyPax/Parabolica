@@ -3,8 +3,22 @@
 // the safety cars fell, who gained and who fell. Built from the same inputs
 // as the lap chart, so it works live mid-race AND from a deterministic
 // replay of any settled race.
-import type { Driver } from '../../RaceEngine';
+import type { Driver, RaceEvent } from '../../RaceEngine';
 import type { LapSample } from './lapChartData';
+
+/** Balance-pass extras (#245 run record, first slice). All optional so the
+ * live lap-chart copy keeps working. */
+export interface RaceReportExtras {
+  /** Engine seed; with trackId + teamIds this replays the race exactly. */
+  seed?: number | null;
+  trackId?: string;
+  teamIds?: string[];
+  engineVersion?: string;
+  /** Ruleset summary lines (cards / "default"). */
+  ruleset?: string[];
+  weatherIntensity?: number;
+  events?: RaceEvent[];
+}
 
 export interface RaceReportMeta {
   /** e.g. "R5 · 🧀 Cheddah" or "🧀 Cheddah (live, lap 9/15)" */
@@ -41,7 +55,7 @@ function stintString(d: Driver, totalLapsRun: number): string {
     .join(' → ');
 }
 
-export function buildRaceReportMd(meta: RaceReportMeta, drivers: Driver[], samples: LapSample[]): string {
+export function buildRaceReportMd(meta: RaceReportMeta, drivers: Driver[], samples: LapSample[], extras: RaceReportExtras = {}): string {
   const lines: string[] = [];
   const last = samples.length - 1;
   const lapsRun = last >= 0 ? samples[last].lap : 0;
@@ -78,6 +92,13 @@ export function buildRaceReportMd(meta: RaceReportMeta, drivers: Driver[], sampl
   if (meta.conditions.length) lines.push(`- Conditions: ${meta.conditions.join(' · ')}`);
   if (meta.totalTicks) lines.push(`- Duration: ${fmtDuration(meta.totalTicks)}`);
   lines.push(`- Field: ${drivers.length} · DNFs: ${dnfs.length}`);
+  if (extras.engineVersion) lines.push(`- Engine: v${extras.engineVersion}`);
+  if (extras.ruleset?.length) lines.push(`- Rules: ${extras.ruleset.join(' · ')}`);
+  if (extras.seed !== undefined) {
+    lines.push(extras.seed === null
+      ? '- Replay: unseeded race (not reproducible)'
+      : `- Replay: seed \`${extras.seed}\`${extras.trackId ? ` · track \`${extras.trackId}\`` : ''}${extras.teamIds ? ` · teams \`${extras.teamIds.join(',')}\`` : ''}`);
+  }
   lines.push(
     scPeriods.length
       ? `- Safety car: ${scPeriods.length}× (laps ${scPeriods.map(p => p.from === p.to ? `${p.from}` : `${p.from}–${p.to}`).join(', ')})`
@@ -88,8 +109,11 @@ export function buildRaceReportMd(meta: RaceReportMeta, drivers: Driver[], sampl
   // === Classification + strategy ===
   lines.push('## Classification & strategy');
   lines.push('');
-  lines.push('| P | Driver | Team | Grid | Δ | Stints | Pits |');
-  lines.push('|---|--------|------|------|---|--------|------|');
+  const bestLap = (d: Driver) => d.lapTimes.length ? fmtSecs(Math.min(...d.lapTimes)) : '—';
+  const avgLap = (d: Driver) => d.lapTimes.length ? fmtSecs(d.lapTimes.reduce((a, b) => a + b, 0) / d.lapTimes.length) : '—';
+  const tagStr = (d: Driver) => d.tags.length ? d.tags.map(t => `${t.emoji} ${t.name}`).join(', ') : '—';
+  lines.push('| P | Driver | Team | Grid | Δ | Best | Avg | Stints | Pits | Tags |');
+  lines.push('|---|--------|------|------|---|------|-----|--------|------|------|');
   classified.forEach((d, i) => {
     const p = i + 1;
     const g = grid.get(d.id);
@@ -98,13 +122,81 @@ export function buildRaceReportMd(meta: RaceReportMeta, drivers: Driver[], sampl
     const pits = (d.pitStops ?? [])
       .map(ps => `L${ps.lap}${ps.wasSlowStop ? ' (slow)' : ''}`)
       .join(', ') || '—';
-    lines.push(`| ${p} | ${d.name} | ${d.teamName ?? '—'} | ${g ?? '—'} | ${deltaStr} | ${stintString(d, lapsRun)} | ${pits} |`);
+    const pen = d.penaltyTicks > 0 ? ` ⚠ +${(d.penaltyTicks / Math.max(1, d.lapTimes.at(-1) ?? 100)).toFixed(1)}L (${d.penaltyReason})` : '';
+    lines.push(`| ${p} | ${d.name}${pen} | ${d.teamName ?? '—'} | ${g ?? '—'} | ${deltaStr} | ${bestLap(d)} | ${avgLap(d)} | ${stintString(d, lapsRun)} | ${pits} | ${tagStr(d)} |`);
   });
   dnfs.forEach(d => {
     const g = grid.get(d.id);
-    lines.push(`| DNF | ${d.name} | ${d.teamName ?? '—'} | ${g ?? '—'} | out L${d.dnfInfo?.lap ?? '?'} (${d.dnfInfo?.reason ?? '?'}) | ${stintString(d, lapsRun)} | ${(d.pitStops ?? []).map(ps => `L${ps.lap}`).join(', ') || '—'} |`);
+    lines.push(`| DNF | ${d.name} | ${d.teamName ?? '—'} | ${g ?? '—'} | out L${d.dnfInfo?.lap ?? '?'} (${d.dnfInfo?.reason ?? '?'}) | ${bestLap(d)} | ${avgLap(d)} | ${stintString(d, lapsRun)} | ${(d.pitStops ?? []).map(ps => `L${ps.lap}`).join(', ') || '—'} | ${tagStr(d)} |`);
   });
   lines.push('');
+
+  // === Driver / car / team stats (the balance inputs) ===
+  lines.push('## Stats (inputs)');
+  lines.push('');
+  lines.push('| Driver | Spd | Con | Lck | Acc | End | Agg | Car P/G/R | Team TM/PC |');
+  lines.push('|--------|-----|-----|-----|-----|-----|-----|-----------|------------|');
+  const f2 = (n: number | undefined) => n === undefined ? '—' : n.toFixed(2);
+  for (const d of [...classified, ...dnfs]) {
+    const st = d.stats, c = d.carStats, t = d.teamStats;
+    lines.push(`| ${d.name} | ${f2(st.baseSpeed)} | ${f2(st.consistency)} | ${f2(st.luck)} | ${f2(st.acceleration)} | ${f2(st.endurance)} | ${f2(st.aggression)} | ${c ? `${c.power}/${c.grip}/${c.reliability}` : '—'} | ${t ? `${t.tireManagement}/${t.pitCrew}` : '—'} |`);
+  }
+  lines.push('');
+
+  // === What the oddities did ===
+  const ev = extras.events ?? [];
+  if (ev.length) {
+    const byDriver = new Map(drivers.map(d => [d.id, d]));
+    // === Racing (#246): passes and battles ===
+    const passes = ev.filter(e => e.type === 'overtake' && /^passes /.test(e.description));
+    const battles = ev.filter(e => e.type === 'battle');
+    const pole = ev.find(e => e.type === 'grid_set');
+    lines.push('## Racing');
+    lines.push('');
+    if (pole) lines.push(`- Pole: ${byDriver.get(pole.driverId)?.name ?? pole.driverName}`);
+    lines.push(`- Passes: ${passes.length} · battles (2s+ stuck behind the same car): ${battles.length}`);
+    const passCount = new Map<number, number>();
+    for (const e of passes) passCount.set(e.driverId, (passCount.get(e.driverId) ?? 0) + 1);
+    const topPassers = [...passCount.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
+    if (topPassers.length) lines.push(`- Most passes: ${topPassers.map(([id, n]) => `${byDriver.get(id)?.name ?? id} ${n}`).join(' · ')}`);
+    const fights = passes.filter(e => /after a fight/.test(e.description));
+    if (fights.length) lines.push(`- Won after a fight: ${fights.slice(0, 8).map(e => `L${e.lap ?? '?'} ${byDriver.get(e.driverId)?.name ?? e.driverName} ${e.description.replace(' after a fight', '')}`).join(' · ')}`);
+    const penalties = ev.filter(e => e.type === 'penalty');
+    if (penalties.length) lines.push(`- Penalties at the flag: ${penalties.map(e => `${byDriver.get(e.driverId)?.name ?? e.driverName} (${e.description})`).join(' · ')}`);
+    lines.push('');
+
+    const fired = ev.filter(e => e.type === 'tag_activation' || e.type === 'tag_acquired');
+    const hits = ev.filter(e => e.type === 'track_event' || e.type === 'track_event_effect');
+    lines.push('## What the oddities did');
+    lines.push('');
+    if (fired.length) {
+      lines.push('Tag activations and mid-race pickups (passive and gated tags act silently):');
+      for (const e of fired) lines.push(`- L${e.lap ?? '?'} ${e.emoji} ${byDriver.get(e.driverId)?.name ?? e.driverName}: ${e.description}`);
+    } else {
+      lines.push('- No triggered tag fired this race.');
+    }
+    if (hits.length) {
+      lines.push('');
+      lines.push('Track events and inflictions:');
+      for (const e of hits) lines.push(`- L${e.lap ?? '?'} ${e.emoji} ${e.driverId >= 0 && byDriver.get(e.driverId) ? byDriver.get(e.driverId)!.name + ': ' : ''}${e.description}`);
+    }
+    lines.push('');
+
+    // === Incident log ===
+    const NOTABLE = new Set(['crash', 'dnf', 'mechanical_failure', 'tire_failure', 'unsafety_car_deployed', 'unsafety_car_recalled', 'driver_error', 'slow_pit_stop', 'quick_pit_stop', 'close_call', 'track_event']);
+    const notable = ev.filter(e => NOTABLE.has(e.type));
+    if (notable.length) {
+      lines.push('## Incidents');
+      lines.push('');
+      lines.push('| Lap | Time | Type | Driver | What |');
+      lines.push('|-----|------|------|--------|------|');
+      for (const e of notable.slice(0, 80)) {
+        lines.push(`| ${e.lap ?? '—'} | ${fmtDuration(e.tick)} | ${e.type} | ${byDriver.get(e.driverId)?.name ?? '—'} | ${e.emoji} ${e.description} |`);
+      }
+      if (notable.length > 80) lines.push(`| … | | | | +${notable.length - 80} more |`);
+      lines.push('');
+    }
+  }
 
   // === Pit stop detail ===
   const allStops = drivers
@@ -113,11 +205,16 @@ export function buildRaceReportMd(meta: RaceReportMeta, drivers: Driver[], sampl
   if (allStops.length) {
     lines.push('## Pit stops');
     lines.push('');
-    lines.push('| Lap | Driver | Change | Pit lane | Note |');
-    lines.push('|-----|--------|--------|----------|------|');
+    const entries = (extras.events ?? []).filter(e => e.type === 'pit_entry');
+    const whyFor = (d: Driver, ps: { tick: number }) => {
+      const e = entries.filter(x => x.driverId === d.id && x.tick <= ps.tick).sort((a, b) => b.tick - a.tick)[0];
+      return e ? e.description.replace(/^Boxes — /, '') : '';
+    };
+    lines.push('| Lap | Driver | Change | Why | Pit lane | Note |');
+    lines.push('|-----|--------|--------|-----|----------|------|');
     for (const { d, ps } of allStops) {
       lines.push(
-        `| ${ps.lap} | ${d.name} | ${COMPOUND[ps.tiresBefore] ?? '?'}→${COMPOUND[ps.tiresAfter] ?? '?'} | ${fmtSecs(ps.duration)} | ${ps.wasSlowStop ? 'slow stop' : ''} |`
+        `| ${ps.lap} | ${d.name} | ${COMPOUND[ps.tiresBefore] ?? '?'}→${COMPOUND[ps.tiresAfter] ?? '?'} | ${whyFor(d, ps)} | ${fmtSecs(ps.duration)} | ${ps.wasSlowStop ? 'slow stop' : ps.wasQuickStop ? 'quick stop' : ''} |`
       );
     }
     lines.push('');

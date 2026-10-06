@@ -1,0 +1,107 @@
+/* Run Setup — one page before a Quick Race. Pit Wall tokens. */
+.run-setup {
+  min-height: 100vh;
+  background: #0a0a0c;
+  color: #f3f2ef;
+  font-family: var(--font-body);
+  padding: 20px clamp(16px, 3vw, 40px) 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+.rs-k { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em; color: #7c7c88; text-transform: uppercase; }
+.rs-hint { font-size: 13px; color: #a6a6b0; }
+.rs-link { background: none; border: 0; color: #a98bff; font: inherit; font-size: 13px; cursor: pointer; padding: 0; margin-left: auto; }
+.rs-link:hover { text-decoration: underline; }
+.rs-chip { display: inline-flex; align-items: center; gap: 4px; margin-left: 8px; padding: 2px 8px; border-radius: 999px; background: #1a1a20; border: 1px solid #26262e; font-size: 12px; color: #d9d8d4; }
+.rs-chip-weather { border-color: rgba(242, 194, 48, 0.45); }
+.rs-chip-dim { color: #7c7c88; }
+
+/* Top bar */
+.rs-top { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 28px; padding-bottom: 14px; border-bottom: 1px solid #1e1e25; }
+.rs-title-block { display: flex; flex-direction: column; gap: 2px; }
+.rs-back { align-self: flex-start; background: none; border: 0; color: #a6a6b0; font: inherit; font-size: 13px; cursor: pointer; padding: 0 0 4px; }
+.rs-back:hover { color: #f3f2ef; }
+.rs-title { margin: 0; font-family: var(--font-display); font-weight: 800; font-size: 40px; line-height: 0.95; text-transform: uppercase; }
+.rs-sub { font-size: 14px; color: #a6a6b0; }
+.rs-seed { display: inline-flex; align-items: center; gap: 10px; }
+.rs-seed-value { font-family: var(--font-mono); font-size: 14px; background: #121216; border: 1px solid #26262e; padding: 6px 10px; border-radius: 8px; color: #f3f2ef; }
+.rs-btn { height: 44px; padding: 0 18px; border-radius: 10px; cursor: pointer; font-family: var(--font-display); font-weight: 700; font-size: 17px; letter-spacing: 0.04em; text-transform: uppercase; border: 1px solid #34343e; background: #1a1a20; color: #f3f2ef; }
+.rs-btn:hover { background: #22222a; }
+.rs-btn-ghost { background: transparent; color: #a6a6b0; }
+.rs-btn-primary { background: #f3f2ef; color: #0a0a0c; border-color: #f3f2ef; }
+.rs-btn-primary:hover { background: #fff; }
+.rs-start { margin-left: auto; height: 48px; padding: 0 24px; font-size: 19px; }
+
+/* Rows */
+.rs-row { background: #121216; border: 1px solid #1e1e25; border-radius: 14px; padding: 14px 18px; }
+.rs-row-head { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+
+/* Track */
+.rs-track { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; }
+.rs-track-main { display: flex; align-items: center; gap: 14px; flex: 1 1 420px; }
+.rs-track-emoji { font-size: 38px; line-height: 1; }
+.rs-track-name { font-family: var(--font-display); font-weight: 700; font-size: 26px; line-height: 1; }
+.rs-flag { font-size: 16px; margin-left: 4px; }
+.rs-track-meta { margin-top: 6px; font-size: 13px; color: #a6a6b0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 0; }
+.rs-track-pick { display: inline-flex; align-items: center; gap: 10px; }
+.rs-track-pick select { background: #0a0a0c; color: #f3f2ef; border: 1px solid #34343e; border-radius: 8px; padding: 8px 10px; font: inherit; font-size: 14px; min-height: 40px; }
+
+/* Cards */
+.rs-hand { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
+.rs-card {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 6px; text-align: left;
+  min-height: 112px; padding: 12px 14px; border-radius: 12px; cursor: pointer;
+  background: #0a0a0c; border: 1px solid #26262e; color: #f3f2ef; font: inherit;
+  transition: border-color 0.15s, transform 0.15s, background 0.15s;
+}
+.rs-card:hover { border-color: #3a3a44; transform: translateY(-1px); }
+.rs-card.on { background: rgba(169, 139, 255, 0.1); border-color: #a98bff; box-shadow: 0 0 0 1px #a98bff inset; }
+.rs-card-emoji { font-size: 22px; line-height: 1; }
+.rs-card-name { font-family: var(--font-display); font-weight: 700; font-size: 18px; line-height: 1; text-transform: uppercase; letter-spacing: 0.02em; }
+.rs-card-readout { font-size: 13px; color: #a6a6b0; line-height: 1.35; }
+.rs-card-weight { margin-top: auto; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #7c7c88; }
+.rs-card.w-wild .rs-card-weight { color: #f2c230; }
+.rs-card.w-cursed .rs-card-weight { color: #ff8a80; }
+.rs-rules { margin-top: 12px; padding: 10px 12px; border-top: 1px solid #1e1e25; display: flex; flex-direction: column; gap: 4px; }
+.rs-rule { font-family: var(--font-mono); font-size: 12px; color: #d9d8d4; }
+.rs-rules-actions { margin-top: 6px; display: flex; }
+.rs-rules-actions .rs-link { margin-left: 0; }
+
+/* Grid */
+.rs-teams { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 10px; }
+.rs-team { background: #0a0a0c; border: 1px solid #1e1e25; border-left: 3px solid var(--team-color, #444); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
+.rs-team-head { display: flex; align-items: center; gap: 8px; }
+.rs-team-marble { width: 22px; height: 22px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: var(--team-color, #444); font-size: 12px; box-shadow: inset 0 0 0 2px rgba(0,0,0,0.35); }
+.rs-team-name { font-family: var(--font-display); font-weight: 700; font-size: 17px; color: var(--team-color, #f3f2ef); }
+.rs-team-car { margin-left: auto; font-family: var(--font-mono); font-size: 10.5px; color: #7c7c88; letter-spacing: 0.02em; white-space: nowrap; }
+.rs-driver { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 10px; min-height: 28px; font-size: 14px; }
+.rs-driver-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rs-driver-stats { font-family: var(--font-mono); font-size: 11px; color: #7c7c88; white-space: nowrap; }
+.rs-driver-tags { text-align: right; }
+.rs-driver-tags .tag-chip.named { font-size: 12px; padding: 2px 6px; }
+
+@media (max-width: 1500px) {
+  .rs-driver { grid-template-columns: minmax(0, 1fr) auto; row-gap: 2px; }
+  .rs-driver-tags { grid-column: 1 / -1; text-align: left; }
+}
+
+@media (max-width: 799px) {
+  .run-setup { padding: 14px 12px 32px; gap: 12px; }
+  .rs-title { font-size: 32px; }
+  .rs-row { padding: 12px 12px; }
+  .rs-hand { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .rs-card { min-height: 0; padding: 10px 10px; gap: 4px; }
+  .rs-card-name { font-size: 16px; }
+  .rs-card-readout { font-size: 12px; }
+  .rs-track-emoji { font-size: 30px; }
+  .rs-track-name { font-size: 22px; }
+  .rs-teams { grid-template-columns: 1fr; }
+  .rs-start { width: 100%; margin-left: 0; }
+  .rs-driver { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  .rs-driver-stats { display: none; }
+  .rs-driver-tags { text-align: left; }
+  .gen-slots { flex-wrap: wrap; }
+}

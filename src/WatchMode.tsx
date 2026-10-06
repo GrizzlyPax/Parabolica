@@ -17,6 +17,9 @@ import {
 import RaceFeed from './components/race/RaceFeed';
 import { buildLapChartData } from './components/race/lapChartData';
 import { buildRaceReportMd } from './components/race/raceReportMd';
+import RaceCompleteBar from './components/race/RaceCompleteBar';
+import type { DriverHistoryEntry } from './components/race/types';
+import { version as appVersion } from '../package.json';
 import { voiceNotification, type FeedItem } from './feed/commentary';
 import './WatchMode.css';
 
@@ -42,6 +45,8 @@ interface WatchModeProps {
   raceState: RaceState;
   trackInfo: TrackInfo | null;
   onNextRace?: () => void;
+  /** Cards + resolved rules, for the report's Rules line (#241). */
+  rulesLines?: string[];
   powerActivation?: PowerActivation | null;
   raceEvents?: RaceEvent[];  // For track event notifications
   onExit?: () => void;  // Leave the race (back to main menu / league)
@@ -80,30 +85,7 @@ interface StatusEffect {
 }
 
 // Generate light and dark variants of a hex color
-function getColorVariants(hexColor: string): { light: string; dark: string } {
-  // Parse hex to RGB
-  const hex = hexColor.replace('#', '');
-  const r = parseInt(hex.substring(0, 2), 16);
-  const g = parseInt(hex.substring(2, 4), 16);
-  const b = parseInt(hex.substring(4, 6), 16);
 
-  // Light variant: blend toward white (70% original, 30% white)
-  const lightR = Math.round(r * 0.6 + 255 * 0.4);
-  const lightG = Math.round(g * 0.6 + 255 * 0.4);
-  const lightB = Math.round(b * 0.6 + 255 * 0.4);
-
-  // Dark variant: blend toward black (50% original, 50% black)
-  const darkR = Math.round(r * 0.4);
-  const darkG = Math.round(g * 0.4);
-  const darkB = Math.round(b * 0.4);
-
-  const toHex = (n: number) => n.toString(16).padStart(2, '0');
-
-  return {
-    light: `#${toHex(lightR)}${toHex(lightG)}${toHex(lightB)}`,
-    dark: `#${toHex(darkR)}${toHex(darkG)}${toHex(darkB)}`,
-  };
-}
 
 // Default fallback track path (oval) if no layout provided
 const DEFAULT_TRACK_PATH = 'M 150 60 L 450 60 Q 550 60, 550 150 Q 550 240, 450 240 L 150 240 Q 50 240, 50 150 Q 50 60, 150 60 Z';
@@ -115,6 +97,7 @@ function WatchMode({
   raceState,
   trackInfo,
   onNextRace,
+  rulesLines,
   powerActivation,
   raceEvents,
   onExit,
@@ -993,6 +976,92 @@ function WatchMode({
     return chips;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [engine, trackInfo]);
+  // One report builder for the lap-chart copy button and the Race Complete
+  // bar: the balance-pass handoff (#245).
+  const buildReport = () => {
+    const weather = engine.getWeather();
+    const conditions = [
+      ...(weather && weather.id !== 'clear' ? [`${weather.emoji} ${weather.name}${weather.intensity < 1 ? ` (${Math.round(weather.intensity * 100)}%)` : ''}`] : []),
+      ...engine.getTrackTags().map(t => `${t.emoji} ${t.name}`),
+    ];
+    const teamIds = Array.from(new Set(drivers.map(d => d.kingdomId).filter((k): k is string => !!k)));
+    return buildRaceReportMd(
+      {
+        title: raceState.raceFinished
+          ? `${trackInfo?.funEmoji ?? ''} ${trackInfo?.name ?? 'Race'}`
+          : `${trackInfo?.funEmoji ?? ''} ${trackInfo?.name ?? 'Race'} (live, lap ${currentLapForHeader}/${totalLaps})`,
+        totalLaps,
+        conditions,
+        totalTicks: raceState.raceFinished ? raceState.totalTicks : undefined,
+        finishOrder: raceState.raceFinished ? raceState.finishOrder : undefined,
+      },
+      drivers,
+      engine.getLapHistory(),
+      {
+        seed: engine.getSeed(),
+        trackId: trackInfo?.id,
+        teamIds,
+        engineVersion: appVersion,
+        ruleset: rulesLines ?? ['default'],
+        events: engine.getFullEvents(),
+      }
+    );
+  };
+
+  // Per-driver history for the focus row: every notable thing that happened
+  // to a car, grouped by kind with the laps it happened on (#243).
+  const historiesMap = useMemo(() => {
+    const map = new Map<number, Map<string, DriverHistoryEntry>>();
+    const kindOf = (t: RaceEvent['type']): DriverHistoryEntry['kind'] | null => {
+      switch (t) {
+        case 'tag_activation': case 'tag_acquired': return 'tag';
+        case 'track_event_effect': return 'event';
+        case 'driver_error': return 'error';
+        case 'slow_pit_stop': case 'quick_pit_stop': return 'pit';
+        case 'crash': case 'dnf': case 'mechanical_failure': case 'tire_failure': return 'crash';
+        case 'overtake': return 'pass';
+        case 'penalty': return 'penalty';
+        default: return null;
+      }
+    };
+    for (const e of engine.getFullEvents()) {
+      const kind = kindOf(e.type);
+      if (!kind || e.driverId < 0) continue;
+      // Name = the part before ':' for tags/errors ("Pit Lane Special: flies…" → "Pit Lane Special")
+      let name = e.description;
+      if (kind === 'tag' || kind === 'error') name = e.description.split(':')[0].trim();
+      if (e.type === 'tag_acquired') name = `+${name}`;
+      else if (kind === 'pit') name = e.type === 'slow_pit_stop' ? 'Slow stop' : 'Quick stop';
+      else if (kind === 'crash') name = e.type === 'dnf' ? 'Retired' : e.type === 'crash' ? 'Crash' : e.type === 'mechanical_failure' ? 'Mechanical failure' : 'Tyre failure';
+      else if (kind === 'pass') name = /passes/.test(e.description) ? 'Passes' : 'Gains places';
+      else if (kind === 'penalty') name = 'Penalty';
+      else name = e.description.replace(/[!.]+$/, '').slice(0, 40);
+      const key = `${kind}:${name}`;
+      let per = map.get(e.driverId);
+      if (!per) { per = new Map(); map.set(e.driverId, per); }
+      let entry = per.get(key);
+      if (!entry) { entry = { key, emoji: e.emoji, name, laps: [], kind }; per.set(key, entry); }
+      if (e.lap !== undefined && !entry.laps.includes(e.lap)) entry.laps.push(e.lap);
+    }
+    // Safety car periods are field-wide: every driver's history gets them,
+    // from the lap history's sc flags (the deploy event carries no lap).
+    const scLaps: number[] = [];
+    for (const smp of engine.getLapHistory()) if (smp.sc && !scLaps.includes(smp.lap)) scLaps.push(smp.lap);
+    const out = new Map<number, DriverHistoryEntry[]>();
+    for (const d of drivers) {
+      const per = map.get(d.id);
+      const list = per ? Array.from(per.values()) : [];
+      if (scLaps.length) list.push({ key: 'sc', emoji: '🚨', name: 'Safety car', laps: scLaps, kind: 'event' });
+      if (list.length) out.set(d.id, list);
+    }
+    return out;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [drivers, engine]);
+  // Starting grid (set by qualifying on tick 1); cheap, read each render.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const gridOrder = useMemo(() => engine.getGridOrder(), [drivers, engine]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const battles = useMemo(() => engine.getBattles().filter(b => b.ticks >= 20), [drivers, engine]);
   const effectStacksMap = useMemo(() => {
     const map = new Map<number, EffectStackEntry[]>();
     for (const d of drivers) map.set(d.id, engine.getEffectStack(d.id));
@@ -1106,6 +1175,22 @@ function WatchMode({
           (desktop/landscape). On portrait phones it falls back to the stacked
           vertical layout. */}
       <div className={`watch-content view-${activeView}`}>
+        {raceState.raceFinished && sortedFinished.length >= 1 && (
+          <RaceCompleteBar
+            podium={sortedFinished}
+            dnfCount={drivers.filter(d => d.status === 'dnf').length}
+            fastestLap={(() => {
+              let best: { driver: Driver; ticks: number } | null = null;
+              for (const d of drivers) for (const t of d.lapTimes) if (!best || t < best.ticks) best = { driver: d, ticks: t };
+              return best;
+            })()}
+            seed={engine.getSeed()}
+            buildReport={buildReport}
+            onNextRace={onNextRace}
+            onExit={onExit}
+            exitLabel={spectator ? '⚜️ Back to League' : 'Menu'}
+          />
+        )}
         <div className={`broadcast-frame frame-${activeView}`}>
           {/* TRACK VIEW: track map fills the frame, timing tower floats left */}
           {activeView === 'track' && (
@@ -1128,7 +1213,10 @@ function WatchMode({
                   statusEffects={statusEffectsMap}
                   activeTags={activeTagsMap}
                   effectStacks={effectStacksMap}
+                  histories={historiesMap}
                   positionDeltas={positionDeltasForTower}
+                  gridOrder={gridOrder}
+                  battles={battles}
                   fastestLapOverall={fastestLapOverall ?? undefined}
                   className="timing-tower-track"
                 />
@@ -1144,6 +1232,7 @@ function WatchMode({
                   highlightedDriverIds={podiumIds}
                   unsafetyCarActive={raceState.unsafetyCarActive}
                   unsafetyCarPosition={raceState.unsafetyCarPosition}
+                  battles={battles}
                 />
               </section>
             </>
@@ -1173,7 +1262,10 @@ function WatchMode({
                   statusEffects={statusEffectsMap}
                   activeTags={activeTagsMap}
                   effectStacks={effectStacksMap}
+                  histories={historiesMap}
                   positionDeltas={positionDeltasForTower}
+                  gridOrder={gridOrder}
+                  battles={battles}
                   fastestLapOverall={fastestLapOverall ?? undefined}
                   className="timing-tower-detail"
                 />
@@ -1221,19 +1313,8 @@ function WatchMode({
                         ...(weather && weather.id !== 'clear' ? [`${weather.emoji} ${weather.name}`] : []),
                         ...engine.getTrackTags().map(t => `${t.emoji} ${t.name}`),
                       ];
-                      const md = buildRaceReportMd(
-                        {
-                          title: raceState.raceFinished
-                            ? `${trackInfo?.funEmoji ?? ''} ${trackInfo?.name ?? 'Race'}`
-                            : `${trackInfo?.funEmoji ?? ''} ${trackInfo?.name ?? 'Race'} (live, lap ${currentLapForHeader}/${totalLaps})`,
-                          totalLaps,
-                          conditions,
-                          totalTicks: raceState.raceFinished ? raceState.totalTicks : undefined,
-                          finishOrder: raceState.raceFinished ? raceState.finishOrder : undefined,
-                        },
-                        drivers,
-                        engine.getLapHistory()
-                      );
+                      void conditions;
+                      const md = buildReport();
                       try {
                         await navigator.clipboard.writeText(md);
                       } catch {
@@ -1269,130 +1350,6 @@ function WatchMode({
         </div>
       </div>
 
-      {/* Race Finished Modal Overlay */}
-      {raceState.raceFinished && sortedFinished.length >= 3 && (
-        <div className="finish-modal-overlay">
-          <div className="finish-modal">
-            <div className="finish-modal-header">
-              <span className="checkered-flag">🏁</span>
-              <h2>Race Complete</h2>
-              <span className="checkered-flag">🏁</span>
-            </div>
-
-            <div className="podium-modal">
-              {/* 2nd place */}
-              <div className="podium-spot podium-2">
-                <div className="podium-driver">
-                  <span className="podium-champagne">🍾</span>
-                  <span
-                    className="podium-badge"
-                    data-slot={sortedFinished[1]?.driverSlot || 1}
-                    style={{
-                      '--team-color': sortedFinished[1]?.color,
-                      '--team-color-light': sortedFinished[1]?.color ? getColorVariants(sortedFinished[1].color).light : '#fff',
-                      '--team-color-dark': sortedFinished[1]?.color ? getColorVariants(sortedFinished[1].color).dark : '#222',
-                    } as React.CSSProperties}
-                  >
-                    {sortedFinished[1]?.emoji}
-                  </span>
-                </div>
-                <div className="podium-name" style={{ color: sortedFinished[1]?.color }}>
-                  {sortedFinished[1]?.name}
-                </div>
-                <div className="podium-block block-2">
-                  <span className="podium-num">2</span>
-                </div>
-              </div>
-
-              {/* 1st place */}
-              <div className="podium-spot podium-1">
-                <div className="podium-driver winner">
-                  <span className="podium-champagne">🍾</span>
-                  <span
-                    className="podium-badge"
-                    data-slot={sortedFinished[0]?.driverSlot || 1}
-                    style={{
-                      '--team-color': sortedFinished[0]?.color,
-                      '--team-color-light': sortedFinished[0]?.color ? getColorVariants(sortedFinished[0].color).light : '#fff',
-                      '--team-color-dark': sortedFinished[0]?.color ? getColorVariants(sortedFinished[0].color).dark : '#222',
-                    } as React.CSSProperties}
-                  >
-                    {sortedFinished[0]?.emoji}
-                  </span>
-                  <span className="winner-crown">🏆</span>
-                </div>
-                <div className="podium-name" style={{ color: sortedFinished[0]?.color }}>
-                  {sortedFinished[0]?.name}
-                </div>
-                <div className="podium-block block-1">
-                  <span className="podium-num">1</span>
-                </div>
-              </div>
-
-              {/* 3rd place */}
-              <div className="podium-spot podium-3">
-                <div className="podium-driver">
-                  <span className="podium-champagne">🍾</span>
-                  <span
-                    className="podium-badge"
-                    data-slot={sortedFinished[2]?.driverSlot || 1}
-                    style={{
-                      '--team-color': sortedFinished[2]?.color,
-                      '--team-color-light': sortedFinished[2]?.color ? getColorVariants(sortedFinished[2].color).light : '#fff',
-                      '--team-color-dark': sortedFinished[2]?.color ? getColorVariants(sortedFinished[2].color).dark : '#222',
-                    } as React.CSSProperties}
-                  >
-                    {sortedFinished[2]?.emoji}
-                  </span>
-                </div>
-                <div className="podium-name" style={{ color: sortedFinished[2]?.color }}>
-                  {sortedFinished[2]?.name}
-                </div>
-                <div className="podium-block block-3">
-                  <span className="podium-num">3</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Other finishers */}
-            {sortedFinished.length > 3 && (
-              <div className="other-finishers-modal">
-                {sortedFinished.slice(3, 10).map((driver, idx) => (
-                  <span key={driver.id} className="finisher-chip">
-                    <span className="finisher-pos">{idx + 4}</span>
-                    <span
-                      className="finisher-badge"
-                      data-slot={driver.driverSlot || 1}
-                      style={{ '--team-color': driver.color } as React.CSSProperties}
-                    >
-                      {driver.emoji}
-                    </span>
-                  </span>
-                ))}
-                {sortedFinished.length > 10 && (
-                  <span className="finisher-more">+{sortedFinished.length - 10} more</span>
-                )}
-              </div>
-            )}
-
-            <div className="finish-modal-buttons">
-              {onExit && (
-                <button
-                  className={spectator ? 'next-race-btn' : 'finish-menu-btn'}
-                  onClick={onExit}
-                >
-                  {spectator ? '⚜️ Back to League' : 'Menu'}
-                </button>
-              )}
-              {onNextRace && (
-                <button className="next-race-btn" onClick={onNextRace}>
-                  Next Race →
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

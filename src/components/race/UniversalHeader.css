@@ -10,8 +10,8 @@
   align-items: center;
   gap: 0.75rem;
   padding: 0.5rem 0.75rem;
-  background: #000;
-  border-bottom: 1px solid #222;
+  background: var(--pw-ground);
+  border-bottom: 1px solid var(--pw-raised);
 }
 
 /* Menu Button */
@@ -21,19 +21,19 @@
   justify-content: center;
   width: 40px;
   height: 40px;
-  background: #000;
-  border: 1px solid #333;
+  background: var(--pw-ground);
+  border: 1px solid var(--pw-border);
   border-radius: 6px;
-  color: #ccc;
+  color: var(--pw-text-1);
   cursor: pointer;
   transition: all 0.15s ease;
   flex-shrink: 0;
 }
 
 .header-menu-btn:hover {
-  background: #000;
-  border-color: #444;
-  color: #fff;
+  background: var(--pw-ground);
+  border-color: var(--pw-border-strong);
+  color: var(--pw-text-1);
 }
 
 .header-menu-btn:active {
@@ -65,12 +65,12 @@
 .lap-counter {
   font-family: var(--font-display), var(--font-emoji);
   font-size: 0.9rem;
-  color: #aaa;
+  color: var(--pw-text-2);
 }
 
 .lap-counter strong {
   font-size: 1.1rem;
-  color: #fff;
+  color: var(--pw-text-1);
 }
 
 /* Session State Indicator */
@@ -83,15 +83,15 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: var(--state-color, #888);
+  color: var(--state-color, var(--pw-text-3));
 }
 
 .state-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--state-color, #888);
-  box-shadow: 0 0 6px var(--state-color, #888);
+  background: var(--state-color, var(--pw-text-3));
+  box-shadow: 0 0 6px var(--state-color, var(--pw-text-3));
 }
 
 /* Racing state: pulsing dot */
@@ -117,8 +117,8 @@
 /* Finished: checkered pattern */
 .session-state.state-finished .state-dot {
   background: repeating-conic-gradient(
-    #fff 0deg 90deg,
-    #222 90deg 180deg
+    var(--pw-text-1) 0deg 90deg,
+    var(--pw-raised) 90deg 180deg
   );
   box-shadow: none;
 }
@@ -130,9 +130,9 @@
   gap: 0.35rem;
   padding: 0.3rem 0.5rem;
   background: rgba(var(--chip-color-rgb, 100, 100, 100), 0.2);
-  border: 1px solid var(--chip-color, #888);
-  border-radius: 4px;
-  color: var(--chip-color, #888);
+  border: 1px solid var(--chip-color, var(--pw-text-3));
+  border-radius: 6px;
+  color: var(--chip-color, var(--pw-text-3));
   font-family: var(--font-display), var(--font-emoji);
   font-size: 0.75rem;
   font-weight: 600;
@@ -169,7 +169,7 @@
 
 .focus-chip:hover .focus-chip-clear {
   opacity: 1;
-  color: #f87171;
+  color: var(--pw-red-soft);
 }
 
 /* Bottom Row: Track + Time */
@@ -183,7 +183,7 @@
 .track-name {
   font-family: var(--font-body), var(--font-emoji);
   font-size: 0.8rem;
-  color: #888;
+  color: var(--pw-text-3);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -192,7 +192,7 @@
 .elapsed-time {
   font-family: var(--font-mono), var(--font-emoji);
   font-size: 0.75rem;
-  color: #666;
+  color: var(--pw-text-3);
   white-space: nowrap;
 }
 
@@ -217,19 +217,19 @@
   justify-content: center;
   width: 36px;
   height: 36px;
-  background: #000;
-  border: 1px solid #333;
+  background: var(--pw-ground);
+  border: 1px solid var(--pw-border);
   border-radius: 6px;
-  color: #ccc;
+  color: var(--pw-text-1);
   font-size: 1rem;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .control-btn:hover:not(:disabled) {
-  background: #000;
-  border-color: #444;
-  color: #fff;
+  background: var(--pw-ground);
+  border-color: var(--pw-border-strong);
+  color: var(--pw-text-1);
 }
 
 .control-btn:active:not(:disabled) {
@@ -242,20 +242,20 @@
 }
 
 .control-btn.control-start {
-  color: #4ade80;
+  color: var(--pw-green);
 }
 
 .control-btn.control-start:hover:not(:disabled) {
-  border-color: #4ade80;
+  border-color: var(--pw-green);
   box-shadow: 0 0 8px rgba(74, 222, 128, 0.3);
 }
 
 .control-btn.control-stop {
-  color: #f59e0b;
+  color: var(--pw-yellow);
 }
 
 .control-btn.control-stop:hover {
-  border-color: #f59e0b;
+  border-color: var(--pw-yellow);
   box-shadow: 0 0 8px rgba(245, 158, 11, 0.3);
 }
 
@@ -266,8 +266,8 @@
 /* Speed Control */
 .speed-control {
   display: flex;
-  background: #000;
-  border: 1px solid #333;
+  background: var(--pw-ground);
+  border: 1px solid var(--pw-border);
   border-radius: 6px;
   overflow: hidden;
 }
@@ -276,7 +276,7 @@
   padding: 0.4rem 0.5rem;
   background: transparent;
   border: none;
-  color: #888;
+  color: var(--pw-text-3);
   font-family: var(--font-mono), var(--font-emoji);
   font-size: 0.7rem;
   font-weight: 600;
@@ -285,13 +285,13 @@
 }
 
 .speed-btn:hover {
-  background: #000;
-  color: #ccc;
+  background: var(--pw-ground);
+  color: var(--pw-text-1);
 }
 
 .speed-btn.active {
-  background: #000;
-  color: #fff;
+  background: var(--pw-ground);
+  color: var(--pw-text-1);
 }
 
 /* ============================================
@@ -299,9 +299,16 @@
    ============================================ */
 
 /* Hide speed control on mobile, show compact controls */
+.speed-cycle-btn { display: none; }
 @media (max-width: 639px) {
   .header-controls .speed-control {
     display: none;
+  }
+  .speed-cycle-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 44px; height: 32px; padding: 0 8px; border-radius: 6px;
+    border: 1px solid var(--pw-border-strong); background: var(--pw-raised); color: var(--pw-text-1);
+    font-family: var(--font-mono); font-size: 12px; font-weight: 600; cursor: pointer;
   }
 
   .control-btn {
@@ -446,7 +453,7 @@
   gap: 6px;
   background: rgba(220, 38, 38, 0.15);
   border: 1px solid rgba(220, 38, 38, 0.5);
-  color: #f87171;
+  color: var(--pw-red-soft);
   font-weight: 700;
   font-size: 0.78rem;
   letter-spacing: 0.08em;
@@ -458,7 +465,7 @@
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: #ef4444;
+  background: var(--pw-red);
   animation: live-pulse 1.4s ease-in-out infinite;
 }
 
@@ -479,7 +486,7 @@
   align-items: center;
   gap: 3px;
   font-size: 0.7rem;
-  color: #aaa;
+  color: var(--pw-text-2);
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 999px;

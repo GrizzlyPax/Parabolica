@@ -8,6 +8,7 @@ import TireHistory from './TireHistory';
 import type { ColumnConfig, RowContext } from './types';
 import { Driver } from '../../RaceEngine';
 import TagChips, { EffectChips } from './TagChips';
+import { CANON_VARIABLES } from '../../simlab/types';
 
 // Suffixes to ignore when extracting surname
 const NAME_SUFFIXES = new Set(['JR', 'JR.', 'SR', 'SR.', 'II', 'III', 'IV', 'V']);
@@ -39,8 +40,10 @@ export const COLUMN_POSITION: ColumnConfig = {
   width: '32px',
   align: 'center',
   render: (_driver: Driver, ctx: RowContext) => (
-    <span className={`position-number ${ctx.isFinished ? 'finished' : ''} ${ctx.isDNF ? 'dnf' : ''} ${ctx.isPitting ? 'pitting' : ''}`}>
+    <span className={`position-number ${ctx.isFinished ? 'finished' : ''} ${ctx.isDNF ? 'dnf' : ''} ${ctx.isPitting ? 'pitting' : ''}`}
+      title={_driver.penaltyTicks > 0 ? `Penalty: ${_driver.penaltyReason}` : undefined}>
       {ctx.isDNF ? 'DNF' : ctx.isPitting ? 'PIT' : ctx.displayPosition}
+      {_driver.penaltyTicks > 0 && <span className="pos-penalty" aria-label="penalty">!</span>}
     </span>
   ),
 };
@@ -140,6 +143,65 @@ export const COLUMN_DELTA_POS: ColumnConfig = {
   ),
 };
 
+// Places gained/lost vs the starting grid (#246 pass 2)
+export const COLUMN_GRID: ColumnConfig = {
+  id: 'grid',
+  header: 'Grid',
+  width: '46px',
+  align: 'center',
+  render: (_driver: Driver, ctx: RowContext) => {
+    if (ctx.gridSlot === undefined || ctx.isDNF) return <span className="muted-cell">—</span>;
+    const now = Number(ctx.displayPosition);
+    const d = Number.isFinite(now) ? ctx.gridSlot - now : 0;
+    return (
+      <span className="grid-cell" title={`Started P${ctx.gridSlot}`}>
+        <span className="grid-slot">P{ctx.gridSlot}</span>
+        {d !== 0 && <span className={`grid-delta ${d > 0 ? 'up' : 'down'}`}>{d > 0 ? '▲' : '▼'}{Math.abs(d)}</span>}
+      </span>
+    );
+  },
+};
+
+// Track view: just the places gained/lost since the grid
+export const COLUMN_GRID_DELTA: ColumnConfig = {
+  id: 'gridDelta',
+  header: '',
+  width: '30px',
+  align: 'center',
+  render: (_driver: Driver, ctx: RowContext) => {
+    if (ctx.gridSlot === undefined || ctx.isDNF) return null;
+    const now = Number(ctx.displayPosition);
+    const d = Number.isFinite(now) ? ctx.gridSlot - now : 0;
+    if (d === 0) return <span className="grid-delta flat" title={`Started P${ctx.gridSlot}`}>·</span>;
+    return <span className={`grid-delta ${d > 0 ? 'up' : 'down'}`} title={`Started P${ctx.gridSlot}`}>{d > 0 ? '▲' : '▼'}{Math.abs(d)}</span>;
+  },
+};
+
+/** Units/tick → km/h: a tick is 100 ms and a lap unit is a metre, so ×10 m/s ×3.6. */
+export function kmh(unitsPerTick: number): number { return Math.round(unitsPerTick * 36); }
+
+// Live speed, coloured against the pack (#246: no more "ticks")
+export const COLUMN_SPEED: ColumnConfig = {
+  id: 'speed',
+  header: 'km/h',
+  width: '54px',
+  align: 'right',
+  render: (driver: Driver, ctx: RowContext) => {
+    if (driver.status !== 'racing' || driver.speedSmooth <= 0) return <span className="muted-cell">—</span>;
+    const titles = { hot: 'Flying — well above the pack', quick: 'Quicker than the pack', pack: 'Pack pace', slow: 'Slower than the pack' };
+    const rel = ctx.speedRel ?? 0;
+    return (
+      <span className={`speed-cell tone-${ctx.speedTone ?? 'pack'}`} title={ctx.speedTone ? titles[ctx.speedTone] : undefined}>
+        <span className="speed-value">{kmh(driver.speedSmooth)}</span>
+        <span className="speed-tach" aria-hidden="true">
+          <span className="speed-tach-mid" />
+          <span className={`speed-tach-fill ${rel >= 0 ? 'pos' : 'neg'}`} style={rel >= 0 ? { left: '50%', width: `${rel * 50}%` } : { right: '50%', width: `${-rel * 50}%` }} />
+        </span>
+      </span>
+    );
+  },
+};
+
 // Interval to the car ahead (the racing battle)
 export const COLUMN_GAP_AHEAD: ColumnConfig = {
   id: 'gapAhead',
@@ -147,9 +209,16 @@ export const COLUMN_GAP_AHEAD: ColumnConfig = {
   width: '62px',
   align: 'right',
   render: (_driver: Driver, ctx: RowContext) => {
-    // Highlight a live battle: within 0.5s of the car ahead.
+    // A real fight (engine says this car is held behind the one ahead) gets
+    // the swords; merely close gets the warm colour.
+    const fighting = ctx.battle?.role === 'attacking';
     const close = /^\+0\.[0-4]/.test(ctx.intervalGap);
-    return <span className={`gap-value gap-ahead ${close ? 'gap-battle' : ''}`}>{ctx.intervalGap}</span>;
+    const title = fighting ? `Stuck behind the car ahead for ${Math.round((ctx.battle?.ticks ?? 0) / 10)}s` : ctx.battle?.role === 'defending' ? 'Under attack from behind' : undefined;
+    return (
+      <span className={`gap-value gap-ahead ${fighting ? 'gap-fight' : close ? 'gap-battle' : ''}`} title={title}>
+        {fighting && <span className="gap-swords" aria-label="attacking">⚔</span>}{ctx.intervalGap}
+      </span>
+    );
   },
 };
 
@@ -196,12 +265,22 @@ export const COLUMN_TIRE_AGE: ColumnConfig = {
   render: (driver: Driver) => {
     const compound = driver.tireState?.compound;
     if (!compound) return <span className="muted-cell">—</span>;
+    const wear = driver.tireState?.wear ?? 0;
+    const cliff = CANON_VARIABLES.tires[compound as 'soft' | 'medium' | 'hard']?.criticalAt ?? 75;
+    const past = wear >= cliff;
+    const used = driver.usedCompounds ?? [];
+    const owed = (['soft', 'medium', 'hard'] as const).filter(c => !used.includes(c));
+    const title = `${compound}, ${Math.round(wear)}% worn${past ? ' — past the cliff' : ''}${owed.length ? ` · still owes ${owed.join(', ')}` : ''}`;
     return (
-      <span className="tire-age">
-        <span className={`tire-pip tire-pip-${compound}`} title={compound}>
+      <span className={`tire-age ${past ? 'past-cliff' : ''}`} title={title}>
+        <span className={`tire-pip tire-pip-${compound}`}>
           {TIRE_LETTER[compound] ?? '?'}
         </span>
         <span className="tire-age-laps">{driver.tireState?.lapsOnTires ?? 0}</span>
+        <span className="tire-life" aria-hidden="true">
+          <span className="tire-life-fill" style={{ width: `${Math.min(100, wear)}%` }} />
+          <span className="tire-life-cliff" style={{ left: `${cliff}%` }} />
+        </span>
       </span>
     );
   },
@@ -262,11 +341,20 @@ export const COLUMN_TIRES: ColumnConfig = {
 export const COLUMN_TAGS: ColumnConfig = {
   id: 'tags',
   header: 'Tags',
-  width: '92px',
+  width: '118px',
   align: 'center',
-  render: (driver: Driver, ctx: RowContext) => (
-    <TagChips tags={driver.tags} stack={ctx.effectStack} />
-  ),
+  render: (driver: Driver, ctx: RowContext) => {
+    // One column for everything on the car: identity tags, then the transient
+    // ones (track events, inflictions, damage) — they're all tags at heart.
+    const hits = (ctx.effectStack ?? []).filter(e => e.source === 'track_event' || e.source === 'infliction' || e.source === 'damage');
+    if (driver.tags.length === 0 && hits.length === 0) return <span className="muted-cell">—</span>;
+    return (
+      <span className="tag-chips">
+        {driver.tags.length > 0 && <TagChips tags={driver.tags} stack={ctx.effectStack} />}
+        {hits.length > 0 && <EffectChips entries={hits} />}
+      </span>
+    );
+  },
 };
 
 // Status icon (mid-race inflictions / effects)
@@ -301,13 +389,15 @@ export const COLUMN_TIRE_HISTORY: ColumnConfig = {
 
 export const TRACK_COLUMNS: ColumnConfig[] = [
   COLUMN_POSITION,
+  COLUMN_GRID_DELTA,
   COLUMN_TEAM_MARBLE,
   COLUMN_DRIVER_CODE,
   COLUMN_GAP_AHEAD,
   COLUMN_GAP_LEADER,
+  COLUMN_SPEED,
   COLUMN_LAST_LAP,
+  COLUMN_TIRE_AGE,
   COLUMN_TAGS,
-  COLUMN_STATUS,
 ];
 
 // Detail View: the rich broadcast data screen (F1 timing).
@@ -317,14 +407,16 @@ export const DETAIL_COLUMNS: ColumnConfig[] = [
   COLUMN_TEAM_MARBLE,
   COLUMN_DRIVER_FULL_NAME,
   COLUMN_TEAM_NAME,
+  COLUMN_GRID,
   COLUMN_GAP_AHEAD,
   COLUMN_GAP_LEADER,
+  COLUMN_SPEED,
   COLUMN_LAST_LAP,
   COLUMN_BEST_LAP,
   COLUMN_TIRE_AGE,
+  COLUMN_TIRES,
   COLUMN_PITS,
   COLUMN_TAGS,
-  COLUMN_STATUS,
 ];
 
 // Generate grid-template-columns CSS from column config

@@ -14,6 +14,8 @@ import { getTrackById, getDynamicEventDescription, Track } from '../generators/t
 import { updateSeasonWithRaceResult } from '../types/season';
 import { LeagueState, RaceDigest, SettleResult, LiveRace } from './types';
 import { rosterStateAt } from './league';
+import { evaluateAcquisitions, expiriesAt, carryoverEntries } from './acquisition';
+import { evaluateActions } from './actions';
 import { pickHighlights } from './highlights';
 import { weatherForRace } from '../data/weather';
 import { intrinsicTrackTags } from '../data/trackTags';
@@ -68,7 +70,7 @@ export function prepareScheduledRace(
   engine.setSeed(race.seed);
   // Weather is part of the fixed universe — same seed+index → same storm, so
   // the live broadcast and the headless settle see identical conditions (#149).
-  engine.setWeather(weatherForRace(league.leagueSeed, raceIndex));
+  engine.setWeather(weatherForRace(league.leagueSeed, raceIndex, league.setup.ruleset?.weather.weights));
   // Track tags are intrinsic to the track (C3) — same place, same character.
   engine.setTrackTags(intrinsicTrackTags(track.id));
   engine.loadGeneratedRoster(rosterStateAt(league, raceIndex));
@@ -130,6 +132,18 @@ function runScheduledRace(
   const weather = engine.getWeather();
   const { drivers, raceState, events } = engine.runHeadless();
 
+  // Crash pairs: every retirement's involvedDriverIds, as unordered pairs.
+  const crashPairs: [number, number][] = [];
+  for (const d of drivers) {
+    const inv = d.dnfInfo?.involvedDriverIds ?? [];
+    for (const other of inv) {
+      if (other === d.id) continue;
+      const pair: [number, number] = d.id < other ? [d.id, other] : [other, d.id];
+      if (!crashPairs.some(p => p[0] === pair[0] && p[1] === pair[1])) crashPairs.push(pair);
+    }
+  }
+  const lapHistory = engine.getLapHistory();
+
   const digest: RaceDigest = {
     index: raceIndex,
     trackId: track.id,
@@ -137,6 +151,9 @@ function runScheduledRace(
     trackEmoji: track.funEmoji,
     finishOrder: raceState.finishOrder,
     dnfDriverIds: drivers.filter(d => d.status === 'dnf').map(d => d.id),
+    gridOrder: lapHistory[0]?.order,
+    damagedDriverIds: drivers.filter(d => d.isDamaged && d.status !== 'dnf').map(d => d.id),
+    crashPairs,
     fastestLapDriverId: findFastestLap(drivers),
     totalTicks: raceState.totalTicks,
     // Only record non-clear weather (keeps clear races/digests clean)
@@ -145,6 +162,7 @@ function runScheduledRace(
       : undefined,
     highlights: pickHighlights(events),
     events,
+    inRaceCarryovers: engine.getInRaceCarryovers(),
   };
   return { digest, drivers };
 }
@@ -177,13 +195,17 @@ function lastBroadcastEnd(league: LeagueState): number {
  * the broadcast is the UI's job.
  */
 export function settleLeague(league: LeagueState, options: SettleOptions): SettleResult {
-  const simVars = options.simVars ?? CANON_VARIABLES;
+  // Physics: explicit override > the league's ruleset > canon.
+  const simVars = options.simVars ?? league.setup.ruleset?.simVars ?? CANON_VARIABLES;
 
   const pending = league.schedule.filter(r => r.index > league.settledThrough);
   let prevEnd = lastBroadcastEnd(league);
   let season = league.season;
   const newlySettled: RaceDigest[] = [];
   let live: LiveRace | undefined;
+  // The log grows as races settle (acquisitions), and each race must run with
+  // the log as it stood when that race began — so work on a copy that grows.
+  let working: LeagueState = league;
 
   for (const race of pending) {
     const startedAt = Math.max(race.scheduledAt, prevEnd);
@@ -199,7 +221,7 @@ export function settleLeague(league: LeagueState, options: SettleOptions): Settl
 
     // Run the race to learn how long its broadcast lasts (deterministic, so
     // this is the same race a viewer would watch live).
-    const { digest } = runScheduledRace(league, race.index, track, simVars);
+    const { digest } = runScheduledRace(working, race.index, track, simVars);
     const endedAt = startedAt + digest.totalTicks * LIVE_TICK_MS;
 
     if (endedAt > options.now) {
@@ -218,6 +240,19 @@ export function settleLeague(league: LeagueState, options: SettleOptions): Settl
       digest.trackEmoji,
       digest.fastestLapDriverId
     );
+    // The sim hands out tags for what just happened (#232). Entries land in
+    // the same append-only log as interventions and take effect next race.
+    const rosterIn = rosterStateAt(working, race.index);
+    const acquired = evaluateAcquisitions(working, digest, season, rosterIn);
+    const carried = carryoverEntries(working, digest, rosterIn);
+    const expired = expiriesAt(working, race.index, rosterIn);
+    // Then every tag carried into the race gets to DO something (#233).
+    const acted = evaluateActions(working, digest, rosterIn, [...acquired.entries, ...carried.entries]);
+    digest.tagChanges = [...expired, ...acquired.changes, ...carried.changes, ...acted.changes];
+    const newEntries = [...acquired.entries, ...carried.entries, ...acted.entries];
+    if (newEntries.length) {
+      working = { ...working, interventionLog: [...working.interventionLog, ...newEntries] };
+    }
     newlySettled.push(digest);
     prevEnd = endedAt;
     options.onRaceSettled?.(digest, newlySettled.length, pending.length);
@@ -229,6 +264,7 @@ export function settleLeague(league: LeagueState, options: SettleOptions): Settl
 
   const settled: LeagueState = {
     ...league,
+    interventionLog: working.interventionLog,
     settledThrough: newlySettled[newlySettled.length - 1].index,
     season,
     digests: applyRetention([...league.digests, ...newlySettled]),

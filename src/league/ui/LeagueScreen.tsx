@@ -143,6 +143,19 @@ function DigestCard({ league, digest, open, onToggle }: {
               )).reduce<React.ReactNode[]>((acc, el, i) => (i === 0 ? [el] : [...acc, ', ', el]), [])}
             </div>
           )}
+          {(digest.tagChanges?.length ?? 0) > 0 && (
+            <ul className="digest-tag-changes">
+              {digest.tagChanges!.map((c, i) => (
+                <li key={i} className={`digest-tag-change ${c.kind}`}>
+                  <span className="digest-ev-emoji">{c.kind === 'acquire' ? '✨' : '⌛'}</span>
+                  <span className="digest-ev-text">
+                    <strong style={{ color: driver(c.driverId)?.color }}>{driver(c.driverId)?.fullName}</strong>{' '}
+                    {c.headline.replace(driver(c.driverId)?.fullName ?? '', '').trim()}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
           <ul className="digest-highlights">
             {digest.highlights.map((ev, i) => (
               <li key={i}>
