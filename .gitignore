@@ -25,3 +25,6 @@ tsconfig.tsbuildinfo
 
 # local screenshot / debug scripts
 rc-*.mjs
+
+# wrangler local state (dev bundles, DO storage)
+server/.wrangler/
