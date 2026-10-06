@@ -147,6 +147,24 @@ export function buildRaceReportMd(meta: RaceReportMeta, drivers: Driver[], sampl
   const ev = extras.events ?? [];
   if (ev.length) {
     const byDriver = new Map(drivers.map(d => [d.id, d]));
+    // === Racing (#246): passes and battles ===
+    const passes = ev.filter(e => e.type === 'overtake' && /^passes /.test(e.description));
+    const battles = ev.filter(e => e.type === 'battle');
+    const pole = ev.find(e => e.type === 'grid_set');
+    lines.push('## Racing');
+    lines.push('');
+    if (pole) lines.push(`- Pole: ${byDriver.get(pole.driverId)?.name ?? pole.driverName}`);
+    lines.push(`- Passes: ${passes.length} · battles (2s+ stuck behind the same car): ${battles.length}`);
+    const passCount = new Map<number, number>();
+    for (const e of passes) passCount.set(e.driverId, (passCount.get(e.driverId) ?? 0) + 1);
+    const topPassers = [...passCount.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
+    if (topPassers.length) lines.push(`- Most passes: ${topPassers.map(([id, n]) => `${byDriver.get(id)?.name ?? id} ${n}`).join(' · ')}`);
+    const fights = passes.filter(e => /after a fight/.test(e.description));
+    if (fights.length) lines.push(`- Won after a fight: ${fights.slice(0, 8).map(e => `L${e.lap ?? '?'} ${byDriver.get(e.driverId)?.name ?? e.driverName} ${e.description.replace(' after a fight', '')}`).join(' · ')}`);
+    const penalties = ev.filter(e => e.type === 'penalty');
+    if (penalties.length) lines.push(`- Penalties at the flag: ${penalties.map(e => `${byDriver.get(e.driverId)?.name ?? e.driverName} (${e.description})`).join(' · ')}`);
+    lines.push('');
+
     const fired = ev.filter(e => e.type === 'tag_activation' || e.type === 'tag_acquired');
     const hits = ev.filter(e => e.type === 'track_event' || e.type === 'track_event_effect');
     lines.push('## What the oddities did');
@@ -187,11 +205,16 @@ export function buildRaceReportMd(meta: RaceReportMeta, drivers: Driver[], sampl
   if (allStops.length) {
     lines.push('## Pit stops');
     lines.push('');
-    lines.push('| Lap | Driver | Change | Pit lane | Note |');
-    lines.push('|-----|--------|--------|----------|------|');
+    const entries = (extras.events ?? []).filter(e => e.type === 'pit_entry');
+    const whyFor = (d: Driver, ps: { tick: number }) => {
+      const e = entries.filter(x => x.driverId === d.id && x.tick <= ps.tick).sort((a, b) => b.tick - a.tick)[0];
+      return e ? e.description.replace(/^Boxes — /, '') : '';
+    };
+    lines.push('| Lap | Driver | Change | Why | Pit lane | Note |');
+    lines.push('|-----|--------|--------|-----|----------|------|');
     for (const { d, ps } of allStops) {
       lines.push(
-        `| ${ps.lap} | ${d.name} | ${COMPOUND[ps.tiresBefore] ?? '?'}→${COMPOUND[ps.tiresAfter] ?? '?'} | ${fmtSecs(ps.duration)} | ${ps.wasSlowStop ? 'slow stop' : ''} |`
+        `| ${ps.lap} | ${d.name} | ${COMPOUND[ps.tiresBefore] ?? '?'}→${COMPOUND[ps.tiresAfter] ?? '?'} | ${whyFor(d, ps)} | ${fmtSecs(ps.duration)} | ${ps.wasSlowStop ? 'slow stop' : ps.wasQuickStop ? 'quick stop' : ''} |`
       );
     }
     lines.push('');

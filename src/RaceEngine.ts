@@ -212,6 +212,7 @@ export interface PitStopInfo {
   tiresBefore: TireCompound;
   tiresAfter: TireCompound;
   wasSlowStop: boolean;  // True if pit crew fumbled
+  wasQuickStop?: boolean; // True if the crew nailed it
 }
 
 // Event types for the analytics system
@@ -2815,6 +2816,7 @@ class RaceEngine {
             tiresBefore: driver.tireState.compound,
             tiresAfter: newCompound,
             wasSlowStop: driver.currentPitIsSlowStop || false,
+            wasQuickStop: driver.currentPitIsQuickStop || false,
           };
 
           const exitMessage = driver.currentPitIsSlowStop
