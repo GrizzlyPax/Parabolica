@@ -100,3 +100,13 @@
 .rc-verdict { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; font-size: 14px; }
 .rc-verdict .rs-link { margin-left: 0; }
 @media (max-width: 799px) { .rc-compare-3 { grid-template-columns: 1fr; } .rc-try-actions { margin-left: 0; } }
+
+/* Inline try-a-change row */
+.rc-try-row td { cursor: default; white-space: normal; padding: 0; background: var(--pw-ground); }
+.rc-try-row:hover td { background: var(--pw-ground); }
+.rc-try { padding: 12px 14px 14px; border-left: 2px solid var(--pw-purple); margin: 4px 0 8px 6px; }
+.rc-try-what { font-size: 14px; color: var(--pw-text-1); margin-bottom: 10px; }
+.rc-try-what .rc-try-readout { margin-top: 4px; }
+.rc-try-k { margin-bottom: 8px; }
+.rc-try-k .rs-hint { text-transform: none; letter-spacing: 0; font-family: var(--font-body); }
+.rc-chev { color: var(--pw-text-3); margin-left: 10px; font-size: 11px; }

@@ -1,10 +1,10 @@
 // Race Control — the lab. Everything here runs races the way the live game
 // does (src/racecontrol/runner.ts), is seeded so it can be replicated outside
 // the browser (`npm run lab`, `npm run calibrate`), and exports what it shows.
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import './RaceControl.css';
 import SimLab from '../simlab/SimLab';
-import { ALL_TAGS, getTagById, describeCondition, type Tag } from '../data/tags';
+import { getTagById, describeCondition, type Tag } from '../data/tags';
 import { TAG_CALIBRATION } from '../data/tagCalibration';
 import { bandViolation, calibrateTagsAsync, CALIBRATION_BANDS, CALIBRATION_RACES, type CalibrationFile, type TagCalibration, type CalibrateProgress } from './calibrate';
 import type { CalibrateInMessage, CalibrateOutMessage } from './calibrateWorker';
@@ -61,7 +61,7 @@ function CalibrationTab() {
   const file = TAG_CALIBRATION;
   const [sort, setSort] = useState<SortKey>('places');
   const [desc, setDesc] = useState(true);
-  const [picked, setPicked] = useState<string>(file.tags[0]?.tagId ?? '');
+  const [picked, setPicked] = useState<string>('');
   const [copied, setCopied] = useState(false);
   const rows = useMemo(() => {
     const r = file.tags.map(c => ({ c, tag: getTagById(c.tagId) })).filter((x): x is Row => !!x.tag).sort(SORTERS[sort]);
@@ -83,7 +83,7 @@ function CalibrationTab() {
   return (
     <>
       <section className="rs-row rc-explain">
-        <p><b>Every tag, measured.</b> Each one was put on a single driver, alone, in {file.races} races, then the same {file.races} races with nobody tagged. <b>Places</b> = how many finishing positions the tag was worth (<span className="rc-good">+2.6</span> good, <span className="rc-bad">−1.0</span> hurts; ± is the uncertainty). Wins, podiums and DNF show the carrier's rate with the untagged rate in grey. Click a header to sort; click a row to try a change below.</p>
+        <p><b>Every tag, measured.</b> Each one was put on a single driver, alone, in {file.races} races, then the same {file.races} races with nobody tagged. <b>Places</b> = how many finishing positions the tag was worth (<span className="rc-good">+2.6</span> good, <span className="rc-bad">−1.0</span> hurts; ± is the uncertainty). Wins, podiums and DNF show the carrier's rate with the untagged rate in grey. Click a header to sort; click a row to see what it does and try a change.</p>
         <div className="rc-bands">
           <span className="rs-hint">Batch <code>{file.batchSeed}</code> · cards <code>{file.cards.join(' ') || 'none'}</code> · {new Date(file.generatedAt).toLocaleDateString()} · bands |places| ≤ {CALIBRATION_BANDS.maxPlaces}, DNF ≤ {Math.round(CALIBRATION_BANDS.maxDnfRate * 100)}%, wins ≤ {Math.round(CALIBRATION_BANDS.maxWinRate * 100)}% · <span className={violations.length ? 'rc-bad' : 'rc-good'}>{violations.length ? `${violations.length} out of band` : 'all in band'}</span></span>
           <span className="rc-actions">
@@ -110,8 +110,10 @@ function CalibrationTab() {
             <tbody>
               {rows.map(({ c, tag }) => {
                 const v = bandViolation(c);
+                const open = picked === c.tagId;
                 return (
-                  <tr key={c.tagId} className={`${v ? 'rc-row-bad' : ''} ${picked === c.tagId ? 'rc-row-on' : ''}`} onClick={() => setPicked(c.tagId)} title={`${tag.description}${v ? ` — ⚠ ${v}` : ''}`}>
+                  <Fragment key={c.tagId}>
+                  <tr className={`${v ? 'rc-row-bad' : ''} ${picked === c.tagId ? 'rc-row-on' : ''}`} onClick={() => setPicked(p => p === c.tagId ? '' : c.tagId)} title={`${tag.description}${v ? ` — ⚠ ${v}` : ''}`}>
                     <td className="rc-tag"><span className="rc-emoji">{tag.emoji}</span> {tag.name}{v && <span className="rc-bad"> ⚠</span>}</td>
                     <td className="rc-dim">{c.target}</td>
                     <td><span className="rc-rarity" style={{ color: `var(--rarity-${c.rarity})` }}>{c.rarity}</span></td>
@@ -119,15 +121,16 @@ function CalibrationTab() {
                     <td><span className="rc-num">{pct(c.winRate)}</span><span className="rc-se">{pct(c.baseWinRate)}</span></td>
                     <td><span className="rc-num">{pct(c.podiumRate)}</span><span className="rc-se">{pct(c.basePodiumRate)}</span></td>
                     <td><span className={`rc-num ${c.dnfRate > c.baseDnfRate + 0.05 ? 'rc-bad' : ''}`}>{pct(c.dnfRate)}</span><span className="rc-se">{pct(c.baseDnfRate)}</span></td>
-                    <td><span className="rc-num rc-dim">{tag.trigger === 'passive' ? '—' : c.activationsPerRace.toFixed(2)}</span></td>
+                    <td><span className="rc-num rc-dim">{tag.trigger === 'passive' ? '—' : c.activationsPerRace.toFixed(2)}</span><span className="rc-chev">{open ? '▾' : '▸'}</span></td>
                   </tr>
+                  {open && <tr className="rc-try-row"><td colSpan={8}><TryPanel file={file} tagId={c.tagId} /></td></tr>}
+                  </Fragment>
                 );
               })}
             </tbody>
           </table>
         </div>
       </section>
-      <TryPanel file={file} tagId={picked} onPick={setPicked} />
     </>
   );
 }
@@ -172,8 +175,7 @@ const KNOBS: { k: Knob; label: string; hint: string }[] = [
 const toPct = (k: Knob, v: number | undefined) => v === undefined ? 0 : k === 'crashResistance' ? Math.round(v * 100) : Math.round((v - 1) * 100);
 const fromPct = (k: Knob, p: number) => k === 'crashResistance' ? p / 100 : 1 + p / 100;
 
-function TryPanel({ file, tagId, onPick }: { file: CalibrationFile; tagId: string; onPick: (id: string) => void }) {
-  const genesis = useMemo(() => ALL_TAGS.filter(t => file.tags.some(c => c.tagId === t.id)), [file]);
+function TryPanel({ file, tagId }: { file: CalibrationFile; tagId: string }) {
   const base = getTagById(tagId);
   const [knobs, setKnobs] = useState<Record<Knob, number>>(() => readKnobs(base));
   const [chance, setChance] = useState<number>(Math.round((base?.triggerChance ?? 1) * 100));
@@ -234,15 +236,15 @@ function TryPanel({ file, tagId, onPick }: { file: CalibrationFile; tagId: strin
   const phase = progress ? (progress.label === 'baseline' ? 'Untagged baseline' : `With your ${progress.label}`) : '';
 
   return (
-    <section className="rs-row rc-try">
-      <div className="rs-row-head">
-        <span className="rs-k">Try a change</span>
-        <span className="rs-hint">This is the lab part. Change a tag's numbers, press Measure, and see what it would be worth on track — measured exactly like the table. Leave the numbers alone and the result should land on the table's row (that's the parity check).</span>
+    <div className="rc-try">
+      <div className="rc-try-what">
+        <span className="rc-emoji">{base.emoji}</span> <b>{base.name}</b> <span className="rc-dim">{base.description}</span>
+        <div className="rc-try-readout">
+          <span className="rs-k">Fires</span> {base.trigger === 'passive' ? 'always on' : base.trigger.replace('_', ' ')}{base.condition ? ` · only when ${describeCond(base)}` : ''} · <span className="rs-k">Does</span> {describeFx(base)}{changed && <> · <span className="rs-k">Your version</span> <span className="rc-edited-text">{describeFx(edited)}</span></>}
+        </div>
       </div>
+      <div className="rs-k rc-try-k">Try a change <span className="rs-hint">— edit the numbers, press Measure; it is measured exactly like the table</span></div>
       <div className="rc-try-grid">
-        <label><span className="rs-k">Tag</span>
-          <select value={tagId} onChange={e => onPick(e.target.value)} disabled={!!progress}>{genesis.map(t => <option key={t.id} value={t.id}>{t.emoji} {t.name}</option>)}</select>
-        </label>
         {KNOBS.map(({ k, label, hint }) => (
           <label key={k} title={hint}><span className="rs-k">{label} <span className="rc-dim">{k === 'crashResistance' ? 'pts' : '%'}</span></span>
             <input type="number" step={1} value={knobs[k]} disabled={!!progress} onChange={e => setKnobs(prev => ({ ...prev, [k]: Number(e.target.value) || 0 }))} className={knobs[k] !== toPct(k, base.effects[k]) ? 'rc-edited' : ''} />
@@ -265,9 +267,6 @@ function TryPanel({ file, tagId, onPick }: { file: CalibrationFile; tagId: strin
             : <button type="button" className="rs-btn rs-btn-primary" onClick={run}>Measure</button>}
           {changed && !progress && <button type="button" className="rs-link" onClick={reset}>Reset</button>}
         </span>
-      </div>
-      <div className="rc-try-readout">
-        <span className="rs-k">Fires</span> {base.trigger === 'passive' ? 'always on' : base.trigger.replace('_', ' ')}{base.condition ? ` · only when ${describeCond(base)}` : ''} · <span className="rs-k">Was</span> {describeFx(base)}{changed && <> · <span className="rs-k">Now</span> <span className="rc-edited-text">{describeFx(edited)}</span></>}
       </div>
       {progress && (
         <div className="rc-progress">
@@ -292,7 +291,7 @@ function TryPanel({ file, tagId, onPick }: { file: CalibrationFile; tagId: strin
           </div>
         </div>
       )}
-    </section>
+    </div>
   );
 }
 
