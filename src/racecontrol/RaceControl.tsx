@@ -4,17 +4,16 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import './RaceControl.css';
 import SimLab from '../simlab/SimLab';
-import BetLab from '../betlab/BetLab';
 import { ALL_TAGS, getTagById, type Tag } from '../data/tags';
 import { TAG_CALIBRATION } from '../data/tagCalibration';
-import { bandViolation, describeCalibration, CALIBRATION_BANDS, type CalibrationFile, type TagCalibration } from './calibrate';
+import { bandViolation, describeCalibration, calibrateTagsAsync, CALIBRATION_BANDS, type CalibrationFile, type TagCalibration, type CalibrateProgress } from './calibrate';
 import type { CalibrateInMessage, CalibrateOutMessage } from './calibrateWorker';
+import { LabRunner } from './labRunner';
 
-type TabId = 'calibration' | 'lab' | 'odds' | 'method';
+type TabId = 'calibration' | 'lab' | 'method';
 const TABS: { id: TabId; label: string; hint: string }[] = [
   { id: 'calibration', label: 'Tag calibration', hint: 'what each tag does, measured' },
   { id: 'lab', label: 'Sim Lab', hint: 'seeded batches, canon vs heretic' },
-  { id: 'odds', label: 'Odds', hint: 'the crowd’s book (BetLab)' },
   { id: 'method', label: 'Method', hint: 'why these numbers can be trusted' },
 ];
 
@@ -36,7 +35,6 @@ export default function RaceControl({ onBack }: { onBack: () => void }) {
       </nav>
       {tab === 'calibration' && <CalibrationTab />}
       {tab === 'lab' && <section className="rs-row rc-legacy"><SimLab /></section>}
-      {tab === 'odds' && <section className="rs-row rc-legacy"><BetLab /></section>}
       {tab === 'method' && <MethodTab />}
     </div>
   );
@@ -78,6 +76,12 @@ function CalibrationTab() {
 
   return (
     <>
+      <section className="rs-row rc-explain">
+        <div className="rs-row-head"><span className="rs-k">How to read this</span></div>
+        <p><b>What was done.</b> Every tag in the game was tested the same way: put on one driver, alone, in {file.races} races — then the same {file.races} races again with nobody tagged. The difference is what the tag does. Nothing here is a guess from the tag's numbers; it is what happened on track.</p>
+        <p><b>Places gained</b> is the headline: how many finishing positions the tagged driver gained over the untagged version of themselves, averaged. <span className="rc-good">+2.6</span> means two and a half places better; <span className="rc-bad">−1.0</span> means the tag hurts. The ± is how sure we are (two of those either side). <b>Wins / Podiums / DNF</b> show the carrier's rate next to the untagged rate ("field").</p>
+        <p><b>Nothing to set up.</b> Sort by any column. If a number looks wrong, the panel at the bottom re-runs one tag in your browser so you can see it come out the same.</p>
+      </section>
       <section className="rs-row">
         <div className="rs-row-head">
           <span className="rs-k">The committed calibration</span>
@@ -109,7 +113,7 @@ function CalibrationTab() {
                 <th><SortBtn k="wins" cur={sort} set={setSort}>Wins</SortBtn></th>
                 <th>Podiums</th>
                 <th><SortBtn k="dnf" cur={sort} set={setSort}>DNF</SortBtn></th>
-                <th>Procs / race</th>
+                <th title="How often the tag fired per race (passive tags are always on)">Fires / race</th>
                 <th>Band</th>
               </tr>
             </thead>
@@ -177,60 +181,77 @@ function VerifyPanel({ file }: { file: CalibrationFile }) {
   const genesis = useMemo(() => ALL_TAGS.filter(t => file.tags.some(c => c.tagId === t.id)), [file]);
   const [tagId, setTagId] = useState(genesis[0]?.id ?? '');
   const [races, setRaces] = useState(file.races);
-  const [progress, setProgress] = useState<{ done: number; total: number; label: string } | null>(null);
+  const [progress, setProgress] = useState<CalibrateProgress | null>(null);
   const [result, setResult] = useState<CalibrationFile | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const worker = useRef<Worker | null>(null);
-  useEffect(() => () => worker.current?.terminate(), []);
+  const [mode, setMode] = useState<string>('');
+  const runner = useRef<LabRunner<CalibrateInMessage, CalibrateOutMessage> | null>(null);
+
+  useEffect(() => {
+    runner.current = new LabRunner<CalibrateInMessage, CalibrateOutMessage>(
+      () => new Worker(new URL('./calibrateWorker.ts', import.meta.url), { type: 'module' }),
+      async (msg, sink) => {
+        if (msg.type !== 'START') return;
+        const { file } = await calibrateTagsAsync(msg.tagIds, { races: msg.races, batchSeed: msg.batchSeed, cards: msg.cards, onProgress: p => { sink.post({ type: 'PROGRESS', progress: p }); return !sink.aborted(); } });
+        if (!sink.aborted()) sink.post({ type: 'COMPLETE', file });
+      },
+      m => {
+        if (m.type === 'PROGRESS') setProgress(m.progress);
+        else if (m.type === 'COMPLETE') { setResult(m.file); setProgress(null); }
+        else { setError(m.message); setProgress(null); }
+        setMode(runner.current?.mode ?? '');
+      },
+      { type: 'ABORT' },
+    );
+    return () => runner.current?.terminate();
+  }, []);
 
   const run = () => {
-    worker.current?.terminate();
-    const w = new Worker(new URL('./calibrateWorker.ts', import.meta.url), { type: 'module' });
-    worker.current = w;
-    setResult(null); setError(null); setProgress({ done: 0, total: races * 2, label: 'starting' });
-    w.onmessage = (e: MessageEvent<CalibrateOutMessage>) => {
-      const m = e.data;
-      if (m.type === 'PROGRESS') setProgress({ done: m.done, total: m.total, label: m.label });
-      else if (m.type === 'COMPLETE') { setResult(m.file); setProgress(null); }
-      else { setError(m.message); setProgress(null); }
-    };
-    const msg: CalibrateInMessage = { type: 'START', tagIds: [tagId], races, batchSeed: file.batchSeed, cards: file.cards };
-    w.postMessage(msg);
+    setResult(null); setError(null); setProgress({ done: 0, total: races * 2, label: 'baseline', race: 0, races });
+    runner.current?.start({ type: 'START', tagIds: [tagId], races, batchSeed: file.batchSeed, cards: file.cards });
   };
-  const stop = () => { worker.current?.terminate(); worker.current = null; setProgress(null); };
+  const stop = () => { runner.current?.terminate(); setProgress(null); };
 
   const mine = result?.tags[0];
   const theirs = file.tags.find(c => c.tagId === tagId);
+  const tag = getTagById(tagId);
   const exact = races === file.races;
   const same = mine && theirs && exact && mine.places === theirs.places && mine.winRate === theirs.winRate && mine.dnfRate === theirs.dnfRate && result?.baselineFingerprint === file.baselineFingerprint;
+  const phase = progress ? (progress.label === 'baseline' ? 'Untagged baseline' : `With ${progress.label}`) : '';
 
   return (
     <section className="rs-row">
       <div className="rs-row-head">
-        <span className="rs-k">Replicate it here</span>
-        <span className="rs-hint">Runs the same seeded races in this browser. With the full {file.races} races the numbers must match the file exactly; fewer races gives a noisier read of the same tag.</span>
+        <span className="rs-k">Check a number yourself</span>
+        <span className="rs-hint">Pick a tag and press Run. Your browser replays the same {file.races} races twice — first with nobody tagged, then with the tag on — so the bar counts to {file.races * 2}. About a minute. The result must match the table exactly.</span>
       </div>
       <div className="rc-verify">
         <label><span className="rs-k">Tag</span>
-          <select value={tagId} onChange={e => setTagId(e.target.value)}>{genesis.map(t => <option key={t.id} value={t.id}>{t.emoji} {t.name}</option>)}</select>
+          <select value={tagId} onChange={e => setTagId(e.target.value)} disabled={!!progress}>{genesis.map(t => <option key={t.id} value={t.id}>{t.emoji} {t.name}</option>)}</select>
         </label>
         <label><span className="rs-k">Races</span>
-          <select value={races} onChange={e => setRaces(Number(e.target.value))}>{[25, 50, 100, file.races].filter((v, i, a) => a.indexOf(v) === i).map(n => <option key={n} value={n}>{n}{n === file.races ? ' (full)' : ''}</option>)}</select>
+          <select value={races} onChange={e => setRaces(Number(e.target.value))} disabled={!!progress}>
+            <option value={file.races}>{file.races} — exact match, ~1 min</option>
+            <option value={50}>50 — quick look, rougher</option>
+          </select>
         </label>
         {progress
           ? <button type="button" className="rs-btn rs-btn-ghost" onClick={stop}>Stop</button>
-          : <button type="button" className="rs-btn rs-btn-primary" onClick={run} disabled={!tagId}>Run in browser</button>}
-        {progress && (
-          <span className="rc-progress"><span className="rc-progress-bar"><span style={{ width: `${(progress.done / progress.total) * 100}%` }} /></span>{progress.label} {progress.done}/{progress.total}</span>
-        )}
-        {error && <span className="rc-bad">{error}</span>}
+          : <button type="button" className="rs-btn rs-btn-primary" onClick={run} disabled={!tagId}>Run</button>}
       </div>
-      {mine && theirs && (
+      {progress && (
+        <div className="rc-progress">
+          <span className="rc-progress-bar"><span style={{ width: `${(progress.done / progress.total) * 100}%` }} /></span>
+          <span>{phase} · race {progress.race} of {progress.races} · {progress.done}/{progress.total}{mode === 'main thread' ? ' · running on the main thread' : ''}</span>
+        </div>
+      )}
+      {error && <div className="rc-bad">{error}</div>}
+      {mine && theirs && tag && (
         <div className="rc-compare">
-          <div><span className="rs-k">This browser · {mine.races} races · baseline #{result?.baselineFingerprint}</span><div>{describeCalibration(mine)}</div></div>
-          <div><span className="rs-k">The file · {theirs.races} races · baseline #{file.baselineFingerprint}</span><div>{describeCalibration(theirs)}</div></div>
+          <div><span className="rs-k">Your browser · {tag.name} · {mine.races} races</span><div>{describeCalibration(mine)}</div><span className="rc-se">baseline #{result?.baselineFingerprint}</span></div>
+          <div><span className="rs-k">The table · {tag.name} · {theirs.races} races</span><div>{describeCalibration(theirs)}</div><span className="rc-se">baseline #{file.baselineFingerprint}</span></div>
           <div className={same ? 'rc-good' : exact ? 'rc-bad' : 'rs-hint'}>
-            {same ? '✓ Identical — the browser and the script ran the same races.' : exact ? '⚠ Different. The engine or the tag changed since the file was written: run npm run calibrate and commit.' : `Partial run; within ±${(2 * mine.placesSe).toFixed(1)} places of the file is the same tag.`}
+            {same ? '✓ Identical. Your browser ran the same races and got the same answer.' : exact ? '⚠ Different. The engine or the tag changed since the table was written — run npm run calibrate and commit.' : `Quick look only: anything within ±${(2 * mine.placesSe).toFixed(1)} places of the table is the same tag. Pick ${file.races} races for an exact match.`}
           </div>
         </div>
       )}
@@ -261,7 +282,7 @@ function MethodTab() {
         <code>npm run calibrate -- 50 glass-cannon</code><span className="rs-hint">one tag, quick read, nothing written</span>
         <code>npx tsx scripts/mechanics-probe.mjs 200</code><span className="rs-hint">the no-tag mechanics gates (#246)</span>
       </div>
-      <p className="rs-hint">Known gaps, parked: the Heretic's variables override a card's own simVars patches; Sim Lab's safety-car count reads a double-logged event (halve it); the Odds tab still runs its own unseeded setup.</p>
+      <p className="rs-hint">Known gaps, parked: the Heretic's variables override a card's own simVars patches; Sim Lab's safety-car count reads a double-logged event (halve it). BetLab (odds) is gone; src/betting/utils keeps the odds math.</p>
     </section>
   );
 }

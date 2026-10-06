@@ -91,22 +91,36 @@ export interface CalibrateOutput {
   aborted: boolean;
 }
 
-/** Calibrate `tagIds` (default: every genesis tag). Deterministic for a given batchSeed/races/cards. */
-export function calibrateTags(tagIds: string[] = genesisTagIds(), options: CalibrateOptions = {}): CalibrateOutput {
+export interface CalibrateProgress {
+  done: number;
+  total: number;
+  /** 'baseline' while the untagged races run, then the tag's name. */
+  label: string;
+  /** Which race of this phase just finished (1-based) and how many there are. */
+  race: number;
+  races: number;
+}
+
+/**
+ * The calibration as a generator: one yield per race, so the same loop runs
+ * synchronously in a script, in a worker, or on the main thread with a
+ * breath between races. Deterministic for a given batchSeed/races/cards.
+ */
+export function* calibrateSteps(tagIds: string[] = genesisTagIds(), options: Omit<CalibrateOptions, 'onProgress'> = {}): Generator<CalibrateProgress, CalibrateOutput, boolean | void> {
   const batchSeed = options.batchSeed ?? CALIBRATION_BATCH_SEED;
   const races = options.races ?? CALIBRATION_RACES;
   const cards = options.cards ?? CALIBRATION_CARDS;
   const total = races * (1 + tagIds.length);
   let done = 0;
   const engine = RaceEngine.createForWorker();
-  const tick = (label: string) => options.onProgress?.(++done, total, label) !== false;
 
   // Baseline: every race once, untagged.
   const baseline: Baseline[] = [];
   for (let i = 0; i < races; i++) {
     const r = runLabRace(labSpec(batchSeed, i, cards), { engine });
     baseline.push(summarize(r));
-    if (!tick('baseline')) return { file: emptyFile(batchSeed, races, cards, baseline), aborted: true };
+    const go = yield { done: ++done, total, label: 'baseline', race: i + 1, races };
+    if (go === false) return { file: emptyFile(batchSeed, races, cards, baseline), aborted: true };
   }
   const file = emptyFile(batchSeed, races, cards, baseline);
 
@@ -132,7 +146,8 @@ export function calibrateTags(tagIds: string[] = genesisTagIds(), options: Calib
         if (base.dnf.has(id)) baseDnfs++;
         activations += r.events.filter(e => e.type === 'tag_activation' && e.driverId === id).length;
       }
-      if (!tick(tag.name)) return { file, aborted: true };
+      const go = yield { done: ++done, total, label: tag.name, race: i + 1, races };
+      if (go === false) return { file, aborted: true };
     }
     const n = deltas.length || 1;
     const mean = deltas.reduce((a, b) => a + b, 0) / n;
@@ -147,6 +162,29 @@ export function calibrateTags(tagIds: string[] = genesisTagIds(), options: Calib
     });
   }
   return { file, aborted: false };
+}
+
+/** Synchronous drain (scripts, tests). */
+export function calibrateTags(tagIds: string[] = genesisTagIds(), options: CalibrateOptions = {}): CalibrateOutput {
+  const g = calibrateSteps(tagIds, options);
+  let next = g.next();
+  while (!next.done) {
+    const p = next.value;
+    next = g.next(options.onProgress?.(p.done, p.total, p.label));
+  }
+  return next.value;
+}
+
+/** Async drain that yields to the event loop between races (main-thread fallback). */
+export async function calibrateTagsAsync(tagIds: string[], options: Omit<CalibrateOptions, 'onProgress'> & { onProgress?: (p: CalibrateProgress) => boolean | void }): Promise<CalibrateOutput> {
+  const g = calibrateSteps(tagIds, options);
+  let next = g.next();
+  while (!next.done) {
+    const go = options.onProgress?.(next.value);
+    await new Promise(r => setTimeout(r, 0));
+    next = g.next(go);
+  }
+  return next.value;
 }
 
 const GRID = 11;

@@ -1,9 +1,11 @@
 import { randomSeed } from '../engine/rng';
+import { LabRunner, type LabSink } from '../racecontrol/labRunner';
+import { runSimulation } from './simLabCore';
 import { CARDS } from '../data/cards';
 import { useState, useEffect, useRef } from 'react';
 import SimLabResults from './SimLabResults';
 import { SimLabVariables } from './SimLabVariables';
-import type { SimLabConfig as Config, SimLabResults as Results, WorkerOutMessage, SimVariables, ComparisonResults, VariablesDiff } from './types';
+import type { SimLabConfig as Config, SimLabResults as Results, WorkerInMessage, WorkerOutMessage, SimVariables, ComparisonResults, VariablesDiff } from './types';
 import { CANON_VARIABLES, cloneVariables } from './types';
 import { intrinsicTrackTags } from '../data/trackTags';
 import { conditionsSections, sectionsToTsvRows } from './reportSections';
@@ -174,8 +176,8 @@ export default function SimLab() {
   const [copyConfirmed, setCopyConfirmed] = useState(false);
 
   // Workers
-  const canonWorkerRef = useRef<Worker | null>(null);
-  const hereticWorkerRef = useRef<Worker | null>(null);
+  const canonWorkerRef = useRef<LabRunner<WorkerInMessage, WorkerOutMessage> | null>(null);
+  const hereticWorkerRef = useRef<LabRunner<WorkerInMessage, WorkerOutMessage> | null>(null);
   const canonResultsRef = useRef<Results | null>(null);
   const hereticResultsRef = useRef<Results | null>(null);
 
@@ -186,73 +188,33 @@ export default function SimLab() {
   const [isComparisonMode, setIsComparisonMode] = useState(false);
 
   useEffect(() => {
-    // Create workers on mount
-    canonWorkerRef.current = new Worker(
-      new URL('./simLabWorker.ts', import.meta.url),
-      { type: 'module' }
-    );
-
-    hereticWorkerRef.current = new Worker(
-      new URL('./simLabWorker.ts', import.meta.url),
-      { type: 'module' }
-    );
-
-    // Canon worker message handler
-    canonWorkerRef.current.onmessage = (e: MessageEvent<WorkerOutMessage>) => {
-      switch (e.data.type) {
-        case 'PROGRESS':
-          setCanonProgress({
-            completed: e.data.completed,
-            total: e.data.total,
-            currentTrack: e.data.currentTrack,
-          });
+    // One runner per side. Each uses a worker when the page allows one and
+    // falls back to the main thread when it doesn't (artifact preview).
+    const make = () => new Worker(new URL('./simLabWorker.ts', import.meta.url), { type: 'module' });
+    const inline = (msg: WorkerInMessage, sink: LabSink<WorkerOutMessage>) => {
+      if (msg.type !== 'START') return;
+      return runSimulation(msg.config, msg.variables, msg.label, sink);
+    };
+    const handler = (side: 'canon' | 'heretic') => (m: WorkerOutMessage) => {
+      switch (m.type) {
+        case 'PROGRESS': {
+          const p = { completed: m.completed, total: m.total, currentTrack: m.currentTrack };
+          if (side === 'canon') setCanonProgress(p); else setHereticProgress(p);
           break;
+        }
         case 'COMPLETE':
-          canonResultsRef.current = e.data.results;
+          if (side === 'canon') canonResultsRef.current = m.results; else hereticResultsRef.current = m.results;
           setCompletedWorkers(prev => prev + 1);
           break;
         case 'ERROR':
-          console.error('Canon worker error:', e.data.message);
-          setError(`Canon: ${e.data.message}`);
+          console.error(`${side} error:`, m.message);
+          setError(`${side === 'canon' ? 'Canon' : 'Heretic'}: ${m.message}`);
           setPhase('setup');
           break;
       }
     };
-
-    // Heretic worker message handler
-    hereticWorkerRef.current.onmessage = (e: MessageEvent<WorkerOutMessage>) => {
-      switch (e.data.type) {
-        case 'PROGRESS':
-          setHereticProgress({
-            completed: e.data.completed,
-            total: e.data.total,
-            currentTrack: e.data.currentTrack,
-          });
-          break;
-        case 'COMPLETE':
-          hereticResultsRef.current = e.data.results;
-          setCompletedWorkers(prev => prev + 1);
-          break;
-        case 'ERROR':
-          console.error('Heretic worker error:', e.data.message);
-          setError(`Heretic: ${e.data.message}`);
-          setPhase('setup');
-          break;
-      }
-    };
-
-    canonWorkerRef.current.onerror = (e) => {
-      console.error('Canon worker crashed:', e);
-      setError('Canon worker crashed unexpectedly');
-      setPhase('setup');
-    };
-
-    hereticWorkerRef.current.onerror = (e) => {
-      console.error('Heretic worker crashed:', e);
-      setError('Heretic worker crashed unexpectedly');
-      setPhase('setup');
-    };
-
+    canonWorkerRef.current = new LabRunner<WorkerInMessage, WorkerOutMessage>(make, inline, handler('canon'), { type: 'ABORT' });
+    hereticWorkerRef.current = new LabRunner<WorkerInMessage, WorkerOutMessage>(make, inline, handler('heretic'), { type: 'ABORT' });
     return () => {
       canonWorkerRef.current?.terminate();
       hereticWorkerRef.current?.terminate();
@@ -301,18 +263,18 @@ export default function SimLab() {
     setHereticProgress({ completed: 0, total: config.batchSize, currentTrack: '' });
 
     // Always start canon worker - pass CANON_VARIABLES so it uses balanced values
-    canonWorkerRef.current?.postMessage({ type: 'START', config, variables: CANON_VARIABLES, label: 'canon' });
+    canonWorkerRef.current?.start({ type: 'START', config, variables: CANON_VARIABLES, label: 'canon' });
 
     // Only start heretic worker if there are changes to compare
     if (runComparison) {
-      hereticWorkerRef.current?.postMessage({ type: 'START', config, variables: hereticVariables, label: 'heretic' });
+      hereticWorkerRef.current?.start({ type: 'START', config, variables: hereticVariables, label: 'heretic' });
     }
   };
 
   const handleAbort = () => {
-    canonWorkerRef.current?.postMessage({ type: 'ABORT' });
+    canonWorkerRef.current?.abort();
     if (isComparisonMode) {
-      hereticWorkerRef.current?.postMessage({ type: 'ABORT' });
+      hereticWorkerRef.current?.abort();
     }
     setPhase('setup');
   };
