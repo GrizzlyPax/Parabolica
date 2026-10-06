@@ -80,7 +80,8 @@
 .rs-driver { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 10px; min-height: 28px; font-size: 14px; }
 .rs-driver-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rs-driver-stats { font-family: var(--font-mono); font-size: 11px; color: #7c7c88; white-space: nowrap; }
-.rs-driver-tags { min-width: 60px; text-align: right; }
+.rs-driver-tags { text-align: right; }
+.rs-driver-tags .tag-chip.named { font-size: 12px; padding: 2px 6px; }
 
 @media (max-width: 799px) {
   .run-setup { padding: 14px 12px 32px; gap: 12px; }
@@ -94,6 +95,8 @@
   .rs-track-name { font-size: 22px; }
   .rs-teams { grid-template-columns: 1fr; }
   .rs-start { width: 100%; margin-left: 0; }
-  .rs-driver { grid-template-columns: minmax(0, 1fr) auto; }
+  .rs-driver { grid-template-columns: minmax(0, 1fr); gap: 4px; }
   .rs-driver-stats { display: none; }
+  .rs-driver-tags { text-align: left; }
+  .gen-slots { flex-wrap: wrap; }
 }

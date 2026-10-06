@@ -6,7 +6,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { EffectStackEntry } from '../../RaceEngine';
-import { Tag, TRIGGER_LABELS, describeCondition } from '../../data/tags';
+import { Tag, TagTarget, TRIGGER_LABELS, describeCondition, isGenesisTag } from '../../data/tags';
 import { describeAction } from '../../data/glossary';
 
 interface TagChipsProps {
@@ -67,7 +67,7 @@ function TagCard({ tag, entry, anchor, onClose }: { tag: Tag; entry?: EffectStac
         <span className="tag-card-emoji">{tag.emoji}</span>
         <div className="tag-card-title">
           <div className="tag-card-name">{tag.name}</div>
-          <div className="tag-card-tier">{tag.target} tag · {tag.rarity}</div>
+          <div className="tag-card-tier">{tag.target} tag{isGenesisTag(tag) && <> · <span className={`rarity-word rarity-${tag.rarity}`}>{tag.rarity}</span></>}</div>
         </div>
         <button type="button" className="tag-card-close" onClick={onClose} aria-label="Close">×</button>
       </div>
@@ -190,7 +190,7 @@ export default function TagChips({ tags, stack, max = 4, showName = false }: Tag
           <button
             key={tag.id}
             type="button"
-            className={`tag-chip ${showName ? 'named' : ''} ${active ? 'active' : 'dormant'} ${open?.id === tag.id ? 'open' : ''}`}
+            className={`tag-chip ${showName ? 'named' : ''} ${active ? 'active' : 'dormant'} ${open?.id === tag.id ? 'open' : ''} ${isGenesisTag(tag) ? `rarity-${tag.rarity}` : ''}`}
             title={`${tag.name} — ${entry?.reason ?? tag.description}`}
             aria-label={`${tag.name}, ${active ? 'active' : 'dormant'}`}
             onClick={(e) => {
@@ -207,6 +207,26 @@ export default function TagChips({ tags, stack, max = 4, showName = false }: Tag
         const tag = tags.find(t => t.id === open.id);
         return tag ? <TagCard tag={tag} entry={byId.get(tag.id)} anchor={open.rect} onClose={() => setOpen(null)} /> : null;
       })()}
+    </span>
+  );
+}
+
+const SLOTS: { target: TagTarget; label: string }[] = [
+  { target: 'driver', label: 'driver' }, { target: 'car', label: 'car' }, { target: 'team', label: 'team' },
+];
+
+/** The three genesis slots a driver is born with — driver, car, team — each
+ * greyed until a roll fills it. Setup pages only; the live view keeps the
+ * compact chips. */
+export function GenesisSlots({ tags }: { tags: Tag[] }) {
+  return (
+    <span className="gen-slots">
+      {SLOTS.map(s => {
+        const tag = tags.find(t => t.target === s.target && isGenesisTag(t));
+        return tag
+          ? <span key={s.target} className="gen-slot filled"><TagChips tags={[tag]} showName /></span>
+          : <span key={s.target} className="gen-slot empty" title={`No ${s.label} tag rolled`}><span className="gen-slot-k">{s.label}</span></span>;
+      })}
     </span>
   );
 }

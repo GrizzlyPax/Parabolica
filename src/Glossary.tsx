@@ -6,8 +6,8 @@
 // to open the full card underneath it.
 import { useMemo, useState, ReactNode } from 'react';
 import { buildGlossary, describeTrigger, describeInRaceRule, effectsOf, GlossaryTag, TagGroup } from './data/glossary';
-import { ALL_TAGS } from './data/tags';
-import { defaultRuleset, describeChance, describeOdds } from './rules/ruleset';
+import { ALL_TAGS, isGenesisTag } from './data/tags';
+import { defaultRuleset, describeChance } from './rules/ruleset';
 import { intrinsicTrackTags } from './data/trackTags';
 import TagChips from './components/race/TagChips';
 import './RunSetup.css';
@@ -63,12 +63,12 @@ export default function Glossary({ onBack }: GlossaryProps) {
   const tagRow = (t: GlossaryTag) => (
     <Row key={t.tag.id} id={`tag:${t.tag.id}`} open={isOpen(`tag:${t.tag.id}`)} onToggle={toggle}
       lead={<TagChips tags={[t.tag]} showName />}
-      note={<>{t.tag.rarity}{t.does.length > 0 && <span className="gl-does" title="Does something after a race">⚡</span>}</>}
+      note={<>{isGenesisTag(t.tag) ? <span className={`rarity-word rarity-${t.tag.rarity}`}>{t.tag.rarity}</span> : t.tag.target}{t.does.length > 0 && <span className="gl-does" title="Does something after a race">⚡</span>}</>}
       pills={<Pills effects={t.effects} />}>
       <p className="gl-desc">{t.tag.description}</p>
       <div className="gl-facts">
         <Fact k="On">{t.tag.target}</Fact>
-        <Fact k="Rarity">{t.tag.rarity}</Fact>
+        {isGenesisTag(t.tag) && <Fact k="Rarity"><span className={`rarity-word rarity-${t.tag.rarity}`}>{t.tag.rarity}</span></Fact>}
         <Fact k="Fires">{t.fires}</Fact>
         <Fact k="Lasts">{t.lasts}</Fact>
         {t.does.length > 0 && <Fact k="After a race">{t.does.join(' · ')}</Fact>}
@@ -95,7 +95,7 @@ export default function Glossary({ onBack }: GlossaryProps) {
         <div className="rs-row-head"><span className="rs-k">How a driver is born with tags</span><span className="rs-hint">Three slots: driver, car, team. Car and team are shared by teammates.</span></div>
         <ol className="gl-roll">
           <li><b>Does the slot hit?</b> {describeChance(rs.tags.genesisChance)}.</li>
-          <li><b>Which bucket?</b> {describeOdds(rs.tags.rarityOdds)}. Fixed odds — more tags in a bucket just means more variety, not more of that bucket.</li>
+          <li><b>Which bucket?</b> {(['common', 'uncommon', 'rare', 'legendary'] as const).map((r, i) => <span key={r}>{i > 0 && ' · '}{rs.tags.rarityOdds[r]}% <span className={`rarity-word rarity-${r}`}>{r}</span></span>)}. Fixed odds — more tags in a bucket just means more variety, not more of that bucket.</li>
           <li><b>Which tag?</b> An even pick inside the bucket.</li>
         </ol>
       </section>

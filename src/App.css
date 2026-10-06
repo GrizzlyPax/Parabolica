@@ -19,6 +19,11 @@
   --pw-red: #ff5a4f;      /* DNF, out, destructive */
   --pw-red-soft: #ff8a80;
   --pw-purple: #a98bff;   /* fastest lap; Commissioner identity */
+  /* Tag rarity, sector-colour order: common → legendary */
+  --rarity-common: var(--pw-red);
+  --rarity-uncommon: var(--pw-yellow);
+  --rarity-rare: var(--pw-green);
+  --rarity-legendary: var(--pw-purple);
   --pw-radius-s: 6px;
   --pw-radius-m: 10px;
   --pw-radius-l: 14px;

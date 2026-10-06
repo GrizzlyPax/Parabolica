@@ -18,7 +18,7 @@ import { resolveRuleset, describeRuleset, describeChance, describeOdds, serializ
 import { buildRoster } from './rules/genesis';
 import { weatherForRace } from './data/weather';
 import { intrinsicTrackTags } from './data/trackTags';
-import TagChips from './components/race/TagChips';
+import { GenesisSlots } from './components/race/TagChips';
 import './RunSetup.css';
 
 interface RunSetupProps {
@@ -179,7 +179,7 @@ export default function RunSetup({ onStartRace, onBack }: RunSetupProps) {
                 <div key={d.id} className="rs-driver">
                   <span className="rs-driver-name">{d.fullName}</span>
                   <span className="rs-driver-stats" title="Speed · Consistency · Luck">{d.stats.baseSpeed.toFixed(2)} · {d.stats.consistency.toFixed(2)} · {d.stats.luck.toFixed(2)}</span>
-                  <span className="rs-driver-tags"><TagChips tags={d.tags} /></span>
+                  <span className="rs-driver-tags"><GenesisSlots tags={d.tags} /></span>
                 </div>
               ))}
             </div>

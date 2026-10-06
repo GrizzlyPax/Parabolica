@@ -353,6 +353,28 @@
 .tag-chip.dormant:hover { opacity: 0.6; filter: grayscale(0.4); }
 .tag-chip:focus-visible { outline: 2px solid var(--pw-purple); outline-offset: 1px; }
 
+/* Rarity: a sector-colour underline on genesis chips, the word on the card */
+.tag-chip.rarity-common { box-shadow: inset 0 -2px 0 var(--rarity-common); }
+.tag-chip.rarity-uncommon { box-shadow: inset 0 -2px 0 var(--rarity-uncommon); }
+.tag-chip.rarity-rare { box-shadow: inset 0 -2px 0 var(--rarity-rare); }
+.tag-chip.rarity-legendary { box-shadow: inset 0 -2px 0 var(--rarity-legendary); }
+.tag-chip.named.rarity-common { border-color: color-mix(in srgb, var(--rarity-common) 55%, transparent); box-shadow: none; }
+.tag-chip.named.rarity-uncommon { border-color: color-mix(in srgb, var(--rarity-uncommon) 55%, transparent); box-shadow: none; }
+.tag-chip.named.rarity-rare { border-color: color-mix(in srgb, var(--rarity-rare) 55%, transparent); box-shadow: none; }
+.tag-chip.named.rarity-legendary { border-color: color-mix(in srgb, var(--rarity-legendary) 55%, transparent); box-shadow: none; }
+.rarity-word { font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
+.rarity-word.rarity-common { color: var(--rarity-common); }
+.rarity-word.rarity-uncommon { color: var(--rarity-uncommon); }
+.rarity-word.rarity-rare { color: var(--rarity-rare); }
+.rarity-word.rarity-legendary { color: var(--rarity-legendary); }
+
+/* Genesis slots (setup pages): driver / car / team, greyed until rolled */
+.gen-slots { display: inline-flex; gap: 4px; align-items: center; }
+.gen-slot { display: inline-flex; align-items: center; min-height: 24px; }
+.gen-slot.empty { padding: 0 8px; border: 1px dashed var(--pw-border); border-radius: 6px; color: var(--pw-text-3); opacity: 0.6; }
+.gen-slot-k { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; }
+.gen-slot.filled .tag-chip.named { border-width: 1px; }
+
 /* === Tag card (popover) === */
 .tag-card {
   background: var(--pw-surface);
