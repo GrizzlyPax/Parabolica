@@ -233,7 +233,7 @@ function InboxTab() {
               <span className="gl-idea-text">{i.text}</span>
               <span className="gl-note">{i.context.screen}{i.context.track ? ` · ${i.context.track}` : ''} · {new Date(i.at).toLocaleDateString()}</span>
               <span className="gl-draft-actions">
-                {i.sent ? <span className="gl-note">sent</span> : <a className="rs-link" href={issueUrl(i)} target="_blank" rel="noopener" onClick={() => setIdeas(prev => prev.map(x => x.id === i.id ? { ...x, sent: true } : x))}>send to GitHub</a>}
+                <a className="rs-link" href={issueUrl(i)} target="_blank" rel="noopener" onClick={() => setIdeas(prev => prev.map(x => x.id === i.id ? { ...x, sent: true } : x))}>{i.sent ? 'resend' : 'send to GitHub'}</a>
                 <button type="button" className="rs-link" onClick={() => setIdeas(prev => prev.filter(x => x.id !== i.id))}>delete</button>
               </span>
             </div>
