@@ -106,7 +106,7 @@ export interface CalibrateProgress {
  * synchronously in a script, in a worker, or on the main thread with a
  * breath between races. Deterministic for a given batchSeed/races/cards.
  */
-export function* calibrateSteps(tagIds: string[] = genesisTagIds(), options: Omit<CalibrateOptions, 'onProgress'> = {}): Generator<CalibrateProgress, CalibrateOutput, boolean | void> {
+export function* calibrateSteps(tagIds: (string | Tag)[] = genesisTagIds(), options: Omit<CalibrateOptions, 'onProgress'> = {}): Generator<CalibrateProgress, CalibrateOutput, boolean | void> {
   const batchSeed = options.batchSeed ?? CALIBRATION_BATCH_SEED;
   const races = options.races ?? CALIBRATION_RACES;
   const cards = options.cards ?? CALIBRATION_CARDS;
@@ -124,13 +124,14 @@ export function* calibrateSteps(tagIds: string[] = genesisTagIds(), options: Omi
   }
   const file = emptyFile(batchSeed, races, cards, baseline);
 
-  for (const tagId of tagIds) {
-    const tag = ALL_TAGS.find(t => t.id === tagId);
-    if (!tag) throw new Error(`Unknown tag ${tagId}`);
+  for (const which of tagIds) {
+    const tag = typeof which === 'string' ? ALL_TAGS.find(t => t.id === which) : which;
+    if (!tag) throw new Error(`Unknown tag ${which}`);
+    const tagId = tag.id;
     const deltas: number[] = [];
     let wins = 0, baseWins = 0, podiums = 0, basePodiums = 0, dnfs = 0, baseDnfs = 0, carrierRaces = 0, activations = 0;
     for (let i = 0; i < races; i++) {
-      const override = { driverIndex: i % (GRID * 2), tagId };
+      const override = { driverIndex: i % (GRID * 2), tagId, tag };
       const r = runLabRace(labSpec(batchSeed, i, cards), { engine, override });
       const base = baseline[i];
       for (const id of carriersOf(r, override)) {
@@ -165,7 +166,7 @@ export function* calibrateSteps(tagIds: string[] = genesisTagIds(), options: Omi
 }
 
 /** Synchronous drain (scripts, tests). */
-export function calibrateTags(tagIds: string[] = genesisTagIds(), options: CalibrateOptions = {}): CalibrateOutput {
+export function calibrateTags(tagIds: (string | Tag)[] = genesisTagIds(), options: CalibrateOptions = {}): CalibrateOutput {
   const g = calibrateSteps(tagIds, options);
   let next = g.next();
   while (!next.done) {
@@ -176,7 +177,7 @@ export function calibrateTags(tagIds: string[] = genesisTagIds(), options: Calib
 }
 
 /** Async drain that yields to the event loop between races (main-thread fallback). */
-export async function calibrateTagsAsync(tagIds: string[], options: Omit<CalibrateOptions, 'onProgress'> & { onProgress?: (p: CalibrateProgress) => boolean | void }): Promise<CalibrateOutput> {
+export async function calibrateTagsAsync(tagIds: (string | Tag)[], options: Omit<CalibrateOptions, 'onProgress'> & { onProgress?: (p: CalibrateProgress) => boolean | void }): Promise<CalibrateOutput> {
   const g = calibrateSteps(tagIds, options);
   let next = g.next();
   while (!next.done) {

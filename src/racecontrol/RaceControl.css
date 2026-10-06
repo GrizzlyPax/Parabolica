@@ -65,3 +65,38 @@
 .rc-explain p:last-child { margin-bottom: 0; }
 .rc-explain b { color: var(--pw-text-1); }
 .rc-progress { margin-top: 12px; }
+
+/* Compact calibration table */
+.rc-table-row { padding: 4px 10px; }
+.rc-compact td { padding: 4px 8px; border-top: 1px solid var(--pw-hairline); white-space: nowrap; cursor: pointer; }
+.rc-compact th { padding: 6px 8px; }
+.rc-compact .rc-tag { min-width: 170px; }
+.rc-compact .rc-num { display: inline; font-size: 12.5px; }
+.rc-compact .rc-se { display: inline; margin-left: 5px; }
+.rc-compact .rc-places { min-width: 190px; }
+.rc-compact .rc-bar { width: 80px; height: 7px; margin-right: 8px; }
+.rc-row-on td { background: rgba(169, 139, 255, 0.08); }
+.rc-dim { color: var(--pw-text-3); font-weight: 400; }
+.rc-th-places { min-width: 190px; }
+.rc-explain .rc-bands { margin: 8px 0 0; }
+
+/* Try a change */
+.rc-try-grid { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: flex-end; }
+.rc-try-grid label { display: flex; flex-direction: column; gap: 4px; }
+.rc-try-grid input, .rc-try-grid select { background: var(--pw-ground); color: var(--pw-text-1); border: 1px solid var(--pw-border-strong); border-radius: var(--pw-radius-m); padding: 8px 10px; font: inherit; font-size: 14px; min-height: 44px; }
+.rc-try-grid input { width: 84px; font-family: var(--font-mono); }
+.rc-try-grid input.rc-edited { border-color: var(--pw-purple); color: var(--pw-purple); }
+.rc-try-actions { display: inline-flex; align-items: center; gap: 12px; min-height: 44px; }
+.rc-try-grid select { width: auto; }
+.rc-try-actions .rs-link { margin-left: 0; }
+.rc-try-readout { margin-top: 10px; font-size: 13px; color: var(--pw-text-2); }
+.rc-try-readout .rs-k { margin-right: 4px; }
+.rc-edited-text { color: var(--pw-purple); }
+.rc-compare-3 { grid-template-columns: 1fr 1fr; }
+.rc-big { display: flex; gap: 22px; margin-top: 6px; flex-wrap: wrap; }
+.rc-big span { display: flex; flex-direction: column; }
+.rc-big b { font-family: var(--font-display); font-size: 26px; font-weight: 800; line-height: 1; }
+.rc-big small { font-family: var(--font-mono); font-size: 11px; color: var(--pw-text-3); margin-top: 3px; }
+.rc-verdict { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; font-size: 14px; }
+.rc-verdict .rs-link { margin-left: 0; }
+@media (max-width: 799px) { .rc-compare-3 { grid-template-columns: 1fr; } .rc-try-actions { margin-left: 0; } }

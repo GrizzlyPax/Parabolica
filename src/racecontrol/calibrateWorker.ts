@@ -1,7 +1,8 @@
 // Calibration worker: a thin shell around calibrateSteps.
 import { calibrateSteps, type CalibrationFile, type CalibrateProgress } from './calibrate';
+import type { Tag } from '../data/tags';
 
-export type CalibrateInMessage = { type: 'START'; tagIds: string[]; races: number; batchSeed: number; cards?: string[] } | { type: 'ABORT' };
+export type CalibrateInMessage = { type: 'START'; tagIds: (string | Tag)[]; races: number; batchSeed: number; cards?: string[] } | { type: 'ABORT' };
 export type CalibrateOutMessage =
   | { type: 'PROGRESS'; progress: CalibrateProgress }
   | { type: 'COMPLETE'; file: CalibrationFile }

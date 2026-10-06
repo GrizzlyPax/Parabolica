@@ -63,6 +63,14 @@ export interface TagOverride {
   /** Roster index (0..21) of the carrier. Team tags also land on the teammate. */
   driverIndex: number;
   tagId: string;
+  /** A tag definition to use instead of the deck's (the lab's "try a change"). */
+  tag?: Tag;
+}
+
+export function overrideTag(override: TagOverride): Tag {
+  const tag = override.tag ?? getTagById(override.tagId);
+  if (!tag) throw new Error(`Unknown tag ${override.tagId}`);
+  return tag;
 }
 
 export interface LabRaceResult {
@@ -117,8 +125,7 @@ export function runLabRace(spec: LabRaceSpec, options: { variables?: SimVariable
 }
 
 function applyOverride(roster: RosterDriver[], override: TagOverride): RosterDriver[] {
-  const tag = getTagById(override.tagId);
-  if (!tag) throw new Error(`Unknown tag ${override.tagId}`);
+  const tag = overrideTag(override);
   const carrier = roster[override.driverIndex];
   if (!carrier) throw new Error(`No roster slot ${override.driverIndex}`);
   const carries = (d: RosterDriver) => d.id === carrier.id || (tag.target === 'team' && d.kingdomId === carrier.kingdomId);
@@ -127,7 +134,7 @@ function applyOverride(roster: RosterDriver[], override: TagOverride): RosterDri
 
 /** Who carries the tag in a race prepared with `override` (ids). */
 export function carriersOf(result: LabRaceResult, override: TagOverride): number[] {
-  const tag = getTagById(override.tagId) as Tag;
+  const tag = overrideTag(override);
   const carrier = result.roster[override.driverIndex];
   return result.roster.filter(d => d.id === carrier.id || (tag.target === 'team' && d.kingdomId === carrier.kingdomId)).map(d => d.id);
 }
