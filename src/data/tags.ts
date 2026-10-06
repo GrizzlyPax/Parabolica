@@ -89,7 +89,7 @@ export function describeCondition(cond: TagCondition): string {
       if (cond.before !== undefined && cond.after === undefined) return `first ${Math.round(cond.before * 100)}% of the race`;
       return `between ${Math.round((cond.after ?? 0) * 100)}% and ${Math.round((cond.before ?? 1) * 100)}% of the race`;
     }
-    case 'condition': return cond.has;
+    case 'condition': return `in ${cond.has}`;
     case 'damaged': return 'car damaged';
     case 'tireWear': {
       if (cond.above !== undefined) return `tyre wear over ${cond.above}%`;

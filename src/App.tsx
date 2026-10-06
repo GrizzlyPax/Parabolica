@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import RaceEngine, { Driver, RaceConfig, RaceState, TrackInfo, RaceEvent, RosterDriver } from './RaceEngine';
 import RunSetup from './RunSetup';
+import Glossary from './Glossary';
 import { Ruleset, describeRuleset } from './rules/ruleset';
 import { CARDS_BY_ID } from './data/cards';
 import { weatherForRace } from './data/weather';
@@ -22,7 +23,7 @@ import { mulberry32, deriveSeed, randomSeed } from './engine/rng';
 import { generateTrack, getRandomTracks, getTrackById, getDynamicEventDescription, Track } from './generators/tracks';
 import './App.css';
 
-type AppScreen = 'main-menu' | 'setup' | 'race' | 'compendium' | 'founding' | 'league' | 'broadcast' | 'grid';
+type AppScreen = 'main-menu' | 'setup' | 'race' | 'compendium' | 'founding' | 'league' | 'broadcast' | 'grid' | 'glossary';
 type RaceSpeed = 0.5 | 1 | 2 | 10;
 
 function App() {
@@ -283,12 +284,17 @@ function App() {
         onSingleRace={handleSingleRace}
         onCommissioner={handleCommissioner}
         onCompendium={handleCompendium}
+        onGlossary={() => setScreen('glossary')}
         league={leagueSummary}
       />
     );
   }
 
   // Show compendium
+  if (screen === 'glossary') {
+    return <Glossary onBack={handleBackToMainMenu} />;
+  }
+
   if (screen === 'compendium') {
     return <Compendium onBack={handleBackToMainMenu} />;
   }

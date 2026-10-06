@@ -1,0 +1,29 @@
+/* Glossary — rows of the sim's vocabulary, Pit Wall tokens. */
+.gl-search { display: inline-flex; align-items: center; gap: 10px; margin-left: auto; }
+.gl-search input { background: var(--pw-ground); color: var(--pw-text-1); border: 1px solid var(--pw-border-strong); border-radius: 8px; padding: 8px 12px; font: inherit; font-size: 14px; min-width: 240px; min-height: 40px; }
+.gl-list { display: flex; flex-direction: column; }
+.gl-row {
+  display: grid; grid-template-columns: 200px minmax(200px, 1.6fr) 160px 180px 120px auto; gap: 8px 14px; align-items: center;
+  padding: 10px 4px; border-top: 1px solid var(--pw-hairline); font-size: 13px;
+}
+.gl-row:first-child { border-top: 0; }
+.gl-row.gl-rule { grid-template-columns: 200px 1fr 100px; }
+.gl-chip { display: flex; }
+.gl-chip .tag-chips { flex-wrap: wrap; }
+.gl-plain { font-weight: 600; color: var(--pw-text-1); }
+.gl-desc { color: var(--pw-text-1); line-height: 1.35; }
+.gl-meta { color: var(--pw-text-2); font-size: 12.5px; }
+.gl-meta .rs-k { margin-right: 4px; }
+.gl-fx { display: flex; }
+.gl-src { grid-column: 1 / -1; color: var(--pw-text-3); font-size: 12px; font-family: var(--font-mono); }
+.gl-card-static { cursor: default; }
+.gl-card-static:hover { transform: none; border-color: var(--pw-border); }
+@media (max-width: 1100px) {
+  .gl-row { grid-template-columns: 1fr 1fr; }
+  .gl-chip, .gl-desc { grid-column: 1 / -1; }
+}
+@media (max-width: 799px) {
+  .gl-search { margin-left: 0; width: 100%; }
+  .gl-search input { flex: 1; min-width: 0; }
+  .gl-row { grid-template-columns: 1fr; gap: 4px; }
+}
