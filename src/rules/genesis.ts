@@ -4,9 +4,10 @@
 // stay exactly where they were, so Run Setup can show the grid first and let
 // you flip cards freely.
 //
-// Streams: driver tag ← deriveSeed(seed, 'tags', 'driver', driverId)
-//          car + team tags ← deriveSeed(seed, 'tags', 'team', kingdomId)
-//          (shared by both of a team's drivers, as before)
+// Streams: driver + car tags ← deriveSeed(seed, 'tags', 'driver', driverId)
+//          (each driver has their own chassis, so the car rolls per driver)
+//          team tag ← deriveSeed(seed, 'tags', 'team', kingdomId)
+//          (one roll, shared by both of a team's drivers)
 
 import { mulberry32, deriveSeed } from '../engine/rng';
 import { Tag, TagTarget, pickTagByRarity } from '../data/tags';
@@ -33,12 +34,12 @@ export function rollGenesisTags(roster: GeneratedDriver[], seed: number, rs: Rul
     let team = teamRolls.get(d.kingdomId);
     if (!team) {
       const rng = mulberry32(deriveSeed(seed, 'tags', 'team', d.kingdomId));
-      team = [maybe('car', pool, rs, rng), maybe('team', pool, rs, rng)].filter((t): t is Tag => !!t);
+      team = [maybe('team', pool, rs, rng)].filter((t): t is Tag => !!t);
       teamRolls.set(d.kingdomId, team);
     }
     const rng = mulberry32(deriveSeed(seed, 'tags', 'driver', d.id));
-    const own = maybe('driver', pool, rs, rng);
-    const tags = [...(own ? [own] : []), ...team].slice(0, cap);
+    const own = [maybe('driver', pool, rs, rng), maybe('car', pool, rs, rng)].filter((t): t is Tag => !!t);
+    const tags = [...own, ...team].slice(0, cap);
     out.set(d.id, tags);
   }
   return out;

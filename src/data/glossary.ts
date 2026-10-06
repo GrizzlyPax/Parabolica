@@ -151,7 +151,7 @@ export function renderGlossaryMd(g: Glossary, version: string): string {
   L.push(`${g.counts.tags} tags (${g.counts.genesis} genesis · ${g.counts.acquired} acquired · ${g.counts.inRace} in-race · ${g.counts.condition} condition) · ${g.counts.cards} cards · ${g.counts.rules} rules · ${g.counts.weather} weathers · ${g.counts.trackTags} track characters · ${g.counts.inflictions} inflictions · ${g.counts.tracks} tracks`, '');
   const rs = defaultRuleset();
   L.push('## How genesis tags are rolled', '',
-    `Each driver gets three slots: driver, car, team (car and team are shared by teammates). Per slot:`, '',
+    `Each driver gets three slots: driver, car (their own chassis), team (one roll, shared by teammates). Per slot:`, '',
     `1. **Does it hit?** ${describeChance(rs.tags.genesisChance)}.`,
     `2. **Which bucket?** ${describeOdds(rs.tags.rarityOdds)}. Fixed odds — adding tags to a bucket never changes how often it comes up, only which tag you get.`,
     `3. **Which tag?** An even pick inside the bucket. An empty bucket falls to the next more common one.`, '',

@@ -92,7 +92,7 @@ export default function Glossary({ onBack }: GlossaryProps) {
       </header>
 
       <section className="rs-row">
-        <div className="rs-row-head"><span className="rs-k">How a driver is born with tags</span><span className="rs-hint">Three slots: driver, car, team. Car and team are shared by teammates.</span></div>
+        <div className="rs-row-head"><span className="rs-k">How a driver is born with tags</span><span className="rs-hint">Three slots: driver, car (their own chassis), team (shared with their teammate).</span></div>
         <ol className="gl-roll">
           <li><b>Does the slot hit?</b> {describeChance(rs.tags.genesisChance)}.</li>
           <li><b>Which bucket?</b> {(['common', 'uncommon', 'rare', 'legendary'] as const).map((r, i) => <span key={r}>{i > 0 && ' · '}{rs.tags.rarityOdds[r]}% <span className={`rarity-word rarity-${r}`}>{r}</span></span>)}. Fixed odds — more tags in a bucket just means more variety, not more of that bucket.</li>

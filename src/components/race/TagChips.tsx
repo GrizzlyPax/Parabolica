@@ -215,8 +215,8 @@ const SLOTS: { target: TagTarget; label: string }[] = [
   { target: 'driver', label: 'driver' }, { target: 'car', label: 'car' }, { target: 'team', label: 'team' },
 ];
 
-/** The three genesis slots a driver is born with — driver, car, team — each
- * greyed until a roll fills it. Setup pages only; the live view keeps the
+/** The three genesis slots a driver is born with — driver, car (their own
+ * chassis), team (shared with their teammate) — each greyed until a roll fills it. Setup pages only; the live view keeps the
  * compact chips. */
 export function GenesisSlots({ tags }: { tags: Tag[] }) {
   return (

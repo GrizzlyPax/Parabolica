@@ -6,7 +6,7 @@
 
 ## How genesis tags are rolled
 
-Each driver gets three slots: driver, car, team (car and team are shared by teammates). Per slot:
+Each driver gets three slots: driver, car (their own chassis), team (one roll, shared by teammates). Per slot:
 
 1. **Does it hit?** 1 in 6.
 2. **Which bucket?** 60% common · 30% uncommon · 9% rare · 1% legendary. Fixed odds — adding tags to a bucket never changes how often it comes up, only which tag you get.
