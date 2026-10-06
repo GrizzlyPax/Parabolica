@@ -4,6 +4,17 @@
 
 **The generated deck** — every record currently in the game, with sources — is `docs/GLOSSARY.md` (`npm run glossary`). The in-game Glossary screen renders the same model. Read it first to see what exists and match the voice.
 
+## Capturing ideas (the inbox)
+
+Inspiration strikes while playing, not while editing TypeScript. So the game has a **💡 idea box** on every screen (bottom-right, or ⌘⇧I): type or dictate a few sentences, pick what kind of thing it is (tag, team, track, card, rule, commentary, bug), and either:
+
+- **Send to GitHub →** opens a prefilled issue (labels `idea` + `world-deck`/`balance`/`bug`) with the screen, race seed and track attached; you press Submit. This is the queue.
+- **Keep for later** holds it in the browser; World Deck → **💡 Inbox** lists them, sends them one by one, or copies the batch as a triage prompt.
+
+**Triage** (an agent or Claude, on a cadence or when asked): take every open `idea` issue, decide *World Deck record* (build it from the shape in this doc, PR it, link the issue) · *engine task* (rewrite as a scoped issue, link the mechanic) · *bug* (reproduce from the seed). Close the idea with a one-line "became X". Small ones get built on the spot; the author's wording stays in the record's PR so the voice survives.
+
+Prompt for a triage agent: *"Triage Parabolica's open `idea` issues on GitHub (GrizzlyPax/Parabolica). For each: build it as a World Deck record per docs/WORLD_DECK.md if it is content and small, otherwise rewrite it as a scoped engine issue or confirm the bug from the seed. Link what you made, close the idea with one line."*
+
 ## The one workflow
 
 1. Pick a content type below. Open the file it names.

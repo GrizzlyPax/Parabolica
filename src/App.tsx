@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useMemo } from 'react';
 import RaceEngine, { Driver, RaceConfig, RaceState, TrackInfo, RaceEvent, RosterDriver } from './RaceEngine';
 import RunSetup from './RunSetup';
 import Glossary from './Glossary';
+import IdeaBox from './IdeaBox';
 import { Ruleset, describeRuleset } from './rules/ruleset';
 import { CARDS_BY_ID } from './data/cards';
 import { weatherForRace } from './data/weather';
@@ -277,6 +278,8 @@ function App() {
     };
   }, [league]);
 
+  const ideaContext = { screen, seed: quickRun?.seed ?? engine.getSeed(), track: trackInfo?.name };
+  const screenEl = (() => {
   // Show main menu
   if (screen === 'main-menu') {
     return (
@@ -385,6 +388,9 @@ function App() {
       />
     </div>
   );
+  })();
+
+  return <>{screenEl}<IdeaBox context={ideaContext} /></>;
 }
 
 export default App;

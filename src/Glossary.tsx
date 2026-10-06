@@ -10,15 +10,16 @@ import { ALL_TAGS, RARITIES, Rarity, Tag, TagTarget, isGenesisTag } from './data
 import { defaultRuleset, describeChance } from './rules/ruleset';
 import { intrinsicTrackTags } from './data/trackTags';
 import TagChips from './components/race/TagChips';
+import { Idea, loadIdeas, saveIdeas, issueUrl, ideasAsPrompt } from './IdeaBox';
 import './RunSetup.css';
 import './Glossary.css';
 
 interface GlossaryProps { onBack: () => void }
 
-type TabId = 'tags' | 'teams' | 'tracks' | 'cards' | 'rules' | 'conditions' | 'gods' | 'flavour' | 'add';
+type TabId = 'tags' | 'teams' | 'tracks' | 'cards' | 'rules' | 'conditions' | 'gods' | 'flavour' | 'add' | 'inbox';
 const TABS: { id: TabId; label: string }[] = [
   { id: 'tags', label: 'Tags' }, { id: 'teams', label: 'Teams' }, { id: 'tracks', label: 'Tracks' }, { id: 'cards', label: 'Cards' },
-  { id: 'rules', label: 'Rules' }, { id: 'conditions', label: 'Weather' }, { id: 'gods', label: 'Gods' }, { id: 'flavour', label: 'Flavour' }, { id: 'add', label: '+ Add' },
+  { id: 'rules', label: 'Rules' }, { id: 'conditions', label: 'Weather' }, { id: 'gods', label: 'Gods' }, { id: 'flavour', label: 'Flavour' }, { id: 'inbox', label: '💡 Inbox' }, { id: 'add', label: '+ Add' },
 ];
 
 const RARITY_ORDER: Record<Rarity, number> = { common: 0, uncommon: 1, rare: 2, legendary: 3 };
@@ -211,6 +212,38 @@ function AddTab() {
   );
 }
 
+// ---------- Inbox tab: captured ideas ----------
+
+function InboxTab() {
+  const [ideas, setIdeas] = useState<Idea[]>(loadIdeas);
+  const [copied, setCopied] = useState(false);
+  useEffect(() => saveIdeas(ideas), [ideas]);
+  const pending = ideas.filter(i => !i.sent);
+  const copyAll = async () => { try { await navigator.clipboard.writeText(ideasAsPrompt(pending.length ? pending : ideas)); setCopied(true); setTimeout(() => setCopied(false), 1500); } catch { /* no clipboard */ } };
+  return (
+    <section className="rs-row">
+      <div className="rs-row-head"><span className="rs-k">Idea inbox <span className="gl-count">{pending.length} waiting</span></span><span className="rs-hint">Captured with the 💡 button (⌘⇧I) on any screen. Send each to GitHub, or copy the batch for an agent to triage.</span>
+        {ideas.length > 0 && <span className="gl-section-extra"><button type="button" className="rs-link" onClick={copyAll}>{copied ? 'Copied' : 'Copy as a prompt'}</button></span>}</div>
+      {ideas.length === 0 && <p className="gl-desc">Nothing yet. Reading the deck and something sparks? Hit 💡 and write two sentences — the screen, seed and track come along.</p>}
+      <div className="gl-list">
+        {ideas.map(i => (
+          <div key={i.id} className={`gl-row ${i.sent ? 'gl-sent' : ''}`}>
+            <div className="gl-line gl-line-static gl-idea">
+              <span className="gl-note">{i.kind}</span>
+              <span className="gl-idea-text">{i.text}</span>
+              <span className="gl-note">{i.context.screen}{i.context.track ? ` · ${i.context.track}` : ''} · {new Date(i.at).toLocaleDateString()}</span>
+              <span className="gl-draft-actions">
+                {i.sent ? <span className="gl-note">sent</span> : <a className="rs-link" href={issueUrl(i)} target="_blank" rel="noopener" onClick={() => setIdeas(prev => prev.map(x => x.id === i.id ? { ...x, sent: true } : x))}>send to GitHub</a>}
+                <button type="button" className="rs-link" onClick={() => setIdeas(prev => prev.filter(x => x.id !== i.id))}>delete</button>
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 // ---------- The deck ----------
 
 export default function Glossary({ onBack }: GlossaryProps) {
@@ -296,7 +329,7 @@ export default function Glossary({ onBack }: GlossaryProps) {
 
       <nav className="gl-tabs" aria-label="World Deck sections">
         {TABS.map(t => <button key={t.id} type="button" className={`gl-tab ${tab === t.id ? 'on' : ''} ${t.id === 'add' ? 'gl-tab-add' : ''}`} onClick={() => setTab(t.id)}>{t.label}</button>)}
-        {tab !== 'add' && (
+        {tab !== 'add' && tab !== 'inbox' && (
           <span className="gl-fold">
             <button type="button" className="rs-link" onClick={() => setAll('expanded')}>Expand all</button>
             <button type="button" className="rs-link" onClick={() => setAll('collapsed')}>Collapse all</button>
@@ -492,6 +525,7 @@ export default function Glossary({ onBack }: GlossaryProps) {
       )}
 
       {tab === 'add' && <AddTab />}
+      {tab === 'inbox' && <InboxTab />}
     </div>
   );
 }
