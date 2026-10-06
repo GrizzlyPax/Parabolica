@@ -92,6 +92,15 @@
 /* === Header === */
 
 .league-header { text-align: center; margin-bottom: 20px; }
+.league-remote { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px 14px; margin-top: 10px; font-size: 13px; color: var(--pw-text-2); }
+.league-remote-live { color: var(--pw-green); font-weight: 600; }
+.league-code { font-family: var(--font-mono); letter-spacing: 0.08em; }
+.league-code b { color: var(--pw-text-1); font-size: 15px; }
+.league-remote-dim { color: var(--pw-text-3); }
+.league-link-btn { background: var(--pw-raised); color: var(--pw-text-1); border: 1px solid var(--pw-border-strong); border-radius: 999px; padding: 6px 14px; font: inherit; font-size: 13px; cursor: pointer; }
+.league-link-btn:hover { border-color: var(--pw-purple); }
+.league-link-btn:disabled { opacity: 0.6; cursor: default; }
+.league-remote-note { flex-basis: 100%; color: var(--pw-yellow); font-size: 12.5px; }
 
 .league-title {
   font-family: var(--font-display), var(--font-emoji);

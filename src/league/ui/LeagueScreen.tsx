@@ -15,6 +15,7 @@ import { buildSeasonReport } from '../seasonReport';
 import { weatherForRace } from '../../data/weather';
 import { intrinsicTrackTags } from '../../data/trackTags';
 import { saveLeagueState } from '../../storage/persistence';
+import { publishLeague, syncRemote, postDigest, leagueLink, RemoteError } from '../remote';
 import { getSeasonStandings, calculatePointsForPosition } from '../../types/season';
 import { getTrackById } from '../../generators/tracks';
 import { getTeamById } from '../../data/teams';
@@ -282,6 +283,10 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onOpenGrid,
   const over = isSeasonOver(league);
   const nextAt = nextRaceAt(league);
 
+  const [remoteNote, setRemoteNote] = useState<string | null>(null);
+  const [publishing, setPublishing] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
+
   const settleNow = useCallback(() => {
     if (settlingRef.current) return;
     settlingRef.current = true;
@@ -292,11 +297,49 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onOpenGrid,
       if (newlySettled.length > 0) {
         saveLeagueState(after);
         onLeagueUpdate(after);
+        // Offer each result as the canonical record. A conflict means another
+        // device computed a different race from the same facts — engine drift.
+        if (after.remote) {
+          for (const d of newlySettled) {
+            postDigest(after, d).then(r => { if (r === 'conflict') setRemoteNote(`⚠ Race ${d.index + 1}: another device saw a different result. Engine versions may differ.`); }).catch(() => { /* offline: the next device will post it */ });
+          }
+        }
       }
     } finally {
       settlingRef.current = false;
     }
   }, [league, onLeagueUpdate]);
+
+  // Published leagues: pull decrees made elsewhere every 30s, and note clock skew.
+  useEffect(() => {
+    if (!league.remote) return;
+    let stop = false;
+    const tick = async () => {
+      try {
+        const r = await syncRemote(league);
+        if (stop) return;
+        if (Math.abs(r.clockSkewMs) > 20_000) setRemoteNote(`This device's clock is ${Math.round(Math.abs(r.clockSkewMs) / 1000)}s ${r.clockSkewMs > 0 ? 'behind' : 'ahead of'} the server — races may appear to start early or late here.`);
+        if (r.changed) { saveLeagueState(r.league); onLeagueUpdate(r.league); }
+      } catch { /* offline: try again next tick */ }
+    };
+    tick();
+    const timer = setInterval(tick, 30_000);
+    return () => { stop = true; clearInterval(timer); };
+  }, [league.remote?.code, league.remote?.version]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const publish = async () => {
+    setPublishing(true); setRemoteNote(null);
+    try {
+      const after = await publishLeague(league);
+      saveLeagueState(after); onLeagueUpdate(after);
+    } catch (e) {
+      setRemoteNote(e instanceof RemoteError ? e.message : 'Could not publish.');
+    } finally { setPublishing(false); }
+  };
+  const copyLink = async () => {
+    if (!league.remote) return;
+    try { await navigator.clipboard.writeText(leagueLink(league.remote.code)); setLinkCopied(true); setTimeout(() => setLinkCopied(false), 1800); } catch { /* no clipboard */ }
+  };
 
   // Settle whatever is due on mount (the check-in), then keep a 1s clock.
   // While a broadcast is on the air we already know its future (endsAt) —
@@ -498,6 +541,22 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onOpenGrid,
           <p className="league-god-line">
             {god.emoji} Under the gaze of <strong>{god.name}</strong>, {god.epithet}
           </p>
+          <div className="league-remote">
+            {league.remote ? (
+              <>
+                <span className="league-remote-live">● Live on every device</span>
+                <span className="league-code" title="Open a league by code from the main menu">code <b>{league.remote.code}</b></span>
+                <button type="button" className="league-link-btn" onClick={copyLink}>{linkCopied ? 'Link copied' : 'Copy link'}</button>
+                {!league.remote.commissionerKey && <span className="league-remote-dim">watching · decrees are the commissioner's</span>}
+              </>
+            ) : (
+              <>
+                <span className="league-remote-dim">On this device only.</span>
+                <button type="button" className="league-link-btn" onClick={publish} disabled={publishing}>{publishing ? 'Publishing…' : 'Publish — watch from anywhere'}</button>
+              </>
+            )}
+            {remoteNote && <span className="league-remote-note">{remoteNote}</span>}
+          </div>
         </header>
 
         {/* On the air / next race countdown / the end of days */}
@@ -760,15 +819,18 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onOpenGrid,
         </div>
 
         <div className="league-danger-zone">
-          {confirmDissolve ? (
+          {league.remote && !league.remote.commissionerKey ? (
+            // A watcher: leaving only clears this device. The league lives on the server.
+            <button className="dissolve-btn" onClick={onDissolve}>Leave this league on this device</button>
+          ) : confirmDissolve ? (
             <div className="dissolve-confirm">
-              <span>Feed the league to a shifting universe? This cannot be undone.</span>
-              <button className="dissolve-btn confirm" onClick={onDissolve}>Dissolve it</button>
+              <span>{league.remote ? 'Remove it from this device? The published league stays on the server; open it again by code.' : 'Feed the league to a shifting universe? This cannot be undone.'}</span>
+              <button className="dissolve-btn confirm" onClick={onDissolve}>{league.remote ? 'Remove it here' : 'Dissolve it'}</button>
               <button className="dissolve-btn cancel" onClick={() => setConfirmDissolve(false)}>Spare it</button>
             </div>
           ) : (
             <button className="dissolve-btn" onClick={() => setConfirmDissolve(true)}>
-              {over ? '⚜️ Dissolve the league and found anew' : 'Dissolve the league'}
+              {over ? '⚜️ Dissolve the league and found anew' : league.remote ? 'Remove the league from this device' : 'Dissolve the league'}
             </button>
           )}
         </div>

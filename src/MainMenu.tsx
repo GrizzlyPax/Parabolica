@@ -1,8 +1,11 @@
+import { useState } from 'react';
 import './MainMenu.css';
 import { version } from '../package.json';
 
 /** What the menu needs to know about a saved league, if one exists. */
 export interface LeagueCardSummary {
+  /** Published code, if this league lives on the server. */
+  remoteCode?: string;
   name: string;
   settled: number;
   total: number;
@@ -13,6 +16,8 @@ export interface LeagueCardSummary {
 }
 
 interface MainMenuProps {
+  /** Open a published league by its code. Resolves to an error message, or null on success. */
+  onOpenCode: (code: string) => Promise<string | null>;
   onSingleRace: () => void;
   onCommissioner: () => void;
   onCompendium: () => void;
@@ -27,7 +32,19 @@ function nextIn(league: LeagueCardSummary): string {
   return `Next in ~${mins}m`;
 }
 
-function MainMenu({ onSingleRace, onCommissioner, onCompendium, onGlossary, league }: MainMenuProps) {
+function MainMenu({ onSingleRace, onCommissioner, onCompendium, onGlossary, onOpenCode, league }: MainMenuProps) {
+  const [code, setCode] = useState('');
+  const [opening, setOpening] = useState(false);
+  const [codeError, setCodeError] = useState<string | null>(null);
+  const submitCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const c = code.trim().toUpperCase();
+    if (c.length < 4) return;
+    setOpening(true); setCodeError(null);
+    const err = await onOpenCode(c);
+    setOpening(false);
+    if (err) setCodeError(err);
+  };
   const status = league
     ? league.nextAt === null && league.dueCount === 0 ? { label: 'COMPLETE', tone: 'done' }
       : league.dueCount > 0 ? { label: `${league.dueCount} RAN`, tone: 'due' }
@@ -78,6 +95,14 @@ function MainMenu({ onSingleRace, onCommissioner, onCompendium, onGlossary, leag
             )}
             {!league && <div className="mm-hero-foot"><span /><span className="mm-cta">Found one →</span></div>}
           </button>
+          <form className="mm-row mm-row-form mm-code" onSubmit={submitCode}>
+            <span className="mm-row-text">
+              <span className="mm-row-title">Open a league by code</span>
+              <span className="mm-row-sub">{codeError ?? (league?.remoteCode ? `This device is on ${league.remoteCode}. Another code replaces it here.` : 'A league someone published. Same races, same clock, on every device.')}</span>
+            </span>
+            <input value={code} onChange={e => { setCode(e.target.value.toUpperCase()); setCodeError(null); }} placeholder="CODE" maxLength={12} className={`mm-input mm-code-input ${codeError ? 'error' : ''}`} aria-label="League code" spellCheck={false} autoCapitalize="characters" />
+            <button type="submit" className="mm-btn" disabled={opening || code.trim().length < 4}>{opening ? '…' : 'Open'}</button>
+          </form>
         </section>
 
         <section className="mm-section">
