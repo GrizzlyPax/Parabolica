@@ -1,7 +1,10 @@
 // Glossary screen: every tag, card, rule, weather, track character and
 // infliction in the sim — rendered from the same model as docs/GLOSSARY.md,
 // so what you read here is what the engine runs.
-import { useMemo, useState } from 'react';
+//
+// Compact by default: one line per entry (chip + effect pills). Click a row
+// to open the full card underneath it.
+import { useMemo, useState, ReactNode } from 'react';
 import { buildGlossary, describeTrigger, describeInRaceRule, effectsOf, GlossaryTag, TagGroup } from './data/glossary';
 import { ALL_TAGS, TIER_LABELS } from './data/tags';
 import { intrinsicTrackTags } from './data/trackTags';
@@ -23,26 +26,53 @@ function Pills({ effects }: { effects: ReturnType<typeof effectsOf> }) {
   return <span className="effect-pills">{effects.map(p => <span key={p.label} className={`effect-pill ${p.good ? 'good' : 'bad'}`}><b>{p.value}</b> {p.label}</span>)}</span>;
 }
 
-function TagRow({ g }: { g: GlossaryTag }) {
+/** One collapsed line; click to open the detail block beneath it. */
+function Row({ id, open, onToggle, lead, pills, note, children }: {
+  id: string; open: boolean; onToggle: (id: string) => void;
+  lead: ReactNode; pills?: ReactNode; note?: ReactNode; children: ReactNode;
+}) {
   return (
-    <div className="gl-row">
-      <span className="gl-chip"><TagChips tags={[g.tag]} showName /></span>
-      <span className="gl-desc">{g.tag.description}</span>
-      <span className="gl-meta"><span className="rs-k">Tier</span> {TIER_LABELS[g.tag.tier].split(' · ')[0]} · <span className="rs-k">On</span> {g.tag.target}</span>
-      <span className="gl-meta"><span className="rs-k">Fires</span> {g.fires}</span>
-      <span className="gl-meta"><span className="rs-k">Lasts</span> {g.lasts}</span>
-      <span className="gl-fx"><Pills effects={g.effects} /></span>
-      <span className="gl-src">{g.source}</span>
+    <div className={`gl-row ${open ? 'open' : ''}`}>
+      <button type="button" className="gl-line" onClick={() => onToggle(id)} aria-expanded={open}>
+        <span className="gl-lead">{lead}</span>
+        {note && <span className="gl-note">{note}</span>}
+        <span className="gl-pills">{pills}</span>
+        <span className="gl-chev" aria-hidden="true">›</span>
+      </button>
+      {open && <div className="gl-detail">{children}</div>}
     </div>
   );
+}
+
+function Fact({ k, children }: { k: string; children: ReactNode }) {
+  return <span className="gl-fact"><span className="rs-k">{k}</span> {children}</span>;
 }
 
 export default function Glossary({ onBack }: GlossaryProps) {
   const g = useMemo(() => buildGlossary(), []);
   const [q, setQ] = useState('');
+  const [open, setOpen] = useState<Set<string>>(() => new Set());
+  const toggle = (id: string) => setOpen(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
   const needle = q.trim().toLowerCase();
   const match = (...parts: (string | undefined)[]) => !needle || parts.some(p => p?.toLowerCase().includes(needle));
   const tagById = (id: string) => ALL_TAGS.find(t => t.id === id);
+  const isOpen = (id: string) => open.has(id);
+
+  const tagRow = (t: GlossaryTag) => (
+    <Row key={t.tag.id} id={`tag:${t.tag.id}`} open={isOpen(`tag:${t.tag.id}`)} onToggle={toggle}
+      lead={<TagChips tags={[t.tag]} showName />}
+      note={TIER_LABELS[t.tag.tier].split(' · ')[0]}
+      pills={<Pills effects={t.effects} />}>
+      <p className="gl-desc">{t.tag.description}</p>
+      <div className="gl-facts">
+        <Fact k="Tier">{TIER_LABELS[t.tag.tier]}</Fact>
+        <Fact k="On">{t.tag.target}</Fact>
+        <Fact k="Fires">{t.fires}</Fact>
+        <Fact k="Lasts">{t.lasts}</Fact>
+      </div>
+      <div className="gl-src">{t.source}</div>
+    </Row>
+  );
 
   return (
     <div className="run-setup glossary">
@@ -50,7 +80,7 @@ export default function Glossary({ onBack }: GlossaryProps) {
         <div className="rs-title-block">
           <button type="button" className="rs-back" onClick={onBack}>← Menu</button>
           <h1 className="rs-title">Glossary</h1>
-          <span className="rs-sub">Everything in the sim, read straight from the data. {g.counts.tags} tags · {g.counts.cards} cards · {g.counts.rules} rules.</span>
+          <span className="rs-sub">Everything in the sim, read straight from the data. {g.counts.tags} tags · {g.counts.cards} cards · {g.counts.rules} rules. Click a line to open it.</span>
         </div>
         <label className="gl-search">
           <span className="rs-k">Find</span>
@@ -63,8 +93,8 @@ export default function Glossary({ onBack }: GlossaryProps) {
         if (!rows.length) return null;
         return (
           <section key={grp.id} className="rs-row">
-            <div className="rs-row-head"><span className="rs-k">{grp.title}</span><span className="rs-hint">{grp.blurb}</span></div>
-            <div className="gl-list">{rows.map(r => <TagRow key={r.tag.id} g={r} />)}</div>
+            <div className="rs-row-head"><span className="rs-k">{grp.title} <span className="gl-count">{rows.length}</span></span><span className="rs-hint">{grp.blurb}</span></div>
+            <div className="gl-list">{rows.map(tagRow)}</div>
           </section>
         );
       })}
@@ -72,14 +102,14 @@ export default function Glossary({ onBack }: GlossaryProps) {
       {g.cards.some(c => match(c.name, c.id, c.readout, c.blurb)) && (
         <section className="rs-row">
           <div className="rs-row-head"><span className="rs-k">Cards</span><span className="rs-hint">Rules you pick before a run. Race cards for one race, season cards for a whole league.</span></div>
-          <div className="rs-hand">
+          <div className="gl-list">
             {g.cards.filter(c => match(c.name, c.id, c.readout, c.blurb)).map(c => (
-              <div key={c.id} className={`rs-card w-${c.weight} gl-card-static`}>
-                <span className="rs-card-emoji">{c.emoji}</span>
-                <span className="rs-card-name">{c.name}</span>
-                <span className="rs-card-readout">{c.readout}</span>
-                <span className="rs-card-weight">{c.scope} · {c.weight}</span>
-              </div>
+              <Row key={c.id} id={`card:${c.id}`} open={isOpen(`card:${c.id}`)} onToggle={toggle}
+                lead={<span className="gl-plain">{c.emoji} {c.name}</span>}
+                note={`${c.scope} · ${c.weight}`}
+                pills={<span className="gl-readout">{c.readout}</span>}>
+                <p className="gl-desc">{c.blurb}</p>
+              </Row>
             ))}
           </div>
         </section>
@@ -92,21 +122,24 @@ export default function Glossary({ onBack }: GlossaryProps) {
             {g.acquisitionRules.filter(r => match(r.id, r.tagId, r.family)).map(r => {
               const t = tagById(r.tagId);
               return (
-                <div key={r.id} className="gl-row gl-rule">
-                  <span className="gl-chip">{t && <TagChips tags={[t]} showName />}</span>
-                  <span className="gl-desc"><span className="rs-k">After a race</span> {describeTrigger(r.when)}</span>
-                  <span className="gl-meta"><span className="rs-k">{r.family}</span></span>
-                </div>
+                <Row key={r.id} id={`rule:${r.id}`} open={isOpen(`rule:${r.id}`)} onToggle={toggle}
+                  lead={t ? <TagChips tags={[t]} showName /> : r.tagId}
+                  note={r.family}
+                  pills={<span className="gl-readout">after a race · {describeTrigger(r.when)}</span>}>
+                  <p className="gl-desc"><span className="rs-k">After a race</span> {describeTrigger(r.when)}</p>
+                  {t && <div className="gl-facts"><Fact k="Lasts">{g.tags.find(x => x.tag.id === t.id)?.lasts ?? '—'}</Fact></div>}
+                </Row>
               );
             })}
             {g.inRaceRules.filter(r => match(r.id, r.tagId)).map(r => {
               const t = tagById(r.tagId);
               return (
-                <div key={r.id} className="gl-row gl-rule">
-                  <span className="gl-chip">{t && <TagChips tags={[t]} showName />}</span>
-                  <span className="gl-desc"><span className="rs-k">Mid-race</span> {describeInRaceRule(r)}</span>
-                  <span className="gl-meta"><span className="rs-k">in-race</span></span>
-                </div>
+                <Row key={r.id} id={`rule:${r.id}`} open={isOpen(`rule:${r.id}`)} onToggle={toggle}
+                  lead={t ? <TagChips tags={[t]} showName /> : r.tagId}
+                  note="in-race"
+                  pills={<span className="gl-readout">mid-race · {describeInRaceRule(r)}</span>}>
+                  <p className="gl-desc"><span className="rs-k">Mid-race</span> {describeInRaceRule(r)}</p>
+                </Row>
               );
             })}
           </div>
@@ -120,12 +153,15 @@ export default function Glossary({ onBack }: GlossaryProps) {
             {g.weather.filter(w => match(w.name, w.id)).map(w => {
               const total = g.weather.reduce((s, x) => s + x.weight, 0);
               return (
-                <div key={w.id} className="gl-row">
-                  <span className="gl-chip gl-plain">{w.emoji} {w.name}</span>
-                  <span className="gl-meta"><span className="rs-k">Odds</span> {Math.round(w.weight / total * 100)}%</span>
-                  <span className="gl-meta"><span className="rs-k">Stamps</span> {w.conditions.join(', ') || '—'}</span>
-                  <span className="gl-fx"><Pills effects={effectsOf(w.baseEffects)} /></span>
-                </div>
+                <Row key={w.id} id={`wx:${w.id}`} open={isOpen(`wx:${w.id}`)} onToggle={toggle}
+                  lead={<span className="gl-plain">{w.emoji} {w.name}</span>}
+                  note={`${Math.round(w.weight / total * 100)}%`}
+                  pills={<Pills effects={effectsOf(w.baseEffects)} />}>
+                  <div className="gl-facts">
+                    <Fact k="Odds">{Math.round(w.weight / total * 100)}% of races</Fact>
+                    <Fact k="Stamps">{w.conditions.join(', ') || '—'}</Fact>
+                  </div>
+                </Row>
               );
             })}
           </div>
@@ -137,12 +173,14 @@ export default function Glossary({ onBack }: GlossaryProps) {
           <div className="rs-row-head"><span className="rs-k">Track characters</span><span className="rs-hint">A circuit's intrinsic lean, field-wide.</span></div>
           <div className="gl-list">
             {g.trackTags.filter(t => match(t.name, t.id)).map(t => (
-              <div key={t.id} className="gl-row">
-                <span className="gl-chip gl-plain">{t.emoji} {t.name}</span>
-                <span className="gl-meta"><span className="rs-k">Stamps</span> {(t.conditions ?? []).join(', ') || '—'}</span>
-                <span className="gl-fx"><Pills effects={effectsOf(t.passive ?? {})} /></span>
-                <span className="gl-src">{g.tracks.filter(tr => intrinsicTrackTags(tr.id).some(i => i.id === t.id)).map(tr => `${tr.funEmoji} ${tr.name}`).join(' · ')}</span>
-              </div>
+              <Row key={t.id} id={`trk:${t.id}`} open={isOpen(`trk:${t.id}`)} onToggle={toggle}
+                lead={<span className="gl-plain">{t.emoji} {t.name}</span>}
+                pills={<Pills effects={effectsOf(t.passive ?? {})} />}>
+                <div className="gl-facts">
+                  <Fact k="Stamps">{(t.conditions ?? []).join(', ') || '—'}</Fact>
+                  <Fact k="Tracks">{g.tracks.filter(tr => intrinsicTrackTags(tr.id).some(i => i.id === t.id)).map(tr => `${tr.funEmoji} ${tr.name}`).join(' · ') || '—'}</Fact>
+                </div>
+              </Row>
             ))}
           </div>
         </section>
@@ -153,13 +191,16 @@ export default function Glossary({ onBack }: GlossaryProps) {
           <div className="rs-row-head"><span className="rs-k">Inflictions</span><span className="rs-hint">Mid-race strikes the conditions can land on one driver.</span></div>
           <div className="gl-list">
             {g.inflictions.filter(i => match(i.name, i.id)).map(i => (
-              <div key={i.id} className="gl-row">
-                <span className="gl-chip gl-plain">{i.emoji} {i.name}</span>
-                <span className="gl-meta"><span className="rs-k">Needs</span> {i.requiresCondition.join(', ')}</span>
-                <span className="gl-meta"><span className="rs-k">Lasts</span> {i.durationTicks} ticks</span>
-                <span className="gl-fx"><Pills effects={effectsOf(i.effects)} /></span>
-                <span className="gl-src">{i.activationText}</span>
-              </div>
+              <Row key={i.id} id={`inf:${i.id}`} open={isOpen(`inf:${i.id}`)} onToggle={toggle}
+                lead={<span className="gl-plain">{i.emoji} {i.name}</span>}
+                note={`needs ${i.requiresCondition.join(', ')}`}
+                pills={<Pills effects={effectsOf(i.effects)} />}>
+                <p className="gl-desc">{i.activationText}</p>
+                <div className="gl-facts">
+                  <Fact k="Needs">{i.requiresCondition.join(', ')}</Fact>
+                  <Fact k="Lasts">{i.durationTicks} ticks</Fact>
+                </div>
+              </Row>
             ))}
           </div>
         </section>

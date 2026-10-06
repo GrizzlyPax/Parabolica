@@ -1,29 +1,41 @@
-/* Glossary — rows of the sim's vocabulary, Pit Wall tokens. */
+/* Glossary — compact one-line rows that open on click. Pit Wall tokens. */
 .gl-search { display: inline-flex; align-items: center; gap: 10px; margin-left: auto; }
 .gl-search input { background: var(--pw-ground); color: var(--pw-text-1); border: 1px solid var(--pw-border-strong); border-radius: 8px; padding: 8px 12px; font: inherit; font-size: 14px; min-width: 240px; min-height: 40px; }
+.gl-count { color: var(--pw-text-3); font-weight: 400; margin-left: 4px; }
+
 .gl-list { display: flex; flex-direction: column; }
-.gl-row {
-  display: grid; grid-template-columns: 200px minmax(200px, 1.6fr) 160px 180px 120px auto; gap: 8px 14px; align-items: center;
-  padding: 10px 4px; border-top: 1px solid var(--pw-hairline); font-size: 13px;
-}
+.gl-row { border-top: 1px solid var(--pw-hairline); }
 .gl-row:first-child { border-top: 0; }
-.gl-row.gl-rule { grid-template-columns: 200px 1fr 100px; }
-.gl-chip { display: flex; }
-.gl-chip .tag-chips { flex-wrap: wrap; }
-.gl-plain { font-weight: 600; color: var(--pw-text-1); }
-.gl-desc { color: var(--pw-text-1); line-height: 1.35; }
-.gl-meta { color: var(--pw-text-2); font-size: 12.5px; }
-.gl-meta .rs-k { margin-right: 4px; }
-.gl-fx { display: flex; }
-.gl-src { grid-column: 1 / -1; color: var(--pw-text-3); font-size: 12px; font-family: var(--font-mono); }
-.gl-card-static { cursor: default; }
-.gl-card-static:hover { transform: none; border-color: var(--pw-border); }
-@media (max-width: 1100px) {
-  .gl-row { grid-template-columns: 1fr 1fr; }
-  .gl-chip, .gl-desc { grid-column: 1 / -1; }
+
+/* The collapsed line: lead · note · pills · chevron */
+.gl-line {
+  display: grid; grid-template-columns: minmax(180px, 220px) 110px 1fr 16px; gap: 6px 12px; align-items: center;
+  width: 100%; padding: 6px 4px; min-height: 36px;
+  background: none; border: 0; color: inherit; font: inherit; text-align: left; cursor: pointer; border-radius: 6px;
 }
+.gl-line:hover { background: var(--pw-surface-2, rgba(255,255,255,0.03)); }
+.gl-lead { display: flex; min-width: 0; }
+.gl-lead .tag-chips { flex-wrap: nowrap; }
+.gl-plain { font-weight: 600; color: var(--pw-text-1); white-space: nowrap; }
+.gl-note { color: var(--pw-text-3); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gl-pills { display: flex; min-width: 0; overflow: hidden; }
+.gl-pills .effect-pills { flex-wrap: nowrap; }
+.gl-readout { color: var(--pw-text-2); font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gl-chev { color: var(--pw-text-3); transition: transform 120ms; justify-self: end; }
+.gl-row.open .gl-chev { transform: rotate(90deg); }
+
+/* The opened block */
+.gl-detail { padding: 4px 12px 12px 12px; margin: 0 4px 6px; border-left: 2px solid var(--pw-border-strong); }
+.gl-desc { color: var(--pw-text-1); line-height: 1.4; font-size: 13.5px; margin: 4px 0 8px; }
+.gl-facts { display: flex; flex-wrap: wrap; gap: 4px 18px; font-size: 12.5px; color: var(--pw-text-2); }
+.gl-fact .rs-k { margin-right: 4px; }
+.gl-src { margin-top: 8px; color: var(--pw-text-3); font-size: 12px; font-family: var(--font-mono); }
+
 @media (max-width: 799px) {
   .gl-search { margin-left: 0; width: 100%; }
   .gl-search input { flex: 1; min-width: 0; }
-  .gl-row { grid-template-columns: 1fr; gap: 4px; }
+  .gl-line { grid-template-columns: 1fr 16px; }
+  .gl-note { display: none; }
+  .gl-pills { grid-column: 1; }
+  .gl-chev { grid-row: 1; grid-column: 2; }
 }
