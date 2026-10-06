@@ -105,3 +105,7 @@
   .rs-driver-tags { text-align: left; }
   .gen-slots { flex-wrap: wrap; }
 }
+
+/* Lab preset picker (Race Control notebook) */
+.rs-preset { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #1e1e25; }
+.rs-preset select { background: #0a0a0c; color: #f3f2ef; border: 1px solid #34343e; border-radius: 8px; padding: 8px 10px; font: inherit; font-size: 14px; min-height: 40px; max-width: 100%; }

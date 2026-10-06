@@ -125,3 +125,12 @@
 .rc-knob-edit input[type=range] { width: 240px; accent-color: var(--pw-purple); margin-bottom: 14px; }
 .rc-knob-edit .rs-hint, .rc-knob-edit .rs-link { margin-bottom: 14px; margin-left: 0; }
 @media (max-width: 799px) { .rc-th-hint, .rc-hint-cell { display: none; } }
+
+/* Save-as-preset in the strip; notebook */
+.rc-savebar { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; }
+.rc-savebar input { width: 170px; background: var(--pw-ground); color: var(--pw-text-1); border: 1px solid var(--pw-border-strong); border-radius: var(--pw-radius-s); padding: 7px 9px; font: inherit; font-size: 13px; min-height: 36px; }
+.rc-savebar .rs-link { margin-left: 0; }
+.rc-inline-hint { flex-basis: auto !important; }
+.rc-preset-detail { display: flex; flex-direction: column; gap: 4px; font-size: 13.5px; color: var(--pw-text-1); }
+.rc-draft-actions { display: inline-flex; gap: 12px; }
+.rc-draft-actions .rs-link { margin-left: 0; }

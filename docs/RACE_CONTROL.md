@@ -50,6 +50,12 @@ The knobs table lists every `SimVariables` entry (`src/racecontrol/knobs.ts`: pa
 
 **Try a change:** click a tag row, edit its effect numbers (and trigger chance), **Measure**: your version is calibrated the same way (same seeds, same pairing) and shown beside the shipped row with a verdict (real change / within noise / out of band) and **Copy as code**. Leaving the numbers alone and measuring at 200 races lands exactly on the table's row — the parity check. **Re-roll** re-measures every tag on a fresh seed (25–100 races each) and adds a Δ column, flagged when the difference is beyond the noise.
 
+## Working changes, presets and the notebook
+
+Both tabs edit one shared set of **working changes** (tag definitions + knob values). Measure on either tab runs everything edited together — tag calibration runs under your knob edits too. Name the set in the strip → **Save as preset**. Presets and every finished measurement (seed, races, preset, full result) live in this browser's **Notebook** tab (`src/racecontrol/notebook.ts`, localStorage `parabolica.lab.notebook`, last 60 runs); download it as JSON to keep or share, copy any run as markdown.
+
+**Race under a preset:** Quick Race → Run Setup → *Lab preset*. `applyLabPreset(ruleset, preset)` (`src/rules/ruleset.ts`) patches `simVars` with the knob edits and makes `poolTags` return the edited tag definitions, so genesis draws your versions. The rules readout names the preset. Acquired / in-race tags are not patched (presets edit genesis tags only).
+
 ## Commands
 
 | | |
