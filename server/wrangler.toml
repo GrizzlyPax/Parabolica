@@ -1,0 +1,21 @@
+# Parabolica league service. Deployed by .github/workflows/deploy-api.yml.
+name = "parabolica-api"
+main = "src/index.ts"
+compatibility_date = "2025-09-01"
+
+# Served under the game's own domain so the client needs no CORS dance:
+# https://playparabolica.com/api/...  (Worker routes take precedence over Pages.)
+routes = [
+  { pattern = "playparabolica.com/api/*", zone_name = "playparabolica.com" },
+  { pattern = "www.playparabolica.com/api/*", zone_name = "playparabolica.com" },
+]
+
+[durable_objects]
+bindings = [{ name = "LEAGUE", class_name = "LeagueObject" }]
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["LeagueObject"]
+
+[observability]
+enabled = true

@@ -90,3 +90,9 @@
 
 /* Footer */
 .mm-footer { margin-top: auto; padding-top: 12px; display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 11px; color: var(--pw-text-3); }
+
+/* Open a league by code */
+.mm-code { gap: 12px; }
+.mm-code .mm-row-text { flex: 1; }
+.mm-code-input { width: 120px; font-family: var(--font-mono); letter-spacing: 0.12em; text-transform: uppercase; text-align: center; }
+@media (max-width: 599px) { .mm-code { flex-wrap: wrap; } .mm-code .mm-row-text { flex-basis: 100%; } }

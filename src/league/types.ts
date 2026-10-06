@@ -139,6 +139,8 @@ export interface LeagueState {
   interventionLog: Intervention[];
   /** Index of the last settled race; -1 before any race has run. */
   settledThrough: number;
+  /** Its copy on the league server, if published (src/league/remote.ts). */
+  remote?: { code: string; commissionerKey?: string; version: number };
   // --- Derived cache (recomputable from the inputs above) ---
   /** Genesis grid, derived from leagueSeed. Cached so resume is instant. */
   roster: RosterDriver[];

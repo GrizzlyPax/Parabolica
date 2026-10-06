@@ -15,6 +15,7 @@ import FoundingScreen, { FoundingChoices } from './league/ui/FoundingScreen';
 import LeagueScreen from './league/ui/LeagueScreen';
 import GridScreen from './league/ui/GridScreen';
 import { createLeague } from './league/league';
+import { openLeague, codeFromLocation, RemoteError } from './league/remote';
 import { leagueNameForSeed } from './generators/leagueName';
 import { LeagueState, LiveRace } from './league/types';
 import { LIVE_TICK_MS, nextRaceAt, prepareScheduledRace } from './league/settle';
@@ -116,6 +117,35 @@ function App() {
     setLeague(newLeague);
     setScreen('league');
   };
+
+  // Open a published league (by code from the menu, or from a #league=CODE link).
+  // The local slot holds one league; a published one replaces whatever is there,
+  // after a confirm if that was a league of this device's own that isn't published.
+  const openByCode = useCallback(async (code: string): Promise<string | null> => {
+    try {
+      const current = loadLeagueState();
+      if (current && current.remote?.code === code) { setLeague(current); setScreen('league'); return null; }
+      if (current && !current.remote && !window.confirm(`Open ${code}? Your unpublished league "${current.setup.name}" on this device will be replaced.`)) return null;
+      const opened = await openLeague(code);
+      // If this device published it, keep the commissioner key.
+      const key = current?.remote?.code === code ? current.remote.commissionerKey : undefined;
+      const withKey = key ? { ...opened, remote: { ...opened.remote!, commissionerKey: key } } : opened;
+      saveLeagueState(withKey);
+      setLeague(withKey);
+      setScreen('league');
+      return null;
+    } catch (e) {
+      return e instanceof RemoteError ? (e.status === 404 ? `No league with code ${code}.` : e.message) : 'Could not open that league.';
+    }
+  }, []);
+
+  // A league link: playparabolica.com/#league=CODE
+  useEffect(() => {
+    const code = codeFromLocation();
+    if (!code) return;
+    history.replaceState(null, '', location.pathname + location.search);
+    openByCode(code).then(err => { if (err) window.alert(err); });
+  }, [openByCode]);
 
   const handleDissolveLeague = () => {
     clearLeagueState();
@@ -266,6 +296,7 @@ function App() {
     const total = league.schedule.length;
     const settled = league.settledThrough + 1;
     return {
+      remoteCode: league.remote?.code,
       name: league.setup.name,
       settled,
       total,
@@ -286,6 +317,7 @@ function App() {
       <MainMenu
         onSingleRace={handleSingleRace}
         onCommissioner={handleCommissioner}
+        onOpenCode={openByCode}
         onCompendium={handleCompendium}
         onGlossary={() => setScreen('glossary')}
         league={leagueSummary}

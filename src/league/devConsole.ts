@@ -17,6 +17,7 @@ import { TEAMS } from '../data/teams';
 import { CURRENT_TRACKS, getTrackById } from '../generators/tracks';
 import { DRIVER_TAGS, getTagById, MAX_TAGS_PER_DRIVER } from '../data/tags';
 import { randomSeed } from '../engine/rng';
+import { postDecree } from './remote';
 
 const MINUTE = 60_000;
 
@@ -182,16 +183,15 @@ State persists in localStorage — reload the page and check in again.`);
       console.log(`Refused: ${driverName(league, driverId)} already carries it, or the stack is full (${MAX_TAGS_PER_DRIVER}).`);
       return;
     }
-    save({
-      ...league,
-      interventionLog: [...league.interventionLog, {
-        type: 'attach-tag',
-        atRaceIndex: nextRace,
-        targetDriverId: driverId,
-        tagId,
-        committedAt: Date.now(),
-      }],
-    });
+    const decree = { type: 'attach-tag' as const, atRaceIndex: nextRace, targetDriverId: driverId, tagId, committedAt: Date.now() };
+    save({ ...league, interventionLog: [...league.interventionLog, decree] });
+    // A published league: the decree is a fact on the server too, so every
+    // device applies it from the same race.
+    if (league.remote) {
+      postDecree(league, decree)
+        .then(after => { save({ ...current!, remote: after.remote }); console.log(`☁ decree sent to league ${league.remote!.code}`); })
+        .catch(e => console.warn('☁ decree stayed local:', e instanceof Error ? e.message : e));
+    }
     const name = driverName(league, driverId);
     console.log(`⚡ ${name} carries '${tagId}' from race ${nextRace + 1} onward. History is untouched — and untouchable.`);
     console.log(`Proof: rosterStateAt applies only interventions at/before each race index.`);

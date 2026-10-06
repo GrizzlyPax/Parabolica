@@ -20,9 +20,11 @@ for the future NPC-crowd system (BetLab was removed Oct 2026; git history has it
   - `engine/rng.ts` - Seeded RNG (mulberry32, deriveSeed, shuffle) — determinism foundation
   - `storage/persistence.ts` - Versioned localStorage league save
   - `league/` - Commissioner Mode: seed → universe, wall-clock settle loop, interventions
+    - `remote.ts` - the league server client: publish, open by code / `#league=CODE`, 30s sync, digest posting (docs/LEAGUE_SERVER.md)
     - `gods.ts` - Appetite gods (placeholder identities; evaluators are PR 5)
     - `ui/` - FoundingScreen, LeagueScreen (check-in reel, countdown, standings, chronicle)
     - `devConsole.ts` - window.league console (dev builds only)
+- `server/` - The league service: Cloudflare Worker + Durable Object (`wrangler.toml`, `src/index.ts`); deployed by `.github/workflows/deploy-api.yml`; `cd server && npx wrangler dev --local` to run it locally
 - `dist/` - Production build output
 - `public/` - Static assets
 
@@ -54,5 +56,6 @@ for the future NPC-crowd system (BetLab was removed Oct 2026; git history has it
 - `docs/STORY_BIBLE.md` - Pax's theme/voice bible; agents read it before any flavour pass (story workstream)
 - `docs/WORLD_DECK.md` - Content framework: how to add teams, tracks, names, tags, cards, weather, gods, commentary (shapes, rules, voice, backlog, agent prompt)
 - `docs/GLOSSARY.md` - GENERATED World Deck: every team, track, tag, card, rule, weather, infliction, god and flavour pool (`npm run glossary`; `src/data/worldDeck.test.ts` checks content)
+- `docs/LEAGUE_SERVER.md` - One league, every device: the server holds facts + decrees + canonical digests; devices replay; publish / open by code / link; deploy secrets
 - `docs/RACE_CONTROL.md` - The lab: parity rule, seeds and fingerprints, tag calibration method and bands, how to replicate and export
 - `docs/PROCEDURAL_IDENTITY.md` - Procedural universe identity (driver names #191, league names #185, team identity #183)
