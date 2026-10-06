@@ -6,7 +6,7 @@
 // Everything is derived from one seed + the hand of cards, so a report's seed
 // reproduces the race and flipping a card re-rolls only what it touches
 // (tags), never names, stats, teams or track.
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import RaceEngine, { RosterDriver } from './RaceEngine';
 import { generateRosterFromTeams } from './generators/drivers';
 import { generateCarsForKingdoms } from './generators/cars';
@@ -15,7 +15,7 @@ import { getRandomTeams, Team } from './data/teams';
 import { mulberry32, deriveSeed, randomSeed } from './engine/rng';
 import { CARDS_BY_ID, cardsForScope } from './data/cards';
 import { resolveRuleset, applyLabPreset, describeRuleset, describeChance, describeOdds, serializeRuleset, Ruleset } from './rules/ruleset';
-import { loadNotebook, presetSummary } from './racecontrol/notebook';
+import { loadNotebook, fetchLedger, presetSummary, type LabPreset } from './racecontrol/notebook';
 import { buildRoster } from './rules/genesis';
 import { weatherForRace } from './data/weather';
 import { intrinsicTrackTags } from './data/trackTags';
@@ -45,7 +45,11 @@ export default function RunSetup({ onStartRace, onBack }: RunSetupProps) {
   const [showRules, setShowRules] = useState(false);
 
   // Race Control presets (edited tags + knobs) saved in this browser.
-  const presets = useMemo(() => loadNotebook().presets, []);
+  const [presets, setPresets] = useState<LabPreset[]>(() => loadNotebook().presets);
+  useEffect(() => {
+    // Shared presets from the repo ledger join the local ones (local wins on the same id).
+    fetchLedger().then(l => setPresets(prev => [...prev, ...l.presets.filter(p => !prev.some(x => x.id === p.id)).map(p => ({ ...p, name: `${p.name} (shared)` }))])).catch(() => { /* offline */ });
+  }, []);
   const [presetId, setPresetId] = useState<string>('');
   const preset = presets.find(p => p.id === presetId) ?? null;
   const ruleset = useMemo(() => applyLabPreset(resolveRuleset(hand, CARDS_BY_ID), preset), [hand, preset]);

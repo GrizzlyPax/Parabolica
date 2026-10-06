@@ -175,3 +175,15 @@ export function formatMetric(v: number, f: MetricFormat): string {
 export function metricOutOfBand(m: PhysicsMetric): boolean {
   return !!m.band && (m.value < m.band[0] || m.value > m.band[1]);
 }
+
+/** The metric definitions (label, meaning, band, format) by id — the ledger stores only id + value. */
+export const METRIC_DEFS: Record<string, Omit<PhysicsMetric, 'value'>> = Object.fromEntries(report(emptyAcc(), 1).map(({ value: _v, ...def }) => [def.id, def]));
+
+/** A ledger-sized report: ids and values only. */
+export function compactReport(r: PhysicsReport): PhysicsReport {
+  return { ...r, metrics: r.metrics.map(m => ({ id: m.id, value: m.value } as PhysicsMetric)) };
+}
+/** Put labels, bands and formats back on a compact report. */
+export function expandReport(r: PhysicsReport): PhysicsReport {
+  return { ...r, metrics: r.metrics.map(m => ({ ...(METRIC_DEFS[m.id] ?? { id: m.id, label: m.id, format: 'num2', hint: '' }), value: m.value })) };
+}

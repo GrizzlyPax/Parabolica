@@ -1,0 +1,42 @@
+# The shared ledger. Race Control → Notebook → "Send to ledger" opens a
+# prefilled issue labelled `ledger` with a JSON batch of runs and presets.
+# This job folds that batch into public/ledger/*, commits to main (which
+# redeploys the site, so the Notebook's "Shared ledger" shows it), and
+# closes the issue with a receipt. No tokens in the browser, ever.
+name: ledger
+on:
+  issues:
+    types: [opened, labeled]
+permissions:
+  contents: write
+  issues: write
+jobs:
+  ingest:
+    if: contains(github.event.issue.labels.*.name, 'ledger')
+    runs-on: ubuntu-latest
+    concurrency: ledger
+    steps:
+      - uses: actions/checkout@v4
+        with: { ref: main }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Fold the batch into the ledger
+        id: fold
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_USER: ${{ github.event.issue.user.login }}
+        run: node scripts/ledger-ingest.mjs
+      - name: Commit
+        run: |
+          git config user.name "parabolica-ledger"
+          git config user.email "ledger@users.noreply.github.com"
+          git add public/ledger
+          git diff --cached --quiet && echo "nothing new" || git commit -m "ledger: #${{ github.event.issue.number }} — ${{ steps.fold.outputs.summary }}"
+          git push origin main
+      - name: Receipt + close
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue comment ${{ github.event.issue.number }} --body "Folded into the ledger: ${{ steps.fold.outputs.summary }}. It shows under Race Control → Notebook → Shared ledger once the site redeploys."
+          gh issue close ${{ github.event.issue.number }} --reason completed
