@@ -9,8 +9,8 @@ import { effectPills } from './TagChips';
 function RankChip({ r, what, unit }: { r?: FieldRank; what: string; unit: string }) {
   if (!r) return null;
   return (
-    <span className={`rank-chip tone-${r.tone}`} title={`${what}: ${r.tied ? 'tied ' : ''}${ordinal(r.rank)} of ${r.of} ${unit} on this grid`}>
-      {r.tied ? '=' : ''}{ordinal(r.rank)}<span className="rank-of"> of {r.of}</span>
+    <span className={`rank-chip tone-${r.tone}`} title={`${what}: ${ordinal(r.rank)} of ${r.of} ${unit} on this grid`}>
+      {ordinal(r.rank)}<span className="rank-of"> of {r.of}</span>
     </span>
   );
 }
