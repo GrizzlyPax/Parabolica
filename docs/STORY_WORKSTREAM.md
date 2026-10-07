@@ -26,7 +26,7 @@ The key idea for story people: **drivers, cars and teams carry *tags*** — smal
 
 | Thing | Where |
 |---|---|
-| Code | `https://github.com/GrizzlyPax/Parabolica` (private — you need access). Default branch `main`, deploys to playparabolica.com on push. |
+| Code | `https://github.com/GrizzlyPax/Parabolica` (public). Default branch `main`, deploys to playparabolica.com on push. |
 | **The content contract** — shapes, rules, voice, how to add anything | `docs/WORLD_DECK.md` ← read this before touching content |
 | **Everything that exists today**, generated from the data | `docs/GLOSSARY.md` (regenerate with `npm run glossary`) |
 | **The story bible** — theme, voice, anchors (Pax's document) | `docs/STORY_BIBLE.md` |
