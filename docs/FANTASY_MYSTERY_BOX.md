@@ -6,7 +6,7 @@
 
 ## TL;DR
 
-- Between races, each fantasy owner opens a box and is **dealt one real tag from the glossary** (good, bad, or mixed), drawn on the genesis rarity odds.
+- Between races, each fantasy owner opens a box and is **dealt one real tag from the glossary** — good, bad, or pure flavour — drawn on rarity odds. **Rarity = severity, not goodness** (Pax): a legendary is a *big* swing (huge boon or brutal curse), a common is a small one, and some commons are cosmetic-only.
 - They **choose a driver to put it on** — buff your own, or dump a bad one on a rival. The tag is the dice; the *target* is the decision.
 - It rides rails that already exist: the box tag becomes an **`attach-tag` intervention**, the one fact every device already replays. No new physics, no new persistence model.
 - **Why it matters beyond fun:** fantasy today is one blind draft pick, then you spectate. The box is the **first in-season decision a fantasy owner makes** — it's what turns fantasy from a draw into a game.
@@ -30,7 +30,7 @@ The tag you draw dictates the move: draw **Steady Hands**, you buff one of your 
 
 Fantasy inherits the sim's dominance directly — scoring is just the sum of your drivers' F1 points. Pax's first fantasy season had one driver win 9 of 16 (318 pts vs 172), and in a blind draft the owner who happened to land that driver effectively won the title at the draft.
 
-The box is the first thing that can **loosen a runaway mid-season** — a trailing owner who draws a bad tag can aim it at the dominant driver. The symmetric "both good and bad" draw already cuts both ways, but Pax's call makes the catch-up explicit: **the worse your fantasy standing, the better your box's rarity odds** (§4). So a trailing owner draws stronger tags more often — bigger buffs for their own squad, nastier curses for the leader. That's a real, legible rubber-band aimed squarely at the dominance fantasy inherits from the sim.
+The box is the first thing that can **loosen a runaway mid-season** — a trailing owner who draws a bad tag can aim it at the dominant driver. The symmetric "both good and bad" draw already cuts both ways, but Pax's call makes the catch-up explicit and names it: **the worse your fantasy standing, the higher-severity your box** (§4) — **Mario Kart item distribution**, the back of the field gets the blue shells. So a trailing owner draws *bigger-swing* tags more often: a huge buff to aim at their own squad, or a brutal curse to drop on the leader. The draw gives the severity; the owner's target choice gives the direction. A real, legible rubber-band at the dominance fantasy inherits from the sim.
 
 The one anti-pattern to prevent: **everyone stacking good tags on a single driver.** The **4-tag slot cap** (#231) plus the temporary expiry that every-race cadence forces (§4) are the natural guards.
 
@@ -56,7 +56,7 @@ Two integration points ENG should confirm, both small:
 - **Pool: all three target types (driver, car, team)** — Pax's call. Cars are independent per driver now (genesis rolls a car tag per seat, not per constructor), so **a driver *or* car tag lands cleanly on one driver** — two distinct, meaningful choices. A **team tag hits both teammates** — that's not a bug to hide, it's the "curse the whole pairing / lift your two-driver stack" play. The box respects the tag's `target`: driver/car → the chosen driver; team → the chosen driver's constructor (both seats), surfaced plainly.
 - **Cadence: every race** — Pax's call. This is the big driver of the rules below: a steady per-race drip of chaos, lots of feed moments, the box always in your hands. The cost is **saturation** — 4 owners × 16 races = 64 boxes against 88 total slots (22 drivers × cap 4), which permanent tags would overflow by mid-season. So:
 - **Expiry: box tags are temporary — last ~2 races, then fade.** This is the fix for every-race saturation (distinct from genesis tags, which stay). Steady state ≈ 2 active box tags per owner (~8 on a 4-owner grid) — plenty of presence, still legible, and it makes *timing* matter (spend it when it bites). The one expiry number (1 / 2 / 3 races) is the main dial left for Pax.
-- **Catch-up tilt = the box's metal** — Pax's call. The tilt isn't a hidden percentage; it's **the colour/grade of the box itself**, assigned by the owner's fantasy standing. Four tiers, each a rarity table (common/uncommon/rare/legendary odds), worse standing → shinier box:
+- **Catch-up tilt = the box's metal** — Pax's call. The tilt isn't a hidden percentage; it's **the colour/grade of the box itself**, assigned by the owner's fantasy standing. Four tiers, each a rarity table; worse standing → shinier box → higher odds of a high-*severity* tag (a bigger swing, either direction — not a better-for-you one):
 
   | Box | Who gets it | Rarity odds (illustrative — §8 tunes) |
   |---|---|---|
@@ -65,7 +65,9 @@ Two integration points ENG should confirm, both small:
   | 🥇 Gold | lower-mid | 43 / 34 / 18 / 5 |
   | 💠 Platinum | last place | 35 / 35 / 22 / 8 |
 
-  Standing maps to a tier (`floor((rank−1)/teams × 4)`, so last always = platinum, leader = bronze, spread between; with 2–3 teams only the end tiers appear). The metal shows **before** you open — you see how good your draw is, then open to see the actual tag. Standings are pure from settled digests, so the tier (and the seeded draw under it) stays deterministic. The four tables' numbers are the dial (§8).
+  Standing maps to a tier (`floor((rank−1)/teams × 4)`, so last always = platinum, leader = bronze, spread between; with 2–3 teams only the end tiers appear). The metal shows **before** you open — you see how big a swing you're holding (not whether it helps you), then open to see the actual tag. Standings are pure from settled digests, so the tier (and the seeded draw under it) stays deterministic. The four tables' numbers are the dial (§8).
+
+**Rarity is severity, not valence — and some tags don't touch gameplay at all.** A common might be pure flavour: a cosmetic that rides along (a hat on the driver's marble — "Stinky Hat" — no mechanical effect), or a story-only beat. A legendary is a season-bending swing. Whether a tag *helps or hurts* is independent of its rarity and is **not shown on the sealed box** — you see the severity, never which way it cuts. This leans on a future **tag/item content pass** (names, descriptions, cosmetic-only items; the Dungeon Crawler Carl-inspired flavour layer Pax wants), which doesn't exist yet and is a real dependency for the box feeling good — flagged, not scoped here.
 - **Reveal, then target.** Show the drawn tag, *then* let the owner choose who gets it. Sealed-until-applied removes the only decision the box offers (you can't aim a curse you can't see).
 - **Full slot (cap 4): replace the weakest, don't fizzle.** A wasted box feels awful. Let the owner bump the lowest-impact existing tag, surfaced in the feed ("\<team\> bumped Y off Z to apply X"). Temporary expiry makes this rarer, but it still needs a rule.
 - **Targeting: any driver** (buff your own, curse a rival) — per #296, confirmed.
@@ -74,7 +76,7 @@ Magnitude reality check (keeps expectations honest): calibration puts a common t
 
 ## 5. Legibility
 
-- **Two rarity-colour systems that must not be confused.** The draft ([#297](https://github.com/GrizzlyPax/Parabolica/issues/297)) colours a sealed "?" by the *tag's* rarity — hidden info about what a driver already carries. The mystery box's **metal (bronze→platinum) grades the box's own odds** — set by your standing, shown before opening. Same "shininess = better" instinct, different meaning; keep the palettes distinct (metallic ramp for the box, the existing rarity-chip colours for tags) so a gold box ≠ a gold tag.
+- **Two rarity-colour systems that must not be confused.** The draft ([#297](https://github.com/GrizzlyPax/Parabolica/issues/297)) colours a sealed "?" by the *tag's* rarity — hidden info about what a driver already carries. The mystery box's **metal (bronze→platinum) grades the box's own severity odds** — set by your standing, shown before opening. Same "shininess = bigger" instinct (bigger *swing*, not better-for-you), different meaning; keep the palettes distinct (metallic ramp for the box, the existing rarity-chip colours for tags) so a gold box ≠ a gold tag.
 - **The metal is the catch-up made visible.** Seeing a rival in last place holding a platinum box *is* the rubber-band on screen — social drama, no stats panel. Lean into it (the reveal can show the metal first, then the tag).
 - **Feed / check-in reel line:** "\<team\> handed \<driver\> a mystery tag" (and the bump line when a slot was full).
 - **Tag card** marks it fantasy-given with the giving team's colour, so a driver's stack reads "who did this to me."
