@@ -103,6 +103,15 @@ The per-mode specs lean on these; gathered here once so both can cite them.
 - **`docs/FANTASY_TEAM_MODE.md`** — the principal / results mode.
 - **`docs/FANTASY_PATRON_MODE.md`** — the channel / ratings mode.
 
-## 9. Status
+## 9. The two-phase loop (shared)
+
+Both modes alternate two phases all season — a structure Pax flagged as central to develop:
+
+- **The Race.** Deterministic and autonomous — you watch. Your team/stable performs; events and results accrue.
+- **The In-Between.** The interstitial beat *between every race* where all the playing happens: open your mystery box, spend, manage your roster/stable, aim buffs and curses. Not an "off-season" — a short, recurring phase.
+
+Agency lives in the **In-Between**; the Race is the payoff you tuned for, and the mystery box is the In-Between's signature moment in both modes. This phase is deliberately under-specified for now — it's the richest open design space (the spend economy, the social/management layer, Patron's drama-programming all live here). Naming TBD ("the In-Between" / "the Paddock" / an in-fiction Management term).
+
+## 10. Status
 
 Design exploration only — **no code, by Pax's direction.** This doc is the fork and the shared principles; the two specs develop each mode's loop, power curve and balance.

@@ -10,6 +10,8 @@
 
 This is the mode that makes fantasy **its own game** rather than a mirror of the standings — because "best driver" and "best show" are different questions, and a flag-to-flag runaway is *boring*, so Patron Mode is **immune to the sim's dominance** by construction.
 
+**The metric is a social-media allegory (Pax's steer): views / followers.** Your drivers accumulate an audience — views on their drama, followers who stick around — and that *is* the score. It fits the bible's Management/paperclip texture (you're optimizing engagement numbers you don't fully understand), and it's the honest shape of "ratings." It also needs real work to get right — see §9. Framed this way, a crash isn't "points," it's a *clip that goes viral*; a season-long underdog arc is a *follower count that compounds*. The currency and the allegory are the same object.
+
 ## 2. The draft (stage one)
 
 Patron leagues open with the same **snake-draft** ritual, but you draft a **three-driver stable** — and the point is you're reading a *different axis*. Pace barely matters to a showrunner; what matters is who makes *television*.
@@ -25,15 +27,17 @@ So a back-of-grid underdog who spins spectacularly can be a *better* Patron pick
 ## 3. The loop (hopeful)
 
 ```
-  BETWEEN RACES                RACE                        AFTER
-  open mystery box  ───▶  your drivers make  ───▶  ratings tick up
-  (manufacture drama)      TV (events fire)          Management re-targets
+  ── THE IN-BETWEEN ──         ── THE RACE ──
+  open your mystery box  ───▶  drivers make TV  ───▶  views / followers rise
+  program the next show        (events fire)          Management re-targets
         ▲                                                  │
         └──────────────────────────────────────────────────┘
                "what show am I programming next?"
 ```
 
-- **Per-race beat:** events fire from your drivers (overtakes, battles, crashes, comebacks); the box lets you *manufacture* drama (a chaos tag on a frontrunner is appointment TV).
+Same two-phase structure as Team (`FANTASY_MODES.md` §loop): **the Race** (your drivers make television) and **the In-Between** (where you program — open the box, manufacture drama, manage the stable). Pax flagged the In-Between as a phase to really develop; for a showrunner it's the writers' room.
+
+- **Per-race beat:** events fire from your drivers (overtakes, battles, crashes, comebacks); the box lets you *manufacture* drama in the In-Between (a chaos tag on a frontrunner is appointment TV).
 - **Season arc — the paperclip escalation (principle 8):** Management keeps **re-targeting** what's hot — chaos this week, spectacle next, sponsor the next. The target keeps moving; the numbers keep climbing; you never quite know what it all means. The escalation *is* the story.
 - **The hook:** variable reward (you can't fully predict which drama your drivers throw off) + a moving goal.
 
@@ -87,7 +91,7 @@ They **conflict by design** (a crash thrills the Crowd, tanks the Sponsor), so e
 
 ## 9. Open design questions
 
-1. **Ship order** — single excitement number first (recommended), audiences as v2. Confirm.
+1. ~~Ship order~~ **Confirmed (Pax):** single number first (framed as views/followers), audiences as v2. Caveat he flagged: the views/followers metric itself needs *a lot* of design work — it's the mode's hardest and most important artifact.
 2. **Re-target cadence & who sets it** — every race, every N, or narrative beats? Management-authored list vs rolled? (This is the paperclip dial and the main anti-snowball lever.)
 3. **Stable size & control** — same draft-3 as today, or different? Do you ever *cut/swap* a driver who stopped being interesting (a programming decision), or is the stable fixed for the season?
 4. **Event weights** — the actual spectacle table (overtake vs battle vs comeback vs crash vs fastest lap…). This is the core tuning artifact; it wants a drama-probe pass (defer, like the dominance probe) before numbers are set.

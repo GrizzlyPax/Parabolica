@@ -21,17 +21,20 @@ No raw numbers, no tag names. Full information would make the draft solved (ever
 ## 3. The loop (hopeful)
 
 ```
-  BETWEEN RACES                 RACE                      AFTER
-  open mystery box  ───▶  your pair races  ───▶  points + standings move
-  set strategy lean        (you watch)            development earned
+  ── THE IN-BETWEEN ──          ── THE RACE ──
+  open your mystery box  ───▶  your pair races  ───▶  points + standings move
+  spend / manage the team      (you watch)           development earned
         ▲                                                │
         └────────────────────────────────────────────────┘
                      "next race I close the gap"
 ```
 
-- **Per-race beat** (principle 1, 4): a box to open and a strategy lean to set — small, meaningful, *not* individually decisive.
+Two phases alternate all season (see `FANTASY_MODES.md` §loop): **the Race** (you watch your pair race) and **the In-Between** (where you actually act — open the box, spend, manage). Nearly all of a Team owner's agency lives in the In-Between.
+
+- **You're an owner, not a pit chief** (Pax's steer): your decisions are *team-ownership* ones — who's on the roster, where development goes, how you aim the box — not lap-by-lap pit-wall strategy. The race runs itself; you built the thing that races.
+- **Per-race beat** (principle 1, 4): a box to open and a management call to make — small, meaningful, *not* individually decisive.
 - **Season arc:** climb to the constructor title; a closed ending (the finale) makes the run a story (principle 8).
-- **The hook:** the standings gap is always one good race from closing, and the box is the between-race variable-reward beat (principle 2).
+- **The hook:** the standings gap is always one good race from closing, and the box is the In-Between's variable-reward beat (principle 2).
 
 ## 4. The power curve — the thing we have to get right
 
@@ -43,7 +46,7 @@ Candidates (pick one as the spine):
 
 **The balance knife-edge:** a progression vector that pays the *winner* most = snowball = the dominance trap we fought in the sim, now re-imported into fantasy. So development must be **catch-up-leaning or flat**, never pro-leader:
 - development points scale with your **deficit** (or are equal-per-race), and
-- the mystery-box tilt (worse standing → shinier box, see `FANTASY_MYSTERY_BOX.md`) is the main equalizer.
+- the mystery-box tilt is **Mario Kart item distribution** (Pax's frame): your standing sets the *quality* of box you draw, so the back of the field gets the blue shells. See `FANTASY_MYSTERY_BOX.md`.
 
 This is principle 5 applied: the catch-up is **skill-gated** (you still choose *what* to develop and *where* to aim the box), **bounded** (a genuinely great team stays ahead — we're compressing the gap, not erasing the lead), and it **creates decisions** rather than handing the laggard free speed.
 
@@ -52,7 +55,7 @@ This is principle 5 applied: the catch-up is **skill-gated** (you still choose *
 | Concern | Target / lever |
 |---|---|
 | Dominance | *Allowed* (be the best team) but not a title decided by mid-season. Measure: champion shouldn't be mathematically safe before ~75% distance in the median league. Lever: deficit-leaning development + box tilt. |
-| Skill over luck | A good principal beats a lucky one across a season (principle 3). The decisions (develop-what, box-whom, strategy lean) must swing enough races to show over the schedule — but no single race decisive. |
+| Skill over luck | A good principal beats a lucky one across a season (principle 3). The ownership decisions (develop-what, box-whom, roster) must swing enough races to show over the schedule — but no single race decisive. |
 | Engagement when losing | A trailing principal always has a live lever (shinier boxes, bigger development) and a visible "catching up" signal. |
 | Two-driver texture | Both seats score (constructor sum). A clear #1/#2 or a rivalry *within* your team is narrative fuel — worth surfacing, not hiding. |
 
@@ -60,8 +63,10 @@ This is principle 5 applied: the catch-up is **skill-gated** (you still choose *
 
 1. **Does a drafted pairing bring its cars, or do you draft a car too?** You draft two drivers (§2) — but cars are per-seat, so either each driver arrives with their own car (simplest) or the car is a separate pick/slot (more agency, more draft rounds). *Lean: drivers bring their cars; revisit a car pick later.*
 2. **Progression spine** — development points vs tag accretion vs both? (Both is richer but two economies to balance; start with one.)
-3. **Strategy lean as a real lever** — is "set your team's pit/aggression archetype" enough of a decision to feel like principal-ing, or does control need more (driver orders, develop focus)?
-4. **Title shape** — pure constructor points, or points + a bonus for beating your pre-season projected finish (a built-in underdog/skill reward that further decouples from raw package)?
+
+**Resolved by Pax:**
+- **Control is team-owner, not pit chief** — agency is roster / development / box / big calls in the In-Between, not lap-by-lap strategy. (The old "strategy lean" lever is dropped.)
+- **Title shape: constructor points, plus a drivers'-champion bonus.** Score is the two drivers' combined points (simple), but if one of *your* drafted drivers wins the **drivers' championship**, that's a bonus that can vault you ahead of a team with a higher raw constructor tally. Rewards backing a single superstar, not just the deepest pair — a second way to win.
 
 ## 7. Why this mode earns its place
 
