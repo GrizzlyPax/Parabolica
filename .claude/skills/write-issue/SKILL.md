@@ -52,6 +52,14 @@ gh api -X PATCH repos/GrizzlyPax/Parabolica/issues/N -f state=closed -f state_re
 
 Closing note forms: "Done in [#M Title]", "Replaced by [#M Title]", "Parked: <why>".
 
+## Asana (required)
+
+Every issue you create gets a matching task in the Asana project "🏁 Parabolica" (GID `1219276019625158`):
+- Title: plain words, no issue number. Description: `GitHub: <issue url>` + one-line why.
+- Section: the release it belongs to (`v0.4.x Patches`, `v0.5 Spa`, …), `📥 Queued`, or `🧊 Icebox`.
+- **Crew** field: who builds it (Apex = Fable-only work; Hub; Wrench = tightly scoped, small model; Telemetry; Pit; Pax = needs a decision). Due date if it's in a release.
+- Closing an issue → complete its Asana task. No Asana connector in this chat → list the Asana changes in your reply.
+
 ## Lane
 
 Issue and `docs/` work only. Never edit `src/`, `server/`, `scripts/`, configs or tests while doing this — if code is needed, that is a new issue.
