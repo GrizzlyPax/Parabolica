@@ -30,9 +30,9 @@ The tag you draw dictates the move: draw **Steady Hands**, you buff one of your 
 
 Fantasy inherits the sim's dominance directly — scoring is just the sum of your drivers' F1 points. Pax's first fantasy season had one driver win 9 of 16 (318 pts vs 172), and in a blind draft the owner who happened to land that driver effectively won the title at the draft.
 
-The box is the first thing that can **loosen a runaway mid-season** — a trailing owner who draws a bad tag can aim it at the dominant driver. That's healthy. The symmetric design Pax chose ("both good and bad") means it cuts both ways: the leader's owner can also draw a good tag and pile it on their monster. Net, that's **added variance, not a systematic tilt** — which mildly *helps* dominance (less deterministic runaways) as long as nothing lets the rich systematically get richer.
+The box is the first thing that can **loosen a runaway mid-season** — a trailing owner who draws a bad tag can aim it at the dominant driver. The symmetric "both good and bad" draw already cuts both ways, but Pax's call makes the catch-up explicit: **the worse your fantasy standing, the better your box's rarity odds** (§4). So a trailing owner draws stronger tags more often — bigger buffs for their own squad, nastier curses for the leader. That's a real, legible rubber-band aimed squarely at the dominance fantasy inherits from the sim.
 
-The one anti-pattern to prevent: **everyone stacking good tags on a single driver.** The existing **4-tag slot cap** (#231) is the natural guard; §4 handles the full-slot case. A gentle catch-up tilt (trailing teams draw from a slightly kinder table) is a **tunable we can add later** if a fantasy-dominance probe shows runaways — kept out of v1 to honor the symmetric steer, but called out so the knob has a home.
+The one anti-pattern to prevent: **everyone stacking good tags on a single driver.** The **4-tag slot cap** (#231) plus the temporary expiry that every-race cadence forces (§4) are the natural guards.
 
 ## 3. How it rides existing rails
 
@@ -43,7 +43,7 @@ Everything the box needs already exists — this is wiring, not new systems:
 | Change a driver's tags for future races | `Intervention` type `attach-tag` (`src/league/types.ts`) — already the **only** fact-level intervention |
 | Replay identically on every device | `decreesOf()` → server → `rosterStateAt()` (`src/league/remote.ts`, `league.ts`) already ships `attach-tag` decrees to all devices |
 | Draw a tag by rarity | `pickTagByRarity(pool, rarityOdds, rng)` + `poolTags(rs)` (`src/rules/genesis.ts`) — the exact draw the draft uses |
-| Determinism | box **contents** = seeded draw `deriveSeed(leagueSeed, 'mysterybox', raceIndex, teamId)`; box **target** = the owner's decree. Both are facts; the race replays the same everywhere |
+| Determinism | box **contents** = seeded draw `deriveSeed(leagueSeed, 'mysterybox', raceIndex, teamId)` under a rarity table derived from fantasy standings-to-date (a pure function of settled digests); box **target** = the owner's decree. All facts; the race replays the same everywhere |
 
 **So a mystery box is literally: roll a tag from the pool (seeded), let the owner pick `targetDriverId`, append an `attach-tag` intervention with `atRaceIndex = nextRace`.** The settle loop and fantasy standings recompute with zero new plumbing.
 
@@ -53,13 +53,15 @@ Two integration points ENG should confirm, both small:
 
 ## 4. The rules (recommendations on #296's open questions)
 
-- **Pool: driver-target tags only, v1.** The glossary has driver/car/team tags; a car or team tag would spill onto a teammate and muddy "I put it on *this driver*." Drawing from the driver-target pool keeps the box one-driver-clean and legible. (Revisit car/team boxes once the base loop feels good.)
-- **Cadence: every 3–4 races, not every race.** Per-race floods the grid with fantasy tags and dilutes the genesis-tag identities the content pass just calibrated. Scarcity makes each box an event and keeps the tower readable.
+- **Pool: all three target types (driver, car, team)** — Pax's call. Cars are independent per driver now (genesis rolls a car tag per seat, not per constructor), so **a driver *or* car tag lands cleanly on one driver** — two distinct, meaningful choices. A **team tag hits both teammates** — that's not a bug to hide, it's the "curse the whole pairing / lift your two-driver stack" play. The box respects the tag's `target`: driver/car → the chosen driver; team → the chosen driver's constructor (both seats), surfaced plainly.
+- **Cadence: every race** — Pax's call. This is the big driver of the rules below: a steady per-race drip of chaos, lots of feed moments, the box always in your hands. The cost is **saturation** — 4 owners × 16 races = 64 boxes against 88 total slots (22 drivers × cap 4), which permanent tags would overflow by mid-season. So:
+- **Expiry: box tags are temporary — last ~2 races, then fade.** This is the fix for every-race saturation (distinct from genesis tags, which stay). Steady state ≈ 2 active box tags per owner (~8 on a 4-owner grid) — plenty of presence, still legible, and it makes *timing* matter (spend it when it bites). The one expiry number (1 / 2 / 3 races) is the main dial left for Pax.
+- **Catch-up tilt: rarity odds scale with fantasy standing** — Pax's call. Worse-placed owners draw stronger boxes. Concretely: interpolate the rarity table by the owner's current fantasy rank, e.g. leader stays near base **60/30/9/1**, last place shifts toward **~35/35/22/8**, linear between. Standings are a pure function of settled digests, so the table (and thus the seeded draw) stays deterministic and replayable. Tuning the two endpoints + curve is a knob; §8 is how we'd set it.
 - **Reveal, then target.** Show the drawn tag, *then* let the owner choose who gets it. Sealed-until-applied removes the only decision the box offers (you can't aim a curse you can't see).
-- **Full slot (cap 4): replace the weakest, don't fizzle.** A wasted box feels awful. Let the owner bump the lowest-impact existing tag, and surface it in the feed ("\<team\> bumped Y off Z to apply X"). "Knock their good tag off" is a real, fun decision.
-- **Expiry: lasts the rest of the season (permanent), v1.** Matches how genesis tags behave; simpler to reason about than timed tags. Revisit if permanence makes late-season boxes too swingy.
+- **Full slot (cap 4): replace the weakest, don't fizzle.** A wasted box feels awful. Let the owner bump the lowest-impact existing tag, surfaced in the feed ("\<team\> bumped Y off Z to apply X"). Temporary expiry makes this rarer, but it still needs a rule.
+- **Targeting: any driver** (buff your own, curse a rival) — per #296, confirmed.
 
-Magnitude reality check (keeps expectations honest): calibration puts a common tag at roughly **+1–2 finishing places**, rares uneven. One box nudges a driver; it does not single-handedly flip a season — which is the right weight. It should feel like a meaningful poke, not a hammer.
+Magnitude reality check (keeps expectations honest): calibration puts a common tag at roughly **+1–2 finishing places**, rares uneven. One box nudges a driver; it does not single-handedly flip a season — which is the right weight, and why the catch-up tilt leans on *rarity frequency* (more rares for the trailing team over many boxes) rather than on any single box being decisive.
 
 ## 5. Legibility
 
@@ -74,13 +76,15 @@ Magnitude reality check (keeps expectations honest): calibration puts a common t
 - **Multi-device boxes need accounts** ([#237](https://github.com/GrizzlyPax/Parabolica/issues/237)): for each owner to open their own box from their own phone, a non-commissioner device must be able to post a decree. That's the accounts/auth work already queued. Design the box so it's **commissioner-run in v1 and owner-run once accounts land** — same intervention either way.
 - Pairs with the planned "spend points on gifts/curses" in `docs/FANTASY.md` — the box is the free/random version; spending points is the earned version. Same application path.
 
-## 7. Open decisions for Pax
+## 7. Decisions — settled, with the dials still open
 
-1. **Pool** — driver-target tags only (recommended, clean), or respect target type so a car tag hits the constructor (richer, but teammate spillover)?
-2. **Cadence** — every 3 races, every 4, or tied to something narrative (e.g. after each "round" of the calendar)?
-3. **Can you box your *own* drafted drivers only, any driver, or any driver *except* your own?** ("Any driver" is the most expressive and what #296 says; worth confirming the curse-a-rival path is explicitly wanted.)
-4. **Catch-up tilt** — ship purely symmetric (Pax's current steer), or leave a gated knob for a mild trailing-team bonus if a later probe shows fantasy runaways?
+Settled with Pax: **all three tag targets** · **every race** · **any driver** · **catch-up tilt via rarity-by-standing**. What's left is numbers to set in the lab, not shape:
+
+1. **Expiry length** — 1, 2, or 3 races? (2 is the recommendation; it's what keeps every-race cadence from saturating.)
+2. **Tilt endpoints + curve** — how generous does last place get, and linear vs steeper? (Starting point: leader 60/30/9/1 → last ~35/35/22/8, linear. Set by §8.)
+3. **Tilt basis** — season-to-date fantasy standings (persistent rubber-band, recommended) or last-race-only (reactive)?
+4. **Full-slot rule confirm** — replace-weakest (recommended) vs owner-picks-which-to-bump.
 
 ## 8. Validation (deferred, per Pax)
 
-Not building a probe now. When we want numbers, the one worth running: a **fantasy-dominance probe** — simulate the blind snake draft across many universes, measure how often the strongest driver's owner wins the title, and how much a symmetric box vs a catch-up-tilted box closes the gap. That tells us whether the symmetric design needs the §2 tilt knob turned on. ~30 min when greenlit.
+Not building a probe now. When we want numbers, the **fantasy-dominance probe** sets the two dials above: simulate the blind snake draft across many universes, measure how often the strongest driver's owner wins the title, then sweep (a) expiry length and (b) the tilt endpoints to find the pair that most closes the title gap *without* making last place a lock. That's the quantitative sign-off on the catch-up curve. ~30 min when greenlit.
