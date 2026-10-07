@@ -47,7 +47,8 @@ for the future NPC-crowd system (BetLab was removed Oct 2026; git history has it
 - **Read first:** the newest `docs/HANDOFF_*.md` (how the pieces fit, traps, open work).
 - **Skills (`.claude/skills/`)** hold the procedures: `write-issue` (issue shape, triage, `ready`), `ship-pr` (build → test → PR → merge rules), `republish-preview`, `balance-read`, `season-report`.
 - **Asana is the task system. Every thread, every crew member.** Project ["🏁 Parabolica"](https://app.asana.com/1/1219276824761487/project/1219276019625158) (workspace "My workspace"). Look there first for what to do; don't track work anywhere else (no TODO docs, no GitHub milestones/projects).
-  - **Sections = releases:** `🏁 v0.4.x · Patches`, `🇧🇪 v0.5 Spa`, `🇮🇹 v0.6 Monza`, `🇯🇵 v0.7 Suzuka`, `📥 Queued` (committed, unslotted), `🧊 Icebox` (maybe / needs Pax). Target date is in the section name.
+  - **Sections = releases:** `🇧🇪 v0.5 Spa` (**the current release: the only thing being worked on**), `🇮🇹 v0.6 Monza`, `🇯🇵 v0.7 Suzuka`, `📥 Queued` (committed, unslotted), `🧊 Icebox` (maybe / needs Pax). Target date is in the section name.
+  - **Only the current release gets Crew + due dates.** Everything past it stays unassigned and undated until Pit pulls it into a release.
   - **Fields:** **Crew** (who + which model; `Pax` = needs his call) and **due date**. Titles are plain, no issue numbers, no status prefixes.
   - **GitHub issues are the build spec**, linked in the task description. Every new issue gets an Asana task; every Asana task that needs code has an issue.
   - **When work ships:** tick the Asana task done. When starting: note it in the task. If the Asana connector isn't available in your chat, say exactly what to change in your final message so Pit can apply it.
