@@ -56,7 +56,16 @@ Two integration points ENG should confirm, both small:
 - **Pool: all three target types (driver, car, team)** — Pax's call. Cars are independent per driver now (genesis rolls a car tag per seat, not per constructor), so **a driver *or* car tag lands cleanly on one driver** — two distinct, meaningful choices. A **team tag hits both teammates** — that's not a bug to hide, it's the "curse the whole pairing / lift your two-driver stack" play. The box respects the tag's `target`: driver/car → the chosen driver; team → the chosen driver's constructor (both seats), surfaced plainly.
 - **Cadence: every race** — Pax's call. This is the big driver of the rules below: a steady per-race drip of chaos, lots of feed moments, the box always in your hands. The cost is **saturation** — 4 owners × 16 races = 64 boxes against 88 total slots (22 drivers × cap 4), which permanent tags would overflow by mid-season. So:
 - **Expiry: box tags are temporary — last ~2 races, then fade.** This is the fix for every-race saturation (distinct from genesis tags, which stay). Steady state ≈ 2 active box tags per owner (~8 on a 4-owner grid) — plenty of presence, still legible, and it makes *timing* matter (spend it when it bites). The one expiry number (1 / 2 / 3 races) is the main dial left for Pax.
-- **Catch-up tilt: rarity odds scale with fantasy standing** — Pax's call. Worse-placed owners draw stronger boxes. Concretely: interpolate the rarity table by the owner's current fantasy rank, e.g. leader stays near base **60/30/9/1**, last place shifts toward **~35/35/22/8**, linear between. Standings are a pure function of settled digests, so the table (and thus the seeded draw) stays deterministic and replayable. Tuning the two endpoints + curve is a knob; §8 is how we'd set it.
+- **Catch-up tilt = the box's metal** — Pax's call. The tilt isn't a hidden percentage; it's **the colour/grade of the box itself**, assigned by the owner's fantasy standing. Four tiers, each a rarity table (common/uncommon/rare/legendary odds), worse standing → shinier box:
+
+  | Box | Who gets it | Rarity odds (illustrative — §8 tunes) |
+  |---|---|---|
+  | 🥉 Bronze | leader | 60 / 30 / 9 / 1 (base) |
+  | 🥈 Silver | upper-mid | 52 / 32 / 13 / 3 |
+  | 🥇 Gold | lower-mid | 43 / 34 / 18 / 5 |
+  | 💠 Platinum | last place | 35 / 35 / 22 / 8 |
+
+  Standing maps to a tier (`floor((rank−1)/teams × 4)`, so last always = platinum, leader = bronze, spread between; with 2–3 teams only the end tiers appear). The metal shows **before** you open — you see how good your draw is, then open to see the actual tag. Standings are pure from settled digests, so the tier (and the seeded draw under it) stays deterministic. The four tables' numbers are the dial (§8).
 - **Reveal, then target.** Show the drawn tag, *then* let the owner choose who gets it. Sealed-until-applied removes the only decision the box offers (you can't aim a curse you can't see).
 - **Full slot (cap 4): replace the weakest, don't fizzle.** A wasted box feels awful. Let the owner bump the lowest-impact existing tag, surfaced in the feed ("\<team\> bumped Y off Z to apply X"). Temporary expiry makes this rarer, but it still needs a rule.
 - **Targeting: any driver** (buff your own, curse a rival) — per #296, confirmed.
@@ -65,7 +74,8 @@ Magnitude reality check (keeps expectations honest): calibration puts a common t
 
 ## 5. Legibility
 
-- **Draft + box share one visual language** ([#297](https://github.com/GrizzlyPax/Parabolica/issues/297)): the sealed "?" box coloured by rarity (legendary glows). The between-races box is that same object, opened.
+- **Two rarity-colour systems that must not be confused.** The draft ([#297](https://github.com/GrizzlyPax/Parabolica/issues/297)) colours a sealed "?" by the *tag's* rarity — hidden info about what a driver already carries. The mystery box's **metal (bronze→platinum) grades the box's own odds** — set by your standing, shown before opening. Same "shininess = better" instinct, different meaning; keep the palettes distinct (metallic ramp for the box, the existing rarity-chip colours for tags) so a gold box ≠ a gold tag.
+- **The metal is the catch-up made visible.** Seeing a rival in last place holding a platinum box *is* the rubber-band on screen — social drama, no stats panel. Lean into it (the reveal can show the metal first, then the tag).
 - **Feed / check-in reel line:** "\<team\> handed \<driver\> a mystery tag" (and the bump line when a slot was full).
 - **Tag card** marks it fantasy-given with the giving team's colour, so a driver's stack reads "who did this to me."
 - The box itself: reveal animation optional, but the tag's **name, rarity and effect** should be plain once revealed — the obfuscation is a *draft* mechanic; by box time, information is the reward.
@@ -81,7 +91,7 @@ Magnitude reality check (keeps expectations honest): calibration puts a common t
 Settled with Pax: **all three tag targets** · **every race** · **any driver** · **catch-up tilt via rarity-by-standing**. What's left is numbers to set in the lab, not shape:
 
 1. **Expiry length** — 1, 2, or 3 races? (2 is the recommendation; it's what keeps every-race cadence from saturating.)
-2. **Tilt endpoints + curve** — how generous does last place get, and linear vs steeper? (Starting point: leader 60/30/9/1 → last ~35/35/22/8, linear. Set by §8.)
+2. **The four metal tables** — the bronze→platinum odds (how much shinier last place really is). Starting point in §4; set by §8.
 3. **Tilt basis** — season-to-date fantasy standings (persistent rubber-band, recommended) or last-race-only (reactive)?
 4. **Full-slot rule confirm** — replace-weakest (recommended) vs owner-picks-which-to-bump.
 
