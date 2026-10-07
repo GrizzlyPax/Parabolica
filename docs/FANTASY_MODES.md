@@ -76,14 +76,30 @@ The box (#296) works in both, but *means* different things:
 - **Patron Mode:** a **programming** tool — manufacture drama. A chaos tag on a frontrunner is appointment television. The box's bronze→platinum metal fits the channel aesthetic perfectly.
 The catch-up tilt (worse standing → shinier box) stays sensible in both; the *standing* it reads is just that mode's leaderboard.
 
-## 6. Open forks for Pax (doc-stage, nothing built)
+## 6. Decided + open
 
-1. **One league, both modes, or pick-a-mode per league?** Could a single published league carry a Team leaderboard *and* a Patron leaderboard, so some friends play principal and some play channel over the same races? (Elegant, and very on-theme — same show, two kinds of audience.) Or is each league one mode?
-2. **Team Mode origin** — adopt a real constructor (a) or draft a pairing (b)? (§2)
-3. **Patron scoring depth** — ship a single excitement number first, or go straight to the spinning-plates audiences? (§3)
-4. **Which mode is "fantasy v2"** — i.e., which do we design to buildable spec next, and does the current draft-3-F1 fantasy become Team Mode or retire?
-5. **Naming** — "Patron" vs "Sponsor" vs "Channel" vs "Showrunner." (The bible leans channel/Management; "Patron" reads a touch classier, "Sponsor" ties to the capitalism-critique thread.)
+**Decided (Pax):** **one mode per league** — you pick Team or Patron when you found it, and it's that kind of league. Cleaner mental model, and it lets each mode's scoring/UI commit fully instead of sharing a screen. (The "both leaderboards over one race set" idea is parked as a possible later crossover.)
 
-## 7. Status
+Still open (doc-stage): Team origin (adopt a constructor vs draft a pairing — §2, Team spec §), Patron scoring depth (single number vs plates — resolved toward *single-first* in the Patron spec per the complexity-gradient research), and naming ("Patron" / "Sponsor" / "Channel").
 
-Design exploration only — **no code, by Pax's direction.** This doc is the fork; the mode we pick as "next" gets its own buildable spec (scoring tables, UI, where it lives) after Pax picks the §6 directions.
+## 7. Design principles (from research — sourced)
+
+The per-mode specs lean on these; gathered here once so both can cite them.
+
+1. **Hopeful loop.** A core loop is an action → immediate feedback → progression toward a longer goal; it works when it's short, satisfying, and anchored to a season arc. Every mode needs a per-race beat that feeds a season climb. [gameanalytics, mwm.ai]
+2. **Variable reward, ethically.** Unpredictable payoffs (the mystery box) drive anticipation — but the bible's rule is bragging rights, not gambling, so we use the *shape* (surprise, "could be great") without money or dark-pattern pressure. [gameanalytics, psu.com]
+3. **Skill must out-run luck over a season.** Persistence is the test — a good manager should keep winning across many races. High-variance one-off events (a crash) add spice but weaken the skill link; enough races + enough events let skill show. Don't let one lucky race decide a title. [FPL study, FanDuel persistence study]
+4. **Give frequent meaningful actions.** Fantasy dropout comes from a rigid roster + a losing team you can't affect. A per-race decision (box, strategy, lineup) that *isn't* individually decisive keeps a trailing player engaged. [fantasy-scoring patents]
+5. **Catch-up that respects skill.** Comebacks keep late seasons alive, but raw handouts negate skill and breed resentment. Good catch-up is *skill-gated* (you must set up the payoff), *bounded* (a big earned lead still matters), and *creates new decisions* rather than just punishing the leader. [Lipka/lawofgamedesign, game-wisdom, bugnet]
+6. **Spectacle scoring patterns.** Multiplicative chains (risk/reward: longer = worth more, breaks hurt), diminishing returns on repeats (forces variety), decay/"heat" (keep moving), tiered ranks (visible goal), and linking the meter to outside rewards (it matters past the scoreboard). [Tony Hawk wiki, Death of a Wish / gamedeveloper.com, Pizza Tower]
+7. **Spinning plates = opposed meters.** Factions/audiences that conflict make every choice a zero-sum trade (that's the tension); keep one legible failure/goal gauge so it stays readable; **add complexity gradually** — stacking many systems at once overwhelms (Frostpunk 2's lesson). Tension from decisions, not busywork. [Frostpunk 2 reviews, Reigns, Universal Paperclips]
+8. **Escalation pulls.** A rising *rate* (not just a rising number) creates forward pull; staged gates give clear next targets; theme and math should reinforce each other; a closed ending makes a run feel like a story with a climax. [Universal Paperclips analyses]
+
+## 8. The two specs
+
+- **`docs/FANTASY_TEAM_MODE.md`** — the principal / results mode.
+- **`docs/FANTASY_PATRON_MODE.md`** — the channel / ratings mode.
+
+## 9. Status
+
+Design exploration only — **no code, by Pax's direction.** This doc is the fork and the shared principles; the two specs develop each mode's loop, power curve and balance.
