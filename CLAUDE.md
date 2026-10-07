@@ -46,6 +46,7 @@ for the future NPC-crowd system (BetLab was removed Oct 2026; git history has it
 ## How we work
 - **Read first:** the newest `docs/HANDOFF_*.md` (how the pieces fit, traps, open work).
 - **Skills (`.claude/skills/`)** hold the procedures: `write-issue` (issue shape, triage, `ready`), `ship-pr` (build → test → PR → merge rules), `republish-preview`, `balance-read`, `season-report`.
+- **Planning lives in Asana** (project "🏁 Parabolica": This week / Next up / Later / Ideas / Close? / Phases, with due dates). GitHub issues hold the build spec; every Asana task links its issue. When you ship or close an issue, tick its Asana task if you have the Asana connector, or say so in the PR.
 - **`ready` label is the handoff.** Scope an issue until it can be built without guessing, then label it `ready`. Build only `ready` issues (or one Pax names). Out-of-scope finds become new issues, not extra code.
 - **Planning sessions** (issues, scoping, docs) don't edit `src/`, `server/`, `scripts/` or tests. **Build sessions** do one issue per branch/PR.
 - **Talking to Pax:** Smart Brevity — TL;DR first, bullets, bold the key bit, plain words. Anchor changes to where he sees them (screen → button). Link issues with titles, never bare numbers. Questions as multiple choice (A / B / C, pick marked). Story and theme are Pax's — capture, don't invent canon.
