@@ -36,13 +36,20 @@ for the future NPC-crowd system (BetLab was removed Oct 2026; git history has it
 - `npm run glossary` - Regenerate docs/GLOSSARY.md from the data modules (a test fails when it is stale)
 - `npm run calibrate` - Re-measure every genesis tag → src/data/tagCalibration.json (~15 min; `-- 50 <tagId>` for a quick unwritten read)
 - `npm run lab -- <seed> <races> all [cards…]` - Replay a Race Control batch in the terminal and print its fingerprint
-- `gh issue list` - View GitHub issues
-- `gh issue view <number>` - View specific issue
+- GitHub: `gh api` REST only (GraphQL is blocked in sessions) — see the `write-issue` and `ship-pr` skills
 
 ## Tech Stack
 - Vite + React + TypeScript
 - Web Workers for heavy simulations
 - GitHub: GrizzlyPax/Parabolica
+
+## How we work
+- **Read first:** the newest `docs/HANDOFF_*.md` (how the pieces fit, traps, open work).
+- **Skills (`.claude/skills/`)** hold the procedures: `write-issue` (issue shape, triage, `ready`), `ship-pr` (build → test → PR → merge rules), `republish-preview`, `balance-read`, `season-report`.
+- **`ready` label is the handoff.** Scope an issue until it can be built without guessing, then label it `ready`. Build only `ready` issues (or one Pax names). Out-of-scope finds become new issues, not extra code.
+- **Planning sessions** (issues, scoping, docs) don't edit `src/`, `server/`, `scripts/` or tests. **Build sessions** do one issue per branch/PR.
+- **Talking to Pax:** Smart Brevity — TL;DR first, bullets, bold the key bit, plain words. Anchor changes to where he sees them (screen → button). Link issues with titles, never bare numbers. Questions as multiple choice (A / B / C, pick marked). Story and theme are Pax's — capture, don't invent canon.
+- **Done** = merged, live on playparabolica.com, and (for UI) checked in the browser.
 
 ## Docs
 - `docs/ARCHITECTURE_REVIEW.md` - Refactor roadmap (seeded RNG, persistence, engine split)
