@@ -22,7 +22,7 @@ One page with defaults, so a solo player can hit Start immediately.
 |---|---|---|
 | League name | generated | Editable; flavour only |
 | Universe seed | random | Enter or reroll; generates the driver + car pool and track character |
-| Teams | 11 | Range TBD (e.g. 4–12). **Drivers = teams × 3, cars = teams** |
+| Teams | 10 | **5–10** (Pax). **Drivers = teams × 3, cars = teams** |
 | Player-controlled | 1 | Each human names and colours their team. >1 = local hotseat |
 | CPU teams | auto | = teams − humans; generated identities; dumb AI |
 | Calendar | random, ~16 | Random from the pool or hand-picked; reuses existing tracks |
@@ -45,12 +45,12 @@ Instead of 2 drivers pre-assigned to each named team, the seed summons a **share
 - Each human's turn has **two decisions**:
   1. **Pick who races:** 2 of your 3 start, and the 3rd is benched.
   2. **Apply your mystery box:** the box has a **metal** (severity, set by standing: Bronze leader → Platinum last) and a **slot** (driver / car / team). Open it (a loot-box reveal), then choose the recipient (any driver, car or team, yours or a rival's).
-- Box rules: dealt every race · lasts about 2 races (dial) · cap 4 tags, replacing the weakest · it's an `attach-tag` intervention, so no new physics.
+- Box rules: dealt every race · **the box has no expiry: how long a reward lasts belongs to the tag itself** (Pax). Some rewards are equipment, some are permanent traits; that split comes from the tag revamp. Until a tag declares a duration, box tags are permanent · cap 4 tags, replacing the weakest · it's an `attach-tag` intervention, so no new physics.
 - Metal odds (C/U/R/L, illustrative): Bronze 60/30/9/1 · Silver 52/32/13/3 · Gold 43/34/18/5 · Platinum 35/35/22/8.
 
 ## 5. Race & standings
 - The **existing engine** races the drafted drivers, cars and tags, with no new physics. Each race **holds for "Go"**, then you **watch live or skip to the result**.
-- **Score:** constructor points (your 2 racers combined) plus a **drivers'-champion bonus** (value TBD). A finale crowns the champion.
+- **Score:** constructor points (your 2 racers combined) plus a **drivers'-champion bonus**. Pax wants it worth *more* than one race win; Telemetry sets the number from seeded seasons. A finale crowns the champion.
 - **The in-race UI hides rivals' detailed stats**, matching the draft opacity.
 
 ## 6. Look & feel
@@ -60,8 +60,11 @@ Instead of 2 drivers pre-assigned to each named team, the seed summons a **share
 ## Out of scope (hooks only)
 Patron Mode · CPU Paddock actions · free agents / transfers · events · spend economy · online / wall-clock / accounts · views-followers metric · cosmetic/story tag content.
 
-## Open dials (Pax)
-Box expiry (1 / 2 / 3 races; 2 recommended) · swap rule (free every race, or constrained) · drivers'-champ bonus value · grid size range.
+## Decided (Pax, Oct 8)
+- **Box expiry:** none on the box; duration lives on the tag/reward (equipment vs permanent traits, from the tag revamp).
+- **Lineups:** free choice of your 2 racers every race.
+- **Drivers'-champ bonus:** worth more than one race win; Telemetry proposes the exact value.
+- **Grid size:** 5–10 teams, default 10.
 
 ## Done when
 League Setup → draft against simmed AI → a session of Paddock + race cycles across the calendar → standings to a champion. Solo first; hotseat if humans > 1. Deterministic and replayable throughout.
