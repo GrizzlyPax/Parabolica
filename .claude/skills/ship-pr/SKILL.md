@@ -47,6 +47,11 @@ gh api -X PUT repos/GrizzlyPax/Parabolica/pulls/N/merge -f merge_method=squash
 
 PR body: what changed · **where Pax sees it** (screen → button) · `Closes #N` · fingerprint/version note if any.
 
+## Asana
+
+- Find the task in Asana project "🏁 Parabolica" before starting; that's the source of what's next.
+- After merge: tick the task done (or move it toward its release if it's a partial). No Asana connector → say "Asana: tick <task title>" at the end of your reply.
+
 ## Merging
 
 - Merging to `main` deploys playparabolica.com. Merge only green, self-contained PRs.

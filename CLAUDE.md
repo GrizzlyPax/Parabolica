@@ -46,7 +46,11 @@ for the future NPC-crowd system (BetLab was removed Oct 2026; git history has it
 ## How we work
 - **Read first:** the newest `docs/HANDOFF_*.md` (how the pieces fit, traps, open work).
 - **Skills (`.claude/skills/`)** hold the procedures: `write-issue` (issue shape, triage, `ready`), `ship-pr` (build → test → PR → merge rules), `republish-preview`, `balance-read`, `season-report`.
-- **Planning lives in Asana** (project "🏁 Parabolica": This week / Next up / Later / Ideas / Close? / Phases, with due dates). GitHub issues hold the build spec; every Asana task links its issue. When you ship or close an issue, tick its Asana task if you have the Asana connector, or say so in the PR.
+- **Asana is the task system. Every thread, every crew member.** Project ["🏁 Parabolica"](https://app.asana.com/1/1219276824761487/project/1219276019625158) (workspace "My workspace"). Look there first for what to do; don't track work anywhere else (no TODO docs, no GitHub milestones/projects).
+  - **Sections = releases:** `🏁 v0.4.x · Patches`, `🇧🇪 v0.5 Spa`, `🇮🇹 v0.6 Monza`, `🇯🇵 v0.7 Suzuka`, `📥 Queued` (committed, unslotted), `🧊 Icebox` (maybe / needs Pax). Target date is in the section name.
+  - **Fields:** **Crew** (who + which model; `Pax` = needs his call) and **due date**. Titles are plain, no issue numbers, no status prefixes.
+  - **GitHub issues are the build spec**, linked in the task description. Every new issue gets an Asana task; every Asana task that needs code has an issue.
+  - **When work ships:** tick the Asana task done. When starting: note it in the task. If the Asana connector isn't available in your chat, say exactly what to change in your final message so Pit can apply it.
 - **`ready` label is the handoff.** Scope an issue until it can be built without guessing, then label it `ready`. Build only `ready` issues (or one Pax names). Out-of-scope finds become new issues, not extra code.
 - **Planning sessions** (issues, scoping, docs) don't edit `src/`, `server/`, `scripts/` or tests. **Build sessions** do one issue per branch/PR.
 - **Talking to Pax:** Smart Brevity — TL;DR first, bullets, bold the key bit, plain words. Anchor changes to where he sees them (screen → button). Link issues with titles, never bare numbers. Questions as multiple choice (A / B / C, pick marked). Story and theme are Pax's — capture, don't invent canon.
