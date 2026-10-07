@@ -87,6 +87,7 @@ Every Asana task has a **Crew** field saying who (and which model) should take i
 - `docs/story/` - Story brainstorms and working notes (NOT canon until moved into the bible); index in `docs/story/README.md`
 - `docs/WORLD_DECK.md` - Content framework: how to add teams, tracks, names, tags, cards, weather, gods, commentary (shapes, rules, voice, backlog, agent prompt)
 - `docs/GLOSSARY.md` - GENERATED World Deck: every team, track, tag, card, rule, weather, infliction, god and flavour pool (`npm run glossary`; `src/data/worldDeck.test.ts` checks content)
+- `docs/SEASON_MODE.md` - v0.5 Spa build spec: Season Mode (League Setup, snake draft, Paddock → Race loop, mystery box)
 - `docs/FANTASY.md` - Fantasy teams: snake draft, obfuscated draft info, scoring, where it shows
 - `docs/LEAGUE_SERVER.md` - One league, every device: the server holds facts + decrees + canonical digests; devices replay; publish / open by code / link; deploy secrets
 - `docs/RACE_CONTROL.md` - The lab: parity rule, seeds and fingerprints, tag calibration method and bands, how to replicate and export
