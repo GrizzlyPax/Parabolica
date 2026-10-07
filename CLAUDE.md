@@ -52,6 +52,7 @@ for the future NPC-crowd system (BetLab was removed Oct 2026; git history has it
 - **Done** = merged, live on playparabolica.com, and (for UI) checked in the browser.
 
 ## Docs
+- `docs/README.md` - Index of every doc, grouped by area (update it when a doc is added, renamed or retired)
 - `docs/ARCHITECTURE_REVIEW.md` - Refactor roadmap (seeded RNG, persistence, engine split)
 - `docs/GAME_DESIGN_PASS.md` - Live-race design roadmap (drama beats, bet settlement, persistence)
 - `docs/COMMISSIONER_MODE.md` - Gamification north star (wall-clock roguelite seasons, gods, decrees)
