@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import './MainMenu.css';
 import { version } from '../package.json';
+import { isUnlocked } from './pitwall/github';
 
 /** What the menu needs to know about a saved league, if one exists. */
 export interface LeagueCardSummary {
@@ -22,6 +23,8 @@ interface MainMenuProps {
   onCommissioner: () => void;
   onCompendium: () => void;
   onGlossary: () => void;
+  /** The team's work board. The row shows once this device has opened #pitwall or saved a token. */
+  onPitWall: () => void;
   league?: LeagueCardSummary | null;
 }
 
@@ -32,7 +35,8 @@ function nextIn(league: LeagueCardSummary): string {
   return `Next in ~${mins}m`;
 }
 
-function MainMenu({ onSingleRace, onCommissioner, onCompendium, onGlossary, onOpenCode, league }: MainMenuProps) {
+function MainMenu({ onSingleRace, onCommissioner, onCompendium, onGlossary, onPitWall, onOpenCode, league }: MainMenuProps) {
+  const [showPitWall] = useState(isUnlocked);
   const [code, setCode] = useState('');
   const [opening, setOpening] = useState(false);
   const [codeError, setCodeError] = useState<string | null>(null);
@@ -140,6 +144,22 @@ function MainMenu({ onSingleRace, onCommissioner, onCompendium, onGlossary, onOp
             <span className="mm-row-chev">›</span>
           </button>
         </section>
+
+        {showPitWall && (
+          <section className="mm-section">
+            <div className="mm-k">Team</div>
+            <button type="button" className="mm-row" onClick={onPitWall}>
+              <span className="mm-row-icon">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><rect x="2.5" y="3.5" width="4" height="13" rx="1" /><rect x="8" y="3.5" width="4" height="8" rx="1" /><rect x="13.5" y="3.5" width="4" height="10.5" rx="1" /></svg>
+              </span>
+              <span className="mm-row-text">
+                <span className="mm-row-title">Pit Wall</span>
+                <span className="mm-row-sub">Live work board from GitHub. Add, move and edit tasks.</span>
+              </span>
+              <span className="mm-row-chev">›</span>
+            </button>
+          </section>
+        )}
 
         <footer className="mm-footer">
           <span>v{version} · {new Date(__BUILD_TIME__).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</span>

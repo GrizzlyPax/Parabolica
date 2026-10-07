@@ -11,6 +11,7 @@ import MainMenu from './MainMenu';
 import RaceStartCountdown from './RaceStartCountdown';
 import WatchMode from './WatchMode';
 import RaceControl from './racecontrol/RaceControl';
+import PitWall from './pitwall/PitWall';
 import FoundingScreen, { FoundingChoices } from './league/ui/FoundingScreen';
 import LeagueScreen from './league/ui/LeagueScreen';
 import GridScreen from './league/ui/GridScreen';
@@ -26,11 +27,12 @@ import { mulberry32, deriveSeed } from './engine/rng';
 import { generateTrack, getRandomTracks, getTrackById, getDynamicEventDescription, Track } from './generators/tracks';
 import './App.css';
 
-type AppScreen = 'main-menu' | 'setup' | 'race' | 'compendium' | 'founding' | 'league' | 'broadcast' | 'grid' | 'glossary';
+type AppScreen = 'main-menu' | 'setup' | 'race' | 'compendium' | 'founding' | 'league' | 'broadcast' | 'grid' | 'glossary' | 'pitwall';
 type RaceSpeed = 0.5 | 1 | 2 | 10;
 
 function App() {
-  const [screen, setScreen] = useState<AppScreen>('main-menu');
+  // playparabolica.com/#pitwall opens the team board directly (and unlocks its menu row).
+  const [screen, setScreen] = useState<AppScreen>(() => (location.hash === '#pitwall' ? 'pitwall' : 'main-menu'));
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [isRunning, setIsRunning] = useState(false);
   const [config, setConfig] = useState<RaceConfig | null>(null);
@@ -139,6 +141,17 @@ function App() {
     } catch (e) {
       return e instanceof RemoteError ? (e.status === 404 ? `No league with code ${code}.` : e.message) : 'Could not open that league.';
     }
+  }, []);
+
+  // Pit Wall keeps its own link in the address bar so a refresh stays put.
+  useEffect(() => {
+    if (screen === 'pitwall' && location.hash !== '#pitwall') history.replaceState(null, '', '#pitwall');
+    if (screen !== 'pitwall' && location.hash === '#pitwall') history.replaceState(null, '', location.pathname + location.search);
+  }, [screen]);
+  useEffect(() => {
+    const onHash = () => { if (location.hash === '#pitwall') setScreen('pitwall'); };
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
   }, []);
 
   // A league link: playparabolica.com/#league=CODE
@@ -326,6 +339,7 @@ function App() {
         onOpenCode={openByCode}
         onCompendium={handleCompendium}
         onGlossary={() => setScreen('glossary')}
+        onPitWall={() => setScreen('pitwall')}
         league={leagueSummary}
       />
     );
@@ -334,6 +348,10 @@ function App() {
   // Show compendium
   if (screen === 'glossary') {
     return <Glossary onBack={handleBackToMainMenu} />;
+  }
+
+  if (screen === 'pitwall') {
+    return <PitWall onBack={handleBackToMainMenu} />;
   }
 
   if (screen === 'compendium') {
