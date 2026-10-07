@@ -8,7 +8,17 @@
 
 **You are a team principal.** You hold one two-driver team and win by **results** — constructor points over the season. This is the competitor's mode: "I'll run the best team on the grid." Pace matters, strategy matters, and beating a rival is the whole point.
 
-## 2. The loop (hopeful)
+## 2. The draft (stage one)
+
+Every Team league opens with a **snake draft** — exclusive picks, order reverses each round — and you leave it holding a **two-driver team**. (This resolves the origin fork: you *draft a pairing*, you don't adopt a constructor. The draft is a skill+luck beat players love, and it's the current fantasy's DNA.) A good read of the board is the first place the season is won or lost.
+
+**What you're reading: pace.** Team Mode is about results, so the cards show how *fast* a pick is — deliberately vague (the #297 card):
+- **Driver** and **car** each get a traffic light — 🟢 front third / 🟡 midfield / 🔴 back third. Cars are per-seat, so each driver carries their own.
+- **Tag slots** are sealed mystery boxes coloured by rarity (driver / car / team) — you see *that* a pick carries a rare tag, not which. Risk inference is the point.
+
+No raw numbers, no tag names. Full information would make the draft solved (everyone fights over the known monster); showing only the tier keeps it a *read*, and keeps the catch-up story alive since you can't just hoover the top.
+
+## 3. The loop (hopeful)
 
 ```
   BETWEEN RACES                 RACE                      AFTER
@@ -23,7 +33,7 @@
 - **Season arc:** climb to the constructor title; a closed ending (the finale) makes the run a story (principle 8).
 - **The hook:** the standings gap is always one good race from closing, and the box is the between-race variable-reward beat (principle 2).
 
-## 3. The power curve — the thing we have to get right
+## 4. The power curve — the thing we have to get right
 
 A principal who merely *owns* a fixed team has **no growth curve**: they're exactly as good as their genesis roll, the season plays out, and a losing player has nothing to do but watch (principle 4's failure mode — the #1 fantasy-dropout driver). Team Mode therefore needs a **progression vector**: something the principal grows across the season.
 
@@ -37,7 +47,7 @@ Candidates (pick one as the spine):
 
 This is principle 5 applied: the catch-up is **skill-gated** (you still choose *what* to develop and *where* to aim the box), **bounded** (a genuinely great team stays ahead — we're compressing the gap, not erasing the lead), and it **creates decisions** rather than handing the laggard free speed.
 
-## 4. Balance targets
+## 5. Balance targets
 
 | Concern | Target / lever |
 |---|---|
@@ -46,14 +56,14 @@ This is principle 5 applied: the catch-up is **skill-gated** (you still choose *
 | Engagement when losing | A trailing principal always has a live lever (shinier boxes, bigger development) and a visible "catching up" signal. |
 | Two-driver texture | Both seats score (constructor sum). A clear #1/#2 or a rivalry *within* your team is narrative fuel — worth surfacing, not hiding. |
 
-## 5. Open design questions
+## 6. Open design questions
 
-1. **Origin** — adopt one of the grid's real 11 constructors (tighter theme, your skill is all in-season) **or** draft a two-driver pairing (keeps the beloved blind-draft moment + more agency, but the team races as an added entity)? *Lean: draft a pairing — the draft is a real skill/luck beat players love, and it's the current fantasy's DNA.*
+1. **Does a drafted pairing bring its cars, or do you draft a car too?** You draft two drivers (§2) — but cars are per-seat, so either each driver arrives with their own car (simplest) or the car is a separate pick/slot (more agency, more draft rounds). *Lean: drivers bring their cars; revisit a car pick later.*
 2. **Progression spine** — development points vs tag accretion vs both? (Both is richer but two economies to balance; start with one.)
 3. **Strategy lean as a real lever** — is "set your team's pit/aggression archetype" enough of a decision to feel like principal-ing, or does control need more (driver orders, develop focus)?
 4. **Title shape** — pure constructor points, or points + a bonus for beating your pre-season projected finish (a built-in underdog/skill reward that further decouples from raw package)?
 
-## 6. Why this mode earns its place
+## 7. Why this mode earns its place
 
 It's the **competitor's fantasy** and the simplest to make legible (points are points). Its whole design risk is the power curve — get the progression catch-up-leaning and it's a tense season-long climb; get it pro-winner and it's the dominance procession wearing a team hat. The levers (deficit development, box tilt) are already in our vocabulary, so the mode is mostly *scoring + a progression economy*, not new simulation.
 

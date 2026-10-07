@@ -20,13 +20,14 @@ A race produces two independent signals: **who finished where** (results) and **
 | | Team Mode | Patron Mode |
 |---|---|---|
 | You are | a team principal | a channel / patron / sponsor |
-| You hold | one two-driver team | a drafted stable of drivers |
+| Opens with | a draft — reading **pace** | a draft — reading **drama** |
+| You hold | a two-driver team (drafted pairing) | a three-driver stable |
 | You win by | **results** (points, podiums, titles) | **ratings** (excitement, chaos, story) |
 | Best pick is | the fastest package | the most *watchable* driver |
 | Relationship to dominance | embraces it (be the best) | immune to it (pace ≠ ratings) |
 | Story frame | the sport | "the work is mysterious and important" |
 
-The magic: they reward **opposite reads of the same grid.** In Team Mode you want the 5★ monster; in Patron Mode you might *fade* him — he wins from pole and nobody watches — and back the midfield lunatic who makes every lap television.
+The magic: they reward **opposite reads of the same grid** — and that split starts at the **draft**, which both modes open with. Team Mode drafts for pace (you want the 5★ monster); Patron Mode drafts for drama (you might *fade* that monster — he wins from pole and nobody watches — and take the midfield lunatic who makes every lap television). Same ritual, opposite skill. Each spec's §2 details its draft.
 
 ## 2. Team Mode — the principal
 
@@ -80,7 +81,9 @@ The catch-up tilt (worse standing → shinier box) stays sensible in both; the *
 
 **Decided (Pax):** **one mode per league** — you pick Team or Patron when you found it, and it's that kind of league. Cleaner mental model, and it lets each mode's scoring/UI commit fully instead of sharing a screen. (The "both leaderboards over one race set" idea is parked as a possible later crossover.)
 
-Still open (doc-stage): Team origin (adopt a constructor vs draft a pairing — §2, Team spec §), Patron scoring depth (single number vs plates — resolved toward *single-first* in the Patron spec per the complexity-gradient research), and naming ("Patron" / "Sponsor" / "Channel").
+Also decided: **both modes open with a snake draft** — Team drafts a two-driver pairing reading pace, Patron a three-driver stable reading drama (resolves the Team origin fork toward drafting, not adopting a constructor).
+
+Still open (doc-stage): whether a Team pairing also drafts a car (Team spec §6), Patron scoring depth (single number vs plates — resolved toward *single-first* per the complexity-gradient research), and naming ("Patron" / "Sponsor" / "Channel").
 
 ## 7. Design principles (from research — sourced)
 
