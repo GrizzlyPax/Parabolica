@@ -1,0 +1,95 @@
+// <GameIcon>, <TeamLogo> and the team theme (#350, docs/ICONS.md).
+//
+// <GameIcon name="weather.rain" size={16} fallback="🌧️" /> — asks for a
+// meaning (or a raw icon id), renders the SVG inline in `currentColor`. A
+// meaning with no icon yet renders `fallback` (the screen's old emoji), so
+// screens migrate one at a time without breaking.
+import type { CSSProperties } from 'react';
+import { iconBody, resolveIcon } from './registry';
+import './icons.css';
+
+export interface GameIconProps {
+  /** A meaning ('weather.rain') or a raw icon id ('raining'). */
+  name?: string;
+  /** Pixel size (square). */
+  size?: number;
+  /** A CSS colour or var(); defaults to the surrounding text colour. */
+  color?: string;
+  /** Shown when `name` has no icon yet — normally the old emoji. */
+  fallback?: string;
+  /** Accessible label. Omit for decorative icons (hidden from screen readers). */
+  title?: string;
+  className?: string;
+}
+
+export function GameIcon({ name, size = 16, color, fallback, title, className }: GameIconProps) {
+  const entry = resolveIcon(name);
+  const body = entry && iconBody(entry);
+  const a11y = title ? { role: 'img' as const, 'aria-label': title } : { 'aria-hidden': true as const };
+  const cls = `game-icon ${className ?? ''}`.trim();
+
+  if (!body) {
+    if (!fallback) return null;
+    return (
+      <span className={`${cls} game-icon-fallback`} style={{ fontSize: size, ...(color ? { color } : {}) }} {...a11y}>
+        {fallback}
+      </span>
+    );
+  }
+  return (
+    <svg
+      className={cls}
+      width={size}
+      height={size}
+      viewBox="0 0 512 512"
+      fill="currentColor"
+      focusable="false"
+      style={color ? { color } : undefined}
+      {...a11y}
+      dangerouslySetInnerHTML={{ __html: body }}
+    />
+  );
+}
+
+/** Anything with a livery: a Team, or a roster driver (color/accentColor). */
+export interface TeamLike {
+  name?: string;
+  emoji?: string;
+  /** Primary colour. */
+  color: string;
+  accentColor?: string;
+  /** Secondary colour (the logo's icon); falls back to accentColor. */
+  secondaryColor?: string;
+  /** Icon id or meaning for the logo; falls back to the team's emoji. */
+  iconId?: string;
+}
+
+export function teamSecondary(team: TeamLike): string {
+  return team.secondaryColor ?? team.accentColor ?? 'var(--pw-text-1)';
+}
+
+/** A team logo: the icon in the secondary colour on a primary-colour tile.
+ * Without a `team`, it wears the surrounding theme (--team-primary/secondary). */
+export function TeamLogo({ team, size = 24, title }: { team?: TeamLike; size?: number; title?: string }) {
+  const style: CSSProperties = {
+    width: size,
+    height: size,
+    borderRadius: Math.max(3, Math.round(size * 0.22)),
+    background: team ? team.color : 'var(--team-primary)',
+    color: team ? teamSecondary(team) : 'var(--team-secondary)',
+  };
+  const label = title ?? team?.name;
+  return (
+    <span className="team-logo" style={style} {...(label ? { role: 'img', 'aria-label': label } : { 'aria-hidden': true })}>
+      <GameIcon name={team?.iconId} size={Math.round(size * 0.72)} fallback={team?.emoji} />
+    </span>
+  );
+}
+
+/** CSS variables that theme a subtree in a team's colours. Put the result on
+ * a screen's root `style` (in Season Mode: your team; hotseat: whoever's
+ * turn it is). Null = neutral (the :root defaults in App.css). */
+export function teamThemeVars(team: TeamLike | null | undefined): CSSProperties {
+  if (!team) return {};
+  return { '--team-primary': team.color, '--team-secondary': teamSecondary(team) } as CSSProperties;
+}

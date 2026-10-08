@@ -84,3 +84,12 @@
 .gl-idea-text { white-space: normal; color: var(--pw-text-1); font-size: 13.5px; line-height: 1.35; }
 .gl-sent { opacity: 0.55; }
 @media (max-width: 799px) { .gl-idea { grid-template-columns: 1fr !important; } }
+
+/* Credits tab (#350): game-icons.net authors, generated from the registry. */
+.gl-credit { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; padding: 8px 0; border-top: 1px solid var(--pw-hairline); }
+.gl-credit-author { min-width: 110px; color: var(--pw-text-1); font-weight: 600; }
+.gl-credit-author a, .glossary .gl-desc a { color: var(--pw-text-1); text-decoration: underline; text-decoration-color: var(--pw-border-strong); }
+.gl-credit-icons { display: flex; flex-wrap: wrap; gap: 6px 14px; }
+.gl-credit-icon, .gl-credit-size { display: inline-flex; align-items: center; gap: 6px; color: var(--pw-text-1); }
+.gl-credit-icon code, .gl-credit-size code { color: var(--pw-text-3); font-size: 12px; }
+.gl-credit-sizes { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--pw-hairline); }

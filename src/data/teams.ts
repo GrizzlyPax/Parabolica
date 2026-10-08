@@ -7,6 +7,10 @@ export interface Team {
   emoji: string;
   color: string;        // Primary color
   accentColor: string;  // Secondary/accent color
+  /** Logo icon colour on the primary tile (docs/ICONS.md); falls back to accentColor. */
+  secondaryColor?: string;
+  /** game-icon id or meaning for the logo (src/icons/registry.ts); falls back to emoji. */
+  iconId?: string;
   description: string;  // Aesthetic vibe
   isHistoric?: boolean; // Historic teams (unlockable)
   isCustom?: boolean;   // Player-created at league founding

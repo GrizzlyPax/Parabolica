@@ -1,0 +1,19 @@
+/* game-icons (#350). Icons are currentColor; size comes from the component. */
+.game-icon {
+  display: inline-block;
+  flex-shrink: 0;
+  vertical-align: -0.15em;
+}
+.game-icon-fallback {
+  font-family: var(--font-emoji);
+  line-height: 1;
+}
+
+/* Team logo: the icon in the secondary colour on a primary-colour tile. */
+.team-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  line-height: 1;
+}

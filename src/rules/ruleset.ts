@@ -73,6 +73,8 @@ export interface RuleCard {
   id: string;
   name: string;
   emoji: string;
+  /** game-icon id or meaning (src/icons/registry.ts); falls back to emoji. */
+  iconId?: string;
   /** Where the card is offered: a one-off race ("Rain"), a whole season
    * ("Always Raining"), or either. Same patch machinery underneath. */
   scope: RuleCardScope;
