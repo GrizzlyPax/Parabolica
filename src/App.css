@@ -5,30 +5,44 @@
   /* === Pit Wall tokens (the house style, Oct 2026). Neutral chrome, loud
      teams; signal colours carry meaning only. New pages use these; old pages
      migrate to them. === */
-  --pw-ground: #0a0a0c;
-  --pw-surface: #121216;
+  --pw-ground: #0b0b0c;
+  --pw-surface: #151517;
   --pw-raised: #1a1a20;
-  --pw-hairline: #1e1e25;
-  --pw-border: #26262e;
-  --pw-border-strong: #34343e;
-  --pw-text-1: #f3f2ef;
-  --pw-text-2: #a6a6b0;
-  --pw-text-3: #7c7c88;
-  --pw-green: #34d27a;    /* live, racing, go */
-  --pw-yellow: #f2c230;   /* safety car, caution, countdowns */
-  --pw-red: #ff5a4f;      /* DNF, out, destructive */
+  --pw-hairline: #2a2a2e;
+  --pw-border: #2a2a2e;
+  --pw-border-strong: #4a4a50;
+  --pw-text-1: #ffffff;
+  --pw-text-2: #b4b4ba;
+  --pw-text-3: #7c7c84;
+  /* Signal colours: meaning only (docs/ICONS.md → The look). */
+  --signal-red: #ff5a4f;     /* DNF, out, destructive, losses */
+  --signal-yellow: #f2c230;  /* safety car, caution, countdowns */
+  --signal-green: #34d27a;   /* live, racing, go, gains */
+  --signal-purple: #a98bff;  /* best / fastest */
+  --pw-green: var(--signal-green);
+  --pw-yellow: var(--signal-yellow);
+  --pw-red: var(--signal-red);
   --pw-red-soft: #ff8a80;
-  --pw-purple: #a98bff;   /* fastest lap; Commissioner identity */
-  /* Tag rarity, sector-colour order: common → legendary */
-  --rarity-common: var(--pw-red);
-  --rarity-uncommon: var(--pw-yellow);
-  --rarity-rare: var(--pw-green);
-  --rarity-legendary: var(--pw-purple);
-  /* The active team's colours (docs/ICONS.md). Neutral here; a screen sets
-     them from your team (Season Mode) or whoever's turn it is (hotseat) via
-     teamThemeVars() in src/icons/GameIcon.tsx. Icons are currentColor. */
-  --team-primary: var(--pw-raised);
-  --team-secondary: var(--pw-text-1);
+  --pw-purple: var(--signal-purple);
+  /* Rarity = metals (Pax, Oct 8). The class names move to bronze…iridium in
+     #385; until then common → legendary carry the metal values. */
+  --rarity-bronze: #c98b5b;
+  --rarity-silver: #9fb4c8;
+  --rarity-gold: #e6be4a;
+  --rarity-iridium: #b7a3ff;
+  --rarity-common: var(--rarity-bronze);
+  --rarity-uncommon: var(--rarity-silver);
+  --rarity-rare: var(--rarity-gold);
+  --rarity-legendary: var(--rarity-iridium);
+  /* The active team's colour (docs/ICONS.md). Neutral = white + near-black
+     ink; a screen sets them from your team (Season Mode) or whoever's turn it
+     is (hotseat) via teamThemeVars() in src/icons/GameIcon.tsx. */
+  --team-primary: #ffffff;
+  --team-ink: #0b0b0c;
+  /* The look (Almanac): wide grotesque display, book serif body, tabular data. */
+  --look-display: 'Archivo', 'Arial Black', sans-serif;
+  --look-serif: 'Source Serif 4', Georgia, serif;
+  --look-data: 'Archivo', system-ui, sans-serif;
   --pw-radius-s: 6px;
   --pw-radius-m: 10px;
   --pw-radius-l: 14px;

@@ -7,7 +7,7 @@ import {
   CARD_KIND_ICONS, ICONS, ICON_AUTHORS, MEANINGS, STAT_ICONS,
   iconBody, iconCredits, iconViewBox, resolveIcon, vendoredIconFiles,
 } from './registry';
-import { GameIcon, TeamLogo, teamThemeVars } from './GameIcon';
+import { GameIcon, TeamLogo, inkFor, teamThemeVars } from './GameIcon';
 
 const html = (el: Parameters<typeof renderToStaticMarkup>[0]) => renderToStaticMarkup(el);
 const doc = (p: string) => readFileSync(join(__dirname, '../../docs', p), 'utf8');
@@ -110,7 +110,7 @@ describe('<GameIcon> / <TeamLogo>', () => {
   });
 
   it('TeamLogo: icon on a primary-colour tile; emoji fallback', () => {
-    const team = { name: 'Test', emoji: '🦆', color: '#112233', accentColor: '#445566' };
+    const team = { name: 'Test', emoji: '🦆', color: '#112233' };
     const plain = html(createElement(TeamLogo, { team }));
     expect(plain).toContain('background:#112233');
     expect(plain).toContain('🦆');
@@ -119,7 +119,16 @@ describe('<GameIcon> / <TeamLogo>', () => {
   });
 
   it('theme vars: a team sets the theme; none stays neutral', () => {
-    expect(teamThemeVars({ color: '#111111', accentColor: '#222222' })).toEqual({ '--team-primary': '#111111', '--team-secondary': '#222222' });
+    expect(teamThemeVars({ color: '#111111' })).toEqual({ '--team-primary': '#111111', '--team-ink': '#ffffff' });
+    expect(teamThemeVars({ color: '#111111', ink: '#0b0b0c' })).toEqual({ '--team-primary': '#111111', '--team-ink': '#0b0b0c' });
     expect(teamThemeVars(null)).toEqual({});
+  });
+
+  it('ink: white on dark colours, near-black on light ones', () => {
+    expect(inkFor('#0b0b0c')).toBe('#ffffff');
+    expect(inkFor('#ffffff')).toBe('#0b0b0c');
+    expect(inkFor('#f2c230')).toBe('#0b0b0c');
+    expect(inkFor('#1e3a8a')).toBe('#ffffff');
+    expect(inkFor('var(--x)')).toBe('#ffffff');
   });
 });
