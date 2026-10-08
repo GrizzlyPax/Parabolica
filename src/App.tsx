@@ -259,7 +259,7 @@ function App() {
   // the same race to its finish. The round is recorded by settleRound (the
   // headless run of the same seeded race), so watching changes nothing.
   const onSeasonRace = route.name === 'season' && route.screen === 'race';
-  const [seasonRace, setSeasonRace] = useState<{ round: number; sealed: Set<number>; you: TeamLike } | null>(null);
+  const [seasonRace, setSeasonRace] = useState<{ round: number; sealed: Set<number>; mine: number[]; you: TeamLike } | null>(null);
   const settlingSeason = useRef(false);
   useEffect(() => {
     if (!onSeasonRace) {
@@ -291,6 +291,7 @@ function App() {
     setSeasonRace({
       round: state.round,
       sealed: new Set(leagueNow.roster.filter(d => !humans.has(d.kingdomId ?? '')).map(d => d.id)),
+      mine: leagueNow.roster.filter(d => humans.has(d.kingdomId ?? '')).map(d => d.id),
       you: teamsOf(facts)[facts.setup.humans[0].teamId],
     });
   }, [onSeasonRace]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -445,6 +446,7 @@ function App() {
           trackInfo={trackInfo}
           raceEvents={raceEvents}
           sealedDriverIds={seasonRace.sealed}
+          myDriverIds={seasonRace.mine}
           onExit={() => leaveSeasonRace(raceState.raceFinished)}
           exitLabel="Paddock"
           isRunning={isRunning}

@@ -221,6 +221,8 @@ export function seasonRoster(pool: SeasonPool, rosters: TeamRoster[], lineups: L
         teamStats: adjusted.team,
         number: driver.number,
         tags: [],
+        // Display only: already baked into the stats above. The race view shows them (#451).
+        cards,
       });
     });
   }

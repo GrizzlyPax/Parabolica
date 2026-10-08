@@ -60,6 +60,8 @@ interface WatchModeProps {
   fantasy?: FantasyConfig;
   /** Season Mode (#322): rivals' drivers, whose stats and cards stay sealed. */
   sealedDriverIds?: ReadonlySet<number>;
+  /** Season Mode (#451): your drivers, lit (focused) from the first lap. */
+  myDriverIds?: readonly number[];
   /** The way out, when it isn't the menu or the league ("Paddock"). */
   exitLabel?: string;
   // Race controls
@@ -112,6 +114,7 @@ function WatchMode({
   onExit,
   spectator = false,
   sealedDriverIds,
+  myDriverIds,
   exitLabel,
   // Race controls
   isRunning = false,
@@ -157,7 +160,7 @@ function WatchMode({
   // New view system: track (map + tower), detail (full tower)
   const [activeView, setActiveView] = useState<RaceView>('track');
   // Multi-driver focus - allow up to 10 focused drivers (click to toggle)
-  const [focusedDriverIds, setFocusedDriverIds] = useState<Set<number>>(new Set());
+  const [focusedDriverIds, setFocusedDriverIds] = useState<Set<number>>(() => new Set(myDriverIds ?? []));
   const [navPanelOpen, setNavPanelOpen] = useState(false);
 
   // Auto-unfocus DNF'd drivers (they can manually re-focus if wanted)
