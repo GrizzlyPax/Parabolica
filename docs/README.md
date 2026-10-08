@@ -7,6 +7,7 @@ Parabolica is an F1-style race sim building toward Commissioner Mode: wall-clock
 ## Start here
 | Doc | What it's for |
 |---|---|
+| [V05_PLAN](V05_PLAN.md) | **The v0.5 Spa plan:** milestones, lanes, order, risks, decision log |
 | [HANDOFF_2026-10-07](HANDOFF_2026-10-07.md) | What shipped Oct 5–7, how the pieces fit, traps, open work |
 | [GLOSSARY](GLOSSARY.md) | Every team, track, tag, card, rule, weather and flavour pool (**generated**: `npm run glossary`) |
 

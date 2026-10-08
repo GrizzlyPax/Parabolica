@@ -44,7 +44,7 @@ for the future NPC-crowd system (BetLab was removed Oct 2026; git history has it
 - GitHub: GrizzlyPax/Parabolica
 
 ## How we work
-- **Read first:** the newest `docs/HANDOFF_*.md` (how the pieces fit, traps, open work).
+- **Read first:** `docs/V05_PLAN.md` (the current release plan), then the newest `docs/HANDOFF_*.md` (how the pieces fit, traps).
 - **Skills (`.claude/skills/`)** hold the procedures: `write-issue` (issue shape, triage, `ready`), `ship-pr` (build → test → PR → merge rules), `republish-preview`, `balance-read`, `season-report`.
 - **Asana is the task system. Every thread, every crew member.** Project ["🏁 Parabolica"](https://app.asana.com/1/1219276824761487/project/1219276019625158) (workspace "My workspace"). Look there first for what to do; don't track work anywhere else (no TODO docs, no GitHub milestones/projects).
   - **Sections = releases:** `🇧🇪 v0.5 Spa` (**the current release: the only thing being worked on**), `🇮🇹 v0.6 Monza`, `🇯🇵 v0.7 Suzuka`, `📥 Queued` (committed, unslotted), `🧊 Icebox` (maybe / needs Pax). Target date is in the section name.
@@ -76,6 +76,7 @@ Every Asana task has a **Crew** field saying who (and which model) should take i
 - Start every message with your emoji and name (e.g. "🔧 Wrench:").
 
 ## Docs
+- `docs/V05_PLAN.md` - The v0.5 Spa plan: milestones, crew lanes, build order, risks, decision log
 - `docs/README.md` - Index of every doc, grouped by area (update it when a doc is added, renamed or retired)
 - `docs/ARCHITECTURE_REVIEW.md` - Refactor roadmap (seeded RNG, persistence, engine split)
 - `docs/GAME_DESIGN_PASS.md` - Live-race design roadmap (drama beats, bet settlement, persistence)
