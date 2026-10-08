@@ -9,7 +9,8 @@ for the future NPC-crowd system (BetLab was removed Oct 2026; git history has it
 
 ## Structure
 - `src/` - All source code
-  - `App.tsx` - Screen router: main menu, quick race, founding, league, compendium
+  - `App.tsx` - Screen switch driven by the URL
+  - `router.ts` - URL routes (#186): hash addresses `#/world-deck/<tab>`, `#/race-control/<tab>`, `#/season/<screen>` (`SEASON_SCREENS`), `useRoute` with `navigate` / `back`
   - `WatchMode.tsx` - Live race screen (track/detail views, finish modal)
   - `racecontrol/` - Race Control, the lab (unlocked from the menu): `runner.ts` is the ONE way a lab race is built (createLeague + prepareScheduledRace = live parity, fully seeded); `calibrate.ts` measures every genesis tag solo; `physics.ts` measures what the rules produce (mechanics-probe metrics); `knobs.ts` is the simVars registry; `labRunner.ts` runs jobs in a worker or on the main thread; `notebook.ts` keeps presets + runs in localStorage and sends batches to the shared ledger (`public/ledger/*`, fed by `ledger` issues via `.github/workflows/ledger.yml` + `scripts/ledger-ingest.mjs`) (Quick Race → Run Setup → Lab preset races under one via `applyLabPreset`); `RaceControl.tsx` hosts Tag calibration, Physics calibration, Notebook, Method
   - `fantasy/` - Fantasy teams: `types.ts` (config, snake order, F1-table scoring), `DraftPanel.tsx` (teams + obfuscated draft), `FantasyStandings.tsx`; config lives in `LeagueSetupConfig.fantasy` (travels with a published league); timing tower tints drafted rows (docs/FANTASY.md)
