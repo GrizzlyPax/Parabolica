@@ -7,11 +7,14 @@ import { Ruleset, describeRuleset } from './rules/ruleset';
 import { RULE_CARDS_BY_ID } from './data/ruleCards';
 import { weatherForRace } from './data/weather';
 import { intrinsicTrackTags } from './data/trackTags';
-import MainMenu from './MainMenu';
+import MainMenu, { type SeasonCardSummary } from './MainMenu';
 import Credits from './Credits';
 import RaceStartCountdown from './RaceStartCountdown';
 import WatchMode from './WatchMode';
 import RaceControl from './racecontrol/RaceControl';
+import SeasonScreen, { seasonScreenFor } from './season/ui/SeasonScreen';
+import { loadSeason, seasonState } from './season/season';
+import { seasonName } from './season/setup';
 import FoundingScreen, { FoundingChoices } from './league/ui/FoundingScreen';
 import LeagueScreen from './league/ui/LeagueScreen';
 import GridScreen from './league/ui/GridScreen';
@@ -28,17 +31,17 @@ import { generateTrack, getRandomTracks, getTrackById, getDynamicEventDescriptio
 import { useRoute, type Route } from './router';
 import './App.css';
 
-type AppScreen = 'main-menu' | 'setup' | 'race' | 'compendium' | 'founding' | 'league' | 'broadcast' | 'grid' | 'glossary' | 'credits';
+type AppScreen = 'main-menu' | 'season' | 'setup' | 'race' | 'compendium' | 'founding' | 'league' | 'broadcast' | 'grid' | 'glossary' | 'credits';
 type RaceSpeed = 0.5 | 1 | 2 | 10;
 
 // Each screen has an address (#186, src/router.ts); the URL is the source of
 // truth for which screen shows, so refresh and the back button work.
 const SCREEN_OF: Record<Route['name'], AppScreen> = {
   'menu': 'main-menu', 'quick-race': 'setup', 'race': 'race', 'world-deck': 'glossary', 'race-control': 'compendium',
-  'credits': 'credits', 'season': 'main-menu', 'league': 'league', 'league-found': 'founding', 'league-grid': 'grid', 'league-watch': 'broadcast',
+  'credits': 'credits', 'season': 'season', 'league': 'league', 'league-found': 'founding', 'league-grid': 'grid', 'league-watch': 'broadcast',
 };
 const ROUTE_OF: Record<AppScreen, Route> = {
-  'main-menu': { name: 'menu' }, 'setup': { name: 'quick-race' }, 'race': { name: 'race' }, 'glossary': { name: 'world-deck' },
+  'main-menu': { name: 'menu' }, 'season': { name: 'season', screen: 'setup' }, 'setup': { name: 'quick-race' }, 'race': { name: 'race' }, 'glossary': { name: 'world-deck' },
   'compendium': { name: 'race-control' }, 'credits': { name: 'credits' }, 'league': { name: 'league' }, 'founding': { name: 'league-found' },
   'grid': { name: 'league-grid' }, 'broadcast': { name: 'league-watch' },
 };
@@ -256,8 +259,7 @@ function App() {
     if (screen === 'race' && !quickRun) setScreen('setup', { replace: true });
     else if (screen === 'broadcast' && !watchingLive.current) setScreen(league ? 'league' : 'main-menu', { replace: true });
     else if ((screen === 'league' || screen === 'grid') && !league) setScreen('main-menu', { replace: true });
-    else if (route.name === 'season') navigate({ name: 'menu' }, { replace: true }); // Season screens register here as they land
-  }, [screen, route.name, quickRun, league, setScreen, navigate]);
+  }, [screen, quickRun, league, setScreen]);
 
   const handleStart = () => {
     if (!isRunning && raceState && raceState.totalTicks === 0) {
@@ -351,6 +353,15 @@ function App() {
     };
   }, [league]);
 
+  // Season Mode: the menu's main Play button picks up the saved season.
+  const savedSeason = useMemo(() => (screen === 'main-menu' ? loadSeason() : null), [screen]);
+  const seasonSummary = useMemo<SeasonCardSummary | null>(() => {
+    if (!savedSeason) return null;
+    const state = seasonState(savedSeason);
+    return { name: seasonName(savedSeason.setup), round: state.round, total: savedSeason.setup.calendar.length, finished: state.phase === 'finished' };
+  }, [savedSeason]);
+  const handleSeason = () => navigate({ name: 'season', screen: savedSeason && seasonState(savedSeason).phase !== 'finished' ? seasonScreenFor(savedSeason) : 'setup' });
+
   const ideaContext = { screen, seed: quickRun?.seed ?? engine.getSeed(), track: trackInfo?.name };
   const screenEl = (() => {
   // Show main menu
@@ -359,6 +370,8 @@ function App() {
       <MainMenu
         onSingleRace={handleSingleRace}
         onCommissioner={handleCommissioner}
+        onSeason={handleSeason}
+        season={seasonSummary}
         onOpenCode={openByCode}
         onCompendium={handleCompendium}
         onGlossary={() => setScreen('glossary')}
@@ -366,6 +379,10 @@ function App() {
         league={leagueSummary}
       />
     );
+  }
+
+  if (screen === 'season' && route.name === 'season') {
+    return <SeasonScreen screen={route.screen} navigate={navigate} onMenu={handleBackToMainMenu} />;
   }
 
   // Show compendium
