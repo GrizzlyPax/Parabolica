@@ -30,11 +30,12 @@ One page with defaults, so a solo player can hit Start immediately.
 Fixed (not settings): squad 3 / race 2 / bench 1 · car rack = team count · reverse-standings Paddock order · points championship, no elimination · one draft opacity for everyone.
 
 ## 2. Genesis changes shape
+Team stats (tyre management, pit crew) belong to the **competitor team**; a rack car is car stats only (Pax, Oct 8).
 Instead of 2 drivers pre-assigned to each named team, the seed summons a **shared pool**: teams × 3 drivers + a rack of `teams` cars. The draft distributes the pool. Team identities are human-named or CPU-generated.
 
 ## 3. Draft
 - One **snake draft for all teams**, interleaved by pick order; AI picks are simmed alongside the humans.
-- Each team takes **3 drivers + 1 car**. Scarcity makes draft order matter.
+- Each team takes **3 drivers + 1 car**: rounds 1–3 drivers, **round 4 cars** (snake continues, Pax Oct 8). Scarcity makes draft order matter.
 - **AI heuristic is dumb:** take the highest tier available, fill the car. Opening order is seeded.
 - **Quick Draft:** "sim the whole draft", auto-picking for humans too. Manual is the default.
 - **Board opacity (decided):** the driver's name, a 🟢/🟡/🔴 read across core stats (no numbers), and sealed rarity dots for rolled tags (severity only, never which tag). Cars get the same RYG read. **Rivals stay dark:** you only see detail on your own picks.
