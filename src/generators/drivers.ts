@@ -126,13 +126,14 @@ function generateStats(rng: Rng): DriverStats {
   };
 }
 
-// Generate a single driver for a specific team and slot
-export function generateDriverForTeam(
-  id: number,
-  team: Team,
-  slot: DriverSlot,
-  rng: Rng = Math.random
-): GeneratedDriver {
+/** A driver before any team: the person, their stats and their story. Season
+ * Mode's shared pool (#313) drafts these; a league driver is one of these plus
+ * a team. */
+export type PoolDriver = Omit<GeneratedDriver, 'emoji' | 'teamName' | 'kingdomId' | 'color' | 'accentColor' | 'driverSlot'>;
+
+/** Name, backstory, quirk, stats — in this rng order, which the golden
+ * fingerprint pins. Both the team and the pool paths come through here. */
+export function generatePoolDriver(id: number, rng: Rng = Math.random): PoolDriver {
   const name = generateDriverName(rng);
 
   // Generate backstory
@@ -141,9 +142,6 @@ export function generateDriverForTeam(
 
   // Pick a quirk
   const quirk = pick(QUIRKS, rng);
-
-  // Short name handles mononyms / corrupted names (computed in names.ts).
-  const shortName = name.shortName;
 
   // Tags are no longer rolled here: genesis tags come from the ruleset on their
   // own seed stream (rules/genesis.ts), so a card can re-roll tags without
@@ -154,16 +152,29 @@ export function generateDriverForTeam(
     middleName: name.middleName,
     lastName: name.lastName,
     fullName: name.fullName,
-    shortName,
+    // Short name handles mononyms / corrupted names (computed in names.ts).
+    shortName: name.shortName,
+    stats: generateStats(rng),
+    backstory,
+    quirk,
+  };
+}
+
+// Generate a single driver for a specific team and slot
+export function generateDriverForTeam(
+  id: number,
+  team: Team,
+  slot: DriverSlot,
+  rng: Rng = Math.random
+): GeneratedDriver {
+  return {
+    ...generatePoolDriver(id, rng),
     emoji: team.emoji,
     teamName: team.name,
     kingdomId: team.id,  // Legacy field name
     color: team.color,
     accentColor: team.accentColor,
     driverSlot: slot,
-    stats: generateStats(rng),
-    backstory,
-    quirk,
   };
 }
 
