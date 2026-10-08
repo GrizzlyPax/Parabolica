@@ -6,7 +6,7 @@
 - **Tags become cards.** Every piece is a typed card: **Gear** (capped slots, swappable), **Traits** (permanent, uncapped), **Effects** (timed, sim-dealt). Today's rule modifiers are renamed **Rule cards**.
 - **One placeholder ladder:** common +2% (1 stat) · uncommon +5% (1) · rare +10% (2 stats) · legendary +15% (3). Calibration replaces it later.
 - **The 🏁 Motorsport base deck (97 cards) is generated from a grid,** not hand-written: one card per stat at common/uncommon, combos at rare/legendary with every stat represented evenly.
-- **Ships in two steps:** v0.5 Spa = gear + traits inside Season Mode. v0.6 = effects, the engine hook, and retiring tags everywhere else.
+- **Ships in two steps:** v0.5 Spa = gear + traits in Season Mode, and **Quick Race on trait cards** (Pax, Oct 8). v0.6 = effects, the engine hook, and retiring tags in leagues, Race Control and World Deck.
 
 ## Card types
 | Card | What | Lasts | Slot |
