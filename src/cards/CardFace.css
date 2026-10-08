@@ -1,0 +1,53 @@
+/* CardFace (#418, docs/ICONS.md → Cards). Drawn at 210 × 294 and scaled, so
+   every size keeps the same proportions. Metal only on the card; never the
+   team colour. */
+.card-face { --m: var(--pw-border-strong); position: relative; flex: none; perspective: 900px; }
+.metal-bronze { --m: var(--rarity-bronze); }
+.metal-silver { --m: var(--rarity-silver); }
+.metal-gold { --m: var(--rarity-gold); }
+.metal-iridium { --m: var(--rarity-iridium); }
+.metal-none { --m: var(--pw-border-strong); }
+
+.cf-tap { cursor: pointer; transition: transform 0.18s ease; }
+.cf-tap:hover, .cf-tap:focus-visible { transform: translateY(-4px); }
+.cf-tap:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset: 3px; }
+.cf-scale { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+.cf-in { position: absolute; inset: 0; transform-style: preserve-3d; transition: transform 0.45s ease; }
+.cf-flipped .cf-in { transform: rotateY(180deg); }
+.cf-side { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; overflow: hidden; background: var(--pw-ground); border: 3px solid var(--m); }
+.cf-back { transform: rotateY(180deg); }
+
+/* Face: name banner over the art, type tag, centred changes, number */
+.cf-rule { position: absolute; inset: 5px; border: 1px solid var(--pw-text-1); display: flex; flex-direction: column; align-items: center; text-align: center; padding: 10px 10px 8px; color: var(--pw-text-1); }
+.cf-banner { position: relative; z-index: 2; width: calc(100% + 8px); margin: 0 -4px; min-height: 42px; display: grid; place-items: center; padding: 5px 10px; background: var(--pw-ground); border: 1px solid var(--pw-text-1); }
+.cf-name { font: 700 var(--cf-name, 18px)/1.08 var(--look-display); letter-spacing: -0.005em; text-wrap: balance; }
+.cf-art { width: 100%; height: 112px; margin-top: -8px; display: grid; place-items: center; color: var(--m); border: 1px solid color-mix(in srgb, var(--m) 50%, transparent); background: color-mix(in srgb, var(--m) 13%, var(--pw-ground)); }
+.metal-iridium .cf-art, .metal-iridium .cf-miniface {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--rarity-iridium) 30%, var(--pw-ground)) 0%, color-mix(in srgb, var(--rarity-silver) 16%, var(--pw-ground)) 45%, color-mix(in srgb, var(--rarity-iridium) 22%, var(--pw-ground)) 55%, color-mix(in srgb, var(--rarity-iridium-sheen) 16%, var(--pw-ground)) 100%);
+}
+.metal-none .cf-art { background: repeating-linear-gradient(45deg, transparent 0 5px, color-mix(in srgb, var(--pw-text-1) 8%, transparent) 5px 6px); }
+.cf-type { position: relative; z-index: 2; margin-top: -10px; width: 104px; height: 20px; display: grid; place-items: center; background: var(--pw-ground); border: 1px solid var(--m); font: 400 10px/1 var(--look-data); letter-spacing: 0.1em; text-transform: uppercase; }
+.cf-type span { margin-right: -0.1em; }
+.cf-desc { flex: 1; width: 100%; display: flex; flex-direction: column; justify-content: center; gap: 2px; padding: 6px 4px 0; font: 400 15px/1.3 var(--look-serif); }
+.cf-desc b { font-weight: 700; }
+.cf-no { font: 400 9px var(--look-data); letter-spacing: 0.08em; color: var(--pw-text-3); }
+
+/* Mini: one centred icon on the metal tint; a heavier edge so it survives the scale */
+.card-face.cf-mini .cf-side { border-width: 14px; }
+.cf-miniface { position: absolute; inset: 0; display: grid; place-items: center; color: var(--m); background: color-mix(in srgb, var(--m) 13%, var(--pw-ground)); }
+
+/* Back: bold stripes in the metal, the deck plate in the middle */
+.cf-backrule { position: absolute; inset: 5px; border: 1px solid var(--pw-text-1); display: grid; place-items: center;
+  background: repeating-linear-gradient(45deg, color-mix(in srgb, var(--m) 38%, transparent) 0 26px, transparent 26px 46px); }
+.card-face.cf-mini .cf-backrule { inset: 0; border: 0; }
+.cf-plate { display: flex; flex-direction: column; align-items: center; gap: 4px; background: var(--pw-ground); padding: 8px 10px; border: 1px solid var(--pw-text-1); text-align: center; color: var(--pw-text-1); }
+.cf-plate b { font: 700 16px/1 var(--look-display); letter-spacing: 0.06em; }
+.cf-plate span { display: inline-flex; gap: 5px; align-items: center; font: 400 9px/1.2 var(--look-data); letter-spacing: 0.08em; text-transform: uppercase; color: var(--pw-text-2); }
+
+/* A rival's trait */
+.card-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--m, var(--pw-border-strong)); display: inline-block; flex: none; }
+
+/* An empty gear slot */
+.cf-empty { flex: none; border: 1px dashed var(--pw-border-strong); display: grid; place-items: center; text-align: center; padding: 6px; font: italic 13px/1.3 var(--look-serif); color: var(--pw-text-3); }
+
+@media (prefers-reduced-motion: reduce) { .cf-tap, .cf-in { transition: none; } .cf-tap:hover { transform: none; } }
