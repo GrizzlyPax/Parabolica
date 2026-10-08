@@ -30,6 +30,7 @@ One page with defaults, so a solo player can hit Start immediately.
 Fixed (not settings): squad 3 / race 2 / bench 1 · car rack = team count · reverse-standings Paddock order · points championship, no elimination · one draft opacity for everyone.
 
 ## 2. Genesis changes shape
+**Racing numbers:** every driver rolls a number 2–99, unique on the grid, kept forever, weighted like F1 (single digits almost always taken, doubles like 44 favoured, high numbers rare; #1 reserved). Marbles show the number, so teammates sharing a colour stay distinguishable.
 Team stats (tyre management, pit crew) belong to the **competitor team**; a rack car is car stats only (Pax, Oct 8).
 Instead of 2 drivers pre-assigned to each named team, the seed summons a **shared pool**: teams × 3 drivers + a rack of `teams` cars. The draft distributes the pool. Team identities are human-named or CPU-generated.
 
