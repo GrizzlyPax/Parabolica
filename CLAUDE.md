@@ -61,6 +61,7 @@ for the future NPC-crowd system (BetLab was removed Oct 2026; git history has it
 - **`ready` label is the handoff.** Scope an issue until it can be built without guessing, then label it `ready`. Build only `ready` issues (or one Pax names). Out-of-scope finds become new issues, not extra code.
 - **Planning sessions** (issues, scoping, docs) don't edit `src/`, `server/`, `scripts/` or tests. **Build sessions** do one issue per branch/PR.
 - **Talking to Pax:** Smart Brevity — TL;DR first, bullets, bold the key bit, plain words. Anchor changes to where he sees them (screen → button). Link issues with titles, never bare numbers. Questions as multiple choice (A / B / C, pick marked). Story and theme are Pax's — capture, don't invent canon.
+- **Pit keeps Pax oriented:** whenever the plan moves (a handoff lands, an issue moves, a milestone closes), Pit's reply includes **where we are**: a milestone table (✅ done / 🟡 now / what's left, with issue links and crew) and **when Pax can play it** ("after #N you can …"). Pull the numbers live from GitHub milestones; close a milestone when its last issue closes.
 - **Done** = merged, live on playparabolica.com, and (for UI) checked in the browser.
 
 ## The crew
