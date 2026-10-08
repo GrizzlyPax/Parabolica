@@ -36,11 +36,12 @@
 2. Draft engine (#314)
 3. Season loop (#315) → **M1**
 4. Mystery box logic + team locker (#316)
-5. One PR, merged by Pax: Quick Race on trait cards (#337) **+** grid swap to the 28 teams (#356) **+** race colours (#381)
+5. One PR, merged by Pax: Quick Race on trait cards (#337) **+** grid swap to the 28 teams (#356) **+** race colours (#381) **+** Tracks & Weather v2 dry swap (#359)
 
 **🛞 Hub-B (Opus) first, to clear Apex's path (no sim changes):**
 1. Base-deck teams as data + World Deck display (#402)
 2. Card model + generated Motorsport base deck (#329): Apex starts after this merges
+2b. Tracks + weather as data + World Deck display (#408)
 3. World Deck + Race Control show the card deck (#403)
 4. Rarity becomes metals (#385)
 
@@ -83,7 +84,7 @@
 - **Hotseat** touches every screen. Each Hub-A screen checks two humans before merging.
 
 ## Out of v0.5 (on purpose)
-Effect cards and the engine hook · Tracks & Weather v2 · live seasons (wall clock, any device) · CPU Paddock actions · Rule cards in Season Mode · Patron Mode · events and economy. All of these are in v0.6 / Queued / Icebox.
+Effect cards and the engine hook · Wet weather + forecast · live seasons (wall clock, any device) · CPU Paddock actions · Rule cards in Season Mode · Patron Mode · events and economy. All of these are in v0.6 / Queued / Icebox.
 
 ## Decision log (Pax, Oct 8)
-Teams 5–10, default 10 · 10-race default · free lineups · bench keeps gear · box: own team only, no expiry, gear swaps go to an uncapped locker with free moves · cars drafted in a fixed last round · team stats belong to the team · champ bonus 50 · hotseat in v0.5 · one save slot · Play again = fresh seed · no Rule cards in Season Mode · watch live with Skip · phone first · rivals show rarity dots only · CPU teams are plain deck teams · Season is the main Play button · mode named "Season" · old 22 teams removed · old leagues removed (live seasons return in v0.6) · game-icons.net everywhere, Phosphor dropped · UI is black + white + your team colour (Blaseball touchstone), teams have one colour · racing numbers 2–99, weighted to single digits + doubles, shown on marbles. · **the look = Almanac** (docs/ICONS.md → The look) · **rarity = metals** (bronze · silver · gold · iridium) for cards and tags; boxes become Common → Legendary with no colour, so the first box is Uncommon ([#385](https://github.com/GrizzlyPax/Parabolica/issues/385)) · **no team picked = purple accent** (the fastest-lap purple) · **type = Pulp Almanac** (Old Standard TT + Special Elite typewriter; Archivo read too slick)
+Teams 5–10, default 10 · 10-race default · free lineups · bench keeps gear · box: own team only, no expiry, gear swaps go to an uncapped locker with free moves · cars drafted in a fixed last round · team stats belong to the team · champ bonus 50 · hotseat in v0.5 · one save slot · Play again = fresh seed · no Rule cards in Season Mode · watch live with Skip · phone first · rivals show rarity dots only · CPU teams are plain deck teams · Season is the main Play button · mode named "Season" · old 22 teams removed · old leagues removed (live seasons return in v0.6) · game-icons.net everywhere, Phosphor dropped · UI is black + white + your team colour (Blaseball touchstone), teams have one colour · racing numbers 2–99, weighted to single digits + doubles, shown on marbles. · **the look = Almanac** (docs/ICONS.md → The look) · **dry Tracks & Weather v2 in v0.5** (6 stat-combo tracks, Neutral + 5 dry weathers at +10% favours, old tracks/weather/events retired, weather rule cards remapped; **no rain until v0.6**) · **rarity = metals** (bronze · silver · gold · iridium) for cards and tags; boxes become Common → Legendary with no colour, so the first box is Uncommon ([#385](https://github.com/GrizzlyPax/Parabolica/issues/385)) · **no team picked = purple accent** (the fastest-lap purple) · **type = Pulp Almanac** (Old Standard TT + Special Elite typewriter; Archivo read too slick)

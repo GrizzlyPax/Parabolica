@@ -25,7 +25,7 @@ One page with defaults, so a solo player can hit Start immediately.
 | Teams | 10 | **5–10** (Pax). **Drivers = teams × 3, cars = teams** |
 | Player-controlled | 1 | Each human names and colours their team. >1 = local hotseat |
 | CPU teams | auto | = teams − humans; deck teams (e.g. For Rory) with a CPU badge; dumb AI |
-| Calendar | random, 10 races | Random from the pool or hand-picked; reuses existing tracks |
+| Calendar | random, 10 races (from the 6 stat-combo tracks, so tracks repeat) | Random from the pool or hand-picked; reuses existing tracks |
 
 Fixed (not settings): squad 3 / race 2 / bench 1 · car rack = team count · reverse-standings Paddock order · points championship, no elimination · one draft opacity for everyone.
 
