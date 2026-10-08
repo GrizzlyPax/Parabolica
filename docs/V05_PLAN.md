@@ -24,7 +24,7 @@ Target: **Fri Oct 31.** Pieces merge to `main` as they land; there's no formal s
 ## Milestones
 | # | Milestone | Pax can… | Target |
 |---|---|---|---|
-| **M1** | **Core** | (nothing visible) A whole season runs headless in tests and replays identically | **Fri Oct 10** |
+| **M1** | **Core** | (nothing visible) A whole season runs headless in tests and replays identically | **Mon Oct 13** |
 | **M2** | **Playable** | Play a full solo season on his phone: setup → draft → pick racers → watch/skip → standings → champion | **Thu Oct 16** |
 | **M3** | **The box** | Open a mystery box every race, equip gear and traits, manage the locker; see his cards | **Tue Oct 21** |
 | **M4** | **Identity** | Build his own team (icon + colours), race the 28 new teams, Quick Race on cards (one bump, Pax merges), the screen in his colours | **Fri Oct 24** |
@@ -32,12 +32,12 @@ Target: **Fri Oct 31.** Pieces merge to `main` as they land; there's no formal s
 
 ## The lanes
 **🏎️ Apex (Fable) is the critical path, in order:**
-1. Card model + generated base deck · Oct 8
-2. Shared-pool genesis · Oct 8
-3. Draft engine · Oct 9
-4. Season loop · Oct 10 → **M1**
-5. Mystery box logic + team locker · Oct 13
-6. Quick Race on trait cards **+** the 28 teams, in one PR · Oct 14 (Pax merges)
+1. Card model + generated base deck · Oct 9
+2. Shared-pool genesis · Oct 9
+3. Draft engine · Oct 10
+4. Season loop · Oct 13 → **M1**
+5. Mystery box logic + team locker · Oct 14
+6. Quick Race on trait cards **+** the 28 teams, in one PR · Oct 15 (Pax merges)
 
 **🛞 Hub-A (Opus): the Season screens, in order:**
 1. League Setup · Oct 13 (needs genesis)
@@ -64,8 +64,20 @@ Target: **Fri Oct 31.** Pieces merge to `main` as they land; there's no formal s
 
 **👤 Pax:** playtest at each milestone · merge the fingerprint PR · approve the icon map
 
+## Kickoff (Fable credits return Thu Oct 9)
+**Wed Oct 8, no Fable needed:**
+- Hub-B: rename to Rule cards (#330), then the icon system (#350).
+- Pit: icon map (#349).
+- Radio + Pax: team-creator palette + logo-picker icons.
+
+**Thu Oct 9, Apex in ONE Fable chat** (keeps the context, so it costs fewer credits). Paste the kickoff prompt from the Asana task "Cards: card model + generated Motorsport base deck". Apex works the chain in order, **one PR per issue**, merging each when green. He stops and reports if any existing test changes, or if he's at roughly half his budget.
+
+**As soon as genesis merges:** Hub-A starts League Setup (#317). Draft board follows once the draft engine merges.
+
+**Fri Oct 10 / Mon Oct 13:** Apex continues in the same chat (draft engine → season loop → box logic). If the chat gets long, start a fresh one with the same kickoff prompt; it picks up from Asana and GitHub.
+
 ## Risks
-- **Apex slips → everything slips.** If the season loop isn't done by Oct 10, Pit moves Hub-A to the card sheet and Hub-B tasks first.
+- **Apex slips → everything slips.** If the season loop isn't done by Oct 13, Pit moves Hub-A to the card sheet and Hub-B tasks first.
 - **Fable limits.** Apex's chain is 6 tasks over 5 working days. If the limit hits, the box logic can drop to Opus with Apex reviewing; the season loop can't.
 - **Hub-A is busy:** 7 screens in about 7 working days. If it slips, the team creator and box reveal polish move to a v0.5.x patch, not the core.
 - **Hotseat** touches every screen. Each Hub-A screen checks two humans before merging.
