@@ -25,6 +25,7 @@ import PointsChart, { ChartSeries } from './PointsChart';
 import { LapChart } from '../../components/race';
 import { traceRace, raceReportForLeague } from '../raceTrace';
 import { TeamMarble } from './TeamMarble';
+import { GameIcon } from '../../icons/GameIcon';
 import './League.css';
 
 interface LeagueScreenProps {
@@ -61,21 +62,22 @@ function formatCountdown(ms: number): string {
 // "what happened", not a soup of team emojis. Track events and tag
 // activations keep their own emoji — there, the emoji IS the event.
 const EVENT_ICONS: Partial<Record<RaceEvent['type'], string>> = {
-  crash: '💥',
-  tire_failure: '💨',
-  mechanical_failure: '⚙️',
-  race_finish: '🏁',
-  lead_change: '👑',
-  overtake: '📈',
-  slow_pit_stop: '🐌',
-  quick_pit_stop: '⚡',
-  close_call: '😬',
-  dnf: '💀',
+  crash: 'race.crash',
+  tire_failure: 'race.tire_failure',
+  mechanical_failure: 'race.mechanical',
+  race_finish: 'race.finish',
+  lead_change: 'race.lead_change',
+  overtake: 'race.battle',
+  slow_pit_stop: 'race.pit_stop',
+  quick_pit_stop: 'race.pit_stop',
+  close_call: 'race.wide',
+  dnf: 'race.dnf',
 };
 
-function eventIcon(ev: RaceEvent): string {
+function eventIcon(ev: RaceEvent): React.ReactNode {
   if (ev.type === 'track_event' || ev.type === 'tag_activation') return ev.emoji;
-  return EVENT_ICONS[ev.type] ?? '•';
+  const name = EVENT_ICONS[ev.type];
+  return name ? <GameIcon name={name} size={14} /> : '•';
 }
 
 function DigestCard({ league, digest, open, onToggle }: {
@@ -130,7 +132,7 @@ function DigestCard({ league, digest, open, onToggle }: {
               const d = driver(id);
               return (
                 <span key={id} className="digest-podium-spot">
-                  {['🥇', '🥈', '🥉'][i]}
+                  <span className="digest-podium-pos">P{i + 1}</span>
                   <TeamMarble color={d?.color} accentColor={d?.accentColor}
                     emoji={d?.emoji} size={20} slot={d?.driverSlot} />
                   <span>{d?.fullName}</span>
@@ -140,7 +142,7 @@ function DigestCard({ league, digest, open, onToggle }: {
           </div>
           {digest.dnfDriverIds.length > 0 && (
             <div className="digest-dnfs">
-              💀 {digest.dnfDriverIds.map(id => (
+              <GameIcon name="race.dnf" size={14} /> {digest.dnfDriverIds.map(id => (
                 <span key={id}>{driver(id)?.fullName ?? `#${id}`}</span>
               )).reduce<React.ReactNode[]>((acc, el, i) => (i === 0 ? [el] : [...acc, ', ', el]), [])}
             </div>
@@ -149,7 +151,7 @@ function DigestCard({ league, digest, open, onToggle }: {
             <ul className="digest-tag-changes">
               {digest.tagChanges!.map((c, i) => (
                 <li key={i} className={`digest-tag-change ${c.kind}`}>
-                  <span className="digest-ev-emoji">{c.kind === 'acquire' ? '✨' : '⌛'}</span>
+                  <span className="digest-ev-emoji"><GameIcon name={c.kind === 'acquire' ? 'card.trait' : 'race.halfway'} size={14} /></span>
                   <span className="digest-ev-text">
                     <strong>{driver(c.driverId)?.fullName}</strong>{' '}
                     {c.headline.replace(driver(c.driverId)?.fullName ?? '', '').trim()}
@@ -174,12 +176,12 @@ function DigestCard({ league, digest, open, onToggle }: {
             <div className="digest-stats">
               {fastest && (
                 <span className="digest-stat">
-                  ⏱ Fastest lap <strong>{fastest.fullName}</strong>
+                  <GameIcon name="race.fastest_lap" size={14} /> Fastest lap <strong>{fastest.fullName}</strong>
                 </span>
               )}
               {climberDriver && climber !== null && (
                 <span className="digest-stat">
-                  📈 Biggest climber <strong>
+                  <GameIcon name="race.battle" size={14} /> Biggest climber <strong>
                     {climberDriver.fullName}</strong> +{climber.gained}
                 </span>
               )}
@@ -190,7 +192,7 @@ function DigestCard({ league, digest, open, onToggle }: {
           <div className="digest-trace-actions">
             {!showTrace && (
               <button className="digest-trace-btn" onClick={() => setShowTrace(true)}>
-                📈 Show lap chart & strategy
+                <GameIcon name="view.lapchart" size={14} /> Show lap chart & strategy
               </button>
             )}
             <button
@@ -212,7 +214,7 @@ function DigestCard({ league, digest, open, onToggle }: {
                 setTimeout(() => setReportCopied(false), 2000);
               }}
             >
-              {reportCopied ? '✅ Copied' : '📋 Copy race report'}
+              {reportCopied ? <><GameIcon name="ui.done" size={14} /> Copied</> : <><GameIcon name="ui.copy" size={14} /> Copy race report</>}
             </button>
           </div>
           {showTrace && trace && (
@@ -303,7 +305,7 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onOpenGrid,
         // device computed a different race from the same facts — engine drift.
         if (after.remote) {
           for (const d of newlySettled) {
-            postDigest(after, d).then(r => { if (r === 'conflict') setRemoteNote(`⚠ Race ${d.index + 1}: another device saw a different result. Engine versions may differ.`); }).catch(() => { /* offline: the next device will post it */ });
+            postDigest(after, d).then(r => { if (r === 'conflict') setRemoteNote(`Race ${d.index + 1}: another device saw a different result. Engine versions may differ.`); }).catch(() => { /* offline: the next device will post it */ });
           }
         }
       }
@@ -449,7 +451,7 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onOpenGrid,
         label: team?.name ?? kingdomId,
         // Teams are known by their emoji — rendered as a marble so it
         // doesn't vanish against the dark background
-        code: team?.emoji ?? lead?.emoji ?? '🏁',
+        code: team?.emoji ?? lead?.emoji ?? '·',
         marble: true,
       };
     });
@@ -532,7 +534,7 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onOpenGrid,
       <div className="league-content">
         <div className="league-topbar">
           <button className="league-back-btn" onClick={onExit}>← Menu</button>
-          <button className="league-grid-tab" onClick={onOpenGrid}>👥 The Grid →</button>
+          <button className="league-grid-tab" onClick={onOpenGrid}><GameIcon name="entity.driver" size={16} /> The Grid →</button>
           <span className="league-progress">
             {league.settledThrough + 1}/{league.schedule.length} races run
           </span>
@@ -566,7 +568,7 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onOpenGrid,
         {/* On the air / next race countdown / the end of days */}
         {over ? (
           <section className="league-finale">
-            <h2>🏁 The season is complete</h2>
+            <h2><GameIcon name="race.finish" size={22} /> The season is complete</h2>
             {champion && (
               <p className="league-champion">
                 Champion: <TeamMarble color={champion.color} accentColor={champion.accentColor}
@@ -601,7 +603,7 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onOpenGrid,
                 setTimeout(() => setReportCopied(false), 2000);
               }}
             >
-              {reportCopied ? '✅ Copied' : '📋 Copy season report'}
+              {reportCopied ? <><GameIcon name="ui.done" size={14} /> Copied</> : <><GameIcon name="ui.copy" size={14} /> Copy season report</>}
             </button>
           </section>
         ) : live && now < live.endsAt ? (
@@ -638,7 +640,7 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onOpenGrid,
               })()}
             </div>
             <button className="watch-live-btn" onClick={() => onWatchLive(live)}>
-              📺 Watch
+              <GameIcon name="ui.play" size={16} /> Watch
             </button>
           </section>
         ) : null}
@@ -669,13 +671,13 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onOpenGrid,
                   role="listitem"
                 >
                   <span className="ribbon-rno">R{race.index + 1}</span>
-                  <span className="ribbon-track">{track?.funEmoji ?? '🏁'}</span>
+                  <span className="ribbon-track">{track?.funEmoji ?? <GameIcon name="race.finish" size={18} />}</span>
                   <span className="ribbon-foot">
                     {settled ? (
                       <TeamMarble color={winner?.color} accentColor={winner?.accentColor}
                         emoji={winner?.emoji} size={18} slot={winner?.driverSlot} />
                     ) : isLiveRace ? (
-                      <span className="ribbon-live">🔴</span>
+                      <span className="ribbon-live" aria-label="live" />
                     ) : isNext ? (
                       <span className="ribbon-next-when">{nextAt !== null && nextAt > now ? formatCountdown(nextAt - now) : 'next'}</span>
                     ) : (
@@ -847,7 +849,7 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onOpenGrid,
             </div>
           ) : (
             <button className="dissolve-btn" onClick={() => setConfirmDissolve(true)}>
-              {over ? '⚜️ Dissolve the league and found anew' : league.remote ? 'Remove the league from this device' : 'Dissolve the league'}
+              {over ? 'Dissolve the league and found anew' : league.remote ? 'Remove the league from this device' : 'Dissolve the league'}
             </button>
           )}
         </div>

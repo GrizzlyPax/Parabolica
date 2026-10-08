@@ -15,6 +15,7 @@ import { ruleCardsForScope, RULE_CARDS_BY_ID } from '../../data/ruleCards';
 import { resolveRuleset, describeRuleset, describeChance, describeOdds, Ruleset } from '../../rules/ruleset';
 import './League.css';
 import '../../RunSetup.css';
+import { GameIcon } from '../../icons/GameIcon';
 
 export interface FoundingChoices {
   name: string;
@@ -45,9 +46,9 @@ const MINUTE = 60_000;
 const HOUR = 3_600_000;
 
 const CADENCES = [
-  { label: 'Frantic', emoji: '⚡', detail: 'back-to-back broadcasts, non-stop', ms: 2 * MINUTE },
-  { label: 'Brisk', emoji: '☕', detail: 'a race every 30 minutes', ms: 30 * MINUTE },
-  { label: 'Classic', emoji: '🕰️', detail: 'a race every 3 hours', ms: 3 * HOUR },
+  { label: 'Frantic', icon: 'stat.speed', detail: 'back-to-back broadcasts, non-stop', ms: 2 * MINUTE },
+  { label: 'Brisk', icon: 'race.fastest_lap', detail: 'a race every 30 minutes', ms: 30 * MINUTE },
+  { label: 'Classic', icon: 'race.halfway', detail: 'a race every 3 hours', ms: 3 * HOUR },
 ];
 
 const SEASON_LENGTHS = [8, 12, 16];
@@ -230,7 +231,7 @@ function FoundingScreen({ onFound, onBack }: FoundingScreenProps) {
 
           {draft ? (
             <div className="custom-team-form" style={{ '--chip-color': draft.color, '--chip-accent': draft.accent } as React.CSSProperties}>
-              <div className="custom-team-preview">{draft.emoji || '🏁'}</div>
+              <div className="custom-team-preview">{draft.emoji || <GameIcon name="race.finish" size={22} />}</div>
               <input
                 className="custom-team-name"
                 type="text"
@@ -243,7 +244,7 @@ function FoundingScreen({ onFound, onBack }: FoundingScreenProps) {
                 className="custom-team-emoji"
                 type="text"
                 value={draft.emoji}
-                placeholder="🏁"
+                placeholder="emoji"
                 maxLength={4}
                 onChange={e => setDraft(d => d && { ...d, emoji: e.target.value })}
                 aria-label="Team emoji"
@@ -254,7 +255,7 @@ function FoundingScreen({ onFound, onBack }: FoundingScreenProps) {
               <label className="custom-team-color" title="Accent color">
                 <input type="color" value={draft.accent} onChange={e => setDraft(d => d && { ...d, accent: e.target.value })} />
               </label>
-              <button type="button" className="custom-team-roll" onClick={rollDraftLook} title="Random look">🎲</button>
+              <button type="button" className="custom-team-roll" onClick={rollDraftLook} title="Random look" aria-label="Random look"><GameIcon name="ui.restart" size={18} /></button>
               <button type="button" className="custom-team-add" onClick={addCustomTeam} disabled={teamCount >= MAX_TEAMS}>Add</button>
               <button type="button" className="custom-team-cancel" onClick={() => setDraft(null)}>Cancel</button>
             </div>
@@ -297,7 +298,7 @@ function FoundingScreen({ onFound, onBack }: FoundingScreenProps) {
               const on = hand.includes(c.id);
               return (
                 <button type="button" key={c.id} className={`rs-card ${on ? 'on' : ''} w-${c.weight}`} onClick={() => toggleCard(c.id)} aria-pressed={on}>
-                  <span className="rs-card-emoji">{c.emoji}</span>
+                  <span className="rs-card-emoji"><GameIcon name={c.iconId ?? 'card.rule'} size={24} /></span>
                   <span className="rs-card-name">{c.name}</span>
                   <span className="rs-card-readout">{c.readout}</span>
                   <span className="rs-card-weight">{c.weight}</span>
@@ -359,7 +360,7 @@ function FoundingScreen({ onFound, onBack }: FoundingScreenProps) {
                 className={`founding-option ${cadenceIdx === i ? 'selected' : ''}`}
                 onClick={() => setCadenceIdx(i)}
               >
-                <span>{c.emoji} {c.label}</span>
+                <span><GameIcon name={c.icon} size={16} /> {c.label}</span>
                 <span className="founding-option-detail">{c.detail}</span>
               </button>
             ))}
@@ -372,7 +373,7 @@ function FoundingScreen({ onFound, onBack }: FoundingScreenProps) {
           onClick={handleFound}
         >
           {canFound
-            ? '⚜️ Found it — the inaugural race runs now'
+            ? 'Found it — the inaugural race runs now'
             : !teamsOk
               ? `Pick ${MIN_TEAMS}–${MAX_TEAMS} teams to continue`
               : 'Finish the fantasy draft (or skip it) to continue'}

@@ -578,7 +578,8 @@ button.section-toggle:hover { color: var(--pw-text-2); }
   color: var(--pw-text-1);
   font-size: 0.62rem;
 }
-.ribbon-live { font-size: 0.7rem; }
+.ribbon-live { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--signal-red); }
+.digest-podium-pos { font-family: var(--look-data); font-size: 11px; color: var(--pw-text-2); }
 .ribbon-conditions { display: inline-flex; gap: 1px; opacity: 0.8; }
 .ribbon-cell:disabled { opacity: 1; }
 
@@ -1165,3 +1166,6 @@ button.section-toggle:hover { color: var(--pw-text-2); }
 .founding-help { font-size: 13.5px; color: var(--pw-text-2); line-height: 1.45; margin: 0 0 10px; }
 .founding-help .rs-link { margin-left: 6px; }
 .founding-header + .founding-section { border-top: 0; padding-top: 0; }
+/* Buttons and inputs don't inherit the font by default. */
+.league-screen :is(button, input, select, textarea) { font-family: inherit; }
+.found-league-btn { font-family: var(--look-display); }
