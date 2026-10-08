@@ -14,6 +14,7 @@ import { intrinsicTrackTags } from './data/trackTags';
 import TagChips from './components/race/TagChips';
 import { Idea, loadIdeas, saveIdeas, issueUrl, ideasAsPrompt } from './IdeaBox';
 import { GameIcon, TeamLogo } from './icons/GameIcon';
+import { TEAM_KINDS } from './data/deckTeams';
 import { ICONS, ICON_LICENSE, iconCredits } from './icons/registry';
 import './RunSetup.css';
 import './Glossary.css';
@@ -263,7 +264,9 @@ export default function Glossary({ onBack }: GlossaryProps) {
   const [tagSort, setTagSort] = useState<'rarity' | 'name' | 'effect'>('rarity');
   const toggle = (id: string) => setOpen(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
   const toggleSection = (id: string) => setFlipped(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
-  const isCollapsed = (id: string) => (mode === 'collapsed') !== flipped.has(id);
+  // The retiring grid stays folded even on "Expand all"; open it by hand (#402).
+  const STAY_FOLDED = new Set(['teams:current', 'teams:historic']);
+  const isCollapsed = (id: string) => (STAY_FOLDED.has(id) || mode === 'collapsed') !== flipped.has(id);
   const setAll = (m: 'collapsed' | 'expanded') => { setMode(m); setFlipped(new Set()); };
   const needle = q.trim().toLowerCase();
   const match = (...parts: (string | undefined)[]) => !needle || parts.some(p => p?.toLowerCase().includes(needle));
@@ -315,7 +318,8 @@ export default function Glossary({ onBack }: GlossaryProps) {
     </select>
   );
 
-  const teamGroups = [{ id: 'current', title: 'Teams', rows: g.teams, hint: 'The tribes. Two drivers each; the colours are the livery.' }, { id: 'historic', title: 'Historic teams', rows: g.historicTeams, hint: 'Unlockable.' }];
+  const deckTeamGroups = TEAM_KINDS.map(k => ({ id: k.kind, title: k.title, rows: g.deckTeams.filter(t => t.kind === k.kind), hint: `${k.hint} Base deck: on the grid once the sim switches (#356).` }));
+  const teamGroups = [{ id: 'current', title: "Today's grid (retiring)", rows: g.teams, hint: 'Quick Race and leagues still race these until the base deck takes over.' }, { id: 'historic', title: 'Historic teams (retiring)', rows: g.historicTeams, hint: 'Unlockable today; leave with the old grid.' }];
   const trackGroups = [{ id: 'current', title: 'Tracks', rows: g.tracks, hint: 'Every circuit is a pun. Laps × length sets the race; layout sets the shape.' }, { id: 'historic', title: 'Historic tracks', rows: g.historicTracks, hint: 'Unlockable.' }];
 
   return (
@@ -324,7 +328,7 @@ export default function Glossary({ onBack }: GlossaryProps) {
         <div className="rs-title-block">
           <button type="button" className="rs-back" onClick={onBack}>← Menu</button>
           <h1 className="rs-title">World Deck</h1>
-          <span className="rs-sub">Everything in the world, read straight from the data. {g.counts.teams} teams · {g.counts.tracks} tracks · {g.counts.tags} tags · {g.counts.cards} rule cards · {g.counts.gods} gods. Click a line to open it.</span>
+          <span className="rs-sub">Everything in the world, read straight from the data. {g.counts.deckTeams} teams · {g.counts.tracks} tracks · {g.counts.tags} tags · {g.counts.cards} rule cards · {g.counts.gods} gods. Click a line to open it.</span>
         </div>
         <label className="gl-search">
           <span className="rs-k">Find</span>
@@ -363,6 +367,24 @@ export default function Glossary({ onBack }: GlossaryProps) {
         </>
       )}
 
+      {tab === 'teams' && deckTeamGroups.map(grp => {
+        const rows = grp.rows.filter(t => match(t.name, t.id, t.description, t.kind));
+        if (!rows.length) return null;
+        return (
+          <Section key={grp.id} {...sec(`teams:${grp.id}`)} title={grp.title} count={grp.rows.length} hint={grp.hint}>
+            <div className="gl-list">
+              {rows.map(t => (
+                <Row key={t.id} id={`team:${t.id}`} open={isOpen(`team:${t.id}`)} onToggle={toggle}
+                  lead={<span className="gl-plain gl-team"><TeamLogo team={t} size={20} /> {t.name}</span>}
+                  pills={<span className="gl-readout">{t.description}</span>}>
+                  <p className="gl-desc">{t.description}</p>
+                  <div className="gl-facts"><Fact k="Colour">{t.color}</Fact><Fact k="Ink">{t.ink}</Fact><Fact k="Icon">{t.iconId}</Fact><Fact k="Id">{t.id}</Fact></div>
+                </Row>
+              ))}
+            </div>
+          </Section>
+        );
+      })}
       {tab === 'teams' && teamGroups.map(grp => {
         const rows = grp.rows.filter(t => match(t.name, t.id, t.description));
         if (!rows.length) return null;

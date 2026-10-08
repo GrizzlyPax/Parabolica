@@ -10,6 +10,8 @@ import { WEATHER_TYPES } from './weather';
 import { TRACK_TAGS } from './trackTags';
 import { INFLICTIONS } from './inflictions';
 import { CURRENT_TEAMS, HISTORIC_TEAMS } from './teams';
+import { BASE_DECK_TEAMS, TEAM_KINDS } from './deckTeams';
+import { resolveIcon } from '../icons/registry';
 import { CURRENT_TRACKS, HISTORIC_TRACKS, LAYOUTS } from '../generators/tracks';
 import { GODS } from '../league/gods';
 import { INTL_FIRST_NAMES, INTL_LAST_NAMES, ABSURD_FIRST_NAMES, ABSURD_LAST_NAMES, MONONYMS } from '../generators/names';
@@ -145,5 +147,32 @@ describe('tag calibration is current and in band', () => {
   });
   it('no genesis tag is out of band', () => {
     for (const c of TAG_CALIBRATION.tags) expect(bandViolation(c), `${c.tagId}: ${bandViolation(c)}`).toBeNull();
+  });
+});
+
+// #402: the 28 base-deck teams (docs/story/team-identity.md), data + World
+// Deck only until the grid swap (#356).
+describe('base-deck teams', () => {
+  it('28 teams, seven of each kind', () => {
+    expect(BASE_DECK_TEAMS).toHaveLength(28);
+    for (const k of TEAM_KINDS) expect(BASE_DECK_TEAMS.filter(t => t.kind === k.kind)).toHaveLength(7);
+  });
+
+  it('unique ids and colours; ids never reuse an old team id', () => {
+    const ids = BASE_DECK_TEAMS.map(t => t.id);
+    expect(new Set(ids).size).toBe(28);
+    expect(new Set(BASE_DECK_TEAMS.map(t => t.color.toLowerCase())).size).toBe(28);
+    const old = new Set([...CURRENT_TEAMS, ...HISTORIC_TEAMS].map(t => t.id));
+    for (const id of ids) expect(old.has(id), id).toBe(false);
+  });
+
+  it('one colour + an ink that is white or near-black; every icon is vendored', () => {
+    for (const t of BASE_DECK_TEAMS) {
+      expect(t.color, t.id).toMatch(/^#[0-9A-F]{6}$/i);
+      expect(['#FFFFFF', '#0A0A0C'], t.id).toContain(t.ink.toUpperCase());
+      expect(resolveIcon(t.iconId), `${t.id} icon ${t.iconId}`).toBeTruthy();
+      expect(t.description.length, t.id).toBeGreaterThan(10);
+      expect('secondaryColor' in t || 'accentColor' in t, t.id).toBe(false);
+    }
   });
 });

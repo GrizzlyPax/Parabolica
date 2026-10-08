@@ -15,6 +15,7 @@ import { TAG_CALIBRATION, calibrationFor } from './tagCalibration';
 import { describeCalibration } from '../racecontrol/calibrate';
 import { CURRENT_TRACKS, HISTORIC_TRACKS, LAYOUTS } from '../generators/tracks';
 import { CURRENT_TEAMS, HISTORIC_TEAMS } from './teams';
+import { BASE_DECK_TEAMS, TEAM_KINDS } from './deckTeams';
 import { GODS } from '../league/gods';
 import { INTL_FIRST_NAMES, INTL_LAST_NAMES, ABSURD_FIRST_NAMES, ABSURD_LAST_NAMES, MONONYMS, NAME_TIER_WEIGHTS } from '../generators/names';
 import { LEAGUE_ADJECTIVES, LEAGUE_NOUNS } from '../generators/leagueName';
@@ -133,6 +134,8 @@ export interface Glossary {
   inflictions: typeof INFLICTIONS;
   tracks: typeof CURRENT_TRACKS;
   historicTracks: typeof HISTORIC_TRACKS;
+  /** The 28 base-deck teams: shown now, on the grid after #356. */
+  deckTeams: typeof BASE_DECK_TEAMS;
   teams: typeof CURRENT_TEAMS;
   historicTeams: typeof HISTORIC_TEAMS;
   gods: typeof GODS;
@@ -146,7 +149,7 @@ export function buildGlossary(): Glossary {
   return {
     tags, cards: RULE_CARDS, acquisitionRules: ACQUISITION_RULES, inRaceRules: IN_RACE_RULES,
     weather: WEATHER_TYPES, trackTags: TRACK_TAGS, inflictions: INFLICTIONS, tracks: CURRENT_TRACKS,
-    historicTracks: HISTORIC_TRACKS, teams: CURRENT_TEAMS, historicTeams: HISTORIC_TEAMS, gods: GODS,
+    historicTracks: HISTORIC_TRACKS, deckTeams: BASE_DECK_TEAMS, teams: CURRENT_TEAMS, historicTeams: HISTORIC_TEAMS, gods: GODS,
     pools: [
       { id: 'names-intl-first', title: `Driver first names · international (${Math.round(NAME_TIER_WEIGHTS.international * 100)}% of drivers)`, where: 'src/generators/names.ts INTL_FIRST_NAMES', size: INTL_FIRST_NAMES.length, samples: INTL_FIRST_NAMES.slice(0, 8) },
       { id: 'names-intl-last', title: 'Driver last names · international', where: 'src/generators/names.ts INTL_LAST_NAMES', size: INTL_LAST_NAMES.length, samples: INTL_LAST_NAMES.slice(0, 8) },
@@ -170,7 +173,7 @@ export function buildGlossary(): Glossary {
       condition: tags.filter(t => t.group === 'condition').length,
       cards: RULE_CARDS.length, rules: ACQUISITION_RULES.length + IN_RACE_RULES.length,
       weather: WEATHER_TYPES.length, trackTags: TRACK_TAGS.length, inflictions: INFLICTIONS.length, tracks: CURRENT_TRACKS.length,
-      historicTracks: HISTORIC_TRACKS.length, teams: CURRENT_TEAMS.length, historicTeams: HISTORIC_TEAMS.length, gods: GODS.length,
+      historicTracks: HISTORIC_TRACKS.length, deckTeams: BASE_DECK_TEAMS.length, teams: CURRENT_TEAMS.length, historicTeams: HISTORIC_TEAMS.length, gods: GODS.length,
     },
   };
 }
@@ -180,8 +183,14 @@ export function renderGlossaryMd(g: Glossary, version: string): string {
   const L: string[] = [];
   const fx = (e: GlossaryEffect[]) => e.length ? e.map(x => `${x.value} ${x.label}`).join(', ') : '—';
   L.push(`# Parabolica World Deck`, '', `*Everything in the sim and the world, generated from the data modules by \`npm run glossary\` — do not edit by hand; edit the source files named in each section and re-run. Engine v${version}. How to add content: docs/WORLD_DECK.md.*`, '');
-  L.push(`${g.counts.teams} teams (+${g.counts.historicTeams} historic) · ${g.counts.tracks} tracks (+${g.counts.historicTracks} historic) · ${g.counts.tags} tags (${g.counts.genesis} genesis · ${g.counts.acquired} acquired · ${g.counts.inRace} in-race · ${g.counts.condition} condition) · ${g.counts.cards} rule cards · ${g.counts.rules} rules · ${g.counts.weather} weathers · ${g.counts.trackTags} track characters · ${g.counts.inflictions} inflictions · ${g.counts.gods} gods`, '');
-  L.push('## Teams', '', '*Source: `src/data/teams.ts`. Two drivers each; colours are the team livery everywhere.*', '', '| Team | Colours | Vibe |', '|---|---|---|');
+  L.push(`${g.counts.deckTeams} base-deck teams · ${g.counts.teams} teams on today's grid (+${g.counts.historicTeams} historic) · ${g.counts.tracks} tracks (+${g.counts.historicTracks} historic) · ${g.counts.tags} tags (${g.counts.genesis} genesis · ${g.counts.acquired} acquired · ${g.counts.inRace} in-race · ${g.counts.condition} condition) · ${g.counts.cards} rule cards · ${g.counts.rules} rules · ${g.counts.weather} weathers · ${g.counts.trackTags} track characters · ${g.counts.inflictions} inflictions · ${g.counts.gods} gods`, '');
+  L.push('## Base-deck teams', '', '*Source: `src/data/deckTeams.ts` (from docs/story/team-identity.md; not canon yet). The 28 world factions, seven of each kind. Shown in the World Deck now; they replace today\'s grid when the sim switches (#356). Logo = the icon in `ink` on the team colour.*', '');
+  for (const k of TEAM_KINDS) {
+    L.push(`### ${k.title}`, '', '| Team | Colour · ink | Icon | Line |', '|---|---|---|---|');
+    for (const t of g.deckTeams.filter(x => x.kind === k.kind)) L.push(`| **${t.name}** \`${t.id}\` | ${t.color} · ${t.ink} | \`${t.iconId}\` | ${t.description} |`);
+    L.push('');
+  }
+  L.push('## Teams on today\'s grid (retiring)', '', '*Source: `src/data/teams.ts`. Quick Race and leagues still race these until #356 swaps in the base deck.*', '', '| Team | Colours | Vibe |', '|---|---|---|');
   for (const t of g.teams) L.push(`| ${t.emoji} **${t.name}** \`${t.id}\` | ${t.color} / ${t.accentColor} | ${t.description} |`);
   L.push('', '### Historic teams (unlockable)', '', '| Team | Colours | Vibe |', '|---|---|---|');
   for (const t of g.historicTeams) L.push(`| ${t.emoji} **${t.name}** \`${t.id}\` | ${t.color} / ${t.accentColor} | ${t.description} |`);
