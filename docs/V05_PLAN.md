@@ -17,7 +17,7 @@
 
 **Rule 2: Apex is the critical path.** Every screen waits on Apex's core. Fable time goes only to his chain; everything else runs on Opus in parallel.
 
-**Rule 3: two Hub chats at most at once.** **Hub-A** builds the Season screens (one after another, since they share files). **Hub-B** does plumbing and cleanup (icons, renames, removals), which rarely touches the same files.
+**Rule 3: one Hub chat, one queue.** Hub works the list below top to bottom, one PR per issue. (The two-Hub split was dropped on Oct 8: Pax runs one Hub thread.)
 
 **Rule 4: one fingerprint bump.** The two content changes that move race results (Quick Race on trait cards + the 28 teams) land together in one PR that Pax merges. Nothing else should move the golden fingerprint.
 
@@ -40,30 +40,26 @@
 4. Card pack logic + team locker (#316)
 5. One PR, merged by Pax: Quick Race on trait cards (#337) **+** grid swap to the 28 teams (#356) **+** race colours (#381) **+** Tracks & Weather v2 dry swap (#359)
 
-**🛞 Hub-B (Opus) first, to clear Apex's path (no sim changes):**
+**🛞 Hub (Opus) first, to clear Apex's path (no sim changes):** ✅ all done
 1. Base-deck teams as data + World Deck display (#402)
 2. Card model + generated Motorsport base deck (#329): Apex starts after this merges
 2b. Tracks + weather as data + World Deck display (#408)
 3. World Deck + Race Control show the card deck (#403)
 4. Rarity becomes metals (#385)
 
-**🛞 Hub-A (Opus): the Season screens, in order:**
-1. League Setup (needs genesis) ✅
-1b. Pick your team (#440): tap a team to make it yours (pulled forward from the team creator, Oct 8)
-2. Draft board (needs the draft engine)
-3. Paddock screen (pick racers, hotseat hand-off)
-4. Race view (watch / skip, rivals dark) + scoring, standings and finale → **M2**
-5. Card sheet + locker
-6. Pack reveal + targeting → **M3**
-7. Team creator: build your own (#346)
-
-**🛞 Hub-B (Opus): plumbing and cleanup:**
-1. Rename to Rule cards
-2. Icon system (registry, GameIcon, TeamLogo, theming tokens, credits)
-3. Remove Commissioner leagues (after League Setup works)
-4. Emoji sweep, screen by screen
-
-**🛞 Hub (either chat):** content icon ids (after the icon map) · the game wears your team colours → **M4**
+**🛞 Hub (Opus): what's left, in order** (League Setup ✅, Rule cards rename ✅, icon system ✅)
+1. Republish the preview (`republish-preview`): v0.5.0 is merged
+2. Pick your team (#440): tap a team to make it yours
+3. Draft board (#318)
+4. Paddock screen (#319): pick racers, hotseat hand-off
+5. Race view (#322): watch / skip, rivals dark
+6. Scoring, standings + champion finale (#321) → **M2**
+7. Packs rename + pack icon (#421)
+8. Pack opening + targeting (#320) → **M3**
+9. Favoured stats on Run Setup, Paddock, race header (#361)
+10. Team creator: build your own (#346) → **M4**
+11. Race-view emoji become game-icons (#397)
+12. Remove Commissioner leagues, gods and league routes (#339) → **M5**
 
 **🎤 Pit:** keep this doc and the milestones current
 
@@ -74,17 +70,17 @@
 **👤 Pax:** playtest at each milestone · merge the fingerprint PR · approve the icon map
 
 ## Kickoff
-**Now, no Fable needed:** Hub-B (Rule cards rename → icon system) · Radio + Pax (palette, logo icons, icon map).
+**Now, no Fable needed:** Hub (works the queue above) · Radio + Pax (palette, logo icons, icon map).
 
 **When Fable credits are back:** paste the Apex kickoff (from Pit) into one Fable chat. Apex works his chain in order (one PR per issue, merging each when green) and stops to report if an existing test changes, something is unclear, or he's about half through his budget. If the chat gets long, start a fresh one with the same block; it picks up from GitHub.
 
-**As soon as genesis merges:** start Hub-A on League Setup. After that, each Hub-A screen starts when the Apex piece it needs has merged.
+**Apex's chain is done**, so every Hub screen has its engine behind it.
 
 ## Risks
-- **Apex slips → everything slips.** If the season loop stalls, Pit moves Hub-A to the card sheet and Hub-B tasks first.
+- **Apex slips → everything slips.** If the season loop stalls, Pit moves Hub to the non-Season tasks first.
 - **Fable limits.** Apex's chain is 6 tasks. If the limit hits, the pack logic can drop to Opus with Apex reviewing; the season loop can't.
-- **Hub-A is busy:** 7 screens in a row. If it slips, the team creator and pack reveal polish move to a v0.5.x patch, not the core.
-- **Hotseat** touches every screen. Each Hub-A screen checks two humans before merging.
+- **Hub is busy:** one chat, 12 items in a row. If it slips, the team creator and pack reveal polish move to a v0.5.x patch, not the core.
+- **Hotseat** touches every screen. Each Season screen checks two humans before merging.
 
 ## Out of v0.5 (on purpose)
 Effect cards and the engine hook · Wet weather + forecast · live seasons (wall clock, any device) · CPU Paddock actions · Rule cards in Season Mode · Patron Mode · events and economy. All of these are in v0.6 / Queued / Icebox.
