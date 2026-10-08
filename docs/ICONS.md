@@ -60,6 +60,12 @@ Fallbacks: Old Standard TT → `Georgia, serif`; Special Elite → `'Courier New
 - **Structure is lines, not boxes:** a **1px white rule** separates major sections and list items on menus; a **1px hairline** (`#2a2a2e`) separates rows in dense lists (tower, card list). Cards that need a frame get a 1px white outline, no fill.
 - **Tower row:** 7px × 20px padding, a 3px left edge in the row's team colour.
 
+### Theming a screen (built in #323)
+- Put `teamThemeVars(team)` (src/icons/GameIcon.tsx) on a screen's root `style`: it sets `--team-primary` and `--team-ink` (white or near-black, picked by contrast unless the team stores `ink`). No team → the `:root` purple.
+- Season Mode screens pass **your** team; hotseat passes **whoever's turn it is**. Everything that reads the two tokens re-colours at once.
+- Fonts come from `--look-display` / `--look-serif` / `--look-data`; never name a face in a component.
+- Race rendering (marbles, track map, charts, tower rows, chronicle lap chart) is Apex's [#381](https://github.com/GrizzlyPax/Parabolica/issues/381) and still uses the old tokens and fonts.
+
 ### Colour tokens
 | Token | Value | Role |
 |---|---|---|
