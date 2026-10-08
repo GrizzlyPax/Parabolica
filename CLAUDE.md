@@ -95,5 +95,6 @@ Every Asana task has a **Crew** field saying who (and which model) should take i
 - `docs/FANTASY.md` - Fantasy teams: snake draft, obfuscated draft info, scoring, where it shows
 - `docs/LEAGUE_SERVER.md` - One league, every device: the server holds facts + decrees + canonical digests; devices replay; publish / open by code / link; deploy secrets
 - `docs/RACE_CONTROL.md` - The lab: parity rule, seeds and fingerprints, tag calibration method and bands, how to replicate and export
+- `docs/ICONS.md` - Design change: game-icons.net replaces every emoji (meaning registry, currentColor), and the UI + icons take your team's colours
 - `docs/PROCEDURAL_IDENTITY.md` - Procedural universe identity (driver names #191, league names #185, team identity #183)
 - `docs/HANDOFF_2026-10-07.md` - Week of Oct 5–7 handoff for code agents: what shipped, how the pieces fit, traps, open work (read first)
