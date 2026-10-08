@@ -144,7 +144,7 @@ function CalibrationTab({ lab }: { lab: LabProps }) {
   return (
     <>
       <section className="rs-row rc-explain">
-        <p><b>Every tag, measured.</b> Each one was put on a single driver, alone, in {file.races} races, then the same {file.races} races with nobody tagged. <b>Places</b> = how many finishing positions the tag was worth (<span className="rc-good">+2.6</span> good, <span className="rc-bad">−1.0</span> hurts; ± is the uncertainty). Grey numbers are the untagged rate. Click a header to sort; click a row to see what a tag does and change its numbers. Edited tags stay purple; <b>Measure</b> runs them all together on the seed below, and a Yours · Δ column appears.</p>
+        <p><b>Every tag, measured.</b> Each one was put on a single driver, alone, in {file.races} races, then the same {file.races} races with nobody tagged. <b>Places</b> = how many finishing positions the tag was worth (<span className="rc-good">+2.6</span> good, <span className="rc-bad">−1.0</span> hurts; ± is the uncertainty). Grey numbers are the untagged rate. Click a header to sort; click a row to see what a tag does and change its numbers. Edited tags stay highlighted in your colour; <b>Measure</b> runs them all together on the seed below, and a Yours · Δ column appears.</p>
         <div className="rc-reroll">
           <span className="rs-k">Seed</span>
           <input type="number" value={seed} disabled={busy} onChange={e => setSeed(Number(e.target.value) >>> 0)} aria-label="Batch seed" />
