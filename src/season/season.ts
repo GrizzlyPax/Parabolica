@@ -25,6 +25,7 @@ import { CANON_VARIABLES, type SimVariables } from '../simlab/types';
 import { version as engineVersion } from '../../package.json';
 import { generateSeasonPool, seasonRoster, RACE_LINEUP, type SeasonPool, type SeasonCards, type TeamIdentityOverride, type Lineup } from './genesis';
 import { draftOrder, draftState, draftedRosters, type DraftPick } from './draft';
+import { packOpened, seasonCardsFor, type CardFact } from './pack';
 
 export const DEFAULT_CALENDAR_LENGTH = 10;
 
@@ -52,11 +53,13 @@ export interface SeasonLineup {
   driverIds: [number, number];
 }
 
-/** The whole season, as facts. #316 adds the pack and gear facts. */
+/** The whole season, as facts. */
 export interface SeasonFacts {
   setup: SeasonSetup;
   draftPicks: DraftPick[];
   lineups: SeasonLineup[];
+  /** Pack applications and gear moves (#316), one ordered log. */
+  cardFacts: CardFact[];
   /** Race digests, one per settled round, in order. Event logs are not kept. */
   results: RaceDigest[];
 }
@@ -86,7 +89,7 @@ export interface SeasonState {
 }
 
 export function newSeason(setup: SeasonSetup): SeasonFacts {
-  return { setup, draftPicks: [], lineups: [], results: [] };
+  return { setup, draftPicks: [], lineups: [], cardFacts: [], results: [] };
 }
 
 export function poolFor(facts: SeasonFacts): SeasonPool {
@@ -101,10 +104,10 @@ export function identitiesFor(facts: SeasonFacts): Record<string, TeamIdentityOv
   return Object.fromEntries(facts.setup.humans.map(h => [h.teamId, { name: h.name, color: h.color, ink: h.ink, iconId: h.iconId }]));
 }
 
-/** Cards dealt during the season, resolved for a round. Genesis traits live
- * on the pool; this is the hook the packs (#316) fill. Empty in #315. */
-export function cardsForRound(_facts: SeasonFacts, _round: number): SeasonCards {
-  return {};
+/** Cards dealt during the season (packs, #316), resolved for a round. Genesis
+ * traits live on the pool and are added by seasonRoster. */
+export function cardsForRound(facts: SeasonFacts, round: number): SeasonCards {
+  return seasonCardsFor(facts, round);
 }
 
 // ---------------------------------------------------------------------------
@@ -156,9 +159,10 @@ export function lineupFor(facts: SeasonFacts, round: number, teamId: string): [n
   return [roster.driverIds[0], roster.driverIds[1]];
 }
 
-/** Has this team finished its Paddock turn for the round? #316 adds the pack. */
+/** Has this team finished its Paddock turn for the round? Two decisions:
+ * who races, and the pack (when the team gets one), in either order. */
 export function turnDone(facts: SeasonFacts, round: number, teamId: string): boolean {
-  return facts.lineups.some(l => l.round === round && l.teamId === teamId);
+  return facts.lineups.some(l => l.round === round && l.teamId === teamId) && packOpened(facts, round, teamId);
 }
 
 /** The CPU hook: no decisions in v0.5. The default lineup races. */
@@ -172,6 +176,7 @@ export function validateLineup(facts: SeasonFacts, lineup: SeasonLineup): string
   if (state.phase !== 'paddock') return `not in the Paddock (${state.phase})`;
   if (lineup.round !== state.round) return `round ${lineup.round} is not the current round (${state.round})`;
   if (lineup.teamId !== state.whoseTurn) return `${lineup.teamId} is not on the clock (${state.whoseTurn} is)`;
+  if (facts.lineups.some(l => l.round === lineup.round && l.teamId === lineup.teamId)) return 'the lineup is already set this round';
   const roster = draftState(poolFor(facts), facts.draftPicks).rosters[lineup.teamId];
   const [a, b] = lineup.driverIds;
   if (lineup.driverIds.length !== RACE_LINEUP || a === b) return `a lineup is ${RACE_LINEUP} different drivers`;
@@ -301,6 +306,7 @@ export function loadSeason(store: SeasonStore | null = defaultStore()): SeasonFa
     if (envelope?.schemaVersion !== SEASON_SCHEMA_VERSION) return null;
     const f = envelope.data;
     if (!f?.setup || !Array.isArray(f.draftPicks) || !Array.isArray(f.lineups) || !Array.isArray(f.results)) return null;
+    if (!Array.isArray(f.cardFacts)) return null;
     return f;
   } catch { return null; }
 }
