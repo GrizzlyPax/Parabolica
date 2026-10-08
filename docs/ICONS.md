@@ -57,7 +57,7 @@ Fallbacks: Old Standard TT → `Georgia, serif`; Special Elite → `'Courier New
 ### Spacing and shape
 - **Scale:** 4 · 8 · 14 · 20 · 32 · 48. Screen gutter **20**; gap between stacked blocks **14**; menu sections **22**.
 - **Radius: 0** everywhere (buttons, chips, panels, logo tiles). Round things stay round only where they are objects: marbles and tyre badges.
-- **Structure is lines, not packs:** a **1px white rule** separates major sections and list items on menus; a **1px hairline** (`#2a2a2e`) separates rows in dense lists (tower, card list). Cards that need a frame get a 1px white outline, no fill.
+- **Structure is lines, not boxes:** a **1px white rule** separates major sections and list items on menus; a **1px hairline** (`#2a2a2e`) separates rows in dense lists (tower, card list). Cards that need a frame get a 1px white outline, no fill.
 - **Tower row:** 7px × 20px padding, a 3px left edge in the row's team colour.
 
 ### Theming a screen (built in #323)
@@ -88,46 +88,51 @@ Fallbacks: Old Standard TT → `Georgia, serif`; Special Elite → `'Courier New
 - **Your rows** in the tower get a 14% wash of the primary plus the edge; nothing else changes.
 - **Rivals:** their colour only on their marble and their 3px row edge. Names stay white.
 - **Rarity:** the metal as a **word** (Label style, coloured) plus a **1px outline** on chips; sealed draft dots in the metal colour. Rarity always shows its word, so the three teams that wear metal colours (Ostler & Finch, Tinplate, Ambergate) still read.
-- **Card packs have no colour:** they are Common → Uncommon → Rare → Legendary packes by standing; the pack icon stays white.
+- **Card packs have no colour:** they are Common → Uncommon → Rare → Legendary packs by standing; the pack icon stays white.
 - **Icons:** `currentColor` always. 16 px inline, 20 px in rows, 24–26 px on tools; `--team-ink` when drawn on the primary.
 
 ## Cards (Pax, Oct 8)
 
-*Picked from [Parabolica Card Looks](https://claude.ai/artifact/Bdi2ubjxMQF2auah9U7VQ5): **direction A, "Almanac Plate"**, with **card backs + dots** for rivals. The game is a deck-builder underneath, so a card should look like a card. Spec for [#418](https://github.com/GrizzlyPax/Parabolica/issues/418); one `CardFace` component draws every size.*
+*Picked from [Parabolica Card Looks](https://claude.ai/artifact/Bdi2ubjxMQF2auah9U7VQ5) after five rounds: **"Almanac Plate"**, laid out like a Slay the Spire card. The game is a deck-builder underneath, so a card should look like a card. Spec for [#418](https://github.com/GrizzlyPax/Parabolica/issues/418); one `CardFace` component draws every card.*
 
-### Anatomy (a printed plate, portrait 5:7)
+### The face (portrait 5:7, centred)
 | Part | Spec |
 |---|---|
-| **Edge** | 3px solid in the card's metal (`--rarity-*`); 2px at mini. Effects have no metal, so they use `--pw-border-strong`. |
-| **Rule** | 1px white rule, inset 6px from the edge. Everything sits inside it. |
-| **Header** | Left: kind icon + kind name (Special Elite 10px, caps). Right: **"No. 013"**, the card's place in the deck (1–94, deck order). |
-| **Plate** (the "art") | The stat icon(s), centred between two hairlines, **in the metal colour**. One icon per stat (gold 2, iridium 3). |
-| **Name** | Old Standard 700, 19px. Utilitarian for now ("Gold Speed + Consistency"). |
-| **Stats** | Special Elite 12px, one line per stat: **+10%** Speed. Effects: Speed ▲ up / ▼ down. |
-| **Footer** | Left: the metal word in its metal colour. Right: the holder (Driver / Car / Team). |
-| **Back** | The metal edge and white rule around a fine diagonal hatch, with a **PARABOLICA** wordmark plate (hidden at mini). |
+| **Edge** | 3px solid in the card's metal (`--rarity-*`). Effects have no metal, so they use `--pw-border-strong`. |
+| **Rule** | 1px white rule, inset 5px from the edge. |
+| **Name banner** | On top, overlapping the top of the art: a black banner with a white outline, the name centred (Old Standard 700). Long names get **smaller**, never wrap the layout: about 18px for short names down to 13px for the longest. |
+| **Art** | **One icon per card**, centred, in the metal colour, on a fixed-size window tinted with the metal (`--rarity-*` at ~13% over black). **Iridium gets a subtle two-tone sheen** (violet → steel → teal), not holographic. Placeholder icon = the card's first stat; the flavour pass gives each card its own. |
+| **Type tag** | A **fixed-width** tag overlapping the bottom of the art, outlined in the metal: the kind in caps (EQUIPMENT · UPGRADE · FACILITY · TRAIT · EFFECT), Special Elite, optically centred. |
+| **Description** | Centred, every change on its own line: **+10%** Speed. Effects: Speed ▲ up / ▼ down. Nothing else. |
+| **Number** | Small at the bottom: "013" (its place in the deck). |
+| **Not on the face** | No metal word, no Driver / Car / Team, no corner icon, no extra line. The metal shows in the edge, the art and the tag. |
 
-The team colour **never** goes on a card. It stays on the header block above a hand and on buttons. Cards carry metal only.
+### The back
+- The metal edge and white rule around **bold diagonal stripes in the metal colour** (about 4–5 across the card), so a face-down card reads its metal at a glance.
+- A centred plate: **PARABOLICA**, then the flag and **BASE DECK** (the deck this card belongs to; future decks name themselves here).
+- **The back hides nothing:** it's just the back. Every fact about a card is on its face.
 
-### Sizes
-| Size | Pack | Where | Differences |
-|---|---|---|---|
-| **Full** | 230 × 322 | Pack reveal, card detail | Tap flips it to the details: what the card does, who holds it, "No. 013 of 94", id. |
-| **Small** | 108 × 151 | Hand, trait pile, locker, World Deck binder | Header shows icon + number only. Stats compact to "+15% each" when there's more than one. |
-| **Mini** | 40 × 56 | Timing tower, tight rows | Just the first stat icon in the metal, inside the edge. |
-| **Dot** | 12px circle | Rival traits | The metal colour only. |
+### One card, scaled
+Every size is **the same card scaled down**, never a re-drawn variant: stripes, edges, banner and type keep their proportions.
+
+| Size | Box | Where |
+|---|---|---|
+| **Full** | 210 × 294 | Pack reveal, a card on its own |
+| **Small** | 108 × 151 (×0.51) | Hand, trait pile, locker, World Deck binder |
+| **Mini** | 40 × 56 | Timing tower, tight rows. Its own simple face: **one centred icon** on the metal tint, inside the edge. |
+| **Dot** | 12px circle | Rival traits |
 
 ### Groupings
-- **Hand:** the three gear slots side by side (Equipment · driver, Upgrade · car, Facility · team) as small cards. **An empty slot is a dashed card outline** with "Empty upgrade slot".
-- **Traits:** an offset **pile** of small cards. Tap to spread them into a row.
-- **Locker:** a **face-down deck** (backs offset 4px) with a count badge. Tap to spread it face up.
-- **Binder:** World Deck → Cards shows the whole deck as a grid of small cards, filterable by kind.
-- **Rivals:** gear slots show **card backs** (metal edge, no name or stats), traits show **metal dots**, and the locker stays a face-down deck with its count.
+- **Hand:** the three gear slots side by side (Equipment · driver, Upgrade · car, Facility · team) as small cards. **An empty slot is a dashed card outline**.
+- **Traits:** an offset **pile** of small cards; tap to spread into a row.
+- **Locker:** a **face-down deck** (backs offset 4px) with a count badge; tap to spread face up.
+- **Binder:** World Deck → Cards shows the whole deck as a grid of small cards.
+- **Rivals:** gear slots show **card backs** (their metal stripes, nothing else), traits show **metal dots**, the locker stays a face-down deck with its count.
 
 ### Motion
-- **Tap** lifts a card 4px and flips it (rotateY, 0.45s) to its details; tap again to flip back.
+- **Tap a card** to lift it 4px and **flip it to its back**, and again to flip it back. A fidget, not a reveal.
 - **A new card** (pack reveal, #320) arrives **face-down**, slides up, then flips face-up.
-- `prefers-reduced-motion`: no lift, flip or slide; the face just swaps.
+- `prefers-reduced-motion`: no lift, flip or slide.
 
 ## Why
 - Emoji render differently on every device, can't be recoloured, and read as placeholder art.
