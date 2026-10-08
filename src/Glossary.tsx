@@ -27,9 +27,9 @@ import './Glossary.css';
 
 interface GlossaryProps { onBack: () => void }
 
-type TabId = 'deck' | 'tags' | 'teams' | 'tracks' | 'cards' | 'rules' | 'conditions' | 'gods' | 'flavour' | 'credits' | 'add' | 'inbox';
+type TabId = 'deck' | 'teams' | 'tracks' | 'cards' | 'rules' | 'conditions' | 'gods' | 'flavour' | 'credits' | 'add' | 'inbox';
 const TABS: { id: TabId; label: string }[] = [
-  { id: 'deck', label: 'Cards' }, { id: 'tags', label: 'Tags · today' }, { id: 'teams', label: 'Teams' }, { id: 'tracks', label: 'Tracks' }, { id: 'cards', label: 'Rule cards' },
+  { id: 'deck', label: 'Cards' }, { id: 'teams', label: 'Teams' }, { id: 'tracks', label: 'Tracks' }, { id: 'cards', label: 'Rule cards' },
   { id: 'rules', label: 'Rules' }, { id: 'conditions', label: 'Weather' }, { id: 'gods', label: 'Gods' }, { id: 'flavour', label: 'Flavour' }, { id: 'credits', label: 'Credits' }, { id: 'inbox', label: 'Inbox' }, { id: 'add', label: '+ Add' },
 ];
 
@@ -289,7 +289,8 @@ export default function Glossary({ onBack }: GlossaryProps) {
   const toggleSection = (id: string) => setFlipped(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
   // The retiring grid stays folded even on "Expand all"; open it by hand (#402).
   const STAY_FOLDED = new Set(['teams:current', 'teams:historic', 'tracks:current', 'tracks:historic', 'weather', 'characters', 'inflictions']);
-  const isCollapsed = (id: string) => (STAY_FOLDED.has(id) || mode === 'collapsed') !== flipped.has(id);
+  const staysFolded = (id: string) => STAY_FOLDED.has(id) || id === 'roll' || id.startsWith('tags:');
+  const isCollapsed = (id: string) => (staysFolded(id) || mode === 'collapsed') !== flipped.has(id);
   const setAll = (m: 'collapsed' | 'expanded') => { setMode(m); setFlipped(new Set()); };
   const needle = q.trim().toLowerCase();
   const match = (...parts: (string | undefined)[]) => !needle || parts.some(p => p?.toLowerCase().includes(needle));
@@ -383,9 +384,19 @@ export default function Glossary({ onBack }: GlossaryProps) {
         )}
       </nav>
 
-      {tab === 'tags' && (
+      {tab === 'deck' && DECK_GROUPS.map(grp => {
+        const rows = grp.rows.filter(c => match(c.name, c.id, c.kind, c.rarity, ...c.stats.map(x => STAT_LABELS[x.stat])));
+        if (!rows.length) return null;
+        return (
+          <Section key={grp.id} {...sec(`deck:${grp.id}`)} title={grp.title} count={grp.rows.length} hint={grp.hint}>
+            <div className="gl-list">{rows.map(c => deckRow(c))}</div>
+          </Section>
+        );
+      })}
+
+      {tab === 'deck' && (
         <>
-          <Section {...sec('roll')} title="How a driver is born with tags" hint="Three slots: driver, car (their own chassis), team (shared with their teammate).">
+          <Section {...sec('roll')} title="How a driver is born with tags (retiring)" hint="Three slots: driver, car (their own chassis), team (shared with their teammate).">
             <ol className="gl-roll">
               <li><b>Does the slot hit?</b> {describeChance(rs.tags.genesisChance)}.</li>
               <li><b>Which bucket?</b> {RARITIES.map((r, i) => <span key={r}>{i > 0 && ' · '}{rs.tags.rarityOdds[r]}% <span className={`rarity-word rarity-${r}`}>{r}</span></span>)}. Fixed odds — more tags in a bucket just means more variety, not more of that bucket.</li>
@@ -396,7 +407,7 @@ export default function Glossary({ onBack }: GlossaryProps) {
             const rows = sortTags(grp.rows.filter(t => match(t.tag.name, t.tag.id, t.tag.description, t.fires, t.source)));
             if (!rows.length) return null;
             return (
-              <Section key={grp.id} {...sec(`tags:${grp.id}`)} title={grp.title} count={grp.rows.length} hint={grp.hint} extra={sortControl}>
+              <Section key={grp.id} {...sec(`tags:${grp.id}`)} title={`${grp.title} (retiring)`} count={grp.rows.length} hint={`${grp.hint} Races use tags until cards are dealt (#313, #337).`} extra={sortControl}>
                 <div className="gl-list">{rows.map(tagRow)}</div>
               </Section>
             );
@@ -476,16 +487,6 @@ export default function Glossary({ onBack }: GlossaryProps) {
                 </Row>
               ))}
             </div>
-          </Section>
-        );
-      })}
-
-      {tab === 'deck' && DECK_GROUPS.map(grp => {
-        const rows = grp.rows.filter(c => match(c.name, c.id, c.kind, c.rarity, ...c.stats.map(x => STAT_LABELS[x.stat])));
-        if (!rows.length) return null;
-        return (
-          <Section key={grp.id} {...sec(`deck:${grp.id}`)} title={grp.title} count={grp.rows.length} hint={grp.hint}>
-            <div className="gl-list">{rows.map(c => deckRow(c))}</div>
           </Section>
         );
       })}
