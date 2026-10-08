@@ -211,7 +211,7 @@ Mid-race strikes that need a condition to be active.
 ```
 `perTickChance` 0.0004 ≈ one strike per race while active; `durationTicks` 300 ≈ 30 s (a couple of laps). `activationText` follows the driver's name.
 
-## 13. Cards — `src/data/cards.ts`
+## 13. Rule cards — `src/data/ruleCards.ts`
 
 Rules the player picks before a run. A card is fiction + one plain-words effect + a patch.
 ```ts

@@ -28,7 +28,7 @@ const KINDS: { id: IdeaKind; label: string; labels: string[] }[] = [
   { id: 'tag', label: 'Tag', labels: ['idea', 'world-deck'] },
   { id: 'team', label: 'Team', labels: ['idea', 'world-deck'] },
   { id: 'track', label: 'Track', labels: ['idea', 'world-deck'] },
-  { id: 'card', label: 'Card', labels: ['idea', 'world-deck'] },
+  { id: 'card', label: 'Rule card', labels: ['idea', 'world-deck'] },
   { id: 'rule', label: 'Rule / mechanic', labels: ['idea', 'balance'] },
   { id: 'commentary', label: 'Commentary', labels: ['idea', 'world-deck'] },
   { id: 'bug', label: 'Bug', labels: ['bug'] },

@@ -11,7 +11,7 @@ import { DraftPanel, emptyFantasy } from '../../fantasy/DraftPanel';
 import { draftComplete, type FantasyConfig } from '../../fantasy/types';
 import { CURRENT_TEAMS, HISTORIC_TEAMS, makeCustomTeam, Team } from '../../data/teams';
 import { generateTeamIdentities } from '../../generators/teamIdentity';
-import { cardsForScope, CARDS_BY_ID } from '../../data/cards';
+import { ruleCardsForScope, RULE_CARDS_BY_ID } from '../../data/ruleCards';
 import { resolveRuleset, describeRuleset, describeChance, describeOdds, Ruleset } from '../../rules/ruleset';
 import './League.css';
 import '../../RunSetup.css';
@@ -100,7 +100,7 @@ function FoundingScreen({ onFound, onBack }: FoundingScreenProps) {
 
   const [hand, setHand] = useState<string[]>([]);
   const [showRules, setShowRules] = useState(false);
-  const ruleset = resolveRuleset(hand, CARDS_BY_ID);
+  const ruleset = resolveRuleset(hand, RULE_CARDS_BY_ID);
   const rulesLines = describeRuleset(ruleset);
   const toggleCard = (id: string) => setHand(h => (h.includes(id) ? h.filter(x => x !== id) : [...h, id]));
 
@@ -288,12 +288,12 @@ function FoundingScreen({ onFound, onBack }: FoundingScreenProps) {
 
         <section className="founding-section">
           <h2 className="founding-label">
-            Season cards
+            Season rule cards
             <span className="founding-team-count">{hand.length === 0 ? 'none — default rules' : `${hand.length} in play`}</span>
           </h2>
           <p className="founding-hint">The rules this whole season plays under. Pick none for the classic universe.</p>
           <div className="rs-hand">
-            {cardsForScope('season').map(c => {
+            {ruleCardsForScope('season').map(c => {
               const on = hand.includes(c.id);
               return (
                 <button type="button" key={c.id} className={`rs-card ${on ? 'on' : ''} w-${c.weight}`} onClick={() => toggleCard(c.id)} aria-pressed={on}>

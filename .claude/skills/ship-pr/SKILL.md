@@ -18,7 +18,7 @@ description: Build a `ready` Parabolica issue and ship it — branch, implement,
 - **Intended physics/content/RNG-order change** → bump `package.json` version, then `GOLDEN_UPDATE=1 npx vitest run -t fingerprint`, and say so in the PR.
 - **Facts, not state:** anything that must persist or be shared goes into league facts (`LeagueSetupConfig`, intervention log), never a derived snapshot.
 - **One way to build a race:** `createLeague` + `prepareScheduledRace` (`src/league/settle.ts`). Don't hand-build an engine.
-- **Tuning is data:** knobs in `src/simlab/types.ts` / `src/racecontrol/knobs.ts`, rules in `src/data/cards.ts`.
+- **Tuning is data:** knobs in `src/simlab/types.ts` / `src/racecontrol/knobs.ts`, rule cards in `src/data/ruleCards.ts`.
 - **Names are white.** Team colour lives on marble, dot, chart line, row edge only. Grep `color:`, `fill:` (incl. SVG style objects), `fill=` on `<text>`, `var(--team-color)`.
 - **Use `--pw-*` tokens** from `src/App.css`, not hex.
 - CSS cleanup: exact-match edits, never regex deletes.

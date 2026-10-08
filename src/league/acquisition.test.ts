@@ -9,7 +9,7 @@ import { CURRENT_TRACKS } from '../generators/tracks';
 import { ACQUIRED_TAGS, getTagById, isGenesisTag } from '../data/tags';
 import { ACQUISITION_RULES } from '../data/acquisitions';
 import { defaultRuleset, resolveRuleset } from '../rules/ruleset';
-import { CARDS_BY_ID } from '../data/cards';
+import { RULE_CARDS_BY_ID } from '../data/ruleCards';
 import { createInitialSeasonState, updateSeasonWithRaceResult } from '../types/season';
 
 const HOUR = 3_600_000;
@@ -103,7 +103,7 @@ describe('evaluateAcquisitions (pure)', () => {
     const { entries } = evaluateAcquisitions(full, digest, season, full.roster, ACQUISITION_RULES.filter(r => r.family !== 'cosmic'));
     expect(entries.filter(e => e.targetDriverId === victim)).toEqual([]); // stack is full (cap 4)
     // Tag Soup raises the cap → it lands
-    const soup = { ...full, setup: { ...full.setup, ruleset: resolveRuleset(['tag-soup'], CARDS_BY_ID) } };
+    const soup = { ...full, setup: { ...full.setup, ruleset: resolveRuleset(['tag-soup'], RULE_CARDS_BY_ID) } };
     const r2 = evaluateAcquisitions(soup, digest, season, soup.roster, ACQUISITION_RULES.filter(r => r.family !== 'cosmic'));
     expect(r2.entries.some(e => e.type === 'acquire-tag' && e.targetDriverId === victim && e.tagId === 'shaken')).toBe(true);
   });
