@@ -1,0 +1,69 @@
+/* Season Mode screens (docs/SEASON_MODE.md) — The look (docs/ICONS.md): the
+   rs-* page frame from RunSetup.css, black + white, white rules, square
+   corners; the team colour only on the primary button and your team's mark. */
+
+.season-setup { max-width: 720px; }
+
+/* Start: top of the page, so the defaults are one tap */
+.ss-start-block { margin-left: auto; display: flex; flex-direction: column; align-items: stretch; gap: 10px; }
+.ss-confirm {
+  display: flex; flex-direction: column; gap: 10px; padding: 12px;
+  border: 1px solid var(--signal-yellow); font-size: 15px; line-height: 1.4; color: var(--pw-text-1);
+}
+
+/* League name + seed */
+.ss-name {
+  width: 100%; height: 48px; padding: 0 12px; border-radius: 0;
+  background: var(--pw-ground); border: 1px solid var(--pw-text-1); color: var(--pw-text-1);
+  font-family: var(--look-display); font-weight: 700; font-size: 22px;
+}
+.ss-seed { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 12px 0 6px; }
+.ss-reroll { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px; font-size: 15px; }
+
+/* Steppers */
+.ss-counts { display: flex; flex-wrap: wrap; gap: 12px 28px; margin-bottom: 8px; }
+.ss-count { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.ss-count-label { font-family: var(--look-display); font-weight: 700; font-size: 18px; min-width: 64px; }
+.ss-stepper { display: inline-flex; align-items: stretch; border: 1px solid var(--pw-text-1); }
+.ss-step {
+  width: 44px; height: 44px; border: 0; border-radius: 0; cursor: pointer;
+  background: transparent; color: var(--pw-text-1); font-family: var(--look-data); font-size: 20px;
+}
+.ss-step:hover:not(:disabled) { background: var(--pw-surface); }
+.ss-step:disabled { color: var(--pw-text-3); cursor: default; }
+.ss-step-value {
+  min-width: 48px; display: inline-flex; align-items: center; justify-content: center;
+  border-left: 1px solid var(--pw-text-1); border-right: 1px solid var(--pw-text-1);
+  font-family: var(--look-data); font-size: 18px;
+}
+
+/* The grid of teams */
+.ss-teams { list-style: none; margin: 12px 0 8px; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); column-gap: 20px; }
+.ss-team { display: flex; align-items: center; gap: 10px; min-height: 44px; border-top: 1px solid var(--pw-hairline); }
+.ss-team-name { flex: 1; min-width: 0; font-size: 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ss-badge {
+  display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px;
+  border: 1px solid var(--pw-border-strong); color: var(--pw-text-2);
+  font-family: var(--look-data); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase;
+}
+.ss-badge-human { border-color: var(--team-primary); background: var(--team-primary); color: var(--team-ink); }
+
+/* Calendar */
+.ss-calendar { list-style: none; margin: 4px 0 8px; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); column-gap: 20px; }
+.ss-race {
+  display: flex; align-items: center; gap: 12px; width: 100%; min-height: 44px; text-align: left;
+  background: transparent; border: 0; border-top: 1px solid var(--pw-hairline); border-radius: 0;
+  padding: 0; color: inherit; font: inherit; cursor: pointer;
+}
+.ss-race:hover .ss-race-chev { color: var(--pw-text-1); }
+.ss-race-no { width: 32px; font-family: var(--look-data); font-size: 12px; color: var(--pw-text-2); }
+.ss-race-name { flex: 1; font-size: 16px; }
+.ss-race-chev { font-family: var(--look-data); font-size: 18px; color: var(--pw-text-3); }
+
+/* A Season screen still to be built: where the season stands */
+.ss-holding { display: flex; flex-direction: column; gap: 12px; }
+.ss-holding-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+
+@media (max-width: 599px) {
+  .ss-start-block { width: 100%; margin-left: 0; }
+}

@@ -39,6 +39,8 @@ export interface SeasonHuman {
 
 /** Fixed at League Setup. */
 export interface SeasonSetup {
+  /** The league's name (League Setup, #317). Display only: never feeds the sim. */
+  name?: string;
   seed: number;
   teamCount: number;
   humans: SeasonHuman[];
