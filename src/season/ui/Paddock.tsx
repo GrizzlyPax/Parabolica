@@ -22,6 +22,7 @@ import { constructorStandings, lineupFor, poolFor, saveSeason, seasonState, setL
 import { overall, readStat, type StatReading } from '../grades';
 import { seasonName } from '../setup';
 import Handoff from './Handoff';
+import PackReveal from './PackReveal';
 import { GradeCell, ReadingSheet } from './RosterTable';
 import { humanLabel, teamsOf } from './teams';
 
@@ -75,6 +76,7 @@ export default function Paddock({ facts, onChange, onMenu, onGo, onStandings }: 
   const turn = state.whoseTurn;
   const [readyFor, setReadyFor] = useState<string | null>(hotseat ? null : facts.setup.humans[0]?.teamId ?? null);
   const [revealed, setRevealed] = useState(false);
+  const [revealing, setRevealing] = useState(false);
   const [aim, setAim] = useState<HolderKey | null>(null);
   const [chosen, setChosen] = useState<number[] | null>(null);
   const [held, setHeld] = useState<string | null>(null);
@@ -191,7 +193,7 @@ export default function Paddock({ facts, onChange, onMenu, onGo, onStandings }: 
   // Step strip
   const step = !myTurn ? 0 : pack ? (revealed ? 2 : 1) : 3;
   const steps: { label: string; action?: JSX.Element }[] = [
-    { label: 'Open pack', action: step === 1 ? <button type="button" className="rs-btn rs-btn-primary pk-step-btn" onClick={() => setRevealed(true)}>Open</button> : undefined },
+    { label: 'Open pack', action: step === 1 ? <button type="button" className="rs-btn rs-btn-primary pk-step-btn" onClick={() => setRevealing(true)}>Open</button> : undefined },
     { label: 'Place card', action: step === 2 ? <button type="button" className="rs-btn rs-btn-primary pk-step-btn" disabled={!aim} onClick={give}>{aim ? 'Give' : 'Aim a row'}</button> : undefined },
     { label: 'Pick 2', action: undefined },
     { label: 'Lock in', action: step === 3 ? <button type="button" className="rs-btn rs-btn-primary pk-step-btn" disabled={lineup.length !== 2} onClick={lock}>Lock in</button> : undefined },
@@ -274,7 +276,7 @@ export default function Paddock({ facts, onChange, onMenu, onGo, onStandings }: 
         <div className="pk-pack">
           {revealed ? <button type="button" className="pk-card" onClick={() => setDetail({ card: pack.card })} aria-label={pack.card.name}><CardFace card={pack.card} size="mini" flippable={false} /></button> : <CardFace card={pack.card} size="mini" faceDown flippable={false} />}
           <div className="pk-pack-text">
-            <span className="rs-k pk-pack-k"><GameIcon name="season.pack" size={14} /> {TIER_LABEL[pack.tier]} pack</span>
+            <span className="rs-k pk-pack-k"><GameIcon name="season.pack" size={14} /> Base deck · {TIER_LABEL[pack.tier]} pack</span>
             <b>{revealed ? pack.card.name : 'Sealed'}</b>
             <span className="rs-hint">{revealed ? `Aim it at a ${pack.card.target === 'driver' ? 'driver' : pack.card.target}: the row shows its new grades (▲ ▼).${pack.card.kind !== 'trait' ? ' A full slot sends its card to the locker.' : ' Traits are for good.'}` : 'Open it to see the card.'}</span>
           </div>
@@ -407,6 +409,10 @@ export default function Paddock({ facts, onChange, onMenu, onGo, onStandings }: 
           </table>
         </div>
       </section>
+
+      {revealing && pack && (
+        <PackReveal card={pack.card} tier={pack.tier} onDone={() => { setRevealing(false); setRevealed(true); }} />
+      )}
 
       {detail && (
         <div className="pk-sheet" role="dialog" aria-label="Detail">
