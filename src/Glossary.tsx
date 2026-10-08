@@ -15,6 +15,10 @@ import TagChips from './components/race/TagChips';
 import { Idea, loadIdeas, saveIdeas, issueUrl, ideasAsPrompt } from './IdeaBox';
 import { GameIcon, TeamLogo } from './icons/GameIcon';
 import { TEAM_KINDS } from './data/deckTeams';
+import { BASE_DECK_TRACKS } from './data/deckTracks';
+import { BASE_DECK_WEATHER } from './data/deckWeather';
+import type { CardStat } from './cards';
+import { STAT_ICONS } from './icons/registry';
 import { MOTORSPORT_DECK, cardsBy, STAT_LABELS, type Card } from './cards';
 import { CardMarks, cardReadout, KIND_LABELS } from './cards/CardMarks';
 import { ICONS, ICON_LICENSE, iconCredits } from './icons/registry';
@@ -78,6 +82,12 @@ function Section({ id, title, count, hint, collapsed, onToggle, children, extra 
 }
 
 const NOT_YET = 'Not in the sim yet: genesis (#313) and Quick Race (#337) deal these.';
+const NOT_YET_TRACK = 'Raced once the sim switches (#359).';
+
+function FavourIcons({ favours }: { favours: CardStat[] }) {
+  return <span className="card-marks">{favours.map(f => <GameIcon key={f.stat} name={STAT_ICONS[f.stat]} size={16} title={STAT_LABELS[f.stat]} />)}</span>;
+}
+const favourText = (favours: CardStat[]) => favours.map(f => `+${f.pct}% ${STAT_LABELS[f.stat]}`).join(' · ');
 const DECK_GROUPS: { id: string; title: string; hint: string; rows: Card[] }[] = [
   { id: 'equipment', title: 'Equipment', hint: `Driver gear: one slot, swappable. ${NOT_YET}`, rows: cardsBy({ kind: 'equipment' }) },
   { id: 'upgrade', title: 'Upgrades', hint: `Car gear: one slot. Scales the car's stars. ${NOT_YET}`, rows: cardsBy({ kind: 'upgrade' }) },
@@ -278,7 +288,7 @@ export default function Glossary({ onBack }: GlossaryProps) {
   const toggle = (id: string) => setOpen(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
   const toggleSection = (id: string) => setFlipped(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
   // The retiring grid stays folded even on "Expand all"; open it by hand (#402).
-  const STAY_FOLDED = new Set(['teams:current', 'teams:historic']);
+  const STAY_FOLDED = new Set(['teams:current', 'teams:historic', 'tracks:current', 'tracks:historic', 'weather', 'characters', 'inflictions']);
   const isCollapsed = (id: string) => (STAY_FOLDED.has(id) || mode === 'collapsed') !== flipped.has(id);
   const setAll = (m: 'collapsed' | 'expanded') => { setMode(m); setFlipped(new Set()); };
   const needle = q.trim().toLowerCase();
@@ -347,7 +357,7 @@ export default function Glossary({ onBack }: GlossaryProps) {
 
   const deckTeamGroups = TEAM_KINDS.map(k => ({ id: k.kind, title: k.title, rows: g.deckTeams.filter(t => t.kind === k.kind), hint: `${k.hint} Base deck: on the grid once the sim switches (#356).` }));
   const teamGroups = [{ id: 'current', title: "Today's grid (retiring)", rows: g.teams, hint: 'Quick Race and leagues still race these until the base deck takes over.' }, { id: 'historic', title: 'Historic teams (retiring)', rows: g.historicTeams, hint: 'Unlockable today; leave with the old grid.' }];
-  const trackGroups = [{ id: 'current', title: 'Tracks', rows: g.tracks, hint: 'Every circuit is a pun. Laps × length sets the race; layout sets the shape.' }, { id: 'historic', title: 'Historic tracks', rows: g.historicTracks, hint: 'Unlockable.' }];
+  const trackGroups = [{ id: 'current', title: "Today's tracks (retiring)", rows: g.tracks, hint: 'The themed circuits races still use until the six stat-combo tracks take over (#359).' }, { id: 'historic', title: 'Historic tracks (retiring)', rows: g.historicTracks, hint: 'Unlockable today; leave with the themed tracks.' }];
 
   return (
     <div className="run-setup glossary">
@@ -355,7 +365,7 @@ export default function Glossary({ onBack }: GlossaryProps) {
         <div className="rs-title-block">
           <button type="button" className="rs-back" onClick={onBack}>← Menu</button>
           <h1 className="rs-title">World Deck</h1>
-          <span className="rs-sub">Everything in the world, read straight from the data. {MOTORSPORT_DECK.length} cards · {g.counts.deckTeams} teams · {g.counts.tracks} tracks · {g.counts.tags} tags · {g.counts.cards} rule cards · {g.counts.gods} gods. Click a line to open it.</span>
+          <span className="rs-sub">Everything in the world, read straight from the data. {MOTORSPORT_DECK.length} cards · {g.counts.deckTeams} teams · {g.counts.deckTracks} tracks · {g.counts.deckWeather} weathers · {g.counts.tags} tags · {g.counts.cards} rule cards · {g.counts.gods} gods. Click a line to open it.</span>
         </div>
         <label className="gl-search">
           <span className="rs-k">Find</span>
@@ -431,6 +441,21 @@ export default function Glossary({ onBack }: GlossaryProps) {
         );
       })}
 
+      {tab === 'tracks' && (
+        <Section {...sec('tracks:deck')} title="Tracks (v0.5)" count={BASE_DECK_TRACKS.length} hint={`Six tracks, one stat combo each: the favoured stats count +10% for the race. ${NOT_YET_TRACK}`}>
+          <div className="gl-list">
+            {BASE_DECK_TRACKS.filter(t => match(t.name, t.id, t.layoutId)).map(t => (
+              <Row key={t.id} id={`dtrack:${t.id}`} open={isOpen(`dtrack:${t.id}`)} onToggle={toggle}
+                lead={<span className="gl-plain gl-card"><FavourIcons favours={t.favours} /> {t.name}</span>}
+                note={t.layoutId}
+                pills={<span className="gl-readout">{favourText(t.favours)}</span>}>
+                <div className="gl-facts"><Fact k="Favours">{favourText(t.favours)}</Fact><Fact k="Layout">{t.layoutId}</Fact><Fact k="Id">{t.id}</Fact></div>
+                <div className="gl-src">src/data/deckTracks.ts · not raced yet (#359)</div>
+              </Row>
+            ))}
+          </div>
+        </Section>
+      )}
       {tab === 'tracks' && trackGroups.map(grp => {
         const rows = grp.rows.filter(t => match(t.name, t.id, t.description));
         if (!rows.length) return null;
@@ -512,7 +537,20 @@ export default function Glossary({ onBack }: GlossaryProps) {
 
       {tab === 'conditions' && (
         <>
-          <Section {...sec('weather')} title="Weather" count={g.weather.length} hint="Rolled per race. Odds are the defaults; rule cards change them.">
+          <Section {...sec('weather:deck')} title="Weather (v0.5)" count={BASE_DECK_WEATHER.length} hint={`Neutral most races; otherwise a dry weather favouring two stats (+10% × intensity), stacking with the track. No rain until v0.6. ${NOT_YET_TRACK}`}>
+            <div className="gl-list">
+              {BASE_DECK_WEATHER.filter(w => match(w.name, w.id)).map(w => (
+                <Row key={w.id} id={`dwx:${w.id}`} open={isOpen(`dwx:${w.id}`)} onToggle={toggle}
+                  lead={<span className="gl-plain gl-card">{w.favours.length ? <FavourIcons favours={w.favours} /> : null} {w.name}</span>}
+                  note={`${w.odds}%`}
+                  pills={<span className="gl-readout">{w.favours.length ? favourText(w.favours) : 'no favours'}</span>}>
+                  <div className="gl-facts"><Fact k="Odds">{w.odds}% of races</Fact><Fact k="Favours">{w.favours.length ? favourText(w.favours) : '—'}</Fact><Fact k="Id">{w.id}</Fact></div>
+                  <div className="gl-src">src/data/deckWeather.ts · not raced yet (#359)</div>
+                </Row>
+              ))}
+            </div>
+          </Section>
+          <Section {...sec('weather')} title="Today's weather (retiring)" count={g.weather.length} hint="What races still roll until the swap. Odds are the defaults; rule cards change them.">
             <div className="gl-list">
               {g.weather.filter(w => match(w.name, w.id)).map(w => {
                 const total = g.weather.reduce((s, x) => s + x.weight, 0);
@@ -527,7 +565,7 @@ export default function Glossary({ onBack }: GlossaryProps) {
               })}
             </div>
           </Section>
-          <Section {...sec('characters')} title="Track characters" count={g.trackTags.length} hint="A circuit's intrinsic lean, field-wide.">
+          <Section {...sec('characters')} title="Track characters (retiring)" count={g.trackTags.length} hint="A circuit's intrinsic lean, field-wide. Retire with the themed tracks.">
             <div className="gl-list">
               {g.trackTags.filter(t => match(t.name, t.id)).map(t => (
                 <Row key={t.id} id={`trk:${t.id}`} open={isOpen(`trk:${t.id}`)} onToggle={toggle}
@@ -541,7 +579,7 @@ export default function Glossary({ onBack }: GlossaryProps) {
               ))}
             </div>
           </Section>
-          <Section {...sec('inflictions')} title="Inflictions" count={g.inflictions.length} hint="Mid-race strikes the conditions can land on one driver.">
+          <Section {...sec('inflictions')} title="Inflictions (retiring)" count={g.inflictions.length} hint="Mid-race strikes the conditions can land on one driver. Parked for a Horror deck.">
             <div className="gl-list">
               {g.inflictions.filter(i => match(i.name, i.id)).map(i => (
                 <Row key={i.id} id={`inf:${i.id}`} open={isOpen(`inf:${i.id}`)} onToggle={toggle}

@@ -16,6 +16,9 @@ import { describeCalibration } from '../racecontrol/calibrate';
 import { CURRENT_TRACKS, HISTORIC_TRACKS, LAYOUTS } from '../generators/tracks';
 import { CURRENT_TEAMS, HISTORIC_TEAMS } from './teams';
 import { BASE_DECK_TEAMS, TEAM_KINDS } from './deckTeams';
+import { BASE_DECK_TRACKS } from './deckTracks';
+import { BASE_DECK_WEATHER } from './deckWeather';
+import { STAT_LABELS } from '../cards/deck';
 import { GODS } from '../league/gods';
 import { INTL_FIRST_NAMES, INTL_LAST_NAMES, ABSURD_FIRST_NAMES, ABSURD_LAST_NAMES, MONONYMS, NAME_TIER_WEIGHTS } from '../generators/names';
 import { LEAGUE_ADJECTIVES, LEAGUE_NOUNS } from '../generators/leagueName';
@@ -136,6 +139,9 @@ export interface Glossary {
   historicTracks: typeof HISTORIC_TRACKS;
   /** The 28 base-deck teams: shown now, on the grid after #356. */
   deckTeams: typeof BASE_DECK_TEAMS;
+  /** The 6 stat-combo tracks and Neutral + 5 dry weathers: shown now, raced after #359. */
+  deckTracks: typeof BASE_DECK_TRACKS;
+  deckWeather: typeof BASE_DECK_WEATHER;
   teams: typeof CURRENT_TEAMS;
   historicTeams: typeof HISTORIC_TEAMS;
   gods: typeof GODS;
@@ -149,7 +155,7 @@ export function buildGlossary(): Glossary {
   return {
     tags, cards: RULE_CARDS, acquisitionRules: ACQUISITION_RULES, inRaceRules: IN_RACE_RULES,
     weather: WEATHER_TYPES, trackTags: TRACK_TAGS, inflictions: INFLICTIONS, tracks: CURRENT_TRACKS,
-    historicTracks: HISTORIC_TRACKS, deckTeams: BASE_DECK_TEAMS, teams: CURRENT_TEAMS, historicTeams: HISTORIC_TEAMS, gods: GODS,
+    historicTracks: HISTORIC_TRACKS, deckTeams: BASE_DECK_TEAMS, deckTracks: BASE_DECK_TRACKS, deckWeather: BASE_DECK_WEATHER, teams: CURRENT_TEAMS, historicTeams: HISTORIC_TEAMS, gods: GODS,
     pools: [
       { id: 'names-intl-first', title: `Driver first names · international (${Math.round(NAME_TIER_WEIGHTS.international * 100)}% of drivers)`, where: 'src/generators/names.ts INTL_FIRST_NAMES', size: INTL_FIRST_NAMES.length, samples: INTL_FIRST_NAMES.slice(0, 8) },
       { id: 'names-intl-last', title: 'Driver last names · international', where: 'src/generators/names.ts INTL_LAST_NAMES', size: INTL_LAST_NAMES.length, samples: INTL_LAST_NAMES.slice(0, 8) },
@@ -173,7 +179,7 @@ export function buildGlossary(): Glossary {
       condition: tags.filter(t => t.group === 'condition').length,
       cards: RULE_CARDS.length, rules: ACQUISITION_RULES.length + IN_RACE_RULES.length,
       weather: WEATHER_TYPES.length, trackTags: TRACK_TAGS.length, inflictions: INFLICTIONS.length, tracks: CURRENT_TRACKS.length,
-      historicTracks: HISTORIC_TRACKS.length, deckTeams: BASE_DECK_TEAMS.length, teams: CURRENT_TEAMS.length, historicTeams: HISTORIC_TEAMS.length, gods: GODS.length,
+      historicTracks: HISTORIC_TRACKS.length, deckTeams: BASE_DECK_TEAMS.length, deckTracks: BASE_DECK_TRACKS.length, deckWeather: BASE_DECK_WEATHER.length, teams: CURRENT_TEAMS.length, historicTeams: HISTORIC_TEAMS.length, gods: GODS.length,
     },
   };
 }
@@ -190,6 +196,12 @@ export function renderGlossaryMd(g: Glossary, version: string): string {
     for (const t of g.deckTeams.filter(x => x.kind === k.kind)) L.push(`| **${t.name}** \`${t.id}\` | ${t.color} · ${t.ink} | \`${t.iconId}\` | ${t.description} |`);
     L.push('');
   }
+  const favs = (f: { stat: keyof typeof STAT_LABELS; pct: number }[]) => f.length ? f.map(x => `+${x.pct}% ${STAT_LABELS[x.stat]}`).join(' · ') : '—';
+  L.push('## Tracks (v0.5)', '', '*Source: `src/data/deckTracks.ts` (docs/TRACKS_WEATHER.md). Six stat-combo tracks; each favours one driver stat and one car/team stat for the race, field-wide. Raced once the sim switches (#359); until then races use the themed tracks below.*', '', '| Track | Favours | Layout |', '|---|---|---|');
+  for (const t of g.deckTracks) L.push(`| **${t.name}** \`${t.id}\` | ${favs(t.favours)} | ${t.layoutId} |`);
+  L.push('', '## Weather (v0.5)', '', '*Source: `src/data/deckWeather.ts`. Neutral + five dry weathers, favours × intensity, stacking with the track. No rain until Wet arrives in v0.6.*', '', '| Weather | Odds | Favours |', '|---|---|---|');
+  for (const w of g.deckWeather) L.push(`| **${w.name}** \`${w.id}\` | ${w.odds}% | ${favs(w.favours)} |`);
+  L.push('');
   L.push('## Teams on today\'s grid (retiring)', '', '*Source: `src/data/teams.ts`. Quick Race and leagues still race these until #356 swaps in the base deck.*', '', '| Team | Colours | Vibe |', '|---|---|---|');
   for (const t of g.teams) L.push(`| ${t.emoji} **${t.name}** \`${t.id}\` | ${t.color} / ${t.accentColor} | ${t.description} |`);
   L.push('', '### Historic teams (unlockable)', '', '| Team | Colours | Vibe |', '|---|---|---|');

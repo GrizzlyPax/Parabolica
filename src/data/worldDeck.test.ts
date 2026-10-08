@@ -11,6 +11,9 @@ import { TRACK_TAGS } from './trackTags';
 import { INFLICTIONS } from './inflictions';
 import { CURRENT_TEAMS, HISTORIC_TEAMS } from './teams';
 import { BASE_DECK_TEAMS, TEAM_KINDS } from './deckTeams';
+import { BASE_DECK_TRACKS, FAVOUR_PCT } from './deckTracks';
+import { BASE_DECK_WEATHER } from './deckWeather';
+import { DRIVER_STATS, CAR_STATS, TEAM_STATS } from '../cards/deck';
 import { resolveIcon } from '../icons/registry';
 import { CURRENT_TRACKS, HISTORIC_TRACKS, LAYOUTS } from '../generators/tracks';
 import { GODS } from '../league/gods';
@@ -173,6 +176,45 @@ describe('base-deck teams', () => {
       expect(resolveIcon(t.iconId), `${t.id} icon ${t.iconId}`).toBeTruthy();
       expect(t.description.length, t.id).toBeGreaterThan(10);
       expect('secondaryColor' in t || 'accentColor' in t, t.id).toBe(false);
+    }
+  });
+});
+
+// #408: Tracks & Weather v2, dry half (v0.5). Data + World Deck only until
+// the swap (#359); the favour shape is the card math's {stat, pct}.
+describe('stat-combo tracks + dry weather', () => {
+  const machine = [...CAR_STATS, ...TEAM_STATS] as string[];
+
+  it('6 tracks: one driver stat + one car/team stat each, every driver stat once', () => {
+    expect(BASE_DECK_TRACKS).toHaveLength(6);
+    expect(new Set(BASE_DECK_TRACKS.map(t => t.id)).size).toBe(6);
+    for (const t of BASE_DECK_TRACKS) {
+      expect(t.favours, t.id).toHaveLength(2);
+      expect(DRIVER_STATS as string[], t.id).toContain(t.favours[0].stat);
+      expect(machine, t.id).toContain(t.favours[1].stat);
+      expect(t.favours.every(f => f.pct === FAVOUR_PCT), t.id).toBe(true);
+    }
+    expect(BASE_DECK_TRACKS.map(t => t.favours[0].stat).sort()).toEqual([...DRIVER_STATS].sort());
+  });
+
+  it('each track reuses a different existing layout drawing', () => {
+    expect(new Set(BASE_DECK_TRACKS.map(t => t.layoutId)).size).toBe(6);
+    for (const t of BASE_DECK_TRACKS) expect(LAYOUTS[t.layoutId], t.id).toBeTruthy();
+  });
+
+  it('Neutral 60% + five dry weathers at 8%, two favours each, no rain', () => {
+    expect(BASE_DECK_WEATHER).toHaveLength(6);
+    expect(BASE_DECK_WEATHER.reduce((s, w) => s + w.odds, 0)).toBe(100);
+    const [neutral, ...dry] = BASE_DECK_WEATHER;
+    expect(neutral.id).toBe('neutral');
+    expect(neutral.odds).toBe(60);
+    expect(neutral.favours).toEqual([]);
+    for (const w of dry) {
+      expect(w.odds, w.id).toBe(8);
+      expect(w.favours, w.id).toHaveLength(2);
+      expect(w.favours.every(f => f.pct === FAVOUR_PCT), w.id).toBe(true);
+      expect(w.kind, w.id).toBe('consistent');
+      expect(w.id, w.id).not.toMatch(/wet|rain/);
     }
   });
 });
