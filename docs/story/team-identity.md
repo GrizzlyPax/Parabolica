@@ -5,6 +5,7 @@
 ## TL;DR
 - **28 new base-deck teams replace the 22 pun teams** (For Rory, Breadbowl…). They are **world factions of Parabolica**, traditional-motorsport flavoured, **seven of each kind**: works manufacturers · privateer garages · family dynasties · regional/city teams.
 - **Each team is three things: an icon, a primary colour, one line.** The logo is the icon on the primary colour, no badge. The icon is drawn in white or near-black, whichever reads on that colour (stored as `ink`, per the [colour system](../ICONS.md): teams have one colour, no secondary).
+- **The team creator** offers the same 28 colours plus 20 logo icons (see [Team creator](#team-creator-v05)).
 - **No two teams share a colour.** The 28 colours are spread as far apart as the dark UI allows. Only two are light (Cream, Silver), because pale colours blur together on black (Pax).
 - **The strangeness is a hint:** straight motorsport with one odd house rule or ritual per team. **Folk custom, not ghost story.** Pax kept the rituals (clocks set slow, seven bolts, the empty chair) and passed on the openly supernatural (an ageless priest, a coin from the future).
 
@@ -157,10 +158,65 @@ export const BASE_DECK_TEAMS: Team[] = [
 - **The old 22 teams are removed** (old leagues go too; live seasons return in v0.6).
 - **The deck is 28.**
 
-## Still to do (from the original brief)
-1. **Team-creator palette** (the 12–16 preset colours a player picks from in [the team creator](https://github.com/GrizzlyPax/Parabolica/issues/346)), plus good and bad pairings. It can borrow from the 28, but it must hold up when a player pairs any two. Not started.
-2. **Logo picker set** (~60 icons for the team creator, grouped by theme). The board's six shelves (flags & signals, car & parts, garage & tools, speed & air, crests & beasts, trophies & marks) are a first cut. Pax hasn't starred icons yet.
-3. **Story pass:** the one-liners are drafts. Teams, places and founders become canon when Pax writes them into the bible.
+## Team creator (v0.5)
+
+*📻 Radio with Pax, Oct 8 ([Team creator palette + logo-picker icons](https://github.com/GrizzlyPax/Parabolica/issues/366)). Feeds [the team creator](https://github.com/GrizzlyPax/Parabolica/issues/346). Follows the colour system in [ICONS.md](../ICONS.md): one colour per team, the logo is a white or near-black icon on it.*
+
+### Colours: the same 28 as the deck
+- **The creator offers the 28 deck colours** (Pax). Reuse is fine: worst case, a player's team shares a colour with a CPU team, and the logo and name still tell them apart.
+- **One colour per team.** `ink` (white or near-black, for the logo icon and any text on the colour) is picked automatically, with the same luminance cut as the deck (150/255).
+- **Picker order:** the table order below, a 7 × 4 grid running reds → purples → blues → greens → yellows → oranges → neutrals. Show the colour name on hover/long-press; the team that already wears it is optional flavour.
+- **Two to know about:** *Violet* sits close to the no-team accent (Parabolica purple `#a98bff`), so a Violet team's screens look nearly unthemed. *Bronze*, *Silver* and *Gold* look like rarity metals; that's fine because rarity always shows its word.
+- **Nice to have, not required:** when dealing CPU teams for a grid, skip any deck team whose colour a human already picked.
+
+| # | Colour | Hex | Ink | Deck team with it |
+|---|---|---|---|---|
+| 1 | Rosso | `#E8242F` | `#FFFFFF` | Vantor Motorwerke |
+| 2 | Crimson | `#C31851` | `#FFFFFF` | Seven Bolt Racing |
+| 3 | Raspberry | `#E63281` | `#FFFFFF` | Kanzaki |
+| 4 | Hot Pink | `#FF4DB8` | `#FFFFFF` | Ishida |
+| 5 | Orchid | `#D95FFC` | `#FFFFFF` | Valcourt |
+| 6 | Purple | `#8F3DC0` | `#FFFFFF` | Moreau-Tallis |
+| 7 | Violet | `#9B8AFE` | `#0A0A0C` | Corvane |
+| 8 | Indigo | `#5454EA` | `#FFFFFF` | Pell & Pell |
+| 9 | Cobalt | `#006EBE` | `#FFFFFF` | Halcyon |
+| 10 | Cornflower | `#5E9EFD` | `#FFFFFF` | Saint Orrin |
+| 11 | Cyan | `#0BAEE0` | `#FFFFFF` | Brisa |
+| 12 | Aqua | `#1BB4B8` | `#FFFFFF` | Low Tide Racing |
+| 13 | Petrol | `#087C77` | `#FFFFFF` | Orsa |
+| 14 | Jade | `#0DB98E` | `#FFFFFF` | Tessaly |
+| 15 | Leaf | `#8DCC6E` | `#0A0A0C` | Glasshouse |
+| 16 | Lime | `#4EBB05` | `#FFFFFF` | Fennick Downs |
+| 17 | Moss | `#507B07` | `#FFFFFF` | Hargreave |
+| 18 | Signal | `#DED903` | `#0A0A0C` | Lumen |
+| 19 | Gold | `#C2A02A` | `#0A0A0C` | Ambergate |
+| 20 | Amber | `#FFB000` | `#0A0A0C` | Arden |
+| 21 | Papaya | `#F87103` | `#FFFFFF` | Caldera |
+| 22 | Coral | `#F8767A` | `#0A0A0C` | Corriva |
+| 23 | Rust | `#C0502A` | `#FFFFFF` | Achterberg |
+| 24 | Saddle | `#945F0E` | `#FFFFFF` | Kiln Lane Motorsport |
+| 25 | Bronze | `#B47B46` | `#FFFFFF` | Ostler & Finch |
+| 26 | Slate | `#718295` | `#FFFFFF` | Cinder Row |
+| 27 | Silver | `#B6BBC1` | `#0A0A0C` | Tinplate |
+| 28 | Cream | `#F4EEDE` | `#0A0A0C` | Calloway |
+
+### Logo picker: 20 icons
+- **20 game-icons** (Pax: 60 was too many), grouped loosely by theme. Shown in the picker as the icon in `ink` on the chosen colour, square tile, no badge.
+- **None repeats a base-deck team logo or a UI icon** from the [icon map](../ICONS.md), so a player's logo never looks like a CPU team or a button.
+- Picked for reading clearly at 16px on a colour tile.
+
+| Theme | Icons |
+|---|---|
+| **Beasts** | [`fox-head`](https://game-icons.net/1x1/lorc/fox-head.html) · [`wolf-head`](https://game-icons.net/1x1/lorc/wolf-head.html) · [`lion`](https://game-icons.net/1x1/lorc/lion.html) · [`owl`](https://game-icons.net/1x1/lorc/owl.html) · [`octopus`](https://game-icons.net/1x1/lorc/octopus.html) |
+| **Machines** | [`f1-car`](https://game-icons.net/1x1/skoll/f1-car.html) · [`spark-plug`](https://game-icons.net/1x1/delapouite/spark-plug.html) · [`rocket`](https://game-icons.net/1x1/lorc/rocket.html) · [`cog`](https://game-icons.net/1x1/badges/cog.html) |
+| **Marks** | [`seven-pointed-star`](https://game-icons.net/1x1/delapouite/seven-pointed-star.html) · [`key`](https://game-icons.net/1x1/lorc/key.html) · [`fleur-de-lys`](https://game-icons.net/1x1/delapouite/fleur-de-lys.html) · [`lightning-helix`](https://game-icons.net/1x1/lorc/lightning-helix.html) |
+| **Flags & signals** | [`pirate-flag`](https://game-icons.net/1x1/delapouite/pirate-flag.html) · [`traffic-cone`](https://game-icons.net/1x1/delapouite/traffic-cone.html) · [`megaphone`](https://game-icons.net/1x1/delapouite/megaphone.html) |
+| **Weird** | [`ghost`](https://game-icons.net/1x1/lorc/ghost.html) · [`alien-stare`](https://game-icons.net/1x1/lorc/alien-stare.html) · [`tentacle-heart`](https://game-icons.net/1x1/lorc/tentacle-heart.html) · [`plastic-duck`](https://game-icons.net/1x1/delapouite/plastic-duck.html) |
+
+**For the builder:** vendor these 20 through the icon registry ([icon system](https://github.com/GrizzlyPax/Parabolica/issues/350)) with credits, store the pick as an icon id in the human team's facts, and the colour as one of the 28 hexes.
+
+## Still to do
+- **Story pass:** the one-liners are drafts. Teams, places and founders become canon when Pax writes them into the bible.
 
 ## Spares (passed in the name rounds; reuse freely)
 - **Works manufacturers:** Kessler-Mott (Trucks and tractors, now racing. Their test driver has never been photographed) · Marrow & Vane (Aircraft makers. They still file a flight plan before every race) · Brandt Ostwerk (Engines first, cars second. The paint is mixed with something they won't list) · Aurelian (Old money. Every car carries a coin dated to a year that hasn't happened yet) · Ferro Vela (Shipbuilders. They christen each chassis with a bottle, and the bottle never breaks) · Nordhaven Motors (Rally roots. Their cars always face north when parked, even when someone moves them) · Sterne (Racing since the first race. Nobody has the founding paperwork, Sterne included) · Quell Dynamics (The new money. Their wind tunnel sometimes runs with nothing in it) · Pyrene (Built in a fireworks factory. They still close for the summer festival) · Ostrander (Sewing machines, then motorbikes, then this. The factory whistle still blows at shift change, Sundays included) · Kardos (Tractor works. Every new engine is left running overnight in the town square)
