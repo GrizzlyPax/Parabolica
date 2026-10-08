@@ -56,7 +56,11 @@ describe('icon registry (#350, #351)', () => {
   });
 
   it('every team icon in docs/story/team-identity.md is vendored, by the right author', () => {
-    const teams = doc('story/team-identity.md').split('\n')
+    // Only "The grid" (the 28 base-deck teams). Later sections list other
+    // icons, e.g. the team-creator logo picker (#415), vendored separately.
+    const md = doc('story/team-identity.md');
+    const grid = md.slice(md.indexOf('## The grid'), md.indexOf('\n## ', md.indexOf('## The grid') + 1));
+    const teams = grid.split('\n')
       .filter(l => /^\|\s*\*\*/.test(l) && LINK.test(l))
       .map(l => LINK.exec(l)!);
     expect(teams.length).toBe(28);
