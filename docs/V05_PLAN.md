@@ -1,6 +1,6 @@
 # v0.5 Spa — the plan
 
-*Master plan for the current release. Owner: 🎤 Pit. Tasks, owners and dates live in Asana ([🏁 Parabolica → 🇧🇪 v0.5 Spa](https://app.asana.com/1/1219276824761487/project/1219276019625158)); build specs live in the GitHub issues each task links. If this doc and Asana disagree on a date, Asana wins.*
+*Master plan for the current release. Owner: 🎤 Pit. The work lives in GitHub: [milestones](https://github.com/GrizzlyPax/Parabolica/milestones) `v0.5 · 1 Core` → `5 Ship`, one issue per task, a `crew:` label for the owner, and a Paste line at the top of each issue.*
 
 ## What v0.5 is
 **Season Mode:** set up a league, snake-draft against the AI, then play **Paddock → Race** turns to a champion. It's local and hotseat, and it replaces the old Commissioner leagues. It ships with:
@@ -8,7 +8,7 @@
 - **the 28 new teams**;
 - **game-icons.net replacing emoji**, with the game taking your team's colours.
 
-**No dates: sequence.** Asana splits v0.5 into five milestone sections worked top to bottom; inside each, "waiting on" links show what's unblocked. Pieces merge to `main` as they land; there's no formal ship gate.
+**No dates: sequence.** GitHub milestones `v0.5 · 1 Core` → `5 Ship`, worked in order; inside each, every issue's "Depends on" line shows what's unblocked. Pieces merge to `main` as they land; there's no formal ship gate.
 
 **Specs:** [SEASON_MODE](SEASON_MODE.md) · [CARDS](CARDS.md) · [ICONS](ICONS.md) · [story/team-identity](story/team-identity.md)
 
@@ -56,7 +56,7 @@
 
 **🔧 Wrench:** content icon ids (after the icon map) · the game wears your team colours → **M4**
 
-**🎤 Pit:** icon map (every non-team emoji) · keep this doc and Asana current
+**🎤 Pit:** icon map (every non-team emoji) · keep this doc and the milestones current
 
 **📻 Radio + 👤 Pax:** team-creator palette + logo-picker icons
 
@@ -67,7 +67,7 @@
 ## Kickoff
 **Now, no Fable needed:** Hub-B (Rule cards rename → icon system) · Pit (icon map) · Radio + Pax (palette + logo icons).
 
-**When Fable credits are back:** paste the KICKOFF block from the Asana task "Cards: card model + generated Motorsport base deck" into one Fable chat. Apex works his chain in order (one PR per issue, merging each when green) and stops to report if an existing test changes, something is unclear, or he's about half through his budget. If the chat gets long, start a fresh one with the same block; it picks up from Asana and GitHub.
+**When Fable credits are back:** paste the Apex kickoff (from Pit) into one Fable chat. Apex works his chain in order (one PR per issue, merging each when green) and stops to report if an existing test changes, something is unclear, or he's about half through his budget. If the chat gets long, start a fresh one with the same block; it picks up from GitHub.
 
 **As soon as genesis merges:** start Hub-A on League Setup. After that, each Hub-A screen starts when the Apex piece it needs has merged.
 
