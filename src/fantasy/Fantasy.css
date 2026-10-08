@@ -44,10 +44,10 @@
 .fd-third.back { color: var(--signal-red); }
 .fd-card-tags { position: absolute; top: 8px; right: 9px; display: inline-flex; gap: 3px; }
 .fd-tag-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-.fd-tag-dot.rarity-common { background: var(--rarity-common); }
-.fd-tag-dot.rarity-uncommon { background: var(--rarity-uncommon); }
-.fd-tag-dot.rarity-rare { background: var(--rarity-rare); }
-.fd-tag-dot.rarity-legendary { background: var(--rarity-legendary); }
+.fd-tag-dot.rarity-bronze { background: var(--rarity-bronze); }
+.fd-tag-dot.rarity-silver { background: var(--rarity-silver); }
+.fd-tag-dot.rarity-gold { background: var(--rarity-gold); }
+.fd-tag-dot.rarity-iridium { background: var(--rarity-iridium); }
 .fd-no-tags { color: var(--pw-text-3); font-size: 10px; }
 .fd-owner { position: absolute; bottom: 6px; right: 9px; font-family: var(--look-data); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fc); }
 @media (max-width: 799px) {

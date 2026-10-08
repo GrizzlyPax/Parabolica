@@ -3,10 +3,33 @@
 
 import { Rng } from '../engine/rng';
 
-export type Rarity = 'common' | 'uncommon' | 'rare' | 'legendary';
-export const RARITIES: Rarity[] = ['common', 'uncommon', 'rare', 'legendary'];
+/** Rarity is a metal (Pax, Oct 8; docs/ICONS.md → The look), least to most rare. */
+export type Rarity = 'bronze' | 'silver' | 'gold' | 'iridium';
+export const RARITIES: Rarity[] = ['bronze', 'silver', 'gold', 'iridium'];
 /** Odds of each bucket once a slot hits. Default 60 / 30 / 9 / 1. */
 export type RarityOdds = Record<Rarity, number>;
+
+/** Pre-metal names (before #385). Old saves, Lab presets and the ledger still
+ * carry them; everything that reads a rarity goes through toRarity(). */
+const LEGACY_RARITY: Record<string, Rarity> = { common: 'bronze', uncommon: 'silver', rare: 'gold', legendary: 'iridium' };
+
+export function toRarity(r: string): Rarity {
+  return LEGACY_RARITY[r] ?? (r as Rarity);
+}
+
+/** Odds keyed by metal, from metal or legacy keys (old saves). */
+export function upgradeRarityOdds(o: Partial<Record<string, number>> | undefined): RarityOdds {
+  const out = { ...DEFAULT_RARITY_ODDS };
+  if (!o) return out;
+  for (const [k, v] of Object.entries(o)) if (typeof v === 'number') out[toRarity(k)] = v;
+  return out;
+}
+
+/** A tag with its rarity on the metal names (old Lab presets). */
+export function upgradeTag<T extends { rarity: string }>(t: T): T {
+  const r = toRarity(t.rarity);
+  return r === t.rarity ? t : { ...t, rarity: r };
+}
 
 export type TagTarget = 'driver' | 'car' | 'team' | 'condition';
 export type TagTrigger = 'passive' | 'race_start' | 'pit_stop' | 'overtake' | 'crash_proximity' | 'final_lap' | 'track_event';
@@ -170,7 +193,7 @@ export const DRIVER_TAGS: Tag[] = [
     description: 'Raises their game when it matters most',
     target: 'driver',
     trigger: 'final_lap',
-    rarity: 'uncommon',
+    rarity: 'silver',
     effects: {
       speedModifier: 1.08,
       consistencyModifier: 1.15,
@@ -185,7 +208,7 @@ export const DRIVER_TAGS: Tag[] = [
     description: 'Mysteriously faster when the skies open',
     target: 'driver',
     trigger: 'passive',
-    rarity: 'rare',
+    rarity: 'gold',
     // #156 fix: gated to rain. Dormant until the weather layer lands (C2) —
     // until then `conditions` never contains 'rain', so this is inert instead
     // of the old always-on 9× destiny. Magnitudes to be lab-calibrated with weather.
@@ -206,7 +229,7 @@ export const DRIVER_TAGS: Tag[] = [
     target: 'driver',
     trigger: 'passive',
     // Measured 10.4% win (2.3×) post-fix — a fun comeback tag, kept rare.
-    rarity: 'uncommon',
+    rarity: 'silver',
     // #156 fix: the "builds pace" was never implemented — only a permanent
     // 0.95 penalty (a death sentence). Now a late-race surge that actually pays off.
     condition: { when: 'lapProgress', after: 0.6 },
@@ -222,7 +245,7 @@ export const DRIVER_TAGS: Tag[] = [
     description: 'Rarely puts a wheel wrong',
     target: 'driver',
     trigger: 'passive',
-    rarity: 'common',
+    rarity: 'bronze',
     effects: { consistencyModifier: 1.04 },
   },
   {
@@ -232,7 +255,7 @@ export const DRIVER_TAGS: Tag[] = [
     description: 'Brave into the corners. Sometimes too brave',
     target: 'driver',
     trigger: 'passive',
-    rarity: 'common',
+    rarity: 'bronze',
     effects: { speedModifier: 1.01, crashResistance: -0.03 },
   },
   {
@@ -242,7 +265,7 @@ export const DRIVER_TAGS: Tag[] = [
     description: 'Lights out and gone',
     target: 'driver',
     trigger: 'race_start',
-    rarity: 'common',
+    rarity: 'bronze',
     effects: { speedModifier: 1.05 },
     triggerChance: 1,
     activationText: 'gets the jump at the start!',
@@ -254,7 +277,7 @@ export const DRIVER_TAGS: Tag[] = [
     description: 'Things just seem to go their way',
     target: 'driver',
     trigger: 'passive',
-    rarity: 'common',
+    rarity: 'bronze',
     effects: { luckModifier: 1.1 },
   },
   {
@@ -264,7 +287,7 @@ export const DRIVER_TAGS: Tag[] = [
     description: 'Would rather be indoors when it rains',
     target: 'driver',
     trigger: 'passive',
-    rarity: 'uncommon',
+    rarity: 'silver',
     condition: { when: 'condition', has: 'rain' },
     effects: { speedModifier: 0.97 },
   },
@@ -275,7 +298,7 @@ export const DRIVER_TAGS: Tag[] = [
     description: 'Unflappable with the lead in sight',
     target: 'driver',
     trigger: 'passive',
-    rarity: 'rare',
+    rarity: 'gold',
     condition: { when: 'position', max: 3 },
     effects: { consistencyModifier: 1.08 },
   },
@@ -286,7 +309,7 @@ export const DRIVER_TAGS: Tag[] = [
     description: 'Born for this. Everyone can tell',
     target: 'driver',
     trigger: 'passive',
-    rarity: 'legendary',
+    rarity: 'iridium',
     effects: { speedModifier: 1.03, consistencyModifier: 1.05, luckModifier: 1.1 },
   },
 ];
@@ -300,7 +323,7 @@ export const CAR_TAGS: Tag[] = [
     description: 'Blazingly fast but fragile',
     target: 'car',
     trigger: 'passive',
-    rarity: 'uncommon',
+    rarity: 'silver',
     // Calibration (#156): was speed 1.06 → 20.4% win (4.5×, the new top destiny).
     // The flat +6% all-race outran its fragility because DNFs are only ~22%.
     // Halved the speed upside; the -0.25 fragility stays its identity.
@@ -317,7 +340,7 @@ export const CAR_TAGS: Tag[] = [
     description: 'Something is wrong with this car. Nobody knows what.',
     target: 'car',
     trigger: 'passive',
-    rarity: 'uncommon',
+    rarity: 'silver',
     // Calibration (#156): was luck 0.7 / consistency 0.9 → 0.0% win, P20.9 (a
     // flat death sentence; consistency is the #2 stat so -10% was brutal — and
     // any persistent penalty pins a car to the back over a full race). Softened
@@ -335,7 +358,7 @@ export const CAR_TAGS: Tag[] = [
     description: 'Optimized for quick pit stops',
     target: 'car',
     trigger: 'pit_stop',
-    rarity: 'common',
+    rarity: 'bronze',
     effects: {
       pitSpeedModifier: 0.75, // 25% faster pits
     },
@@ -349,7 +372,7 @@ export const CAR_TAGS: Tag[] = [
     description: 'More horsepower than manners',
     target: 'car',
     trigger: 'passive',
-    rarity: 'common',
+    rarity: 'bronze',
     effects: { speedModifier: 1.015 },
   },
   {
@@ -359,7 +382,7 @@ export const CAR_TAGS: Tag[] = [
     description: 'Shrugs off contact that would end other cars',
     target: 'car',
     trigger: 'passive',
-    rarity: 'common',
+    rarity: 'bronze',
     effects: { crashResistance: 0.06 },
   },
   {
@@ -369,7 +392,7 @@ export const CAR_TAGS: Tag[] = [
     description: 'Flies on fresh rubber',
     target: 'car',
     trigger: 'passive',
-    rarity: 'common',
+    rarity: 'bronze',
     condition: { when: 'tireWear', below: 40 },
     effects: { speedModifier: 1.02 },
   },
@@ -380,7 +403,7 @@ export const CAR_TAGS: Tag[] = [
     description: 'Hates a scorcher',
     target: 'car',
     trigger: 'passive',
-    rarity: 'uncommon',
+    rarity: 'silver',
     condition: { when: 'condition', has: 'scorcher' },
     effects: { speedModifier: 0.96 },
   },
@@ -391,7 +414,7 @@ export const CAR_TAGS: Tag[] = [
     description: 'Built for the rain; sure-footed when it pours',
     target: 'car',
     trigger: 'passive',
-    rarity: 'rare',
+    rarity: 'gold',
     condition: { when: 'condition', has: 'rain' },
     effects: { speedModifier: 1.03, crashResistance: 0.05 },
   },
@@ -402,7 +425,7 @@ export const CAR_TAGS: Tag[] = [
     description: 'Nobody is sure how it works, including the team',
     target: 'car',
     trigger: 'passive',
-    rarity: 'rare',
+    rarity: 'gold',
     effects: { speedModifier: 1.03, luckModifier: 0.9 },
   },
   {
@@ -412,7 +435,7 @@ export const CAR_TAGS: Tag[] = [
     description: 'The car every team dreams of building once',
     target: 'car',
     trigger: 'passive',
-    rarity: 'legendary',
+    rarity: 'iridium',
     effects: { speedModifier: 1.03, consistencyModifier: 1.04, crashResistance: 0.05 },
   },
 ];
@@ -426,7 +449,7 @@ export const TEAM_TAGS: Tag[] = [
     description: 'Performs better when behind',
     target: 'team',
     trigger: 'passive',
-    rarity: 'common',
+    rarity: 'bronze',
     // #156 fix: "when behind" is now real — gated to the bottom half of the field.
     condition: { when: 'positionFraction', bottom: 0.5 },
     effects: {
@@ -442,7 +465,7 @@ export const TEAM_TAGS: Tag[] = [
     description: 'Thrives when leading the pack',
     target: 'team',
     trigger: 'passive',
-    rarity: 'common',
+    rarity: 'bronze',
     // #156 fix: "when leading" is now real — gated to a top-5 running position.
     // Calibration: gating cut it 23.1%→14.3%; trimmed further (was 1.06/0.12) to
     // soften the rich-get-richer once a car is already at the front.
@@ -460,7 +483,7 @@ export const TEAM_TAGS: Tag[] = [
     description: 'Unpredictable - could be brilliant or disastrous',
     target: 'team',
     trigger: 'race_start',
-    rarity: 'uncommon',
+    rarity: 'silver',
     effects: {
       // Randomly assigns big bonus or penalty each race
       speedModifier: 1.0, // Modified at race start
@@ -476,7 +499,7 @@ export const TEAM_TAGS: Tag[] = [
     description: 'Every stop rehearsed a hundred times',
     target: 'team',
     trigger: 'passive',
-    rarity: 'common',
+    rarity: 'bronze',
     effects: { pitSpeedModifier: 0.92 },
   },
   {
@@ -486,7 +509,7 @@ export const TEAM_TAGS: Tag[] = [
     description: 'Well fed, well loved, a little lucky',
     target: 'team',
     trigger: 'passive',
-    rarity: 'common',
+    rarity: 'bronze',
     effects: { luckModifier: 1.08 },
   },
   {
@@ -496,7 +519,7 @@ export const TEAM_TAGS: Tag[] = [
     description: 'Find their pace when the race gets long',
     target: 'team',
     trigger: 'passive',
-    rarity: 'uncommon',
+    rarity: 'silver',
     condition: { when: 'lapProgress', after: 0.7 },
     effects: { speedModifier: 1.015 },
   },
@@ -507,7 +530,7 @@ export const TEAM_TAGS: Tag[] = [
     description: 'Something always rolls under the car',
     target: 'team',
     trigger: 'passive',
-    rarity: 'uncommon',
+    rarity: 'silver',
     effects: { pitSpeedModifier: 1.15 },
   },
   {
@@ -517,7 +540,7 @@ export const TEAM_TAGS: Tag[] = [
     description: 'Defend the lead at all costs',
     target: 'team',
     trigger: 'passive',
-    rarity: 'rare',
+    rarity: 'gold',
     condition: { when: 'position', max: 3 },
     effects: { consistencyModifier: 1.03, crashResistance: 0.08 },
   },
@@ -528,7 +551,7 @@ export const TEAM_TAGS: Tag[] = [
     description: 'Fast, and the Void is watching',
     target: 'team',
     trigger: 'passive',
-    rarity: 'rare',
+    rarity: 'gold',
     effects: { speedModifier: 1.02, luckModifier: 0.85 },
   },
   {
@@ -538,7 +561,7 @@ export const TEAM_TAGS: Tag[] = [
     description: 'Generations of winning, and it shows everywhere',
     target: 'team',
     trigger: 'passive',
-    rarity: 'legendary',
+    rarity: 'iridium',
     effects: { speedModifier: 1.02, consistencyModifier: 1.03, luckModifier: 1.05, pitSpeedModifier: 0.95 },
   },
 ];
@@ -551,7 +574,7 @@ export const CONDITION_TAGS: Tag[] = [
   // === HAZARD CONDITIONS (crash risk) ===
   {
     id: 'low-visibility',
-    rarity: 'common',
+    rarity: 'bronze',
     name: 'Low Visibility',
     emoji: '🌫️',
     description: 'Fog, mist, or smoke reducing driver visibility',
@@ -565,7 +588,7 @@ export const CONDITION_TAGS: Tag[] = [
   },
   {
     id: 'slippery-surface',
-    rarity: 'rare',
+    rarity: 'gold',
     name: 'Slippery Surface',
     emoji: '💧',
     description: 'Oil, water, or debris on the track',
@@ -579,7 +602,7 @@ export const CONDITION_TAGS: Tag[] = [
   },
   {
     id: 'debris-hazard',
-    rarity: 'rare',
+    rarity: 'gold',
     name: 'Debris Hazard',
     emoji: '⚠️',
     description: 'Track debris creating danger',
@@ -592,7 +615,7 @@ export const CONDITION_TAGS: Tag[] = [
   },
   {
     id: 'dust-cloud',
-    rarity: 'uncommon',
+    rarity: 'silver',
     name: 'Dust Cloud',
     emoji: '💨',
     description: 'Kicked-up dust reducing visibility',
@@ -608,7 +631,7 @@ export const CONDITION_TAGS: Tag[] = [
   // === SPEED CONDITIONS ===
   {
     id: 'adrenaline-surge',
-    rarity: 'uncommon',
+    rarity: 'silver',
     name: 'Adrenaline Surge',
     emoji: '⚡',
     description: 'A burst of speed from the excitement',
@@ -626,7 +649,7 @@ export const CONDITION_TAGS: Tag[] = [
     description: 'Caught a powerful slipstream',
     target: 'condition',
     trigger: 'track_event',
-    rarity: 'common',
+    rarity: 'bronze',
     effects: {
       speedModifier: 1.05,
     },
@@ -639,7 +662,7 @@ export const CONDITION_TAGS: Tag[] = [
     description: 'Track grip improving with rubber buildup',
     target: 'condition',
     trigger: 'track_event',
-    rarity: 'common',
+    rarity: 'bronze',
     effects: {
       speedModifier: 1.04,
       consistencyModifier: 1.05,
@@ -648,7 +671,7 @@ export const CONDITION_TAGS: Tag[] = [
   },
   {
     id: 'headwind',
-    rarity: 'uncommon',
+    rarity: 'silver',
     name: 'Headwind',
     emoji: '🍃',
     description: 'Strong headwind reducing straight-line speed',
@@ -661,7 +684,7 @@ export const CONDITION_TAGS: Tag[] = [
   },
   {
     id: 'cooling-issues',
-    rarity: 'uncommon',
+    rarity: 'silver',
     name: 'Cooling Issues',
     emoji: '🌡️',
     description: 'High temperatures forcing reduced pace',
@@ -675,7 +698,7 @@ export const CONDITION_TAGS: Tag[] = [
   },
   {
     id: 'tire-graining',
-    rarity: 'uncommon',
+    rarity: 'silver',
     name: 'Tire Graining',
     emoji: '🛞',
     description: 'Temporary loss of tire grip',
@@ -691,7 +714,7 @@ export const CONDITION_TAGS: Tag[] = [
   // === FOCUS CONDITIONS ===
   {
     id: 'distracted',
-    rarity: 'uncommon',
+    rarity: 'silver',
     name: 'Distracted',
     emoji: '😵',
     description: 'Lost focus, making small mistakes',
@@ -705,7 +728,7 @@ export const CONDITION_TAGS: Tag[] = [
   },
   {
     id: 'in-the-zone',
-    rarity: 'uncommon',
+    rarity: 'silver',
     name: 'In The Zone',
     emoji: '🎯',
     description: 'Perfect focus, hitting every apex',
@@ -719,7 +742,7 @@ export const CONDITION_TAGS: Tag[] = [
   },
   {
     id: 'rattled',
-    rarity: 'uncommon',
+    rarity: 'silver',
     name: 'Rattled',
     emoji: '😰',
     description: 'Shaken up, driving cautiously',
@@ -733,7 +756,7 @@ export const CONDITION_TAGS: Tag[] = [
   },
   {
     id: 'desperate-push',
-    rarity: 'rare',
+    rarity: 'gold',
     name: 'Desperate Push',
     emoji: '🔥',
     description: 'Nothing to lose, pushing hard',
@@ -749,7 +772,7 @@ export const CONDITION_TAGS: Tag[] = [
   // === PIT CONDITIONS ===
   {
     id: 'pit-congestion',
-    rarity: 'uncommon',
+    rarity: 'silver',
     name: 'Pit Congestion',
     emoji: '🚧',
     description: 'Heavy pit lane traffic',
@@ -762,7 +785,7 @@ export const CONDITION_TAGS: Tag[] = [
   },
   {
     id: 'equipment-malfunction',
-    rarity: 'rare',
+    rarity: 'gold',
     name: 'Equipment Malfunction',
     emoji: '🔧',
     description: 'Pit equipment issues causing delays',
@@ -775,7 +798,7 @@ export const CONDITION_TAGS: Tag[] = [
   },
   {
     id: 'fast-hands',
-    rarity: 'uncommon',
+    rarity: 'silver',
     name: 'Fast Hands',
     emoji: '👐',
     description: 'Pit crew on fire today',
@@ -799,7 +822,7 @@ export const ACQUIRED_TAGS: Tag[] = [
     description: 'Two wins on the bounce. Everything is coming easy.',
     target: 'driver',
     trigger: 'passive',
-    rarity: 'uncommon',
+    rarity: 'silver',
     duration: { races: 3 },
     sources: ['acquired'],
     effects: { speedModifier: 1.02, consistencyModifier: 1.05 },
@@ -814,7 +837,7 @@ export const ACQUIRED_TAGS: Tag[] = [
     description: 'Came through the field like it owed them money. Faster in traffic.',
     target: 'driver',
     trigger: 'passive',
-    rarity: 'uncommon',
+    rarity: 'silver',
     duration: 'season',
     sources: ['acquired'],
     condition: { when: 'positionFraction', bottom: 0.5 },
@@ -827,7 +850,7 @@ export const ACQUIRED_TAGS: Tag[] = [
     description: 'Walked away from a wreck and kept racing. Harder to put out now.',
     target: 'driver',
     trigger: 'passive',
-    rarity: 'uncommon',
+    rarity: 'silver',
     duration: 'permanent',
     sources: ['acquired'],
     effects: { crashResistance: 0.12 },
@@ -839,7 +862,7 @@ export const ACQUIRED_TAGS: Tag[] = [
     description: 'Three retirements in a row. Something followed them home.',
     target: 'driver',
     trigger: 'passive',
-    rarity: 'rare',
+    rarity: 'gold',
     duration: { races: 4 },
     sources: ['acquired'],
     effects: { luckModifier: 0.8, crashResistance: -0.05 },
@@ -854,7 +877,7 @@ export const ACQUIRED_TAGS: Tag[] = [
     description: 'Crashed out last time. The hands are not quite steady yet.',
     target: 'driver',
     trigger: 'passive',
-    rarity: 'uncommon',
+    rarity: 'silver',
     duration: { races: 2 },
     sources: ['acquired'],
     effects: { consistencyModifier: 0.94 },
@@ -869,7 +892,7 @@ export const ACQUIRED_TAGS: Tag[] = [
     description: 'They say the asphalt talks to them. It has not said anything useful yet.',
     target: 'driver',
     trigger: 'passive',
-    rarity: 'common',
+    rarity: 'bronze',
     duration: 'season',
     sources: ['acquired'],
     effects: {},
@@ -884,7 +907,7 @@ export const ACQUIRED_TAGS: Tag[] = [
     description: 'The universe simply decided. Fortune looks the other way for a while.',
     target: 'driver',
     trigger: 'passive',
-    rarity: 'uncommon',
+    rarity: 'silver',
     duration: { races: 2 },
     sources: ['acquired'],
     effects: { luckModifier: 0.9 },
@@ -900,7 +923,7 @@ export const ACQUIRED_TAGS: Tag[] = [
     description: 'Someone is driving angry. Quicker, and less careful about it.',
     target: 'driver',
     trigger: 'passive',
-    rarity: 'uncommon',
+    rarity: 'silver',
     duration: { races: 3 },
     sources: ['acquired'],
     effects: { speedModifier: 1.02, crashResistance: -0.06 },
@@ -912,15 +935,15 @@ export const ACQUIRED_TAGS: Tag[] = [
 // bypass the slot cap; `duration` here is informational (the rule decides).
 export const IN_RACE_TAGS: Tag[] = [
   { id: 'damaged', name: 'Damaged', emoji: '🔧', description: 'Survived a crash. The car is 15% slower for the rest of the race.',
-    target: 'driver', trigger: 'passive', rarity: 'rare', sources: ['in-race'], effects: { speedModifier: 0.85 } },
+    target: 'driver', trigger: 'passive', rarity: 'gold', sources: ['in-race'], effects: { speedModifier: 0.85 } },
   { id: 'spun', name: 'Spun', emoji: '🌀', description: 'Just swapped ends. The next couple of laps are ragged.',
-    target: 'driver', trigger: 'passive', rarity: 'uncommon', sources: ['in-race'], effects: { consistencyModifier: 0.9 } },
+    target: 'driver', trigger: 'passive', rarity: 'silver', sources: ['in-race'], effects: { consistencyModifier: 0.9 } },
   { id: 'cooked-tyres', name: 'Cooked Tyres', emoji: '🔥', description: 'Past the cliff. Slower until the next stop.',
-    target: 'driver', trigger: 'passive', rarity: 'uncommon', sources: ['in-race'], effects: { speedModifier: 0.97 } },
+    target: 'driver', trigger: 'passive', rarity: 'silver', sources: ['in-race'], effects: { speedModifier: 0.97 } },
   { id: 'sulking', name: 'Sulking', emoji: '🐢', description: 'That stop was slow and everyone knows it.',
-    target: 'driver', trigger: 'passive', rarity: 'common', sources: ['in-race'], effects: { consistencyModifier: 0.96 } },
+    target: 'driver', trigger: 'passive', rarity: 'bronze', sources: ['in-race'], effects: { consistencyModifier: 0.96 } },
   { id: 'fired-up', name: 'Fired Up', emoji: '⚡', description: 'A lightning stop. The whole crew is buzzing.',
-    target: 'driver', trigger: 'passive', rarity: 'common', sources: ['in-race'], effects: { speedModifier: 1.01 } },
+    target: 'driver', trigger: 'passive', rarity: 'bronze', sources: ['in-race'], effects: { speedModifier: 1.01 } },
 ];
 
 // All tags combined for easy lookup
@@ -947,14 +970,15 @@ export function getTagById(id: string): Tag | undefined {
  * source). Enforced by the league when tags are attached, not by the engine. */
 export const MAX_TAGS_PER_DRIVER = 4;
 
-export const DEFAULT_RARITY_ODDS: RarityOdds = { common: 60, uncommon: 30, rare: 9, legendary: 1 };
+export const DEFAULT_RARITY_ODDS: RarityOdds = { bronze: 60, silver: 30, gold: 9, iridium: 1 };
 
 /** Roll a bucket from fixed odds. Exactly one rng() draw. */
-export function rollRarity(odds: RarityOdds, rng: Rng): Rarity {
+export function rollRarity(given: RarityOdds, rng: Rng): Rarity {
+  const odds = upgradeRarityOdds(given);
   const total = RARITIES.reduce((s, r) => s + Math.max(0, odds[r]), 0);
   let x = rng() * total;
   for (const r of RARITIES) { x -= Math.max(0, odds[r]); if (x < 0) return r; }
-  return 'common';
+  return 'bronze';
 }
 
 /** The genesis pick: roll a bucket, then a uniform pick inside it. An empty
@@ -967,7 +991,7 @@ export function pickTagByRarity(pool: Tag[], odds: RarityOdds, rng: Rng): Tag | 
   const want = RARITIES.indexOf(bucket);
   const order = [...RARITIES.slice(0, want + 1).reverse(), ...RARITIES.slice(want + 1)];
   for (const r of order) {
-    const inBucket = pool.filter(t => t.rarity === r);
+    const inBucket = pool.filter(t => toRarity(t.rarity) === r);
     if (inBucket.length) return inBucket[Math.floor(pick * inBucket.length)];
   }
   return null;

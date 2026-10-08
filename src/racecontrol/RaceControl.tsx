@@ -67,7 +67,7 @@ export default function RaceControl({ onBack }: { onBack: () => void }) {
 // Calibration
 
 type SortKey = 'name' | 'target' | 'rarity' | 'places' | 'wins' | 'podiums' | 'dnf' | 'fires';
-const RARITY_RANK = { common: 0, uncommon: 1, rare: 2, legendary: 3 } as const;
+const RARITY_RANK = { bronze: 0, silver: 1, gold: 2, iridium: 3 } as const;
 type Row = { c: TagCalibration; tag: Tag };
 const SORTERS: Record<SortKey, (a: Row, b: Row) => number> = {
   name: (a, b) => a.tag.name.localeCompare(b.tag.name),

@@ -134,7 +134,7 @@
 /* Tag chips and effect pills outside the race view (the shared race styles
    stay for the tower until #381/#397): square, metal outline, no fill. */
 :is(.run-setup, .league-screen) .tag-chip.named,
-:is(.run-setup, .league-screen) .tag-chip.named:is(.rarity-common, .rarity-uncommon, .rarity-rare, .rarity-legendary) {
+:is(.run-setup, .league-screen) .tag-chip.named:is(.rarity-bronze, .rarity-silver, .rarity-gold, .rarity-iridium) {
   border-radius: 0; background: none; padding: 3px 8px 3px 6px; gap: 6px;
 }
 :is(.run-setup, .league-screen) .tag-chip.named .tag-chip-name { font-family: var(--look-serif); font-size: 15px; color: var(--pw-text-1); }
@@ -143,3 +143,4 @@
 :is(.run-setup, .league-screen) .effect-pill.good b { color: var(--signal-green); }
 :is(.run-setup, .league-screen) .effect-pill.bad { border-color: color-mix(in srgb, var(--signal-red) 40%, transparent); color: var(--pw-text-2); }
 :is(.run-setup, .league-screen) .effect-pill.bad b { color: var(--signal-red); }
+:is(.run-setup, .league-screen) .rarity-word { font-family: var(--look-data); font-size: 12px; font-weight: 400; letter-spacing: 0.06em; text-transform: uppercase; }
