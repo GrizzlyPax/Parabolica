@@ -42,7 +42,9 @@ describe('icon registry (#350, #351)', () => {
   it('the meaning map matches the approved table in docs/ICONS.md exactly', () => {
     const fromDoc: Record<string, { id: string; author: string }> = {};
     for (const line of doc('ICONS.md').split('\n')) {
-      const m = /^\|\s*`([a-z_.]+)`\s*\|/.exec(line);
+      // The first code span in the row's first cell is the meaning; a note may
+      // follow it, e.g. "`season.box` (→ `season.pack`, #421)".
+      const m = /^\|\s*`([a-z_.]+)`[^|]*\|/.exec(line);
       const l = LINK.exec(line);
       if (m && l) fromDoc[m[1]] = { id: l[2], author: l[1] };
     }
