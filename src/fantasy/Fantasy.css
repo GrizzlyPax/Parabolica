@@ -4,14 +4,14 @@
 .fd-head-actions { margin-left: auto; display: inline-flex; gap: 12px; }
 .fd-head-actions .rs-link { margin-left: 0; }
 .fd-clock { font-size: 14px; color: var(--pw-text-1); display: inline-flex; align-items: center; gap: 6px; }
-.fd-done { color: var(--pw-green); font-weight: 600; }
+.fd-done { color: var(--signal-green); font-weight: 600; }
 .fd-hint { font-size: 12.5px; }
-.fd-swatch { display: inline-block; width: 12px; height: 12px; border-radius: 3px; flex: none; }
+.fd-swatch { display: inline-block; width: 12px; height: 12px; border-radius: 0; flex: none; }
 
 /* Teams phase */
 .fd-teams { display: flex; flex-direction: column; gap: 8px; }
 .fd-team-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
-.fd-name { flex: 1 1 180px; max-width: 280px; background: var(--pw-ground); color: var(--pw-text-1); border: 1px solid var(--pw-border-strong); border-radius: var(--pw-radius-m); padding: 8px 10px; font: inherit; font-size: 14px; min-height: 40px; }
+.fd-name { flex: 1 1 180px; max-width: 280px; background: var(--pw-ground); color: var(--pw-text-1); border: 1px solid var(--pw-border-strong); border-radius: 0; padding: 8px 10px; font: inherit; font-size: 14px; min-height: 40px; }
 .fd-colors { display: inline-flex; gap: 6px; }
 .fd-color { width: 22px; height: 22px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; padding: 0; }
 .fd-color.on { border-color: var(--pw-text-1); box-shadow: 0 0 0 2px var(--pw-ground); }
@@ -22,34 +22,34 @@
 /* Draft phase */
 .fd-body { display: grid; grid-template-columns: 220px 1fr; gap: 14px; align-items: start; }
 .fd-squads { display: flex; flex-direction: column; gap: 8px; position: sticky; top: 8px; }
-.fd-squad { border: 1px solid var(--pw-border); border-left: 3px solid var(--fc); border-radius: var(--pw-radius-m); padding: 8px 10px; background: var(--pw-surface); }
+.fd-squad { border: 1px solid var(--pw-border); border-left: 3px solid var(--fc); border-radius: 0; padding: 8px 10px; background: var(--pw-surface); }
 .fd-squad.on-clock { border-color: var(--fc); box-shadow: 0 0 0 1px var(--fc) inset; }
-.fd-squad-name { display: flex; align-items: center; gap: 6px; font-family: var(--font-display); font-weight: 700; text-transform: uppercase; font-size: 14px; margin-bottom: 4px; }
+.fd-squad-name { display: flex; align-items: center; gap: 6px; font-family: var(--look-display); font-weight: 700; text-transform: uppercase; font-size: 14px; margin-bottom: 4px; }
 .fd-squad-slot { font-size: 13px; color: var(--pw-text-1); display: flex; align-items: center; gap: 6px; padding: 2px 0; }
-.fd-squad-slot.empty { color: var(--pw-text-3); font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; }
+.fd-squad-slot.empty { color: var(--pw-text-3); font-family: var(--look-data); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; }
 .fd-board { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
 .fd-constructor { display: flex; flex-direction: column; gap: 4px; }
-.fd-constructor-name { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; padding: 0 2px; color: var(--pw-text-2); }
-.fd-card { display: grid; grid-template-columns: 24px 1fr; grid-template-rows: auto auto; column-gap: 8px; row-gap: 3px; align-items: center; text-align: left; background: var(--pw-surface); border: 1px solid var(--pw-border); border-radius: var(--pw-radius-m); padding: 7px 9px; color: var(--pw-text-1); font: inherit; cursor: pointer; position: relative; }
-.fd-card:hover:not(:disabled) { border-color: var(--pw-purple); }
+.fd-constructor-name { font-family: var(--look-data); font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; padding: 0 2px; color: var(--pw-text-2); }
+.fd-card { display: grid; grid-template-columns: 24px 1fr; grid-template-rows: auto auto; column-gap: 8px; row-gap: 3px; align-items: center; text-align: left; background: var(--pw-surface); border: 1px solid var(--pw-border); border-radius: 0; padding: 7px 9px; color: var(--pw-text-1); font: inherit; cursor: pointer; position: relative; }
+.fd-card:hover:not(:disabled) { border-color: var(--pw-text-1); }
 .fd-card:disabled { cursor: default; }
 .fd-card.taken { border-color: var(--fc); background: color-mix(in srgb, var(--fc) 10%, var(--pw-surface)); opacity: 0.85; }
 .fd-card.locked:not(.taken) { opacity: 0.45; }
 .fd-card > .lg-marble { grid-row: 1 / span 2; }
 .fd-card-name { font-weight: 600; font-size: 13.5px; }
 .fd-card-hints { display: flex; gap: 6px; grid-column: 2; }
-.fd-third { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.04em; padding: 1px 6px; border-radius: 999px; border: 1px solid currentColor; }
-.fd-third.front { color: var(--pw-green); }
-.fd-third.mid { color: var(--pw-yellow); }
-.fd-third.back { color: var(--pw-red); }
+.fd-third { font-family: var(--look-data); font-size: 10.5px; letter-spacing: 0.04em; padding: 1px 6px; border-radius: 0; border: 1px solid currentColor; }
+.fd-third.front { color: var(--signal-green); }
+.fd-third.mid { color: var(--signal-yellow); }
+.fd-third.back { color: var(--signal-red); }
 .fd-card-tags { position: absolute; top: 8px; right: 9px; display: inline-flex; gap: 3px; }
 .fd-tag-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
 .fd-tag-dot.rarity-common { background: var(--rarity-common); }
 .fd-tag-dot.rarity-uncommon { background: var(--rarity-uncommon); }
 .fd-tag-dot.rarity-rare { background: var(--rarity-rare); }
-.fd-tag-dot.rarity-legendary { background: var(--rarity-legendary); box-shadow: 0 0 6px var(--rarity-legendary); }
+.fd-tag-dot.rarity-legendary { background: var(--rarity-legendary); }
 .fd-no-tags { color: var(--pw-text-3); font-size: 10px; }
-.fd-owner { position: absolute; bottom: 6px; right: 9px; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fc); }
+.fd-owner { position: absolute; bottom: 6px; right: 9px; font-family: var(--look-data); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fc); }
 @media (max-width: 799px) {
   .fd-body { grid-template-columns: 1fr; }
   .fd-squads { position: static; flex-direction: row; flex-wrap: wrap; }
@@ -58,10 +58,10 @@
 
 /* Standings */
 .fs { display: flex; flex-direction: column; gap: 6px; }
-.fs-row { display: grid; grid-template-columns: 22px 12px 1fr auto; align-items: center; gap: 8px; padding: 6px 8px; border-radius: var(--pw-radius-m); background: var(--pw-surface); border: 1px solid var(--pw-border); border-left: 3px solid var(--fc); }
-.fs-rank { font-family: var(--font-display); font-weight: 800; font-size: 16px; color: var(--pw-text-2); }
-.fs-name { font-weight: 700; font-family: var(--font-display); text-transform: uppercase; font-size: 15px; }
-.fs-points { font-family: var(--font-mono); font-size: 15px; color: var(--pw-text-1); }
+.fs-row { display: grid; grid-template-columns: 22px 12px 1fr auto; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 0; background: var(--pw-surface); border: 1px solid var(--pw-border); border-left: 3px solid var(--fc); }
+.fs-rank { font-family: var(--look-display); font-weight: 700; font-size: 16px; color: var(--pw-text-2); }
+.fs-name { font-weight: 700; font-family: var(--look-display); text-transform: uppercase; font-size: 15px; }
+.fs-points { font-family: var(--look-data); font-size: 15px; color: var(--pw-text-1); }
 .fs-points small { color: var(--pw-text-3); font-size: 11px; margin-left: 4px; }
 .fs-drivers { grid-column: 3 / span 2; display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: var(--pw-text-2); }
 .fs-drivers b { color: var(--pw-text-1); font-weight: 600; }
@@ -70,7 +70,7 @@
 /* Timing tower: a drafted driver's row carries its fantasy team */
 .timing-row.fantasy { box-shadow: inset -3px 0 0 var(--fantasy-color); }
 .timing-row.fantasy::after { content: ''; position: absolute; inset: 0; background: var(--fantasy-color); opacity: 0.1; pointer-events: none; }
-.fantasy-badge { display: inline-block; font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fantasy-color); border: 1px solid var(--fantasy-color); border-radius: 999px; padding: 0 5px; margin-left: 6px; vertical-align: middle; line-height: 1.5; }
+.fantasy-badge { display: inline-block; font-family: var(--look-data); font-size: 9.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fantasy-color); border: 1px solid var(--fantasy-color); border-radius: 0; padding: 0 5px; margin-left: 6px; vertical-align: middle; line-height: 1.5; }
 
 /* Race complete bar: fantasy points this race */
 .race-complete-fantasy { display: inline-flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; font-size: 13px; }
