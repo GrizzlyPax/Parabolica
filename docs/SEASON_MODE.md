@@ -59,6 +59,12 @@ Instead of 2 drivers pre-assigned to each named team, the seed summons a **share
 - **The game wears your team's primary colour** in a few key places (a bar or background block). This doubles as the hotseat "whose turn is it" cue.
 - **The mystery box reveal is an over-the-top loot-box moment** that escalates with the metal: Bronze is a quick pop, Platinum a full build-up.
 
+## Decided (Pax, Oct 8, round 2)
+- **Hotseat ships in v0.5** (basic): several humans, a hand-off screen in each team's colour between turns.
+- **One save slot:** a new season overwrites the old one (asks first).
+- **Drivers'-champion bonus = 50 points** (two race wins) to start; Telemetry may tune it.
+- **Draft board:** no AI-pick animation; taken drivers and cars are **faded out** and AI picks resolve instantly.
+
 ## Out of scope (hooks only)
 Effect cards from the sim (v0.6) · Patron Mode · CPU Paddock actions · free agents / transfers · events · spend economy · online / wall-clock / accounts · views-followers metric · cosmetic/story tag content.
 
