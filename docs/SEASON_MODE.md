@@ -63,6 +63,10 @@ Instead of 2 drivers pre-assigned to each named team, the seed summons a **share
 - **Hotseat ships in v0.5** (basic): several humans, a hand-off screen in each team's colour between turns.
 - **One save slot:** a new season overwrites the old one (asks first).
 - **Drivers'-champion bonus = 50 points** (two race wins) to start; Telemetry may tune it.
+- **After the finale:** "Play again" = League Setup with a fresh seed and draft. No carry-over in v0.5.
+- **No Rule cards** in Season Mode v0.5 (default ruleset).
+- **Race view:** Go opens the live broadcast; Skip to result is always one tap away.
+- **Phone first:** every Season Mode screen is designed and tested at phone width; desktop must still work.
 - **Draft board:** no AI-pick animation; taken drivers and cars are **faded out** and AI picks resolve instantly.
 
 ## Out of scope (hooks only)
