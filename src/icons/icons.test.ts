@@ -3,18 +3,24 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { ICONS, ICON_AUTHORS, MEANINGS, iconBody, iconCredits, resolveIcon, vendoredIconFiles } from './registry';
+import {
+  CARD_KIND_ICONS, ICONS, ICON_AUTHORS, MEANINGS, STAT_ICONS,
+  iconBody, iconCredits, iconViewBox, resolveIcon, vendoredIconFiles,
+} from './registry';
 import { GameIcon, TeamLogo, teamThemeVars } from './GameIcon';
 
 const html = (el: Parameters<typeof renderToStaticMarkup>[0]) => renderToStaticMarkup(el);
+const doc = (p: string) => readFileSync(join(__dirname, '../../docs', p), 'utf8');
+/** game-icons.net/1x1/<author>/<id>.html links in a doc line. */
+const LINK = /game-icons\.net\/1x1\/([a-z0-9-]+)\/([a-z0-9-]+)\.html/;
 
-describe('icon registry (#350)', () => {
+describe('icon registry (#350, #351)', () => {
   it('every registered icon has a vendored SVG, and every vendored SVG is registered', () => {
-    const files = vendoredIconFiles().sort();
-    expect(ICONS.map(i => i.file).sort()).toEqual(files);
+    expect(ICONS.map(i => i.file).sort()).toEqual(vendoredIconFiles().sort());
     for (const i of ICONS) {
       expect(i.file, i.id).toBe(`${i.id}.svg`);
       expect(iconBody(i), i.id).toMatch(/<path/);
+      expect(iconViewBox(i), i.id).toMatch(/^\d+ \d+ \d+ \d+$/);
       expect(ICON_AUTHORS[i.author], `${i.id} author`).toBeDefined();
     }
   });
@@ -22,15 +28,54 @@ describe('icon registry (#350)', () => {
   it('vendored SVGs are single-colour: currentColor, no background, no hard-coded colour', () => {
     for (const i of ICONS) {
       const svg = readFileSync(join(__dirname, '../assets/icons', i.file), 'utf8');
-      expect(svg, i.id).toContain('fill="currentColor"');
-      expect(svg, i.id).not.toContain('M0 0h512v512H0z');
-      expect(svg.replace(/xmlns="[^"]*"/, ''), `${i.id} has a hex colour`).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
+      expect(svg, i.id).toContain('="currentColor"');
+      expect(svg, i.id).not.toMatch(/M0 0h(512|256)v(512|256)H0z/);
+      expect(svg.replace(/xmlns="[^"]*"/, ''), `${i.id} has a hard colour`).not.toMatch(/#[0-9a-fA-F]{3,8}\b|(fill|stroke)="(?!currentColor|none)/);
+      // Every shape draws in currentColor. A shape with no fill/stroke of its
+      // own would inherit and paint over the glyph (the Badges disc bug).
+      for (const shape of svg.match(/<(path|circle|rect|ellipse|polygon|polyline)\b[^>]*>/g) ?? []) {
+        expect(shape, `${i.id}: shape without currentColor`).toMatch(/(fill|stroke)="currentColor"/);
+      }
     }
   });
 
-  it('every meaning points at a registered icon; ids resolve directly too', () => {
-    for (const [meaning, id] of Object.entries(MEANINGS)) expect(resolveIcon(meaning)?.id, meaning).toBe(id);
-    expect(resolveIcon('raining')?.id).toBe('raining');
+  it('the meaning map matches the approved table in docs/ICONS.md exactly', () => {
+    const fromDoc: Record<string, { id: string; author: string }> = {};
+    for (const line of doc('ICONS.md').split('\n')) {
+      const m = /^\|\s*`([a-z_.]+)`\s*\|/.exec(line);
+      const l = LINK.exec(line);
+      if (m && l) fromDoc[m[1]] = { id: l[2], author: l[1] };
+    }
+    expect(Object.keys(fromDoc).length).toBe(60);
+    expect(Object.fromEntries(Object.entries(fromDoc).map(([k, v]) => [k, v.id]))).toEqual(MEANINGS);
+    for (const [meaning, { id, author }] of Object.entries(fromDoc)) {
+      const entry = resolveIcon(meaning);
+      expect(entry?.id, meaning).toBe(id);
+      expect(entry?.author, `${meaning} author`).toBe(author);
+    }
+  });
+
+  it('every team icon in docs/story/team-identity.md is vendored, by the right author', () => {
+    const teams = doc('story/team-identity.md').split('\n')
+      .filter(l => /^\|\s*\*\*/.test(l) && LINK.test(l))
+      .map(l => LINK.exec(l)!);
+    expect(teams.length).toBe(28);
+    for (const [, author, id] of teams) {
+      const entry = resolveIcon(id);
+      expect(entry?.id, id).toBe(id);
+      expect(entry?.author, `${id} author`).toBe(author);
+    }
+  });
+
+  it('every card stat and card kind has an icon', () => {
+    for (const meaning of [...Object.values(STAT_ICONS), ...Object.values(CARD_KIND_ICONS)]) {
+      expect(resolveIcon(meaning), meaning).toBeDefined();
+    }
+  });
+
+  it('meanings resolve; raw ids resolve directly; unknowns do not', () => {
+    expect(resolveIcon('race.crash')?.id).toBe('spiky-explosion');
+    expect(resolveIcon('spiky-explosion')?.id).toBe('spiky-explosion');
     expect(resolveIcon('weather.hail')).toBeUndefined();
     expect(resolveIcon(undefined)).toBeUndefined();
   });
@@ -43,11 +88,16 @@ describe('icon registry (#350)', () => {
 
 describe('<GameIcon> / <TeamLogo>', () => {
   it('renders a known meaning as an inline currentColor SVG at the asked size', () => {
-    const out = html(createElement(GameIcon, { name: 'weather.rain', size: 24 }));
+    const out = html(createElement(GameIcon, { name: 'race.crash', size: 24 }));
     expect(out).toMatch(/^<svg/);
     expect(out).toContain('width="24"');
     expect(out).toContain('fill="currentColor"');
     expect(out).toContain('aria-hidden="true"');
+  });
+
+  it("uses each icon's own viewBox (Badges glyphs are cropped to 48 48 160 160)", () => {
+    expect(html(createElement(GameIcon, { name: 'race.lead_change' }))).toContain('viewBox="48 48 160 160"');
+    expect(html(createElement(GameIcon, { name: 'race.finish' }))).toContain('viewBox="0 0 512 512"');
   });
 
   it('falls back to the old emoji when a meaning has no icon yet; nothing without one', () => {
@@ -59,18 +109,16 @@ describe('<GameIcon> / <TeamLogo>', () => {
     expect(html(createElement(GameIcon, { name: 'ui.close', title: 'Close' }))).toContain('aria-label="Close"');
   });
 
-  it('TeamLogo: secondary-colour icon on a primary-colour tile; emoji fallback', () => {
+  it('TeamLogo: icon on a primary-colour tile; emoji fallback', () => {
     const team = { name: 'Test', emoji: '🦆', color: '#112233', accentColor: '#445566' };
     const plain = html(createElement(TeamLogo, { team }));
     expect(plain).toContain('background:#112233');
-    expect(plain).toContain('color:#445566');
     expect(plain).toContain('🦆');
-    const iconned = html(createElement(TeamLogo, { team: { ...team, secondaryColor: '#778899', iconId: 'race-car' } }));
-    expect(iconned).toContain('color:#778899');
+    const iconned = html(createElement(TeamLogo, { team: { ...team, iconId: 'race-car' } }));
     expect(iconned).toContain('<svg');
   });
 
-  it('theme vars: a team sets --team-primary/secondary; none stays neutral', () => {
+  it('theme vars: a team sets the theme; none stays neutral', () => {
     expect(teamThemeVars({ color: '#111111', accentColor: '#222222' })).toEqual({ '--team-primary': '#111111', '--team-secondary': '#222222' });
     expect(teamThemeVars(null)).toEqual({});
   });

@@ -5,11 +5,11 @@
 // meaning with no icon yet renders `fallback` (the screen's old emoji), so
 // screens migrate one at a time without breaking.
 import type { CSSProperties } from 'react';
-import { iconBody, resolveIcon } from './registry';
+import { iconBody, iconViewBox, resolveIcon } from './registry';
 import './icons.css';
 
 export interface GameIconProps {
-  /** A meaning ('weather.rain') or a raw icon id ('raining'). */
+  /** A meaning ('race.crash') or a raw icon id ('spiky-explosion'). */
   name?: string;
   /** Pixel size (square). */
   size?: number;
@@ -41,7 +41,7 @@ export function GameIcon({ name, size = 16, color, fallback, title, className }:
       className={cls}
       width={size}
       height={size}
-      viewBox="0 0 512 512"
+      viewBox={iconViewBox(entry)}
       fill="currentColor"
       focusable="false"
       style={color ? { color } : undefined}
