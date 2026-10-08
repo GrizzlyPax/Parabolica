@@ -263,6 +263,38 @@ button.rt-g:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset:
   .pk-side { grid-template-columns: 1fr; }
 }
 
+/* Pack reveal (#320): full screen over the Paddock. Neutral until the card turns. */
+.pr { position: fixed; inset: 0; z-index: 1000; /* over everything, the idea box included, while it plays */ overflow: hidden; isolation: isolate; cursor: pointer; background: var(--pw-ground); --pr-m: var(--pw-text-1); }
+.pr:focus-visible { outline: none; }
+.pr.pr-metal-bronze { --pr-m: var(--rarity-bronze); }
+.pr.pr-metal-silver { --pr-m: var(--rarity-silver); }
+.pr.pr-metal-gold { --pr-m: var(--rarity-gold); }
+.pr.pr-metal-iridium { --pr-m: var(--rarity-iridium); }
+.pr-dim { position: absolute; inset: 0; background: var(--pw-ground); filter: brightness(0); transition: opacity 0.5s; z-index: 0; }
+.pr-rays {
+  position: absolute; left: 50%; top: 46%; width: 1100px; height: 1100px; margin: -550px 0 0 -550px; z-index: 1; opacity: 0;
+  background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--pr-m) 42%, transparent) 0 6deg, transparent 6deg 18deg);
+  -webkit-mask: radial-gradient(circle, var(--pw-ground) 0 16%, transparent 58%); mask: radial-gradient(circle, var(--pw-ground) 0 16%, transparent 58%);
+  transition: background 0.4s;
+}
+.pr-hud { position: absolute; left: 0; right: 0; top: calc(18px + env(safe-area-inset-top)); z-index: 5; display: grid; gap: 4px; justify-items: center; text-align: center; }
+.pr-hud b { font-family: var(--look-display); font-size: 28px; }
+.pr-pack { position: absolute; left: 50%; top: 46%; width: 168px; height: 236px; margin: -118px 0 0 -84px; z-index: 2; display: grid; place-items: center; border: 3px solid var(--pw-text-1); background: var(--pw-ground); }
+.pr-pack::before { content: ""; position: absolute; inset: 5px; border: 1px solid var(--pw-text-1); background: repeating-linear-gradient(-45deg, color-mix(in srgb, var(--pw-text-1) 16%, transparent) 0 14px, transparent 14px 26px); }
+.pr-plate { position: relative; display: grid; gap: 6px; justify-items: center; padding: 10px 12px; background: var(--pw-ground); border: 1px solid var(--pw-text-1); text-align: center; color: var(--pw-text-1); }
+.pr-plate b { font-family: var(--look-display); font-size: 17px; letter-spacing: 0.04em; }
+.pr-plate span { font-family: var(--look-data); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--pw-text-2); }
+.pr-card { position: absolute; left: 50%; top: 46%; width: 210px; height: 294px; margin: -147px 0 0 -105px; z-index: 3; opacity: 0; overflow: hidden; }
+.pr-card.slow .cf-in { transition-duration: 1.1s; }
+.pr-sheen { position: absolute; inset: 0; z-index: 4; pointer-events: none; transform: translateX(-120%);
+  background: linear-gradient(105deg, transparent 30%, color-mix(in srgb, var(--rarity-iridium-sheen) 45%, transparent) 45%, color-mix(in srgb, var(--pw-text-1) 55%, transparent) 50%, transparent 62%); }
+.pr-flash { position: absolute; inset: 0; z-index: 4; background: var(--pw-text-1); opacity: 0; pointer-events: none; }
+.pr-skip { position: absolute; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom)); z-index: 6; font-family: var(--look-data); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--pw-text-3); }
+.pr-cta { position: absolute; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom)); transform: translate(-50%, 10px); z-index: 6; width: min(420px, calc(100% - 32px)); display: grid; gap: 8px; text-align: center; opacity: 0; transition: opacity 0.3s, transform 0.3s; pointer-events: none; }
+.pr.done .pr-cta { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+.pr-cta .rs-btn { height: 52px; font-size: 18px; }
+@media (prefers-reduced-motion: reduce) { .pr-dim, .pr-cta { transition: none; } }
+
 /* Standings + finale (#321) */
 .ss-standings { padding-bottom: 96px; }
 .ss-crown {
