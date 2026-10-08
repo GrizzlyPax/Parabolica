@@ -134,3 +134,7 @@
 .rc-preset-detail { display: flex; flex-direction: column; gap: 4px; font-size: 13.5px; color: var(--pw-text-1); }
 .rc-draft-actions { display: inline-flex; gap: 12px; }
 .rc-draft-actions .rs-link { margin-left: 0; }
+
+/* Deck tab (#403) */
+.rc-deck-filter { margin-left: auto; display: inline-flex; align-items: center; gap: 8px; }
+.rc-deck .rc-num { display: inline; font-size: 12.5px; }
