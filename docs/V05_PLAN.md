@@ -32,12 +32,17 @@
 
 ## The lanes
 **🏎️ Apex (Fable) is the critical path, in order:**
-1. Card model + generated base deck
-2. Shared-pool genesis
-3. Draft engine
-4. Season loop → **M1**
-5. Mystery box logic + team locker
-6. Quick Race on trait cards **+** the 28 teams, in one PR (Pax merges)
+1. Shared-pool genesis (#313), using Hub's card model
+2. Draft engine (#314)
+3. Season loop (#315) → **M1**
+4. Mystery box logic + team locker (#316)
+5. One PR, merged by Pax: Quick Race on trait cards (#337) **+** grid swap to the 28 teams (#356) **+** race colours (#381)
+
+**🛞 Hub-B (Opus) first, to clear Apex's path (no sim changes):**
+1. Base-deck teams as data + World Deck display (#402)
+2. Card model + generated Motorsport base deck (#329): Apex starts after this merges
+3. World Deck + Race Control show the card deck (#403)
+4. Rarity becomes metals (#385)
 
 **🛞 Hub-A (Opus): the Season screens, in order:**
 1. League Setup (needs genesis)
