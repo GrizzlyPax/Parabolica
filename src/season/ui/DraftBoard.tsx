@@ -8,8 +8,9 @@ import { CardDot } from '../../cards/CardFace';
 import type { FieldRank } from '../../betting/utils';
 import type { Card } from '../../cards/types';
 import { advanceCpu, applyPick, draftState, quickDraft, type DraftPick, type PickKind } from '../draft';
-import { identitiesFor, poolFor, saveSeason, type SeasonFacts } from '../season';
-import type { CompetitorTeam, PoolDriver, RackCar } from '../genesis';
+import { poolFor, saveSeason, type SeasonFacts } from '../season';
+import { teamsOf } from './teams';
+import type { PoolDriver, RackCar } from '../genesis';
 import { seasonName } from '../setup';
 import Handoff from './Handoff';
 
@@ -39,12 +40,6 @@ function Sealed({ traits }: { traits: Card[] }) {
 /** Your own pick: trait names in the open. */
 function Open({ traits }: { traits: Card[] }) {
   return traits.length ? <span className="ss-open">{traits.map(c => <span key={c.id} className="ss-open-card"><CardDot card={c} />{c.name}</span>)}</span> : null;
-}
-
-/** The pool's teams wearing any human's chosen identity. */
-function teamsOf(facts: SeasonFacts): Record<string, CompetitorTeam> {
-  const ids = identitiesFor(facts);
-  return Object.fromEntries(poolFor(facts).teams.map(t => [t.id, { ...t, ...Object.fromEntries(Object.entries(ids[t.id] ?? {}).filter(([, v]) => v != null)) }]));
 }
 
 export default function DraftBoard({ facts, onChange, onMenu, onDone }: Props) {

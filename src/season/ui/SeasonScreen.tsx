@@ -9,6 +9,7 @@ import { loadSeason, seasonState, type SeasonFacts } from '../season';
 import { seasonName } from '../setup';
 import LeagueSetup from './LeagueSetup';
 import DraftBoard from './DraftBoard';
+import Paddock from './Paddock';
 import '../../RunSetup.css';
 import './Season.css';
 
@@ -28,7 +29,18 @@ export default function SeasonScreen({ screen, navigate, onMenu }: Props) {
   if (screen === 'setup') {
     return <LeagueSetup onBack={onMenu} onStarted={facts => navigate({ name: 'season', screen: seasonScreenFor(facts) }, { replace: true })} />;
   }
-  return <SavedSeason screen={screen} navigate={navigate} onMenu={onMenu} />;
+  // Keyed by screen: each screen reads the saved season fresh on arrival.
+  return <SavedSeason key={screen} screen={screen} navigate={navigate} onMenu={onMenu} />;
+}
+
+/** Can this screen show the season in this phase? */
+function screenFits(screen: Screen, phase: ReturnType<typeof seasonState>['phase']): boolean {
+  switch (screen) {
+    case 'draft': return phase === 'draft';
+    case 'paddock': return phase === 'paddock' || phase === 'ready-for-go';
+    case 'race': return phase === 'ready-for-go';
+    default: return phase !== 'draft';
+  }
 }
 
 /** Screens that play the saved season. A screen the season isn't on yet
@@ -36,14 +48,18 @@ export default function SeasonScreen({ screen, navigate, onMenu }: Props) {
 function SavedSeason({ screen, navigate, onMenu }: Props) {
   const [facts, setFacts] = useState(() => loadSeason());
   // Checked on arrival only, so finishing the draft doesn't jump the page.
-  const [at] = useState(() => (facts ? seasonScreenFor(facts) : null));
-  const wrongPlace = facts != null && ((screen === 'draft') !== (at === 'draft'));
+  const [arrival] = useState(() => (facts ? { at: seasonScreenFor(facts), fits: screenFits(screen, seasonState(facts).phase) } : null));
+  const at = arrival?.at;
+  const wrongPlace = arrival != null && !arrival.fits;
   useEffect(() => {
     if (wrongPlace) navigate({ name: 'season', screen: at! }, { replace: true });
   }, [wrongPlace, at, navigate]);
   if (wrongPlace) return null;
   if (facts && screen === 'draft') {
     return <DraftBoard facts={facts} onChange={setFacts} onMenu={onMenu} onDone={() => navigate({ name: 'season', screen: 'paddock' })} />;
+  }
+  if (facts && screen === 'paddock') {
+    return <Paddock facts={facts} onChange={setFacts} onMenu={onMenu} onGo={() => navigate({ name: 'season', screen: 'race' })} />;
   }
   return <SeasonHolding screen={screen} navigate={navigate} onMenu={onMenu} />;
 }

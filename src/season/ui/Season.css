@@ -119,6 +119,32 @@
 .ss-tab.on { background: var(--pw-text-1); color: var(--pw-ground); border-color: var(--pw-text-1); }
 .ss-tab-n { font-family: var(--look-data); font-weight: 400; font-size: 11px; margin-left: 4px; }
 
+/* Paddock */
+.ss-paddock { padding-bottom: 96px; }
+.ss-strip { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.ss-strip-team { display: inline-flex; flex-direction: column; align-items: center; gap: 4px; padding: 4px; border: 1px solid transparent; }
+.ss-strip-team.now { border-color: var(--team-primary); }
+.ss-strip-team.done { opacity: 0.35; }
+.ss-strip-label { font-family: var(--look-data); font-size: 10px; letter-spacing: 0.06em; color: var(--pw-text-2); }
+.ss-pack { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
+.ss-pack-place { flex: 1 1 180px; display: flex; flex-direction: column; gap: 8px; }
+.ss-place { text-align: left; height: auto; min-height: 44px; padding: 8px 12px; }
+.ss-place-note { font-family: var(--look-serif); font-weight: 400; font-style: italic; font-size: 13px; color: var(--pw-text-2); }
+.ss-lineup .ss-badge { min-width: 56px; justify-content: center; }
+.ss-gear { list-style: none; margin: 0; padding: 0; }
+.ss-gear-row { display: flex; align-items: center; gap: 10px; min-height: 48px; border-top: 1px solid var(--pw-hairline); }
+.ss-gear-row .ss-pick-name { flex: 1; min-width: 0; }
+.ss-select {
+  height: 40px; max-width: 50%; padding: 0 8px; border-radius: 0;
+  background: var(--pw-ground); color: var(--pw-text-1); border: 1px solid var(--pw-text-1);
+  font-family: var(--look-data); font-size: 13px;
+}
+.ss-table { list-style: none; margin: 0; padding: 0; }
+.ss-table-row { display: flex; align-items: center; gap: 10px; min-height: 40px; border-top: 1px solid var(--pw-hairline); }
+.ss-table-rank { width: 22px; font-family: var(--look-data); font-size: 13px; color: var(--pw-text-2); }
+.ss-table-pts { font-family: var(--look-data); font-size: 15px; min-width: 32px; text-align: right; }
+.ss-table-row.human .ss-team-name { color: var(--pw-text-1); }
+
 /* The thumb dock: the one action, bottom of the screen */
 .ss-dock {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 5;
