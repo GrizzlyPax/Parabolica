@@ -11,7 +11,9 @@ import { formatMetric, metricOutOfBand } from './physics';
 import { CANON_VARIABLES } from '../simlab/types';
 import { cloneVariables, setValueByPath, ALL_KNOBS, formatValue, canonValue } from './knobs';
 import { randomSeed } from '../engine/rng';
-import { getTagById, describeCondition, type Tag } from '../data/tags';
+import { getTagById, describeCondition, isGenesisTag, type Tag } from '../data/tags';
+import { GameIcon } from '../icons/GameIcon';
+import { tagIconName } from '../components/race/TagChips';
 import { TAG_CALIBRATION } from '../data/tagCalibration';
 import { bandViolation, calibrateTagsAsync, CALIBRATION_BANDS, type CalibrationFile, type TagCalibration, type CalibrateProgress } from './calibrate';
 import type { CalibrateInMessage, CalibrateOutMessage } from './calibrateWorker';
@@ -202,8 +204,8 @@ function CalibrationTab({ lab }: { lab: LabProps }) {
                 const y = yoursBy.get(c.tagId);
                 return (
                   <Fragment key={c.tagId}>
-                  <tr className={`${v ? 'rc-row-bad' : ''} ${e ? 'rc-row-on' : ''}`} onClick={() => setOpen(o => o === c.tagId ? '' : c.tagId)} title={`${tag.description}${v ? ` — ⚠ ${v}` : ''}`}>
-                    <td className="rc-tag"><span className="rc-emoji">{tag.emoji}</span> {tag.name}{v && <span className="rc-bad"> ⚠</span>}{e && <span className="rc-edited-text"> ✎</span>}</td>
+                  <tr className={`${v ? 'rc-row-bad' : ''} ${e ? 'rc-row-on' : ''}`} onClick={() => setOpen(o => o === c.tagId ? '' : c.tagId)} title={`${tag.description}${v ? ` — out of band: ${v}` : ''}`}>
+                    <td className="rc-tag"><span className="rc-emoji"><GameIcon name={tagIconName(tag)} size={15} color={isGenesisTag(tag) ? `var(--rarity-${tag.rarity})` : undefined} /></span> {tag.name}{v && <span className="rc-bad"> · out of band</span>}{e && <span className="rc-edited-text"> · edited</span>}</td>
                     <td className="rc-dim">{c.target}</td>
                     <td><span className="rc-rarity" style={{ color: `var(--rarity-${c.rarity})` }}>{c.rarity}</span></td>
                     <td className="rc-places"><PlacesBar value={c.places} max={maxPlaces} /><span className={`rc-num ${c.places > 0.05 ? 'rc-good' : c.places < -0.05 ? 'rc-bad' : ''}`}>{fmtSigned(c.places)}</span><span className="rc-se">±{c.placesSe.toFixed(1)}</span></td>
@@ -238,7 +240,7 @@ function Delta({ mine, theirs, strong }: { mine?: TagCalibration; theirs?: TagCa
   const noise = 2 * Math.sqrt(mine.placesSe ** 2 + theirs.placesSe ** 2);
   const real = Math.abs(d) > noise;
   const cls = real ? (strong ? (d > 0 ? 'rc-good' : 'rc-bad') : 'rc-bad') : '';
-  return <><span className={`rc-num ${strong ? 'rc-edited-text' : ''}`}>{fmtSigned(mine.places)}</span><span className={`rc-se ${cls}`}>{d > 0 ? '+' : ''}{d.toFixed(1)}{real ? (strong ? ' ✓' : ' ⚠') : ''}</span></>;
+  return <><span className={`rc-num ${strong ? 'rc-edited-text' : ''}`}>{fmtSigned(mine.places)}</span><span className={`rc-se ${cls}`}>{d > 0 ? '+' : ''}{d.toFixed(1)}{real ? (strong ? ' ✓' : ' !') : ''}</span></>;
 }
 
 function SortBtn({ k, cur, desc, set, children }: { k: SortKey; cur: SortKey; desc: boolean; set: (k: SortKey) => void; children: React.ReactNode }) {
@@ -354,7 +356,7 @@ function Verdict({ mine, theirs }: { mine: TagCalibration; theirs: TagCalibratio
   const v = bandViolation(mine);
   return (
     <span className={v ? 'rc-bad' : sig ? 'rc-good' : 'rs-hint'}>
-      {v ? `⚠ Out of band: ${v}.` : sig ? `${d > 0 ? 'Stronger' : 'Weaker'} by ${Math.abs(d).toFixed(1)} places — a real change.` : `Within noise of the shipped version (${d > 0 ? '+' : ''}${d.toFixed(1)} places). Push harder or run more races.`}
+      {v ? `Out of band: ${v}.` : sig ? `${d > 0 ? 'Stronger' : 'Weaker'} by ${Math.abs(d).toFixed(1)} places — a real change.` : `Within noise of the shipped version (${d > 0 ? '+' : ''}${d.toFixed(1)} places). Push harder or run more races.`}
     </span>
   );
 }
@@ -405,7 +407,7 @@ function NotebookTab({ notebook, setNotebook, working, onLoad, onDeletePreset, o
             {notebook.presets.map(p => (
               <Fragment key={p.id}>
               <tr className={working.preset?.id === p.id ? 'rc-row-on' : ''} onClick={() => setOpen(o => o === p.id ? '' : p.id)}>
-                <td className="rc-tag">{p.name}{working.preset?.id === p.id && <span className="rc-edited-text"> · loaded</span>}{p.sentAt && p.sentAt >= p.createdAt ? <span className="rc-dim" title="In the shared ledger"> ☁</span> : ''}</td>
+                <td className="rc-tag">{p.name}{working.preset?.id === p.id && <span className="rc-edited-text"> · loaded</span>}{p.sentAt && p.sentAt >= p.createdAt ? <span className="rc-dim" title="In the shared ledger"> · shared</span> : ''}</td>
                 <td className="rc-dim">{presetSummary(p)}</td>
                 <td className="rc-dim">{new Date(p.createdAt).toLocaleString()}</td>
                 <td><span className="rc-draft-actions"><button type="button" className="rs-link" onClick={e => { e.stopPropagation(); onLoad(p); }}>Load</button><button type="button" className="rs-link rc-bad" onClick={e => { e.stopPropagation(); onDeletePreset(p.id); }}>Delete</button></span></td>
@@ -428,7 +430,7 @@ function NotebookTab({ notebook, setNotebook, working, onLoad, onDeletePreset, o
               <Fragment key={r.id}>
               <tr onClick={() => setOpen(o => o === r.id ? '' : r.id)}>
                 <td className="rc-dim">{new Date(r.at).toLocaleString()}</td>
-                <td className="rc-tag">{r.kind === 'tags' ? 'Tags' : 'Physics'} <span className="rc-dim">{r.note}</span>{r.sentAt ? <span className="rc-dim" title="In the shared ledger"> ☁</span> : ''}</td>
+                <td className="rc-tag">{r.kind === 'tags' ? 'Tags' : 'Physics'} <span className="rc-dim">{r.note}</span>{r.sentAt ? <span className="rc-dim" title="In the shared ledger"> · shared</span> : ''}</td>
                 <td><span className="rc-num">{r.seed}</span></td>
                 <td><span className="rc-num">{r.races}</span></td>
                 <td className="rc-dim">{r.presetName ?? '—'}</td>

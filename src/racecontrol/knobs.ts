@@ -6,7 +6,8 @@ import { SimVariables, CANON_VARIABLES, cloneVariables } from '../simlab/types';
 // Variable metadata for display
 export interface VarDef {
   category: string;
-  categoryEmoji: string;
+  /** Icon meaning for the category heading (docs/ICONS.md). */
+  categoryIcon: string;
   path: string;           // e.g., "tires.soft.speedBonus" or "crashes.baseCrashChance"
   label: string;
   description: string;
@@ -30,11 +31,11 @@ export function buildVariableList(): VarDef[] {
   ];
 
   for (const compound of ['soft', 'medium', 'hard'] as const) {
-    const emoji = compound === 'soft' ? '🔴' : compound === 'medium' ? '🟡' : '⚪';
+    const icon = 'stat.tyre_management';
     for (const v of tireCompoundVars) {
       vars.push({
         category: `Tires (${compound})`,
-        categoryEmoji: emoji,
+        categoryIcon: icon,
         path: `tires.${compound}.${v.key}`,
         label: v.label,
         description: v.desc,
@@ -58,7 +59,7 @@ export function buildVariableList(): VarDef[] {
     { key: 'teamTireMgmtWearPerStar', label: 'Tire Mgmt Wear/Star', desc: 'Team tire mgmt wear scaling, 3★ neutral (0 = dormant)', format: 'decimal' as const, min: 0, max: 0.15, step: 0.01 },
   ];
   for (const v of tireGeneralVars) {
-    vars.push({ category: 'Tires (general)', categoryEmoji: '🛞', path: `tires.${v.key}`, label: v.label, description: v.desc, format: v.format, min: v.min, max: v.max, step: v.step });
+    vars.push({ category: 'Tires (general)', categoryIcon: 'stat.tyre_management', path: `tires.${v.key}`, label: v.label, description: v.desc, format: v.format, min: v.min, max: v.max, step: v.step });
   }
 
   // Crashes
@@ -76,7 +77,7 @@ export function buildVariableList(): VarDef[] {
     { key: 'safetyCarsReduction', label: 'SC Reduction', desc: 'Crash reduction under SC', format: 'percent' as const, min: 0.01, max: 0.3, step: 0.01 },
   ];
   for (const v of crashVars) {
-    vars.push({ category: 'Crashes', categoryEmoji: '💥', path: `crashes.${v.key}`, label: v.label, description: v.desc, format: v.format, min: v.min, max: v.max, step: v.step });
+    vars.push({ category: 'Crashes', categoryIcon: 'race.crash', path: `crashes.${v.key}`, label: v.label, description: v.desc, format: v.format, min: v.min, max: v.max, step: v.step });
   }
 
   // Mechanical
@@ -88,7 +89,7 @@ export function buildVariableList(): VarDef[] {
     { key: 'luckMultiplier', label: 'Luck Multiplier', desc: 'Luck reduction mult', format: 'decimal' as const, min: 0.25, max: 1, step: 0.05 },
   ];
   for (const v of mechVars) {
-    vars.push({ category: 'Mechanical', categoryEmoji: '🔧', path: `mechanical.${v.key}`, label: v.label, description: v.desc, format: v.format, min: v.min, max: v.max, step: v.step });
+    vars.push({ category: 'Mechanical', categoryIcon: 'race.mechanical', path: `mechanical.${v.key}`, label: v.label, description: v.desc, format: v.format, min: v.min, max: v.max, step: v.step });
   }
 
   // Pits
@@ -108,7 +109,7 @@ export function buildVariableList(): VarDef[] {
     { key: 'scPitMinWear', label: 'SC Pit Min Wear', desc: 'Wear floor for an SC stop', format: 'decimal' as const, min: 5, max: 50, step: 5 },
   ];
   for (const v of pitVars) {
-    vars.push({ category: 'Pit Stops', categoryEmoji: '🏁', path: `pits.${v.key}`, label: v.label, description: v.desc, format: v.format, min: v.min, max: v.max, step: v.step });
+    vars.push({ category: 'Pit Stops', categoryIcon: 'race.pit_stop', path: `pits.${v.key}`, label: v.label, description: v.desc, format: v.format, min: v.min, max: v.max, step: v.step });
   }
 
   // Performance
@@ -134,7 +135,7 @@ export function buildVariableList(): VarDef[] {
     { key: 'mistakeCooldownTicks', label: 'Mistake Cooldown', desc: 'Refractory window (ticks)', format: 'decimal' as const, min: 0, max: 600, step: 50 },
   ];
   for (const v of perfVars) {
-    vars.push({ category: 'Performance', categoryEmoji: '⚡', path: `performance.${v.key}`, label: v.label, description: v.desc, format: v.format, min: v.min, max: v.max, step: v.step });
+    vars.push({ category: 'Performance', categoryIcon: 'stat.speed', path: `performance.${v.key}`, label: v.label, description: v.desc, format: v.format, min: v.min, max: v.max, step: v.step });
   }
 
   // Car Stats
@@ -151,7 +152,7 @@ export function buildVariableList(): VarDef[] {
     { key: 'pitCrewPerStar', label: 'Pit Crew/Star', desc: 'Pit crew per star', format: 'decimal' as const, min: 0.04, max: 0.15, step: 0.02 },
   ];
   for (const v of carStatVars) {
-    vars.push({ category: 'Car Stats', categoryEmoji: '🏎️', path: `carStats.${v.key}`, label: v.label, description: v.desc, format: v.format, min: v.min, max: v.max, step: v.step });
+    vars.push({ category: 'Car Stats', categoryIcon: 'stat.power', path: `carStats.${v.key}`, label: v.label, description: v.desc, format: v.format, min: v.min, max: v.max, step: v.step });
   }
 
   // Safety Car
@@ -162,7 +163,7 @@ export function buildVariableList(): VarDef[] {
     { key: 'unsafetyCarSpeed', label: 'Unsafety Speed', desc: 'Per-tick movement', format: 'decimal' as const, min: 0.001, max: 0.01, step: 0.0005 },
   ];
   for (const v of scVars) {
-    vars.push({ category: 'Safety Car', categoryEmoji: '🚨', path: `safetyCar.${v.key}`, label: v.label, description: v.desc, format: v.format, min: v.min, max: v.max, step: v.step });
+    vars.push({ category: 'Safety Car', categoryIcon: 'race.safety_car', path: `safetyCar.${v.key}`, label: v.label, description: v.desc, format: v.format, min: v.min, max: v.max, step: v.step });
   }
 
   // Blowouts
@@ -173,7 +174,7 @@ export function buildVariableList(): VarDef[] {
     { key: 'safetyCarReduction', label: 'SC Reduction', desc: 'Blowout reduction under SC', format: 'percent' as const, min: 0.01, max: 0.2, step: 0.01 },
   ];
   for (const v of blowoutVars) {
-    vars.push({ category: 'Blowouts', categoryEmoji: '💨', path: `blowouts.${v.key}`, label: v.label, description: v.desc, format: v.format, min: v.min, max: v.max, step: v.step });
+    vars.push({ category: 'Blowouts', categoryIcon: 'race.tire_failure', path: `blowouts.${v.key}`, label: v.label, description: v.desc, format: v.format, min: v.min, max: v.max, step: v.step });
   }
 
   // Driver Speed (Field Compression)
@@ -184,7 +185,7 @@ export function buildVariableList(): VarDef[] {
     { key: 'baseSpeedMax', label: 'Base Speed Max', desc: 'Max random speed/tick', format: 'integer' as const, min: 5, max: 20, step: 1 },
   ];
   for (const v of speedVars) {
-    vars.push({ category: 'Field Spread', categoryEmoji: '📊', path: `driverSpeed.${v.key}`, label: v.label, description: v.desc, format: v.format, min: v.min, max: v.max, step: v.step });
+    vars.push({ category: 'Field Spread', categoryIcon: 'view.lapchart', path: `driverSpeed.${v.key}`, label: v.label, description: v.desc, format: v.format, min: v.min, max: v.max, step: v.step });
   }
 
   // Grid (#246 pass 2)
@@ -194,7 +195,7 @@ export function buildVariableList(): VarDef[] {
     { key: 'qualiFlubChance', label: 'Quali Flub', desc: 'Chance a qualifying is ruined', format: 'percent' as const, min: 0, max: 0.3, step: 0.01 },
   ];
   for (const v of gridVars) {
-    vars.push({ category: 'Grid', categoryEmoji: '🏁', path: `grid.${v.key}`, label: v.label, description: v.desc, format: v.format, min: v.min, max: v.max, step: v.step });
+    vars.push({ category: 'Grid', categoryIcon: 'race.finish', path: `grid.${v.key}`, label: v.label, description: v.desc, format: v.format, min: v.min, max: v.max, step: v.step });
   }
 
   // Overtaking (#246 pass 3)
@@ -210,7 +211,7 @@ export function buildVariableList(): VarDef[] {
     { key: 'heldCrashFactor', label: 'Held Crash Factor', desc: 'Crash chance scale for a held-up pair', format: 'decimal' as const, min: 0, max: 1, step: 0.05 },
   ];
   for (const v of otVars) {
-    vars.push({ category: 'Overtaking', categoryEmoji: '⚔️', path: `overtaking.${v.key}`, label: v.label, description: v.desc, format: v.format, min: v.min, max: v.max, step: v.step });
+    vars.push({ category: 'Overtaking', categoryIcon: 'race.battle', path: `overtaking.${v.key}`, label: v.label, description: v.desc, format: v.format, min: v.min, max: v.max, step: v.step });
   }
 
   return vars;

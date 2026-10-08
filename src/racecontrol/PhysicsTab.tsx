@@ -3,6 +3,7 @@
 // edit it, Measure, and see every metric move.
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import { ALL_KNOBS, KNOB_CATEGORIES, canonValue, cloneVariables, formatValue, setValueByPath, type VarDef } from './knobs';
+import { GameIcon } from '../icons/GameIcon';
 import { CANON_VARIABLES, type SimVariables } from '../simlab/types';
 import { measurePhysicsAsync, formatMetric, metricOutOfBand, PHYSICS_CARDS, PHYSICS_RACES, type PhysicsProgress, type PhysicsReport } from './physics';
 import type { PhysicsInMessage, PhysicsOutMessage } from './physicsWorker';
@@ -118,7 +119,7 @@ export function PhysicsTab({ lab }: { lab: LabProps }) {
                       <td><span className="rc-num">{formatMetric(m.value, m.format)}</span></td>
                       {y && <td><span className={`rc-num ${moved ? 'rc-edited-text' : ''}`}>{formatMetric(y.value, y.format)}</span></td>}
                       {y && <td><span className={`rc-se ${moved ? (metricOutOfBand(y) ? 'rc-bad' : 'rc-edited-text') : ''}`}>{d > 0 ? '+' : ''}{formatMetric(d, m.format === 'pct' ? 'pct' : m.format)}</span></td>}
-                      <td className="rc-dim">{m.band ? `${formatMetric(m.band[0], m.format)} – ${formatMetric(m.band[1], m.format)}${metricOutOfBand(y ?? m) ? ' ⚠' : ''}` : '—'}</td>
+                      <td className="rc-dim">{m.band ? `${formatMetric(m.band[0], m.format)} – ${formatMetric(m.band[1], m.format)}${metricOutOfBand(y ?? m) ? ' · out' : ''}` : '—'}</td>
                       <td className="rc-hint-cell">{m.hint}</td>
                     </tr>
                   );
@@ -141,7 +142,7 @@ export function PhysicsTab({ lab }: { lab: LabProps }) {
             <tbody>
               {KNOB_CATEGORIES.map(cat => (
                 <Fragment key={cat}>
-                  <tr className="rc-cat"><td colSpan={4}><span className="rc-emoji">{ALL_KNOBS.find(k => k.category === cat)?.categoryEmoji}</span> {cat}</td></tr>
+                  <tr className="rc-cat"><td colSpan={4}><span className="rc-emoji"><GameIcon name={ALL_KNOBS.find(k => k.category === cat)?.categoryIcon} size={15} /></span> {cat}</td></tr>
                   {ALL_KNOBS.filter(k => k.category === cat).map(k => <KnobRow key={k.path} k={k} edit={edits[k.path]} open={open === k.path} busy={busy} onOpen={() => setOpen(o => o === k.path ? '' : k.path)} onEdit={v => setEdit(k.path, v)} />)}
                 </Fragment>
               ))}
