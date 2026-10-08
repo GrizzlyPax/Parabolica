@@ -13,7 +13,7 @@
 **Specs:** [SEASON_MODE](SEASON_MODE.md) · [CARDS](CARDS.md) · [ICONS](ICONS.md) · [story/team-identity](story/team-identity.md)
 
 ## How we work through it
-**Rule 1: playable before pretty.** Get one ugly solo season running end to end first, then add the box, then polish. Every milestone is something Pax can play on his phone.
+**Rule 1: playable before pretty.** Get one ugly solo season running end to end first, then add the pack, then polish. Every milestone is something Pax can play on his phone.
 
 **Rule 2: Apex is the critical path.** Every screen waits on Apex's core. Fable time goes only to his chain; everything else runs on Opus in parallel.
 
@@ -26,7 +26,7 @@
 |---|---|---|
 | **M1** | **Core** | (nothing visible) A whole season runs headless in tests and replays identically |
 | **M2** | **Playable** | Play a full solo season on his phone: setup → draft → pick racers → watch/skip → standings → champion |
-| **M3** | **The box** | Open a mystery box every race, equip gear and traits, manage the locker; see his cards |
+| **M3** | **The pack** | Open a card pack every race, equip gear and traits, manage the locker; see his cards |
 | **M4** | **Identity** | Build his own team (icon + colours), race the 28 new teams, Quick Race on cards (one bump, Pax merges), the screen in his colours |
 | **M5** | **Clean-up + ship** | Old leagues gone, no emoji left anywhere, hotseat checked, balance read done |
 
@@ -35,7 +35,7 @@
 1. Shared-pool genesis (#313), using Hub's card model
 2. Draft engine (#314)
 3. Season loop (#315) → **M1**
-4. Mystery box logic + team locker (#316)
+4. Card pack logic + team locker (#316)
 5. One PR, merged by Pax: Quick Race on trait cards (#337) **+** grid swap to the 28 teams (#356) **+** race colours (#381) **+** Tracks & Weather v2 dry swap (#359)
 
 **🛞 Hub-B (Opus) first, to clear Apex's path (no sim changes):**
@@ -51,7 +51,7 @@
 3. Paddock screen (pick racers, hotseat hand-off)
 4. Race view (watch / skip, rivals dark) + scoring, standings and finale → **M2**
 5. Card sheet + locker
-6. Box reveal + targeting → **M3**
+6. Pack reveal + targeting → **M3**
 7. Team creator
 
 **🛞 Hub-B (Opus): plumbing and cleanup:**
@@ -79,12 +79,12 @@
 
 ## Risks
 - **Apex slips → everything slips.** If the season loop stalls, Pit moves Hub-A to the card sheet and Hub-B tasks first.
-- **Fable limits.** Apex's chain is 6 tasks. If the limit hits, the box logic can drop to Opus with Apex reviewing; the season loop can't.
-- **Hub-A is busy:** 7 screens in a row. If it slips, the team creator and box reveal polish move to a v0.5.x patch, not the core.
+- **Fable limits.** Apex's chain is 6 tasks. If the limit hits, the pack logic can drop to Opus with Apex reviewing; the season loop can't.
+- **Hub-A is busy:** 7 screens in a row. If it slips, the team creator and pack reveal polish move to a v0.5.x patch, not the core.
 - **Hotseat** touches every screen. Each Hub-A screen checks two humans before merging.
 
 ## Out of v0.5 (on purpose)
 Effect cards and the engine hook · Wet weather + forecast · live seasons (wall clock, any device) · CPU Paddock actions · Rule cards in Season Mode · Patron Mode · events and economy. All of these are in v0.6 / Queued / Icebox.
 
 ## Decision log (Pax, Oct 8)
-Teams 5–10, default 10 · 10-race default · free lineups · bench keeps gear · box: own team only, no expiry, gear swaps go to an uncapped locker with free moves · cars drafted in a fixed last round · team stats belong to the team · champ bonus 50 · hotseat in v0.5 · one save slot · Play again = fresh seed · no Rule cards in Season Mode · watch live with Skip · phone first · rivals show rarity dots only · CPU teams are plain deck teams · Season is the main Play button · mode named "Season" · old 22 teams removed · old leagues removed (live seasons return in v0.6) · game-icons.net everywhere, Phosphor dropped · UI is black + white + your team colour (Blaseball touchstone), teams have one colour · racing numbers 2–99, weighted to single digits + doubles, shown on marbles. · **the look = Almanac** (docs/ICONS.md → The look) · **dry Tracks & Weather v2 in v0.5** (6 stat-combo tracks, Neutral + 5 dry weathers at +10% favours, old tracks/weather/events retired, weather rule cards remapped; **no rain until v0.6**) · **gods retire** with Commissioner leagues · **Credits** on their own screen (menu footer) · **World Deck pattern:** new content on top, old in collapsed "(retiring)" groups until each sim swap · **rarity = metals** (bronze · silver · gold · iridium) for cards and tags; boxes become Common → Legendary with no colour, so the first box is Uncommon ([#385](https://github.com/GrizzlyPax/Parabolica/issues/385)) · **no team picked = purple accent** (the fastest-lap purple) · **type = Pulp Almanac** (Old Standard TT + Special Elite typewriter; Archivo read too slick) · **cards look like cards = Almanac Plate** (portrait, metal edge, stat icons as the art, "No. 013"; rivals see card backs + dots; docs/ICONS.md → Cards)
+Teams 5–10, default 10 · 10-race default · free lineups · bench keeps gear · pack: own team only, no expiry, gear swaps go to an uncapped locker with free moves · cars drafted in a fixed last round · team stats belong to the team · champ bonus 50 · hotseat in v0.5 · one save slot · Play again = fresh seed · no Rule cards in Season Mode · watch live with Skip · phone first · rivals show rarity dots only · CPU teams are plain deck teams · Season is the main Play button · mode named "Season" · old 22 teams removed · old leagues removed (live seasons return in v0.6) · game-icons.net everywhere, Phosphor dropped · UI is black + white + your team colour (Blaseball touchstone), teams have one colour · racing numbers 2–99, weighted to single digits + doubles, shown on marbles. · **the look = Almanac** (docs/ICONS.md → The look) · **dry Tracks & Weather v2 in v0.5** (6 stat-combo tracks, Neutral + 5 dry weathers at +10% favours, old tracks/weather/events retired, weather rule cards remapped; **no rain until v0.6**) · **gods retire** with Commissioner leagues · **Credits** on their own screen (menu footer) · **World Deck pattern:** new content on top, old in collapsed "(retiring)" groups until each sim swap · **mystery boxes are now card packs** (Common → Legendary packs) · **rarity = metals** (bronze · silver · gold · iridium) for cards and tags; packs become Common → Legendary with no colour, so the first pack is Uncommon ([#385](https://github.com/GrizzlyPax/Parabolica/issues/385)) · **no team picked = purple accent** (the fastest-lap purple) · **type = Pulp Almanac** (Old Standard TT + Special Elite typewriter; Archivo read too slick) · **cards look like cards = Almanac Plate** (portrait, metal edge, stat icons as the art, "No. 013"; rivals see card backs + dots; docs/ICONS.md → Cards)
