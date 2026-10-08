@@ -91,6 +91,44 @@ Fallbacks: Old Standard TT → `Georgia, serif`; Special Elite → `'Courier New
 - **Mystery boxes have no colour:** they are Common → Uncommon → Rare → Legendary boxes by standing; the box icon stays white.
 - **Icons:** `currentColor` always. 16 px inline, 20 px in rows, 24–26 px on tools; `--team-ink` when drawn on the primary.
 
+## Cards (Pax, Oct 8)
+
+*Picked from [Parabolica Card Looks](https://claude.ai/artifact/Bdi2ubjxMQF2auah9U7VQ5): **direction A, "Almanac Plate"**, with **card backs + dots** for rivals. The game is a deck-builder underneath, so a card should look like a card. Spec for [#418](https://github.com/GrizzlyPax/Parabolica/issues/418); one `CardFace` component draws every size.*
+
+### Anatomy (a printed plate, portrait 5:7)
+| Part | Spec |
+|---|---|
+| **Edge** | 3px solid in the card's metal (`--rarity-*`); 2px at mini. Effects have no metal, so they use `--pw-border-strong`. |
+| **Rule** | 1px white rule, inset 6px from the edge. Everything sits inside it. |
+| **Header** | Left: kind icon + kind name (Special Elite 10px, caps). Right: **"No. 013"**, the card's place in the deck (1–94, deck order). |
+| **Plate** (the "art") | The stat icon(s), centred between two hairlines, **in the metal colour**. One icon per stat (gold 2, iridium 3). |
+| **Name** | Old Standard 700, 19px. Utilitarian for now ("Gold Speed + Consistency"). |
+| **Stats** | Special Elite 12px, one line per stat: **+10%** Speed. Effects: Speed ▲ up / ▼ down. |
+| **Footer** | Left: the metal word in its metal colour. Right: the holder (Driver / Car / Team). |
+| **Back** | The metal edge and white rule around a fine diagonal hatch, with a **PARABOLICA** wordmark plate (hidden at mini). |
+
+The team colour **never** goes on a card. It stays on the header block above a hand and on buttons. Cards carry metal only.
+
+### Sizes
+| Size | Box | Where | Differences |
+|---|---|---|---|
+| **Full** | 230 × 322 | Box reveal, card detail | Tap flips it to the details: what the card does, who holds it, "No. 013 of 94", id. |
+| **Small** | 108 × 151 | Hand, trait pile, locker, World Deck binder | Header shows icon + number only. Stats compact to "+15% each" when there's more than one. |
+| **Mini** | 40 × 56 | Timing tower, tight rows | Just the first stat icon in the metal, inside the edge. |
+| **Dot** | 12px circle | Rival traits | The metal colour only. |
+
+### Groupings
+- **Hand:** the three gear slots side by side (Equipment · driver, Upgrade · car, Facility · team) as small cards. **An empty slot is a dashed card outline** with "Empty upgrade slot".
+- **Traits:** an offset **pile** of small cards. Tap to spread them into a row.
+- **Locker:** a **face-down deck** (backs offset 4px) with a count badge. Tap to spread it face up.
+- **Binder:** World Deck → Cards shows the whole deck as a grid of small cards, filterable by kind.
+- **Rivals:** gear slots show **card backs** (metal edge, no name or stats), traits show **metal dots**, and the locker stays a face-down deck with its count.
+
+### Motion
+- **Tap** lifts a card 4px and flips it (rotateY, 0.45s) to its details; tap again to flip back.
+- **A new card** (box reveal, #320) arrives **face-down**, slides up, then flips face-up.
+- `prefers-reduced-motion`: no lift, flip or slide; the face just swaps.
+
 ## Why
 - Emoji render differently on every device, can't be recoloured, and read as placeholder art.
 - game-icons.net has ~4,000 icons in one consistent silhouette style, covering motorsport and the weirder themed decks we've planned (Horror, Fantasy).
