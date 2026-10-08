@@ -4,7 +4,7 @@
 
 ## TL;DR
 - **28 new base-deck teams replace the 22 pun teams** (For Rory, Breadbowl…). They are **world factions of Parabolica**, traditional-motorsport flavoured, **seven of each kind**: works manufacturers · privateer garages · family dynasties · regional/city teams.
-- **Each team is three things: an icon, a primary colour, one line.** The logo is the icon on the primary colour, no badge. The icon is drawn in white or near-black, whichever reads on that colour (stored as `secondaryColor` so `<TeamLogo>` just works).
+- **Each team is three things: an icon, a primary colour, one line.** The logo is the icon on the primary colour, no badge. The icon is drawn in white or near-black, whichever reads on that colour (stored as `ink`, per the [colour system](../ICONS.md): teams have one colour, no secondary).
 - **No two teams share a colour.** The 28 colours are spread as far apart as the dark UI allows. Only two are light (Cream, Silver), because pale colours blur together on black (Pax).
 - **The strangeness is a hint:** straight motorsport with one odd house rule or ritual per team. **Folk custom, not ghost story.** Pax kept the rituals (clocks set slow, seven bolts, the empty chair) and passed on the openly supernatural (an ageless priest, a coin from the future).
 
@@ -110,39 +110,39 @@
 
 Everything a builder needs is here; who builds it and when is decided later.
 
-**Data, ready to paste.** One entry per team in today's `Team` shape (`src/data/teams.ts`), plus the fields [ICONS.md](../ICONS.md) adds (`iconId`, `secondaryColor`) and an optional `kind`. `accentColor` mirrors `secondaryColor` until the old field is retired. `emoji` is the fallback ICONS.md rule 7 asks for while screens migrate.
+**Data, ready to paste.** One entry per team in today's `Team` shape (`src/data/teams.ts`), plus `iconId`, `ink` (the logo icon colour, per the [colour system](../ICONS.md)) and an optional `kind`. `accentColor` mirrors `ink` until the old field is retired. `emoji` is the fallback ICONS.md rule 7 asks for while screens migrate.
 
 ```ts
 // Base deck teams (28) — Radio + Pax, Oct 8. Source: docs/story/team-identity.md
 export const BASE_DECK_TEAMS: Team[] = [
-  { id: 'vantor-motorwerke', name: 'Vantor Motorwerke', kind: 'works', emoji: '🐂', iconId: 'charging-bull', color: '#E8242F', accentColor: '#FFFFFF', secondaryColor: '#FFFFFF', description: 'Industrial giant. Every car is built on the same night of the year.' },
-  { id: 'halcyon', name: 'Halcyon', kind: 'works', emoji: '🦅', iconId: 'eagle-emblem', color: '#006EBE', accentColor: '#FFFFFF', secondaryColor: '#FFFFFF', description: 'Grand tourers. No Halcyon has ever been sold; they are only raced.' },
-  { id: 'orsa', name: 'Orsa', kind: 'works', emoji: '🐻', iconId: 'bear-head', color: '#087C77', accentColor: '#FFFFFF', secondaryColor: '#FFFFFF', description: 'Northern marque. The factory clocks run eleven minutes slow, by policy.' },
-  { id: 'corvane', name: 'Corvane', kind: 'works', emoji: '🐦', iconId: 'raven', color: '#9B8AFE', accentColor: '#0A0A0C', secondaryColor: '#0A0A0C', description: 'Luxury house. The badge was redrawn after the founder dreamed it.' },
-  { id: 'calloway', name: 'Calloway', kind: 'works', emoji: '🛞', iconId: 'steering-wheel', color: '#F4EEDE', accentColor: '#0A0A0C', secondaryColor: '#0A0A0C', description: 'Every Calloway is road-tested on the same nine miles of road, at dawn.' },
-  { id: 'brisa', name: 'Brisa', kind: 'works', emoji: '🛵', iconId: 'scooter', color: '#0BAEE0', accentColor: '#FFFFFF', secondaryColor: '#FFFFFF', description: 'Scooter maker gone racing. Every car leaves the factory with a full tank and a bell.' },
-  { id: 'arden', name: 'Arden', kind: 'works', emoji: '⏱️', iconId: 'pocket-watch', color: '#FFB000', accentColor: '#0A0A0C', secondaryColor: '#0A0A0C', description: 'Clocks and engines in the same building. Both are wound by hand on Mondays.' },
-  { id: 'seven-bolt-racing', name: 'Seven Bolt Racing', kind: 'privateer', emoji: '🔩', iconId: 'hexagonal-nut', color: '#C31851', accentColor: '#FFFFFF', secondaryColor: '#FFFFFF', description: 'Every wheel has seven bolts. Nobody remembers why.' },
-  { id: 'low-tide-racing', name: 'Low Tide Racing', kind: 'privateer', emoji: '⚓', iconId: 'anchor', color: '#1BB4B8', accentColor: '#FFFFFF', secondaryColor: '#FFFFFF', description: 'The garage sits below the tideline. They work between tides.' },
-  { id: 'kiln-lane-motorsport', name: 'Kiln Lane Motorsport', kind: 'privateer', emoji: '⚒️', iconId: 'anvil', color: '#945F0E', accentColor: '#FFFFFF', secondaryColor: '#FFFFFF', description: 'Brick sheds and a forge. The engine is started with a match.' },
-  { id: 'tinplate', name: 'Tinplate', kind: 'privateer', emoji: '🏎️', iconId: 'race-car', color: '#B6BBC1', accentColor: '#0A0A0C', secondaryColor: '#0A0A0C', description: 'A car that looks like a toy and is faster than it should be.' },
-  { id: 'ostler-finch', name: 'Ostler & Finch', kind: 'privateer', emoji: '🐴', iconId: 'horse-head', color: '#B47B46', accentColor: '#FFFFFF', secondaryColor: '#FFFFFF', description: 'Was a coaching inn. The stable doors still get locked at night.' },
-  { id: 'cinder-row', name: 'Cinder Row', kind: 'privateer', emoji: '🃏', iconId: 'poker-hand', color: '#718295', accentColor: '#FFFFFF', secondaryColor: '#FFFFFF', description: 'Six garages on one street share one car. Who drives is settled by a card game.' },
-  { id: 'glasshouse', name: 'Glasshouse', kind: 'privateer', emoji: '🌱', iconId: 'sprout', color: '#8DCC6E', accentColor: '#0A0A0C', secondaryColor: '#0A0A0C', description: 'The garage is an old greenhouse. Every car has a plant in the cockpit.' },
-  { id: 'hargreave', name: 'Hargreave', kind: 'dynasty', emoji: '🦌', iconId: 'stag-head', color: '#507B07', accentColor: '#FFFFFF', secondaryColor: '#FFFFFF', description: 'The founder\'s chair stays in the garage, empty, facing the track.' },
-  { id: 'moreau-tallis', name: 'Moreau-Tallis', kind: 'dynasty', emoji: '🦂', iconId: 'scorpion', color: '#8F3DC0', accentColor: '#FFFFFF', secondaryColor: '#FFFFFF', description: 'A marriage of two rival teams. The garage still has a line down the middle.' },
-  { id: 'kanzaki', name: 'Kanzaki', kind: 'dynasty', emoji: '💠', iconId: 'checkered-diamond', color: '#E63281', accentColor: '#FFFFFF', secondaryColor: '#FFFFFF', description: 'The family crest changes slightly every ten years.' },
-  { id: 'achterberg', name: 'Achterberg', kind: 'dynasty', emoji: '🎗️', iconId: 'ribbon', color: '#C0502A', accentColor: '#FFFFFF', secondaryColor: '#FFFFFF', description: 'Run by a widow and her four sons. The whole crew wears a black armband, always.' },
-  { id: 'valcourt', name: 'Valcourt', kind: 'dynasty', emoji: '🍾', iconId: 'champagne-cork', color: '#D95FFC', accentColor: '#FFFFFF', secondaryColor: '#FFFFFF', description: 'Old wine family. They pour one glass on the grid before every start.' },
-  { id: 'ishida', name: 'Ishida', kind: 'dynasty', emoji: '🌲', iconId: 'pine-tree', color: '#FF4DB8', accentColor: '#FFFFFF', secondaryColor: '#FFFFFF', description: 'Every new driver plants a tree at the family track. The oldest ones are very tall.' },
-  { id: 'pell-pell', name: 'Pell & Pell', kind: 'dynasty', emoji: '✉️', iconId: 'envelope', color: '#5454EA', accentColor: '#FFFFFF', secondaryColor: '#FFFFFF', description: 'Brothers who haven\'t spoken in twenty years. They run the team by letter.' },
-  { id: 'corriva', name: 'Corriva', kind: 'regional', emoji: '☀️', iconId: 'sun', color: '#F8767A', accentColor: '#0A0A0C', secondaryColor: '#0A0A0C', description: 'Coast city that keeps siesta. They never test before 4pm.' },
-  { id: 'lumen', name: 'Lumen', kind: 'regional', emoji: '💡', iconId: 'light-bulb', color: '#DED903', accentColor: '#0A0A0C', secondaryColor: '#0A0A0C', description: 'A city whose lights have never gone off.' },
-  { id: 'fennick-downs', name: 'Fennick Downs', kind: 'regional', emoji: '🐇', iconId: 'rabbit', color: '#4EBB05', accentColor: '#FFFFFF', secondaryColor: '#FFFFFF', description: 'Farm country. The whole crew are related, and nobody admits how.' },
-  { id: 'ambergate', name: 'Ambergate', kind: 'regional', emoji: '🏰', iconId: 'castle', color: '#C2A02A', accentColor: '#0A0A0C', secondaryColor: '#0A0A0C', description: 'A walled town. The gates close at dusk, and the team must be back inside.' },
-  { id: 'saint-orrin', name: 'Saint Orrin', kind: 'regional', emoji: '🗼', iconId: 'lighthouse', color: '#5E9EFD', accentColor: '#FFFFFF', secondaryColor: '#FFFFFF', description: 'Island city. The ferry waits for the team, never the other way round.' },
-  { id: 'caldera', name: 'Caldera', kind: 'regional', emoji: '🌋', iconId: 'volcano', color: '#F87103', accentColor: '#FFFFFF', secondaryColor: '#FFFFFF', description: 'A city built inside an old crater. Race day starts with the bells.' },
-  { id: 'tessaly', name: 'Tessaly', kind: 'regional', emoji: '💧', iconId: 'water-drop', color: '#0DB98E', accentColor: '#FFFFFF', secondaryColor: '#FFFFFF', description: 'Spa town. Drivers take the waters before every race and won\'t say why.' },
+  { id: 'vantor-motorwerke', name: 'Vantor Motorwerke', kind: 'works', emoji: '🐂', iconId: 'charging-bull', color: '#E8242F', accentColor: '#FFFFFF', ink: '#FFFFFF', description: 'Industrial giant. Every car is built on the same night of the year.' },
+  { id: 'halcyon', name: 'Halcyon', kind: 'works', emoji: '🦅', iconId: 'eagle-emblem', color: '#006EBE', accentColor: '#FFFFFF', ink: '#FFFFFF', description: 'Grand tourers. No Halcyon has ever been sold; they are only raced.' },
+  { id: 'orsa', name: 'Orsa', kind: 'works', emoji: '🐻', iconId: 'bear-head', color: '#087C77', accentColor: '#FFFFFF', ink: '#FFFFFF', description: 'Northern marque. The factory clocks run eleven minutes slow, by policy.' },
+  { id: 'corvane', name: 'Corvane', kind: 'works', emoji: '🐦', iconId: 'raven', color: '#9B8AFE', accentColor: '#0A0A0C', ink: '#0A0A0C', description: 'Luxury house. The badge was redrawn after the founder dreamed it.' },
+  { id: 'calloway', name: 'Calloway', kind: 'works', emoji: '🛞', iconId: 'steering-wheel', color: '#F4EEDE', accentColor: '#0A0A0C', ink: '#0A0A0C', description: 'Every Calloway is road-tested on the same nine miles of road, at dawn.' },
+  { id: 'brisa', name: 'Brisa', kind: 'works', emoji: '🛵', iconId: 'scooter', color: '#0BAEE0', accentColor: '#FFFFFF', ink: '#FFFFFF', description: 'Scooter maker gone racing. Every car leaves the factory with a full tank and a bell.' },
+  { id: 'arden', name: 'Arden', kind: 'works', emoji: '⏱️', iconId: 'pocket-watch', color: '#FFB000', accentColor: '#0A0A0C', ink: '#0A0A0C', description: 'Clocks and engines in the same building. Both are wound by hand on Mondays.' },
+  { id: 'seven-bolt-racing', name: 'Seven Bolt Racing', kind: 'privateer', emoji: '🔩', iconId: 'hexagonal-nut', color: '#C31851', accentColor: '#FFFFFF', ink: '#FFFFFF', description: 'Every wheel has seven bolts. Nobody remembers why.' },
+  { id: 'low-tide-racing', name: 'Low Tide Racing', kind: 'privateer', emoji: '⚓', iconId: 'anchor', color: '#1BB4B8', accentColor: '#FFFFFF', ink: '#FFFFFF', description: 'The garage sits below the tideline. They work between tides.' },
+  { id: 'kiln-lane-motorsport', name: 'Kiln Lane Motorsport', kind: 'privateer', emoji: '⚒️', iconId: 'anvil', color: '#945F0E', accentColor: '#FFFFFF', ink: '#FFFFFF', description: 'Brick sheds and a forge. The engine is started with a match.' },
+  { id: 'tinplate', name: 'Tinplate', kind: 'privateer', emoji: '🏎️', iconId: 'race-car', color: '#B6BBC1', accentColor: '#0A0A0C', ink: '#0A0A0C', description: 'A car that looks like a toy and is faster than it should be.' },
+  { id: 'ostler-finch', name: 'Ostler & Finch', kind: 'privateer', emoji: '🐴', iconId: 'horse-head', color: '#B47B46', accentColor: '#FFFFFF', ink: '#FFFFFF', description: 'Was a coaching inn. The stable doors still get locked at night.' },
+  { id: 'cinder-row', name: 'Cinder Row', kind: 'privateer', emoji: '🃏', iconId: 'poker-hand', color: '#718295', accentColor: '#FFFFFF', ink: '#FFFFFF', description: 'Six garages on one street share one car. Who drives is settled by a card game.' },
+  { id: 'glasshouse', name: 'Glasshouse', kind: 'privateer', emoji: '🌱', iconId: 'sprout', color: '#8DCC6E', accentColor: '#0A0A0C', ink: '#0A0A0C', description: 'The garage is an old greenhouse. Every car has a plant in the cockpit.' },
+  { id: 'hargreave', name: 'Hargreave', kind: 'dynasty', emoji: '🦌', iconId: 'stag-head', color: '#507B07', accentColor: '#FFFFFF', ink: '#FFFFFF', description: 'The founder\'s chair stays in the garage, empty, facing the track.' },
+  { id: 'moreau-tallis', name: 'Moreau-Tallis', kind: 'dynasty', emoji: '🦂', iconId: 'scorpion', color: '#8F3DC0', accentColor: '#FFFFFF', ink: '#FFFFFF', description: 'A marriage of two rival teams. The garage still has a line down the middle.' },
+  { id: 'kanzaki', name: 'Kanzaki', kind: 'dynasty', emoji: '💠', iconId: 'checkered-diamond', color: '#E63281', accentColor: '#FFFFFF', ink: '#FFFFFF', description: 'The family crest changes slightly every ten years.' },
+  { id: 'achterberg', name: 'Achterberg', kind: 'dynasty', emoji: '🎗️', iconId: 'ribbon', color: '#C0502A', accentColor: '#FFFFFF', ink: '#FFFFFF', description: 'Run by a widow and her four sons. The whole crew wears a black armband, always.' },
+  { id: 'valcourt', name: 'Valcourt', kind: 'dynasty', emoji: '🍾', iconId: 'champagne-cork', color: '#D95FFC', accentColor: '#FFFFFF', ink: '#FFFFFF', description: 'Old wine family. They pour one glass on the grid before every start.' },
+  { id: 'ishida', name: 'Ishida', kind: 'dynasty', emoji: '🌲', iconId: 'pine-tree', color: '#FF4DB8', accentColor: '#FFFFFF', ink: '#FFFFFF', description: 'Every new driver plants a tree at the family track. The oldest ones are very tall.' },
+  { id: 'pell-pell', name: 'Pell & Pell', kind: 'dynasty', emoji: '✉️', iconId: 'envelope', color: '#5454EA', accentColor: '#FFFFFF', ink: '#FFFFFF', description: 'Brothers who haven\'t spoken in twenty years. They run the team by letter.' },
+  { id: 'corriva', name: 'Corriva', kind: 'regional', emoji: '☀️', iconId: 'sun', color: '#F8767A', accentColor: '#0A0A0C', ink: '#0A0A0C', description: 'Coast city that keeps siesta. They never test before 4pm.' },
+  { id: 'lumen', name: 'Lumen', kind: 'regional', emoji: '💡', iconId: 'light-bulb', color: '#DED903', accentColor: '#0A0A0C', ink: '#0A0A0C', description: 'A city whose lights have never gone off.' },
+  { id: 'fennick-downs', name: 'Fennick Downs', kind: 'regional', emoji: '🐇', iconId: 'rabbit', color: '#4EBB05', accentColor: '#FFFFFF', ink: '#FFFFFF', description: 'Farm country. The whole crew are related, and nobody admits how.' },
+  { id: 'ambergate', name: 'Ambergate', kind: 'regional', emoji: '🏰', iconId: 'castle', color: '#C2A02A', accentColor: '#0A0A0C', ink: '#0A0A0C', description: 'A walled town. The gates close at dusk, and the team must be back inside.' },
+  { id: 'saint-orrin', name: 'Saint Orrin', kind: 'regional', emoji: '🗼', iconId: 'lighthouse', color: '#5E9EFD', accentColor: '#FFFFFF', ink: '#FFFFFF', description: 'Island city. The ferry waits for the team, never the other way round.' },
+  { id: 'caldera', name: 'Caldera', kind: 'regional', emoji: '🌋', iconId: 'volcano', color: '#F87103', accentColor: '#FFFFFF', ink: '#FFFFFF', description: 'A city built inside an old crater. Race day starts with the bells.' },
+  { id: 'tessaly', name: 'Tessaly', kind: 'regional', emoji: '💧', iconId: 'water-drop', color: '#0DB98E', accentColor: '#FFFFFF', ink: '#FFFFFF', description: 'Spa town. Drivers take the waters before every race and won\'t say why.' },
 ];
 ```
 
@@ -150,7 +150,7 @@ export const BASE_DECK_TEAMS: Team[] = [
 - **Ids are new and never collide with the old 22.** The old teams and old leagues are both removed in v0.5, so nothing needs to keep resolving the old ids.
 - **Swapping the default grid will likely move the golden fingerprint** (rosters and colours are built from the team list). Treat it as an intended content change: version bump plus fingerprint update, per `ship-pr`.
 - **Icons:** the 28 `iconId`s are game-icons.net names; vendor them through the [icon system](https://github.com/GrizzlyPax/Parabolica/issues/350) registry, credits included. The authors are in the table links above.
-- **Logo ink:** `secondaryColor` is white or near-black (`#0A0A0C`), whichever reads on the primary (luminance cut at 150/255). Players building their own team in the [team creator](https://github.com/GrizzlyPax/Parabolica/issues/346) pick a real secondary instead.
+- **Logo ink:** `ink` is white or near-black (`#0A0A0C`), whichever reads on the primary (luminance cut at 150/255). Player-built teams in the [team creator](https://github.com/GrizzlyPax/Parabolica/issues/346) get theirs the same way: one colour, ink picked automatically.
 - **Names stay white** in the UI (house rule); team colour goes on the logo tile, marble, dot and row edge.
 
 **Settled (Pax, Oct 8, [V05_PLAN](../V05_PLAN.md) decision log)**

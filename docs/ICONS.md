@@ -142,4 +142,4 @@ Hand-tuned icons for headline teams · animated icon states (box reveal) · them
 | `season.handoff` | Hotseat hand-off | Hand-off screen | — | [`back-forth`](https://game-icons.net/1x1/lorc/back-forth.html) |
 | `season.champion` | Champion | Finale, standings | — | [`laurels-trophy`](https://game-icons.net/1x1/delapouite/laurels-trophy.html) |
 
-Rarity stays a colour (`--rarity-*`), not an icon. Box metals (Bronze, Silver, Gold, Iridium) tint `season.box`; they don't need their own icons.
+Rarity stays a signal colour (`--rarity-*`), not an icon. Box metals (Bronze, Silver, Gold, Iridium) are a property of `season.box`, not separate icons; how a metal shows follows the colour system above.
