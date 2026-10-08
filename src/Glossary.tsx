@@ -15,15 +15,17 @@ import TagChips from './components/race/TagChips';
 import { Idea, loadIdeas, saveIdeas, issueUrl, ideasAsPrompt } from './IdeaBox';
 import { GameIcon, TeamLogo } from './icons/GameIcon';
 import { TEAM_KINDS } from './data/deckTeams';
+import { MOTORSPORT_DECK, cardsBy, STAT_LABELS, type Card } from './cards';
+import { CardMarks, cardReadout, KIND_LABELS } from './cards/CardMarks';
 import { ICONS, ICON_LICENSE, iconCredits } from './icons/registry';
 import './RunSetup.css';
 import './Glossary.css';
 
 interface GlossaryProps { onBack: () => void }
 
-type TabId = 'tags' | 'teams' | 'tracks' | 'cards' | 'rules' | 'conditions' | 'gods' | 'flavour' | 'credits' | 'add' | 'inbox';
+type TabId = 'deck' | 'tags' | 'teams' | 'tracks' | 'cards' | 'rules' | 'conditions' | 'gods' | 'flavour' | 'credits' | 'add' | 'inbox';
 const TABS: { id: TabId; label: string }[] = [
-  { id: 'tags', label: 'Tags' }, { id: 'teams', label: 'Teams' }, { id: 'tracks', label: 'Tracks' }, { id: 'cards', label: 'Rule cards' },
+  { id: 'deck', label: 'Cards' }, { id: 'tags', label: 'Tags · today' }, { id: 'teams', label: 'Teams' }, { id: 'tracks', label: 'Tracks' }, { id: 'cards', label: 'Rule cards' },
   { id: 'rules', label: 'Rules' }, { id: 'conditions', label: 'Weather' }, { id: 'gods', label: 'Gods' }, { id: 'flavour', label: 'Flavour' }, { id: 'credits', label: 'Credits' }, { id: 'inbox', label: 'Inbox' }, { id: 'add', label: '+ Add' },
 ];
 
@@ -74,6 +76,17 @@ function Section({ id, title, count, hint, collapsed, onToggle, children, extra 
     </section>
   );
 }
+
+const NOT_YET = 'Not in the sim yet: genesis (#313) and Quick Race (#337) deal these.';
+const DECK_GROUPS: { id: string; title: string; hint: string; rows: Card[] }[] = [
+  { id: 'equipment', title: 'Equipment', hint: `Driver gear: one slot, swappable. ${NOT_YET}`, rows: cardsBy({ kind: 'equipment' }) },
+  { id: 'upgrade', title: 'Upgrades', hint: `Car gear: one slot. Scales the car's stars. ${NOT_YET}`, rows: cardsBy({ kind: 'upgrade' }) },
+  { id: 'facility', title: 'Facilities', hint: `Team gear: one slot, helps both drivers. ${NOT_YET}`, rows: cardsBy({ kind: 'facility' }) },
+  { id: 'trait-driver', title: 'Driver traits', hint: `Permanent, uncapped. What a driver is born with. ${NOT_YET}`, rows: cardsBy({ kind: 'trait', target: 'driver' }) },
+  { id: 'trait-car', title: 'Car traits', hint: `Permanent. What a chassis is born with. ${NOT_YET}`, rows: cardsBy({ kind: 'trait', target: 'car' }) },
+  { id: 'trait-team', title: 'Team traits', hint: `Permanent, shared by teammates. ${NOT_YET}`, rows: cardsBy({ kind: 'trait', target: 'team' }) },
+  { id: 'effect', title: 'Effects (v0.6)', hint: 'Timed, dealt by the race (a lightning pit, crash damage). Size comes from the moment. Arrive in v0.6.', rows: cardsBy({ kind: 'effect' }) },
+];
 
 const RARITY_HINT = 'Rarity only sets how often the genesis draw finds it.';
 
@@ -254,7 +267,7 @@ function InboxTab() {
 export default function Glossary({ onBack }: GlossaryProps) {
   const g = useMemo(() => buildGlossary(), []);
   const rs = useMemo(() => defaultRuleset(), []);
-  const [tab, setTab] = useState<TabId>('tags');
+  const [tab, setTab] = useState<TabId>('deck');
   const [q, setQ] = useState('');
   const [open, setOpen] = useState<Set<string>>(() => new Set());
   // Sections start collapsed. `mode` is the baseline; `flipped` are the
@@ -278,6 +291,20 @@ export default function Glossary({ onBack }: GlossaryProps) {
     tagSort === 'name' ? a.tag.name.localeCompare(b.tag.name)
       : tagSort === 'effect' ? b.effects.length - a.effects.length || a.tag.name.localeCompare(b.tag.name)
       : RARITY_ORDER[a.tag.rarity] - RARITY_ORDER[b.tag.rarity] || a.tag.name.localeCompare(b.tag.name));
+
+  const deckRow = (c: Card) => (
+    <Row key={c.id} id={`deck:${c.id}`} open={isOpen(`deck:${c.id}`)} onToggle={toggle}
+      lead={<span className="gl-plain gl-card"><CardMarks card={c} /> {c.name}</span>}
+      note={c.rarity ? <span className={`rarity-word rarity-${c.rarity}`}>{c.rarity}</span> : 'v0.6'}
+      pills={<span className="gl-readout">{cardReadout(c)}</span>}>
+      <div className="gl-facts">
+        <Fact k="Kind">{KIND_LABELS[c.kind]}</Fact><Fact k="On">{c.target}</Fact>
+        {c.rarity && <Fact k="Metal"><span className={`rarity-word rarity-${c.rarity}`}>{c.rarity}</span></Fact>}
+        <Fact k="Does">{cardReadout(c)}</Fact><Fact k="Id">{c.id}</Fact>
+      </div>
+      <div className="gl-src">src/cards/deck.ts · not in the sim yet (genesis #313, Quick Race #337)</div>
+    </Row>
+  );
 
   const tagRow = (t: GlossaryTag) => (
     <Row key={t.tag.id} id={`tag:${t.tag.id}`} open={isOpen(`tag:${t.tag.id}`)} onToggle={toggle}
@@ -328,7 +355,7 @@ export default function Glossary({ onBack }: GlossaryProps) {
         <div className="rs-title-block">
           <button type="button" className="rs-back" onClick={onBack}>← Menu</button>
           <h1 className="rs-title">World Deck</h1>
-          <span className="rs-sub">Everything in the world, read straight from the data. {g.counts.deckTeams} teams · {g.counts.tracks} tracks · {g.counts.tags} tags · {g.counts.cards} rule cards · {g.counts.gods} gods. Click a line to open it.</span>
+          <span className="rs-sub">Everything in the world, read straight from the data. {MOTORSPORT_DECK.length} cards · {g.counts.deckTeams} teams · {g.counts.tracks} tracks · {g.counts.tags} tags · {g.counts.cards} rule cards · {g.counts.gods} gods. Click a line to open it.</span>
         </div>
         <label className="gl-search">
           <span className="rs-k">Find</span>
@@ -424,6 +451,16 @@ export default function Glossary({ onBack }: GlossaryProps) {
                 </Row>
               ))}
             </div>
+          </Section>
+        );
+      })}
+
+      {tab === 'deck' && DECK_GROUPS.map(grp => {
+        const rows = grp.rows.filter(c => match(c.name, c.id, c.kind, c.rarity, ...c.stats.map(x => STAT_LABELS[x.stat])));
+        if (!rows.length) return null;
+        return (
+          <Section key={grp.id} {...sec(`deck:${grp.id}`)} title={grp.title} count={grp.rows.length} hint={grp.hint}>
+            <div className="gl-list">{rows.map(c => deckRow(c))}</div>
           </Section>
         );
       })}

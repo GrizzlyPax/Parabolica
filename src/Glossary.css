@@ -101,3 +101,5 @@
   .gl-section-extra { margin-left: 20px; }
 }
 .gl-plain .game-icon, .gl-team .team-logo { vertical-align: -3px; }
+.card-marks { display: inline-flex; align-items: center; gap: 3px; vertical-align: -3px; }
+.gl-card { display: inline-flex; align-items: center; gap: 8px; }

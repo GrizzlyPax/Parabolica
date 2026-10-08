@@ -13,15 +13,17 @@ import { cloneVariables, setValueByPath, ALL_KNOBS, formatValue, canonValue } fr
 import { randomSeed } from '../engine/rng';
 import { getTagById, describeCondition, isGenesisTag, type Tag } from '../data/tags';
 import { GameIcon } from '../icons/GameIcon';
+import { DeckTab } from './DeckTab';
 import { tagIconName } from '../components/race/TagChips';
 import { TAG_CALIBRATION } from '../data/tagCalibration';
 import { bandViolation, calibrateTagsAsync, CALIBRATION_BANDS, type CalibrationFile, type TagCalibration, type CalibrateProgress } from './calibrate';
 import type { CalibrateInMessage, CalibrateOutMessage } from './calibrateWorker';
 
-type TabId = 'calibration' | 'physics' | 'notebook' | 'method';
+type TabId = 'calibration' | 'physics' | 'deck' | 'notebook' | 'method';
 const TABS: { id: TabId; label: string; hint: string }[] = [
   { id: 'calibration', label: 'Tag calibration', hint: 'what each tag does, measured' },
   { id: 'physics', label: 'Physics calibration', hint: 'what the race rules produce, measured; change a knob and re-measure' },
+  { id: 'deck', label: 'Deck', hint: 'the card deck, before the sim uses it' },
   { id: 'notebook', label: 'Notebook', hint: 'saved presets and every run you measured' },
   { id: 'method', label: 'Method', hint: 'why these numbers can be trusted' },
 ];
@@ -57,6 +59,7 @@ export default function RaceControl({ onBack }: { onBack: () => void }) {
       </nav>
       {tab === 'calibration' && <CalibrationTab lab={lab} />}
       {tab === 'physics' && <PhysicsTab lab={lab} />}
+      {tab === 'deck' && <DeckTab />}
       {tab === 'notebook' && <NotebookTab notebook={notebook} setNotebook={setNotebook} working={working} onLoad={p => { loadPreset(p); }} onDeletePreset={deletePreset} onDeleteRun={deleteRun} />}
       {tab === 'method' && <MethodTab />}
     </div>
