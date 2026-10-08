@@ -1,6 +1,6 @@
 # Season Mode — v0.5 "Spa" build spec
 
-*The build cut for v0.5. Source: Dev's design artifact (Fantasy Design, "v0.5 · Spa" tab), with the design reasoning in [#305 fantasy modes](https://github.com/GrizzlyPax/Parabolica/pull/305) and [#303 mystery box](https://github.com/GrizzlyPax/Parabolica/pull/303). Where this doc and Pax disagree, Pax wins; tell Pit.*
+*The build cut for v0.5. Source: Dev's design artifact (Fantasy Design, "v0.5 · Spa" tab), with the design reasoning in [#305 fantasy modes](https://github.com/GrizzlyPax/Parabolica/pull/305) and [#303 card pack](https://github.com/GrizzlyPax/Parabolica/pull/303). Where this doc and Pax disagree, Pax wins; tell Pit.*
 
 ## TL;DR
 - **Season Mode replaces Commissioner leagues entirely** (Pax, Oct 8): founding, the wall-clock league screens and open-by-code are removed in v0.5. **Live seasons** (wall clock, any device) return for Season Mode in v0.6. Quick Race and Race Control stay.
@@ -46,10 +46,10 @@ Instead of 2 drivers pre-assigned to each named team, the seed summons a **share
 - **CPU turns are no-ops in v0.5:** build the framework and per-team hook only. CPU actions come later with no rework.
 - Each human's turn has **two decisions**:
   1. **Pick who races:** 2 of your 3 start, and the 3rd is benched.
-  2. **Open your mystery box:** its **tier** is set by standing (**Common** box for the leader → Uncommon → Rare → **Legendary** for last place; no colour). It deals a **gear card** (equipment / upgrade / facility), or about **1 in 4** times a **trait card**, from the 🏁 Motorsport deck ([docs/CARDS.md](CARDS.md)). Open it (a loot-box reveal) and put it on **your own team** (driver, car or team). Gear into a full slot **swaps**; the old card goes to your **team locker**.
+  2. **Open your card pack:** its **tier** is set by standing (**Common** pack for the leader → Uncommon → Rare → **Legendary** for last place; no colour). It deals a **gear card** (equipment / upgrade / facility), or about **1 in 4** times a **trait card**, from the 🏁 Motorsport deck ([docs/CARDS.md](CARDS.md)). Open it (a pack-opening reveal) and put it on **your own team** (driver, car or team). Gear into a full slot **swaps**; the old card goes to your **team locker**.
 - **Gear management:** in any Paddock you can equip from the locker, move equipment between your drivers (bench included), or unequip to the locker. Free, unlimited.
-- Box rules: dealt every race · gear lasts until swapped, traits are permanent · teams start each season with no gear and 1 slot of each kind · slot traits add slots.
-- **Card rarity is a metal: Bronze · Silver · Gold · Iridium** (Pax, Oct 8). Box odds for the card's metal (B/S/G/I, illustrative): Common box 60/30/9/1 · Uncommon 52/32/13/3 · Rare 43/34/18/5 · Legendary 35/35/22/8. **The first box is Uncommon** for everyone.
+- Pack rules: dealt every race · gear lasts until swapped, traits are permanent · teams start each season with no gear and 1 slot of each kind · slot traits add slots.
+- **Card rarity is a metal: Bronze · Silver · Gold · Iridium** (Pax, Oct 8). Pack odds for the card's metal (B/S/G/I, illustrative): Common pack 60/30/9/1 · Uncommon 52/32/13/3 · Rare 43/34/18/5 · Legendary 35/35/22/8. **The first pack is Uncommon** for everyone.
 
 ## 5. Race & standings
 - The **existing engine** races the drafted drivers, cars and tags, with no new physics. Each race **holds for "Go"**, then you **watch live or skip to the result**.
@@ -58,7 +58,7 @@ Instead of 2 drivers pre-assigned to each named team, the seed summons a **share
 
 ## 6. Look & feel
 - **The game wears your team's colour:** the UI is black + white, and your team's primary is the only accent (see docs/ICONS.md → colour system). It doubles as the hotseat "whose turn is it" cue.
-- **The mystery box reveal is an over-the-top loot-box moment** that escalates with the box tier: a Common box is a quick pop, a Legendary box a full build-up.
+- **The card pack reveal is an over-the-top pack-opening moment** that escalates with the pack tier: a Common pack is a quick pop, a Legendary pack a full build-up.
 
 ## Decided (Pax, Oct 8, round 2)
 - **Hotseat ships in v0.5** (basic): several humans, a hand-off screen in each team's colour between turns.
@@ -81,7 +81,7 @@ Instead of 2 drivers pre-assigned to each named team, the seed summons a **share
 Effect cards from the sim (v0.6) · Patron Mode · CPU Paddock actions · free agents / transfers · events · spend economy · online / wall-clock / accounts · views-followers metric · cosmetic/story tag content.
 
 ## Decided (Pax, Oct 8)
-- **Box expiry:** none on the box. Gear lasts until swapped, traits forever (Cards revamp, docs/CARDS.md).
+- **Pack expiry:** none on the pack. Gear lasts until swapped, traits forever (Cards revamp, docs/CARDS.md).
 - **Lineups:** free choice of your 2 racers every race.
 - **Drivers'-champ bonus:** worth more than one race win; Telemetry proposes the exact value.
 - **Grid size:** 5–10 teams, default 10.

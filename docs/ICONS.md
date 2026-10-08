@@ -57,7 +57,7 @@ Fallbacks: Old Standard TT → `Georgia, serif`; Special Elite → `'Courier New
 ### Spacing and shape
 - **Scale:** 4 · 8 · 14 · 20 · 32 · 48. Screen gutter **20**; gap between stacked blocks **14**; menu sections **22**.
 - **Radius: 0** everywhere (buttons, chips, panels, logo tiles). Round things stay round only where they are objects: marbles and tyre badges.
-- **Structure is lines, not boxes:** a **1px white rule** separates major sections and list items on menus; a **1px hairline** (`#2a2a2e`) separates rows in dense lists (tower, card list). Cards that need a frame get a 1px white outline, no fill.
+- **Structure is lines, not packs:** a **1px white rule** separates major sections and list items on menus; a **1px hairline** (`#2a2a2e`) separates rows in dense lists (tower, card list). Cards that need a frame get a 1px white outline, no fill.
 - **Tower row:** 7px × 20px padding, a 3px left edge in the row's team colour.
 
 ### Theming a screen (built in #323)
@@ -88,7 +88,7 @@ Fallbacks: Old Standard TT → `Georgia, serif`; Special Elite → `'Courier New
 - **Your rows** in the tower get a 14% wash of the primary plus the edge; nothing else changes.
 - **Rivals:** their colour only on their marble and their 3px row edge. Names stay white.
 - **Rarity:** the metal as a **word** (Label style, coloured) plus a **1px outline** on chips; sealed draft dots in the metal colour. Rarity always shows its word, so the three teams that wear metal colours (Ostler & Finch, Tinplate, Ambergate) still read.
-- **Mystery boxes have no colour:** they are Common → Uncommon → Rare → Legendary boxes by standing; the box icon stays white.
+- **Card packs have no colour:** they are Common → Uncommon → Rare → Legendary packes by standing; the pack icon stays white.
 - **Icons:** `currentColor` always. 16 px inline, 20 px in rows, 24–26 px on tools; `--team-ink` when drawn on the primary.
 
 ## Cards (Pax, Oct 8)
@@ -110,9 +110,9 @@ Fallbacks: Old Standard TT → `Georgia, serif`; Special Elite → `'Courier New
 The team colour **never** goes on a card. It stays on the header block above a hand and on buttons. Cards carry metal only.
 
 ### Sizes
-| Size | Box | Where | Differences |
+| Size | Pack | Where | Differences |
 |---|---|---|---|
-| **Full** | 230 × 322 | Box reveal, card detail | Tap flips it to the details: what the card does, who holds it, "No. 013 of 94", id. |
+| **Full** | 230 × 322 | Pack reveal, card detail | Tap flips it to the details: what the card does, who holds it, "No. 013 of 94", id. |
 | **Small** | 108 × 151 | Hand, trait pile, locker, World Deck binder | Header shows icon + number only. Stats compact to "+15% each" when there's more than one. |
 | **Mini** | 40 × 56 | Timing tower, tight rows | Just the first stat icon in the metal, inside the edge. |
 | **Dot** | 12px circle | Rival traits | The metal colour only. |
@@ -126,7 +126,7 @@ The team colour **never** goes on a card. It stays on the header block above a h
 
 ### Motion
 - **Tap** lifts a card 4px and flips it (rotateY, 0.45s) to its details; tap again to flip back.
-- **A new card** (box reveal, #320) arrives **face-down**, slides up, then flips face-up.
+- **A new card** (pack reveal, #320) arrives **face-down**, slides up, then flips face-up.
 - `prefers-reduced-motion`: no lift, flip or slide; the face just swaps.
 
 ## Why
@@ -162,7 +162,7 @@ The team colour **never** goes on a card. It stays on the header block above a h
 - **Build:** 🛞 Hub. Icon system (registry, `<GameIcon>`, `<TeamLogo>`, credits, theming tokens) → emoji sweep. 🔧 Wrench adds icon ids to content data.
 
 ## Later
-Hand-tuned icons for headline teams · animated icon states (box reveal) · themed-deck icon packs.
+Hand-tuned icons for headline teams · animated icon states (pack reveal) · themed-deck icon packs.
 
 ## Appendix: icon map (UI)
 
@@ -230,16 +230,16 @@ Hand-tuned icons for headline teams · animated icon states (box reveal) · them
 | `stat.tyre_management` | Tyre management | Card chips, card sheet | — | [`car-wheel`](https://game-icons.net/1x1/delapouite/car-wheel.html) |
 | `stat.pit_crew` | Pit crew | Card chips, card sheet | — | [`toolbox`](https://game-icons.net/1x1/delapouite/toolbox.html) |
 | **Card types (new)** | | | | |
-| `card.equipment` | Equipment (driver gear) | Card frame, locker, box reveal | — | [`gloves`](https://game-icons.net/1x1/delapouite/gloves.html) |
-| `card.upgrade` | Upgrade (car gear) | Card frame, locker, box reveal | — | [`gear-hammer`](https://game-icons.net/1x1/lorc/gear-hammer.html) |
-| `card.facility` | Facility (team gear) | Card frame, locker, box reveal | — | [`mechanic-garage`](https://game-icons.net/1x1/delapouite/mechanic-garage.html) |
+| `card.equipment` | Equipment (driver gear) | Card frame, locker, pack reveal | — | [`gloves`](https://game-icons.net/1x1/delapouite/gloves.html) |
+| `card.upgrade` | Upgrade (car gear) | Card frame, locker, pack reveal | — | [`gear-hammer`](https://game-icons.net/1x1/lorc/gear-hammer.html) |
+| `card.facility` | Facility (team gear) | Card frame, locker, pack reveal | — | [`mechanic-garage`](https://game-icons.net/1x1/delapouite/mechanic-garage.html) |
 | `card.trait` | Trait (permanent) | Card frame, card sheet | — | [`dna1`](https://game-icons.net/1x1/lorc/dna1.html) |
 | `card.effect` | Effect (timed, v0.6) | Card frame | — | [`hourglass`](https://game-icons.net/1x1/lorc/hourglass.html) |
 | `card.rule` | Rule card | Run Setup | — | [`scroll-unfurled`](https://game-icons.net/1x1/lorc/scroll-unfurled.html) |
 | **Season (new)** | | | | |
 | `entity.driver` | Driver (ratings, driver cards) | Draft board, Paddock lineup, card sheet | — | [`full-motorcycle-helmet`](https://game-icons.net/1x1/delapouite/full-motorcycle-helmet.html) |
-| `season.box` | Mystery box (metal = tint) | Paddock | — | [`locked-chest`](https://game-icons.net/1x1/lorc/locked-chest.html) |
-| `season.box_open` | Box reveal | Box reveal | — | [`open-chest`](https://game-icons.net/1x1/skoll/open-chest.html) |
+| `season.box` (→ `season.pack`, #421) | Card pack (tier word, no colour) | Paddock | — | [`locked-chest`](https://game-icons.net/1x1/lorc/locked-chest.html) |
+| `season.box_open` | Pack reveal | Pack reveal | — | [`open-chest`](https://game-icons.net/1x1/skoll/open-chest.html) |
 | `season.locker` | Team locker | Paddock, card sheet | — | [`lockers`](https://game-icons.net/1x1/delapouite/lockers.html) |
 | `season.draft` | Draft | Draft board | — | [`card-draw`](https://game-icons.net/1x1/faithtoken/card-draw.html) |
 | `season.bench` | Bench (3rd driver) | Paddock lineup | — | [`park-bench`](https://game-icons.net/1x1/delapouite/park-bench.html) |
@@ -247,4 +247,4 @@ Hand-tuned icons for headline teams · animated icon states (box reveal) · them
 | `season.handoff` | Hotseat hand-off | Hand-off screen | — | [`back-forth`](https://game-icons.net/1x1/lorc/back-forth.html) |
 | `season.champion` | Champion | Finale, standings | — | [`laurels-trophy`](https://game-icons.net/1x1/delapouite/laurels-trophy.html) |
 
-Rarity is a metal colour (`--rarity-*`: bronze · silver · gold · iridium), not an icon. Mystery boxes are Common → Uncommon → Rare → Legendary (a property of `season.box`, renamed in [#385](https://github.com/GrizzlyPax/Parabolica/issues/385)); boxes carry no colour, just the white box icon and the word.
+Rarity is a metal colour (`--rarity-*`: bronze · silver · gold · iridium), not an icon. Card packs are Common → Uncommon → Rare → Legendary (a property of `season.box` (→ `season.pack`, #421), renamed in [#385](https://github.com/GrizzlyPax/Parabolica/issues/385)); packs carry no colour, just the white pack icon and the word.
