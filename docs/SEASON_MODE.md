@@ -24,7 +24,7 @@ One page with defaults, so a solo player can hit Start immediately.
 | Universe seed | random | Enter or reroll; generates the driver + car pool and track character |
 | Teams | 10 | **5–10** (Pax). **Drivers = teams × 3, cars = teams** |
 | Player-controlled | 1 | Each human names and colours their team. >1 = local hotseat |
-| CPU teams | auto | = teams − humans; generated identities; dumb AI |
+| CPU teams | auto | = teams − humans; deck teams (e.g. For Rory) with a CPU badge; dumb AI |
 | Calendar | random, 10 races | Random from the pool or hand-picked; reuses existing tracks |
 
 Fixed (not settings): squad 3 / race 2 / bench 1 · car rack = team count · reverse-standings Paddock order · points championship, no elimination · one draft opacity for everyone.
@@ -67,6 +67,10 @@ Instead of 2 drivers pre-assigned to each named team, the seed summons a **share
 - **No Rule cards** in Season Mode v0.5 (default ruleset).
 - **Race view:** Go opens the live broadcast; Skip to result is always one tap away.
 - **Phone first:** every Season Mode screen is designed and tested at phone width; desktop must still work.
+- **Bench:** the 3rd driver sits out (no points) and keeps their gear.
+- **CPU teams** are deck teams (e.g. For Rory) with a CPU badge: no persona, no owner name.
+- **Menu:** Season Mode is the main Play button.
+- **Rival cards:** rarity dots only.
 - **Draft board:** no AI-pick animation; taken drivers and cars are **faded out** and AI picks resolve instantly.
 
 ## Out of scope (hooks only)
