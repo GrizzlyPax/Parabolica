@@ -2,8 +2,22 @@
 import { describe, it, expect } from 'vitest';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { CardSheet } from './CardSheet';
-import { SAMPLE_SHEET } from './sample';
+import { CardSheet, type CardSheetData } from './CardSheet';
+import { getDeckTeamById } from '../data/deckTeams';
+import { CARDS_BY_ID } from './deck';
+
+// Every state: traits on two of three holders, a filled and an empty gear slot, a locker.
+const card = (id: string) => CARDS_BY_ID.get(id)!;
+const SAMPLE_SHEET: CardSheetData = {
+  driver: { name: 'Yuki Okafor', number: 7, traits: [card('tr-driver-gold-speed+consistency')], equipment: card('eq-silver-luck') },
+  car: { name: 'Vantor GT-7', traits: [], upgrade: null },
+  team: {
+    ...getDeckTeamById('vantor-motorwerke')!,
+    traits: [card('tr-team-bronze-pit-crew')],
+    facility: card('fa-iridium-tyre-management+pit-crew'),
+    locker: [card('eq-bronze-aggression'), card('up-gold-power+grip')],
+  },
+};
 
 const render = (view: 'mine' | 'rival', data = SAMPLE_SHEET) => renderToStaticMarkup(createElement(CardSheet, { data, view }));
 const allCards = [...SAMPLE_SHEET.driver.traits, ...SAMPLE_SHEET.car.traits, ...SAMPLE_SHEET.team.traits,
