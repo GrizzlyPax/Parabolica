@@ -61,14 +61,16 @@ Hand-tuned icons for headline teams · animated icon states (box reveal) · them
 
 ## Appendix: icon map (UI)
 
-*📻 Radio with Pax, Oct 8 ([Icon map](https://github.com/GrizzlyPax/Parabolica/issues/349)). Meaning → game-icons.net icon for the UI. Review page: [UI Icon Map](https://claude.ai/artifact/N23VYQXj6EaAbHZN88kMJ2).*
+*📻 Radio with Pax, Oct 8 ([Icon map](https://github.com/GrizzlyPax/Parabolica/issues/349)). Meaning → game-icons.net icon for the UI. Approved by Pax. Review page: [UI Icon Map](https://claude.ai/artifact/N23VYQXj6EaAbHZN88kMJ2).*
 
 **Scope**
-- **In:** race events (feed, notifications, tower and map markers), commentary voices, race-screen views, controls, and the new v0.5 pieces: card stats, card types, Season screens.
+- **In:** race events (feed, notifications, tower and map markers), commentary voices, race-screen views, controls, and the new v0.5 pieces: card stats, card types, drivers, Season screens.
 - **Out, because they're replaced before the next update:** tracks, track events, tags, weather, gods, the old league screens (Founding, League, Grid, dev console) and the Race Control lab. Team logos live in [story/team-identity.md](story/team-identity.md).
 - **Inline glyphs stay as text** (Pax): arrows, ticks and stars inside text, like `Start race →`, `▲3` in the tower or `★★★☆☆`, keep their character. Standalone controls and markers (☰ ⏸ ▶ ↺ ✕ ⚔ ✗) become icons.
 - **Played straight** (Pax): the safety car is a siren everywhere, including the Unsafety Car and its map marker.
+- **The helmet means "driver"** (Pax): it's kept for driver ratings and driver cards, so Equipment (driver gear) is gloves.
 - **One icon per meaning.** No icon repeats in this table, and none is used by a team logo.
+- **Watch the names:** game-icons' `clover` is a card-suit flower, not a clover; Luck uses `shamrock`.
 
 | Meaning | What | Where it shows | Was | Icon |
 |---|---|---|---|---|
@@ -113,8 +115,8 @@ Hand-tuned icons for headline teams · animated icon states (box reveal) · them
 | **Card stats (new)** | | | | |
 | `stat.speed` | Speed | Card chips, card sheet | — | [`speedometer`](https://game-icons.net/1x1/delapouite/speedometer.html) |
 | `stat.consistency` | Consistency | Card chips, card sheet | — | [`metronome`](https://game-icons.net/1x1/delapouite/metronome.html) |
-| `stat.luck` | Luck | Card chips, card sheet | — | [`clover`](https://game-icons.net/1x1/lorc/clover.html) |
-| `stat.acceleration` | Acceleration | Card chips, card sheet | — | [`sprint`](https://game-icons.net/1x1/lorc/sprint.html) |
+| `stat.luck` | Luck | Card chips, card sheet | — | [`shamrock`](https://game-icons.net/1x1/delapouite/shamrock.html) |
+| `stat.acceleration` | Acceleration | Card chips, card sheet | — | [`afterburn`](https://game-icons.net/1x1/lorc/afterburn.html) |
 | `stat.endurance` | Endurance | Card chips, card sheet | — | [`heart-beats`](https://game-icons.net/1x1/delapouite/heart-beats.html) |
 | `stat.aggression` | Aggression | Card chips, card sheet | — | [`fist`](https://game-icons.net/1x1/lorc/fist.html) |
 | `stat.power` | Power | Card chips, card sheet | — | [`turbine`](https://game-icons.net/1x1/delapouite/turbine.html) |
@@ -123,13 +125,14 @@ Hand-tuned icons for headline teams · animated icon states (box reveal) · them
 | `stat.tyre_management` | Tyre management | Card chips, card sheet | — | [`car-wheel`](https://game-icons.net/1x1/delapouite/car-wheel.html) |
 | `stat.pit_crew` | Pit crew | Card chips, card sheet | — | [`toolbox`](https://game-icons.net/1x1/delapouite/toolbox.html) |
 | **Card types (new)** | | | | |
-| `card.equipment` | Equipment (driver gear) | Card frame, locker, box reveal | — | [`full-motorcycle-helmet`](https://game-icons.net/1x1/delapouite/full-motorcycle-helmet.html) |
+| `card.equipment` | Equipment (driver gear) | Card frame, locker, box reveal | — | [`gloves`](https://game-icons.net/1x1/delapouite/gloves.html) |
 | `card.upgrade` | Upgrade (car gear) | Card frame, locker, box reveal | — | [`gear-hammer`](https://game-icons.net/1x1/lorc/gear-hammer.html) |
 | `card.facility` | Facility (team gear) | Card frame, locker, box reveal | — | [`mechanic-garage`](https://game-icons.net/1x1/delapouite/mechanic-garage.html) |
 | `card.trait` | Trait (permanent) | Card frame, card sheet | — | [`dna1`](https://game-icons.net/1x1/lorc/dna1.html) |
 | `card.effect` | Effect (timed, v0.6) | Card frame | — | [`hourglass`](https://game-icons.net/1x1/lorc/hourglass.html) |
 | `card.rule` | Rule card | Run Setup | — | [`scroll-unfurled`](https://game-icons.net/1x1/lorc/scroll-unfurled.html) |
 | **Season (new)** | | | | |
+| `entity.driver` | Driver (ratings, driver cards) | Draft board, Paddock lineup, card sheet | — | [`full-motorcycle-helmet`](https://game-icons.net/1x1/delapouite/full-motorcycle-helmet.html) |
 | `season.box` | Mystery box (metal = tint) | Paddock | — | [`locked-chest`](https://game-icons.net/1x1/lorc/locked-chest.html) |
 | `season.box_open` | Box reveal | Box reveal | — | [`open-chest`](https://game-icons.net/1x1/skoll/open-chest.html) |
 | `season.locker` | Team locker | Paddock, card sheet | — | [`lockers`](https://game-icons.net/1x1/delapouite/lockers.html) |
