@@ -46,10 +46,10 @@ Instead of 2 drivers pre-assigned to each named team, the seed summons a **share
 - **CPU turns are no-ops in v0.5:** build the framework and per-team hook only. CPU actions come later with no rework.
 - Each human's turn has **two decisions**:
   1. **Pick who races:** 2 of your 3 start, and the 3rd is benched.
-  2. **Open your mystery box:** its **metal** is set by standing (Bronze leader → Silver → Gold → 🟣 Iridium last). It deals a **gear card** (equipment / upgrade / facility), or about **1 in 4** times a **trait card**, from the 🏁 Motorsport deck ([docs/CARDS.md](CARDS.md)). Open it (a loot-box reveal) and put it on **your own team** (driver, car or team). Gear into a full slot **swaps**; the old card goes to your **team locker**.
+  2. **Open your mystery box:** its **tier** is set by standing (**Common** box for the leader → Uncommon → Rare → **Legendary** for last place; no colour). It deals a **gear card** (equipment / upgrade / facility), or about **1 in 4** times a **trait card**, from the 🏁 Motorsport deck ([docs/CARDS.md](CARDS.md)). Open it (a loot-box reveal) and put it on **your own team** (driver, car or team). Gear into a full slot **swaps**; the old card goes to your **team locker**.
 - **Gear management:** in any Paddock you can equip from the locker, move equipment between your drivers (bench included), or unequip to the locker. Free, unlimited.
 - Box rules: dealt every race · gear lasts until swapped, traits are permanent · teams start each season with no gear and 1 slot of each kind · slot traits add slots.
-- Metal odds (C/U/R/L, illustrative): Bronze 60/30/9/1 · Silver 52/32/13/3 · Gold 43/34/18/5 · Iridium 35/35/22/8.
+- **Card rarity is a metal: Bronze · Silver · Gold · Iridium** (Pax, Oct 8). Box odds for the card's metal (B/S/G/I, illustrative): Common box 60/30/9/1 · Uncommon 52/32/13/3 · Rare 43/34/18/5 · Legendary 35/35/22/8. **The first box is Uncommon** for everyone.
 
 ## 5. Race & standings
 - The **existing engine** races the drafted drivers, cars and tags, with no new physics. Each race **holds for "Go"**, then you **watch live or skip to the result**.
@@ -58,7 +58,7 @@ Instead of 2 drivers pre-assigned to each named team, the seed summons a **share
 
 ## 6. Look & feel
 - **The game wears your team's colour:** the UI is black + white, and your team's primary is the only accent (see docs/ICONS.md → colour system). It doubles as the hotseat "whose turn is it" cue.
-- **The mystery box reveal is an over-the-top loot-box moment** that escalates with the metal: Bronze is a quick pop, Platinum a full build-up.
+- **The mystery box reveal is an over-the-top loot-box moment** that escalates with the box tier: a Common box is a quick pop, a Legendary box a full build-up.
 
 ## Decided (Pax, Oct 8, round 2)
 - **Hotseat ships in v0.5** (basic): several humans, a hand-off screen in each team's colour between turns.
