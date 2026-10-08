@@ -126,6 +126,7 @@
 .ss-strip-team.now { border-color: var(--team-primary); }
 .ss-strip-team.done { opacity: 0.35; }
 .ss-strip-label { font-family: var(--look-data); font-size: 10px; letter-spacing: 0.06em; color: var(--pw-text-2); }
+.ss-pack-k { display: inline-flex; align-items: center; gap: 6px; }
 .ss-pack { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
 .ss-pack-place { flex: 1 1 180px; display: flex; flex-direction: column; gap: 8px; }
 .ss-place { text-align: left; height: auto; min-height: 44px; padding: 8px 12px; }
