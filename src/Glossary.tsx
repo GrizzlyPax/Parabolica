@@ -549,7 +549,7 @@ export default function Glossary({ onBack }: GlossaryProps) {
           </div>
           <div className="gl-credit-sizes" aria-label="Icon sizes">
             <span className="rs-k">Sizes</span>
-            {[12, 16, 24, 48].map(s => <span key={s} className="gl-credit-size"><GameIcon name="race.car" size={s} /><code>{s}</code></span>)}
+            {[12, 16, 24, 48].map(s => <span key={s} className="gl-credit-size"><GameIcon name="entity.driver" size={s} /><code>{s}</code></span>)}
           </div>
         </Section>
       )}
