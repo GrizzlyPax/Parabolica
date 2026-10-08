@@ -30,6 +30,8 @@
 | **M4** | **Identity** | Build his own team (icon + colours), race the 28 new teams, Quick Race on cards (one bump, Pax merges), the screen in his colours |
 | **M5** | **Clean-up + ship** | Old leagues gone, no emoji left anywhere, hotseat checked, balance read done |
 
+**Playtest 1 (Oct 8):** the loop works; the Paddock reads badly (oversized on desktop, no driver stats, one driver at a time). Fixes go in **before** the pack reveal, so #320 isn't built twice: #451, #452, then #453 in M4.
+
 **Status (Oct 8, evening):** ✅ **M1 done.** ✅ **M2 done: a full season is playable** (Menu → Play a Season). ✅ The race-changing bundle (#438, v0.5.0) is merged. **Apex's v0.5 chain is complete**; Fable's next work is v0.6. Now: Hub on M3 (packs); Steward on the balance reads; Radio on weather card names.
 
 ## The lanes
@@ -54,13 +56,16 @@
 4. ✅ Paddock screen (#319, PR #446): includes a plain pack step
 5. ✅ Race view (#322, PR #447): watch / skip, rivals dark
 6. ✅ Scoring, standings + champion finale (#321, PR #448) → **M2 ✅**
-7. Packs rename + pack icon (#421)
-8. Pack opening reveal (#320): replaces the plain pack step → **M3**
-9. Favoured stats on Run Setup, Paddock, race header (#361)
-10. Team creator: build your own (#346) → **M4**
-11. Race-view emoji become game-icons (#397)
-11b. Hide the Reset button in Season races (#449)
-12. Remove Commissioner leagues, gods and league routes (#339) → **M5**
+7. Race view playtest fixes (#451): numbers centred, my drivers lit, cards on tap
+8. Packs rename + pack icon (#421)
+9. **Paddock redesign (#452): layout session with Pax on artifacts first**, then build
+10. Pack opening reveal (#320): drops into the new Paddock → **M3**
+11. Favoured stats on Run Setup, Paddock, race header (#361)
+12. Season screens desktop pass (#453)
+13. Team creator: build your own (#346) → **M4**
+14. Race-view emoji become game-icons (#397)
+15. Hide the Reset button in Season races (#449)
+16. Remove Commissioner leagues, gods and league routes (#339) → **M5**
 
 **🎤 Pit:** keep this doc and the milestones current
 
@@ -80,13 +85,13 @@
 ## Risks
 - **Apex slips → everything slips.** If the season loop stalls, Pit moves Hub to the non-Season tasks first.
 - **Fable limits.** Apex's chain is 6 tasks. If the limit hits, the pack logic can drop to Opus with Apex reviewing; the season loop can't.
-- **Hub is busy:** one chat, 12 items in a row. If it slips, the team creator and pack reveal polish move to a v0.5.x patch, not the core.
+- **Hub is busy:** one chat, 16 items in a row. If it slips, the team creator and pack reveal polish move to a v0.5.x patch, not the core.
 - **Hotseat** touches every screen. Each Season screen checks two humans before merging.
 
 ## Out of v0.5 (on purpose)
 Effect cards and the engine hook · Wet weather + forecast · live seasons (wall clock, any device) · CPU Paddock actions · Rule cards in Season Mode · Patron Mode · events and economy. All of these are in v0.6 / Queued / Icebox.
 
 ## Decision log (Pax, Oct 8)
-Teams 5–10, default 10 · 10-race default · free lineups · bench keeps gear · pack: own team only, no expiry, gear swaps go to an uncapped locker with free moves · cars drafted in a fixed last round · team stats belong to the team · champ bonus 50 · hotseat in v0.5 · one save slot · Play again = fresh seed · no Rule cards in Season Mode · watch live with Skip · phone first · rivals show rarity dots only · CPU teams are plain deck teams · Season is the main Play button · mode named "Season" · old 22 teams removed · old leagues removed (live seasons return in v0.6) · game-icons.net everywhere, Phosphor dropped · UI is black + white + your team colour (Blaseball touchstone), teams have one colour · racing numbers 2–99, weighted to single digits + doubles, shown on marbles. · **the look = Almanac** (docs/ICONS.md → The look) · **dry Tracks & Weather v2 in v0.5** (6 stat-combo tracks, Neutral + 5 dry weathers at +10% favours, old tracks/weather/events retired, weather rule cards remapped; **no rain until v0.6**) · **gods retire** with Commissioner leagues · **Credits** on their own screen (menu footer) · **World Deck pattern:** new content on top, old in collapsed "(retiring)" groups until each sim swap · **racing-number weight for single digits = 20** (12 left ~81% of grids missing one) · **slot traits cut from v0.5** (1 slot per driver/car/team; back in v0.6) · **a Paddock turn = lineup set + pack opened** · **weather rule cards remapped** (placeholder names) · **mystery boxes are now card packs** (Common → Legendary packs) · **rarity = metals** (bronze · silver · gold · iridium) for cards and tags; packs become Common → Legendary with no colour, so the first pack is Uncommon ([#385](https://github.com/GrizzlyPax/Parabolica/issues/385)) · **no team picked = purple accent** (the fastest-lap purple) · **type = Pulp Almanac** (Old Standard TT + Special Elite typewriter; Archivo read too slick) · **cards look like cards = Almanac Plate** (Slay the Spire layout: name banner over one icon, type tag, centred changes; one card scaled to every size; bold metal-stripe back reading "Base deck"; tap flips to the back as a fidget; rivals see backs + dots; docs/ICONS.md → Cards) · **pick your team moves to 2 Playable** (tap a deck team in League Setup, #440); build your own stays in 4 Identity (#346) · **one Hub chat, one queue** (no Hub-A / Hub-B)
+Teams 5–10, default 10 · 10-race default · free lineups · bench keeps gear · pack: own team only, no expiry, gear swaps go to an uncapped locker with free moves · cars drafted in a fixed last round · team stats belong to the team · champ bonus 50 · hotseat in v0.5 · one save slot · Play again = fresh seed · no Rule cards in Season Mode · watch live with Skip · phone first · rivals show rarity dots only · CPU teams are plain deck teams · Season is the main Play button · mode named "Season" · old 22 teams removed · old leagues removed (live seasons return in v0.6) · game-icons.net everywhere, Phosphor dropped · UI is black + white + your team colour (Blaseball touchstone), teams have one colour · racing numbers 2–99, weighted to single digits + doubles, shown on marbles. · **the look = Almanac** (docs/ICONS.md → The look) · **dry Tracks & Weather v2 in v0.5** (6 stat-combo tracks, Neutral + 5 dry weathers at +10% favours, old tracks/weather/events retired, weather rule cards remapped; **no rain until v0.6**) · **gods retire** with Commissioner leagues · **Credits** on their own screen (menu footer) · **World Deck pattern:** new content on top, old in collapsed "(retiring)" groups until each sim swap · **racing-number weight for single digits = 20** (12 left ~81% of grids missing one) · **slot traits cut from v0.5** (1 slot per driver/car/team; back in v0.6) · **a Paddock turn = lineup set + pack opened** · **weather rule cards remapped** (placeholder names) · **mystery boxes are now card packs** (Common → Legendary packs) · **rarity = metals** (bronze · silver · gold · iridium) for cards and tags; packs become Common → Legendary with no colour, so the first pack is Uncommon ([#385](https://github.com/GrizzlyPax/Parabolica/issues/385)) · **no team picked = purple accent** (the fastest-lap purple) · **type = Pulp Almanac** (Old Standard TT + Special Elite typewriter; Archivo read too slick) · **cards look like cards = Almanac Plate** (Slay the Spire layout: name banner over one icon, type tag, centred changes; one card scaled to every size; bold metal-stripe back reading "Base deck"; tap flips to the back as a fidget; rivals see backs + dots; docs/ICONS.md → Cards) · **pick your team moves to 2 Playable** (tap a deck team in League Setup, #440); build your own stays in 4 Identity (#346) · **one Hub chat, one queue** (no Hub-A / Hub-B) · **info rule: your own team = full stats everywhere; rivals = the read + rarity dots** (playtest 1) · **layout work starts as artifact mock-ups with Pax** · **desktop matters, not just phone**
 
 **Hub's M2 calls (flagged in PRs; Pax can overrule):** unpicked players get the first free team ("auto"), so Start never blocks · a picked team survives Reroll if the new seed deals it again · the Paddock has a plain pack step until #320 · locking the lineup ends your turn (gear moves first) · the +50 champion bonus counts only in the final table (mid-season it reads "would go to <team>"); turn order uses race points only · leaving a race midway doesn't run it; only finishing (or Skip) records the round · in hotseat every human's drivers stay visible; only CPU teams are hidden · the league name comes from the seed (a name field could come with #346)
