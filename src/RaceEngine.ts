@@ -49,6 +49,8 @@ export interface RosterDriver {
   carStats?: CarStats;
   carName?: string;
   teamStats?: TeamStats;
+  /** Racing number 2–99 (Season Mode, #313). Display only. */
+  number?: number;
   /** Every tag on this driver (driver, car and team tags together — a tag's
    * `target` says which). Genesis rolls, interventions and acquisitions all
    * land here; capped per driver by the league (MAX_TAGS_PER_DRIVER). */
@@ -84,6 +86,7 @@ export interface Driver {
   carName?: string;       // Name of the car
   // Team stats (shared by team)
   teamStats?: TeamStats;  // Team operational stats (tire management, pit crew)
+  number?: number;        // Racing number (Season Mode); display only
   // Tire/Pit/Crash state
   tireState: TireState;
   status: DriverStatus;
@@ -716,6 +719,7 @@ class RaceEngine {
         carStats: d.carStats,
         carName: d.carName,
         teamStats: d.teamStats,
+        number: d.number,
         tags: [...(d.tags ?? [])],
         // Tire/Pit/Crash initial state
         tireState: {

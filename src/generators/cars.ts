@@ -55,7 +55,7 @@ export const CAR_QUIRKS = [
  * Generate a random star rating (1-5) with weighted distribution
  * Most chariots cluster around 2-4 stars, with 1 and 5 being rare
  */
-function generateStarRating(rng: Rng): number {
+export function generateStarRating(rng: Rng): number {
   const roll = rng();
   if (roll < 0.08) return 1;       // 8% chance of 1 star
   if (roll < 0.28) return 2;       // 20% chance of 2 stars
@@ -171,6 +171,34 @@ export function generateCarForKingdom(kingdomId: string, rng: Rng = Math.random)
     stats,
     teamStats,
     quirk,
+  };
+}
+
+/** A rack car for Season Mode's shared pool (#313): car stats only. Team
+ * stats belong to the competitor team that drafts it (generateTeamStats). */
+export interface RackCar {
+  id: string;
+  name: string;
+  stats: CarStats;
+  quirk: string;
+}
+
+export function generateRackCar(id: string, rng: Rng = Math.random): RackCar {
+  const name = generateCarName(rng);
+  const stats: CarStats = {
+    power: generateStarRating(rng),
+    grip: generateStarRating(rng),
+    reliability: generateStarRating(rng),
+  };
+  const quirk = pick(CAR_QUIRKS, rng);
+  return { id, name, stats, quirk };
+}
+
+/** Operational stats for a competitor team (Season Mode, #313). */
+export function generateTeamStats(rng: Rng = Math.random): TeamStats {
+  return {
+    tireManagement: generateStarRating(rng),
+    pitCrew: generateStarRating(rng),
   };
 }
 
