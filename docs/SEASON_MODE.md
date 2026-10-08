@@ -56,7 +56,7 @@ Instead of 2 drivers pre-assigned to each named team, the seed summons a **share
 - **The in-race UI hides rivals' detailed stats**, matching the draft opacity.
 
 ## 6. Look & feel
-- **The game wears your team's primary colour** in a few key places (a bar or background block). This doubles as the hotseat "whose turn is it" cue.
+- **The game wears your team's colour:** the UI is black + white, and your team's primary is the only accent (see docs/ICONS.md → colour system). It doubles as the hotseat "whose turn is it" cue.
 - **The mystery box reveal is an over-the-top loot-box moment** that escalates with the metal: Bronze is a quick pop, Platinum a full build-up.
 
 ## Decided (Pax, Oct 8, round 2)
@@ -68,7 +68,7 @@ Instead of 2 drivers pre-assigned to each named team, the seed summons a **share
 - **Race view:** Go opens the live broadcast; Skip to result is always one tap away.
 - **Phone first:** every Season Mode screen is designed and tested at phone width; desktop must still work.
 - **Name:** the mode is called **Season** ("Play a Season").
-- **Your team:** pick a pre-made deck team, or build your own: logo picker, primary + secondary colours, name ([#346](https://github.com/GrizzlyPax/Parabolica/issues/346)).
+- **Your team:** pick a pre-made deck team, or build your own: logo picker, **one primary colour**, name ([#346](https://github.com/GrizzlyPax/Parabolica/issues/346)).
 - **Shipping:** no formal gate. Pieces merge to main as they land, since nobody else is on prod yet.
 - **Bench:** the 3rd driver sits out (no points) and keeps their gear.
 - **CPU teams** are deck teams (e.g. For Rory) with a CPU badge: no persona, no owner name.

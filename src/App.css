@@ -24,6 +24,11 @@
   --rarity-uncommon: var(--pw-yellow);
   --rarity-rare: var(--pw-green);
   --rarity-legendary: var(--pw-purple);
+  /* The active team's colours (docs/ICONS.md). Neutral here; a screen sets
+     them from your team (Season Mode) or whoever's turn it is (hotseat) via
+     teamThemeVars() in src/icons/GameIcon.tsx. Icons are currentColor. */
+  --team-primary: var(--pw-raised);
+  --team-secondary: var(--pw-text-1);
   --pw-radius-s: 6px;
   --pw-radius-m: 10px;
   --pw-radius-l: 14px;

@@ -1,13 +1,13 @@
-// Rules of the run (#241). Before a run you pick CARDS; cards compose a
+// Rules of the run (#241). Before a run you pick RULE CARDS; they compose a
 // RULESET — the savable, inspectable object the whole universe reads. The
 // ruleset is stamped into a league's setup (and a quick race) at founding, so
 // determinism holds: same seed + different ruleset = a different story, and
 // re-settling from inputs reproduces it exactly.
 //
-// Cards are data. A card is a named rule that bundles content, physics and
+// Rule cards are data. A rule card is a named rule that bundles content, physics and
 // flavour, one level above the dials (GDD pillar 5). Its `patch` is the only
 // thing that touches the ruleset, applied in hand order. Adding a card is a
-// toss-in: an object in data/cards.ts, no engine edits.
+// toss-in: an object in data/ruleCards.ts, no engine edits.
 
 import { SimVariables, CANON_VARIABLES } from '../simlab/types';
 import { ALL_TAGS, Tag, MAX_TAGS_PER_DRIVER, isGenesisTag, RarityOdds, DEFAULT_RARITY_ODDS, RARITIES } from '../data/tags';
@@ -45,7 +45,7 @@ export interface Ruleset {
 }
 
 /** A card's patch: the small vocabulary cards speak. All optional. */
-export interface CardPatch {
+export interface RuleCardPatch {
   tags?: {
     /** Restrict the pool to these ids (applied before add/remove). */
     only?: string[];
@@ -67,22 +67,24 @@ export interface CardPatch {
 
 export type DeepPartial<T> = { [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K] };
 
-export type CardScope = 'race' | 'season' | 'both';
+export type RuleCardScope = 'race' | 'season' | 'both';
 
-export interface Card {
+export interface RuleCard {
   id: string;
   name: string;
   emoji: string;
+  /** game-icon id or meaning (src/icons/registry.ts); falls back to emoji. */
+  iconId?: string;
   /** Where the card is offered: a one-off race ("Rain"), a whole season
    * ("Always Raining"), or either. Same patch machinery underneath. */
-  scope: CardScope;
+  scope: RuleCardScope;
   /** How hard it bends the universe — shown as a badge. */
   weight: 'mild' | 'wild' | 'cursed';
   /** The fiction, one or two lines. */
   blurb: string;
   /** The plain-words effect, one line. The layer underneath, in a sentence. */
   readout: string;
-  patch: CardPatch;
+  patch: RuleCardPatch;
 }
 
 // ---------------------------------------------------------------------------
@@ -131,7 +133,7 @@ function scalePath(obj: any, path: string, factor: number): void {
 }
 
 /** Apply one card's patch to a ruleset. Pure. */
-export function applyCard(rs: Ruleset, card: Card): Ruleset {
+export function applyRuleCard(rs: Ruleset, card: RuleCard): Ruleset {
   const p = card.patch;
   const next: Ruleset = structuredClone(rs);
   next.cards = [...rs.cards, card.id];
@@ -155,11 +157,11 @@ export function applyCard(rs: Ruleset, card: Card): Ruleset {
 }
 
 /** Compose a hand of cards into a ruleset. Unknown ids are ignored. */
-export function resolveRuleset(cardIds: string[], cardsById: Map<string, Card>): Ruleset {
+export function resolveRuleset(cardIds: string[], cardsById: Map<string, RuleCard>): Ruleset {
   let rs = defaultRuleset();
   for (const id of cardIds) {
     const card = cardsById.get(id);
-    if (card) rs = applyCard(rs, card);
+    if (card) rs = applyRuleCard(rs, card);
   }
   return rs;
 }

@@ -4,8 +4,8 @@
 
 import { ALL_TAGS, ActionTarget, Tag, TagAction, TRIGGER_LABELS, RARITIES, describeCondition, describeDuration, getTagById, isGenesisTag } from './tags';
 import { defaultRuleset, describeChance, describeOdds } from '../rules/ruleset';
-import { CARDS } from './cards';
-import type { Card } from '../rules/ruleset';
+import { RULE_CARDS } from './ruleCards';
+import type { RuleCard } from '../rules/ruleset';
 import { ACQUISITION_RULES, AcquisitionRule, AcquisitionTrigger } from './acquisitions';
 import { IN_RACE_RULES, InRaceRule, InRaceDuration } from './inRace';
 import { WEATHER_TYPES } from './weather';
@@ -125,7 +125,7 @@ export function buildGlossaryTags(): GlossaryTag[] {
 
 export interface Glossary {
   tags: GlossaryTag[];
-  cards: Card[];
+  cards: RuleCard[];
   acquisitionRules: AcquisitionRule[];
   inRaceRules: InRaceRule[];
   weather: typeof WEATHER_TYPES;
@@ -144,7 +144,7 @@ export interface Glossary {
 export function buildGlossary(): Glossary {
   const tags = buildGlossaryTags();
   return {
-    tags, cards: CARDS, acquisitionRules: ACQUISITION_RULES, inRaceRules: IN_RACE_RULES,
+    tags, cards: RULE_CARDS, acquisitionRules: ACQUISITION_RULES, inRaceRules: IN_RACE_RULES,
     weather: WEATHER_TYPES, trackTags: TRACK_TAGS, inflictions: INFLICTIONS, tracks: CURRENT_TRACKS,
     historicTracks: HISTORIC_TRACKS, teams: CURRENT_TEAMS, historicTeams: HISTORIC_TEAMS, gods: GODS,
     pools: [
@@ -168,7 +168,7 @@ export function buildGlossary(): Glossary {
       acquired: tags.filter(t => t.group === 'acquired').length,
       inRace: tags.filter(t => t.group === 'in-race').length,
       condition: tags.filter(t => t.group === 'condition').length,
-      cards: CARDS.length, rules: ACQUISITION_RULES.length + IN_RACE_RULES.length,
+      cards: RULE_CARDS.length, rules: ACQUISITION_RULES.length + IN_RACE_RULES.length,
       weather: WEATHER_TYPES.length, trackTags: TRACK_TAGS.length, inflictions: INFLICTIONS.length, tracks: CURRENT_TRACKS.length,
       historicTracks: HISTORIC_TRACKS.length, teams: CURRENT_TEAMS.length, historicTeams: HISTORIC_TEAMS.length, gods: GODS.length,
     },
@@ -180,7 +180,7 @@ export function renderGlossaryMd(g: Glossary, version: string): string {
   const L: string[] = [];
   const fx = (e: GlossaryEffect[]) => e.length ? e.map(x => `${x.value} ${x.label}`).join(', ') : '—';
   L.push(`# Parabolica World Deck`, '', `*Everything in the sim and the world, generated from the data modules by \`npm run glossary\` — do not edit by hand; edit the source files named in each section and re-run. Engine v${version}. How to add content: docs/WORLD_DECK.md.*`, '');
-  L.push(`${g.counts.teams} teams (+${g.counts.historicTeams} historic) · ${g.counts.tracks} tracks (+${g.counts.historicTracks} historic) · ${g.counts.tags} tags (${g.counts.genesis} genesis · ${g.counts.acquired} acquired · ${g.counts.inRace} in-race · ${g.counts.condition} condition) · ${g.counts.cards} cards · ${g.counts.rules} rules · ${g.counts.weather} weathers · ${g.counts.trackTags} track characters · ${g.counts.inflictions} inflictions · ${g.counts.gods} gods`, '');
+  L.push(`${g.counts.teams} teams (+${g.counts.historicTeams} historic) · ${g.counts.tracks} tracks (+${g.counts.historicTracks} historic) · ${g.counts.tags} tags (${g.counts.genesis} genesis · ${g.counts.acquired} acquired · ${g.counts.inRace} in-race · ${g.counts.condition} condition) · ${g.counts.cards} rule cards · ${g.counts.rules} rules · ${g.counts.weather} weathers · ${g.counts.trackTags} track characters · ${g.counts.inflictions} inflictions · ${g.counts.gods} gods`, '');
   L.push('## Teams', '', '*Source: `src/data/teams.ts`. Two drivers each; colours are the team livery everywhere.*', '', '| Team | Colours | Vibe |', '|---|---|---|');
   for (const t of g.teams) L.push(`| ${t.emoji} **${t.name}** \`${t.id}\` | ${t.color} / ${t.accentColor} | ${t.description} |`);
   L.push('', '### Historic teams (unlockable)', '', '| Team | Colours | Vibe |', '|---|---|---|');
@@ -213,7 +213,7 @@ export function renderGlossaryMd(g: Glossary, version: string): string {
     }
     L.push('');
   }
-  L.push('## Cards', '', '| Card | Scope | Weight | Does |', '|---|---|---|---|');
+  L.push('## Rule cards', '', '| Rule card | Scope | Weight | Does |', '|---|---|---|---|');
   for (const c of g.cards) L.push(`| ${c.emoji} **${c.name}** \`${c.id}\` | ${c.scope} | ${c.weight} | ${c.readout} |`);
   L.push('', '## Acquisition rules (after a race)', '', '| Rule | Family | Trigger | Awards |', '|---|---|---|---|');
   for (const r of g.acquisitionRules) { const t = ALL_TAGS.find(x => x.id === r.tagId); L.push(`| \`${r.id}\` | ${r.family} | ${describeTrigger(r.when)} | ${t?.emoji ?? ''} ${t?.name ?? r.tagId} |`); }

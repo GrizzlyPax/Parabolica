@@ -8,13 +8,13 @@ import { prepareScheduledRace } from '../src/league/settle.ts';
 import { CURRENT_TRACKS } from '../src/generators/tracks.ts';
 import { TEAMS } from '../src/data/teams.ts';
 import { resolveRuleset } from '../src/rules/ruleset.ts';
-import { CARDS_BY_ID } from '../src/data/cards.ts';
+import { RULE_CARDS_BY_ID } from '../src/data/ruleCards.ts';
 import { mulberry32, shuffle } from '../src/engine/rng.ts';
 
 const RACES = Number(process.argv[2] ?? 200);
 const NO_TAGS = (process.argv[3] ?? '1') === '1';
 const meta = mulberry32(246);
-const ruleset = resolveRuleset(NO_TAGS ? ['no-tags'] : [], CARDS_BY_ID);
+const ruleset = resolveRuleset(NO_TAGS ? ['no-tags'] : [], RULE_CARDS_BY_ID);
 
 // Deterministic "pace score" from stats, the thing a fan would call "the package".
 const pace = d => (1 + (d.stats.baseSpeed - 1) * 0.12) * (0.942 + (d.carStats?.power ?? 3) * 0.014);

@@ -30,6 +30,8 @@ interface WeatherType {
   id: string;
   name: string;
   emoji: string;
+  /** game-icon id or meaning (src/icons/registry.ts); falls back to emoji. */
+  iconId?: string;
   /** Relative frequency. Skewed hard toward mild so dramatic weather is rare
    * and weather-reactive tags stay spice, not destiny (CONDITIONS_LAYER §4). */
   weight: number;

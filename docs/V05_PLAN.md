@@ -15,7 +15,7 @@
 ## How we work through it
 **Rule 1: playable before pretty.** Get one ugly solo season running end to end first, then add the box, then polish. Every milestone is something Pax can play on his phone.
 
-**Rule 2: Apex is the critical path.** Every screen waits on Apex's core. Fable time goes only to his chain; everything else runs on Opus or smaller in parallel.
+**Rule 2: Apex is the critical path.** Every screen waits on Apex's core. Fable time goes only to his chain; everything else runs on Opus in parallel.
 
 **Rule 3: two Hub chats at most at once.** **Hub-A** builds the Season screens (one after another, since they share files). **Hub-B** does plumbing and cleanup (icons, renames, removals), which rarely touches the same files.
 
@@ -54,18 +54,18 @@
 3. Remove Commissioner leagues (after League Setup works)
 4. Emoji sweep, screen by screen
 
-**🔧 Wrench:** content icon ids (after the icon map) · the game wears your team colours → **M4**
+**🛞 Hub (either chat):** content icon ids (after the icon map) · the game wears your team colours → **M4**
 
-**🎤 Pit:** icon map (every non-team emoji) · keep this doc and the milestones current
+**🎤 Pit:** keep this doc and the milestones current
 
-**📻 Radio + 👤 Pax:** team-creator palette + logo-picker icons
+**📻 Radio + 👤 Pax:** team-creator palette + logo-picker icons · icon map for everything else (#349)
 
-**📈 Telemetry:** Season Mode balance read (titles open? champ bonus at 25 / 50 / 75)
+**🏛️ Steward:** Season Mode balance + fun read (titles open? champ bonus at 25 / 50 / 75? is a season fun?)
 
 **👤 Pax:** playtest at each milestone · merge the fingerprint PR · approve the icon map
 
 ## Kickoff
-**Now, no Fable needed:** Hub-B (Rule cards rename → icon system) · Pit (icon map) · Radio + Pax (palette + logo icons).
+**Now, no Fable needed:** Hub-B (Rule cards rename → icon system) · Radio + Pax (palette, logo icons, icon map).
 
 **When Fable credits are back:** paste the Apex kickoff (from Pit) into one Fable chat. Apex works his chain in order (one PR per issue, merging each when green) and stops to report if an existing test changes, something is unclear, or he's about half through his budget. If the chat gets long, start a fresh one with the same block; it picks up from GitHub.
 

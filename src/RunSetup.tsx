@@ -13,7 +13,7 @@ import { generateCarsForKingdoms } from './generators/cars';
 import { generateTrack, getDynamicEventDescription, CURRENT_TRACKS, Track } from './generators/tracks';
 import { getRandomTeams, Team } from './data/teams';
 import { mulberry32, deriveSeed, randomSeed } from './engine/rng';
-import { CARDS_BY_ID, cardsForScope } from './data/cards';
+import { RULE_CARDS_BY_ID, ruleCardsForScope } from './data/ruleCards';
 import { resolveRuleset, applyLabPreset, describeRuleset, describeChance, describeOdds, serializeRuleset, Ruleset } from './rules/ruleset';
 import { loadNotebook, fetchLedger, presetSummary, type LabPreset } from './racecontrol/notebook';
 import { DraftPanel, emptyFantasy } from './fantasy/DraftPanel';
@@ -54,7 +54,7 @@ export default function RunSetup({ onStartRace, onBack }: RunSetupProps) {
   }, []);
   const [presetId, setPresetId] = useState<string>('');
   const preset = presets.find(p => p.id === presetId) ?? null;
-  const ruleset = useMemo(() => applyLabPreset(resolveRuleset(hand, CARDS_BY_ID), preset), [hand, preset]);
+  const ruleset = useMemo(() => applyLabPreset(resolveRuleset(hand, RULE_CARDS_BY_ID), preset), [hand, preset]);
 
   // The universe for this seed (teams, track, people, cars) — independent of cards.
   const universe = useMemo(() => {
@@ -154,12 +154,12 @@ export default function RunSetup({ onStartRace, onBack }: RunSetupProps) {
 
       <section className="rs-row rs-cards">
         <div className="rs-row-head">
-          <span className="rs-k">Cards</span>
+          <span className="rs-k">Rule cards</span>
           <span className="rs-hint">{hand.length === 0 ? 'None picked: default rules.' : `${hand.length} in play`}</span>
           <button type="button" className="rs-link" onClick={() => setShowRules(v => !v)}>{showRules ? 'Hide the rules underneath' : 'Show the rules underneath'}</button>
         </div>
         <div className="rs-hand">
-          {cardsForScope('race').map(c => {
+          {ruleCardsForScope('race').map(c => {
             const on = hand.includes(c.id);
             return (
               <button type="button" key={c.id} className={`rs-card ${on ? 'on' : ''} w-${c.weight}`} onClick={() => toggleCard(c.id)} aria-pressed={on}>

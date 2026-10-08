@@ -13,15 +13,17 @@ import { defaultRuleset, describeChance } from './rules/ruleset';
 import { intrinsicTrackTags } from './data/trackTags';
 import TagChips from './components/race/TagChips';
 import { Idea, loadIdeas, saveIdeas, issueUrl, ideasAsPrompt } from './IdeaBox';
+import { GameIcon } from './icons/GameIcon';
+import { ICONS, ICON_LICENSE, iconCredits } from './icons/registry';
 import './RunSetup.css';
 import './Glossary.css';
 
 interface GlossaryProps { onBack: () => void }
 
-type TabId = 'tags' | 'teams' | 'tracks' | 'cards' | 'rules' | 'conditions' | 'gods' | 'flavour' | 'add' | 'inbox';
+type TabId = 'tags' | 'teams' | 'tracks' | 'cards' | 'rules' | 'conditions' | 'gods' | 'flavour' | 'credits' | 'add' | 'inbox';
 const TABS: { id: TabId; label: string }[] = [
-  { id: 'tags', label: 'Tags' }, { id: 'teams', label: 'Teams' }, { id: 'tracks', label: 'Tracks' }, { id: 'cards', label: 'Cards' },
-  { id: 'rules', label: 'Rules' }, { id: 'conditions', label: 'Weather' }, { id: 'gods', label: 'Gods' }, { id: 'flavour', label: 'Flavour' }, { id: 'inbox', label: '💡 Inbox' }, { id: 'add', label: '+ Add' },
+  { id: 'tags', label: 'Tags' }, { id: 'teams', label: 'Teams' }, { id: 'tracks', label: 'Tracks' }, { id: 'cards', label: 'Rule cards' },
+  { id: 'rules', label: 'Rules' }, { id: 'conditions', label: 'Weather' }, { id: 'gods', label: 'Gods' }, { id: 'flavour', label: 'Flavour' }, { id: 'credits', label: 'Credits' }, { id: 'inbox', label: '💡 Inbox' }, { id: 'add', label: '+ Add' },
 ];
 
 const RARITY_ORDER: Record<Rarity, number> = { common: 0, uncommon: 1, rare: 2, legendary: 3 };
@@ -322,7 +324,7 @@ export default function Glossary({ onBack }: GlossaryProps) {
         <div className="rs-title-block">
           <button type="button" className="rs-back" onClick={onBack}>← Menu</button>
           <h1 className="rs-title">World Deck</h1>
-          <span className="rs-sub">Everything in the world, read straight from the data. {g.counts.teams} teams · {g.counts.tracks} tracks · {g.counts.tags} tags · {g.counts.cards} cards · {g.counts.gods} gods. Click a line to open it.</span>
+          <span className="rs-sub">Everything in the world, read straight from the data. {g.counts.teams} teams · {g.counts.tracks} tracks · {g.counts.tags} tags · {g.counts.cards} rule cards · {g.counts.gods} gods. Click a line to open it.</span>
         </div>
         <label className="gl-search">
           <span className="rs-k">Find</span>
@@ -405,7 +407,7 @@ export default function Glossary({ onBack }: GlossaryProps) {
       })}
 
       {tab === 'cards' && (
-        <Section {...sec('cards')} title="Cards" count={g.cards.length} hint="Rules you pick before a run. Race cards for one race, season cards for a whole league.">
+        <Section {...sec('cards')} title="Rule cards" count={g.cards.length} hint="Rules you pick before a run. Race rule cards for one race, season rule cards for a whole league.">
           <div className="gl-list">
             {g.cards.filter(c => match(c.name, c.id, c.readout, c.blurb)).map(c => (
               <Row key={c.id} id={`card:${c.id}`} open={isOpen(`card:${c.id}`)} onToggle={toggle}
@@ -451,7 +453,7 @@ export default function Glossary({ onBack }: GlossaryProps) {
 
       {tab === 'conditions' && (
         <>
-          <Section {...sec('weather')} title="Weather" count={g.weather.length} hint="Rolled per race. Odds are the defaults; cards change them.">
+          <Section {...sec('weather')} title="Weather" count={g.weather.length} hint="Rolled per race. Odds are the defaults; rule cards change them.">
             <div className="gl-list">
               {g.weather.filter(w => match(w.name, w.id)).map(w => {
                 const total = g.weather.reduce((s, x) => s + x.weight, 0);
@@ -523,6 +525,31 @@ export default function Glossary({ onBack }: GlossaryProps) {
                 <div className="gl-src">{p.where}</div>
               </Row>
             ))}
+          </div>
+        </Section>
+      )}
+
+      {tab === 'credits' && (
+        <Section {...sec('icon-credits')} title="Icon credits" count={ICONS.length} hint="Icons are from game-icons.net, used under CC BY 3.0. This list is generated from the icon registry.">
+          <p className="gl-desc">
+            Icons by the <a href={ICON_LICENSE.source} target="_blank" rel="noreferrer">game-icons.net</a> contributors below,
+            licensed under <a href={ICON_LICENSE.url} target="_blank" rel="noreferrer">{ICON_LICENSE.name}</a>.
+          </p>
+          <div className="gl-list">
+            {iconCredits().filter(c => match(c.name, ...c.icons)).map(c => (
+              <div key={c.author} className="gl-credit">
+                <span className="gl-credit-author">{c.url ? <a href={c.url} target="_blank" rel="noreferrer">{c.name}</a> : c.name}</span>
+                <span className="gl-credit-icons">
+                  {c.icons.map(id => (
+                    <span key={id} className="gl-credit-icon" title={id}><GameIcon name={id} size={24} /><code>{id}</code></span>
+                  ))}
+                </span>
+              </div>
+            ))}
+          </div>
+          <div className="gl-credit-sizes" aria-label="Icon sizes">
+            <span className="rs-k">Sizes</span>
+            {[12, 16, 24, 48].map(s => <span key={s} className="gl-credit-size"><GameIcon name="race.car" size={s} /><code>{s}</code></span>)}
           </div>
         </Section>
       )}
