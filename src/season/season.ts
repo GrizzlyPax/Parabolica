@@ -1,0 +1,310 @@
+// The season loop (#315, docs/SEASON_MODE.md §4–5): a session-based Season
+// Mode that walks [Paddock turns → race] for every round on the calendar.
+//
+// Facts, not state. A season is `SeasonFacts`: the setup, the draft picks,
+// every lineup and every settled race digest. Everything else (phase, whose
+// turn, standings, the race grid) is derived here, pure, so the same facts
+// give the same season on any device, and save/restore is just the facts.
+//
+// Races go through the ONE race path: `leagueForRound` shapes a round as a
+// LeagueState so `prepareScheduledRace` / `runScheduledRace` (league/settle)
+// run it unchanged, and the live view replays the same race.
+//
+// Paddock turns run in reverse constructor standings (last place first; round
+// 1 is the draft order reversed). CPU turns are no-ops in v0.5 (hook only), so
+// the clock only ever stops on a human.
+
+import { deriveSeed } from '../engine/rng';
+import { getTrackById } from '../generators/tracks';
+import { runScheduledRace } from '../league/settle';
+import type { LeagueState, RaceDigest } from '../league/types';
+import { createInitialSeasonState, updateSeasonWithRaceResult, getSeasonStandings, type DriverSeasonStats } from '../types/season';
+import { driverPointsInRace } from '../fantasy/types';
+import { Ruleset, defaultRuleset } from '../rules/ruleset';
+import { CANON_VARIABLES, type SimVariables } from '../simlab/types';
+import { version as engineVersion } from '../../package.json';
+import { generateSeasonPool, seasonRoster, RACE_LINEUP, type SeasonPool, type SeasonCards, type TeamIdentityOverride, type Lineup } from './genesis';
+import { draftOrder, draftState, draftedRosters, type DraftPick } from './draft';
+
+export const DEFAULT_CALENDAR_LENGTH = 10;
+
+export interface SeasonHuman {
+  teamId: string;
+  name: string;
+  color: string;
+  ink?: string;
+  iconId?: string;
+}
+
+/** Fixed at League Setup. */
+export interface SeasonSetup {
+  seed: number;
+  teamCount: number;
+  humans: SeasonHuman[];
+  /** Track ids in running order; one round each. */
+  calendar: string[];
+  ruleset?: Ruleset;
+}
+
+export interface SeasonLineup {
+  round: number;
+  teamId: string;
+  driverIds: [number, number];
+}
+
+/** The whole season, as facts. #316 adds the pack and gear facts. */
+export interface SeasonFacts {
+  setup: SeasonSetup;
+  draftPicks: DraftPick[];
+  lineups: SeasonLineup[];
+  /** Race digests, one per settled round, in order. Event logs are not kept. */
+  results: RaceDigest[];
+}
+
+/** `racing` is the UI's: between Go and the digest. seasonState never returns it. */
+export type SeasonPhase = 'draft' | 'paddock' | 'ready-for-go' | 'racing' | 'finished';
+
+export interface ConstructorStanding {
+  teamId: string;
+  points: number;
+  wins: number;
+  /** Points scored each settled round. */
+  perRound: number[];
+  rank: number;
+}
+
+export interface SeasonState {
+  /** 0-based round in progress; equals the calendar length once finished. */
+  round: number;
+  phase: Exclude<SeasonPhase, 'racing'>;
+  /** Every team, in Paddock turn order for this round (reverse standings). */
+  paddockOrder: string[];
+  /** The human team on the clock, or null (CPU-only turns are no-ops; ready or finished). */
+  whoseTurn: string | null;
+  standings: ConstructorStanding[];
+  humans: string[];
+}
+
+export function newSeason(setup: SeasonSetup): SeasonFacts {
+  return { setup, draftPicks: [], lineups: [], results: [] };
+}
+
+export function poolFor(facts: SeasonFacts): SeasonPool {
+  return generateSeasonPool(facts.setup.seed, facts.setup.teamCount, facts.setup.ruleset ?? defaultRuleset());
+}
+
+export function isHuman(facts: SeasonFacts, teamId: string): boolean {
+  return facts.setup.humans.some(h => h.teamId === teamId);
+}
+
+export function identitiesFor(facts: SeasonFacts): Record<string, TeamIdentityOverride> {
+  return Object.fromEntries(facts.setup.humans.map(h => [h.teamId, { name: h.name, color: h.color, ink: h.ink, iconId: h.iconId }]));
+}
+
+/** Cards dealt during the season, resolved for a round. Genesis traits live
+ * on the pool; this is the hook the packs (#316) fill. Empty in #315. */
+export function cardsForRound(_facts: SeasonFacts, _round: number): SeasonCards {
+  return {};
+}
+
+// ---------------------------------------------------------------------------
+// Standings
+
+/** Constructor table from the settled rounds: a team scores its drivers' F1
+ * points (`driverPointsInRace`). Ties: more wins, then the team earlier in the
+ * draft order ranks higher (so in the Paddock the one further back goes first). */
+export function constructorStandings(facts: SeasonFacts): ConstructorStanding[] {
+  const pool = poolFor(facts);
+  const order = draftOrder(pool);
+  const rosters = draftState(pool, facts.draftPicks).rosters;
+  const lines = pool.teams.map(t => {
+    const ids = rosters[t.id].driverIds;
+    const perRound = facts.results.map(d => ids.reduce((s, id) => s + driverPointsInRace(d, id), 0));
+    const wins = facts.results.filter(d => ids.includes(d.finishOrder[0])).length;
+    return { teamId: t.id, points: perRound.reduce((a, b) => a + b, 0), wins, perRound, rank: 0 };
+  });
+  lines.sort((a, b) => b.points - a.points || b.wins - a.wins || order.indexOf(a.teamId) - order.indexOf(b.teamId));
+  lines.forEach((l, i) => { l.rank = i + 1; });
+  return lines;
+}
+
+/** Drivers' table, through the league's own season machinery. */
+export function driverStandings(facts: SeasonFacts): DriverSeasonStats[] {
+  const pool = poolFor(facts);
+  let season = createInitialSeasonState(facts.setup.calendar.length, pool.drivers.map(d => d.id));
+  for (const d of facts.results) {
+    season = updateSeasonWithRaceResult(season, d.finishOrder, d.dnfDriverIds, d.trackName, d.trackEmoji, d.fastestLapDriverId);
+  }
+  return getSeasonStandings(season);
+}
+
+// ---------------------------------------------------------------------------
+// Paddock
+
+/** Reverse standings; round 0 (nothing settled) is the draft order reversed. */
+export function paddockOrder(facts: SeasonFacts): string[] {
+  return constructorStandings(facts).map(s => s.teamId).reverse();
+}
+
+/** The lineup a team races this round: its fact, else its last lineup, else
+ * its first two drafted drivers. CPU teams and quiet humans both get this. */
+export function lineupFor(facts: SeasonFacts, round: number, teamId: string): [number, number] {
+  const own = facts.lineups.filter(l => l.teamId === teamId && l.round <= round).sort((a, b) => b.round - a.round);
+  if (own.length) return own[0].driverIds;
+  const roster = draftState(poolFor(facts), facts.draftPicks).rosters[teamId];
+  if (!roster || roster.driverIds.length < RACE_LINEUP) throw new Error(`lineupFor: ${teamId} has not drafted ${RACE_LINEUP} drivers`);
+  return [roster.driverIds[0], roster.driverIds[1]];
+}
+
+/** Has this team finished its Paddock turn for the round? #316 adds the pack. */
+export function turnDone(facts: SeasonFacts, round: number, teamId: string): boolean {
+  return facts.lineups.some(l => l.round === round && l.teamId === teamId);
+}
+
+/** The CPU hook: no decisions in v0.5. The default lineup races. */
+export function cpuTurn(_facts: SeasonFacts, _round: number, _teamId: string): { lineup?: [number, number] } {
+  return {};
+}
+
+/** Why the lineup is illegal, or null. The team must be on the clock. */
+export function validateLineup(facts: SeasonFacts, lineup: SeasonLineup): string | null {
+  const state = seasonState(facts);
+  if (state.phase !== 'paddock') return `not in the Paddock (${state.phase})`;
+  if (lineup.round !== state.round) return `round ${lineup.round} is not the current round (${state.round})`;
+  if (lineup.teamId !== state.whoseTurn) return `${lineup.teamId} is not on the clock (${state.whoseTurn} is)`;
+  const roster = draftState(poolFor(facts), facts.draftPicks).rosters[lineup.teamId];
+  const [a, b] = lineup.driverIds;
+  if (lineup.driverIds.length !== RACE_LINEUP || a === b) return `a lineup is ${RACE_LINEUP} different drivers`;
+  if (!roster.driverIds.includes(a) || !roster.driverIds.includes(b)) return `both drivers must be on ${lineup.teamId}`;
+  return null;
+}
+
+/** A human sets who races. Pure; throws on an illegal lineup. */
+export function setLineup(facts: SeasonFacts, lineup: SeasonLineup): SeasonFacts {
+  const why = validateLineup(facts, lineup);
+  if (why) throw new Error(`season: ${why}`);
+  return { ...facts, lineups: [...facts.lineups, lineup] };
+}
+
+// ---------------------------------------------------------------------------
+// Derived state
+
+export function seasonState(facts: SeasonFacts): SeasonState {
+  const humans = facts.setup.humans.map(h => h.teamId);
+  const pool = poolFor(facts);
+  const standings = constructorStandings(facts);
+  const order = [...standings].map(s => s.teamId).reverse();
+  const round = facts.results.length;
+  const base = { round, paddockOrder: order, standings, humans };
+  if (!draftState(pool, facts.draftPicks).done) return { ...base, phase: 'draft', whoseTurn: null };
+  if (round >= facts.setup.calendar.length) return { ...base, phase: 'finished', whoseTurn: null };
+  // CPU turns are no-ops, so the clock skips to the first human still to act.
+  const next = order.find(id => humans.includes(id) && !turnDone(facts, round, id)) ?? null;
+  return { ...base, phase: next ? 'paddock' : 'ready-for-go', whoseTurn: next };
+}
+
+export function whoseTurn(facts: SeasonFacts): string | null {
+  return seasonState(facts).whoseTurn;
+}
+
+// ---------------------------------------------------------------------------
+// Race adapter
+
+export function raceSeed(seed: number, round: number): number {
+  return deriveSeed(seed, 'season', 'race', round);
+}
+
+/** Every team's lineup for a round, in team order. */
+export function lineupsFor(facts: SeasonFacts, round: number): Lineup[] {
+  const pool = poolFor(facts);
+  return pool.teams.map(t => ({ teamId: t.id, driverIds: lineupFor(facts, round, t.id) }));
+}
+
+/**
+ * The round as a LeagueState, so `prepareScheduledRace` and the live view run
+ * it exactly as a league race: the roster is this round's grid with every
+ * card baked in, the log is empty, and race `round` carries the season's seed
+ * for it. Only `schedule[round]` and `roster` matter to the race path.
+ */
+export function leagueForRound(facts: SeasonFacts, round: number): LeagueState {
+  const { setup } = facts;
+  const pool = poolFor(facts);
+  const rosters = draftedRosters(pool, facts.draftPicks);
+  const roster = seasonRoster(pool, rosters, lineupsFor(facts, round), { cards: cardsForRound(facts, round), identities: identitiesFor(facts) });
+  return {
+    engineVersion,
+    leagueSeed: setup.seed,
+    setup: {
+      name: 'Season',
+      godId: '',
+      teamIds: [],
+      trackIds: setup.calendar,
+      raceIntervalMs: 0,
+      createdAt: 0,
+      ruleset: setup.ruleset,
+    },
+    schedule: setup.calendar.map((trackId, index) => ({ index, trackId, scheduledAt: 0, seed: raceSeed(setup.seed, index) })),
+    interventionLog: [],
+    settledThrough: round - 1,
+    roster,
+    season: createInitialSeasonState(setup.calendar.length, roster.map(d => d.id)),
+    digests: facts.results,
+  };
+}
+
+/** Skip to the result: run the round headless and append its digest (without
+ * the event log; the live view replays the race). The season must be ready. */
+export function settleRound(facts: SeasonFacts, simVars: SimVariables = facts.setup.ruleset?.simVars ?? CANON_VARIABLES): SeasonFacts {
+  const state = seasonState(facts);
+  if (state.phase !== 'ready-for-go') throw new Error(`season: cannot race in phase ${state.phase}`);
+  const round = state.round;
+  const track = getTrackById(facts.setup.calendar[round]);
+  if (!track) throw new Error(`season: unknown track '${facts.setup.calendar[round]}' at round ${round}`);
+  const { digest } = runScheduledRace(leagueForRound(facts, round), round, track, simVars);
+  const { events: _events, ...kept } = digest;
+  return { ...facts, results: [...facts.results, kept] };
+}
+
+// ---------------------------------------------------------------------------
+// Save / restore: facts only, one slot (Pax, Oct 8)
+
+export const SEASON_KEY = 'parabolica.season.v1';
+export const SEASON_SCHEMA_VERSION = 1;
+
+export interface SeasonStore {
+  getItem(key: string): string | null;
+  setItem(key: string, value: string): void;
+  removeItem(key: string): void;
+}
+
+interface SeasonEnvelope { schemaVersion: number; savedAt: number; data: SeasonFacts }
+
+function defaultStore(): SeasonStore | null {
+  try { return typeof localStorage !== 'undefined' ? localStorage : null; } catch { return null; }
+}
+
+export function saveSeason(facts: SeasonFacts, store: SeasonStore | null = defaultStore(), now: number = Date.now()): boolean {
+  if (!store) return false;
+  try {
+    const envelope: SeasonEnvelope = { schemaVersion: SEASON_SCHEMA_VERSION, savedAt: now, data: facts };
+    store.setItem(SEASON_KEY, JSON.stringify(envelope));
+    return true;
+  } catch { return false; }
+}
+
+export function loadSeason(store: SeasonStore | null = defaultStore()): SeasonFacts | null {
+  if (!store) return null;
+  try {
+    const raw = store.getItem(SEASON_KEY);
+    if (!raw) return null;
+    const envelope = JSON.parse(raw) as SeasonEnvelope;
+    if (envelope?.schemaVersion !== SEASON_SCHEMA_VERSION) return null;
+    const f = envelope.data;
+    if (!f?.setup || !Array.isArray(f.draftPicks) || !Array.isArray(f.lineups) || !Array.isArray(f.results)) return null;
+    return f;
+  } catch { return null; }
+}
+
+export function clearSeason(store: SeasonStore | null = defaultStore()): void {
+  try { store?.removeItem(SEASON_KEY); } catch { /* nothing to do */ }
+}
