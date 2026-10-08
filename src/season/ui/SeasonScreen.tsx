@@ -10,6 +10,7 @@ import { seasonName } from '../setup';
 import LeagueSetup from './LeagueSetup';
 import DraftBoard from './DraftBoard';
 import Paddock from './Paddock';
+import Standings from './Standings';
 import '../../RunSetup.css';
 import './Season.css';
 
@@ -59,7 +60,10 @@ function SavedSeason({ screen, navigate, onMenu }: Props) {
     return <DraftBoard facts={facts} onChange={setFacts} onMenu={onMenu} onDone={() => navigate({ name: 'season', screen: 'paddock' })} />;
   }
   if (facts && screen === 'paddock') {
-    return <Paddock facts={facts} onChange={setFacts} onMenu={onMenu} onGo={() => navigate({ name: 'season', screen: 'race' })} />;
+    return <Paddock facts={facts} onChange={setFacts} onMenu={onMenu} onGo={() => navigate({ name: 'season', screen: 'race' })} onStandings={() => navigate({ name: 'season', screen: 'standings' })} />;
+  }
+  if (facts && screen === 'standings') {
+    return <Standings facts={facts} onMenu={onMenu} onPaddock={() => navigate({ name: 'season', screen: 'paddock' })} onPlayAgain={() => navigate({ name: 'season', screen: 'setup' }, { replace: true })} />;
   }
   return <SeasonHolding screen={screen} navigate={navigate} onMenu={onMenu} />;
 }

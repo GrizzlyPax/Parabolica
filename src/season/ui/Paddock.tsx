@@ -23,6 +23,7 @@ interface Props {
   onChange: (facts: SeasonFacts) => void;
   onMenu: () => void;
   onGo: () => void;
+  onStandings: () => void;
 }
 
 const TIER_LABEL = { common: 'Common', uncommon: 'Uncommon', rare: 'Rare', legendary: 'Legendary' } as const;
@@ -45,7 +46,7 @@ function slotOf(state: TeamCardState, h: CardHolder): Card[] {
   return h.kind === 'driver' ? state.drivers[h.id].equipment : h.kind === 'car' ? state.car.upgrade : state.team.facility;
 }
 
-export default function Paddock({ facts, onChange, onMenu, onGo }: Props) {
+export default function Paddock({ facts, onChange, onMenu, onGo, onStandings }: Props) {
   const pool = useMemo(() => poolFor(facts), [facts.setup]); // eslint-disable-line react-hooks/exhaustive-deps
   const teams = useMemo(() => teamsOf(facts), [facts.setup]); // eslint-disable-line react-hooks/exhaustive-deps
   const rosters = useMemo(() => draftState(pool, facts.draftPicks).rosters, [pool, facts.draftPicks]);
@@ -242,7 +243,7 @@ export default function Paddock({ facts, onChange, onMenu, onGo }: Props) {
       )}
 
       <section className="rs-row">
-        <div className="rs-row-head"><span className="rs-k">Constructors</span></div>
+        <div className="rs-row-head"><span className="rs-k">Constructors</span><button type="button" className="rs-link" onClick={onStandings}>Full standings</button></div>
         {table}
       </section>
 
