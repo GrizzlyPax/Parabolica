@@ -44,7 +44,7 @@ Hand-tuned icons for headline teams · animated icon states (box reveal) · them
 
 ## Appendix: icon map (UI)
 
-*📻 Radio with Pax, Oct 8 ([Icon map](https://github.com/GrizzlyPax/Parabolica/issues/349)). Meaning → game-icons.net icon for the UI. Review board: [Team Logo Scouting](https://claude.ai/artifact/QztBfCMQSzmLa99ptQrXWL) (top section).*
+*📻 Radio with Pax, Oct 8 ([Icon map](https://github.com/GrizzlyPax/Parabolica/issues/349)). Meaning → game-icons.net icon for the UI. Review page: [UI Icon Map](https://claude.ai/artifact/N23VYQXj6EaAbHZN88kMJ2).*
 
 **Scope**
 - **In:** race events (feed, notifications, tower and map markers), commentary voices, race-screen views, controls, and the new v0.5 pieces: card stats, card types, Season screens.
