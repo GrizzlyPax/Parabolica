@@ -21,7 +21,7 @@ The whole UI is **black and white plus one colour: your team's.** Everything els
 | **Other teams** | only on a rival's own mark: their logo tile and row edge | **their primary** |
 
 - **Teams have one colour: the primary.** No secondary colour. A team logo is a **white or near-black icon on the primary**, whichever reads (an `ink` value, picked automatically or stored per team).
-- **Default (no team picked yet, Quick Race, menus):** the accent falls back to a neutral (white).
+- **Default (no team picked yet, Quick Race, menus):** the accent is **Parabolica purple** (`#a98bff`, the fastest-lap purple; Pax, Oct 8).
 - **Names stay white** (house rule).
 - **One token drives it:** `--team-primary` (plus `--team-ink` for icons on it). Change the team, and every accent and icon re-colours. Nothing else in the UI hard-codes a colour; signal colours come from `--signal-*` tokens and rarity from `--rarity-*` (metals).
 
@@ -68,8 +68,8 @@ Fallbacks: Archivo → `'Arial Black', sans-serif`; Source Serif 4 → `Georgia,
 | `--pw-text-3` | `#7c7c84` | labels, captions |
 | `--pw-hairline` | `#2a2a2e` | row separators |
 | `--pw-border-strong` | `#4a4a50` | quiet outlines |
-| `--team-primary` | the active team's primary (neutral: `#ffffff`) | the one accent |
-| `--team-ink` | the team's `ink` (neutral: `#0b0b0c`) | text and icons drawn **on** the primary |
+| `--team-primary` | the active team's primary (no team: purple `#a98bff`) | the one accent |
+| `--team-ink` | the team's `ink` (no team: `#0b0b0c`) | text and icons drawn **on** the primary |
 | `--signal-red` · `--signal-yellow` · `--signal-green` · `--signal-purple` | `#ff5a4f` · `#f2c230` · `#34d27a` · `#a98bff` | traffic lights, gains (green) / losses (red), best / fastest (purple) |
 | `--rarity-bronze` · `--rarity-silver` · `--rarity-gold` · `--rarity-iridium` | `#C98B5B` · `#9FB4C8` · `#E6BE4A` · `#B7A3FF` | card and tag rarity (the rename is [#385](https://github.com/GrizzlyPax/Parabolica/issues/385); until it lands, today's `--rarity-common`… carry these values) |
 
@@ -92,7 +92,7 @@ Fallbacks: Archivo → `'Arial Black', sans-serif`; Source Serif 4 → `Georgia,
 1. **One icon per meaning.** Code asks for a *meaning* (`weather.rain`, `stat.speed`, `ui.close`), never a file. A registry maps meaning → icon, so swapping art is a data change.
 2. **Icons are always `currentColor`.** An icon has no colour of its own; it takes the colour of its context.
 3. **Colour comes from roles, not hexes.** Each screen asks for a role:
-   - `--team-primary` (+ `--team-ink` for icons drawn on it): the active team, yours in Season Mode, otherwise a neutral;
+   - `--team-primary` (+ `--team-ink` for icons drawn on it): the active team, yours in Season Mode, otherwise Parabolica purple;
    - `--rarity-*` (metals: bronze · silver · gold · iridium, for card and tag chips; the word always shows);
    - the existing `--pw-*` Pit Wall tokens for everything neutral.
 4. **Team logos = icon on primary:** a white or near-black icon on the team's primary tile. No badge shapes, no secondary colour.
