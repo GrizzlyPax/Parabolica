@@ -1,4 +1,4 @@
-/* Main menu — The look (Almanac, docs/ICONS.md). Black and white, square
+/* Main menu — The look (Almanac, type Pulp Almanac; docs/ICONS.md). Black and white, square
    corners, white rules; your team's colour only on the primary block. */
 .main-menu {
   min-height: 100vh;
@@ -26,16 +26,16 @@
 .mm-curve-apex { fill: var(--team-primary); }
 .mm-title {
   position: relative; margin: 0;
-  font-family: var(--look-display); font-weight: 900; font-stretch: 112%;
-  font-size: clamp(46px, 10vw, 64px); line-height: 0.9; letter-spacing: -0.035em;
+  font-family: var(--look-display); font-weight: 700;
+  font-size: clamp(50px, 11vw, 68px); line-height: 0.9; letter-spacing: -0.02em;
 }
-.mm-tm { font-family: var(--look-data); font-size: 10px; font-weight: 700; font-stretch: 100%; color: var(--pw-text-3); vertical-align: top; margin-left: 4px; letter-spacing: 0.08em; }
+.mm-tm { font-family: var(--look-data); font-size: 10px; font-weight: 400; color: var(--pw-text-3); vertical-align: top; margin-left: 4px; letter-spacing: 0.08em; }
 .mm-sub { position: relative; margin: 0; font-style: italic; font-size: 16px; line-height: 1.35; color: var(--pw-text-2); }
 
 /* Sections: a caps label over a white rule */
 .mm-section { display: flex; flex-direction: column; gap: 0; }
 .mm-k {
-  font-family: var(--look-data); font-weight: 700; font-size: 10px; line-height: 1.2; letter-spacing: 0.08em;
+  font-family: var(--look-data); font-weight: 400; font-size: 11px; line-height: 1.2; letter-spacing: 0.06em;
   color: var(--pw-text-2); text-transform: uppercase;
   padding-bottom: 6px; border-bottom: 1px solid var(--pw-text-1); margin-bottom: 14px;
 }
@@ -48,10 +48,10 @@
 }
 .mm-hero:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset: 3px; }
 .mm-hero-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
-.mm-eyebrow { font-family: var(--look-data); font-weight: 700; font-size: 10px; letter-spacing: 0.08em; color: var(--pw-text-2); text-transform: uppercase; }
+.mm-eyebrow { font-family: var(--look-data); font-weight: 400; font-size: 11px; letter-spacing: 0.06em; color: var(--pw-text-2); text-transform: uppercase; }
 .mm-pill {
   display: inline-flex; align-items: center; gap: 6px;
-  font-family: var(--look-data); font-size: 10px; font-weight: 800; letter-spacing: 0.08em;
+  font-family: var(--look-data); font-size: 11px; font-weight: 400; letter-spacing: 0.06em;
   color: var(--pw-text-2);
 }
 .mm-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
@@ -59,17 +59,17 @@
 .mm-pill.tone-due { color: var(--signal-yellow); }
 .mm-pill.tone-done { color: var(--pw-text-1); }
 .mm-pill.tone-new { color: var(--pw-text-2); }
-.mm-hero-name { font-family: var(--look-display); font-weight: 800; font-size: 24px; line-height: 1.05; letter-spacing: -0.015em; }
+.mm-hero-name { font-family: var(--look-display); font-weight: 700; font-size: 24px; line-height: 1.05; }
 .mm-hero-line { font-size: 16px; color: var(--pw-text-2); line-height: 1.4; }
 .mm-ribbon { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 3px; }
 .mm-ribbon-cell { height: 6px; background: var(--pw-border); }
 .mm-ribbon-cell.run { background: var(--pw-text-1); }
 .mm-ribbon-cell.due { background: var(--signal-yellow); }
-.mm-hero-foot { display: flex; flex-direction: column; align-items: stretch; gap: 14px; font-family: var(--look-data); font-weight: 600; font-size: 13px; color: var(--pw-text-2); font-variant-numeric: tabular-nums; }
+.mm-hero-foot { display: flex; flex-direction: column; align-items: stretch; gap: 14px; font-family: var(--look-data); font-weight: 400; font-size: 13px; color: var(--pw-text-2); }
 .mm-cta {
   display: block; padding: 16px 18px;
   background: var(--team-primary); color: var(--team-ink);
-  font-family: var(--look-display); font-weight: 800; font-size: 17px; line-height: 1; letter-spacing: -0.01em;
+  font-family: var(--look-display); font-weight: 700; font-size: 17px; line-height: 1;
 }
 .mm-hero:hover .mm-cta { filter: brightness(1.08); }
 
@@ -85,21 +85,21 @@
 .mm-row-icon { width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; color: var(--pw-text-1); flex: none; }
 .mm-row-icon-dim { color: var(--pw-text-1); }
 .mm-row-text { flex: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-.mm-row-title { font-family: var(--look-display); font-weight: 700; font-size: 17px; line-height: 1; letter-spacing: -0.01em; display: flex; align-items: center; gap: 8px; }
+.mm-row-title { font-family: var(--look-display); font-weight: 700; font-size: 18px; line-height: 1; display: flex; align-items: center; gap: 8px; }
 .mm-row-sub { font-style: italic; font-size: 13px; line-height: 1.35; color: var(--pw-text-2); }
-.mm-row-chev { font-family: var(--look-display); font-size: 20px; color: var(--pw-text-3); line-height: 1; }
-.mm-tag { font-family: var(--look-data); font-size: 10px; font-weight: 700; letter-spacing: 0.08em; color: var(--pw-text-2); border: 1px solid var(--pw-border-strong); padding: 2px 5px; }
+.mm-row-chev { font-family: var(--look-data); font-size: 20px; color: var(--pw-text-3); line-height: 1; }
+.mm-tag { font-family: var(--look-data); font-size: 10px; font-weight: 400; letter-spacing: 0.06em; color: var(--pw-text-2); border: 1px solid var(--pw-border-strong); padding: 2px 5px; }
 .mm-row-form { cursor: default; }
 .mm-input {
   flex: 1; min-width: 0; height: 44px; padding: 0 12px; border-radius: 0;
   background: var(--pw-ground); border: 1px solid var(--pw-text-1); color: var(--pw-text-1);
-  font-family: var(--look-data); font-weight: 700; font-size: 15px;
+  font-family: var(--look-data); font-weight: 400; font-size: 15px;
 }
 .mm-input.error { border-color: var(--signal-red); }
 .mm-input::placeholder { color: var(--pw-text-3); }
 .mm-btn {
   height: 44px; padding: 0 16px; border-radius: 0; cursor: pointer;
-  font-family: var(--look-display); font-weight: 800; font-size: 17px; letter-spacing: -0.01em;
+  font-family: var(--look-display); font-weight: 700; font-size: 17px;
   border: 1px solid var(--pw-text-1); background: var(--pw-text-1); color: var(--pw-ground);
 }
 .mm-btn:disabled { background: transparent; color: var(--pw-text-3); border-color: var(--pw-border-strong); cursor: default; }
@@ -109,7 +109,7 @@
 .mm-footer {
   margin-top: auto; padding-top: 8px; border-top: 1px solid var(--pw-hairline);
   display: flex; justify-content: space-between;
-  font-family: var(--look-data); font-weight: 600; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--pw-text-3);
+  font-family: var(--look-data); font-weight: 400; font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--pw-text-3);
 }
 
 /* Open a league by code */

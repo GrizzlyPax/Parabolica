@@ -40,10 +40,11 @@
      src/icons/GameIcon.tsx. */
   --team-primary: var(--signal-purple);
   --team-ink: #0b0b0c;
-  /* The look (Almanac): wide grotesque display, book serif body, tabular data. */
-  --look-display: 'Archivo', 'Arial Black', sans-serif;
-  --look-serif: 'Source Serif 4', Georgia, serif;
-  --look-data: 'Archivo', system-ui, sans-serif;
+  /* The look, type "Pulp Almanac" (Pax, Oct 8): an old textbook serif for
+     headings and names, a worn typewriter for every number and label. */
+  --look-display: 'Old Standard TT', Georgia, serif;
+  --look-serif: 'Old Standard TT', Georgia, serif;
+  --look-data: 'Special Elite', 'Courier New', monospace;
   --pw-radius-s: 6px;
   --pw-radius-m: 10px;
   --pw-radius-l: 14px;
