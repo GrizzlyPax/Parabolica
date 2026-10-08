@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { GameIcon } from './icons/GameIcon';
 import './MainMenu.css';
 import { version } from '../package.json';
 
@@ -108,9 +109,7 @@ function MainMenu({ onSingleRace, onCommissioner, onCompendium, onGlossary, onOp
         <section className="mm-section">
           <div className="mm-k">Play</div>
           <button type="button" className="mm-row" onClick={onSingleRace}>
-            <span className="mm-row-icon">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M4 17V3M4 4h10l-2 3 2 3H4" /></svg>
-            </span>
+            <span className="mm-row-icon"><GameIcon name="ui.play" size={20} /></span>
             <span className="mm-row-text">
               <span className="mm-row-title">Quick Race</span>
               <span className="mm-row-sub">One race. Pick your cards, edit the grid, go.</span>
@@ -119,9 +118,7 @@ function MainMenu({ onSingleRace, onCommissioner, onCompendium, onGlossary, onOp
           </button>
 
           <button type="button" className="mm-row" onClick={onGlossary}>
-            <span className="mm-row-icon mm-row-icon-dim">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M4 4h5a2 2 0 0 1 2 2v11a1.5 1.5 0 0 0-1.5-1.5H4zM16 4h-5a2 2 0 0 0-2 2v11a1.5 1.5 0 0 1 1.5-1.5H16z" /></svg>
-            </span>
+            <span className="mm-row-icon"><GameIcon name="card.rule" size={20} /></span>
             <span className="mm-row-text">
               <span className="mm-row-title">World Deck</span>
               <span className="mm-row-sub">Every team, track, tag, card and god in the world, read from the data.</span>
@@ -130,9 +127,7 @@ function MainMenu({ onSingleRace, onCommissioner, onCompendium, onGlossary, onOp
           </button>
 
           <button type="button" className="mm-row" onClick={onCompendium}>
-            <span className="mm-row-icon mm-row-icon-dim">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><circle cx="6" cy="6" r="2.5" /><circle cx="14" cy="14" r="2.5" /><path d="M8.5 6H17M3 14h8.5M6 3v-1M14 18v-1" /></svg>
-            </span>
+            <span className="mm-row-icon"><GameIcon name="view.detail" size={20} /></span>
             <span className="mm-row-text">
               <span className="mm-row-title">Race Control</span>
               <span className="mm-row-sub">The lab: seeded batches, tag calibration, odds. Every number replicable.</span>

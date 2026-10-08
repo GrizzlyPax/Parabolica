@@ -1,9 +1,10 @@
-// The idea inbox (World Deck capture): a floating 💡 on every screen. Type or
+// The idea inbox (World Deck capture): a floating idea button on every screen. Type or
 // dictate a few sentences, tag what kind of thing it is, and either send it
 // straight to GitHub as an `idea` issue (prefilled; you press Submit there) or
 // keep it in this browser's inbox to send later. The screen you were on, the
 // race seed and the track ride along as context so an agent can act on it.
 import { useEffect, useRef, useState } from 'react';
+import { GameIcon } from './icons/GameIcon';
 import './IdeaBox.css';
 
 export interface IdeaContext {
@@ -106,7 +107,7 @@ export default function IdeaBox({ context }: { context: IdeaContext }) {
   return (
     <>
       <button type="button" className="idea-fab" onClick={() => setOpen(o => !o)} title="Capture an idea (⌘⇧I)" aria-label="Capture an idea">
-        💡{count > 0 && <span className="idea-fab-count">{count}</span>}
+        <GameIcon name="ui.idea" size={22} />{count > 0 && <span className="idea-fab-count">{count}</span>}
       </button>
       {toast && <div className="idea-toast">{toast}</div>}
       {open && (
@@ -128,7 +129,7 @@ export default function IdeaBox({ context }: { context: IdeaContext }) {
             {KINDS.map(k => <button key={k.id} type="button" className={`idea-kind ${kind === k.id ? 'on' : ''}`} onClick={() => setKind(k.id)}>{k.label}</button>)}
           </div>
           <div className="idea-actions">
-            {canSpeak && <button type="button" className={`rs-btn rs-btn-ghost ${listening ? 'idea-listening' : ''}`} onClick={dictate}>{listening ? '● Listening… tap to stop' : '🎤 Dictate'}</button>}
+            {canSpeak && <button type="button" className={`rs-btn rs-btn-ghost ${listening ? 'idea-listening' : ''}`} onClick={dictate}>{listening ? '● Listening… tap to stop' : <><GameIcon name="ui.dictate" size={16} /> Dictate</>}</button>}
             <span className="idea-spacer" />
             <button type="button" className="rs-btn rs-btn-ghost" disabled={!text.trim()} onClick={keep}>Keep for later</button>
             <button type="button" className="rs-btn rs-btn-primary" disabled={!text.trim()} onClick={send}>Send to GitHub →</button>
