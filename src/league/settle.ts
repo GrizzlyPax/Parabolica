@@ -122,7 +122,7 @@ function prepareEngine(
   return engine;
 }
 
-function runScheduledRace(
+export function runScheduledRace(
   league: LeagueState,
   raceIndex: number,
   track: Track,
