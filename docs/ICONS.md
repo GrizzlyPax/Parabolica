@@ -10,6 +10,8 @@
 ## The colour system (Pax, Oct 8)
 The whole UI is **black and white plus one colour: your team's.** Everything else is earned.
 
+**Touchstone: Blaseball** (Pax). Stark black and white, confident type, lots of negative space, one flat colour per team, no gradients or chrome. The strangeness lives in the words, not the visuals. When unsure, take colour away.
+
 | Layer | Where | Colour |
 |---|---|---|
 | **Base** | backgrounds, panels, text, icons, borders, most of every screen | **black + white** (greys only as shades of these) |
