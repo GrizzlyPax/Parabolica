@@ -81,8 +81,11 @@ export const COLUMN_TEAM_MARBLE: ColumnConfig = {
         fontFamily: driver.number !== undefined ? 'var(--look-data, monospace)' : undefined,
         fontWeight: 600,
         lineHeight: 1,
+        // Centre the digits themselves, not the font's line box: Special
+        // Elite's descender space otherwise lifts the number (#451).
+        textBox: 'trim-both cap alphabetic',
         boxShadow: `0 0 6px ${driver.color}60`,
-      }}
+      } as React.CSSProperties}
     >
       {driver.number ?? driver.emoji}
     </span>
@@ -341,7 +344,7 @@ export const COLUMN_TIRES: ColumnConfig = {
 // can literally watch Rain Dancer wake when the skies open.
 export const COLUMN_TAGS: ColumnConfig = {
   id: 'tags',
-  header: 'Tags',
+  header: 'Cards',
   width: '118px',
   align: 'center',
   render: (driver: Driver, ctx: RowContext) => {
@@ -353,7 +356,7 @@ export const COLUMN_TAGS: ColumnConfig = {
     return (
       <span className="tag-chips">
         {cards.map(c => (ctx.sealed ? <CardDot key={c.id} card={c} /> : <CardFace key={c.id} card={c} size="mini" flippable={false} />))}
-        {driver.tags.length > 0 && <TagChips tags={driver.tags} stack={ctx.effectStack} />}
+        {!ctx.sealed && driver.tags.length > 0 && <TagChips tags={driver.tags} stack={ctx.effectStack} />}
         {hits.length > 0 && <EffectChips entries={hits} />}
       </span>
     );

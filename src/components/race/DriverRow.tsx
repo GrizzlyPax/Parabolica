@@ -4,6 +4,7 @@
 import type { DriverRowProps } from './types';
 import { ordinal, type FieldRank } from '../../betting/utils';
 import { effectPills } from './TagChips';
+import { CardDot, CardFace } from '../../cards/CardFace';
 
 /** "3rd of 22" as a chip coloured by where that sits in the field. */
 function RankChip({ r, what, unit }: { r?: FieldRank; what: string; unit: string }) {
@@ -56,7 +57,8 @@ function DriverRow({ driver, columns, context, gridTemplate, isFocused, expandab
       {isFocused && expandable && (
         <div className="timing-row-expanded" style={{ '--team-color': driver.color } as React.CSSProperties}>
           <div className="expanded-content">
-            <span className="expanded-full-name">{driver.name}</span>
+            {/* The Detail view already has a full-name column; don't say it twice (#451). */}
+            {!columns.some(c => c.id === 'driverFullName') && <span className="expanded-full-name">{driver.name}</span>}
             {context.fantasyTeam && <span className="expanded-fact"><span className="expanded-k">Fantasy</span> <span className="fantasy-badge" style={{ '--fantasy-color': context.fantasyTeam.color } as React.CSSProperties}>{context.fantasyTeam.name}</span></span>}
             {context.sealed ? (
               <span className="expanded-fact"><span className="expanded-k">Rival</span> stats and cards stay sealed</span>
@@ -73,6 +75,15 @@ function DriverRow({ driver, columns, context, gridTemplate, isFocused, expandab
               </span>
             )}
           </div>
+          {/* Cards: yours face up (mini, metal visible); a rival's as metal dots only (#451) */}
+          {(driver.cards ?? []).length > 0 && (
+            <div className="expanded-cards">
+              <span className="expanded-k">Cards</span>
+              {context.sealed
+                ? (driver.cards ?? []).map(c => <CardDot key={c.id} card={c} />)
+                : (driver.cards ?? []).map(c => <span key={c.id} className="expanded-card"><CardFace card={c} size="mini" flippable={false} /><span className="expanded-card-name">{c.name}</span></span>)}
+            </div>
+          )}
           {/* The effect stack: everything acting on this driver, with the reason (#243) */}
           <div className="effect-stack">
             {!context.sealed && (context.effectStack ?? []).length === 0 && (

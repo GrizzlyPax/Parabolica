@@ -422,6 +422,9 @@
 
 /* === Focus row: facts + effect stack === */
 .expanded-fact { font-size: 12px; color: var(--pw-text-2); white-space: nowrap; }
+.expanded-cards { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding: 6px 0 2px; }
+.expanded-card { display: inline-flex; align-items: center; gap: 6px; }
+.expanded-card-name { font-size: 12px; color: var(--pw-text-2); }
 .expanded-k { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; color: var(--pw-text-3); text-transform: uppercase; margin-right: 4px; }
 /* Field rank: where this driver / car stacks up on this grid. 1st purple, then thirds green / yellow / red. */
 .rank-chip { display: inline-block; white-space: nowrap; padding: 1px 7px; border-radius: 999px; border: 1px solid currentColor; font-family: var(--font-mono); font-size: 11.5px; font-weight: 600; line-height: 1.5; cursor: help; }
