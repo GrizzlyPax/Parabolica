@@ -10,7 +10,6 @@ import { useEffect, useMemo, useState, ReactNode } from 'react';
 import { buildGlossary, describeTrigger, describeInRaceRule, effectsOf, GlossaryTag } from './data/glossary';
 import { ALL_TAGS, RARITIES, Rarity, Tag, TagTarget, isGenesisTag } from './data/tags';
 import { defaultRuleset, describeChance } from './rules/ruleset';
-import { intrinsicTrackTags } from './data/trackTags';
 import TagChips from './components/race/TagChips';
 import { Idea, loadIdeas, saveIdeas, issueUrl, ideasAsPrompt } from './IdeaBox';
 import { GameIcon, TeamLogo, teamThemeVars } from './icons/GameIcon';
@@ -83,7 +82,7 @@ function Section({ id, title, count, hint, collapsed, onToggle, children, extra 
 }
 
 const NOT_YET = 'Not in the sim yet: genesis (#313) and Quick Race (#337) deal these.';
-const NOT_YET_TRACK = 'Raced once the sim switches (#359).';
+const NOT_YET_TRACK = 'Every race and season calendar draws from these.';
 
 function FavourIcons({ favours }: { favours: CardStat[] }) {
   return <span className="card-marks">{favours.map(f => <GameIcon key={f.stat} name={STAT_ICONS[f.stat]} size={16} title={STAT_LABELS[f.stat]} />)}</span>;
@@ -104,7 +103,7 @@ const RARITY_HINT = 'Rarity only sets how often the genesis draw finds it.';
 // ---------- Add tab: drafts ----------
 
 interface TagDraft { kind: 'tag'; id: string; name: string; emoji: string; description: string; target: TagTarget; rarity: Rarity; speed: number; consistency: number; luck: number; crash: number; pit: number; note: string }
-interface TeamDraft { kind: 'team'; id: string; name: string; emoji: string; color: string; accentColor: string; description: string; note: string }
+interface TeamDraft { kind: 'team'; id: string; name: string; emoji: string; color: string; description: string; note: string }
 type Draft = TagDraft | TeamDraft;
 const DRAFTS_KEY = 'parabolica.worldDeck.drafts';
 
@@ -113,7 +112,7 @@ const q1 = (s: string) => s.replace(/'/g, "\\'");
 
 function draftToCode(d: Draft): string {
   if (d.kind === 'team') {
-    return `  { id: '${d.id}', name: '${q1(d.name)}', emoji: '${d.emoji}', color: '${d.color}', accentColor: '${d.accentColor}',\n    description: '${q1(d.description)}' },`;
+    return `  { id: '${d.id}', name: '${q1(d.name)}', kind: 'privateer', emoji: '${d.emoji}', iconId: 'race-car', color: '${d.color}', ink: '#FFFFFF',\n    description: '${q1(d.description)}' },`;
   }
   const fx: string[] = [];
   if (d.speed) fx.push(`speedModifier: ${(1 + d.speed / 100).toFixed(3)}`);
@@ -144,7 +143,7 @@ function draftPreviewTag(d: TagDraft): Tag {
 }
 
 const blankTag = (): TagDraft => ({ kind: 'tag', id: '', name: '', emoji: '', description: '', target: 'driver', rarity: 'bronze', speed: 0, consistency: 0, luck: 0, crash: 0, pit: 0, note: '' });
-const blankTeam = (): TeamDraft => ({ kind: 'team', id: '', name: '', emoji: '', color: '#3671C6', accentColor: '#E63946', description: '', note: '' });
+const blankTeam = (): TeamDraft => ({ kind: 'team', id: '', name: '', emoji: '', color: '#3671C6', description: '', note: '' });
 
 function AddTab() {
   const [drafts, setDrafts] = useState<Draft[]>(() => { try { return JSON.parse(localStorage.getItem(DRAFTS_KEY) ?? '[]'); } catch { return []; } });
@@ -186,7 +185,6 @@ function AddTab() {
           {d.kind === 'team' && (
             <>
               <label><span className="rs-k">Colour</span><input type="color" value={d.color} onChange={e => set({ color: e.target.value })} /></label>
-              <label><span className="rs-k">Accent</span><input type="color" value={d.accentColor} onChange={e => set({ accentColor: e.target.value })} /></label>
             </>
           )}
           <label className="gl-wide"><span className="rs-k">Note to the builder</span><input value={d.note} onChange={e => set({ note: e.target.value })} placeholder="optional — the story behind it, a number you want the lab to check" /></label>
@@ -289,7 +287,7 @@ export default function Glossary({ onBack }: GlossaryProps) {
   const toggle = (id: string) => setOpen(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
   const toggleSection = (id: string) => setFlipped(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
   // The retiring grid stays folded even on "Expand all"; open it by hand (#402).
-  const STAY_FOLDED = new Set(['teams:current', 'teams:historic', 'tracks:current', 'tracks:historic', 'weather', 'characters', 'inflictions']);
+  const STAY_FOLDED = new Set<string>();
   const staysFolded = (id: string) => STAY_FOLDED.has(id) || id === 'roll' || id.startsWith('tags:');
   // The sample card sheet starts open so the deck tab leads with it (#331).
   const startsOpen = (id: string) => id === 'deck:sheet';
@@ -338,7 +336,6 @@ export default function Glossary({ onBack }: GlossaryProps) {
     }),
     { id: 'acquired', title: 'Acquired tags', hint: 'Awarded after a race for what happened in it. Take effect next race.', rows: g.tags.filter(t => t.group === 'acquired') },
     { id: 'in-race', title: 'In-race tags', hint: 'Picked up mid-race. Expire by lap, at the next stop, or at the flag.', rows: g.tags.filter(t => t.group === 'in-race') },
-    { id: 'condition', title: 'Condition tags', hint: 'Stamped by track events for one race only.', rows: g.tags.filter(t => t.group === 'condition') },
   ];
   const sortControl = (
     <select className="gl-sort" value={tagSort} onChange={e => setTagSort(e.target.value as typeof tagSort)} aria-label="Sort tags">
@@ -346,9 +343,7 @@ export default function Glossary({ onBack }: GlossaryProps) {
     </select>
   );
 
-  const deckTeamGroups = TEAM_KINDS.map(k => ({ id: k.kind, title: k.title, rows: g.deckTeams.filter(t => t.kind === k.kind), hint: `${k.hint} Base deck: on the grid once the sim switches (#356).` }));
-  const teamGroups = [{ id: 'current', title: "Today's grid (retiring)", rows: g.teams, hint: 'Quick Race and leagues still race these until the base deck takes over.' }, { id: 'historic', title: 'Historic teams (retiring)', rows: g.historicTeams, hint: 'Unlockable today; leave with the old grid.' }];
-  const trackGroups = [{ id: 'current', title: "Today's tracks (retiring)", rows: g.tracks, hint: 'The themed circuits races still use until the six stat-combo tracks take over (#359).' }, { id: 'historic', title: 'Historic tracks (retiring)', rows: g.historicTracks, hint: 'Unlockable today; leave with the themed tracks.' }];
+  const deckTeamGroups = TEAM_KINDS.map(k => ({ id: k.kind, title: k.title, rows: g.deckTeams.filter(t => t.kind === k.kind), hint: `${k.hint} Quick Race draws its 11 and Season Mode its CPU teams from these.` }));
 
   return (
     <div className="run-setup glossary">
@@ -392,7 +387,7 @@ export default function Glossary({ onBack }: GlossaryProps) {
 
       {tab === 'deck' && (
         <>
-          <Section {...sec('roll')} title="How a driver is born with tags (retiring)" hint="Three slots: driver, car (their own chassis), team (shared with their teammate).">
+          <Section {...sec('roll')} title="How a driver is born with cards (and tags)" hint="Three slots: driver, car (their own chassis), team (shared with their teammate). Quick Race and Season Mode deal trait cards from the deck above; leagues and the lab still roll these tags until v0.6.">
             <ol className="gl-roll">
               <li><b>Does the slot hit?</b> {describeChance(rs.tags.genesisChance)}.</li>
               <li><b>Which bucket?</b> {RARITIES.map((r, i) => <span key={r}>{i > 0 && ' · '}{rs.tags.rarityOdds[r]}% <span className={`rarity-word rarity-${r}`}>{r}</span></span>)}. Fixed odds — more tags in a bucket just means more variety, not more of that bucket.</li>
@@ -403,7 +398,7 @@ export default function Glossary({ onBack }: GlossaryProps) {
             const rows = sortTags(grp.rows.filter(t => match(t.tag.name, t.tag.id, t.tag.description, t.fires, t.source)));
             if (!rows.length) return null;
             return (
-              <Section key={grp.id} {...sec(`tags:${grp.id}`)} title={`${grp.title} (retiring)`} count={grp.rows.length} hint={`${grp.hint} Races use tags until cards are dealt (#313, #337).`} extra={sortControl}>
+              <Section key={grp.id} {...sec(`tags:${grp.id}`)} title={`${grp.title} (leagues + lab)`} count={grp.rows.length} hint={`${grp.hint} Quick Race and Season Mode run on cards; tags remain for leagues and Race Control until v0.6 (#334).`} extra={sortControl}>
                 <div className="gl-list">{rows.map(tagRow)}</div>
               </Section>
             );
@@ -429,25 +424,6 @@ export default function Glossary({ onBack }: GlossaryProps) {
           </Section>
         );
       })}
-      {tab === 'teams' && teamGroups.map(grp => {
-        const rows = grp.rows.filter(t => match(t.name, t.id, t.description));
-        if (!rows.length) return null;
-        return (
-          <Section key={grp.id} {...sec(`teams:${grp.id}`)} title={grp.title} count={grp.rows.length} hint={grp.hint}>
-            <div className="gl-list">
-              {rows.map(t => (
-                <Row key={t.id} id={`team:${t.id}`} open={isOpen(`team:${t.id}`)} onToggle={toggle}
-                  lead={<span className="gl-plain gl-team"><TeamLogo team={t} size={20} /> {t.name}</span>}
-                  pills={<span className="gl-readout">{t.description}</span>}>
-                  <p className="gl-desc">{t.description}</p>
-                  <div className="gl-facts"><Fact k="Colours">{t.color} / {t.accentColor}</Fact><Fact k="Id">{t.id}</Fact></div>
-                </Row>
-              ))}
-            </div>
-          </Section>
-        );
-      })}
-
       {tab === 'tracks' && (
         <Section {...sec('tracks:deck')} title="Tracks (v0.5)" count={BASE_DECK_TRACKS.length} hint={`Six tracks, one stat combo each: the favoured stats count +10% for the race. ${NOT_YET_TRACK}`}>
           <div className="gl-list">
@@ -457,36 +433,12 @@ export default function Glossary({ onBack }: GlossaryProps) {
                 note={t.layoutId}
                 pills={<span className="gl-readout">{favourText(t.favours)}</span>}>
                 <div className="gl-facts"><Fact k="Favours">{favourText(t.favours)}</Fact><Fact k="Layout">{t.layoutId}</Fact><Fact k="Id">{t.id}</Fact></div>
-                <div className="gl-src">src/data/deckTracks.ts · not raced yet (#359)</div>
+                <div className="gl-src">src/data/deckTracks.ts</div>
               </Row>
             ))}
           </div>
         </Section>
       )}
-      {tab === 'tracks' && trackGroups.map(grp => {
-        const rows = grp.rows.filter(t => match(t.name, t.id, t.description));
-        if (!rows.length) return null;
-        return (
-          <Section key={grp.id} {...sec(`tracks:${grp.id}`)} title={grp.title} count={grp.rows.length} hint={grp.hint}>
-            <div className="gl-list">
-              {rows.map(t => (
-                <Row key={t.id} id={`track:${t.id}`} open={isOpen(`track:${t.id}`)} onToggle={toggle}
-                  lead={<span className="gl-plain">{t.emoji} {t.funEmoji} {t.name}</span>}
-                  note={`${t.laps} laps · ${t.length}m`}
-                  pills={<span className="gl-readout">{t.description}</span>}>
-                  <p className="gl-desc">{t.description}</p>
-                  <div className="gl-facts">
-                    <Fact k="Layout">{t.layout.id}</Fact>
-                    <Fact k="Character">{intrinsicTrackTags(t.id).map(x => `${x.emoji} ${x.name}`).join(', ') || '—'}</Fact>
-                    <Fact k="Event">{t.event ? `${t.event.emoji} ${t.event.name}` : 'none yet'}</Fact>
-                  </div>
-                </Row>
-              ))}
-            </div>
-          </Section>
-        );
-      })}
-
       {tab === 'cards' && (
         <Section {...sec('cards')} title="Rule cards" count={g.cards.length} hint="Rules you pick before a run. Race rule cards for one race, season rule cards for a whole league.">
           <div className="gl-list">
@@ -542,49 +494,7 @@ export default function Glossary({ onBack }: GlossaryProps) {
                   note={`${w.odds}%`}
                   pills={<span className="gl-readout">{w.favours.length ? favourText(w.favours) : 'no favours'}</span>}>
                   <div className="gl-facts"><Fact k="Odds">{w.odds}% of races</Fact><Fact k="Favours">{w.favours.length ? favourText(w.favours) : '—'}</Fact><Fact k="Id">{w.id}</Fact></div>
-                  <div className="gl-src">src/data/deckWeather.ts · not raced yet (#359)</div>
-                </Row>
-              ))}
-            </div>
-          </Section>
-          <Section {...sec('weather')} title="Today's weather (retiring)" count={g.weather.length} hint="What races still roll until the swap. Odds are the defaults; rule cards change them.">
-            <div className="gl-list">
-              {g.weather.filter(w => match(w.name, w.id)).map(w => {
-                const total = g.weather.reduce((s, x) => s + x.weight, 0);
-                return (
-                  <Row key={w.id} id={`wx:${w.id}`} open={isOpen(`wx:${w.id}`)} onToggle={toggle}
-                    lead={<span className="gl-plain">{w.emoji} {w.name}</span>}
-                    note={`${Math.round(w.weight / total * 100)}%`}
-                    pills={<Pills effects={effectsOf(w.baseEffects)} />}>
-                    <div className="gl-facts"><Fact k="Odds">{Math.round(w.weight / total * 100)}% of races</Fact><Fact k="Stamps">{w.conditions.join(', ') || '—'}</Fact></div>
-                  </Row>
-                );
-              })}
-            </div>
-          </Section>
-          <Section {...sec('characters')} title="Track characters (retiring)" count={g.trackTags.length} hint="A circuit's intrinsic lean, field-wide. Retire with the themed tracks.">
-            <div className="gl-list">
-              {g.trackTags.filter(t => match(t.name, t.id)).map(t => (
-                <Row key={t.id} id={`trk:${t.id}`} open={isOpen(`trk:${t.id}`)} onToggle={toggle}
-                  lead={<span className="gl-plain">{t.emoji} {t.name}</span>}
-                  pills={<Pills effects={effectsOf(t.passive ?? {})} />}>
-                  <div className="gl-facts">
-                    <Fact k="Stamps">{(t.conditions ?? []).join(', ') || '—'}</Fact>
-                    <Fact k="Tracks">{g.tracks.filter(tr => intrinsicTrackTags(tr.id).some(i => i.id === t.id)).map(tr => `${tr.funEmoji} ${tr.name}`).join(' · ') || '—'}</Fact>
-                  </div>
-                </Row>
-              ))}
-            </div>
-          </Section>
-          <Section {...sec('inflictions')} title="Inflictions (retiring)" count={g.inflictions.length} hint="Mid-race strikes the conditions can land on one driver. Parked for a Horror deck.">
-            <div className="gl-list">
-              {g.inflictions.filter(i => match(i.name, i.id)).map(i => (
-                <Row key={i.id} id={`inf:${i.id}`} open={isOpen(`inf:${i.id}`)} onToggle={toggle}
-                  lead={<span className="gl-plain">{i.emoji} {i.name}</span>}
-                  note={`needs ${i.requiresCondition.join(', ')}`}
-                  pills={<Pills effects={effectsOf(i.effects)} />}>
-                  <p className="gl-desc">{i.activationText}</p>
-                  <div className="gl-facts"><Fact k="Needs">{i.requiresCondition.join(', ')}</Fact><Fact k="Lasts">~{Math.round(i.durationTicks / 10)}s</Fact></div>
+                  <div className="gl-src">src/data/deckWeather.ts</div>
                 </Row>
               ))}
             </div>

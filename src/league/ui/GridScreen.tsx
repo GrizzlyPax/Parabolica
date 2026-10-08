@@ -49,7 +49,7 @@ function DriverEntry({ driver, stats }: { driver: RosterDriver; stats?: DriverSe
   return (
     <div className={`grid-driver ${open ? 'open' : ''}`}>
       <button className="grid-driver-row" onClick={() => setOpen(!open)}>
-        <TeamMarble color={driver.color} accentColor={driver.accentColor}
+        <TeamMarble color={driver.color} ink={driver.ink} number={driver.number}
           emoji={driver.emoji} size={24} slot={driver.driverSlot} />
         <span className="grid-driver-name">{driver.fullName}</span>
         <TagChips tags={tagsFor(driver.tags, 'driver')} showName icons />

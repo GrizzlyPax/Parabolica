@@ -760,7 +760,7 @@ export const CANON_VARIABLES: SimVariables = {
     tyreWeight: 1.0,
     aggressionSwing: 0.8,
     defenderWeight: 1.2,
-    trackDifficulty: { 'high-speed': 0.75, technical: 1.5, hazardous: 1.1 },
+    trackDifficulty: {}, // keyed by track id; every v0.5 track passes normally (Tracks & Weather v2)
     battleTicks: 20,
     heldCrashFactor: 0.25,
   },

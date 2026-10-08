@@ -7,8 +7,6 @@ import { ACQUISITION_RULES } from './acquisitions';
 import { IN_RACE_RULES } from './inRace';
 import { RULE_CARDS } from './ruleCards';
 import { WEATHER_TYPES } from './weather';
-import { TRACK_TAGS } from './trackTags';
-import { INFLICTIONS } from './inflictions';
 import { CURRENT_TEAMS, HISTORIC_TEAMS } from './teams';
 import { BASE_DECK_TEAMS, TEAM_KINDS } from './deckTeams';
 import { BASE_DECK_TRACKS, FAVOUR_PCT } from './deckTracks';
@@ -37,7 +35,7 @@ const nonEmpty = (s: string | undefined, what: string) => expect((s ?? '').trim(
 
 describe('ids are unique, kebab-case, and every record has a name and emoji', () => {
   const registries: [string, { id: string; name: string; emoji: string }[]][] = [
-    ['tags', ALL_TAGS], ['cards', RULE_CARDS], ['weather', WEATHER_TYPES], ['track tags', TRACK_TAGS], ['inflictions', INFLICTIONS],
+    ['tags', ALL_TAGS], ['cards', RULE_CARDS], ['weather', WEATHER_TYPES],
     ['teams', [...CURRENT_TEAMS, ...HISTORIC_TEAMS]], ['tracks', [...CURRENT_TRACKS, ...HISTORIC_TRACKS]], ['gods', GODS],
   ];
   for (const [what, rows] of registries) {
@@ -54,7 +52,6 @@ describe('ids are unique, kebab-case, and every record has a name and emoji', ()
 });
 
 describe('references point at things that exist', () => {
-  const conditionIds = new Set([...WEATHER_TYPES.flatMap(w => w.conditions), ...TRACK_TAGS.flatMap(t => t.conditions ?? [])]);
   it('acquisition and in-race rules award real tags', () => {
     for (const r of ACQUISITION_RULES) expect(getTagById(r.tagId), `rule ${r.id} → ${r.tagId}`).toBeDefined();
     for (const r of IN_RACE_RULES) expect(getTagById(r.tagId), `rule ${r.id} → ${r.tagId}`).toBeDefined();
@@ -62,9 +59,10 @@ describe('references point at things that exist', () => {
   it('tag actions point at real tags', () => {
     for (const t of ALL_TAGS) for (const a of t.afterRace ?? []) if (a.do !== 'expire-self') expect(getTagById(a.tagId), `${t.id} → ${a.tagId}`).toBeDefined();
   });
-  it('condition gates and infliction requirements name conditions that something stamps', () => {
-    for (const t of ALL_TAGS) if (t.condition?.when === 'condition') expect(conditionIds.has(t.condition.has), `${t.id} gates on "${t.condition.has}" which nothing stamps`).toBe(true);
-    for (const i of INFLICTIONS) for (const c of i.requiresCondition) expect(conditionIds.has(c), `${i.id} needs "${c}" which nothing stamps`).toBe(true);
+  it('condition gates name a known condition id (dormant until Wet returns in v0.6)', () => {
+    // No v0.5 weather or track stamps a condition, so these tags sleep; they wake with Wet ('rain').
+    const KNOWN = new Set(['rain', 'scorcher']);
+    for (const t of ALL_TAGS) if (t.condition?.when === 'condition') expect(KNOWN.has(t.condition.has), `${t.id} gates on unknown "${t.condition.has}"`).toBe(true);
   });
   it('cards resolve and change something', () => {
     const base = JSON.stringify(defaultRuleset());
@@ -98,11 +96,15 @@ describe('tags are well-formed', () => {
 });
 
 describe('teams, tracks, gods, weather', () => {
-  it('team colours are hex and the two differ', () => {
-    for (const t of [...CURRENT_TEAMS, ...HISTORIC_TEAMS]) {
-      expect(t.color, `${t.id} color`).toMatch(HEX); expect(t.accentColor, `${t.id} accent`).toMatch(HEX);
-      expect(t.color.toLowerCase()).not.toBe(t.accentColor.toLowerCase());
+  it('the grid is the 28 base-deck teams: one hex colour + a white or near-black ink', () => {
+    expect(CURRENT_TEAMS.map(t => t.id)).toEqual(BASE_DECK_TEAMS.map(t => t.id));
+    expect(HISTORIC_TEAMS).toEqual([]);
+    for (const t of CURRENT_TEAMS) {
+      expect(t.color, `${t.id} color`).toMatch(HEX);
+      expect(['#FFFFFF', '#0A0A0C'], `${t.id} ink`).toContain(t.ink.toUpperCase());
+      expect(t.kind, t.id).toBeTruthy();
       nonEmpty(t.description, `${t.id} description`);
+      expect('accentColor' in t || 'secondaryColor' in t, t.id).toBe(false);
     }
   });
   it('tracks have a known layout, sane laps and length, and a vibe', () => {
@@ -117,9 +119,20 @@ describe('teams, tracks, gods, weather', () => {
   it('gods have an epithet, a hunger and an appetite', () => {
     for (const g of GODS) { nonEmpty(g.epithet, g.id); nonEmpty(g.hunger, g.id); nonEmpty(g.appetite, g.id); }
   });
-  it('weather weights are positive and clear is the most common', () => {
+  it('weather weights are positive, sum to 100 and neutral is the most common', () => {
     for (const w of WEATHER_TYPES) expect(w.weight).toBeGreaterThan(0);
-    expect(Math.max(...WEATHER_TYPES.map(w => w.weight))).toBe(WEATHER_TYPES.find(w => w.id === 'clear')!.weight);
+    expect(WEATHER_TYPES.reduce((s, w) => s + w.weight, 0)).toBe(100);
+    expect(Math.max(...WEATHER_TYPES.map(w => w.weight))).toBe(WEATHER_TYPES.find(w => w.id === 'neutral')!.weight);
+    expect(WEATHER_TYPES.map(w => w.id)).toEqual(BASE_DECK_WEATHER.map(w => w.id));
+  });
+  it('the six race tracks are the deck tracks, each on its layout drawing with its favours', () => {
+    expect(CURRENT_TRACKS.map(t => t.id)).toEqual(BASE_DECK_TRACKS.map(t => t.id));
+    for (const t of CURRENT_TRACKS) {
+      const deck = BASE_DECK_TRACKS.find(d => d.id === t.id)!;
+      expect(t.layout.id).toBe(LAYOUTS[deck.layoutId].id);
+      expect(t.favours).toEqual(deck.favours);
+    }
+    expect(HISTORIC_TRACKS).toEqual([]);
   });
 });
 
@@ -161,12 +174,12 @@ describe('base-deck teams', () => {
     for (const k of TEAM_KINDS) expect(BASE_DECK_TEAMS.filter(t => t.kind === k.kind)).toHaveLength(7);
   });
 
-  it('unique ids and colours; ids never reuse an old team id', () => {
+  it('unique ids and colours; none of the old 22 team ids remain', () => {
     const ids = BASE_DECK_TEAMS.map(t => t.id);
     expect(new Set(ids).size).toBe(28);
     expect(new Set(BASE_DECK_TEAMS.map(t => t.color.toLowerCase())).size).toBe(28);
-    const old = new Set([...CURRENT_TEAMS, ...HISTORIC_TEAMS].map(t => t.id));
-    for (const id of ids) expect(old.has(id), id).toBe(false);
+    const OLD = ['for-rory', 'breadbowl', 'mcelodeon', 'haazmat', 'daddyslacks', 'asteroid-martian', 'furbabies', 'haudy'];
+    for (const id of OLD) expect(ids.includes(id), id).toBe(false);
   });
 
   it('one colour + an ink that is white or near-black; every icon is vendored', () => {

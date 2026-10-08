@@ -30,6 +30,8 @@ export interface LeagueSetupConfig {
   fantasy?: FantasyConfig;
   /** The rules this run plays under (#241). Absent = defaults (pre-ruleset saves). */
   ruleset?: Ruleset;
+  /** Genesis deals trait cards instead of tags (Quick Race, #337). Leagues stay on tags until v0.6. */
+  cards?: boolean;
   /** Epoch ms of league founding; race i is scheduled at createdAt + i*interval
    * (the inaugural race airs at founding). A race that outlasts the interval
    * pushes its successor back — broadcasts queue, never overlap. */

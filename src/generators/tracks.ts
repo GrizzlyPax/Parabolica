@@ -23,49 +23,30 @@ export interface TrackLayout {
 }
 
 // ============================================
-// TRACK EVENT SYSTEM
+// TRACKS (Tracks & Weather v2, dry half — #359, docs/TRACKS_WEATHER.md)
+// Six stat-combo tracks replace the 31 themed ones. A track favours one driver
+// stat and one car/team stat for the race, field-wide, through the card math
+// (src/cards/apply.ts) at race build. Track events, the themed circuits and
+// their intrinsic "characters" are retired. Data: src/data/deckTracks.ts.
 // ============================================
 
-export type TrackEventTrigger =
-  | { type: 'lap'; laps: number[] }           // Specific laps
-  | { type: 'interval'; every: number }        // Every N laps
-  | { type: 'random'; chance: number }         // % chance per lap
-  | { type: 'halfway' }                        // At halfway point
-  | { type: 'condition'; condition: string }   // Special condition
-  | { type: 'final_laps'; count: number };     // Final N laps
-
-// All track effects apply condition tags to specific drivers
-export interface TrackEventEffect {
-  type: 'apply_tag';
-  triggerTag: string;
-  targets: 'random' | 'leader' | 'last' | 'top' | 'bottom';
-  count: number;
-  duration: number;
-}
-
-export interface TrackEvent {
-  id: string;
-  name: string;
-  emoji: string;
-  description: string;
-  flavorText: string;
-  trigger: TrackEventTrigger;
-  effect: TrackEventEffect;
-}
+import { BASE_DECK_TRACKS, type DeckTrack } from '../data/deckTracks';
+import type { CardStat } from '../cards/types';
 
 export interface Track {
   id: string;
   name: string;
   description: string;
   emoji: string;
-  funEmoji: string;      // Fun/theme emoji
+  funEmoji: string;      // Fun/theme emoji (fallback while screens migrate to icons)
   /** game-icon id or meaning (src/icons/registry.ts); falls back to funEmoji. */
   iconId?: string;
   length: number;
   laps: number;
   layout: TrackLayout;
-  event?: TrackEvent;    // Optional - to be assigned per track
-  isHistoric?: boolean;  // Historic tracks (unlockable)
+  /** Stats that count +pct% here, field-wide. Weather favours stack on top. */
+  favours: CardStat[];
+  isHistoric?: boolean;  // No historic tracks in v0.5; kept for the type's consumers
 }
 
 // ============================================
@@ -267,448 +248,40 @@ export const LAYOUTS: Record<string, TrackLayout> = {
   },
 };
 
-// ============================================
-// CURRENT SEASON TRACKS (24)
-// F1-Inspired with punny names and aesthetics
-// ============================================
 
-export const CURRENT_TRACKS: Track[] = [
-  // 1. Bahrain - Venhir (Modern tilke-style)
-  {
-    id: 'venhir',
-    name: 'Venhir',
-    description: 'Fangs gleaming under the lights, dentist chairs in every garage, open wide for inspection, floss mandatory.',
-    emoji: '🇧🇭',
-    funEmoji: '🦷',
-    length: 850,
-    laps: 15,
-    layout: LAYOUTS.modern,
-  },
-  // 2. Saudi Arabia - Cheddah (Street circuit, fast walls)
-  {
-    id: 'cheddah',
-    name: 'Cheddah',
-    description: 'Cheese caves as far as the eye can see, wheels aging in silence, the sharpest place on earth, brie breezes.',
-    emoji: '🇸🇦',
-    funEmoji: '🧀',
-    length: 900,
-    laps: 14,
-    layout: LAYOUTS.power,
-  },
-  // 3. Australia - All Bird Park (Flowing street circuit)
-  {
-    id: 'all-bird-park',
-    name: 'All Bird Park',
-    description: 'Feathers everywhere, constant squawking, birds judging your racing line, someone\'s cracker got stolen.',
-    emoji: '🇦🇺',
-    funEmoji: '🦜',
-    length: 820,
-    laps: 16,
-    layout: LAYOUTS.flowing,
-  },
-  // 4. Japan - Choo-Choo-Ka (Technical, Suzuka-style)
-  {
-    id: 'choo-choo-ka',
-    name: 'Choo-Choo-Ka',
-    description: 'Train heaven, steam galore, where all your ticket-punching dreams come true, eternal platform announcements.',
-    emoji: '🇯🇵',
-    funEmoji: '🚂',
-    length: 880,
-    laps: 15,
-    layout: LAYOUTS.technical,
-  },
-  // 5. China - Fang High (Modern circuit)
-  {
-    id: 'fang-high',
-    name: 'Fang High',
-    description: 'Lockers full of capes, prom is at midnight, the cafeteria only serves red, yearbook photos won\'t develop.',
-    emoji: '🇨🇳',
-    funEmoji: '🧛',
-    length: 850,
-    laps: 15,
-    layout: LAYOUTS.modern,
-  },
-  // 6. Miami - Spyami (Street circuit)
-  {
-    id: 'spyami',
-    name: 'Spyami',
-    description: 'Trench coats in the shadows, dead drops in the pit lane, everyone\'s got a handler, the walls have ears.',
-    emoji: '🇺🇸',
-    funEmoji: '🕵️‍♂️',
-    length: 800,
-    laps: 16,
-    layout: LAYOUTS.street,
-  },
-  // 7. Imola - Grimola (Classic old-school)
-  {
-    id: 'grimola',
-    name: 'Grimola',
-    description: 'Fog rolling through the chicanes, skulls grinning from the grandstands, beautiful but haunted, don\'t look back.',
-    emoji: '🇮🇹',
-    funEmoji: '💀',
-    length: 780,
-    laps: 17,
-    layout: LAYOUTS.classic,
-  },
-  // 8. Monaco - Monacoco (Tight street circuit)
-  {
-    id: 'monacoco',
-    name: 'Monacoco',
-    description: 'Chocolate waterfalls, cocoa fog in the streets, everything melts eventually, sweet sweet surrender.',
-    emoji: '🇲🇨',
-    funEmoji: '🍫',
-    length: 700,
-    laps: 18,
-    layout: LAYOUTS.street,
-  },
-  // 9. Spain - Cattylosers (Technical, flowing)
-  {
-    id: 'cattylosers',
-    name: 'Cattylosers',
-    description: 'Scratching posts for miles, hairball alley, where trophies go to fall, eternal hissing in the distance.',
-    emoji: '🇪🇸',
-    funEmoji: '🐱',
-    length: 820,
-    laps: 16,
-    layout: LAYOUTS.technical,
-  },
-  // 10. Canada - Mini-Vanada (Power circuit, walls)
-  {
-    id: 'mini-vanada',
-    name: 'Mini-Vanada',
-    description: 'Sliding doors and Cheerios in the seats, snack distribution from the front, "don\'t make me turn this around."',
-    emoji: '🇨🇦',
-    funEmoji: '🚙',
-    length: 800,
-    laps: 16,
-    layout: LAYOUTS.power,
-  },
-  // 11. Austria - Eelburg (Short, fast)
-  {
-    id: 'eelburg',
-    name: 'Eelburg',
-    description: 'Electric eels in the walls, everything\'s buzzing, don\'t touch the barriers, shockingly fast.',
-    emoji: '🇦🇹',
-    funEmoji: '⚡️',
-    length: 720,
-    laps: 18,
-    layout: LAYOUTS.flowing,
-  },
-  // 12. Great Britain - Silverclone (Fast flowing, Silverstone-style)
-  {
-    id: 'silverclone',
-    name: 'Silverclone',
-    description: 'Robots everywhere, uncanny valley vibes, everyone looks familiar, are you the original or the copy?',
-    emoji: '🇬🇧',
-    funEmoji: '🤖',
-    length: 880,
-    laps: 15,
-    layout: LAYOUTS.flowing,
-  },
-  // 13. Belgium - Spa Frankenstein (Classic, long, Spa-style)
-  {
-    id: 'spa-frankenstein',
-    name: 'Spa Frankenstein',
-    description: 'Frankenstein runs a surprisingly lovely spa here, hot springs and lightning therapy, monster hospitality, bolts on the house.',
-    emoji: '🇧🇪',
-    funEmoji: '🧟‍♂️',
-    length: 950,
-    laps: 14,
-    layout: LAYOUTS.classic,
-  },
-  // 14. Hungary - Tonguearoring (Technical, twisty)
-  {
-    id: 'tonguearoring',
-    name: 'Tonguearoring',
-    description: 'Flavor country, everything is a taste test, suspiciously sticky grandstands, lick at your own risk.',
-    emoji: '🇭🇺',
-    funEmoji: '👅',
-    length: 780,
-    laps: 17,
-    layout: LAYOUTS.technical,
-  },
-  // 15. Netherlands - Sandforts (Modern banked turns)
-  {
-    id: 'sandforts',
-    name: 'Sandforts',
-    description: 'Moats around every corner, bucket and spade engineering, tides come in without warning, your castle will fall.',
-    emoji: '🇳🇱',
-    funEmoji: '🏖️',
-    length: 760,
-    laps: 17,
-    layout: LAYOUTS.modern,
-  },
-  // 16. Italy - Monsta (Power circuit, Monza-style)
-  {
-    id: 'monsta',
-    name: 'Monsta',
-    description: 'Something roaring in the temple, speed demons welcome, the creature under the track hungers, feed it laps.',
-    emoji: '🇮🇹',
-    funEmoji: '🧌',
-    length: 900,
-    laps: 14,
-    layout: LAYOUTS.power,
-  },
-  // 17. Azerbaijan - Snapbaku (Street circuit, long straight)
-  {
-    id: 'snapbaku',
-    name: 'Snapbaku',
-    description: 'Hats flying everywhere, brims bent just right, backwards cap energy, fitted or nothing.',
-    emoji: '🇦🇿',
-    funEmoji: '🧢',
-    length: 920,
-    laps: 14,
-    layout: LAYOUTS.street,
-  },
-  // 18. Singapore - Subpoena Day (Street circuit, night)
-  {
-    id: 'subpoena-day',
-    name: 'Subpoena Day',
-    description: 'Court is in session, gavels banging, everyone\'s serving papers, the verdict is always dramatic.',
-    emoji: '🇸🇬',
-    funEmoji: '👩‍⚖️',
-    length: 850,
-    laps: 15,
-    layout: LAYOUTS.street,
-  },
-  // 19. Austin - MOTA (Modern, COTA-style)
-  {
-    id: 'mota',
-    name: 'MOTA',
-    description: 'Castle on a hill, drawbridge pit entry, jousting but faster, someone brought a trebuchet.',
-    emoji: '🇺🇸',
-    funEmoji: '🏰',
-    length: 880,
-    laps: 15,
-    layout: LAYOUTS.modern,
-  },
-  // 20. Mexico - T-Rex & Co. (Flowing, stadium section)
-  {
-    id: 't-rex-and-co',
-    name: 'T-Rex & Co.',
-    description: 'Family business since the Jurassic, tiny arms big dreams, the siblings run this town, meteor-proof since \'65.',
-    emoji: '🇲🇽',
-    funEmoji: '🦖',
-    length: 800,
-    laps: 16,
-    layout: LAYOUTS.flowing,
-  },
-  // 21. Brazil - Winter Igloos (Classic old-school)
-  {
-    id: 'winter-igloos',
-    name: 'Winter Igloos',
-    description: 'Frozen paradise, penguins in the paddock, everything\'s chill, ice sculptures judging you.',
-    emoji: '🇧🇷',
-    funEmoji: '🧊',
-    length: 780,
-    laps: 17,
-    layout: LAYOUTS.classic,
-  },
-  // 22. Las Vegas - Las PEMDAS (Street circuit, night)
-  {
-    id: 'las-pemdas',
-    name: 'Las PEMDAS',
-    description: 'Please excuse my dear aunt Sally, parentheses everywhere, order of operations strictly enforced, show your work.',
-    emoji: '🇺🇸',
-    funEmoji: '🧮',
-    length: 920,
-    laps: 14,
-    layout: LAYOUTS.power,
-  },
-  // 23. Qatar - Rainbowha (Modern, night)
-  {
-    id: 'rainbowha',
-    name: 'Rainbowha',
-    description: 'Unicorns grazing in the infield, glitter in the air vents, manes flowing at 200mph, sparkle mandatory.',
-    emoji: '🇶🇦',
-    funEmoji: '🦄',
-    length: 850,
-    laps: 15,
-    layout: LAYOUTS.modern,
-  },
-  // 24. Abu Dhabi - Yas Christina! (Modern, twilight)
-  {
-    id: 'yas-christina',
-    name: 'Yas Christina!',
-    description: 'Dance floor pit stops, someone\'s always spinning, heels on the podium, the crowd moves as one.',
-    emoji: '🇦🇪',
-    funEmoji: '💃',
-    length: 880,
-    laps: 15,
-    layout: LAYOUTS.modern,
-  },
-];
+/** Each layout drawing's race distance, and a placeholder glyph until icons land. */
+const LAYOUT_SHAPE: Record<DeckTrack['layoutId'], { length: number; laps: number; funEmoji: string }> = {
+  power: { length: 900, laps: 14, funEmoji: '⚡' },
+  technical: { length: 800, laps: 16, funEmoji: '🌀' },
+  street: { length: 850, laps: 15, funEmoji: '🏙️' },
+  flowing: { length: 850, laps: 15, funEmoji: '🌊' },
+  modern: { length: 850, laps: 15, funEmoji: '🏟️' },
+  classic: { length: 900, laps: 14, funEmoji: '🏛️' },
+};
 
-// ============================================
-// HISTORIC TRACKS (10)
-// ============================================
+function trackFromDeck(t: DeckTrack): Track {
+  const shape = LAYOUT_SHAPE[t.layoutId];
+  return {
+    id: t.id,
+    name: t.name,
+    description: `${t.name}: both count +${t.favours[0]?.pct ?? 0}% for the race, field-wide.`,
+    emoji: '🏁',
+    funEmoji: shape.funEmoji,
+    length: shape.length,
+    laps: shape.laps,
+    layout: LAYOUTS[t.layoutId],
+    favours: t.favours,
+  };
+}
 
-export const HISTORIC_TRACKS: Track[] = [
-  {
-    id: 'bendy-500',
-    name: 'Bendy 500',
-    description: 'Contortionists in every corner, limbo under the checkered flag, stretch before entry, flexibility required.',
-    emoji: '🇺🇸',
-    funEmoji: '🤸',
-    length: 850,
-    laps: 15,
-    layout: LAYOUTS.power, // Indy-style power circuit
-    isHistoric: true,
-  },
-  {
-    id: 'hamburgring',
-    name: 'Hamburgring',
-    description: 'Patties sizzling in the paddock, ketchup or mustard wars, the grill never closes, medium rare only.',
-    emoji: '🇩🇪',
-    funEmoji: '🍔',
-    length: 950,
-    laps: 14,
-    layout: LAYOUTS.classic, // Nurburgring-style classic
-    isHistoric: true,
-  },
-  {
-    id: 'bachenheim',
-    name: 'Bachenheim',
-    description: 'Orchestras in the grandstands, engines tuned to concert pitch, classical gas, the conductor sets the pace.',
-    emoji: '🇩🇪',
-    funEmoji: '🎻',
-    length: 800,
-    laps: 16,
-    layout: LAYOUTS.technical, // Hockenheim-style technical
-    isHistoric: true,
-  },
-  {
-    id: 'paul-the-guard',
-    name: 'Paul-the-Guard',
-    description: 'Security everywhere, badge checks at every corner, "papers please," Paul sees all.',
-    emoji: '🇫🇷',
-    funEmoji: '👮‍♂️',
-    length: 880,
-    laps: 15,
-    layout: LAYOUTS.flowing, // Paul Ricard flowing
-    isHistoric: true,
-  },
-  {
-    id: 'see-change',
-    name: 'See Change?',
-    description: 'Coins rolling through the paddock, interest rates posted at every turn, the bank always wins, exact change only.',
-    emoji: '🇲🇾',
-    funEmoji: '🪙',
-    length: 870,
-    laps: 15,
-    layout: LAYOUTS.modern, // Sepang modern
-    isHistoric: true,
-  },
-  {
-    id: 'pielami',
-    name: 'Pielami',
-    description: 'Crusts flaking in the wind, filling debates that never end, lattice or solid top discourse, à la mode mandatory.',
-    emoji: '🇿🇦',
-    funEmoji: '🥧',
-    length: 780,
-    laps: 17,
-    layout: LAYOUTS.flowing, // Kyalami flowing
-    isHistoric: true,
-  },
-  {
-    id: 'portimouse',
-    name: 'Portimouse',
-    description: 'Tiny paws on tiny wheels, cheese at every checkpoint, squeaking through the chicanes, the cat is always watching.',
-    emoji: '🇵🇹',
-    funEmoji: '🐭',
-    length: 820,
-    laps: 16,
-    layout: LAYOUTS.classic, // Portimao classic
-    isHistoric: true,
-  },
-];
+/** The six tracks every race and season draws from. */
+export const CURRENT_TRACKS: Track[] = BASE_DECK_TRACKS.map(trackFromDeck);
 
-// All tracks combined
+/** None in v0.5 (the themed circuits retired with Tracks & Weather v2). */
+export const HISTORIC_TRACKS: Track[] = [];
+
 export const ALL_TRACKS: Track[] = [...CURRENT_TRACKS, ...HISTORIC_TRACKS];
 
-// ============================================
-// HELPER FUNCTIONS
-// ============================================
-
-/**
- * Generate a dynamic event description based on total laps
- */
-export function getDynamicEventDescription(event: TrackEvent, totalLaps: number): string {
-  const trigger = event.trigger;
-
-  switch (trigger.type) {
-    case 'lap': {
-      const laps = trigger.laps.map(lap => lap < 0 ? totalLaps + lap + 1 : lap);
-      const sortedLaps = [...laps].sort((a, b) => a - b);
-      const lapStr = formatLapList(sortedLaps, totalLaps);
-      const effectDesc = getEffectDescription(event.effect);
-      return `${lapStr}: ${effectDesc}`;
-    }
-
-    case 'interval': {
-      const effectDesc = getEffectDescription(event.effect);
-      return `Every ${trigger.every} laps: ${effectDesc}`;
-    }
-
-    case 'random': {
-      const effectDesc = getEffectDescription(event.effect);
-      return `${trigger.chance}% per lap: ${effectDesc}`;
-    }
-
-    case 'halfway': {
-      const halfwayLap = Math.floor(totalLaps / 2);
-      const effectDesc = getEffectDescription(event.effect);
-      return `Lap ${halfwayLap}: ${effectDesc}`;
-    }
-
-    case 'final_laps': {
-      const startLap = totalLaps - trigger.count + 1;
-      const effectDesc = getEffectDescription(event.effect);
-      if (trigger.count === 1) {
-        return `Final lap: ${effectDesc}`;
-      }
-      return `Laps ${startLap}-${totalLaps}: ${effectDesc}`;
-    }
-
-    case 'condition': {
-      return event.description;
-    }
-
-    default:
-      return event.description;
-  }
-}
-
-function formatLapList(laps: number[], totalLaps: number): string {
-  if (laps.length === 0) return 'No laps';
-  if (laps.length === 1) {
-    return laps[0] === totalLaps ? 'Final lap' : `Lap ${laps[0]}`;
-  }
-
-  const isConsecutive = laps.every((lap, i) => i === 0 || lap === laps[i - 1] + 1);
-  if (isConsecutive && laps.length > 2) {
-    const hasFinal = laps[laps.length - 1] === totalLaps;
-    if (hasFinal) {
-      return `Laps ${laps[0]}-final`;
-    }
-    return `Laps ${laps[0]}-${laps[laps.length - 1]}`;
-  }
-
-  const formatted = laps.map(lap => lap === totalLaps ? 'final' : lap.toString());
-  if (formatted.length === 2) {
-    return `Laps ${formatted[0]} & ${formatted[1]}`;
-  }
-  return `Laps ${formatted.slice(0, -1).join(', ')} & ${formatted[formatted.length - 1]}`;
-}
-
-function getEffectDescription(effect: TrackEventEffect): string {
-  const targetDesc = effect.targets === 'leader' ? 'Leader'
-    : effect.targets === 'last' ? `Last ${effect.count}`
-    : effect.targets === 'top' ? `Top ${effect.count}`
-    : effect.targets === 'bottom' ? `Bottom ${effect.count}`
-    : `${effect.count} random`;
-  return `${targetDesc} get ${effect.triggerTag} for ${effect.duration} lap${effect.duration > 1 ? 's' : ''}`;
-}
 
 export function getTrackById(id: string): Track | undefined {
   return ALL_TRACKS.find(t => t.id === id);

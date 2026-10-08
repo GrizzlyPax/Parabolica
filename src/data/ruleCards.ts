@@ -8,30 +8,35 @@
 
 import type { RuleCard } from '../rules/ruleset';
 
-const ONLY = (id: string) => ({ clear: 0, windy: 0, scorcher: 0, fog: 0, rain: 0, [id]: 100 });
+// Weather v2 (dry) ids: neutral + five stat-combo weathers (src/data/deckWeather.ts).
+const DRY = ['speed-tyre-management', 'consistency-pit-crew', 'acceleration-reliability', 'endurance-power', 'aggression-grip'];
+const ONLY = (id: string) => ({ neutral: 0, ...Object.fromEntries(DRY.map(d => [d, 0])), [id]: 100 });
 
 export const RULE_CARDS: RuleCard[] = [
   // ---- Weather ------------------------------------------------------------
-  { id: 'rain', name: 'Rain', emoji: '🌧️', scope: 'race', weight: 'wild',
-    blurb: 'The skies open before the formation lap.',
-    readout: 'This race is wet. Rain Dancer wakes; crashes more likely.',
-    patch: { weather: ONLY('rain'), quickRaceWeather: true } },
-  { id: 'fog', name: 'Fog', emoji: '🌫️', scope: 'race', weight: 'mild',
-    blurb: 'You can see the car ahead. Probably.',
-    readout: 'This race is foggy: slightly slower, more close calls.',
-    patch: { weather: ONLY('fog'), quickRaceWeather: true } },
-  { id: 'clear-skies', name: 'Clear Skies', emoji: '☀️', scope: 'race', weight: 'mild',
+  // Remapped to Weather v2's dry weathers (#359): no rain in v0.5. The ids are
+  // kept so saved presets and the ledger still resolve; names are utilitarian
+  // until a flavour pass.
+  { id: 'rain', name: 'Grip Weather', emoji: '🌬️', scope: 'race', weight: 'wild',
+    blurb: 'A day for the brave and the planted.',
+    readout: 'This race favours Aggression and Grip.',
+    patch: { weather: ONLY('aggression-grip'), quickRaceWeather: true } },
+  { id: 'fog', name: 'Steady Weather', emoji: '🌤️', scope: 'race', weight: 'mild',
+    blurb: 'Nothing to see; keep it tidy.',
+    readout: 'This race favours Consistency and Pit Crew.',
+    patch: { weather: ONLY('consistency-pit-crew'), quickRaceWeather: true } },
+  { id: 'clear-skies', name: 'Neutral Skies', emoji: '☀️', scope: 'race', weight: 'mild',
     blurb: 'Nothing in the forecast but racing.',
-    readout: 'No weather this race.',
-    patch: { weather: ONLY('clear'), quickRaceWeather: true } },
-  { id: 'always-raining', name: 'Always Raining', emoji: '🌧️', scope: 'season', weight: 'wild',
-    blurb: 'The league moved somewhere with a climate problem.',
-    readout: 'Every race is wet.',
-    patch: { weather: ONLY('rain') } },
+    readout: 'No weather favours this race.',
+    patch: { weather: ONLY('neutral'), quickRaceWeather: true } },
+  { id: 'always-raining', name: 'Always Grip Weather', emoji: '🌬️', scope: 'season', weight: 'wild',
+    blurb: 'The league moved somewhere with a climate.',
+    readout: 'Every race favours Aggression and Grip.',
+    patch: { weather: ONLY('aggression-grip') } },
   { id: 'wild-weather', name: 'Wild Weather', emoji: '🌪️', scope: 'season', weight: 'wild',
     blurb: 'Four seasons in one calendar.',
-    readout: 'Clear skies become rare; rain, fog, wind and heat are all as likely.',
-    patch: { weather: { clear: 10, windy: 20, scorcher: 20, fog: 20, rain: 20 } } },
+    readout: 'Neutral skies become rare; every dry weather is as likely.',
+    patch: { weather: { neutral: 10, ...Object.fromEntries(DRY.map(d => [d, 18])) } } },
 
   // ---- Tags ---------------------------------------------------------------
   { id: 'tag-soup', name: 'Tag Soup', emoji: '🍲', scope: 'both', weight: 'wild',

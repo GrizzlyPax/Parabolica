@@ -6,7 +6,6 @@ import IdeaBox from './IdeaBox';
 import { Ruleset, describeRuleset } from './rules/ruleset';
 import { RULE_CARDS_BY_ID } from './data/ruleCards';
 import { weatherForRace } from './data/weather';
-import { intrinsicTrackTags } from './data/trackTags';
 import MainMenu from './MainMenu';
 import Credits from './Credits';
 import RaceStartCountdown from './RaceStartCountdown';
@@ -16,6 +15,7 @@ import FoundingScreen, { FoundingChoices } from './league/ui/FoundingScreen';
 import LeagueScreen from './league/ui/LeagueScreen';
 import GridScreen from './league/ui/GridScreen';
 import { createLeague } from './league/league';
+import { applyFavours } from './cards/apply';
 import { openLeague, codeFromLocation, RemoteError } from './league/remote';
 import type { FantasyConfig } from './fantasy/types';
 import { leagueNameForSeed } from './generators/leagueName';
@@ -24,7 +24,7 @@ import { LIVE_TICK_MS, nextRaceAt, prepareScheduledRace } from './league/settle'
 import { CANON_VARIABLES } from './simlab/types';
 import { saveLeagueState, loadLeagueState, clearLeagueState } from './storage/persistence';
 import { mulberry32, deriveSeed } from './engine/rng';
-import { generateTrack, getRandomTracks, getTrackById, getDynamicEventDescription, Track } from './generators/tracks';
+import { generateTrack, getRandomTracks, getTrackById, Track } from './generators/tracks';
 import './App.css';
 
 type AppScreen = 'main-menu' | 'setup' | 'race' | 'compendium' | 'founding' | 'league' | 'broadcast' | 'grid' | 'glossary' | 'credits';
@@ -192,7 +192,6 @@ function App() {
     engine.clearSeed();
     engine.setSimVars(null); // back to Quick Race defaults
     engine.setWeather(null);  // drop this race's weather off the shared engine
-    engine.setTrackTags([]);  // and its track tags
     setScreen('league');
   }, [engine]);
 
@@ -200,12 +199,12 @@ function App() {
 
   // The quick run in progress: one seed + the hand of cards; race N derives
   // its own seed, track and weather from it (so Next Race stays replayable).
-  const [quickRun, setQuickRun] = useState<{ seed: number; ruleset: Ruleset; raceIndex: number } | null>(null);
+  const [quickRun, setQuickRun] = useState<{ seed: number; ruleset: Ruleset; raceIndex: number; roster: RosterDriver[] } | null>(null);
   // Fantasy teams for whatever race is on screen (a quick race's draft, or the league's).
   const [activeFantasy, setActiveFantasy] = useState<FantasyConfig | null>(null);
 
-  const handleStartRace = (_roster: RosterDriver[], ruleset: Ruleset, seed: number, fantasy?: FantasyConfig) => {
-    setQuickRun({ seed, ruleset, raceIndex: 0 });
+  const handleStartRace = (roster: RosterDriver[], ruleset: Ruleset, seed: number, fantasy?: FantasyConfig) => {
+    setQuickRun({ seed, ruleset, raceIndex: 0, roster });
     setActiveFantasy(fantasy ?? null);
     setTrackInfo(engine.getTrackInfo());
     setScreen('race');
@@ -260,16 +259,7 @@ function App() {
         straightEnd: track.layout.straightEnd,
         totalLength: track.layout.totalLength,
       },
-      event: track.event ? {
-        id: track.event.id,
-        name: track.event.name,
-        emoji: track.event.emoji,
-        description: getDynamicEventDescription(track.event, track.laps),
-        flavorText: track.event.flavorText,
-      } : undefined,
-      // Full event data for engine processing
-      eventTrigger: track.event?.trigger,
-      eventEffect: track.event?.effect,
+      favours: track.favours,
     });
     engine.updateConfig({
       lapLength: track.length,
@@ -284,11 +274,15 @@ function App() {
     if (quickRun) {
       const idx = quickRun.raceIndex + 1;
       const rs = quickRun.ruleset;
-      applyTrackToEngine(generateTrack(mulberry32(deriveSeed(quickRun.seed, 'track', idx))));
+      const track = generateTrack(mulberry32(deriveSeed(quickRun.seed, 'track', idx)));
+      applyTrackToEngine(track);
       engine.setSimVars(rs.simVars);
       engine.setSeed(deriveSeed(quickRun.seed, 'race', idx));
-      engine.setWeather(rs.weather.quickRace ? weatherForRace(quickRun.seed, idx, rs.weather.weights) : null);
-      engine.setTrackTags(intrinsicTrackTags(engine.getTrackInfo()?.id ?? ''));
+      const weather = rs.weather.quickRace ? weatherForRace(quickRun.seed, idx, rs.weather.weights) : null;
+      engine.setWeather(weather);
+      // Track + weather favours are baked into the grid at race build, so the
+      // next race reloads the base roster with its own favours.
+      engine.loadGeneratedRoster(applyFavours(quickRun.roster, [...track.favours, ...(weather?.favours ?? [])]));
       setTrackInfo(engine.getTrackInfo());
       setQuickRun({ ...quickRun, raceIndex: idx });
     } else {

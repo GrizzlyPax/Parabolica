@@ -126,7 +126,7 @@ export function DraftPanel({ roster, value, onChange, context }: DraftPanelProps
               <div className="fd-squad-name"><span className="fd-swatch" style={{ background: fantasyHex(t.color) }} />{t.name}</div>
               {Array.from({ length: value.squadSize }, (_, k) => {
                 const d = roster.find(x => x.id === t.driverIds[k]);
-                return <div key={k} className={`fd-squad-slot ${d ? '' : 'empty'}`}>{d ? <><TeamMarble color={d.color} accentColor={d.accentColor} emoji={d.emoji} size={16} slot={d.driverSlot} /> {d.fullName}</> : `pick ${k + 1}`}</div>;
+                return <div key={k} className={`fd-squad-slot ${d ? '' : 'empty'}`}>{d ? <><TeamMarble color={d.color} ink={d.ink} number={d.number} emoji={d.emoji} size={16} slot={d.driverSlot} /> {d.fullName}</> : `pick ${k + 1}`}</div>;
               })}
             </div>
           ))}
@@ -141,7 +141,7 @@ export function DraftPanel({ roster, value, onChange, context }: DraftPanelProps
                 const cr = thirdOf(ranks.car.get(d.id)?.tone);
                 return (
                   <button key={d.id} type="button" className={`fd-card ${owner ? 'taken' : ''} ${complete ? 'locked' : ''}`} disabled={!!owner || !clock} onClick={() => pick(d.id)} style={owner ? { '--fc': fantasyHex(owner.color) } as React.CSSProperties : undefined} title={owner ? `Drafted by ${owner.name}` : `Draft ${d.fullName}`}>
-                    <TeamMarble color={d.color} accentColor={d.accentColor} emoji={d.emoji} size={20} slot={d.driverSlot} />
+                    <TeamMarble color={d.color} ink={d.ink} number={d.number} emoji={d.emoji} size={20} slot={d.driverSlot} />
                     <span className="fd-card-name">{d.fullName}</span>
                     <span className="fd-card-hints">
                       <span className={`fd-third ${dr.cls}`} title={`Driver: ${dr.label} of the grid`}>D · {dr.label}</span>

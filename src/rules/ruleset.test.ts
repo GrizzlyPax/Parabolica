@@ -45,7 +45,7 @@ describe('ruleset (#241)', () => {
 
   it('"Always Raining" makes every race wet; "No Tags" empties the grid', () => {
     const wet = resolveRuleset(['always-raining'], RULE_CARDS_BY_ID);
-    for (let i = 0; i < 20; i++) expect(weatherForRace(7, i, wet.weather.weights).id).toBe('rain');
+    for (let i = 0; i < 20; i++) expect(weatherForRace(7, i, wet.weather.weights).id).toBe('aggression-grip');
     const rng = mulberry32(1);
     const roster = generateRosterFromTeams(TEAMS.slice(0, 6).map(t => t.id), rng);
     const none = rollGenesisTags(roster, 99, resolveRuleset(['no-tags'], RULE_CARDS_BY_ID));

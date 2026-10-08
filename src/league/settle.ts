@@ -8,17 +8,17 @@
 // Pure (input league is never mutated) and synchronous.
 // See docs/COMMISSIONER_MODE_TECH.md (Problem 3).
 
-import RaceEngine, { Driver } from '../RaceEngine';
+import RaceEngine, { Driver, RosterDriver } from '../RaceEngine';
 import { SimVariables, CANON_VARIABLES } from '../simlab/types';
-import { getTrackById, getDynamicEventDescription, Track } from '../generators/tracks';
+import { getTrackById, Track } from '../generators/tracks';
 import { updateSeasonWithRaceResult } from '../types/season';
 import { LeagueState, RaceDigest, SettleResult, LiveRace } from './types';
 import { rosterStateAt } from './league';
 import { evaluateAcquisitions, expiriesAt, carryoverEntries } from './acquisition';
 import { evaluateActions } from './actions';
 import { pickHighlights } from './highlights';
-import { weatherForRace } from '../data/weather';
-import { intrinsicTrackTags } from '../data/trackTags';
+import { weatherForRace, isNeutralWeather } from '../data/weather';
+import { applyFavours } from '../cards/apply';
 
 export { HIGHLIGHTS_PER_RACE } from './highlights';
 
@@ -50,6 +50,17 @@ function findFastestLap(drivers: Driver[]): number | null {
 }
 
 /**
+ * Track + weather favours (Tracks & Weather v2): the favoured stats count +10%
+ * for the race, field-wide, baked into the roster the engine loads. The ONE
+ * place favours apply to a league race; anything that reloads a roster for a
+ * race (the lab's tag override) must come through here too.
+ */
+export function favouredRoster(league: LeagueState, raceIndex: number, track: Track, roster: RosterDriver[]): RosterDriver[] {
+  const weather = weatherForRace(league.leagueSeed, raceIndex, league.setup.ruleset?.weather.weights);
+  return applyFavours(roster, [...track.favours, ...weather.favours]);
+}
+
+/**
  * Configure `engine` to run scheduled race `raceIndex` exactly as the settle
  * loop scores it: same sim variables, same seed, same roster, same lap
  * count/length, same track events. The headless settle AND the live
@@ -71,9 +82,7 @@ export function prepareScheduledRace(
   // Weather is part of the fixed universe — same seed+index → same storm, so
   // the live broadcast and the headless settle see identical conditions (#149).
   engine.setWeather(weatherForRace(league.leagueSeed, raceIndex, league.setup.ruleset?.weather.weights));
-  // Track tags are intrinsic to the track (C3) — same place, same character.
-  engine.setTrackTags(intrinsicTrackTags(track.id));
-  engine.loadGeneratedRoster(rosterStateAt(league, raceIndex));
+  engine.loadGeneratedRoster(favouredRoster(league, raceIndex, track, rosterStateAt(league, raceIndex)));
   engine.updateConfig({
     // The sim runs off config, not trackInfo — these decide the outcome
     totalLaps: track.laps,
@@ -94,16 +103,6 @@ export function prepareScheduledRace(
       straightEnd: track.layout.straightEnd,
       totalLength: track.layout.totalLength,
     },
-    event: track.event ? {
-      id: track.event.id,
-      name: track.event.name,
-      emoji: track.event.emoji,
-      description: getDynamicEventDescription(track.event, track.laps),
-      flavorText: track.event.flavorText,
-    } : undefined,
-    // Track events change outcomes — settle must run them like live races do
-    eventTrigger: track.event?.trigger,
-    eventEffect: track.event?.effect,
   });
 }
 
@@ -156,8 +155,8 @@ export function runScheduledRace(
     crashPairs,
     fastestLapDriverId: findFastestLap(drivers),
     totalTicks: raceState.totalTicks,
-    // Only record non-clear weather (keeps clear races/digests clean)
-    weather: weather && weather.id !== 'clear'
+    // Only record non-neutral weather (keeps neutral races/digests clean)
+    weather: weather && !isNeutralWeather(weather)
       ? { id: weather.id, name: weather.name, emoji: weather.emoji }
       : undefined,
     highlights: pickHighlights(events),

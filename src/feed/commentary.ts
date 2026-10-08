@@ -275,7 +275,7 @@ export function voiceBetSwing(
   info: BetSwingInfo,
   ctx: FeedContext,
   seed: number,
-  accentColor?: string
+  color?: string
 ): Omit<FeedItem, 'id'> {
   return {
     lap: ctx.lap,
@@ -284,6 +284,6 @@ export function voiceBetSwing(
     personaEmoji: PERSONA_META.marbles.emoji,
     text: reactToBetSwing(info, seed),
     emphasis: info.swing === 'bet_dead' || info.swing === 'dnf_bet_hit' ? 'big' : 'normal',
-    color: accentColor,
+    color,
   };
 }

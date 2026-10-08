@@ -12,15 +12,15 @@ import { LeagueState } from './types';
 import { prepareScheduledRace } from './settle';
 import { buildLapChartData, LapChartData } from '../components/race/lapChartData';
 import { buildRaceReportMd } from '../components/race/raceReportMd';
-import { weatherForRace } from '../data/weather';
-import { intrinsicTrackTags } from '../data/trackTags';
+import { weatherForRace, isNeutralWeather } from '../data/weather';
+import { favourText } from '../cards/favourText';
 import { TireCompound } from '../RaceEngine';
 
 export interface DriverStrategy {
   driverId: number;
   name: string;
   color: string;
-  accentColor?: string;
+  ink?: string;
   emoji: string;
   /** Final classification: position number, or null for DNF. */
   finalPosition: number | null;
@@ -69,7 +69,7 @@ export function traceRace(league: LeagueState, raceIndex: number): RaceTrace | n
       driverId: d.id,
       name: d.name,
       color: d.color,
-      accentColor: d.accentColor,
+      ink: d.ink,
       emoji: d.emoji,
       finalPosition: d.status === 'dnf' ? null : (finishIdx >= 0 ? finishIdx + 1 : null),
       stints,
@@ -95,8 +95,8 @@ export function raceReportForLeague(league: LeagueState, raceIndex: number): str
 
   const weather = weatherForRace(league.leagueSeed, raceIndex);
   const conditions = [
-    ...(weather.id !== 'clear' ? [`${weather.emoji} ${weather.name}`] : []),
-    ...intrinsicTrackTags(track.id).map(t => `${t.emoji} ${t.name}`),
+    ...(!isNeutralWeather(weather) ? [`${weather.emoji} ${weather.name}`] : []),
+    ...(track.favours.length ? [`${track.name}: ${favourText(track.favours)}`] : []),
   ];
   return buildRaceReportMd(
     {

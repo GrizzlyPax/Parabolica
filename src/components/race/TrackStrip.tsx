@@ -32,7 +32,7 @@ function TrackStrip({ drivers, totalLaps, lapLength, mode, label, focusedDriverI
     <span
       key={d.id}
       className={`track-strip-dot ${focusedDriverIds?.has(d.id) ? 'focused' : ''}`}
-      style={{ left: `${pos(d) * 100}%`, background: d.color, borderColor: d.accentColor || '#fff' }}
+      style={{ left: `${pos(d) * 100}%`, background: d.color, borderColor: d.ink || '#fff' }}
       title={d.name}
     />
   );

@@ -10,7 +10,7 @@ import { useEffect, useMemo, useState } from 'react';
 import RaceEngine, { RosterDriver } from './RaceEngine';
 import { generateRosterFromTeams } from './generators/drivers';
 import { generateCarsForKingdoms } from './generators/cars';
-import { generateTrack, getDynamicEventDescription, CURRENT_TRACKS, Track } from './generators/tracks';
+import { generateTrack, CURRENT_TRACKS, Track } from './generators/tracks';
 import { getRandomTeams, Team } from './data/teams';
 import { mulberry32, deriveSeed, randomSeed } from './engine/rng';
 import { RULE_CARDS_BY_ID, ruleCardsForScope } from './data/ruleCards';
@@ -18,10 +18,11 @@ import { resolveRuleset, applyLabPreset, describeRuleset, describeChance, descri
 import { loadNotebook, fetchLedger, presetSummary, type LabPreset } from './racecontrol/notebook';
 import { DraftPanel, emptyFantasy } from './fantasy/DraftPanel';
 import { draftComplete, type FantasyConfig } from './fantasy/types';
-import { buildRoster } from './rules/genesis';
-import { weatherForRace } from './data/weather';
-import { intrinsicTrackTags } from './data/trackTags';
-import { GenesisSlots } from './components/race/TagChips';
+import { buildCardRoster } from './rules/genesis';
+import { weatherForRace, isNeutralWeather } from './data/weather';
+import { applyFavours } from './cards/apply';
+import { favourText } from './cards/favourText';
+import { CardFace } from './cards/CardFace';
 import { GameIcon } from './icons/GameIcon';
 import './RunSetup.css';
 
@@ -69,8 +70,8 @@ export default function RunSetup({ onStartRace, onBack }: RunSetupProps) {
   }, [seed]);
   const track = trackOverride ?? universe.track;
 
-  // Tags depend on the cards; everything else above does not.
-  const roster = useMemo(() => buildRoster(universe.drivers, universe.cars, seed, ruleset), [universe, seed, ruleset]);
+  // Trait cards depend on the rule cards (genesis chance + metal odds); everything above does not (#337).
+  const roster = useMemo(() => buildCardRoster(universe.drivers, universe.cars, seed, ruleset), [universe, seed, ruleset]);
   const weather = useMemo(() => ruleset.weather.quickRace ? weatherForRace(seed, 0, ruleset.weather.weights) : null, [seed, ruleset]);
   // Fantasy draft for this race; picks are cleared if the grid changes under them.
   const [fantasy, setFantasy] = useState<FantasyConfig | null>(null);
@@ -81,7 +82,6 @@ export default function RunSetup({ onStartRace, onBack }: RunSetupProps) {
     if (fantasy?.teams.some(t => t.driverIds.length)) setFantasy({ ...fantasy, teams: fantasy.teams.map(t => ({ ...t, driverIds: [] })) });
   }
   const rulesLines = useMemo(() => describeRuleset(ruleset), [ruleset]);
-  const trackTags = intrinsicTrackTags(track.id);
 
   const toggleCard = (id: string) => setHand(h => (h.includes(id) ? h.filter(x => x !== id) : [...h, id]));
 
@@ -90,8 +90,8 @@ export default function RunSetup({ onStartRace, onBack }: RunSetupProps) {
     engine.setSimVars(ruleset.simVars);
     engine.setSeed(deriveSeed(seed, 'race'));
     engine.setWeather(weather);
-    engine.setTrackTags(trackTags);
-    engine.loadGeneratedRoster(roster);
+    // Track + weather favours count +10% for the race, field-wide (Tracks & Weather v2).
+    engine.loadGeneratedRoster(applyFavours(roster, [...track.favours, ...(weather?.favours ?? [])]));
     engine.setTrackInfo({
       id: track.id, name: track.name, emoji: track.emoji, funEmoji: track.funEmoji,
       description: track.description, laps: track.laps,
@@ -99,12 +99,7 @@ export default function RunSetup({ onStartRace, onBack }: RunSetupProps) {
         trackPath: track.layout.trackPath, pitLanePath: track.layout.pitLanePath,
         straightStart: track.layout.straightStart, straightEnd: track.layout.straightEnd, totalLength: track.layout.totalLength,
       },
-      event: track.event ? {
-        id: track.event.id, name: track.event.name, emoji: track.event.emoji,
-        description: getDynamicEventDescription(track.event, track.laps), flavorText: track.event.flavorText,
-      } : undefined,
-      eventTrigger: track.event?.trigger,
-      eventEffect: track.event?.effect,
+      favours: track.favours,
     });
     engine.updateConfig({ lapLength: track.length, totalLaps: track.laps });
     onStartRace(roster, ruleset, seed, fantasy && draftComplete(fantasy) ? fantasy : undefined);
@@ -138,10 +133,9 @@ export default function RunSetup({ onStartRace, onBack }: RunSetupProps) {
           <div>
             <div className="rs-track-name">{track.name} <span className="rs-flag">{track.emoji}</span></div>
             <div className="rs-track-meta">{track.laps} laps · {track.length}m
-              {trackTags.map(t => <span key={t.id} className="rs-chip" title={t.name}>{t.emoji} {t.name}</span>)}
-              {weather && <span className="rs-chip rs-chip-weather">{weather.emoji} {weather.name}{weather.intensity < 1 ? ` ${Math.round(weather.intensity * 100)}%` : ''}</span>}
-              {!weather && <span className="rs-chip rs-chip-dim">No weather</span>}
-              {track.event && <span className="rs-chip" title={getDynamicEventDescription(track.event, track.laps)}>{track.event.emoji} {track.event.name}</span>}
+              <span className="rs-chip" title="Favoured stats count +10% for the race, field-wide">{favourText(track.favours)}</span>
+              {weather && !isNeutralWeather(weather) && <span className="rs-chip rs-chip-weather" title={favourText(weather.favours)}>{weather.emoji} {weather.name}{weather.intensity < 1 ? ` ${Math.round(weather.intensity * 100)}%` : ''}</span>}
+              {(!weather || isNeutralWeather(weather)) && <span className="rs-chip rs-chip-dim">Neutral weather</span>}
             </div>
           </div>
         </div>
@@ -184,7 +178,7 @@ export default function RunSetup({ onStartRace, onBack }: RunSetupProps) {
         )}
         {showRules && (
           <div className="rs-rules">
-            {rulesLines.length === 0 ? <div className="rs-rule">Default rules: {ruleset.tags.pool.length} tags in the pool, {describeChance(ruleset.tags.genesisChance)} per slot to be born with one ({describeOdds(ruleset.tags.rarityOdds)}), up to {ruleset.tags.slotCap} each; pit rule: {ruleset.simVars.pits.minStops} stops{ruleset.simVars.pits.requireAllCompounds ? ', all 3 compounds' : ''}; canon physics.</div>
+            {rulesLines.length === 0 ? <div className="rs-rule">Default rules: {describeChance(ruleset.tags.genesisChance)} per slot (driver, car, team) to be born with a trait card ({describeOdds(ruleset.tags.rarityOdds)}); pit rule: {ruleset.simVars.pits.minStops} stops{ruleset.simVars.pits.requireAllCompounds ? ', all 3 compounds' : ''}; canon physics.</div>
               : rulesLines.map(l => <div key={l} className="rs-rule">{l}</div>)}
             <div className="rs-rules-actions">
               <button type="button" className="rs-link" onClick={() => navigator.clipboard?.writeText(serializeRuleset(ruleset))}>Copy ruleset JSON</button>
@@ -205,7 +199,7 @@ export default function RunSetup({ onStartRace, onBack }: RunSetupProps) {
       </section>
 
       <section className="rs-row rs-grid">
-        <div className="rs-row-head"><span className="rs-k">Grid</span><span className="rs-hint">{roster.length} drivers · {universe.teams.length} teams · click a tag for details</span></div>
+        <div className="rs-row-head"><span className="rs-k">Grid</span><span className="rs-hint">{roster.length} drivers · {universe.teams.length} teams · trait cards are born with them and baked into the stats; tap a card to flip it</span></div>
         <div className="rs-teams">
           {byTeam.map(({ team, drivers, car }) => (
             <div key={team.id} className="rs-team" style={{ '--team-color': team.color } as React.CSSProperties}>
@@ -218,9 +212,9 @@ export default function RunSetup({ onStartRace, onBack }: RunSetupProps) {
               </div>
               {drivers.map(d => (
                 <div key={d.id} className="rs-driver">
-                  <span className="rs-driver-name">{d.fullName}</span>
+                  <span className="rs-driver-name"><span className="rs-driver-number" style={{ background: d.color, color: d.ink }}>{d.number}</span> {d.fullName}</span>
                   <span className="rs-driver-stats" title="Speed · Consistency · Luck">{d.stats.baseSpeed.toFixed(2)} · {d.stats.consistency.toFixed(2)} · {d.stats.luck.toFixed(2)}</span>
-                  <span className="rs-driver-tags"><GenesisSlots tags={d.tags} /></span>
+                  <span className="rs-driver-tags">{d.cards?.length ? d.cards.map(c => <CardFace key={c.id} card={c} size="mini" />) : <span className="rs-chip rs-chip-dim">no traits</span>}</span>
                 </div>
               ))}
             </div>

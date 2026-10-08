@@ -7,9 +7,15 @@ import { ALL_TRACKS, CURRENT_TRACKS, Track } from './generators/tracks';
 import { generateGenesisRoster } from './league/league';
 import { TEAMS } from './data/teams';
 import { Tag, getTagById } from './data/tags';
-import { rollWeather } from './data/weather';
+import type { WeatherState } from './data/weather';
+
+/** A hand-built wet race (what Wet, v0.6, will roll): stamps 'rain', leans the field. */
+const WET: WeatherState = { id: 'wet', name: 'Wet', emoji: '🌧️', intensity: 1, conditions: ['rain'], effects: { crashResistance: -0.1, speedModifier: 0.96, consistencyModifier: 0.97 }, favours: [] };
 import { mulberry32, randomSeed } from './engine/rng';
 import { buildRoster } from './rules/genesis';
+
+/** A standard grid: 11 of the 28 teams, like Quick Race. */
+const GRID_TEAM_IDS = TEAMS.slice(0, 11).map(t => t.id);
 import { Ruleset, defaultRuleset } from './rules/ruleset';
 
 function createRosterWithCars(roster: GeneratedDriver[], cars: Map<string, GeneratedCar>, seed: number = randomSeed(), rs: Ruleset = defaultRuleset()) {
@@ -19,7 +25,7 @@ function createRosterWithCars(roster: GeneratedDriver[], cars: Map<string, Gener
 function runOneRace(track: Track) {
   const engine = RaceEngine.createForWorker(CANON_VARIABLES);
   const roster = generateRoster();
-  const cars = generateCarsForKingdoms(TEAMS.map(t => t.id));
+  const cars = generateCarsForKingdoms(GRID_TEAM_IDS);
   engine.loadGeneratedRoster(createRosterWithCars(roster, cars));
   engine.updateConfig({ totalLaps: track.laps, lapLength: track.length });
   engine.setTrackInfo({
@@ -46,7 +52,7 @@ describe('determinism (golden master)', () => {
   // byte-identical inputs (generators are seeded separately).
   function makeRosterWithCars() {
     const roster = generateRoster();
-    const cars = generateCarsForKingdoms(TEAMS.map(t => t.id));
+    const cars = generateCarsForKingdoms(GRID_TEAM_IDS);
     return createRosterWithCars(roster, cars);
   }
 
@@ -107,7 +113,7 @@ describe('conditional tags (#156 gate)', () => {
     // "diverges on at least one of four seeds" assertions flaky).
     const rng = mulberry32(0x156);
     const roster = generateRoster(rng);
-    const cars = generateCarsForKingdoms(TEAMS.map(t => t.id), rng);
+    const cars = generateCarsForKingdoms(GRID_TEAM_IDS, rng);
     return createRosterWithCars(roster, cars).map(d => ({ ...d, tags: [] }));
   }
 
@@ -155,18 +161,6 @@ describe('conditional tags (#156 gate)', () => {
     const boosted = run(base, 0xBEEF, boost);
     expect(boosted.events).not.toEqual(baseline.events);
   });
-
-  function runWithTrackTags(base: RosterDriver[], seed: number, trackTags: Parameters<RaceEngine['setTrackTags']>[0], driverTag?: Tag) {
-    const grid = structuredClone(base);
-    grid[0].tags = driverTag ? [driverTag] : [];
-    const engine = RaceEngine.createForWorker(CANON_VARIABLES, seed);
-    engine.loadGeneratedRoster(grid);
-    engine.updateConfig({ totalLaps: track.laps, lapLength: track.length });
-    engine.setTrackInfo({ id: track.id, name: track.name, emoji: track.emoji,
-      funEmoji: track.funEmoji, description: track.description, laps: track.laps });
-    engine.setTrackTags(trackTags);
-    return engine.runHeadless();
-  }
 
   it('records a complete lap-position history from lap 1 (the lap chart / #173 trace)', () => {
     const grid = structuredClone(cleanRoster());
@@ -238,7 +232,7 @@ describe('conditional tags (#156 gate)', () => {
     expect(diverged).toBe(true);
   });
 
-  it('strategy archetypes + SC opportunism are live at canon and each changes races — #195/#246', () => {
+  it('strategy archetypes + SC opportunism are live at canon and each changes races — #195/#246', { timeout: 60_000 }, () => {
     // Both knobs are canon-on since #246 (lean 0.1, SC stops 0.5). Each must
     // (a) replay byte-identically for a fixed seed and (b) actually change
     // races when turned off, so neither is a dead knob.
@@ -266,7 +260,8 @@ describe('conditional tags (#156 gate)', () => {
     // (b) live: turning each gate off diverges on at least one of a few seeds
     for (const pits of [{ strategyWearLean: 0 }, { scPitChance: 0 }]) {
       let diverged = false;
-      for (const seed of [0x195, 0x196, 0x197, 0x198]) {
+      // The new tracks are shorter (14–16 laps), so a safety car needs a few more seeds to show up.
+      for (const seed of [0x195, 0x196, 0x197, 0x198, 0x199, 0x19a, 0x19b, 0x19c]) {
         const a = runWith(CANON_VARIABLES, seed);
         const b = runWith(withVars(pits), seed);
         if (JSON.stringify(a.events) !== JSON.stringify(b.events)) diverged = true;
@@ -327,66 +322,9 @@ describe('conditional tags (#156 gate)', () => {
     expect(sawMistake).toBe(true);
   });
 
-  it('a track tag passive lean changes the race', () => {
-    const base = cleanRoster();
-    const plain = run(base, 0x7AC, undefined);
-    // A field-wide pace lean touches every tick — guaranteed divergence.
-    const tagged = runWithTrackTags(base, 0x7AC, [{ id: 'high-speed', name: 'High-Speed', emoji: '🏎️',
-      passive: { speedModifier: 1.02 } }]);
-    expect(tagged.events).not.toEqual(plain.events);
-  });
-
-  it('a track tag stamps conditions that condition-gated tags react to', () => {
-    // The cross-layer trigger: a driver tag gated on 'debris-hazard' must be
-    // inert on a plain track but bite when the track stamps that condition.
-    const debrisLover: Tag = {
-      id: 'test-scavenger', name: 'Scavenger', emoji: '🦅', description: 'thrives in debris',
-      target: 'driver', trigger: 'passive', rarity: 'bronze', condition: { when: 'condition', has: 'debris-hazard' },
-      effects: { speedModifier: 1.15 },
-    };
-    const hazardTag = { id: 'hazardous', name: 'Hazardous', emoji: '⚠️', conditions: ['debris-hazard'] };
-    const base = cleanRoster();
-    // Same track tag both runs; only the driver tag differs. On a stamping
-    // track, the gated tag must fire and change the race.
-    const withoutDriverTag = runWithTrackTags(base, 0x7AD, [hazardTag]);
-    const withDriverTag = runWithTrackTags(base, 0x7AD, [hazardTag], debrisLover);
-    expect(withDriverTag.events).not.toEqual(withoutDriverTag.events);
-    // And on a non-stamping track the gated tag is fully inert (no condition).
-    const plainNoTag = runWithTrackTags(base, 0x7AD, []);
-    const plainWithTag = runWithTrackTags(base, 0x7AD, [], debrisLover);
-    expect(plainWithTag.events).toEqual(plainNoTag.events);
-  });
-
-  it('inflictions strike only when their condition is active, and land as events', () => {
-    const base = cleanRoster();
-    // Dry races (no weather, no track tags): zero inflictions, ever.
-    for (const seed of [11, 22, 33]) {
-      const dry = run(base, seed, undefined);
-      expect(dry.events.some(e => e.description.includes('Electrocuted'))).toBe(false);
-    }
-    // Rainy races: ⚡ Electrocuted strikes show up across a handful of seeds
-    // (per-tick chance ≈ 0.6 expected/race — any single race may be clean).
-    const rain = rollWeather(() => 0.99);
-    let struck = 0;
-    for (const seed of [11, 22, 33, 44, 55, 66, 77, 88]) {
-      const grid = structuredClone(base);
-      const engine = RaceEngine.createForWorker(CANON_VARIABLES, seed);
-      engine.loadGeneratedRoster(grid);
-      // Full event log — the 500-event UI cap can evict an early strike,
-      // which made this assertion flaky.
-      engine.updateConfig({ totalLaps: track.laps, lapLength: track.length, maxStoredEvents: Number.MAX_SAFE_INTEGER });
-      engine.setTrackInfo({ id: track.id, name: track.name, emoji: track.emoji,
-        funEmoji: track.funEmoji, description: track.description, laps: track.laps });
-      engine.setWeather(rain);
-      const wet = engine.runHeadless();
-      if (wet.events.some(e => e.description.includes('Electrocuted'))) struck++;
-    }
-    expect(struck).toBeGreaterThan(0);
-  });
-
   it('getActiveTagIds reports a conditional tag only while its gate is open', () => {
     const base = cleanRoster();
-    const prep = (weather: ReturnType<typeof rollWeather> | null) => {
+    const prep = (weather: WeatherState | null) => {
       const grid = structuredClone(base);
       grid[0].tags = [getTagById('rain-dancer')!];
       const engine = RaceEngine.createForWorker(CANON_VARIABLES, 0xACE);
@@ -400,12 +338,13 @@ describe('conditional tags (#156 gate)', () => {
       return engine;
     };
     expect(prep(null).getActiveTagIds(base[0].id)).not.toContain('rain-dancer');
-    expect(prep(rollWeather(() => 0.99)).getActiveTagIds(base[0].id)).toContain('rain-dancer');
+    expect(prep(WET).getActiveTagIds(base[0].id)).toContain('rain-dancer');
   });
 
   it('setWeather wakes a rain-dancer (the real C2 path, not just raw conditions)', () => {
-    const rain = rollWeather(() => 0.99); // lands in the rain bucket at high intensity
-    expect(rain.id).toBe('rain');
+    // No weather rolls rain in v0.5 (Wet returns in v0.6), so this is the state
+    // Wet will set: it stamps 'rain' and leans the field.
+    const rain = WET;
     const base = cleanRoster();
     const dry = run(base, 0xDDD, getTagById('rain-dancer'));
     // setWeather applies the field-wide lean AND stamps 'rain' so the tag fires.
@@ -434,7 +373,7 @@ describe('headless race invariants', () => {
   it('classifies every driver as finished or DNF, with a consistent finish order', () => {
     const { drivers, raceState } = runOneRace(track);
 
-    expect(drivers.length).toBe(TEAMS.length * 2);
+    expect(drivers.length).toBe(GRID_TEAM_IDS.length * 2);
     for (const d of drivers) {
       expect(['finished', 'dnf']).toContain(d.status);
     }
@@ -488,7 +427,7 @@ describe('golden fingerprint', () => {
   function fingerprint() {
     const rng = mulberry32(SEED);
     const roster = generateRoster(rng);
-    const cars = generateCarsForKingdoms(TEAMS.map(t => t.id), rng);
+    const cars = generateCarsForKingdoms(GRID_TEAM_IDS, rng);
     const track = ALL_TRACKS[0];
     const engine = RaceEngine.createForWorker(CANON_VARIABLES, SEED);
     engine.loadGeneratedRoster(createRosterWithCars(roster, cars, SEED));
@@ -523,7 +462,7 @@ describe('tag stacks (#231)', () => {
   function cleanGrid(seed: number): RosterDriver[] {
     const rng = mulberry32(seed);
     const roster = generateRoster(rng);
-    const cars = generateCarsForKingdoms(TEAMS.map(t => t.id), rng);
+    const cars = generateCarsForKingdoms(GRID_TEAM_IDS, rng);
     return createRosterWithCars(roster, cars).map(d => ({ ...d, tags: [] }));
   }
   function run(grid: RosterDriver[], seed: number, conditions: string[] = []) {
@@ -543,8 +482,10 @@ describe('tag stacks (#231)', () => {
     const faster: Tag = { id: 't-faster', name: 'Faster', emoji: '2', description: '', target: 'car', trigger: 'passive', rarity: 'bronze', condition: { when: 'lapProgress', after: 0 }, effects: { speedModifier: 1.1 } };
     const with1 = base.map(x => x.id === d ? { ...x, tags: [fast] } : x);
     const with2 = base.map(x => x.id === d ? { ...x, tags: [fast, faster] } : x);
-    // Best lap is robust to DNFs and to where the driver finishes.
-    const best = (grid: RosterDriver[]) => Math.min(...run(grid, 5).drivers.find(x => x.id === d)!.lapTimes);
+    // Best lap is robust to DNFs and to where the driver finishes, but one
+    // seed can still hand the tagged run a safety-car lap, so take the best
+    // lap over a few seeds.
+    const best = (grid: RosterDriver[]) => Math.min(...[5, 6, 7].flatMap(seed => run(grid, seed).drivers.find(x => x.id === d)!.lapTimes));
     const t0 = best(base), t1 = best(with1), t2 = best(with2);
     expect(t1).toBeLessThan(t0);
     expect(t2).toBeLessThan(t1);
@@ -579,7 +520,7 @@ describe('in-race acquisition (#232b)', () => {
   function cleanGrid(seed: number): RosterDriver[] {
     const rng = mulberry32(seed);
     const roster = generateRoster(rng);
-    const cars = generateCarsForKingdoms(TEAMS.map(t => t.id), rng);
+    const cars = generateCarsForKingdoms(GRID_TEAM_IDS, rng);
     return createRosterWithCars(roster, cars).map(d => ({ ...d, tags: [] }));
   }
   function run(grid: RosterDriver[], seed: number) {
@@ -683,7 +624,7 @@ describe('qualifying and the grid (#246 pass 2)', () => {
   const track = CURRENT_TRACKS[0];
   const build = (seed: number) => {
     const engine = RaceEngine.createForWorker(CANON_VARIABLES, seed);
-    engine.loadGeneratedRoster(generateGenesisRoster(seed, TEAMS.map(t => t.id)));
+    engine.loadGeneratedRoster(generateGenesisRoster(seed, GRID_TEAM_IDS));
     engine.updateConfig({ totalLaps: track.laps, lapLength: track.length });
     return engine;
   };
@@ -722,7 +663,7 @@ describe('overtaking is an event (#246 pass 3)', () => {
   const track = CURRENT_TRACKS[0];
   const run = (seed: number, over: Partial<typeof CANON_VARIABLES.overtaking> = {}) => {
     const engine = RaceEngine.createForWorker({ ...CANON_VARIABLES, overtaking: { ...CANON_VARIABLES.overtaking, ...over } }, seed);
-    engine.loadGeneratedRoster(generateGenesisRoster(seed, TEAMS.map(t => t.id)));
+    engine.loadGeneratedRoster(generateGenesisRoster(seed, GRID_TEAM_IDS));
     engine.updateConfig({ totalLaps: track.laps, lapLength: track.length, maxStoredEvents: Number.MAX_SAFE_INTEGER });
     const out = engine.runHeadless(seed);
     return { engine, ...out };

@@ -45,12 +45,10 @@
   --pw-radius-m: 10px;
   --pw-radius-l: 14px;
 
-  /* Headlines & Display - Barlow Condensed for that racing poster feel */
-  --font-display: 'Barlow Condensed', 'Arial Narrow', sans-serif;
-  /* Body text - Inter for readability */
-  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  /* Numbers & Data - Inconsolata for tabular data */
-  --font-mono: 'Inconsolata', 'Consolas', 'Monaco', monospace;
+  /* The race view wears The look too (#381): the legacy font roles map onto it. */
+  --font-display: var(--look-display);
+  --font-body: var(--look-serif);
+  --font-mono: var(--look-data);
   /* Emoji fallback */
   --font-emoji: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji';
 

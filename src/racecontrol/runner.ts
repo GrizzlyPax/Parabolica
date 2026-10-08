@@ -18,7 +18,7 @@ import RaceEngine from '../RaceEngine';
 import type { Driver, RaceEvent, RaceState, RosterDriver } from '../RaceEngine';
 import { createLeague, rosterStateAt } from '../league/league';
 import type { LeagueState } from '../league/types';
-import { prepareScheduledRace } from '../league/settle';
+import { prepareScheduledRace, favouredRoster } from '../league/settle';
 import { CURRENT_TRACKS, type Track } from '../generators/tracks';
 import { TEAMS } from '../data/teams';
 import { resolveRuleset, type Ruleset } from '../rules/ruleset';
@@ -26,7 +26,6 @@ import { RULE_CARDS_BY_ID } from '../data/ruleCards';
 import { deriveSeed, mulberry32, shuffle } from '../engine/rng';
 import { getTagById, type Tag } from '../data/tags';
 import { weatherForRace, type WeatherState } from '../data/weather';
-import { intrinsicTrackTags, type TrackTag } from '../data/trackTags';
 import type { SimVariables } from '../simlab/types';
 
 export const GRID_TEAMS = 11;
@@ -79,7 +78,6 @@ export interface LabRaceResult {
   track: Track;
   roster: RosterDriver[];
   weather: WeatherState | null;
-  trackTags: TrackTag[];
   drivers: Driver[];
   raceState: RaceState;
   events: RaceEvent[];
@@ -111,14 +109,15 @@ export function runLabRace(spec: LabRaceSpec, options: { variables?: SimVariable
   let roster = rosterStateAt(league, 0);
   if (options.override) {
     roster = applyOverride(roster, options.override);
-    engine.loadGeneratedRoster(roster);
+    // Same favours as prepareScheduledRace gave the untouched grid, so a
+    // calibration run differs from its baseline by the tag alone.
+    engine.loadGeneratedRoster(favouredRoster(league, 0, track, roster));
   }
 
   const { drivers, raceState, events } = engine.runHeadless(league.schedule[0].seed);
   return {
     spec, league, track, roster,
     weather: weatherForRace(league.leagueSeed, 0, ruleset.weather.weights),
-    trackTags: intrinsicTrackTags(track.id),
     drivers, raceState, events,
     gridOrder: engine.getGridOrder(),
   };
