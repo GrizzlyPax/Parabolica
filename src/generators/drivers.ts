@@ -110,12 +110,28 @@ function fillBackstoryTemplate(template: string, rng: Rng): string {
   return result;
 }
 
-function generateStats(rng: Rng): DriverStats {
-  // Generate stats with compressed ranges for closer competition
-  // Speed-type stats: 0.85 to 1.15 (±15% from baseline)
-  const statRoll = () => 0.85 + rng() * 0.30;
+/**
+ * The roll range of each driver stat: min + rng() × span. The one source for
+ * both the generator and the Season grades (0 = worst possible roll, 100 =
+ * best; src/season/grades.ts), so re-tuning a range keeps the grades honest.
+ * Kept as min + span (not min/max) so the arithmetic, and every seeded race,
+ * stays bit-identical.
+ */
+export const DRIVER_STAT_ROLLS: Record<keyof DriverStats, { min: number; span: number }> = {
+  // Speed-type stats: 0.85 to 1.15 (±15% from baseline), compressed for closer competition
+  baseSpeed: { min: 0.85, span: 0.30 },
+  acceleration: { min: 0.85, span: 0.30 },
+  endurance: { min: 0.85, span: 0.30 },
   // Consistency/luck/aggression: 0.3 to 0.8 (avoid extremes)
-  const traitRoll = () => 0.3 + rng() * 0.5;
+  consistency: { min: 0.3, span: 0.5 },
+  luck: { min: 0.3, span: 0.5 },
+  aggression: { min: 0.3, span: 0.5 },
+};
+
+function generateStats(rng: Rng): DriverStats {
+  const roll = (k: keyof DriverStats) => DRIVER_STAT_ROLLS[k].min + rng() * DRIVER_STAT_ROLLS[k].span;
+  const statRoll = () => roll('baseSpeed');
+  const traitRoll = () => roll('consistency');
 
   return {
     baseSpeed: statRoll(),
