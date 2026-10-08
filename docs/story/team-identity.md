@@ -147,15 +147,15 @@ export const BASE_DECK_TEAMS: Team[] = [
 ```
 
 **Things to know before wiring it in**
-- **Ids are new and never collide with the old 22.** Per the workstream rule, old ids are retired, not rewritten: saved and published leagues still reference `for-rory`, `breadbowl` and the rest, so `getTeamById` must keep resolving them.
+- **Ids are new and never collide with the old 22.** The old teams and old leagues are both removed in v0.5, so nothing needs to keep resolving the old ids.
 - **Swapping the default grid will likely move the golden fingerprint** (rosters and colours are built from the team list). Treat it as an intended content change: version bump plus fingerprint update, per `ship-pr`.
 - **Icons:** the 28 `iconId`s are game-icons.net names; vendor them through the [icon system](https://github.com/GrizzlyPax/Parabolica/issues/350) registry, credits included. The authors are in the table links above.
 - **Logo ink:** `secondaryColor` is white or near-black (`#0A0A0C`), whichever reads on the primary (luminance cut at 150/255). Players building their own team in the [team creator](https://github.com/GrizzlyPax/Parabolica/issues/346) pick a real secondary instead.
 - **Names stay white** in the UI (house rule); team colour goes on the logo tile, marble, dot and row edge.
 
-**Open for Pax (no rush)**
-- What happens to the old 22? **A.** Retired: hidden from new leagues, still resolved for old saves ← *Radio's pick* · **B.** Kept as an unlockable "historic" deck · **C.** Fully removed
-- Stay at 28, or add two spares to make 30?
+**Settled (Pax, Oct 8, [V05_PLAN](../V05_PLAN.md) decision log)**
+- **The old 22 teams are removed** (old leagues go too; live seasons return in v0.6).
+- **The deck is 28.**
 
 ## Still to do (from the original brief)
 1. **Team-creator palette** (the 12–16 preset colours a player picks from in [the team creator](https://github.com/GrizzlyPax/Parabolica/issues/346)), plus good and bad pairings. It can borrow from the 28, but it must hold up when a player pairs any two. Not started.
