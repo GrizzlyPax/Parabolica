@@ -16,13 +16,72 @@ The whole UI is **black and white plus one colour: your team's.** Everything els
 |---|---|---|
 | **Base** | backgrounds, panels, text, icons, borders, most of every screen | **black + white** (greys only as shades of these) |
 | **Your team** | accents: active states, buttons, highlights, your rows, your icons, the hotseat cue | **your team's primary**, one colour |
-| **Signal colours** | only where they carry meaning: rarity (🔴 common · 🟡 uncommon · 🟢 rare · 🟣 legendary), draft traffic lights, gains/losses | **red · yellow · green · purple** |
+| **Signal colours** | only where they carry meaning: draft traffic lights, gains/losses, best / fastest (purple) | **red · yellow · green · purple** |
+| **Rarity** | card and tag rarity: chips, draft dots, card sheet | **metals: bronze · silver · gold · iridium** (Pax, Oct 8; see The look) |
 | **Other teams** | only on a rival's own mark: their logo tile and row edge | **their primary** |
 
 - **Teams have one colour: the primary.** No secondary colour. A team logo is a **white or near-black icon on the primary**, whichever reads (an `ink` value, picked automatically or stored per team).
 - **Default (no team picked yet, Quick Race, menus):** the accent falls back to a neutral (white).
 - **Names stay white** (house rule).
-- **One token drives it:** `--team-primary` (plus `--team-ink` for icons on it). Change the team, and every accent and icon re-colours. Nothing else in the UI hard-codes a colour; signal colours come from `--rarity-*` / `--signal-*` tokens.
+- **One token drives it:** `--team-primary` (plus `--team-ink` for icons on it). Change the team, and every accent and icon re-colours. Nothing else in the UI hard-codes a colour; signal colours come from `--signal-*` tokens and rarity from `--rarity-*` (metals).
+
+## The look (Pax, Oct 8)
+
+*Picked from the look tests: **direction B, "Almanac"**, the one closest to Blaseball. Review page: [Parabolica Look Tests](https://claude.ai/artifact/BTW6FEB4RQhtdRK4Wz3EGq) (tick "B Almanac", rarity look "Metals"). This is the spec the colour system ([#323](https://github.com/GrizzlyPax/Parabolica/issues/323)) and the emoji sweep ([#352](https://github.com/GrizzlyPax/Parabolica/issues/352)) build to. Phone first: every value below is set at 390 px.*
+
+**In one line:** white rules on black, a wide heavy grotesque for headings, a book serif for names and flavour, square corners, lots of air. The team colour appears as **flat blocks** and nowhere else. No gradients, no shadows, no rounded cards.
+
+### Typefaces (Google Fonts)
+| Role | Face | Use |
+|---|---|---|
+| **Display** | **Archivo** 800–900, width 112% (`font-stretch: 112%`) | screen titles, buttons, the wordmark, big numbers (racing numbers on cards) |
+| **Body** | **Source Serif 4** 400 / 600, *italic 400* | driver and team names, running text; *italic* for flavour lines (team one-liners, backstories, readouts) |
+| **Data / labels** | **Archivo** 600–800, `tabular-nums` | gaps, times, points, positions; small caps labels |
+
+Fallbacks: Archivo → `'Arial Black', sans-serif`; Source Serif 4 → `Georgia, serif`.
+
+### Type scale (px / line-height)
+| Name | Size | Spec | Example |
+|---|---|---|---|
+| Hero | 46 / 0.9 | Archivo 900, 112%, −0.035em | the wordmark on the menu |
+| Title | 24 / 1.05 | Archivo 800, −0.015em | screen titles ("The Paddock") |
+| Button | 17 / 1 | Archivo 800, −0.01em | primary and row buttons |
+| Body | 16 / 1.4 | Source Serif 4 400 | running text |
+| Name | 15–16 / 1.15 | Source Serif 4 600 | drivers, teams, card names |
+| Flavour | 15 / 1.35 | Source Serif 4 *italic* 400 | one-liners, readouts, sub-lines |
+| Data | 13 / 1.2 | Archivo 600, tabular | +1.284 · ▲3 · L14/24 |
+| Label | 10 / 1.2 | Archivo 700, caps, +0.08em | column heads, rarity words, section eyebrows |
+
+### Spacing and shape
+- **Scale:** 4 · 8 · 14 · 20 · 32 · 48. Screen gutter **20**; gap between stacked blocks **14**; menu sections **22**.
+- **Radius: 0** everywhere (buttons, chips, panels, logo tiles). Round things stay round only where they are objects: marbles and tyre badges.
+- **Structure is lines, not boxes:** a **1px white rule** separates major sections and list items on menus; a **1px hairline** (`#2a2a2e`) separates rows in dense lists (tower, card list). Cards that need a frame get a 1px white outline, no fill.
+- **Tower row:** 7px × 20px padding, a 3px left edge in the row's team colour.
+
+### Colour tokens
+| Token | Value | Role |
+|---|---|---|
+| `--pw-ground` | `#0b0b0c` | screen background |
+| `--pw-surface` | `#151517` | the rare raised panel |
+| `--pw-text-1` | `#ffffff` | text, icons, white rules |
+| `--pw-text-2` | `#b4b4ba` | secondary text |
+| `--pw-text-3` | `#7c7c84` | labels, captions |
+| `--pw-hairline` | `#2a2a2e` | row separators |
+| `--pw-border-strong` | `#4a4a50` | quiet outlines |
+| `--team-primary` | the active team's primary (neutral: `#ffffff`) | the one accent |
+| `--team-ink` | the team's `ink` (neutral: `#0b0b0c`) | text and icons drawn **on** the primary |
+| `--signal-red` · `--signal-yellow` · `--signal-green` · `--signal-purple` | `#ff5a4f` · `#f2c230` · `#34d27a` · `#a98bff` | traffic lights, gains (green) / losses (red), best / fastest (purple) |
+| `--rarity-bronze` · `--rarity-silver` · `--rarity-gold` · `--rarity-iridium` | `#C98B5B` · `#9FB4C8` · `#E6BE4A` · `#B7A3FF` | card and tag rarity (the rename is [#385](https://github.com/GrizzlyPax/Parabolica/issues/385); until it lands, today's `--rarity-common`… carry these values) |
+
+**Silver is a cool steel tone on purpose:** a true near-white silver vanished on the black + white UI.
+
+### How colour is applied
+- **Your team = flat blocks:** the primary button (team primary, `--team-ink` text), the Paddock header (also the hotseat "your turn" cue), your logo tile, a Draft button you can press. Secondary buttons are **white** blocks with black text, or white-ruled rows.
+- **Your rows** in the tower get a 14% wash of the primary plus the edge; nothing else changes.
+- **Rivals:** their colour only on their marble and their 3px row edge. Names stay white.
+- **Rarity:** the metal as a **word** (Label style, coloured) plus a **1px outline** on chips; sealed draft dots in the metal colour. Rarity always shows its word, so the three teams that wear metal colours (Ostler & Finch, Tinplate, Ambergate) still read.
+- **Mystery boxes have no colour:** they are Common → Uncommon → Rare → Legendary boxes by standing; the box icon stays white.
+- **Icons:** `currentColor` always. 16 px inline, 20 px in rows, 24–26 px on tools; `--team-ink` when drawn on the primary.
 
 ## Why
 - Emoji render differently on every device, can't be recoloured, and read as placeholder art.
@@ -34,7 +93,7 @@ The whole UI is **black and white plus one colour: your team's.** Everything els
 2. **Icons are always `currentColor`.** An icon has no colour of its own; it takes the colour of its context.
 3. **Colour comes from roles, not hexes.** Each screen asks for a role:
    - `--team-primary` (+ `--team-ink` for icons drawn on it): the active team, yours in Season Mode, otherwise a neutral;
-   - `--rarity-*` (🔴 common · 🟡 uncommon · 🟢 rare · 🟣 legendary, for card chips);
+   - `--rarity-*` (metals: bronze · silver · gold · iridium, for card and tag chips; the word always shows);
    - the existing `--pw-*` Pit Wall tokens for everything neutral.
 4. **Team logos = icon on primary:** a white or near-black icon on the team's primary tile. No badge shapes, no secondary colour.
 5. **Your team themes the screen; rivals don't.** In Season Mode the Paddock, your draft panel and your card sheet use your colours. Rival rows in the tower use *their* team colour on the row edge and logo only. Names stay white (house rule).
@@ -142,4 +201,4 @@ Hand-tuned icons for headline teams · animated icon states (box reveal) · them
 | `season.handoff` | Hotseat hand-off | Hand-off screen | — | [`back-forth`](https://game-icons.net/1x1/lorc/back-forth.html) |
 | `season.champion` | Champion | Finale, standings | — | [`laurels-trophy`](https://game-icons.net/1x1/delapouite/laurels-trophy.html) |
 
-Rarity stays a signal colour (`--rarity-*`), not an icon. Box metals (Bronze, Silver, Gold, Iridium) are a property of `season.box`, not separate icons; how a metal shows follows the colour system above.
+Rarity is a metal colour (`--rarity-*`: bronze · silver · gold · iridium), not an icon. Mystery boxes are Common → Uncommon → Rare → Legendary (a property of `season.box`, renamed in [#385](https://github.com/GrizzlyPax/Parabolica/issues/385)); boxes carry no colour, just the white box icon and the word.
