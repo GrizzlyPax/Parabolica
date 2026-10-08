@@ -10,7 +10,7 @@
 // toss-in: an object in data/ruleCards.ts, no engine edits.
 
 import { SimVariables, CANON_VARIABLES } from '../simlab/types';
-import { ALL_TAGS, Tag, MAX_TAGS_PER_DRIVER, isGenesisTag, RarityOdds, DEFAULT_RARITY_ODDS, RARITIES } from '../data/tags';
+import { ALL_TAGS, Tag, MAX_TAGS_PER_DRIVER, isGenesisTag, RarityOdds, DEFAULT_RARITY_ODDS, RARITIES, upgradeRarityOdds, upgradeTag } from '../data/tags';
 import { WEATHER_TYPES } from '../data/weather';
 
 export const RULESET_VERSION = 1 as const;
@@ -144,7 +144,7 @@ export function applyRuleCard(rs: Ruleset, card: RuleCard): Ruleset {
     if (p.tags.add) for (const id of p.tags.add) if (!pool.includes(id)) pool.push(id);
     next.tags.pool = pool;
     if (p.tags.genesisChance !== undefined) next.tags.genesisChance = p.tags.genesisChance;
-    if (p.tags.rarityOdds) next.tags.rarityOdds = { ...next.tags.rarityOdds, ...p.tags.rarityOdds };
+    if (p.tags.rarityOdds) next.tags.rarityOdds = { ...next.tags.rarityOdds, ...upgradeRarityOdds(p.tags.rarityOdds) };
     if (p.tags.slotCap !== undefined) next.tags.slotCap = p.tags.slotCap;
   }
   if (p.weather) {
@@ -182,7 +182,8 @@ export function applyLabPreset(rs: Ruleset, preset: { name: string; tagEdits: Re
     for (let i = 0; i < parts.length - 1; i++) cur = cur[parts[i]] as Record<string, unknown>;
     if (typeof cur[parts[parts.length - 1]] === 'number') cur[parts[parts.length - 1]] = value;
   }
-  return { ...rs, simVars, lab: { name: preset.name, tagEdits: preset.tagEdits, knobEdits: preset.knobEdits } };
+  const tagEdits = Object.fromEntries(Object.entries(preset.tagEdits).map(([id, t]) => [id, upgradeTag(t)]));
+  return { ...rs, simVars, lab: { name: preset.name, tagEdits, knobEdits: preset.knobEdits } };
 }
 
 /** Is this ruleset byte-for-byte the default (no cards, nothing tweaked)? */
@@ -205,13 +206,27 @@ export function parseRuleset(json: string): Ruleset | null {
     if (!o || o.v !== RULESET_VERSION) return null;
     if (!Array.isArray(o.cards) || !o.tags || !o.weather || !o.simVars) return null;
     if (!Array.isArray(o.tags.pool) || typeof o.tags.genesisChance !== 'number' || typeof o.tags.slotCap !== 'number') return null;
-    if (!o.tags.rarityOdds) o.tags.rarityOdds = { ...DEFAULT_RARITY_ODDS }; // pre-rarity saves
+    upgradeRulesetInPlace(o);
     if (typeof o.weather.weights !== 'object' || typeof o.weather.quickRace !== 'boolean') return null;
     // simVars: deep-merge over CANON so a partial or stale file still resolves
     return { ...o, simVars: deepMerge(structuredClone(CANON_VARIABLES), o.simVars) };
   } catch {
     return null;
   }
+}
+
+/** Old saves (pre-#385) name rarities common…legendary; move them to the
+ * metals. Missing odds (pre-rarity saves) become the defaults. */
+function upgradeRulesetInPlace(o: { tags: { rarityOdds?: Partial<Record<string, number>> }; lab?: { tagEdits?: Record<string, Tag> } }): void {
+  o.tags.rarityOdds = upgradeRarityOdds(o.tags.rarityOdds);
+  if (o.lab?.tagEdits) o.lab.tagEdits = Object.fromEntries(Object.entries(o.lab.tagEdits).map(([id, t]) => [id, upgradeTag(t)]));
+}
+
+/** A ruleset from any era, on today's rarity names. Returns a copy. */
+export function upgradeRuleset(rs: Ruleset): Ruleset {
+  const o = structuredClone(rs);
+  upgradeRulesetInPlace(o as never);
+  return o;
 }
 
 /** "1 in 6" for 0.1667, "25%" otherwise. */
@@ -222,8 +237,9 @@ export function describeChance(c: number): string {
   return Math.abs(n - Math.round(n)) < 0.01 ? `1 in ${Math.round(n)}` : `${Math.round(c * 100)}%`;
 }
 
-/** "60% common · 30% uncommon · 9% rare · 1% legendary" */
-export function describeOdds(o: RarityOdds): string {
+/** "60% bronze · 30% silver · 9% gold · 1% iridium" */
+export function describeOdds(given: RarityOdds): string {
+  const o = upgradeRarityOdds(given);
   const total = RARITIES.reduce((s, r) => s + Math.max(0, o[r]), 0) || 1;
   return RARITIES.filter(r => o[r] > 0).map(r => `${Math.round(o[r] / total * 100)}% ${r}`).join(' · ');
 }

@@ -4,7 +4,7 @@
 // A preset is a named bundle of edits — tag definitions and physics knobs —
 // that the lab measures and that Quick Race can play under. A run is one
 // measurement: what was run (seed, races, preset) and what came out.
-import type { Tag } from '../data/tags';
+import { upgradeTag, type Tag } from '../data/tags';
 import type { CalibrationFile } from './calibrate';
 import { compactReport, expandReport, type PhysicsReport } from './physics';
 
@@ -29,8 +29,13 @@ export interface Notebook { presets: LabPreset[]; runs: LabRun[] }
 export const NOTEBOOK_KEY = 'parabolica.lab.notebook';
 const MAX_RUNS = 60;
 
+/** A preset from any era, its tag edits on today's rarity names (#385). */
+export function upgradePreset(p: LabPreset): LabPreset {
+  return { ...p, tagEdits: Object.fromEntries(Object.entries(p.tagEdits ?? {}).map(([id, t]) => [id, upgradeTag(t)])) };
+}
+
 export function loadNotebook(): Notebook {
-  try { const n = JSON.parse(localStorage.getItem(NOTEBOOK_KEY) ?? 'null'); if (n && Array.isArray(n.presets) && Array.isArray(n.runs)) return n; } catch { /* private window */ }
+  try { const n = JSON.parse(localStorage.getItem(NOTEBOOK_KEY) ?? 'null'); if (n && Array.isArray(n.presets) && Array.isArray(n.runs)) return { ...n, presets: n.presets.map(upgradePreset) }; } catch { /* private window */ }
   return { presets: [], runs: [] };
 }
 export function saveNotebook(n: Notebook) { try { localStorage.setItem(NOTEBOOK_KEY, JSON.stringify({ ...n, runs: n.runs.slice(0, MAX_RUNS) })); } catch { /* private window */ } }
@@ -117,5 +122,5 @@ export async function fetchLedger(base = ''): Promise<Ledger> {
   ]);
   const runs: LabRun[] = runsText.split('\n').filter(Boolean).map(l => { try { return JSON.parse(l) as LabRun; } catch { return null; } }).filter((r): r is LabRun => !!r)
     .map(r => r.kind === 'physics' ? { ...r, result: expandReport(r.result) } : r).sort((a, b) => b.at - a.at);
-  return { runs, presets: Array.isArray(presetsJson) ? presetsJson as LabPreset[] : [] };
+  return { runs, presets: Array.isArray(presetsJson) ? (presetsJson as LabPreset[]).map(upgradePreset) : [] };
 }

@@ -11,7 +11,7 @@
     {
       "tagId": "clutch-performer",
       "target": "driver",
-      "rarity": "uncommon",
+      "rarity": "silver",
       "effectsHash": "317a9820",
       "races": 200,
       "places": 0.11,
@@ -27,7 +27,7 @@
     {
       "tagId": "rain-dancer",
       "target": "driver",
-      "rarity": "rare",
+      "rarity": "gold",
       "effectsHash": "30bc0f90",
       "races": 200,
       "places": -0.03,
@@ -43,7 +43,7 @@
     {
       "tagId": "sunday-driver",
       "target": "driver",
-      "rarity": "uncommon",
+      "rarity": "silver",
       "effectsHash": "b936f183",
       "races": 200,
       "places": 0.595,
@@ -59,7 +59,7 @@
     {
       "tagId": "steady-hands",
       "target": "driver",
-      "rarity": "common",
+      "rarity": "bronze",
       "effectsHash": "3e21d09e",
       "races": 200,
       "places": 1.05,
@@ -75,7 +75,7 @@
     {
       "tagId": "late-braker",
       "target": "driver",
-      "rarity": "common",
+      "rarity": "bronze",
       "effectsHash": "ef62b3b6",
       "races": 200,
       "places": 0.525,
@@ -91,7 +91,7 @@
     {
       "tagId": "quick-starter",
       "target": "driver",
-      "rarity": "common",
+      "rarity": "bronze",
       "effectsHash": "9772a949",
       "races": 200,
       "places": 0.22,
@@ -107,7 +107,7 @@
     {
       "tagId": "crowd-favourite",
       "target": "driver",
-      "rarity": "common",
+      "rarity": "bronze",
       "effectsHash": "2f0b7a62",
       "races": 200,
       "places": -0.4,
@@ -123,7 +123,7 @@
     {
       "tagId": "rain-shy",
       "target": "driver",
-      "rarity": "uncommon",
+      "rarity": "silver",
       "effectsHash": "5667d048",
       "races": 200,
       "places": -0.02,
@@ -139,7 +139,7 @@
     {
       "tagId": "ice-veins",
       "target": "driver",
-      "rarity": "rare",
+      "rarity": "gold",
       "effectsHash": "ca0f7eb1",
       "races": 200,
       "places": 0.3,
@@ -155,7 +155,7 @@
     {
       "tagId": "the-natural",
       "target": "driver",
-      "rarity": "legendary",
+      "rarity": "iridium",
       "effectsHash": "bc320681",
       "races": 200,
       "places": 2.565,
@@ -171,7 +171,7 @@
     {
       "tagId": "glass-cannon",
       "target": "car",
-      "rarity": "uncommon",
+      "rarity": "silver",
       "effectsHash": "759b9c72",
       "races": 200,
       "places": 1.355,
@@ -187,7 +187,7 @@
     {
       "tagId": "cursed-chassis",
       "target": "car",
-      "rarity": "uncommon",
+      "rarity": "silver",
       "effectsHash": "089565ac",
       "races": 200,
       "places": -1.015,
@@ -203,7 +203,7 @@
     {
       "tagId": "pit-lane-special",
       "target": "car",
-      "rarity": "common",
+      "rarity": "bronze",
       "effectsHash": "01e0d26a",
       "races": 200,
       "places": 0.59,
@@ -219,7 +219,7 @@
     {
       "tagId": "big-engine",
       "target": "car",
-      "rarity": "common",
+      "rarity": "bronze",
       "effectsHash": "e92d1d51",
       "races": 200,
       "places": 0.445,
@@ -235,7 +235,7 @@
     {
       "tagId": "built-like-a-tank",
       "target": "car",
-      "rarity": "common",
+      "rarity": "bronze",
       "effectsHash": "fd1fcb44",
       "races": 200,
       "places": 0,
@@ -251,7 +251,7 @@
     {
       "tagId": "light-footed",
       "target": "car",
-      "rarity": "common",
+      "rarity": "bronze",
       "effectsHash": "b9cb62dc",
       "races": 200,
       "places": -0.17,
@@ -267,7 +267,7 @@
     {
       "tagId": "runs-hot",
       "target": "car",
-      "rarity": "uncommon",
+      "rarity": "silver",
       "effectsHash": "cc1a3026",
       "races": 200,
       "places": -0.405,
@@ -283,7 +283,7 @@
     {
       "tagId": "wet-weather-package",
       "target": "car",
-      "rarity": "rare",
+      "rarity": "gold",
       "effectsHash": "eeb36eaf",
       "races": 200,
       "places": 0.06,
@@ -299,7 +299,7 @@
     {
       "tagId": "spaceship",
       "target": "car",
-      "rarity": "rare",
+      "rarity": "gold",
       "effectsHash": "7a0cf12f",
       "races": 200,
       "places": 1.605,
@@ -315,7 +315,7 @@
     {
       "tagId": "the-unicorn",
       "target": "car",
-      "rarity": "legendary",
+      "rarity": "iridium",
       "effectsHash": "709f5333",
       "races": 200,
       "places": 2.2,
@@ -331,7 +331,7 @@
     {
       "tagId": "underdog-spirit",
       "target": "team",
-      "rarity": "common",
+      "rarity": "bronze",
       "effectsHash": "73c4360b",
       "races": 200,
       "places": 0.645,
@@ -347,7 +347,7 @@
     {
       "tagId": "front-runners",
       "target": "team",
-      "rarity": "common",
+      "rarity": "bronze",
       "effectsHash": "b1e7b452",
       "races": 200,
       "places": 0.638,
@@ -363,7 +363,7 @@
     {
       "tagId": "chaotic-energy",
       "target": "team",
-      "rarity": "uncommon",
+      "rarity": "silver",
       "effectsHash": "534e683a",
       "races": 200,
       "places": -0.61,
@@ -379,7 +379,7 @@
     {
       "tagId": "drilled-crew",
       "target": "team",
-      "rarity": "common",
+      "rarity": "bronze",
       "effectsHash": "3aabdfdd",
       "races": 200,
       "places": -0.065,
@@ -395,7 +395,7 @@
     {
       "tagId": "home-cooking",
       "target": "team",
-      "rarity": "common",
+      "rarity": "bronze",
       "effectsHash": "a504a7aa",
       "races": 200,
       "places": -0.162,
@@ -411,7 +411,7 @@
     {
       "tagId": "late-bloomers",
       "target": "team",
-      "rarity": "uncommon",
+      "rarity": "silver",
       "effectsHash": "a66796fc",
       "races": 200,
       "places": -0.287,
@@ -427,7 +427,7 @@
     {
       "tagId": "butterfingers",
       "target": "team",
-      "rarity": "uncommon",
+      "rarity": "silver",
       "effectsHash": "9873c209",
       "races": 200,
       "places": -0.705,
@@ -443,7 +443,7 @@
     {
       "tagId": "siege-mentality",
       "target": "team",
-      "rarity": "rare",
+      "rarity": "gold",
       "effectsHash": "c4b9eb55",
       "races": 200,
       "places": 0.313,
@@ -459,7 +459,7 @@
     {
       "tagId": "void-touched",
       "target": "team",
-      "rarity": "rare",
+      "rarity": "gold",
       "effectsHash": "083ff3ad",
       "races": 200,
       "places": 0.563,
@@ -475,7 +475,7 @@
     {
       "tagId": "dynasty",
       "target": "team",
-      "rarity": "legendary",
+      "rarity": "iridium",
       "effectsHash": "057ce2dc",
       "races": 200,
       "places": 2.398,

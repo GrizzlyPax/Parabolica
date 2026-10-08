@@ -5,7 +5,7 @@
 import { mulberry32, deriveSeed } from '../engine/rng';
 import { Tag, getTagById } from '../data/tags';
 import { buildRoster } from '../rules/genesis';
-import { Ruleset, defaultRuleset } from '../rules/ruleset';
+import { Ruleset, defaultRuleset, upgradeRuleset } from '../rules/ruleset';
 import { getTeamsByIds, Team } from '../data/teams';
 import { generateRosterFromTeamList } from '../generators/drivers';
 import { generateCarsForKingdoms } from '../generators/cars';
@@ -44,7 +44,8 @@ export function buildSchedule(leagueSeed: number, setup: LeagueSetupConfig): Sch
 }
 
 export function createLeague(leagueSeed: number, setup: LeagueSetupConfig): LeagueState {
-  const roster = generateGenesisRoster(leagueSeed, setup.teamIds, setup.customTeams, setup.ruleset ?? defaultRuleset());
+  // Old saves name rarities common…legendary (#385); the facts stay as saved.
+  const roster = generateGenesisRoster(leagueSeed, setup.teamIds, setup.customTeams, setup.ruleset ? upgradeRuleset(setup.ruleset) : defaultRuleset());
   return {
     engineVersion,
     leagueSeed,

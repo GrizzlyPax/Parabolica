@@ -24,16 +24,11 @@
   --pw-red: var(--signal-red);
   --pw-red-soft: #ff8a80;
   --pw-purple: var(--signal-purple);
-  /* Rarity = metals (Pax, Oct 8). The class names move to bronze…iridium in
-     #385; until then common → legendary carry the metal values. */
+  /* Rarity = metals (Pax, Oct 8; #385): bronze · silver · gold · iridium. */
   --rarity-bronze: #c98b5b;
   --rarity-silver: #9fb4c8;
   --rarity-gold: #e6be4a;
   --rarity-iridium: #b7a3ff;
-  --rarity-common: var(--rarity-bronze);
-  --rarity-uncommon: var(--rarity-silver);
-  --rarity-rare: var(--rarity-gold);
-  --rarity-legendary: var(--rarity-iridium);
   /* The active team's colour (docs/ICONS.md). No team yet = Parabolica
      purple + near-black ink (Pax, Oct 8); a screen sets them from your team
      (Season Mode) or whoever's turn it is (hotseat) via teamThemeVars() in

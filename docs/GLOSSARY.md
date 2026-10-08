@@ -53,10 +53,10 @@
 Each driver gets three slots: driver, car (their own chassis), team (one roll, shared by teammates). Per slot:
 
 1. **Does it hit?** 1 in 6.
-2. **Which bucket?** 60% common · 30% uncommon · 9% rare · 1% legendary. Fixed odds — adding tags to a bucket never changes how often it comes up, only which tag you get.
+2. **Which bucket?** 60% bronze · 30% silver · 9% gold · 1% iridium. Fixed odds — adding tags to a bucket never changes how often it comes up, only which tag you get.
 3. **Which tag?** An even pick inside the bucket. An empty bucket falls to the next more common one.
 
-Bucket sizes in the default pool: common 12 · uncommon 9 · rare 6 · legendary 3. Cards change the hit chance and the odds.
+Bucket sizes in the default pool: bronze 12 · silver 9 · gold 6 · iridium 3. Cards change the hit chance and the odds.
 
 ## How tags enter the world
 
@@ -74,81 +74,81 @@ Measured: each tag alone on one driver over 200 seeded races vs the same races u
 
 | Tag | Rarity | Target | Fires | Effect | Lasts | After a race | How you get it | Measured |
 |---|---|---|---|---|---|---|---|---|
-| 🎯 **Clutch Performer** `clutch-performer` — Raises their game when it matters most | uncommon | driver | on the final lap (70% chance) | +8% speed, +15% consistency | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +0.1 places · 1.3× wins · 16% DNF (field 14%) |
-| 🌧️ **Rain Dancer** `rain-dancer` — Mysteriously faster when the skies open | rare | driver | while in rain | +8% consistency, −15% crash risk | for good | — | born with it (in the genesis pool), or granted by the Commissionary | -0.0 places · 1.1× wins · 16% DNF (field 14%) |
-| 🐢 **Sunday Driver** `sunday-driver` — Slow starter who builds to a strong finish | uncommon | driver | while last 40% of the race | +5% speed | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +0.6 places · 2.0× wins · 15% DNF (field 14%) |
-| 🧤 **Steady Hands** `steady-hands` — Rarely puts a wheel wrong | common | driver | always on | +4% consistency | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +1.1 places · 2.6× wins · 18% DNF (field 14%) |
-| 🛑 **Late Braker** `late-braker` — Brave into the corners. Sometimes too brave | common | driver | always on | +1% speed, +3% crash risk | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +0.5 places · 2.1× wins · 15% DNF (field 14%) |
-| 🚦 **Quick Starter** `quick-starter` — Lights out and gone | common | driver | at the start | +5% speed | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +0.2 places · 1.3× wins · 16% DNF (field 14%) |
-| 🙌 **Crowd Favourite** `crowd-favourite` — Things just seem to go their way | common | driver | always on | +10% luck | for good | — | born with it (in the genesis pool), or granted by the Commissionary | -0.4 places · 1.4× wins · 19% DNF (field 14%) |
-| 🌂 **Rain Shy** `rain-shy` — Would rather be indoors when it rains | uncommon | driver | while in rain | -3% speed | for good | — | born with it (in the genesis pool), or granted by the Commissionary | -0.0 places · 1.0× wins · 14% DNF (field 14%) |
-| 🧊 **Ice Veins** `ice-veins` — Unflappable with the lead in sight | rare | driver | while running top 3 | +8% consistency | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +0.3 places · 3.9× wins · 16% DNF (field 14%) |
-| ⭐ **The Natural** `the-natural` — Born for this. Everyone can tell | legendary | driver | always on | +3% speed, +5% consistency, +10% luck | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +2.6 places · 5.3× wins · 16% DNF (field 14%) |
-| 💎 **Glass Cannon** `glass-cannon` — Blazingly fast but fragile | uncommon | car | always on | +3% speed, +25% crash risk | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +1.4 places · 2.4× wins · 16% DNF (field 14%) |
-| 👻 **Cursed Chassis** `cursed-chassis` — Something is wrong with this car. Nobody knows what. | uncommon | car | always on | -2% consistency, -12% luck | for good | — | born with it (in the genesis pool), or granted by the Commissionary | -1.0 places · 1.0× wins · 17% DNF (field 14%) |
-| 🔧 **Pit Lane Special** `pit-lane-special` — Optimized for quick pit stops | common | car | on a pit stop | -25% pit time | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +0.6 places · 1.9× wins · 20% DNF (field 14%) |
-| 🔋 **Big Engine** `big-engine` — More horsepower than manners | common | car | always on | +1% speed | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +0.4 places · 2.0× wins · 18% DNF (field 14%) |
-| 🛡️ **Built Like a Tank** `built-like-a-tank` — Shrugs off contact that would end other cars | common | car | always on | −6% crash risk | for good | — | born with it (in the genesis pool), or granted by the Commissionary | no measurable effect · 1.0× wins · 14% DNF (field 14%) |
-| 🪶 **Light-Footed** `light-footed` — Flies on fresh rubber | common | car | while tyre wear under 40% | +2% speed | for good | — | born with it (in the genesis pool), or granted by the Commissionary | -0.2 places · 1.6× wins · 22% DNF (field 14%) |
-| 🌡️ **Runs Hot** `runs-hot` — Hates a scorcher | uncommon | car | while in scorcher | -4% speed | for good | — | born with it (in the genesis pool), or granted by the Commissionary | -0.4 places · 1.0× wins · 14% DNF (field 14%) |
-| 🌧️ **Wet Weather Package** `wet-weather-package` — Built for the rain; sure-footed when it pours | rare | car | while in rain | +3% speed, −5% crash risk | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +0.1 places · 1.0× wins · 14% DNF (field 14%) |
-| 🛸 **Spaceship** `spaceship` — Nobody is sure how it works, including the team | rare | car | always on | +3% speed, -10% luck | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +1.6 places · 1.9× wins · 10% DNF (field 14%) |
-| 🦄 **The Unicorn** `the-unicorn` — The car every team dreams of building once | legendary | car | always on | +3% speed, +4% consistency, −5% crash risk | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +2.2 places · 4.1× wins · 13% DNF (field 14%) |
-| 🐕 **Underdog Spirit** `underdog-spirit` — Performs better when behind | common | team | while bottom 50% of the field | +3% speed, +10% luck | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +0.6 places · 1.1× wins · 17% DNF (field 16%) |
-| 👑 **Front Runners** `front-runners` — Thrives when leading the pack | common | team | while running top 5 | +4% consistency, −8% crash risk | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +0.6 places · 1.7× wins · 15% DNF (field 16%) |
-| 🌀 **Chaotic Energy** `chaotic-energy` — Unpredictable - could be brilliant or disastrous | uncommon | team | at the start (50% chance) | -20% consistency | for good | — | born with it (in the genesis pool), or granted by the Commissionary | -0.6 places · 0.5× wins · 18% DNF (field 16%) |
-| 🔧 **Drilled Crew** `drilled-crew` — Every stop rehearsed a hundred times | common | team | always on | -8% pit time | for good | — | born with it (in the genesis pool), or granted by the Commissionary | -0.1 places · 1.0× wins · 19% DNF (field 16%) |
-| 🍲 **Home Cooking** `home-cooking` — Well fed, well loved, a little lucky | common | team | always on | +8% luck | for good | — | born with it (in the genesis pool), or granted by the Commissionary | -0.2 places · 1.1× wins · 18% DNF (field 16%) |
-| 🌱 **Late Bloomers** `late-bloomers` — Find their pace when the race gets long | uncommon | team | while last 30% of the race | +1% speed | for good | — | born with it (in the genesis pool), or granted by the Commissionary | -0.3 places · 1.0× wins · 20% DNF (field 16%) |
-| 🧈 **Butterfingers** `butterfingers` — Something always rolls under the car | uncommon | team | always on | +15% pit time | for good | — | born with it (in the genesis pool), or granted by the Commissionary | -0.7 places · 0.7× wins · 17% DNF (field 16%) |
-| 🏰 **Siege Mentality** `siege-mentality` — Defend the lead at all costs | rare | team | while running top 3 | +3% consistency, −8% crash risk | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +0.3 places · 1.4× wins · 14% DNF (field 16%) |
-| 🕳️ **Void-Touched** `void-touched` — Fast, and the Void is watching | rare | team | always on | +2% speed, -15% luck | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +0.6 places · 1.2× wins · 18% DNF (field 16%) |
-| 👑 **Dynasty** `dynasty` — Generations of winning, and it shows everywhere | legendary | team | always on | +2% speed, +3% consistency, +5% luck, -5% pit time | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +2.4 places · 2.4× wins · 14% DNF (field 16%) |
+| 🎯 **Clutch Performer** `clutch-performer` — Raises their game when it matters most | silver | driver | on the final lap (70% chance) | +8% speed, +15% consistency | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +0.1 places · 1.3× wins · 16% DNF (field 14%) |
+| 🌧️ **Rain Dancer** `rain-dancer` — Mysteriously faster when the skies open | gold | driver | while in rain | +8% consistency, −15% crash risk | for good | — | born with it (in the genesis pool), or granted by the Commissionary | -0.0 places · 1.1× wins · 16% DNF (field 14%) |
+| 🐢 **Sunday Driver** `sunday-driver` — Slow starter who builds to a strong finish | silver | driver | while last 40% of the race | +5% speed | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +0.6 places · 2.0× wins · 15% DNF (field 14%) |
+| 🧤 **Steady Hands** `steady-hands` — Rarely puts a wheel wrong | bronze | driver | always on | +4% consistency | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +1.1 places · 2.6× wins · 18% DNF (field 14%) |
+| 🛑 **Late Braker** `late-braker` — Brave into the corners. Sometimes too brave | bronze | driver | always on | +1% speed, +3% crash risk | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +0.5 places · 2.1× wins · 15% DNF (field 14%) |
+| 🚦 **Quick Starter** `quick-starter` — Lights out and gone | bronze | driver | at the start | +5% speed | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +0.2 places · 1.3× wins · 16% DNF (field 14%) |
+| 🙌 **Crowd Favourite** `crowd-favourite` — Things just seem to go their way | bronze | driver | always on | +10% luck | for good | — | born with it (in the genesis pool), or granted by the Commissionary | -0.4 places · 1.4× wins · 19% DNF (field 14%) |
+| 🌂 **Rain Shy** `rain-shy` — Would rather be indoors when it rains | silver | driver | while in rain | -3% speed | for good | — | born with it (in the genesis pool), or granted by the Commissionary | -0.0 places · 1.0× wins · 14% DNF (field 14%) |
+| 🧊 **Ice Veins** `ice-veins` — Unflappable with the lead in sight | gold | driver | while running top 3 | +8% consistency | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +0.3 places · 3.9× wins · 16% DNF (field 14%) |
+| ⭐ **The Natural** `the-natural` — Born for this. Everyone can tell | iridium | driver | always on | +3% speed, +5% consistency, +10% luck | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +2.6 places · 5.3× wins · 16% DNF (field 14%) |
+| 💎 **Glass Cannon** `glass-cannon` — Blazingly fast but fragile | silver | car | always on | +3% speed, +25% crash risk | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +1.4 places · 2.4× wins · 16% DNF (field 14%) |
+| 👻 **Cursed Chassis** `cursed-chassis` — Something is wrong with this car. Nobody knows what. | silver | car | always on | -2% consistency, -12% luck | for good | — | born with it (in the genesis pool), or granted by the Commissionary | -1.0 places · 1.0× wins · 17% DNF (field 14%) |
+| 🔧 **Pit Lane Special** `pit-lane-special` — Optimized for quick pit stops | bronze | car | on a pit stop | -25% pit time | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +0.6 places · 1.9× wins · 20% DNF (field 14%) |
+| 🔋 **Big Engine** `big-engine` — More horsepower than manners | bronze | car | always on | +1% speed | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +0.4 places · 2.0× wins · 18% DNF (field 14%) |
+| 🛡️ **Built Like a Tank** `built-like-a-tank` — Shrugs off contact that would end other cars | bronze | car | always on | −6% crash risk | for good | — | born with it (in the genesis pool), or granted by the Commissionary | no measurable effect · 1.0× wins · 14% DNF (field 14%) |
+| 🪶 **Light-Footed** `light-footed` — Flies on fresh rubber | bronze | car | while tyre wear under 40% | +2% speed | for good | — | born with it (in the genesis pool), or granted by the Commissionary | -0.2 places · 1.6× wins · 22% DNF (field 14%) |
+| 🌡️ **Runs Hot** `runs-hot` — Hates a scorcher | silver | car | while in scorcher | -4% speed | for good | — | born with it (in the genesis pool), or granted by the Commissionary | -0.4 places · 1.0× wins · 14% DNF (field 14%) |
+| 🌧️ **Wet Weather Package** `wet-weather-package` — Built for the rain; sure-footed when it pours | gold | car | while in rain | +3% speed, −5% crash risk | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +0.1 places · 1.0× wins · 14% DNF (field 14%) |
+| 🛸 **Spaceship** `spaceship` — Nobody is sure how it works, including the team | gold | car | always on | +3% speed, -10% luck | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +1.6 places · 1.9× wins · 10% DNF (field 14%) |
+| 🦄 **The Unicorn** `the-unicorn` — The car every team dreams of building once | iridium | car | always on | +3% speed, +4% consistency, −5% crash risk | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +2.2 places · 4.1× wins · 13% DNF (field 14%) |
+| 🐕 **Underdog Spirit** `underdog-spirit` — Performs better when behind | bronze | team | while bottom 50% of the field | +3% speed, +10% luck | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +0.6 places · 1.1× wins · 17% DNF (field 16%) |
+| 👑 **Front Runners** `front-runners` — Thrives when leading the pack | bronze | team | while running top 5 | +4% consistency, −8% crash risk | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +0.6 places · 1.7× wins · 15% DNF (field 16%) |
+| 🌀 **Chaotic Energy** `chaotic-energy` — Unpredictable - could be brilliant or disastrous | silver | team | at the start (50% chance) | -20% consistency | for good | — | born with it (in the genesis pool), or granted by the Commissionary | -0.6 places · 0.5× wins · 18% DNF (field 16%) |
+| 🔧 **Drilled Crew** `drilled-crew` — Every stop rehearsed a hundred times | bronze | team | always on | -8% pit time | for good | — | born with it (in the genesis pool), or granted by the Commissionary | -0.1 places · 1.0× wins · 19% DNF (field 16%) |
+| 🍲 **Home Cooking** `home-cooking` — Well fed, well loved, a little lucky | bronze | team | always on | +8% luck | for good | — | born with it (in the genesis pool), or granted by the Commissionary | -0.2 places · 1.1× wins · 18% DNF (field 16%) |
+| 🌱 **Late Bloomers** `late-bloomers` — Find their pace when the race gets long | silver | team | while last 30% of the race | +1% speed | for good | — | born with it (in the genesis pool), or granted by the Commissionary | -0.3 places · 1.0× wins · 20% DNF (field 16%) |
+| 🧈 **Butterfingers** `butterfingers` — Something always rolls under the car | silver | team | always on | +15% pit time | for good | — | born with it (in the genesis pool), or granted by the Commissionary | -0.7 places · 0.7× wins · 17% DNF (field 16%) |
+| 🏰 **Siege Mentality** `siege-mentality` — Defend the lead at all costs | gold | team | while running top 3 | +3% consistency, −8% crash risk | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +0.3 places · 1.4× wins · 14% DNF (field 16%) |
+| 🕳️ **Void-Touched** `void-touched` — Fast, and the Void is watching | gold | team | always on | +2% speed, -15% luck | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +0.6 places · 1.2× wins · 18% DNF (field 16%) |
+| 👑 **Dynasty** `dynasty` — Generations of winning, and it shows everywhere | iridium | team | always on | +2% speed, +3% consistency, +5% luck, -5% pit time | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +2.4 places · 2.4× wins · 14% DNF (field 16%) |
 
 ## Acquired tags
 
 | Tag | Rarity | Target | Fires | Effect | Lasts | After a race | How you get it |
 |---|---|---|---|---|---|---|---|
-| 🔥 **Hot Streak** `hot-streak` — Two wins on the bounce. Everything is coming easy. | uncommon | driver | always on | +2% speed, +5% consistency | 3 races | 15%: gives 🐎 The Charger to themselves | earned: 2 wins in a row |
-| 🐎 **The Charger** `the-charger` — Came through the field like it owed them money. Faster in traffic. | uncommon | driver | while bottom 50% of the field | +3% speed | rest of the season | — | earned: gained 10+ places from the grid and finished top 5; passed on by 🔥 Hot Streak |
-| 🛡️ **Unkillable** `unkillable` — Walked away from a wreck and kept racing. Harder to put out now. | uncommon | driver | always on | −12% crash risk | for good | — | earned: damaged in a crash and still classified in the top 8 |
-| 👻 **Haunted** `haunted` — Three retirements in a row. Something followed them home. | rare | driver | always on | -20% luck, +5% crash risk | 4 races | 10%: gives 👻 Haunted to their teammate | inflicted: 3 retirements in a row; passed on by 👻 Haunted |
-| 😵 **Shaken** `shaken` — Crashed out last time. The hands are not quite steady yet. | uncommon | driver | always on | -6% consistency | 2 races | 50%: gives 👊 Bad Blood to whoever they crashed with | inflicted: retired in a crash |
-| 👂 **Hears the Track** `hears-the-track` — They say the asphalt talks to them. It has not said anything useful yet. | common | driver | always on | — | rest of the season | always: shakes off 😵 Shaken | cosmic: 0.5% lottery per driver per race |
-| 🕳️ **Marked by the Void** `marked-by-the-void` — The universe simply decided. Fortune looks the other way for a while. | uncommon | driver | always on | -10% luck | 2 races | 10%: gives 🕳️ Marked by the Void to a random driver; 10%: wears off | cosmic: 0.3% lottery per driver per race; passed on by 🕳️ Marked by the Void |
-| 👊 **Bad Blood** `bad-blood` — Someone is driving angry. Quicker, and less careful about it. | uncommon | driver | always on | +2% speed, +6% crash risk | 3 races | — | passed on by 😵 Shaken |
+| 🔥 **Hot Streak** `hot-streak` — Two wins on the bounce. Everything is coming easy. | silver | driver | always on | +2% speed, +5% consistency | 3 races | 15%: gives 🐎 The Charger to themselves | earned: 2 wins in a row |
+| 🐎 **The Charger** `the-charger` — Came through the field like it owed them money. Faster in traffic. | silver | driver | while bottom 50% of the field | +3% speed | rest of the season | — | earned: gained 10+ places from the grid and finished top 5; passed on by 🔥 Hot Streak |
+| 🛡️ **Unkillable** `unkillable` — Walked away from a wreck and kept racing. Harder to put out now. | silver | driver | always on | −12% crash risk | for good | — | earned: damaged in a crash and still classified in the top 8 |
+| 👻 **Haunted** `haunted` — Three retirements in a row. Something followed them home. | gold | driver | always on | -20% luck, +5% crash risk | 4 races | 10%: gives 👻 Haunted to their teammate | inflicted: 3 retirements in a row; passed on by 👻 Haunted |
+| 😵 **Shaken** `shaken` — Crashed out last time. The hands are not quite steady yet. | silver | driver | always on | -6% consistency | 2 races | 50%: gives 👊 Bad Blood to whoever they crashed with | inflicted: retired in a crash |
+| 👂 **Hears the Track** `hears-the-track` — They say the asphalt talks to them. It has not said anything useful yet. | bronze | driver | always on | — | rest of the season | always: shakes off 😵 Shaken | cosmic: 0.5% lottery per driver per race |
+| 🕳️ **Marked by the Void** `marked-by-the-void` — The universe simply decided. Fortune looks the other way for a while. | silver | driver | always on | -10% luck | 2 races | 10%: gives 🕳️ Marked by the Void to a random driver; 10%: wears off | cosmic: 0.3% lottery per driver per race; passed on by 🕳️ Marked by the Void |
+| 👊 **Bad Blood** `bad-blood` — Someone is driving angry. Quicker, and less careful about it. | silver | driver | always on | +2% speed, +6% crash risk | 3 races | — | passed on by 😵 Shaken |
 
 ## In-race tags
 
 | Tag | Rarity | Target | Fires | Effect | Lasts | After a race | How you get it |
 |---|---|---|---|---|---|---|---|
-| 🔧 **Damaged** `damaged` — Survived a crash. The car is 15% slower for the rest of the race. | rare | driver | always on | -15% speed | rest of the race | — | mid-race, after surviving a crash |
-| 🌀 **Spun** `spun` — Just swapped ends. The next couple of laps are ragged. | uncommon | driver | always on | -10% consistency | 2 laps | — | mid-race, after a driver error |
-| 🔥 **Cooked Tyres** `cooked-tyres` — Past the cliff. Slower until the next stop. | uncommon | driver | always on | -3% speed | until the next pit stop | — | mid-race, after tyres falling off the cliff |
-| 🐢 **Sulking** `sulking` — That stop was slow and everyone knows it. | common | driver | always on | -4% consistency | 1 lap | — | mid-race, after a slow pit stop |
-| ⚡ **Fired Up** `fired-up` — A lightning stop. The whole crew is buzzing. | common | driver | always on | +1% speed | 1 lap | — | mid-race, after a lightning pit stop |
+| 🔧 **Damaged** `damaged` — Survived a crash. The car is 15% slower for the rest of the race. | gold | driver | always on | -15% speed | rest of the race | — | mid-race, after surviving a crash |
+| 🌀 **Spun** `spun` — Just swapped ends. The next couple of laps are ragged. | silver | driver | always on | -10% consistency | 2 laps | — | mid-race, after a driver error |
+| 🔥 **Cooked Tyres** `cooked-tyres` — Past the cliff. Slower until the next stop. | silver | driver | always on | -3% speed | until the next pit stop | — | mid-race, after tyres falling off the cliff |
+| 🐢 **Sulking** `sulking` — That stop was slow and everyone knows it. | bronze | driver | always on | -4% consistency | 1 lap | — | mid-race, after a slow pit stop |
+| ⚡ **Fired Up** `fired-up` — A lightning stop. The whole crew is buzzing. | bronze | driver | always on | +1% speed | 1 lap | — | mid-race, after a lightning pit stop |
 
 ## Condition tags
 
 | Tag | Rarity | Target | Fires | Effect | Lasts | After a race | How you get it |
 |---|---|---|---|---|---|---|---|
-| 🌫️ **Low Visibility** `low-visibility` — Fog, mist, or smoke reducing driver visibility | common | condition | on a track event | -8% consistency, +15% crash risk | one race | — | stamped by a track event for one race |
-| 💧 **Slippery Surface** `slippery-surface` — Oil, water, or debris on the track | rare | condition | on a track event | -12% consistency, +20% crash risk | one race | — | stamped by a track event for one race |
-| ⚠️ **Debris Hazard** `debris-hazard` — Track debris creating danger | rare | condition | on a track event | +25% crash risk | one race | — | stamped by a track event for one race |
-| 💨 **Dust Cloud** `dust-cloud` — Kicked-up dust reducing visibility | uncommon | condition | on a track event | -6% consistency, +12% crash risk | one race | — | stamped by a track event for one race |
-| ⚡ **Adrenaline Surge** `adrenaline-surge` — A burst of speed from the excitement | uncommon | condition | on a track event | +8% speed | one race | — | stamped by a track event for one race |
-| 🌀 **Slipstream Boost** `slipstream-boost` — Caught a powerful slipstream | common | condition | on a track event | +5% speed | one race | — | stamped by a track event for one race |
-| 📈 **Track Evolution** `track-evolution` — Track grip improving with rubber buildup | common | condition | on a track event | +4% speed, +5% consistency | one race | — | stamped by a track event for one race |
-| 🍃 **Headwind** `headwind` — Strong headwind reducing straight-line speed | uncommon | condition | on a track event | -6% speed | one race | — | stamped by a track event for one race |
-| 🌡️ **Cooling Issues** `cooling-issues` — High temperatures forcing reduced pace | uncommon | condition | on a track event | -8% speed, -5% consistency | one race | — | stamped by a track event for one race |
-| 🛞 **Tire Graining** `tire-graining` — Temporary loss of tire grip | uncommon | condition | on a track event | -5% speed, +8% crash risk | one race | — | stamped by a track event for one race |
-| 😵 **Distracted** `distracted` — Lost focus, making small mistakes | uncommon | condition | on a track event | -4% speed, -10% consistency | one race | — | stamped by a track event for one race |
-| 🎯 **In The Zone** `in-the-zone` — Perfect focus, hitting every apex | uncommon | condition | on a track event | +6% speed, +10% consistency | one race | — | stamped by a track event for one race |
-| 😰 **Rattled** `rattled` — Shaken up, driving cautiously | uncommon | condition | on a track event | -7% speed, −15% crash risk | one race | — | stamped by a track event for one race |
-| 🔥 **Desperate Push** `desperate-push` — Nothing to lose, pushing hard | rare | condition | on a track event | +10% speed, +20% crash risk | one race | — | stamped by a track event for one race |
-| 🚧 **Pit Congestion** `pit-congestion` — Heavy pit lane traffic | uncommon | condition | on a track event | +25% pit time | one race | — | stamped by a track event for one race |
-| 🔧 **Equipment Malfunction** `equipment-malfunction` — Pit equipment issues causing delays | rare | condition | on a track event | +40% pit time | one race | — | stamped by a track event for one race |
-| 👐 **Fast Hands** `fast-hands` — Pit crew on fire today | uncommon | condition | on a track event | -20% pit time | one race | — | stamped by a track event for one race |
+| 🌫️ **Low Visibility** `low-visibility` — Fog, mist, or smoke reducing driver visibility | bronze | condition | on a track event | -8% consistency, +15% crash risk | one race | — | stamped by a track event for one race |
+| 💧 **Slippery Surface** `slippery-surface` — Oil, water, or debris on the track | gold | condition | on a track event | -12% consistency, +20% crash risk | one race | — | stamped by a track event for one race |
+| ⚠️ **Debris Hazard** `debris-hazard` — Track debris creating danger | gold | condition | on a track event | +25% crash risk | one race | — | stamped by a track event for one race |
+| 💨 **Dust Cloud** `dust-cloud` — Kicked-up dust reducing visibility | silver | condition | on a track event | -6% consistency, +12% crash risk | one race | — | stamped by a track event for one race |
+| ⚡ **Adrenaline Surge** `adrenaline-surge` — A burst of speed from the excitement | silver | condition | on a track event | +8% speed | one race | — | stamped by a track event for one race |
+| 🌀 **Slipstream Boost** `slipstream-boost` — Caught a powerful slipstream | bronze | condition | on a track event | +5% speed | one race | — | stamped by a track event for one race |
+| 📈 **Track Evolution** `track-evolution` — Track grip improving with rubber buildup | bronze | condition | on a track event | +4% speed, +5% consistency | one race | — | stamped by a track event for one race |
+| 🍃 **Headwind** `headwind` — Strong headwind reducing straight-line speed | silver | condition | on a track event | -6% speed | one race | — | stamped by a track event for one race |
+| 🌡️ **Cooling Issues** `cooling-issues` — High temperatures forcing reduced pace | silver | condition | on a track event | -8% speed, -5% consistency | one race | — | stamped by a track event for one race |
+| 🛞 **Tire Graining** `tire-graining` — Temporary loss of tire grip | silver | condition | on a track event | -5% speed, +8% crash risk | one race | — | stamped by a track event for one race |
+| 😵 **Distracted** `distracted` — Lost focus, making small mistakes | silver | condition | on a track event | -4% speed, -10% consistency | one race | — | stamped by a track event for one race |
+| 🎯 **In The Zone** `in-the-zone` — Perfect focus, hitting every apex | silver | condition | on a track event | +6% speed, +10% consistency | one race | — | stamped by a track event for one race |
+| 😰 **Rattled** `rattled` — Shaken up, driving cautiously | silver | condition | on a track event | -7% speed, −15% crash risk | one race | — | stamped by a track event for one race |
+| 🔥 **Desperate Push** `desperate-push` — Nothing to lose, pushing hard | gold | condition | on a track event | +10% speed, +20% crash risk | one race | — | stamped by a track event for one race |
+| 🚧 **Pit Congestion** `pit-congestion` — Heavy pit lane traffic | silver | condition | on a track event | +25% pit time | one race | — | stamped by a track event for one race |
+| 🔧 **Equipment Malfunction** `equipment-malfunction` — Pit equipment issues causing delays | gold | condition | on a track event | +40% pit time | one race | — | stamped by a track event for one race |
+| 👐 **Fast Hands** `fast-hands` — Pit crew on fire today | silver | condition | on a track event | -20% pit time | one race | — | stamped by a track event for one race |
 
 ## Rule cards
 

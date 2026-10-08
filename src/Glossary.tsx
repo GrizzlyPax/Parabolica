@@ -26,7 +26,7 @@ const TABS: { id: TabId; label: string }[] = [
   { id: 'rules', label: 'Rules' }, { id: 'conditions', label: 'Weather' }, { id: 'gods', label: 'Gods' }, { id: 'flavour', label: 'Flavour' }, { id: 'credits', label: 'Credits' }, { id: 'inbox', label: 'Inbox' }, { id: 'add', label: '+ Add' },
 ];
 
-const RARITY_ORDER: Record<Rarity, number> = { common: 0, uncommon: 1, rare: 2, legendary: 3 };
+const RARITY_ORDER: Record<Rarity, number> = { bronze: 0, silver: 1, gold: 2, iridium: 3 };
 
 function Pills({ effects }: { effects: ReturnType<typeof effectsOf> }) {
   if (effects.length === 0) return <span className="tag-card-none">story only</span>;
@@ -118,7 +118,7 @@ function draftPreviewTag(d: TagDraft): Tag {
   };
 }
 
-const blankTag = (): TagDraft => ({ kind: 'tag', id: '', name: '', emoji: '', description: '', target: 'driver', rarity: 'common', speed: 0, consistency: 0, luck: 0, crash: 0, pit: 0, note: '' });
+const blankTag = (): TagDraft => ({ kind: 'tag', id: '', name: '', emoji: '', description: '', target: 'driver', rarity: 'bronze', speed: 0, consistency: 0, luck: 0, crash: 0, pit: 0, note: '' });
 const blankTeam = (): TeamDraft => ({ kind: 'team', id: '', name: '', emoji: '', color: '#3671C6', accentColor: '#E63946', description: '', note: '' });
 
 function AddTab() {

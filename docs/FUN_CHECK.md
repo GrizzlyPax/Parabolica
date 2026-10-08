@@ -18,7 +18,7 @@
 | 1 | **Title alive late** | Clinch race: first race after which the leader can't be caught (points left incl. the 50 bonus) | Median clinch **≥ race 8**; clinched by race 6 in **≤ 15%**; decided in the finale in **≥ 30%** |
 | 2 | **Comebacks** | Lead changes after race 3 · champion who was **3rd or worse at halfway** | Median **2–4** lead changes; comeback champion in **20–40%** |
 | 3 | **Paddock choices matter** | Points spread between best and worst 2-of-3 lineup each race · how often the benched racer was the right call | Spread **≥ 3 pts/race** on average; bench was right **≥ 25%** of races (no auto-pick) |
-| 4 | **Box moments** | Races where a box card moves its holder **≥ 1 place** (with vs without) · rare+ and legendary pulls · trait pulls | Box swing in **20–40%** of races; a rare+ in **≥ 80%** of seasons; a legendary in **20–40%**; **~2–3** traits/season |
+| 4 | **Box moments** | Races where a box card moves its holder **≥ 1 place** (with vs without) · gold+ and iridium pulls · trait pulls | Box swing in **20–40%** of races; a gold+ in **≥ 80%** of seasons; an iridium in **20–40%**; **~2–3** traits/season |
 | 5 | **Fair fight** | Champion rate: plain bot vs sharp bot vs a dumb-AI seat · trailing third vs top third box gain | Plain **~10%** (1 in 10, like anyone), sharp **15–30%** (skill pays, no stomp); trailers gain **more** from boxes than leaders, but boxes are **< 20%** of the champion's points |
 | 6 | **Variety** | Distinct race winners per season · top driver's win share · champion rate per draft slot · champion's first pick | **≥ 5** winners of 10; top driver **≤ 40%** of wins; every draft slot **5–20%**; no single driver or car champion in **> 15%** of seeds |
 
@@ -38,7 +38,7 @@
 - **One driver wins 6+ of 10**, or the same driver or car is champion across many seeds.
 - **Choices don't matter:** the best lineup is always the top two by stars; skipping the box changes nothing.
 - **The box is invisible:** cards never show in results, or you can't tell what you got.
-- **The box is the game:** one legendary pull decides the season.
+- **The box is the game:** one iridium pull decides the season.
 - **The AI stomps you, or you stomp the AI** with plain play.
 - **Every season feels the same:** same draft order of picks, same shape of standings.
 - **Dead time:** skipping races because watching them is a chore, not because you're excited for the Paddock.
