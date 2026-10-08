@@ -59,6 +59,8 @@ export interface Track {
   description: string;
   emoji: string;
   funEmoji: string;      // Fun/theme emoji
+  /** game-icon id or meaning (src/icons/registry.ts); falls back to funEmoji. */
+  iconId?: string;
   length: number;
   laps: number;
   layout: TrackLayout;
