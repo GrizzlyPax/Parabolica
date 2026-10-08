@@ -52,6 +52,10 @@ PR body: what changed · **where Pax sees it** (screen → button) · `Closes #N
 - Take the first open issue with your `crew:` label in the earliest milestone (`v0.5 · 1 Core` → … → `5 Ship`) whose **Depends on** issues are closed.
 - The PR body says `Closes #N`, so merging closes the issue. No other status update is needed.
 
+## Before you stop
+
+Write the **handoff to Pit** (format in CLAUDE.md → The crew): TL;DR · Shipped · Decisions · Issue edits needed · Traps · Next. Pax pastes it into Pit's chat.
+
 ## Merging
 
 - Merging to `main` deploys playparabolica.com. Merge only green, self-contained PRs.
