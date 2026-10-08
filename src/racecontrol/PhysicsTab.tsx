@@ -132,7 +132,7 @@ export function PhysicsTab({ lab }: { lab: LabProps }) {
       <section className="rs-row rc-table-row">
         <div className="rc-knob-head">
           <span className="rs-k">The knobs</span>
-          <span className="rs-hint">Click one to change it. Edited knobs stay purple; Measure at the top runs them all together.</span>
+          <span className="rs-hint">Click one to change it. Edited knobs stay highlighted in your colour; Measure at the top runs them all together.</span>
           {edited && <span className="rc-edited-text rc-actions">{Object.keys(edits).length} edited</span>}
         </div>
         <div className="rc-table-wrap">
