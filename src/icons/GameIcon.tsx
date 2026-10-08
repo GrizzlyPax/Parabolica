@@ -51,32 +51,54 @@ export function GameIcon({ name, size = 16, color, fallback, title, className }:
   );
 }
 
-/** Anything with a livery: a Team, or a roster driver (color/accentColor). */
+/** Anything with a livery: a Team, or a roster driver. One colour (docs/ICONS.md). */
 export interface TeamLike {
   name?: string;
   emoji?: string;
-  /** Primary colour. */
+  /** The team's one colour (the primary). */
   color: string;
-  accentColor?: string;
-  /** Secondary colour (the logo's icon); falls back to accentColor. */
-  secondaryColor?: string;
+  /** Text/icon colour drawn on the primary; picked automatically when absent. */
+  ink?: string;
   /** Icon id or meaning for the logo; falls back to the team's emoji. */
   iconId?: string;
 }
 
-export function teamSecondary(team: TeamLike): string {
-  return team.secondaryColor ?? team.accentColor ?? 'var(--pw-text-1)';
+/** The neutral ink: near-black, matching --pw-ground. */
+export const INK_DARK = '#0b0b0c';
+export const INK_LIGHT = '#ffffff';
+
+function luminance(hex: string): number | null {
+  const m = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(hex.trim());
+  if (!m) return null;
+  const h = m[1].length === 3 ? m[1].split('').map(c => c + c).join('') : m[1];
+  const [r, g, b] = [0, 2, 4].map(i => {
+    const c = parseInt(h.slice(i, i + 2), 16) / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
 
-/** A team logo: the icon in the secondary colour on a primary-colour tile.
- * Without a `team`, it wears the surrounding theme (--team-primary/secondary). */
+/** White or near-black, whichever contrasts more with `color` (WCAG ratio). */
+export function inkFor(color: string): string {
+  const l = luminance(color);
+  if (l === null) return INK_LIGHT;
+  const vsWhite = 1.05 / (l + 0.05);
+  const vsDark = (l + 0.05) / ((luminance(INK_DARK) ?? 0) + 0.05);
+  return vsDark > vsWhite ? INK_DARK : INK_LIGHT;
+}
+
+export function teamInk(team: TeamLike): string {
+  return team.ink ?? inkFor(team.color);
+}
+
+/** A team logo: a white or near-black icon on a primary-colour tile, square.
+ * Without a `team`, it wears the surrounding theme (--team-primary/ink). */
 export function TeamLogo({ team, size = 24, title }: { team?: TeamLike; size?: number; title?: string }) {
   const style: CSSProperties = {
     width: size,
     height: size,
-    borderRadius: Math.max(3, Math.round(size * 0.22)),
     background: team ? team.color : 'var(--team-primary)',
-    color: team ? teamSecondary(team) : 'var(--team-secondary)',
+    color: team ? teamInk(team) : 'var(--team-ink)',
   };
   const label = title ?? team?.name;
   return (
@@ -86,10 +108,10 @@ export function TeamLogo({ team, size = 24, title }: { team?: TeamLike; size?: n
   );
 }
 
-/** CSS variables that theme a subtree in a team's colours. Put the result on
+/** CSS variables that theme a subtree in a team's colour. Put the result on
  * a screen's root `style` (in Season Mode: your team; hotseat: whoever's
  * turn it is). Null = neutral (the :root defaults in App.css). */
 export function teamThemeVars(team: TeamLike | null | undefined): CSSProperties {
   if (!team) return {};
-  return { '--team-primary': team.color, '--team-secondary': teamSecondary(team) } as CSSProperties;
+  return { '--team-primary': team.color, '--team-ink': teamInk(team) } as CSSProperties;
 }

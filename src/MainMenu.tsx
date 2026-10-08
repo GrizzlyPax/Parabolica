@@ -57,9 +57,9 @@ function MainMenu({ onSingleRace, onCommissioner, onCompendium, onGlossary, onOp
       <div className="main-menu-content">
         <header className="mm-header">
           <svg className="mm-curve" width="360" height="120" viewBox="0 0 360 120" fill="none" aria-hidden="true">
-            <path d="M0 108 C 150 108 270 100 318 52 C 338 32 344 16 346 0" stroke="#26262E" strokeWidth="10" strokeLinecap="round" />
-            <path d="M0 108 C 150 108 270 100 318 52 C 338 32 344 16 346 0" stroke="#34343E" strokeWidth="1" strokeDasharray="2 6" />
-            <circle cx="318" cy="52" r="5" fill="var(--pw-purple)" />
+            <path d="M0 108 C 150 108 270 100 318 52 C 338 32 344 16 346 0" className="mm-curve-track" strokeWidth="10" strokeLinecap="round" />
+            <path d="M0 108 C 150 108 270 100 318 52 C 338 32 344 16 346 0" className="mm-curve-line" strokeWidth="1" strokeDasharray="2 6" />
+            <circle className="mm-curve-apex" cx="318" cy="52" r="5" />
           </svg>
           <h1 className="mm-title">Parabolica<span className="mm-tm">TM</span></h1>
           <p className="mm-sub">Racing, where everything is fine.</p>
@@ -89,11 +89,11 @@ function MainMenu({ onSingleRace, onCommissioner, onCompendium, onGlossary, onOp
                 </div>
                 <div className="mm-hero-foot">
                   <span>{league.dueCount > 0 ? `${league.dueCount} race${league.dueCount > 1 ? 's' : ''} ran while you were away` : nextIn(league)}</span>
-                  <span className="mm-cta">{league.dueCount > 0 ? 'Check in →' : 'Open league →'}</span>
+                  <span className="mm-cta">{league.dueCount > 0 ? 'Check in' : 'Open league'}</span>
                 </div>
               </>
             )}
-            {!league && <div className="mm-hero-foot"><span /><span className="mm-cta">Found one →</span></div>}
+            {!league && <div className="mm-hero-foot"><span className="mm-cta">Found one</span></div>}
           </button>
           <form className="mm-row mm-row-form mm-code" onSubmit={submitCode}>
             <span className="mm-row-text">
