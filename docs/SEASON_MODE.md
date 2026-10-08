@@ -48,7 +48,8 @@ Instead of 2 drivers pre-assigned to each named team, the seed summons a **share
   1. **Pick who races:** 2 of your 3 start, and the 3rd is benched.
   2. **Open your card pack:** its **tier** is set by standing (**Common** pack for the leader → Uncommon → Rare → **Legendary** for last place; no colour). It deals a **gear card** (equipment / upgrade / facility), or about **1 in 4** times a **trait card**, from the 🏁 Motorsport deck ([docs/CARDS.md](CARDS.md)). Open it (a pack-opening reveal) and put it on **your own team** (driver, car or team). Gear into a full slot **swaps**; the old card goes to your **team locker**.
 - **Gear management:** in any Paddock you can equip from the locker, move equipment between your drivers (bench included), or unequip to the locker. Free, unlimited.
-- Pack rules: dealt every race · gear lasts until swapped, traits are permanent · teams start each season with no gear and 1 slot of each kind · slot traits add slots.
+- Pack rules: dealt every race · gear lasts until swapped, traits are permanent · teams start each season with no gear and 1 slot of each kind (fixed in v0.5).
+- **A human's Paddock turn ends** when the lineup is set **and** the pack is opened, in either order. CPU turns are no-ops.
 - **Card rarity is a metal: Bronze · Silver · Gold · Iridium** (Pax, Oct 8). Pack odds for the card's metal (B/S/G/I, illustrative): Common pack 60/30/9/1 · Uncommon 52/32/13/3 · Rare 43/34/18/5 · Legendary 35/35/22/8. **The first pack is Uncommon** for everyone.
 
 ## 5. Race & standings
