@@ -20,8 +20,8 @@ import { BASE_DECK_WEATHER } from './data/deckWeather';
 import type { CardStat } from './cards';
 import { STAT_ICONS } from './icons/registry';
 import { MOTORSPORT_DECK, cardsBy, STAT_LABELS, type Card } from './cards';
-import { CardMarks, cardReadout, KIND_LABELS } from './cards/CardMarks';
 import { CardSheet, type SheetView } from './cards/CardSheet';
+import { CardFace } from './cards/CardFace';
 import { SAMPLE_SHEET } from './cards/sample';
 import './RunSetup.css';
 import './Glossary.css';
@@ -307,20 +307,6 @@ export default function Glossary({ onBack }: GlossaryProps) {
       : tagSort === 'effect' ? b.effects.length - a.effects.length || a.tag.name.localeCompare(b.tag.name)
       : RARITY_ORDER[a.tag.rarity] - RARITY_ORDER[b.tag.rarity] || a.tag.name.localeCompare(b.tag.name));
 
-  const deckRow = (c: Card) => (
-    <Row key={c.id} id={`deck:${c.id}`} open={isOpen(`deck:${c.id}`)} onToggle={toggle}
-      lead={<span className="gl-plain gl-card"><CardMarks card={c} /> {c.name}</span>}
-      note={c.rarity ? <span className={`rarity-word rarity-${c.rarity}`}>{c.rarity}</span> : 'v0.6'}
-      pills={<span className="gl-readout">{cardReadout(c)}</span>}>
-      <div className="gl-facts">
-        <Fact k="Kind">{KIND_LABELS[c.kind]}</Fact><Fact k="On">{c.target}</Fact>
-        {c.rarity && <Fact k="Metal"><span className={`rarity-word rarity-${c.rarity}`}>{c.rarity}</span></Fact>}
-        <Fact k="Does">{cardReadout(c)}</Fact><Fact k="Id">{c.id}</Fact>
-      </div>
-      <div className="gl-src">src/cards/deck.ts · not in the sim yet (genesis #313, Quick Race #337)</div>
-    </Row>
-  );
-
   const tagRow = (t: GlossaryTag) => (
     <Row key={t.tag.id} id={`tag:${t.tag.id}`} open={isOpen(`tag:${t.tag.id}`)} onToggle={toggle}
       lead={<TagChips tags={[t.tag]} showName icons />}
@@ -399,7 +385,7 @@ export default function Glossary({ onBack }: GlossaryProps) {
         if (!rows.length) return null;
         return (
           <Section key={grp.id} {...sec(`deck:${grp.id}`)} title={grp.title} count={grp.rows.length} hint={grp.hint}>
-            <div className="gl-list">{rows.map(c => deckRow(c))}</div>
+            <div className="gl-binder">{rows.map(c => <CardFace key={c.id} card={c} />)}</div>
           </Section>
         );
       })}

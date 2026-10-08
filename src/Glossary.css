@@ -107,3 +107,5 @@
 .gl-sheet-toggle .rs-link.on { text-decoration-color: var(--pw-text-1); color: var(--pw-text-1); }
 .gl-sheet-toggle .rs-link:not(.on) { color: var(--pw-text-3); }
 .gl-sheet { padding: 4px 0 8px; }
+/* World Deck → Cards: the deck as a binder of card faces (#418) */
+.gl-binder { display: grid; grid-template-columns: repeat(auto-fill, 108px); gap: 12px 8px; padding: 6px 0 4px; }

@@ -10,27 +10,30 @@ const allCards = [...SAMPLE_SHEET.driver.traits, ...SAMPLE_SHEET.car.traits, ...
   SAMPLE_SHEET.driver.equipment, SAMPLE_SHEET.car.upgrade, SAMPLE_SHEET.team.facility, ...SAMPLE_SHEET.team.locker].filter(Boolean);
 
 describe('CardSheet', () => {
-  it('your sheet: every card by name in its metal, traits / gear / effects / locker', () => {
+  it('your sheet: gear and traits as cards, the locker as a face-down deck with its count', () => {
     const out = render('mine');
-    for (const c of allCards) expect(out).toContain(c!.name.replace('&', '&amp;'));
-    for (const label of ['Traits', 'Gear', 'Effects', 'Locker']) expect(out).toContain(label);
-    expect(out).toContain('metal-iridium');
+    const faceUp = [...SAMPLE_SHEET.driver.traits, ...SAMPLE_SHEET.car.traits, ...SAMPLE_SHEET.team.traits, SAMPLE_SHEET.driver.equipment!, SAMPLE_SHEET.team.facility!];
+    for (const c of faceUp) expect(out).toContain(c.name);
+    for (const c of SAMPLE_SHEET.team.locker) expect(out).not.toContain(c.name);
+    expect(out).toContain('cs-deckcount">' + SAMPLE_SHEET.team.locker.length);
+    for (const label of ['Gear', 'Traits', 'Effects', 'Locker']) expect(out).toContain(label);
     expect(out).toContain('#7');
   });
 
-  it('empty gear slots stay visible and the free count is right', () => {
+  it('an empty gear slot is a dashed card outline and the free count is right', () => {
     const out = render('mine');
-    expect(out).toContain('Empty slot');
+    expect(out).toContain('Empty upgrade slot');
     expect(out).toContain('1 of 3 slots free');
-    expect(out).toContain('No car trait.');
     expect(out).toContain('Effects arrive in v0.6');
   });
 
-  it('a rival sheet shows metal dots only: no card names, one dot per card', () => {
+  it('a rival sheet: gear as card backs, traits as dots, no card names', () => {
     const out = render('rival');
     for (const c of allCards) expect(out).not.toContain(c!.name);
-    expect((out.match(/class="cs-dot /g) ?? []).length).toBe(allCards.length);
-    expect(out).toContain('Empty slot');
+    const traits = SAMPLE_SHEET.driver.traits.length + SAMPLE_SHEET.car.traits.length + SAMPLE_SHEET.team.traits.length;
+    expect((out.match(/class="card-dot /g) ?? []).length).toBe(traits);
+    expect(out).toContain('Face-down');
+    expect(out).toContain('cs-deckcount');
   });
 
   it('a benched driver says so and keeps their gear', () => {
