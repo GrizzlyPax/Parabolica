@@ -22,6 +22,7 @@ import { buildRoster } from './rules/genesis';
 import { weatherForRace } from './data/weather';
 import { intrinsicTrackTags } from './data/trackTags';
 import { GenesisSlots } from './components/race/TagChips';
+import { GameIcon } from './icons/GameIcon';
 import './RunSetup.css';
 
 interface RunSetupProps {
@@ -139,7 +140,7 @@ export default function RunSetup({ onStartRace, onBack }: RunSetupProps) {
             <div className="rs-track-meta">{track.laps} laps · {track.length}m
               {trackTags.map(t => <span key={t.id} className="rs-chip" title={t.name}>{t.emoji} {t.name}</span>)}
               {weather && <span className="rs-chip rs-chip-weather">{weather.emoji} {weather.name}{weather.intensity < 1 ? ` ${Math.round(weather.intensity * 100)}%` : ''}</span>}
-              {!weather && <span className="rs-chip rs-chip-dim">☀️ no weather</span>}
+              {!weather && <span className="rs-chip rs-chip-dim">No weather</span>}
               {track.event && <span className="rs-chip" title={getDynamicEventDescription(track.event, track.laps)}>{track.event.emoji} {track.event.name}</span>}
             </div>
           </div>
@@ -163,7 +164,7 @@ export default function RunSetup({ onStartRace, onBack }: RunSetupProps) {
             const on = hand.includes(c.id);
             return (
               <button type="button" key={c.id} className={`rs-card ${on ? 'on' : ''} w-${c.weight}`} onClick={() => toggleCard(c.id)} aria-pressed={on}>
-                <span className="rs-card-emoji">{c.emoji}</span>
+                <span className="rs-card-emoji"><GameIcon name={c.iconId ?? 'card.rule'} size={24} /></span>
                 <span className="rs-card-name">{c.name}</span>
                 <span className="rs-card-readout">{c.readout}</span>
                 <span className="rs-card-weight">{c.weight}</span>

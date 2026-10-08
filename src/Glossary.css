@@ -100,3 +100,4 @@
   .gl-section-toggle .rs-hint { flex-basis: 100%; padding-left: 20px; }
   .gl-section-extra { margin-left: 20px; }
 }
+.gl-plain .game-icon, .gl-team .team-logo { vertical-align: -3px; }

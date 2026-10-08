@@ -51,7 +51,7 @@ function DriverEntry({ driver, stats }: { driver: RosterDriver; stats?: DriverSe
         <TeamMarble color={driver.color} accentColor={driver.accentColor}
           emoji={driver.emoji} size={24} slot={driver.driverSlot} />
         <span className="grid-driver-name">{driver.fullName}</span>
-        <TagChips tags={tagsFor(driver.tags, 'driver')} showName />
+        <TagChips tags={tagsFor(driver.tags, 'driver')} showName icons />
         {stats && <span className="grid-driver-pts">{stats.points} pts</span>}
         <span className="grid-driver-toggle">{open ? '▾' : '▸'}</span>
       </button>
@@ -127,7 +127,7 @@ function GridScreen({ league, onExit }: { league: LeagueState; onExit: () => voi
               <div key={kingdomId} className="grid-team-card" style={{ '--team-color': lead?.color } as React.CSSProperties}>
                 <div className="grid-team-header">
                   <span className="grid-team-name">{team?.emoji ?? lead?.emoji} {team?.name ?? lead?.teamName ?? kingdomId}</span>
-                  <TagChips tags={tagsFor(lead?.tags, 'team')} showName />
+                  <TagChips tags={tagsFor(lead?.tags, 'team')} showName icons />
                 </div>
                 {lead?.carName && (
                   <div className="grid-team-car">
@@ -137,7 +137,7 @@ function GridScreen({ league, onExit }: { league: LeagueState; onExit: () => voi
                         P {stars(lead.carStats.power)} · G {stars(lead.carStats.grip)} · R {stars(lead.carStats.reliability)}
                       </span>
                     )}
-                    <TagChips tags={tagsFor(lead.tags, 'car')} showName />
+                    <TagChips tags={tagsFor(lead.tags, 'car')} showName icons />
                   </div>
                 )}
                 <div className="grid-team-drivers">

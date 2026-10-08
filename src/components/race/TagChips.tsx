@@ -8,6 +8,7 @@ import { createPortal } from 'react-dom';
 import type { EffectStackEntry } from '../../RaceEngine';
 import { Tag, TagTarget, TRIGGER_LABELS, describeCondition, isGenesisTag } from '../../data/tags';
 import { describeAction } from '../../data/glossary';
+import { GameIcon } from '../../icons/GameIcon';
 
 interface TagChipsProps {
   tags: Tag[];
@@ -16,6 +17,9 @@ interface TagChipsProps {
   max?: number;
   /** Show the tag name next to the emoji (Grid screen, setup pages). */
   showName?: boolean;
+  /** Show the tag's stat icon instead of its emoji (#352; screens outside
+   * the race view). The race view keeps emoji until #397. */
+  icons?: boolean;
 }
 
 function pct(mult: number): string {
@@ -34,13 +38,34 @@ export function effectPills(e: Pick<EffectStackEntry, 'speed' | 'consistency' | 
   return pills;
 }
 
+/** The stat a tag mostly moves, as an icon meaning (docs/ICONS.md: tags show
+ * as their stat icon, tinted by rarity). No effect on the numbers → trait. */
+export function tagIconName(tag: Tag): string {
+  const fx = tag.effects;
+  const moves: [string, number][] = [
+    ['stat.speed', Math.abs((fx.speedModifier ?? 1) - 1)],
+    ['stat.consistency', Math.abs((fx.consistencyModifier ?? 1) - 1)],
+    ['stat.luck', Math.abs((fx.luckModifier ?? 1) - 1)],
+    ['stat.reliability', Math.abs(fx.crashResistance ?? 0)],
+    ['stat.pit_crew', Math.abs((fx.pitSpeedModifier ?? 1) - 1)],
+  ];
+  const [name, size] = moves.reduce((a, b) => (b[1] > a[1] ? b : a));
+  return size > 0 ? name : 'card.trait';
+}
+
+function TagMark({ tag, icons, size = 14 }: { tag: Tag; icons?: boolean; size?: number }) {
+  if (!icons) return <>{tag.emoji}</>;
+  const color = isGenesisTag(tag) ? `var(--rarity-${tag.rarity})` : undefined;
+  return <GameIcon name={tagIconName(tag)} size={size} color={color} />;
+}
+
 /** The full definition's effects (not the live ones), for the card. */
 function definitionPills(tag: Tag) {
   const fx = tag.effects;
   return effectPills({ speed: fx.speedModifier ?? 1, consistency: fx.consistencyModifier ?? 1, luck: fx.luckModifier ?? 1, crash: fx.crashResistance ?? 0, pit: fx.pitSpeedModifier ?? 1 });
 }
 
-function TagCard({ tag, entry, anchor, onClose }: { tag: Tag; entry?: EffectStackEntry; anchor: DOMRect; onClose: () => void }) {
+function TagCard({ tag, entry, anchor, onClose, icons }: { tag: Tag; entry?: EffectStackEntry; anchor: DOMRect; onClose: () => void; icons?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const onDoc = (ev: MouseEvent) => { if (ref.current && !ref.current.contains(ev.target as Node)) onClose(); };
@@ -64,7 +89,7 @@ function TagCard({ tag, entry, anchor, onClose }: { tag: Tag; entry?: EffectStac
   return createPortal(
     <div ref={ref} className="tag-card" style={style} role="dialog" aria-label={`${tag.name} tag`}>
       <div className="tag-card-head">
-        <span className="tag-card-emoji">{tag.emoji}</span>
+        <span className="tag-card-emoji"><TagMark tag={tag} icons={icons} size={22} /></span>
         <div className="tag-card-title">
           <div className="tag-card-name">{tag.name}</div>
           <div className="tag-card-tier">{tag.target} tag{isGenesisTag(tag) && <> · <span className={`rarity-word rarity-${tag.rarity}`}>{tag.rarity}</span></>}</div>
@@ -177,7 +202,7 @@ export function EffectChips({ entries, max = 2 }: { entries: EffectStackEntry[];
   );
 }
 
-export default function TagChips({ tags, stack, max = 4, showName = false }: TagChipsProps) {
+export default function TagChips({ tags, stack, max = 4, showName = false, icons = false }: TagChipsProps) {
   const [open, setOpen] = useState<{ id: string; rect: DOMRect } | null>(null);
   if (tags.length === 0) return <span className="muted-cell">—</span>;
   const byId = new Map((stack ?? []).filter(e => e.source === 'tag').map(e => [e.id, e]));
@@ -199,13 +224,13 @@ export default function TagChips({ tags, stack, max = 4, showName = false }: Tag
               setOpen(open?.id === tag.id ? null : { id: tag.id, rect });
             }}
           >
-            {tag.emoji}{showName && <span className="tag-chip-name">{tag.name}</span>}
+            <TagMark tag={tag} icons={icons} />{showName && <span className="tag-chip-name">{tag.name}</span>}
           </button>
         );
       })}
       {open && (() => {
         const tag = tags.find(t => t.id === open.id);
-        return tag ? <TagCard tag={tag} entry={byId.get(tag.id)} anchor={open.rect} onClose={() => setOpen(null)} /> : null;
+        return tag ? <TagCard tag={tag} entry={byId.get(tag.id)} anchor={open.rect} onClose={() => setOpen(null)} icons={icons} /> : null;
       })()}
     </span>
   );
@@ -224,7 +249,7 @@ export function GenesisSlots({ tags }: { tags: Tag[] }) {
       {SLOTS.map(s => {
         const tag = tags.find(t => t.target === s.target && isGenesisTag(t));
         return tag
-          ? <span key={s.target} className="gen-slot filled"><TagChips tags={[tag]} showName /></span>
+          ? <span key={s.target} className="gen-slot filled"><TagChips tags={[tag]} showName icons /></span>
           : <span key={s.target} className="gen-slot empty" title={`No ${s.label} tag rolled`}><span className="gen-slot-k">{s.label}</span></span>;
       })}
     </span>

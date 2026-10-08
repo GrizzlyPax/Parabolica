@@ -13,7 +13,7 @@ import { defaultRuleset, describeChance } from './rules/ruleset';
 import { intrinsicTrackTags } from './data/trackTags';
 import TagChips from './components/race/TagChips';
 import { Idea, loadIdeas, saveIdeas, issueUrl, ideasAsPrompt } from './IdeaBox';
-import { GameIcon } from './icons/GameIcon';
+import { GameIcon, TeamLogo } from './icons/GameIcon';
 import { ICONS, ICON_LICENSE, iconCredits } from './icons/registry';
 import './RunSetup.css';
 import './Glossary.css';
@@ -23,7 +23,7 @@ interface GlossaryProps { onBack: () => void }
 type TabId = 'tags' | 'teams' | 'tracks' | 'cards' | 'rules' | 'conditions' | 'gods' | 'flavour' | 'credits' | 'add' | 'inbox';
 const TABS: { id: TabId; label: string }[] = [
   { id: 'tags', label: 'Tags' }, { id: 'teams', label: 'Teams' }, { id: 'tracks', label: 'Tracks' }, { id: 'cards', label: 'Rule cards' },
-  { id: 'rules', label: 'Rules' }, { id: 'conditions', label: 'Weather' }, { id: 'gods', label: 'Gods' }, { id: 'flavour', label: 'Flavour' }, { id: 'credits', label: 'Credits' }, { id: 'inbox', label: '💡 Inbox' }, { id: 'add', label: '+ Add' },
+  { id: 'rules', label: 'Rules' }, { id: 'conditions', label: 'Weather' }, { id: 'gods', label: 'Gods' }, { id: 'flavour', label: 'Flavour' }, { id: 'credits', label: 'Credits' }, { id: 'inbox', label: 'Inbox' }, { id: 'add', label: '+ Add' },
 ];
 
 const RARITY_ORDER: Record<Rarity, number> = { common: 0, uncommon: 1, rare: 2, legendary: 3 };
@@ -110,7 +110,7 @@ function draftPrompt(d: Draft): string {
 
 function draftPreviewTag(d: TagDraft): Tag {
   return {
-    id: d.id || 'draft', name: d.name || 'Untitled', emoji: d.emoji || '✨', description: d.description, target: d.target, trigger: 'passive', rarity: d.rarity,
+    id: d.id || 'draft', name: d.name || 'Untitled', emoji: d.emoji || '', description: d.description, target: d.target, trigger: 'passive', rarity: d.rarity,
     effects: {
       ...(d.speed ? { speedModifier: 1 + d.speed / 100 } : {}), ...(d.consistency ? { consistencyModifier: 1 + d.consistency / 100 } : {}),
       ...(d.luck ? { luckModifier: 1 + d.luck / 100 } : {}), ...(d.crash ? { crashResistance: d.crash / 100 } : {}), ...(d.pit ? { pitSpeedModifier: 1 + d.pit / 100 } : {}),
@@ -147,7 +147,7 @@ function AddTab() {
         </div>
         <div className="gl-form">
           <label><span className="rs-k">Name</span><input value={d.name} onChange={e => set({ name: e.target.value, id: slug(e.target.value) })} placeholder={kind === 'tag' ? 'Steady Hands' : 'Breadbowl'} /></label>
-          <label><span className="rs-k">Emoji</span><input value={d.emoji} onChange={e => set({ emoji: e.target.value })} placeholder="🧤" maxLength={4} /></label>
+          <label><span className="rs-k">Emoji</span><input value={d.emoji} onChange={e => set({ emoji: e.target.value })} placeholder="one emoji, for now" maxLength={4} /></label>
           <label className="gl-wide"><span className="rs-k">One line</span><input value={d.description} onChange={e => set({ description: e.target.value })} placeholder={kind === 'tag' ? 'Rarely puts a wheel wrong' : 'Sourdough starters with names, carb worship, "she\'s been fermenting for six years."'} /></label>
           {d.kind === 'tag' && (
             <>
@@ -170,7 +170,7 @@ function AddTab() {
           <span className="rs-k">Preview</span>
           {d.kind === 'tag'
             ? <><TagChips tags={[draftPreviewTag(d)]} showName /> <Pills effects={effectsOf(draftPreviewTag(d).effects)} /></>
-            : <span className="gl-plain"><span className="gl-swatch" style={{ background: d.color }} />{d.emoji || '✨'} {d.name || 'Untitled'}</span>}
+            : <span className="gl-plain"><span className="gl-swatch" style={{ background: d.color }} />{d.emoji} {d.name || 'Untitled'}</span>}
           <span className="gl-note">{problems.length ? problems.join(' · ') : `goes in ${draftFile(d)}`}</span>
         </div>
         <div className="gl-actions">
@@ -226,9 +226,9 @@ function InboxTab() {
   const copyAll = async () => { try { await navigator.clipboard.writeText(ideasAsPrompt(pending.length ? pending : ideas)); setCopied(true); setTimeout(() => setCopied(false), 1500); } catch { /* no clipboard */ } };
   return (
     <section className="rs-row">
-      <div className="rs-row-head"><span className="rs-k">Idea inbox <span className="gl-count">{pending.length} waiting</span></span><span className="rs-hint">Captured with the 💡 button (⌘⇧I) on any screen. Send each to GitHub, or copy the batch for an agent to triage.</span>
+      <div className="rs-row-head"><span className="rs-k">Idea inbox <span className="gl-count">{pending.length} waiting</span></span><span className="rs-hint">Captured with the idea button (⌘⇧I) on any screen. Send each to GitHub, or copy the batch for an agent to triage.</span>
         {ideas.length > 0 && <span className="gl-section-extra"><button type="button" className="rs-link" onClick={copyAll}>{copied ? 'Copied' : 'Copy as a prompt'}</button></span>}</div>
-      {ideas.length === 0 && <p className="gl-desc">Nothing yet. Reading the deck and something sparks? Hit 💡 and write two sentences — the screen, seed and track come along.</p>}
+      {ideas.length === 0 && <p className="gl-desc">Nothing yet. Reading the deck and something sparks? Hit the idea button and write two sentences — the screen, seed and track come along.</p>}
       <div className="gl-list">
         {ideas.map(i => (
           <div key={i.id} className={`gl-row ${i.sent ? 'gl-sent' : ''}`}>
@@ -278,8 +278,8 @@ export default function Glossary({ onBack }: GlossaryProps) {
 
   const tagRow = (t: GlossaryTag) => (
     <Row key={t.tag.id} id={`tag:${t.tag.id}`} open={isOpen(`tag:${t.tag.id}`)} onToggle={toggle}
-      lead={<TagChips tags={[t.tag]} showName />}
-      note={<>{isGenesisTag(t.tag) ? <span className={`rarity-word rarity-${t.tag.rarity}`}>{t.tag.rarity}</span> : t.tag.target}{t.does.length > 0 && <span className="gl-does" title="Does something after a race">⚡</span>}</>}
+      lead={<TagChips tags={[t.tag]} showName icons />}
+      note={<>{isGenesisTag(t.tag) ? <span className={`rarity-word rarity-${t.tag.rarity}`}>{t.tag.rarity}</span> : t.tag.target}{t.does.length > 0 && <span className="gl-does" title="Does something after a race"><GameIcon name="race.card_trigger" size={14} /></span>}</>}
       pills={<Pills effects={t.effects} />}>
       <p className="gl-desc">{t.tag.description}</p>
       <div className="gl-facts">
@@ -371,7 +371,7 @@ export default function Glossary({ onBack }: GlossaryProps) {
             <div className="gl-list">
               {rows.map(t => (
                 <Row key={t.id} id={`team:${t.id}`} open={isOpen(`team:${t.id}`)} onToggle={toggle}
-                  lead={<span className="gl-plain"><span className="gl-swatch" style={{ background: t.color }} />{t.emoji} {t.name}</span>}
+                  lead={<span className="gl-plain gl-team"><TeamLogo team={t} size={20} /> {t.name}</span>}
                   pills={<span className="gl-readout">{t.description}</span>}>
                   <p className="gl-desc">{t.description}</p>
                   <div className="gl-facts"><Fact k="Colours">{t.color} / {t.accentColor}</Fact><Fact k="Id">{t.id}</Fact></div>
@@ -411,7 +411,7 @@ export default function Glossary({ onBack }: GlossaryProps) {
           <div className="gl-list">
             {g.cards.filter(c => match(c.name, c.id, c.readout, c.blurb)).map(c => (
               <Row key={c.id} id={`card:${c.id}`} open={isOpen(`card:${c.id}`)} onToggle={toggle}
-                lead={<span className="gl-plain">{c.emoji} {c.name}</span>}
+                lead={<span className="gl-plain"><GameIcon name={c.iconId ?? 'card.rule'} size={16} /> {c.name}</span>}
                 note={`${c.scope} · ${c.weight}`}
                 pills={<span className="gl-readout">{c.readout}</span>}>
                 <p className="gl-desc">{c.blurb}</p>
@@ -428,7 +428,7 @@ export default function Glossary({ onBack }: GlossaryProps) {
               const t = tagById(r.tagId);
               return (
                 <Row key={r.id} id={`rule:${r.id}`} open={isOpen(`rule:${r.id}`)} onToggle={toggle}
-                  lead={t ? <TagChips tags={[t]} showName /> : r.tagId}
+                  lead={t ? <TagChips tags={[t]} showName icons /> : r.tagId}
                   note={r.family}
                   pills={<span className="gl-readout">after a race · {describeTrigger(r.when)}</span>}>
                   <p className="gl-desc"><span className="rs-k">After a race</span> {describeTrigger(r.when)}</p>
@@ -440,7 +440,7 @@ export default function Glossary({ onBack }: GlossaryProps) {
               const t = tagById(r.tagId);
               return (
                 <Row key={r.id} id={`rule:${r.id}`} open={isOpen(`rule:${r.id}`)} onToggle={toggle}
-                  lead={t ? <TagChips tags={[t]} showName /> : r.tagId}
+                  lead={t ? <TagChips tags={[t]} showName icons /> : r.tagId}
                   note="in-race"
                   pills={<span className="gl-readout">mid-race · {describeInRaceRule(r)}</span>}>
                   <p className="gl-desc"><span className="rs-k">Mid-race</span> {describeInRaceRule(r)}</p>
