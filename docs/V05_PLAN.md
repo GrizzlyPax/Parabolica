@@ -30,8 +30,10 @@
 | **M4** | **Identity** | Build his own team (icon + colours), race the 28 new teams, Quick Race on cards (one bump, Pax merges), the screen in his colours |
 | **M5** | **Clean-up + ship** | Old leagues gone, no emoji left anywhere, hotseat checked, balance read done |
 
+**Status (Oct 8):** ✅ **M1 done.** ✅ The race-changing bundle (#438, v0.5.0) is merged. **Apex's v0.5 chain is complete**; Fable's next work is v0.6. The rest of v0.5 is Hub, Radio and Steward.
+
 ## The lanes
-**🏎️ Apex (Fable) is the critical path, in order:**
+**🏎️ Apex (Fable) is the critical path, in order:** ✅ all done (Oct 8)
 1. Shared-pool genesis (#313), using Hub's card model
 2. Draft engine (#314)
 3. Season loop (#315) → **M1**
