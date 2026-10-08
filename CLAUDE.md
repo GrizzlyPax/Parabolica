@@ -99,4 +99,5 @@ Every current-release issue has a `crew:` label saying who (and which model) sho
 - `docs/RACE_CONTROL.md` - The lab: parity rule, seeds and fingerprints, tag calibration method and bands, how to replicate and export
 - `docs/ICONS.md` - Design change: game-icons.net replaces every emoji (meaning registry, currentColor), and the UI + icons take your team's colours
 - `docs/PROCEDURAL_IDENTITY.md` - Procedural universe identity (driver names #191, league names #185, team identity #183)
+- `docs/HANDOFF_2026-10-08.md` - Oct 8: GitHub-only planning, the crew, the Almanac look, icons, metal rarity, racing numbers, what's next (read first)
 - `docs/HANDOFF_2026-10-07.md` - Week of Oct 5–7 handoff for code agents: what shipped, how the pieces fit, traps, open work (read first)
