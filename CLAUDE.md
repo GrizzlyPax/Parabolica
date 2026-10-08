@@ -85,6 +85,7 @@ Every Asana task has a **Crew** field saying who (and which model) should take i
 - `docs/BALANCE_HANDOFF.md` - Game-dev handoff: data exports, tuning surface, balance state, workflow
 - `docs/CARDS.md` - Cards revamp: tags → gear / traits / effects, placeholder ladder, Motorsport base deck, two-step rollout
 - `docs/TAG_SYSTEM.md` - Tag system design framework (five sources, magnitude ladder, acquisition engine, interview)
+- `docs/TRACKS_WEATHER.md` - v0.6 spec: 6 stat-combo tracks replace 31 themed ones; 6 weathers + Neutral; lap-by-lap Wet with a wet tyre
 - `docs/CONDITIONS_LAYER.md` - Track tags + weather design build (the conditions stack; companion to TAG_SYSTEM)
 - `docs/STORY_WORKSTREAM.md` - Handoff for ANY agent/collaborator: orientation, where things are, fixed vs flexible, flavour pass vs theme change, the loop, prompts
 - `docs/STORY_BIBLE.md` - Pax's theme/voice bible; agents read it before any flavour pass (story workstream)
