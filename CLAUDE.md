@@ -47,9 +47,9 @@ for the future NPC-crowd system (BetLab was removed Oct 2026; git history has it
 - **Read first:** `docs/V05_PLAN.md` (the current release plan), then the newest `docs/HANDOFF_*.md` (how the pieces fit, traps).
 - **Skills (`.claude/skills/`)** hold the procedures: `write-issue` (issue shape, triage, `ready`), `ship-pr` (build → test → PR → merge rules), `republish-preview`, `balance-read`, `season-report`.
 - **Asana is the task system. Every thread, every crew member.** Project ["🏁 Parabolica"](https://app.asana.com/1/1219276824761487/project/1219276019625158) (workspace "My workspace"). Look there first for what to do; don't track work anywhere else (no TODO docs, no GitHub milestones/projects).
-  - **Sections = releases:** `🇧🇪 v0.5 Spa` (**the current release: the only thing being worked on**), `🇮🇹 v0.6 Monza`, `🇯🇵 v0.7 Suzuka`, `📥 Queued` (committed, unslotted), `🧊 Icebox` (maybe / needs Pax). Target date is in the section name.
-  - **Only the current release gets Crew + due dates.** Everything past it stays unassigned and undated until Pit pulls it into a release.
-  - **Fields:** **Crew** (who + which model; `Pax` = needs his call) and **due date**. Titles are plain, no issue numbers, no status prefixes.
+  - **Sections = sequence.** The current release is split into **milestone sections, worked top to bottom**: `🇧🇪 v0.5 · 1 Core` → `2 Playable` → `3 The box` → `4 Identity` → `5 Ship`. Below them: `🇮🇹 v0.6 Monza`, `🇯🇵 v0.7 Suzuka`, `📥 Queued` (committed, unslotted), `🧊 Icebox` (maybe / needs Pax).
+  - **No due dates.** Order comes from the section, then the task's "waiting on" dependencies. Pick the first unblocked task in the earliest milestone for your crew.
+  - **Fields:** **Crew** only, and only on the current release. Later work stays unassigned until Pit pulls it in. Titles are plain, no issue numbers, no status prefixes.
   - **GitHub issues are the build spec**, linked in the task description. Every new issue gets an Asana task; every Asana task that needs code has an issue.
   - **When work ships:** tick the Asana task done. When starting: note it in the task. If the Asana connector isn't available in your chat, say exactly what to change in your final message so Pit can apply it.
 - **`ready` label is the handoff.** Scope an issue until it can be built without guessing, then label it `ready`. Build only `ready` issues (or one Pax names). Out-of-scope finds become new issues, not extra code.
