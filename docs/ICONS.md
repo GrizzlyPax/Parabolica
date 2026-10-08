@@ -27,30 +27,32 @@ The whole UI is **black and white plus one colour: your team's.** Everything els
 
 ## The look (Pax, Oct 8)
 
-*Picked from the look tests: **direction B, "Almanac"**, the one closest to Blaseball. Review page: [Parabolica Look Tests](https://claude.ai/artifact/BTW6FEB4RQhtdRK4Wz3EGq) (tick "B Almanac", rarity look "Metals"). This is the spec the colour system ([#323](https://github.com/GrizzlyPax/Parabolica/issues/323)) and the emoji sweep ([#352](https://github.com/GrizzlyPax/Parabolica/issues/352)) build to. Phone first: every value below is set at 390 px.*
+*Picked from the look tests: **direction B, "Almanac"**, the one closest to Blaseball (typefaces since swapped; see below). Review page: [Parabolica Look Tests](https://claude.ai/artifact/BTW6FEB4RQhtdRK4Wz3EGq) (tick "B Almanac", rarity look "Metals"). This is the spec the colour system ([#323](https://github.com/GrizzlyPax/Parabolica/issues/323)) and the emoji sweep ([#352](https://github.com/GrizzlyPax/Parabolica/issues/352)) build to. Phone first: every value below is set at 390 px.*
 
-**In one line:** white rules on black, a wide heavy grotesque for headings, a book serif for names and flavour, square corners, lots of air. The team colour appears as **flat blocks** and nowhere else. No gradients, no shadows, no rounded cards.
+**In one line:** white rules on black, an old textbook serif for headings and names, every number and label in a worn typewriter, square corners, lots of air. The team colour appears as **flat blocks** and nowhere else. No gradients, no shadows, no rounded cards.
+
+**Type: "Pulp Almanac" (Pax, Oct 8).** The first pick (Archivo + Source Serif 4) read slick, like a magazine; Pax wanted Blaseball's handmade feel. Picked from [Parabolica Type Tests](https://claude.ai/artifact/WVsivr593kRTZ2Fqb116gM), option C: *a stewards' report typed up and pasted into a farmers' almanac.*
 
 ### Typefaces (Google Fonts)
 | Role | Face | Use |
 |---|---|---|
-| **Display** | **Archivo** 800–900, width 112% (`font-stretch: 112%`) | screen titles, buttons, the wordmark, big numbers (racing numbers on cards) |
-| **Body** | **Source Serif 4** 400 / 600, *italic 400* | driver and team names, running text; *italic* for flavour lines (team one-liners, backstories, readouts) |
-| **Data / labels** | **Archivo** 600–800, `tabular-nums` | gaps, times, points, positions; small caps labels |
+| **Display** | **Old Standard TT** 700 | screen titles, buttons, the wordmark, big numbers (racing numbers on cards) |
+| **Body** | **Old Standard TT** 400, *italic 400* | driver and team names, running text; *italic* for flavour lines (team one-liners, backstories, readouts) |
+| **Data / labels** | **Special Elite** 400 (a worn typewriter; monospaced, so digits line up) | gaps, times, points, positions, stat reads; caps labels |
 
-Fallbacks: Archivo → `'Arial Black', sans-serif`; Source Serif 4 → `Georgia, serif`.
+Fallbacks: Old Standard TT → `Georgia, serif`; Special Elite → `'Courier New', monospace`. Tokens: `--look-display`, `--look-serif`, `--look-data`. Both faces come in one weight each for their role, so **hierarchy is size, case and rules, not weight**.
 
 ### Type scale (px / line-height)
 | Name | Size | Spec | Example |
 |---|---|---|---|
-| Hero | 46 / 0.9 | Archivo 900, 112%, −0.035em | the wordmark on the menu |
-| Title | 24 / 1.05 | Archivo 800, −0.015em | screen titles ("The Paddock") |
-| Button | 17 / 1 | Archivo 800, −0.01em | primary and row buttons |
-| Body | 16 / 1.4 | Source Serif 4 400 | running text |
-| Name | 15–16 / 1.15 | Source Serif 4 600 | drivers, teams, card names |
-| Flavour | 15 / 1.35 | Source Serif 4 *italic* 400 | one-liners, readouts, sub-lines |
-| Data | 13 / 1.2 | Archivo 600, tabular | +1.284 · ▲3 · L14/24 |
-| Label | 10 / 1.2 | Archivo 700, caps, +0.08em | column heads, rarity words, section eyebrows |
+| Hero | 50 / 0.9 | Old Standard 700, −0.02em | the wordmark on the menu |
+| Title | 24 / 1.05 | Old Standard 700 | screen titles ("The Paddock") |
+| Button | 17 / 1 | Old Standard 700 | primary and row buttons |
+| Body | 16 / 1.4 | Old Standard 400 | running text |
+| Name | 16 / 1.15 | Old Standard 400 | drivers, teams, card names |
+| Flavour | 15 / 1.35 | Old Standard *italic* 400 | one-liners, readouts, sub-lines |
+| Data | 13 / 1.2 | Special Elite | +1.284 · ▲3 · L14/24 |
+| Label | 10–11 / 1.2 | Special Elite, caps, +0.06em | column heads, rarity words, section eyebrows |
 
 ### Spacing and shape
 - **Scale:** 4 · 8 · 14 · 20 · 32 · 48. Screen gutter **20**; gap between stacked blocks **14**; menu sections **22**.
