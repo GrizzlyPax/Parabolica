@@ -2,12 +2,13 @@
 // Each screen reads the one saved season; the screens after Setup land with
 // their own issues (#318 draft, #319 Paddock, #322 race, #321 standings) and
 // until then show where the season stands.
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { TeamLogo, teamThemeVars } from '../../icons/GameIcon';
 import type { Route, SeasonScreen as Screen } from '../../router';
 import { loadSeason, seasonState, type SeasonFacts } from '../season';
 import { seasonName } from '../setup';
 import LeagueSetup from './LeagueSetup';
+import DraftBoard from './DraftBoard';
 import '../../RunSetup.css';
 import './Season.css';
 
@@ -26,6 +27,23 @@ export function seasonScreenFor(facts: SeasonFacts): Screen {
 export default function SeasonScreen({ screen, navigate, onMenu }: Props) {
   if (screen === 'setup') {
     return <LeagueSetup onBack={onMenu} onStarted={facts => navigate({ name: 'season', screen: seasonScreenFor(facts) }, { replace: true })} />;
+  }
+  return <SavedSeason screen={screen} navigate={navigate} onMenu={onMenu} />;
+}
+
+/** Screens that play the saved season. A screen the season isn't on yet
+ * (the Paddock before the draft is done) sends you to the right one. */
+function SavedSeason({ screen, navigate, onMenu }: Props) {
+  const [facts, setFacts] = useState(() => loadSeason());
+  // Checked on arrival only, so finishing the draft doesn't jump the page.
+  const [at] = useState(() => (facts ? seasonScreenFor(facts) : null));
+  const wrongPlace = facts != null && ((screen === 'draft') !== (at === 'draft'));
+  useEffect(() => {
+    if (wrongPlace) navigate({ name: 'season', screen: at! }, { replace: true });
+  }, [wrongPlace, at, navigate]);
+  if (wrongPlace) return null;
+  if (facts && screen === 'draft') {
+    return <DraftBoard facts={facts} onChange={setFacts} onMenu={onMenu} onDone={() => navigate({ name: 'season', screen: 'paddock' })} />;
   }
   return <SeasonHolding screen={screen} navigate={navigate} onMenu={onMenu} />;
 }

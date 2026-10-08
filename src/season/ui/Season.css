@@ -74,6 +74,59 @@
 .ss-holding { display: flex; flex-direction: column; gap: 12px; }
 .ss-holding-actions { display: flex; flex-wrap: wrap; gap: 10px; }
 
+/* Hotseat hand-off: the next player's colour, edge to edge */
+.ss-handoff {
+  min-height: 100vh; width: 100%; border: 0; border-radius: 0; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 24px;
+  background: var(--team-primary); color: var(--team-ink); font-family: var(--look-serif);
+}
+.ss-handoff-k { font-family: var(--look-data); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; }
+.ss-handoff-name { font-family: var(--look-display); font-weight: 700; font-size: 34px; line-height: 1.05; text-align: center; }
+.ss-handoff-tap { font-style: italic; font-size: 16px; }
+.ss-handoff .team-logo { outline: 2px solid var(--team-ink); }
+
+/* Draft board */
+.ss-draft { padding-bottom: 96px; }
+.ss-third { display: inline-flex; align-items: center; gap: 6px; font-family: var(--look-data); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--pw-text-2); white-space: nowrap; }
+.ss-third-dot { width: 9px; height: 9px; border-radius: 50%; background: currentColor; }
+.ss-third.front .ss-third-dot { background: var(--signal-green); }
+.ss-third.middle .ss-third-dot { background: var(--signal-yellow); }
+.ss-third.back .ss-third-dot { background: var(--signal-red); }
+.ss-dots { display: inline-flex; gap: 4px; }
+.ss-open { display: flex; flex-wrap: wrap; gap: 4px 10px; }
+.ss-open-card { display: inline-flex; align-items: center; gap: 5px; font-style: italic; font-size: 13px; color: var(--pw-text-2); }
+.ss-num { width: 30px; flex: none; font-family: var(--look-data); font-size: 16px; color: var(--pw-text-1); display: inline-flex; justify-content: center; }
+.ss-pick-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.ss-pick-name { font-size: 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ss-board, .ss-roster { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); column-gap: 20px; }
+.ss-pick, .ss-roster-slot {
+  display: flex; align-items: center; gap: 10px; width: 100%; min-height: 52px; padding: 6px 0; text-align: left;
+  background: transparent; border: 0; border-top: 1px solid var(--pw-hairline); border-radius: 0; color: inherit; font: inherit;
+}
+.ss-pick { cursor: pointer; }
+.ss-pick:disabled { cursor: default; }
+.ss-pick.taken { opacity: 0.35; }
+.ss-pick.selected { box-shadow: inset 3px 0 0 var(--team-primary); background: var(--pw-surface); }
+.ss-roster-slot.empty .ss-pick-name { color: var(--pw-text-3); font-style: italic; }
+.ss-roster-logo { margin-left: auto; display: inline-flex; }
+.ss-tabs { display: flex; gap: 0; }
+.ss-tab {
+  height: 40px; padding: 0 14px; border-radius: 0; cursor: pointer;
+  background: transparent; color: var(--pw-text-2); border: 1px solid var(--pw-border-strong);
+  font-family: var(--look-display); font-weight: 700; font-size: 16px;
+}
+.ss-tab + .ss-tab { border-left: 0; }
+.ss-tab.on { background: var(--pw-text-1); color: var(--pw-ground); border-color: var(--pw-text-1); }
+.ss-tab-n { font-family: var(--look-data); font-weight: 400; font-size: 11px; margin-left: 4px; }
+
+/* The thumb dock: the one action, bottom of the screen */
+.ss-dock {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 5;
+  display: flex; justify-content: center; padding: 12px 76px calc(12px + env(safe-area-inset-bottom)) 16px; /* right: room for the idea box */
+  background: var(--pw-ground); border-top: 1px solid var(--pw-text-1);
+}
+.ss-dock-btn { width: 100%; max-width: 688px; height: 52px; font-size: 18px; }
+
 @media (max-width: 599px) {
   .ss-start-block { width: 100%; margin-left: 0; }
 }
