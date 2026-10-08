@@ -34,10 +34,11 @@
   --rarity-uncommon: var(--rarity-silver);
   --rarity-rare: var(--rarity-gold);
   --rarity-legendary: var(--rarity-iridium);
-  /* The active team's colour (docs/ICONS.md). Neutral = white + near-black
-     ink; a screen sets them from your team (Season Mode) or whoever's turn it
-     is (hotseat) via teamThemeVars() in src/icons/GameIcon.tsx. */
-  --team-primary: #ffffff;
+  /* The active team's colour (docs/ICONS.md). No team yet = Parabolica
+     purple + near-black ink (Pax, Oct 8); a screen sets them from your team
+     (Season Mode) or whoever's turn it is (hotseat) via teamThemeVars() in
+     src/icons/GameIcon.tsx. */
+  --team-primary: var(--signal-purple);
   --team-ink: #0b0b0c;
   /* The look (Almanac): wide grotesque display, book serif body, tabular data. */
   --look-display: 'Archivo', 'Arial Black', sans-serif;
