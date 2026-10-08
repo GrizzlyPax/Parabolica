@@ -1,6 +1,6 @@
-# Tracks & Weather v2 (v0.6)
+# Tracks & Weather v2 (dry in v0.5, Wet in v0.6)
 
-*Build spec. Source: Dev's design artifact "Tracks & Weather v2" (Oct 8). Ships in **v0.6 Monza**, all of it (Pax, Oct 8). Where this doc and Pax disagree, Pax wins; tell Pit.*
+*Build spec. Source: Dev's design artifact "Tracks & Weather v2" (Oct 8). **Two steps (Pax, Oct 8, revised):** the **dry half ships in v0.5** (6 tracks, Neutral + 5 dry weathers, favours, retiring the old content) inside the one fingerprint PR. **Wet** (lap by lap, wet tyre, forecast, pit rule suspended) ships in **v0.6**. **No rain in v0.5.** Where this doc and Pax disagree, Pax wins; tell Pit.*
 
 ## TL;DR
 - **Audit:** today's tracks and weather change pace and passing, but **not who wins**.
@@ -40,6 +40,10 @@
 - **One Wet compound:** fast in the wet, slow and quick-wearing when dry. **The sim makes the pit calls** using strategy archetypes (some teams jump early, some wait). You own the team, not the pit wall.
 - **Rough forecast** before lights out ("rain likely mid-race"), never the exact laps.
 - **The pit rule (2 stops, all 3 compounds) is suspended in any race where rain falls.**
+
+**v0.5 odds:** Neutral 60% · each dry weather **8%** (Wet's share spread across them). Wet returns in v0.6.
+
+**Weather rule cards** (Rain, Fog, Clear Skies, Wild Weather) are **remapped** to the new dry weathers in v0.5 (Quick Race only).
 
 ## Build notes
 - **Dry favours are static for the race,** so they apply like gear and traits: field-wide multipliers at race build, reusing the card math (`applyCards`).
