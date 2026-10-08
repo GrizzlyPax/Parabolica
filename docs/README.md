@@ -2,12 +2,13 @@
 
 Parabolica is an F1-style race sim building toward Commissioner Mode: wall-clock roguelite leagues you watch from any device. Play it at **[playparabolica.com](https://playparabolica.com)**.
 
-**New here? Read in this order:** [the latest handoff](HANDOFF_2026-10-07.md) → [`CLAUDE.md`](../CLAUDE.md) → the doc for the area you're touching.
+**New here? Read in this order:** [the latest handoff](HANDOFF_2026-10-08.md) → [`CLAUDE.md`](../CLAUDE.md) → the doc for the area you're touching.
 
 ## Start here
 | Doc | What it's for |
 |---|---|
 | [V05_PLAN](V05_PLAN.md) | **The v0.5 Spa plan:** milestones, lanes, order, risks, decision log |
+| [HANDOFF_2026-10-08](HANDOFF_2026-10-08.md) | Oct 8: GitHub-only planning, the crew, the Almanac look, icons, metals, numbers, what's next |
 | [HANDOFF_2026-10-07](HANDOFF_2026-10-07.md) | What shipped Oct 5–7, how the pieces fit, traps, open work |
 | [GLOSSARY](GLOSSARY.md) | Every team, track, tag, card, rule, weather and flavour pool (**generated**: `npm run glossary`) |
 
