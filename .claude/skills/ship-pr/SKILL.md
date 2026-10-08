@@ -28,7 +28,7 @@ description: Build a `ready` Parabolica issue and ship it — branch, implement,
 ```bash
 git fetch origin main && git checkout -b <short-branch> origin/main
 # … build …
-npm test && npm run build
+npm test && npx tsc --noEmit && npm run build   # PR checks (Cloudflare) don't run tests or types: you are the CI
 npm run glossary            # if you touched src/data or src/generators
 npm run calibrate           # only if a genesis tag changed (~15 min)
 git status                  # check for stray files (rc-*.mjs, server/.wrangler/)
