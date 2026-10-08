@@ -243,8 +243,8 @@ Hand-tuned icons for headline teams · animated icon states (pack reveal) · the
 | `card.rule` | Rule card | Run Setup | — | [`scroll-unfurled`](https://game-icons.net/1x1/lorc/scroll-unfurled.html) |
 | **Season (new)** | | | | |
 | `entity.driver` | Driver (ratings, driver cards) | Draft board, Paddock lineup, card sheet | — | [`full-motorcycle-helmet`](https://game-icons.net/1x1/delapouite/full-motorcycle-helmet.html) |
-| `season.box` (→ `season.pack`, #421) | Card pack (tier word, no colour) | Paddock | — | [`locked-chest`](https://game-icons.net/1x1/lorc/locked-chest.html) |
-| `season.box_open` | Pack reveal | Pack reveal | — | [`open-chest`](https://game-icons.net/1x1/skoll/open-chest.html) |
+| `season.pack` | Card pack (tier word, no colour) | Paddock | — | [`card-random`](https://game-icons.net/1x1/faithtoken/card-random.html) |
+| `season.pack_open` | Pack reveal | Pack reveal | — | [`card-pick`](https://game-icons.net/1x1/faithtoken/card-pick.html) |
 | `season.locker` | Team locker | Paddock, card sheet | — | [`lockers`](https://game-icons.net/1x1/delapouite/lockers.html) |
 | `season.draft` | Draft | Draft board | — | [`card-draw`](https://game-icons.net/1x1/faithtoken/card-draw.html) |
 | `season.bench` | Bench (3rd driver) | Paddock lineup | — | [`park-bench`](https://game-icons.net/1x1/delapouite/park-bench.html) |
@@ -252,4 +252,4 @@ Hand-tuned icons for headline teams · animated icon states (pack reveal) · the
 | `season.handoff` | Hotseat hand-off | Hand-off screen | — | [`back-forth`](https://game-icons.net/1x1/lorc/back-forth.html) |
 | `season.champion` | Champion | Finale, standings | — | [`laurels-trophy`](https://game-icons.net/1x1/delapouite/laurels-trophy.html) |
 
-Rarity is a metal colour (`--rarity-*`: bronze · silver · gold · iridium), not an icon. Card packs are Common → Uncommon → Rare → Legendary (a property of `season.box` (→ `season.pack`, #421), renamed in [#385](https://github.com/GrizzlyPax/Parabolica/issues/385)); packs carry no colour, just the white pack icon and the word.
+Rarity is a metal colour (`--rarity-*`: bronze · silver · gold · iridium), not an icon. Card packs are Common → Uncommon → Rare → Legendary (a property of `season.pack`, renamed in [#385](https://github.com/GrizzlyPax/Parabolica/issues/385)); packs carry no colour, just the white pack icon and the word.

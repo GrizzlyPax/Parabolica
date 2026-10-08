@@ -6,7 +6,7 @@
 // The pack step here is plain (the card face up, tap where it goes); the
 // reveal theatre is #320.
 import { useMemo, useState } from 'react';
-import { TeamLogo, teamThemeVars } from '../../icons/GameIcon';
+import { GameIcon, TeamLogo, teamThemeVars } from '../../icons/GameIcon';
 import { CardFace } from '../../cards/CardFace';
 import { CardSheet, type CardSheetData } from '../../cards/CardSheet';
 import type { Card } from '../../cards/types';
@@ -162,7 +162,7 @@ export default function Paddock({ facts, onChange, onMenu, onGo, onStandings }: 
         <>
           {pack && (
             <section className="rs-row">
-              <div className="rs-row-head"><span className="rs-k">Your pack · {TIER_LABEL[pack.tier]}</span></div>
+              <div className="rs-row-head"><span className="rs-k ss-pack-k"><GameIcon name="season.pack" size={16} /> {TIER_LABEL[pack.tier]} pack</span></div>
               <div className="ss-pack">
                 <CardFace card={pack.card} />
                 <div className="ss-pack-place">
