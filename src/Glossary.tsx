@@ -264,7 +264,9 @@ export default function Glossary({ onBack }: GlossaryProps) {
   const [tagSort, setTagSort] = useState<'rarity' | 'name' | 'effect'>('rarity');
   const toggle = (id: string) => setOpen(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
   const toggleSection = (id: string) => setFlipped(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
-  const isCollapsed = (id: string) => (mode === 'collapsed') !== flipped.has(id);
+  // The retiring grid stays folded even on "Expand all"; open it by hand (#402).
+  const STAY_FOLDED = new Set(['teams:current', 'teams:historic']);
+  const isCollapsed = (id: string) => (STAY_FOLDED.has(id) || mode === 'collapsed') !== flipped.has(id);
   const setAll = (m: 'collapsed' | 'expanded') => { setMode(m); setFlipped(new Set()); };
   const needle = q.trim().toLowerCase();
   const match = (...parts: (string | undefined)[]) => !needle || parts.some(p => p?.toLowerCase().includes(needle));

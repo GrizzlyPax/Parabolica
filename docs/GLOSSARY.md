@@ -2,11 +2,63 @@
 
 *Everything in the sim and the world, generated from the data modules by `npm run glossary` — do not edit by hand; edit the source files named in each section and re-run. Engine v0.4.3. How to add content: docs/WORLD_DECK.md.*
 
-11 teams (+11 historic) · 24 tracks (+7 historic) · 60 tags (30 genesis · 8 acquired · 5 in-race · 17 condition) · 12 rule cards · 12 rules · 5 weathers · 3 track characters · 5 inflictions · 3 gods
+28 base-deck teams · 11 teams on today's grid (+11 historic) · 24 tracks (+7 historic) · 60 tags (30 genesis · 8 acquired · 5 in-race · 17 condition) · 12 rule cards · 12 rules · 5 weathers · 3 track characters · 5 inflictions · 3 gods
 
-## Teams
+## Base-deck teams
 
-*Source: `src/data/teams.ts`. Two drivers each; colours are the team livery everywhere.*
+*Source: `src/data/deckTeams.ts` (from docs/story/team-identity.md; not canon yet). The 28 world factions, seven of each kind. Shown in the World Deck now; they replace today's grid when the sim switches (#356). Logo = the icon in `ink` on the team colour.*
+
+### Works manufacturers
+
+| Team | Colour · ink | Icon | Line |
+|---|---|---|---|
+| **Vantor Motorwerke** `vantor-motorwerke` | #E8242F · #FFFFFF | `charging-bull` | Industrial giant. Every car is built on the same night of the year. |
+| **Halcyon** `halcyon` | #006EBE · #FFFFFF | `eagle-emblem` | Grand tourers. No Halcyon has ever been sold; they are only raced. |
+| **Orsa** `orsa` | #087C77 · #FFFFFF | `bear-head` | Northern marque. The factory clocks run eleven minutes slow, by policy. |
+| **Corvane** `corvane` | #9B8AFE · #0A0A0C | `raven` | Luxury house. The badge was redrawn after the founder dreamed it. |
+| **Calloway** `calloway` | #F4EEDE · #0A0A0C | `steering-wheel` | Every Calloway is road-tested on the same nine miles of road, at dawn. |
+| **Brisa** `brisa` | #0BAEE0 · #FFFFFF | `scooter` | Scooter maker gone racing. Every car leaves the factory with a full tank and a bell. |
+| **Arden** `arden` | #FFB000 · #0A0A0C | `pocket-watch` | Clocks and engines in the same building. Both are wound by hand on Mondays. |
+
+### Privateer garages
+
+| Team | Colour · ink | Icon | Line |
+|---|---|---|---|
+| **Seven Bolt Racing** `seven-bolt-racing` | #C31851 · #FFFFFF | `hexagonal-nut` | Every wheel has seven bolts. Nobody remembers why. |
+| **Low Tide Racing** `low-tide-racing` | #1BB4B8 · #FFFFFF | `anchor` | The garage sits below the tideline. They work between tides. |
+| **Kiln Lane Motorsport** `kiln-lane-motorsport` | #945F0E · #FFFFFF | `anvil` | Brick sheds and a forge. The engine is started with a match. |
+| **Tinplate** `tinplate` | #B6BBC1 · #0A0A0C | `race-car` | A car that looks like a toy and is faster than it should be. |
+| **Ostler & Finch** `ostler-finch` | #B47B46 · #FFFFFF | `horse-head` | Was a coaching inn. The stable doors still get locked at night. |
+| **Cinder Row** `cinder-row` | #718295 · #FFFFFF | `poker-hand` | Six garages on one street share one car. Who drives is settled by a card game. |
+| **Glasshouse** `glasshouse` | #8DCC6E · #0A0A0C | `sprout` | The garage is an old greenhouse. Every car has a plant in the cockpit. |
+
+### Family dynasties
+
+| Team | Colour · ink | Icon | Line |
+|---|---|---|---|
+| **Hargreave** `hargreave` | #507B07 · #FFFFFF | `stag-head` | The founder's chair stays in the garage, empty, facing the track. |
+| **Moreau-Tallis** `moreau-tallis` | #8F3DC0 · #FFFFFF | `scorpion` | A marriage of two rival teams. The garage still has a line down the middle. |
+| **Kanzaki** `kanzaki` | #E63281 · #FFFFFF | `checkered-diamond` | The family crest changes slightly every ten years. |
+| **Achterberg** `achterberg` | #C0502A · #FFFFFF | `ribbon` | Run by a widow and her four sons. The whole crew wears a black armband, always. |
+| **Valcourt** `valcourt` | #D95FFC · #FFFFFF | `champagne-cork` | Old wine family. They pour one glass on the grid before every start. |
+| **Ishida** `ishida` | #FF4DB8 · #FFFFFF | `pine-tree` | Every new driver plants a tree at the family track. The oldest ones are very tall. |
+| **Pell & Pell** `pell-pell` | #5454EA · #FFFFFF | `envelope` | Brothers who haven't spoken in twenty years. They run the team by letter. |
+
+### Regional / city teams
+
+| Team | Colour · ink | Icon | Line |
+|---|---|---|---|
+| **Corriva** `corriva` | #F8767A · #0A0A0C | `sun` | Coast city that keeps siesta. They never test before 4pm. |
+| **Lumen** `lumen` | #DED903 · #0A0A0C | `light-bulb` | A city whose lights have never gone off. |
+| **Fennick Downs** `fennick-downs` | #4EBB05 · #FFFFFF | `rabbit` | Farm country. The whole crew are related, and nobody admits how. |
+| **Ambergate** `ambergate` | #C2A02A · #0A0A0C | `castle` | A walled town. The gates close at dusk, and the team must be back inside. |
+| **Saint Orrin** `saint-orrin` | #5E9EFD · #FFFFFF | `lighthouse` | Island city. The ferry waits for the team, never the other way round. |
+| **Caldera** `caldera` | #F87103 · #FFFFFF | `volcano` | A city built inside an old crater. Race day starts with the bells. |
+| **Tessaly** `tessaly` | #0DB98E · #FFFFFF | `water-drop` | Spa town. Drivers take the waters before every race and won't say why. |
+
+## Teams on today's grid (retiring)
+
+*Source: `src/data/teams.ts`. Quick Race and leagues still race these until #356 swaps in the base deck.*
 
 | Team | Colours | Vibe |
 |---|---|---|
