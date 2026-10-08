@@ -2,6 +2,9 @@
 
 *The World Deck is everything in the universe: teams, tracks, drivers' names and backstories, tags, cards, weather, gods, the commentary voices. This doc is the contributor's guide: where each thing lives, the exact shape of a record, the rules it has to follow, the voice to write in, and how to check your work. It is written so a person or an agent with no engine knowledge can add content safely.*
 
+> **v0.5 layout (Oct 8):** the World Deck now leads with the **new content**: the 94-card Motorsport deck (`src/cards/`, docs/CARDS.md), the 28 base-deck teams (`src/data/deckTeams.ts`), the 6 stat-combo tracks and Neutral + 5 dry weathers (`src/data/deckTracks.ts`, `deckWeather.ts`). Old content (tags, the old 22 teams, themed tracks, old weathers, inflictions) sits in collapsed **"(retiring)"** groups until each sim swap lands, then it's deleted. **Gods are retired** (their tab is gone; the data goes with #339). **Credits** live on their own screen (menu footer). Sections below that describe retiring content are kept for reference only. New content follows the new shapes above.
+
+
 **The generated deck** — every record currently in the game, with sources — is `docs/GLOSSARY.md` (`npm run glossary`). The in-game Glossary screen renders the same model. Read it first to see what exists and match the voice.
 
 ## Capturing ideas (the inbox)
@@ -223,7 +226,7 @@ Rules the player picks before a run. A card is fiction + one plain-words effect 
 ```
 Patches: `weather` (weight overrides), `tags` (`only/add/remove`, `genesisChance`, `rarityOdds`, `slotCap`), `simVars` (deep-partial physics), `scale` (multiply a numeric path). Name cards for what they *do* ("Rain", "No Pit Rules"), not for a mood. Pax's bar: a card's name must be obvious at a glance.
 
-## 14. Gods — `src/league/gods.ts`
+## 14. Gods — `src/league/gods.ts` (RETIRED Oct 8)
 
 Three today; appetites and smiting are a later system, so for now a god is a voice.
 ```ts
@@ -257,7 +260,7 @@ Ten today. One line, caps allowed, this is the one place exclamation marks live.
 | 2 | **Teams** (current + historic) | More tribes; also give each a riskiness note for pass 4 |
 | 2 | **Tracks** | More puns; declare a character and layout for each |
 | 3 | **Acquired tags with actions** | Spread / rival / upgrade stories |
-| 3 | **Gods** | 5–8 more voices with measurable appetites |
+| 3 | ~~Gods~~ | retired (Oct 8) |
 | 3 | **Backstory slots & templates, quirks, car quirks, name pools** | Depth; never urgent, always welcome |
 | 4 | **Weather types, inflictions, track characters** | After the wets pass |
 
