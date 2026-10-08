@@ -112,6 +112,10 @@ export default function Paddock({ facts, onChange, onMenu, onGo, onStandings }: 
     const d = pool.drivers.find(x => x.id === id)!;
     return DRIVER_STATS.map(s => readStat(s, d.stats[s as keyof typeof d.stats], withCard([...d.traits, ...cards.drivers[id].traits], cards.drivers[id].equipment, extra)));
   };
+  /** While the card is in hand: rows it can go on pulse; tap one to try it on, tap again (or Give) to place it. */
+  const isTarget = (k: HolderKey) => aiming && packFits(holderOf(k));
+  const tryOn = (k: HolderKey) => { if (!isTarget(k)) return; if (aim === k) give(); else setAim(k); };
+  const targetName = (k: HolderKey) => (k === 'car' ? car.name : k === 'team' ? you.name : pool.drivers.find(x => x.id === Number(k))!.fullName);
   const previewFor = (k: HolderKey) => (aiming && aim === k && packFits(holderOf(k)) ? pack!.card : null);
 
   // Actions
@@ -181,10 +185,12 @@ export default function Paddock({ facts, onChange, onMenu, onGo, onStandings }: 
       <CardFace card={c} size="mini" flippable={false} />
     </button>
   );
+  const heldCard = held ? [...cards.locker, ...Object.values(cards.drivers).flatMap(d => d.equipment), ...cards.car.upgrade, ...cards.team.facility].find(c => c.id === held) : undefined;
   const slotCell = (h: CardHolder) => {
     const c = slotOf(cards, h)[0];
+    const fits = !!heldCard && GEAR_FOR[h.kind] === heldCard.kind && c?.id !== heldCard.id;
     return (
-      <td className={`rt-slot ${held ? 'droppable' : ''}`} {...dropZone(h)}>
+      <td className={`rt-slot ${fits ? 'droppable pulse' : ''}`} {...dropZone(h)}>
         {c ? mini(c, true) : <span className="pk-empty" aria-label="Empty slot">—</span>}
       </td>
     );
@@ -194,7 +200,7 @@ export default function Paddock({ facts, onChange, onMenu, onGo, onStandings }: 
   const step = !myTurn ? 0 : pack ? (revealed ? 2 : 1) : 3;
   const steps: { label: string; action?: JSX.Element }[] = [
     { label: 'Open pack', action: step === 1 ? <button type="button" className="rs-btn rs-btn-primary pk-step-btn" onClick={() => setRevealing(true)}>Open</button> : undefined },
-    { label: 'Place card', action: step === 2 ? <button type="button" className="rs-btn rs-btn-primary pk-step-btn" disabled={!aim} onClick={give}>{aim ? 'Give' : 'Aim a row'}</button> : undefined },
+    { label: 'Place card', action: step === 2 ? <button type="button" className="rs-btn rs-btn-primary pk-step-btn" disabled={!aim} onClick={give}>{aim ? 'Give' : 'Tap a row'}</button> : undefined },
     { label: 'Pick 2', action: undefined },
     { label: 'Lock in', action: step === 3 ? <button type="button" className="rs-btn rs-btn-primary pk-step-btn" disabled={lineup.length !== 2} onClick={lock}>Lock in</button> : undefined },
   ];
@@ -223,16 +229,21 @@ export default function Paddock({ facts, onChange, onMenu, onGo, onStandings }: 
             notch={now[i].parts.length > 0}
             move={after ? Math.sign(Math.round(after[i].total) - Math.round(now[i].total)) : 0}
             dim={dim}
-            onOpen={() => setDetail({ title: `${title} · ${STAT_LABELS[s]}`, reading: now[i] })}
+            onOpen={() => (isTarget(k) ? tryOn(k) : setDetail({ title: `${title} · ${STAT_LABELS[s]}`, reading: now[i] }))}
           />
         ))}
         {Array.from({ length: pad }, (_, i) => <td key={`pad${i}`} className="rt-cell rt-pad" />)}
       </>
     );
   };
+  const nameBody = (k: HolderKey, body: JSX.Element) => (isTarget(k)
+    ? <button type="button" className="rt-pick" onClick={() => tryOn(k)} aria-label={aim === k ? `Give to ${targetName(k)}` : `Try the card on ${targetName(k)}`}>{body}</button>
+    : body);
   const aimCell = (k: HolderKey) => aiming && (
     <td className="rt-act">
-      {packFits(holderOf(k)) && <button type="button" className={`pk-toggle ${aim === k ? 'on' : ''}`} onClick={() => setAim(a => (a === k ? null : k))} aria-pressed={aim === k}>{aim === k ? 'Aimed' : 'Aim'}</button>}
+      {isTarget(k) && (aim === k
+        ? <button type="button" className="rs-btn rs-btn-primary pk-give" onClick={give}>Give</button>
+        : <button type="button" className="pk-toggle" onClick={() => setAim(k)}>Try on</button>)}
     </td>
   );
 
@@ -274,12 +285,13 @@ export default function Paddock({ facts, onChange, onMenu, onGo, onStandings }: 
 
       {pack && myTurn && (
         <div className="pk-pack">
-          {revealed ? <button type="button" className="pk-card" onClick={() => setDetail({ card: pack.card })} aria-label={pack.card.name}><CardFace card={pack.card} size="mini" flippable={false} /></button> : <CardFace card={pack.card} size="mini" faceDown flippable={false} />}
+          {revealed ? <button type="button" className="pk-card inhand" onClick={() => setDetail({ card: pack.card })} aria-label={pack.card.name}><CardFace card={pack.card} size="mini" flippable={false} /></button> : <CardFace card={pack.card} size="mini" faceDown flippable={false} />}
           <div className="pk-pack-text">
             <span className="rs-k pk-pack-k"><GameIcon name="season.pack" size={14} /> Base deck · {TIER_LABEL[pack.tier]} pack</span>
             <b>{revealed ? pack.card.name : 'Sealed'}</b>
-            <span className="rs-hint">{revealed ? `Aim it at a ${pack.card.target === 'driver' ? 'driver' : pack.card.target}: the row shows its new grades (▲ ▼).${pack.card.kind !== 'trait' ? ' A full slot sends its card to the locker.' : ' Traits are for good.'}` : 'Open it to see the card.'}</span>
+            <span className="rs-hint">{!revealed ? 'Open it to see the card.' : aim ? `On ${targetName(aim)}, the row shows its new grades (▲ ▼). Give it, or tap another row.` : `Tap ${pack.card.target === 'driver' ? 'a driver' : `your ${pack.card.target}`} in the table (the glowing ${pack.card.target === 'driver' ? 'rows' : 'row'}) to try it on.${pack.card.kind !== 'trait' ? ' A full slot sends its card to the locker.' : ' Traits are for good.'}`}</span>
           </div>
+          {revealed && aim && <button type="button" className="rs-btn rs-btn-primary pk-give-big" onClick={give}>Give to {targetName(aim)}</button>}
         </div>
       )}
 
@@ -308,8 +320,8 @@ export default function Paddock({ facts, onChange, onMenu, onGo, onStandings }: 
               const carNo = lineup.indexOf(id);
               const traits = [...d.traits, ...cards.drivers[id].traits];
               return (
-                <tr key={id} className={`${aim === k && aiming ? 'aimed' : ''} ${carNo < 0 ? 'benched' : ''}`}>
-                  <th className="rt-name" scope="row"><span className="rt-num" style={teamThemeVars(you)}>{d.number}</span><span className="rt-nm">{d.fullName}</span></th>
+                <tr key={id} className={`${aim === k && aiming ? 'aimed' : ''} ${isTarget(k) && aim !== k ? 'target' : ''} ${carNo < 0 ? 'benched' : ''}`}>
+                  <th className="rt-name" scope="row">{nameBody(k, <><span className="rt-num" style={teamThemeVars(you)}>{d.number}</span><span className="rt-nm">{d.fullName}</span></>)}</th>
                   {statCells(k, d.fullName, DRIVER_STATS, 0, carNo < 0)}
                   {slotCell({ kind: 'driver', id })}
                   <td className="rt-traits"><span className="rt-minis">{traits.map(c => mini(c, false))}</span></td>
@@ -330,15 +342,15 @@ export default function Paddock({ facts, onChange, onMenu, onGo, onStandings }: 
               <th className="rt-act" />
               {aiming && <th className="rt-act" />}
             </tr>
-            <tr className={aim === 'car' && aiming ? 'aimed' : ''}>
-              <th className="rt-name" scope="row"><span className="rt-nm">{car.name}</span></th>
+            <tr className={`${aim === 'car' && aiming ? 'aimed' : ''} ${isTarget('car') && aim !== 'car' ? 'target' : ''}`}>
+              <th className="rt-name" scope="row">{nameBody('car', <span className="rt-nm">{car.name}</span>)}</th>
               {(() => {
                 const now = readRow('car', null), pv = previewFor('car'), after = pv ? readRow('car', pv) : null;
                 const ovr = overall(now);
                 return (
                   <>
                     <GradeCell value={(after ? overall(after) : ovr).total} strong move={after ? Math.sign(Math.round(overall(after).total) - Math.round(ovr.total)) : 0} />
-                    {CAR_STATS.map((s, i) => <GradeCell key={s} value={(after ?? now)[i].total} notch={now[i].parts.length > 0} move={after ? Math.sign(Math.round(after[i].total) - Math.round(now[i].total)) : 0} onOpen={() => setDetail({ title: `${car.name} · ${STAT_LABELS[s]}`, reading: now[i] })} />)}
+                    {CAR_STATS.map((s, i) => <GradeCell key={s} value={(after ?? now)[i].total} notch={now[i].parts.length > 0} move={after ? Math.sign(Math.round(after[i].total) - Math.round(now[i].total)) : 0} onOpen={() => (isTarget('car') ? tryOn('car') : setDetail({ title: `${car.name} · ${STAT_LABELS[s]}`, reading: now[i] }))} />)}
                     {TEAM_STATS.map(s => <td key={s} className="rt-cell rt-na">·</td>)}
                     {Array.from({ length: DRIVER_STATS.length - CAR_STATS.length - TEAM_STATS.length }, (_, i) => <td key={i} className="rt-cell rt-pad" />)}
                   </>
@@ -349,8 +361,8 @@ export default function Paddock({ facts, onChange, onMenu, onGo, onStandings }: 
               <td className="rt-act" />
               {aimCell('car')}
             </tr>
-            <tr className={aim === 'team' && aiming ? 'aimed' : ''}>
-              <th className="rt-name" scope="row"><TeamLogo team={you} size={22} /><span className="rt-nm">{you.name}</span></th>
+            <tr className={`${aim === 'team' && aiming ? 'aimed' : ''} ${isTarget('team') && aim !== 'team' ? 'target' : ''}`}>
+              <th className="rt-name" scope="row">{nameBody('team', <><TeamLogo team={you} size={22} /><span className="rt-nm">{you.name}</span></>)}</th>
               {(() => {
                 const now = readRow('team', null), pv = previewFor('team'), after = pv ? readRow('team', pv) : null;
                 const ovr = overall(now);
@@ -358,7 +370,7 @@ export default function Paddock({ facts, onChange, onMenu, onGo, onStandings }: 
                   <>
                     <GradeCell value={(after ? overall(after) : ovr).total} strong move={after ? Math.sign(Math.round(overall(after).total) - Math.round(ovr.total)) : 0} />
                     {CAR_STATS.map(s => <td key={s} className="rt-cell rt-na">·</td>)}
-                    {TEAM_STATS.map((s, i) => <GradeCell key={s} value={(after ?? now)[i].total} notch={now[i].parts.length > 0} move={after ? Math.sign(Math.round(after[i].total) - Math.round(now[i].total)) : 0} onOpen={() => setDetail({ title: `${you.name} · ${STAT_LABELS[s]}`, reading: now[i] })} />)}
+                    {TEAM_STATS.map((s, i) => <GradeCell key={s} value={(after ?? now)[i].total} notch={now[i].parts.length > 0} move={after ? Math.sign(Math.round(after[i].total) - Math.round(now[i].total)) : 0} onOpen={() => (isTarget('team') ? tryOn('team') : setDetail({ title: `${you.name} · ${STAT_LABELS[s]}`, reading: now[i] }))} />)}
                     {Array.from({ length: DRIVER_STATS.length - CAR_STATS.length - TEAM_STATS.length }, (_, i) => <td key={i} className="rt-cell rt-pad" />)}
                   </>
                 );
@@ -411,7 +423,7 @@ export default function Paddock({ facts, onChange, onMenu, onGo, onStandings }: 
       </section>
 
       {revealing && pack && (
-        <PackReveal card={pack.card} tier={pack.tier} onDone={() => { setRevealing(false); setRevealed(true); }} />
+        <PackReveal card={pack.card} tier={pack.tier} onDone={() => { setRevealing(false); setRevealed(true); requestAnimationFrame(() => document.querySelector('.rt tr.target')?.scrollIntoView({ block: 'center', behavior: 'smooth' })); }} />
       )}
 
       {detail && (
