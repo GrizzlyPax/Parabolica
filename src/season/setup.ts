@@ -51,8 +51,14 @@ export function randomSeasonSeed(): number {
 export const clampTeams = (n: number) => Math.min(MAX_TEAMS, Math.max(MIN_TEAMS, Math.round(n)));
 export const clampRaces = (n: number) => Math.min(MAX_RACES, Math.max(MIN_RACES, Math.round(n)));
 
+/** The league's name comes from its seed ("The Molten Circuit"), so it
+ * needs no field of its own and rerolls with the seed. */
+export function seasonName(setup: Pick<SeasonSetup, 'seed'>): string {
+  return leagueNameForSeed(setup.seed);
+}
+
 /** Every default from one seed: the one-tap season. */
 export function defaultSetup(seed: number): SeasonSetup {
   const humans = humansFor(generateSeasonPool(seed, DEFAULT_TEAMS), 1);
-  return { name: leagueNameForSeed(seed), seed, teamCount: DEFAULT_TEAMS, humans, calendar: seasonCalendar(seed) };
+  return { seed, teamCount: DEFAULT_TEAMS, humans, calendar: seasonCalendar(seed) };
 }

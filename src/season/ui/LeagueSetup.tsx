@@ -4,10 +4,9 @@
 import { useMemo, useState } from 'react';
 import { GameIcon, TeamLogo, teamThemeVars } from '../../icons/GameIcon';
 import { getTrackById } from '../../generators/tracks';
-import { leagueNameForSeed } from '../../generators/leagueName';
 import { MAX_TEAMS, MIN_TEAMS, generateSeasonPool } from '../genesis';
 import { loadSeason, newSeason, saveSeason, seasonState, type SeasonFacts } from '../season';
-import { MAX_RACES, MIN_RACES, clampRaces, clampTeams, defaultSetup, humansFor, nextTrack, randomSeasonSeed, seasonCalendar } from '../setup';
+import { MAX_RACES, MIN_RACES, clampRaces, clampTeams, defaultSetup, humansFor, nextTrack, randomSeasonSeed, seasonCalendar, seasonName } from '../setup';
 import '../../RunSetup.css';
 import './Season.css';
 
@@ -32,8 +31,6 @@ const trackName = (id: string) => getTrackById(id)?.name ?? id;
 export default function LeagueSetup({ onBack, onStarted }: Props) {
   const [initial] = useState(() => defaultSetup(randomSeasonSeed()));
   const [seed, setSeed] = useState(initial.seed);
-  const [name, setName] = useState(initial.name!);
-  const [nameEdited, setNameEdited] = useState(false);
   const [teamCount, setTeamCount] = useState(initial.teamCount);
   const [humanCount, setHumanCount] = useState(initial.humans.length);
   const [calendar, setCalendar] = useState(initial.calendar);
@@ -49,7 +46,6 @@ export default function LeagueSetup({ onBack, onStarted }: Props) {
   const reroll = () => {
     const s = randomSeasonSeed();
     setSeed(s);
-    if (!nameEdited) setName(leagueNameForSeed(s));
     setCalendar(seasonCalendar(s, calendar.length));
   };
   const changeTeams = (n: number) => {
@@ -65,7 +61,7 @@ export default function LeagueSetup({ onBack, onStarted }: Props) {
 
   const start = () => {
     if (saved && !confirming) { setConfirming(true); return; }
-    const facts = newSeason({ name: name.trim() || leagueNameForSeed(seed), seed, teamCount, humans, calendar });
+    const facts = newSeason({ seed, teamCount, humans, calendar });
     saveSeason(facts);
     onStarted(facts);
   };
@@ -87,7 +83,7 @@ export default function LeagueSetup({ onBack, onStarted }: Props) {
           {confirming && saved && savedState && (
             <div className="ss-confirm" role="alert">
               <span>
-                This replaces <b>{saved.setup.name ?? 'your season'}</b>, round {savedState.round + 1} of {saved.setup.calendar.length}. One season is saved at a time.
+                This replaces <b>{seasonName(saved.setup)}</b>, round {savedState.round + 1} of {saved.setup.calendar.length}. One season is saved at a time.
               </span>
               <button type="button" className="rs-btn rs-btn-ghost" onClick={() => setConfirming(false)}>Keep it</button>
             </div>
@@ -97,14 +93,7 @@ export default function LeagueSetup({ onBack, onStarted }: Props) {
 
       <section className="rs-row">
         <div className="rs-row-head"><span className="rs-k">League</span></div>
-        <input
-          className="ss-name"
-          value={name}
-          onChange={e => { setName(e.target.value); setNameEdited(true); }}
-          maxLength={40}
-          aria-label="League name"
-          spellCheck={false}
-        />
+        <div className="ss-name">{seasonName({ seed })}</div>
         <div className="ss-seed">
           <span className="rs-k">Seed</span>
           <span className="rs-seed-value">{seed}</span>
@@ -112,7 +101,7 @@ export default function LeagueSetup({ onBack, onStarted }: Props) {
             <GameIcon name="ui.restart" size={16} /> Reroll
           </button>
         </div>
-        <p className="rs-hint">The seed makes the drivers, cars and teams. Same seed, same season.</p>
+        <p className="rs-hint">The seed makes the name, drivers, cars and teams. Same seed, same season.</p>
       </section>
 
       <section className="rs-row">

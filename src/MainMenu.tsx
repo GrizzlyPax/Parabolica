@@ -16,11 +16,23 @@ export interface LeagueCardSummary {
   nextAt: number | null;
 }
 
+/** The saved Season, if there is one (one save slot). */
+export interface SeasonCardSummary {
+  name: string;
+  /** 0-based round in progress. */
+  round: number;
+  total: number;
+  finished: boolean;
+}
+
 interface MainMenuProps {
   /** Open a published league by its code. Resolves to an error message, or null on success. */
   onOpenCode: (code: string) => Promise<string | null>;
   onSingleRace: () => void;
   onCommissioner: () => void;
+  /** Play a Season: continue the saved one, or League Setup. */
+  onSeason: () => void;
+  season?: SeasonCardSummary | null;
   onCompendium: () => void;
   onGlossary: () => void;
   onCredits: () => void;
@@ -34,7 +46,7 @@ function nextIn(league: LeagueCardSummary): string {
   return `Next in ~${mins}m`;
 }
 
-function MainMenu({ onSingleRace, onCommissioner, onCompendium, onGlossary, onCredits, onOpenCode, league }: MainMenuProps) {
+function MainMenu({ onSingleRace, onCommissioner, onSeason, season, onCompendium, onGlossary, onCredits, onOpenCode, league }: MainMenuProps) {
   const [code, setCode] = useState('');
   const [opening, setOpening] = useState(false);
   const [codeError, setCodeError] = useState<string | null>(null);
@@ -68,35 +80,39 @@ function MainMenu({ onSingleRace, onCommissioner, onCompendium, onGlossary, onCr
         </header>
 
         <section className="mm-section">
-          <div className="mm-k">Your league</div>
-          <button type="button" className="mm-hero" onClick={onCommissioner}>
+          <div className="mm-k">Season</div>
+          <button type="button" className="mm-hero" onClick={onSeason}>
             <div className="mm-hero-top">
-              <span className="mm-eyebrow">Commissioner Mode</span>
-              <span className={`mm-pill tone-${status.tone}`}>
-                <span className="mm-dot" />{status.label}
-              </span>
+              <span className="mm-eyebrow">Season Mode</span>
+              {season && !season.finished && <span className="mm-pill tone-live"><span className="mm-dot" />ROUND {season.round + 1} OF {season.total}</span>}
             </div>
-            <div className="mm-hero-name">{league ? league.name : 'Found a league'}</div>
+            <div className="mm-hero-name">{season && !season.finished ? season.name : 'Play a Season'}</div>
             <div className="mm-hero-line">
-              {league
-                ? `${done} of ${league.total} races run`
-                : 'A league that runs on the real clock. Races happen whether you watch or not.'}
+              {season && !season.finished
+                ? 'Your season is saved. Pick up where you left off.'
+                : 'Draft three drivers and a car, race the calendar, win the constructors’.'}
             </div>
-            {league && (
-              <>
-                <div className="mm-ribbon" aria-label={`Season progress: ${done} of ${league.total}`}>
-                  {Array.from({ length: league.total }, (_, i) => (
-                    <span key={i} className={`mm-ribbon-cell ${i < league.settled ? 'run' : i < done ? 'due' : ''}`} />
-                  ))}
-                </div>
-                <div className="mm-hero-foot">
-                  <span>{league.dueCount > 0 ? `${league.dueCount} race${league.dueCount > 1 ? 's' : ''} ran while you were away` : nextIn(league)}</span>
-                  <span className="mm-cta">{league.dueCount > 0 ? 'Check in' : 'Open league'}</span>
-                </div>
-              </>
+            {season && !season.finished && (
+              <div className="mm-ribbon" aria-label={`Season progress: ${season.round} of ${season.total}`}>
+                {Array.from({ length: season.total }, (_, i) => <span key={i} className={`mm-ribbon-cell ${i < season.round ? 'run' : ''}`} />)}
+              </div>
             )}
-            {!league && <div className="mm-hero-foot"><span className="mm-cta">Found one</span></div>}
+            <div className="mm-hero-foot"><span className="mm-cta">{season && !season.finished ? 'Continue' : 'Play a Season'}</span></div>
           </button>
+        </section>
+
+        <section className="mm-section">
+          <div className="mm-k">Commissioner leagues (retiring)</div>
+          {league && (
+            <button type="button" className="mm-row" onClick={onCommissioner}>
+              <span className="mm-row-icon"><GameIcon name="ui.home" size={20} /></span>
+              <span className="mm-row-text">
+                <span className="mm-row-title">{league.name} <span className={`mm-pill tone-${status.tone}`}><span className="mm-dot" />{status.label}</span></span>
+                <span className="mm-row-sub">{done} of {league.total} races run · {league.dueCount > 0 ? `${league.dueCount} ran while you were away` : nextIn(league)}</span>
+              </span>
+              <span className="mm-row-chev">›</span>
+            </button>
+          )}
           <form className="mm-row mm-row-form mm-code" onSubmit={submitCode}>
             <span className="mm-row-text">
               <span className="mm-row-title">Open a league by code</span>
