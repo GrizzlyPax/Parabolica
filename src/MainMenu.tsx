@@ -23,6 +23,7 @@ interface MainMenuProps {
   onCommissioner: () => void;
   onCompendium: () => void;
   onGlossary: () => void;
+  onCredits: () => void;
   league?: LeagueCardSummary | null;
 }
 
@@ -33,7 +34,7 @@ function nextIn(league: LeagueCardSummary): string {
   return `Next in ~${mins}m`;
 }
 
-function MainMenu({ onSingleRace, onCommissioner, onCompendium, onGlossary, onOpenCode, league }: MainMenuProps) {
+function MainMenu({ onSingleRace, onCommissioner, onCompendium, onGlossary, onCredits, onOpenCode, league }: MainMenuProps) {
   const [code, setCode] = useState('');
   const [opening, setOpening] = useState(false);
   const [codeError, setCodeError] = useState<string | null>(null);
@@ -121,7 +122,7 @@ function MainMenu({ onSingleRace, onCommissioner, onCompendium, onGlossary, onOp
             <span className="mm-row-icon"><GameIcon name="card.rule" size={20} /></span>
             <span className="mm-row-text">
               <span className="mm-row-title">World Deck</span>
-              <span className="mm-row-sub">Every team, track, tag, card and god in the world, read from the data.</span>
+              <span className="mm-row-sub">Every card, team, track and weather in the world, read from the data.</span>
             </span>
             <span className="mm-row-chev">›</span>
           </button>
@@ -138,7 +139,7 @@ function MainMenu({ onSingleRace, onCommissioner, onCompendium, onGlossary, onOp
 
         <footer className="mm-footer">
           <span>v{version} · {new Date(__BUILD_TIME__).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</span>
-          <span>playparabolica.com</span>
+          <span className="mm-footer-links"><button type="button" className="mm-footer-link" onClick={onCredits}>Credits</button> · playparabolica.com</span>
         </footer>
       </div>
     </div>

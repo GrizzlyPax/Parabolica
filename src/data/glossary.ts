@@ -206,7 +206,7 @@ export function renderGlossaryMd(g: Glossary, version: string): string {
   for (const t of g.teams) L.push(`| ${t.emoji} **${t.name}** \`${t.id}\` | ${t.color} / ${t.accentColor} | ${t.description} |`);
   L.push('', '### Historic teams (unlockable)', '', '| Team | Colours | Vibe |', '|---|---|---|');
   for (const t of g.historicTeams) L.push(`| ${t.emoji} **${t.name}** \`${t.id}\` | ${t.color} / ${t.accentColor} | ${t.description} |`);
-  L.push('', '## Gods', '', '*Source: `src/league/gods.ts`. A league picks a patron at founding; appetites and smiting come later.*', '', '| God | Epithet | Hunger | Appetite |', '|---|---|---|---|');
+  L.push('', '## Gods (retiring)', '', '*Source: `src/league/gods.ts`. Parked: founding no longer asks, and gods retire with Commissioner leagues (#339). Not shown in the World Deck.*', '', '| God | Epithet | Hunger | Appetite |', '|---|---|---|---|');
   for (const d of g.gods) L.push(`| ${d.emoji} **${d.name}** \`${d.id}\` | ${d.epithet} | ${d.hunger} | ${d.appetite} |`);
   L.push('');
   const rs = defaultRuleset();
