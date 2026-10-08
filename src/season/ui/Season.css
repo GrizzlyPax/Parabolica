@@ -42,6 +42,20 @@
   border: 1px solid var(--pw-border-strong); color: var(--pw-text-2);
   font-family: var(--look-data); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase;
 }
+.ss-team-pick {
+  width: 100%; text-align: left; background: transparent; border: 0; border-top: 1px solid var(--pw-hairline); border-radius: 0;
+  padding: 0; color: inherit; font: inherit; cursor: pointer;
+}
+.ss-team-pick:disabled { cursor: default; }
+.ss-team-pick.mine { box-shadow: inset 3px 0 0 var(--team-primary); padding-left: 8px; }
+.ss-team-pick.mine .ss-team-name { font-weight: 700; }
+.ss-pickers { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 8px; }
+.ss-picker {
+  height: 36px; padding: 0 12px; border-radius: 0; cursor: pointer;
+  background: transparent; color: var(--pw-text-1); border: 1px solid var(--pw-border-strong);
+  font-family: var(--look-data); font-size: 13px; letter-spacing: 0.06em;
+}
+.ss-picker.on { background: var(--team-primary); color: var(--team-ink); border-color: var(--team-primary); }
 .ss-badge-human { border-color: var(--team-primary); background: var(--team-primary); color: var(--team-ink); }
 
 /* Calendar */
