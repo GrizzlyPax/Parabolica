@@ -153,6 +153,18 @@
 }
 .ss-dock-btn { width: 100%; max-width: 688px; height: 52px; font-size: 18px; }
 
+/* Standings + finale (#321) */
+.ss-standings { padding-bottom: 96px; }
+.ss-crown {
+  display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 28px 16px;
+  background: var(--team-primary); color: var(--team-ink); text-align: center;
+}
+.ss-crown-k { display: inline-flex; align-items: center; gap: 6px; font-family: var(--look-data); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; }
+.ss-crown .team-logo { outline: 2px solid var(--team-ink); }
+.ss-crown-name { font-family: var(--look-display); font-weight: 700; font-size: 34px; line-height: 1.05; }
+.ss-crown-pts { font-family: var(--look-data); font-size: 14px; }
+.ss-bonus { font-family: var(--look-data); font-size: 11px; color: var(--pw-text-2); border: 1px solid var(--pw-border-strong); padding: 1px 5px; }
+
 /* Season race (#322): Skip to result, always one tap away */
 .season-skip {
   position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(16px + env(safe-area-inset-bottom)); z-index: 50;
