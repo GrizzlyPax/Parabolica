@@ -21,16 +21,15 @@ import type { CardStat } from './cards';
 import { STAT_ICONS } from './icons/registry';
 import { MOTORSPORT_DECK, cardsBy, STAT_LABELS, type Card } from './cards';
 import { CardMarks, cardReadout, KIND_LABELS } from './cards/CardMarks';
-import { ICONS, ICON_LICENSE, iconCredits } from './icons/registry';
 import './RunSetup.css';
 import './Glossary.css';
 
 interface GlossaryProps { onBack: () => void }
 
-type TabId = 'deck' | 'teams' | 'tracks' | 'cards' | 'rules' | 'conditions' | 'gods' | 'flavour' | 'credits' | 'add' | 'inbox';
+type TabId = 'deck' | 'teams' | 'tracks' | 'cards' | 'rules' | 'conditions' | 'flavour' | 'add' | 'inbox';
 const TABS: { id: TabId; label: string }[] = [
   { id: 'deck', label: 'Cards' }, { id: 'teams', label: 'Teams' }, { id: 'tracks', label: 'Tracks' }, { id: 'cards', label: 'Rule cards' },
-  { id: 'rules', label: 'Rules' }, { id: 'conditions', label: 'Weather' }, { id: 'gods', label: 'Gods' }, { id: 'flavour', label: 'Flavour' }, { id: 'credits', label: 'Credits' }, { id: 'inbox', label: 'Inbox' }, { id: 'add', label: '+ Add' },
+  { id: 'rules', label: 'Rules' }, { id: 'conditions', label: 'Weather' }, { id: 'flavour', label: 'Flavour' }, { id: 'inbox', label: 'Inbox' }, { id: 'add', label: '+ Add' },
 ];
 
 const RARITY_ORDER: Record<Rarity, number> = { bronze: 0, silver: 1, gold: 2, iridium: 3 };
@@ -366,7 +365,7 @@ export default function Glossary({ onBack }: GlossaryProps) {
         <div className="rs-title-block">
           <button type="button" className="rs-back" onClick={onBack}>← Menu</button>
           <h1 className="rs-title">World Deck</h1>
-          <span className="rs-sub">Everything in the world, read straight from the data. {MOTORSPORT_DECK.length} cards · {g.counts.deckTeams} teams · {g.counts.deckTracks} tracks · {g.counts.deckWeather} weathers · {g.counts.tags} tags · {g.counts.cards} rule cards · {g.counts.gods} gods. Click a line to open it.</span>
+          <span className="rs-sub">Everything in the world, read straight from the data. {MOTORSPORT_DECK.length} cards · {g.counts.deckTeams} teams · {g.counts.deckTracks} tracks · {g.counts.deckWeather} weathers · {g.counts.tags} tags · {g.counts.cards} rule cards. Click a line to open it.</span>
         </div>
         <label className="gl-search">
           <span className="rs-k">Find</span>
@@ -596,21 +595,6 @@ export default function Glossary({ onBack }: GlossaryProps) {
         </>
       )}
 
-      {tab === 'gods' && (
-        <Section {...sec('gods')} title="Gods" count={g.gods.length} hint="A league picks a patron at founding. Appetites and smiting come later.">
-          <div className="gl-list">
-            {g.gods.filter(d => match(d.name, d.id, d.hunger, d.appetite)).map(d => (
-              <Row key={d.id} id={`god:${d.id}`} open={isOpen(`god:${d.id}`)} onToggle={toggle}
-                lead={<span className="gl-plain">{d.emoji} {d.name}</span>}
-                note={d.epithet}
-                pills={<span className="gl-readout">{d.appetite}</span>}>
-                <p className="gl-desc">“{d.hunger}”</p>
-              </Row>
-            ))}
-          </div>
-        </Section>
-      )}
-
       {tab === 'flavour' && (
         <Section {...sec('pools')} title="Flavour pools" count={g.pools.length} hint="Names, backstories, quirks — plain lists. docs/WORLD_DECK.md says how to add.">
           <div className="gl-list">
@@ -623,31 +607,6 @@ export default function Glossary({ onBack }: GlossaryProps) {
                 <div className="gl-src">{p.where}</div>
               </Row>
             ))}
-          </div>
-        </Section>
-      )}
-
-      {tab === 'credits' && (
-        <Section {...sec('icon-credits')} title="Icon credits" count={ICONS.length} hint="Icons are from game-icons.net, used under CC BY 3.0. This list is generated from the icon registry.">
-          <p className="gl-desc">
-            Icons by the <a href={ICON_LICENSE.source} target="_blank" rel="noreferrer">game-icons.net</a> contributors below,
-            licensed under <a href={ICON_LICENSE.url} target="_blank" rel="noreferrer">{ICON_LICENSE.name}</a>.
-          </p>
-          <div className="gl-list">
-            {iconCredits().filter(c => match(c.name, ...c.icons)).map(c => (
-              <div key={c.author} className="gl-credit">
-                <span className="gl-credit-author">{c.url ? <a href={c.url} target="_blank" rel="noreferrer">{c.name}</a> : c.name}</span>
-                <span className="gl-credit-icons">
-                  {c.icons.map(id => (
-                    <span key={id} className="gl-credit-icon" title={id}><GameIcon name={id} size={24} /><code>{id}</code></span>
-                  ))}
-                </span>
-              </div>
-            ))}
-          </div>
-          <div className="gl-credit-sizes" aria-label="Icon sizes">
-            <span className="rs-k">Sizes</span>
-            {[12, 16, 24, 48].map(s => <span key={s} className="gl-credit-size"><GameIcon name="entity.driver" size={s} /><code>{s}</code></span>)}
           </div>
         </Section>
       )}

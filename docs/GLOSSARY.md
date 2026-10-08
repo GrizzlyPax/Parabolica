@@ -116,9 +116,9 @@
 | 🎁 **Toy Quota** `toy-quota` | #C0C0C0 / #E63946 | Gift wrappers, holiday stress, "I have a system," Black Friday strategists. |
 | 🎸 **Jazz Guitar** `jazz-guitar` | #006633 / #FFB800 | Smooth jazz dads, open mic courage, "anyway here's Wonderwall" but sophisticated. |
 
-## Gods
+## Gods (retiring)
 
-*Source: `src/league/gods.ts`. A league picks a patron at founding; appetites and smiting come later.*
+*Source: `src/league/gods.ts`. Parked: founding no longer asks, and gods retire with Commissioner leagues (#339). Not shown in the World Deck.*
 
 | God | Epithet | Hunger | Appetite |
 |---|---|---|---|

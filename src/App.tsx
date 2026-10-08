@@ -8,6 +8,7 @@ import { RULE_CARDS_BY_ID } from './data/ruleCards';
 import { weatherForRace } from './data/weather';
 import { intrinsicTrackTags } from './data/trackTags';
 import MainMenu from './MainMenu';
+import Credits from './Credits';
 import RaceStartCountdown from './RaceStartCountdown';
 import WatchMode from './WatchMode';
 import RaceControl from './racecontrol/RaceControl';
@@ -26,7 +27,7 @@ import { mulberry32, deriveSeed } from './engine/rng';
 import { generateTrack, getRandomTracks, getTrackById, getDynamicEventDescription, Track } from './generators/tracks';
 import './App.css';
 
-type AppScreen = 'main-menu' | 'setup' | 'race' | 'compendium' | 'founding' | 'league' | 'broadcast' | 'grid' | 'glossary';
+type AppScreen = 'main-menu' | 'setup' | 'race' | 'compendium' | 'founding' | 'league' | 'broadcast' | 'grid' | 'glossary' | 'credits';
 type RaceSpeed = 0.5 | 1 | 2 | 10;
 
 function App() {
@@ -326,12 +327,17 @@ function App() {
         onOpenCode={openByCode}
         onCompendium={handleCompendium}
         onGlossary={() => setScreen('glossary')}
+        onCredits={() => setScreen('credits')}
         league={leagueSummary}
       />
     );
   }
 
   // Show compendium
+  if (screen === 'credits') {
+    return <Credits onBack={handleBackToMainMenu} />;
+  }
+
   if (screen === 'glossary') {
     return <Glossary onBack={handleBackToMainMenu} />;
   }
