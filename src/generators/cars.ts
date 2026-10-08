@@ -51,6 +51,9 @@ export const CAR_QUIRKS = [
   'Rumored to have a soul. Unconfirmed but likely.',
 ];
 
+/** The star-rating range (car and team stats); Season grades read it (src/season/grades.ts). */
+export const STAR_RATING = { min: 1, max: 5 } as const;
+
 /**
  * Generate a random star rating (1-5) with weighted distribution
  * Most chariots cluster around 2-4 stars, with 1 and 5 being rare
