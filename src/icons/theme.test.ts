@@ -16,6 +16,7 @@ const THEMED = [
   'components/Tooltip.css',
   'cards/CardSheet.css',
   'cards/CardFace.css',
+  'season/ui/Season.css',
 ];
 
 // Race rendering inside a themed file stays with Apex (#381) until it moves.
