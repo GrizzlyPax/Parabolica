@@ -15,6 +15,7 @@ import './League.css';
 import { rosterStateAt } from '../league';
 import TagChips from '../../components/race/TagChips';
 import '../../components/race/components.css';
+import { GameIcon } from '../../icons/GameIcon';
 
 function stars(n: number): string {
   const filled = Math.max(0, Math.min(5, Math.round(n)));
@@ -58,7 +59,7 @@ function DriverEntry({ driver, stats }: { driver: RosterDriver; stats?: DriverSe
       {open && (
         <div className="grid-driver-detail">
           {driver.backstory && <p className="grid-driver-backstory">{driver.backstory}</p>}
-          {driver.quirk && <p className="grid-driver-quirk">⚡ {driver.quirk}</p>}
+          {driver.quirk && <p className="grid-driver-quirk">{driver.quirk}</p>}
           <div className="grid-stat-bars">
             {STAT_BARS.map(s => (
               <div key={s.key} className="grid-stat-bar">
@@ -131,7 +132,7 @@ function GridScreen({ league, onExit }: { league: LeagueState; onExit: () => voi
                 </div>
                 {lead?.carName && (
                   <div className="grid-team-car">
-                    <span className="grid-car-name">🏎️ {lead.carName}</span>
+                    <span className="grid-car-name"><GameIcon name="card.upgrade" size={14} /> {lead.carName}</span>
                     {lead.carStats && (
                       <span className="grid-car-stars" title="Power / Grip / Reliability">
                         P {stars(lead.carStats.power)} · G {stars(lead.carStats.grip)} · R {stars(lead.carStats.reliability)}
