@@ -1,11 +1,12 @@
 // League Setup (#317, docs/SEASON_MODE.md §1): the choices a season starts
 // from, as pure helpers. The screen (ui/LeagueSetup.tsx) only edits these.
 //
-// Humans take the first N pool slots. The draft order is a seeded shuffle of
-// the slots (draft.ts), so slot 0 is no better than any other.
+// Each human picks a team from the pool (#440). A pick is the World Deck team
+// (deckTeamId), so it survives a reroll whenever that team is drawn again.
+// Where a team sits in the pool doesn't matter: the draft order is a seeded
+// shuffle of the slots (draft.ts).
 import { deriveSeed, mulberry32, shuffle } from '../engine/rng';
-import { CURRENT_TRACKS, getTrackById } from '../generators/tracks';
-import { BASE_DECK_TRACKS } from '../data/deckTracks';
+import { CURRENT_TRACKS } from '../generators/tracks';
 import { leagueNameForSeed } from '../generators/leagueName';
 import { DEFAULT_TEAMS, MAX_TEAMS, MIN_TEAMS, generateSeasonPool, type SeasonPool } from './genesis';
 import { DEFAULT_CALENDAR_LENGTH, type SeasonHuman, type SeasonSetup } from './season';
@@ -13,11 +14,9 @@ import { DEFAULT_CALENDAR_LENGTH, type SeasonHuman, type SeasonSetup } from './s
 export const MIN_RACES = 3;
 export const MAX_RACES = 20;
 
-/** The tracks a calendar draws from: the six stat-combo tracks once the sim
- * runs on them (the v0.5 bundle), the current tracks until then. */
+/** The tracks a calendar draws from: the six stat-combo tracks. */
 export function calendarTrackIds(): string[] {
-  const deck = BASE_DECK_TRACKS.map(t => t.id);
-  return deck.every(id => getTrackById(id)) ? deck : CURRENT_TRACKS.map(t => t.id);
+  return CURRENT_TRACKS.map(t => t.id);
 }
 
 /** `length` races from the seed: whole shuffles of the tracks back to back,
@@ -38,10 +37,56 @@ export function nextTrack(id: string, ids: string[] = calendarTrackIds()): strin
   return ids[(ids.indexOf(id) + 1) % ids.length];
 }
 
-/** Humans sit in the first `count` slots and wear that slot's team for now
- * (the team creator, #346, lets them name their own). */
-export function humansFor(pool: SeasonPool, count: number): SeasonHuman[] {
-  return pool.teams.slice(0, count).map(t => ({ teamId: t.id, name: t.name, color: t.color, ink: t.ink, iconId: t.iconId }));
+/** A human's pick: a World Deck team id, or null for "not picked yet". */
+export type TeamPick = string | null;
+
+const pickOf = (t: SeasonPool['teams'][number]): string => t.deckTeamId ?? t.id;
+
+/** Each human's pool team. A pick that isn't in this pool, or that an earlier
+ * human already holds, counts as unpicked; unpicked humans get the first free
+ * teams in pool order, so Start always works. */
+export function resolvePicks(pool: SeasonPool, picks: TeamPick[]): string[] {
+  const taken = new Set<string>();
+  const out: (string | null)[] = picks.map(p => {
+    const team = p == null ? undefined : pool.teams.find(t => pickOf(t) === p);
+    if (!team || taken.has(team.id)) return null;
+    taken.add(team.id);
+    return team.id;
+  });
+  const free = pool.teams.filter(t => !taken.has(t.id)).map(t => t.id);
+  return out.map(id => id ?? free.shift()!);
+}
+
+/** Picks that still stand in `pool` (after a reroll or a team-count change); the rest go back to null. */
+export function keepPicks(pool: SeasonPool, picks: TeamPick[]): TeamPick[] {
+  return picks.map(p => (p != null && pool.teams.some(t => pickOf(t) === p) ? p : null));
+}
+
+/** Tap a team row: the picker takes it, or lets it go if it's already theirs.
+ * A team another human holds can't be taken. */
+export function tapTeam(pool: SeasonPool, picks: TeamPick[], picker: number, teamId: string): TeamPick[] {
+  const team = pool.teams.find(t => t.id === teamId);
+  if (!team) return picks;
+  const pick = pickOf(team);
+  if (picks[picker] === pick) return picks.map((p, i) => (i === picker ? null : p));
+  if (picks.some((p, i) => i !== picker && p === pick)) return picks;
+  return picks.map((p, i) => (i === picker ? pick : p));
+}
+
+/** Humans as the season stores them: each wears their picked team (the team
+ * creator, #346, lets them build their own). */
+export function humansFor(pool: SeasonPool, picks: TeamPick[]): SeasonHuman[] {
+  return resolvePicks(pool, picks).map(id => {
+    const t = pool.teams.find(x => x.id === id)!;
+    return { teamId: t.id, name: t.name, color: t.color, ink: t.ink, iconId: t.iconId };
+  });
+}
+
+/** The pick a new human starts with: the first team nobody holds. */
+export function firstFreePick(pool: SeasonPool, picks: TeamPick[]): TeamPick {
+  const held = new Set(resolvePicks(pool, picks));
+  const t = pool.teams.find(x => !held.has(x.id));
+  return t ? pickOf(t) : null;
 }
 
 export function randomSeasonSeed(): number {
@@ -59,6 +104,7 @@ export function seasonName(setup: Pick<SeasonSetup, 'seed'>): string {
 
 /** Every default from one seed: the one-tap season. */
 export function defaultSetup(seed: number): SeasonSetup {
-  const humans = humansFor(generateSeasonPool(seed, DEFAULT_TEAMS), 1);
+  const pool = generateSeasonPool(seed, DEFAULT_TEAMS);
+  const humans = humansFor(pool, [pickOf(pool.teams[0])]);
   return { seed, teamCount: DEFAULT_TEAMS, humans, calendar: seasonCalendar(seed) };
 }
