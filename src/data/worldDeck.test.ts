@@ -5,7 +5,7 @@ import { describe, it, expect } from 'vitest';
 import { ALL_TAGS, DRIVER_TAGS, CAR_TAGS, TEAM_TAGS, RARITIES, getTagById } from './tags';
 import { ACQUISITION_RULES } from './acquisitions';
 import { IN_RACE_RULES } from './inRace';
-import { CARDS } from './cards';
+import { RULE_CARDS } from './ruleCards';
 import { WEATHER_TYPES } from './weather';
 import { TRACK_TAGS } from './trackTags';
 import { INFLICTIONS } from './inflictions';
@@ -17,7 +17,7 @@ import { LEAGUE_ADJECTIVES, LEAGUE_NOUNS } from '../generators/leagueName';
 import { BACKSTORY_TEMPLATES, BACKSTORY_FILLS, QUIRKS } from '../generators/drivers';
 import { CAR_QUIRKS } from '../generators/cars';
 import { resolveRuleset, defaultRuleset } from '../rules/ruleset';
-import { CARDS_BY_ID } from './cards';
+import { RULE_CARDS_BY_ID } from './ruleCards';
 import { TAG_CALIBRATION, calibrationFor } from './tagCalibration';
 import { effectsHash, bandViolation, CALIBRATION_CARDS } from '../racecontrol/calibrate';
 import { isGenesisTag } from './tags';
@@ -32,7 +32,7 @@ const nonEmpty = (s: string | undefined, what: string) => expect((s ?? '').trim(
 
 describe('ids are unique, kebab-case, and every record has a name and emoji', () => {
   const registries: [string, { id: string; name: string; emoji: string }[]][] = [
-    ['tags', ALL_TAGS], ['cards', CARDS], ['weather', WEATHER_TYPES], ['track tags', TRACK_TAGS], ['inflictions', INFLICTIONS],
+    ['tags', ALL_TAGS], ['cards', RULE_CARDS], ['weather', WEATHER_TYPES], ['track tags', TRACK_TAGS], ['inflictions', INFLICTIONS],
     ['teams', [...CURRENT_TEAMS, ...HISTORIC_TEAMS]], ['tracks', [...CURRENT_TRACKS, ...HISTORIC_TRACKS]], ['gods', GODS],
   ];
   for (const [what, rows] of registries) {
@@ -63,10 +63,10 @@ describe('references point at things that exist', () => {
   });
   it('cards resolve and change something', () => {
     const base = JSON.stringify(defaultRuleset());
-    for (const c of CARDS) expect(JSON.stringify(resolveRuleset([c.id], CARDS_BY_ID)), `card ${c.id} does nothing`).not.toBe(base);
+    for (const c of RULE_CARDS) expect(JSON.stringify(resolveRuleset([c.id], RULE_CARDS_BY_ID)), `card ${c.id} does nothing`).not.toBe(base);
   });
   it('card tag patches name real tags', () => {
-    for (const c of CARDS) for (const id of [...(c.patch.tags?.only ?? []), ...(c.patch.tags?.add ?? []), ...(c.patch.tags?.remove ?? [])]) expect(getTagById(id), `card ${c.id} → ${id}`).toBeDefined();
+    for (const c of RULE_CARDS) for (const id of [...(c.patch.tags?.only ?? []), ...(c.patch.tags?.add ?? []), ...(c.patch.tags?.remove ?? [])]) expect(getTagById(id), `card ${c.id} → ${id}`).toBeDefined();
   });
 });
 

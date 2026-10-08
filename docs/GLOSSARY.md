@@ -2,7 +2,7 @@
 
 *Everything in the sim and the world, generated from the data modules by `npm run glossary` — do not edit by hand; edit the source files named in each section and re-run. Engine v0.4.3. How to add content: docs/WORLD_DECK.md.*
 
-11 teams (+11 historic) · 24 tracks (+7 historic) · 60 tags (30 genesis · 8 acquired · 5 in-race · 17 condition) · 12 cards · 12 rules · 5 weathers · 3 track characters · 5 inflictions · 3 gods
+11 teams (+11 historic) · 24 tracks (+7 historic) · 60 tags (30 genesis · 8 acquired · 5 in-race · 17 condition) · 12 rule cards · 12 rules · 5 weathers · 3 track characters · 5 inflictions · 3 gods
 
 ## Teams
 
@@ -150,9 +150,9 @@ Measured: each tag alone on one driver over 200 seeded races vs the same races u
 | 🔧 **Equipment Malfunction** `equipment-malfunction` — Pit equipment issues causing delays | rare | condition | on a track event | +40% pit time | one race | — | stamped by a track event for one race |
 | 👐 **Fast Hands** `fast-hands` — Pit crew on fire today | uncommon | condition | on a track event | -20% pit time | one race | — | stamped by a track event for one race |
 
-## Cards
+## Rule cards
 
-| Card | Scope | Weight | Does |
+| Rule card | Scope | Weight | Does |
 |---|---|---|---|
 | 🌧️ **Rain** `rain` | race | wild | This race is wet. Rain Dancer wakes; crashes more likely. |
 | 🌫️ **Fog** `fog` | race | mild | This race is foggy: slightly slower, more close calls. |

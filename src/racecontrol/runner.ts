@@ -22,7 +22,7 @@ import { prepareScheduledRace } from '../league/settle';
 import { CURRENT_TRACKS, type Track } from '../generators/tracks';
 import { TEAMS } from '../data/teams';
 import { resolveRuleset, type Ruleset } from '../rules/ruleset';
-import { CARDS_BY_ID } from '../data/cards';
+import { RULE_CARDS_BY_ID } from '../data/ruleCards';
 import { deriveSeed, mulberry32, shuffle } from '../engine/rng';
 import { getTagById, type Tag } from '../data/tags';
 import { weatherForRace, type WeatherState } from '../data/weather';
@@ -87,7 +87,7 @@ export interface LabRaceResult {
 }
 
 export function labRuleset(cardIds: string[]): Ruleset {
-  return resolveRuleset(cardIds, CARDS_BY_ID);
+  return resolveRuleset(cardIds, RULE_CARDS_BY_ID);
 }
 
 /**

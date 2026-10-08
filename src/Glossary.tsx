@@ -20,7 +20,7 @@ interface GlossaryProps { onBack: () => void }
 
 type TabId = 'tags' | 'teams' | 'tracks' | 'cards' | 'rules' | 'conditions' | 'gods' | 'flavour' | 'add' | 'inbox';
 const TABS: { id: TabId; label: string }[] = [
-  { id: 'tags', label: 'Tags' }, { id: 'teams', label: 'Teams' }, { id: 'tracks', label: 'Tracks' }, { id: 'cards', label: 'Cards' },
+  { id: 'tags', label: 'Tags' }, { id: 'teams', label: 'Teams' }, { id: 'tracks', label: 'Tracks' }, { id: 'cards', label: 'Rule cards' },
   { id: 'rules', label: 'Rules' }, { id: 'conditions', label: 'Weather' }, { id: 'gods', label: 'Gods' }, { id: 'flavour', label: 'Flavour' }, { id: 'inbox', label: '💡 Inbox' }, { id: 'add', label: '+ Add' },
 ];
 
@@ -405,7 +405,7 @@ export default function Glossary({ onBack }: GlossaryProps) {
       })}
 
       {tab === 'cards' && (
-        <Section {...sec('cards')} title="Cards" count={g.cards.length} hint="Rules you pick before a run. Race cards for one race, season cards for a whole league.">
+        <Section {...sec('cards')} title="Rule cards" count={g.cards.length} hint="Rules you pick before a run. Race rule cards for one race, season rule cards for a whole league.">
           <div className="gl-list">
             {g.cards.filter(c => match(c.name, c.id, c.readout, c.blurb)).map(c => (
               <Row key={c.id} id={`card:${c.id}`} open={isOpen(`card:${c.id}`)} onToggle={toggle}
@@ -451,7 +451,7 @@ export default function Glossary({ onBack }: GlossaryProps) {
 
       {tab === 'conditions' && (
         <>
-          <Section {...sec('weather')} title="Weather" count={g.weather.length} hint="Rolled per race. Odds are the defaults; cards change them.">
+          <Section {...sec('weather')} title="Weather" count={g.weather.length} hint="Rolled per race. Odds are the defaults; rule cards change them.">
             <div className="gl-list">
               {g.weather.filter(w => match(w.name, w.id)).map(w => {
                 const total = g.weather.reduce((s, x) => s + x.weight, 0);

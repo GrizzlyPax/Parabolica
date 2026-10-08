@@ -175,7 +175,7 @@ function CalibrationTab({ lab }: { lab: LabProps }) {
             <button type="button" className="rs-link" onClick={download}>Download JSON</button>
           </span>
         </div>
-        <div className="rc-bands rs-hint">Shipped table: batch <code>{file.batchSeed}</code> · cards <code>{file.cards.join(' ') || 'none'}</code> · {new Date(file.generatedAt).toLocaleDateString()} · bands |places| ≤ {CALIBRATION_BANDS.maxPlaces}, DNF ≤ {Math.round(CALIBRATION_BANDS.maxDnfRate * 100)}%, wins ≤ {Math.round(CALIBRATION_BANDS.maxWinRate * 100)}% · <span className={violations.length ? 'rc-bad' : 'rc-good'}>{violations.length ? `${violations.length} out of band` : 'all in band'}</span></div>
+        <div className="rc-bands rs-hint">Shipped table: batch <code>{file.batchSeed}</code> · rule cards <code>{file.cards.join(' ') || 'none'}</code> · {new Date(file.generatedAt).toLocaleDateString()} · bands |places| ≤ {CALIBRATION_BANDS.maxPlaces}, DNF ≤ {Math.round(CALIBRATION_BANDS.maxDnfRate * 100)}%, wins ≤ {Math.round(CALIBRATION_BANDS.maxWinRate * 100)}% · <span className={violations.length ? 'rc-bad' : 'rc-good'}>{violations.length ? `${violations.length} out of band` : 'all in band'}</span></div>
       </section>
       <section className="rs-row rc-table-row">
         <div className="rc-table-wrap">
@@ -264,7 +264,7 @@ export function calibrationMarkdown(file: CalibrationFile): string {
     const t = getTagById(c.tagId);
     return `| ${t?.emoji ?? ''} ${t?.name ?? c.tagId} | ${c.target} | ${c.rarity} | ${fmtSigned(c.places)} ± ${c.placesSe.toFixed(1)} | ${pct(c.winRate)} (${pct(c.baseWinRate)}) | ${pct(c.podiumRate)} (${pct(c.basePodiumRate)}) | ${pct(c.dnfRate)} (${pct(c.baseDnfRate)}) | ${c.activationsPerRace.toFixed(2)} | ${bandViolation(c) ?? 'ok'} |`;
   });
-  return `# Tag calibration\n\nBatch seed ${file.batchSeed} · ${file.races} races per tag · cards: ${file.cards.join(' ') || 'none'} · baseline #${file.baselineFingerprint} · ${file.generatedAt}\n\nReplicate: \`npm run calibrate\`\n\n${head}\n${rows.join('\n')}\n`;
+  return `# Tag calibration\n\nBatch seed ${file.batchSeed} · ${file.races} races per tag · rule cards: ${file.cards.join(' ') || 'none'} · baseline #${file.baselineFingerprint} · ${file.generatedAt}\n\nReplicate: \`npm run calibrate\`\n\n${head}\n${rows.join('\n')}\n`;
 }
 
 // ---------------------------------------------------------------------------
@@ -506,11 +506,11 @@ function MethodTab() {
     <section className="rs-row rc-method">
       <div className="rs-row-head"><span className="rs-k">How a lab number earns trust</span></div>
       <ol>
-        <li><b>A lab race is a league race.</b> Every batch goes through <code>src/racecontrol/runner.ts</code>, which builds a one-race league with <code>createLeague</code> and prepares the engine with <code>prepareScheduledRace</code> — the same two calls the live broadcast and the wall-clock settle use. Current tracks only, genesis roster per universe, seeded weather, the chosen card hand.</li>
-        <li><b>Everything is seeded.</b> A batch is (seed, size, cards). Race <i>i</i> derives from <code>deriveSeed(seed, 'lab', i)</code>; nothing in the lab touches <code>Math.random</code>. The same spec gives the same race in this browser, in a vitest, and in the terminal.</li>
+        <li><b>A lab race is a league race.</b> Every batch goes through <code>src/racecontrol/runner.ts</code>, which builds a one-race league with <code>createLeague</code> and prepares the engine with <code>prepareScheduledRace</code> — the same two calls the live broadcast and the wall-clock settle use. Current tracks only, genesis roster per universe, seeded weather, the chosen rule-card hand.</li>
+        <li><b>Everything is seeded.</b> A batch is (seed, size, rule cards). Race <i>i</i> derives from <code>deriveSeed(seed, 'lab', i)</code>; nothing in the lab touches <code>Math.random</code>. The same spec gives the same race in this browser, in a vitest, and in the terminal.</li>
         <li><b>Every result carries a fingerprint.</b> Physics shows <code>#xxxxxxxx</code> next to its seed; <code>npm run lab -- &lt;seed&gt; &lt;races&gt; all no-tags</code> prints the same one when it ran the same races. Tag calibration carries the baseline batch's fingerprint.</li>
-        <li><b>Physics is measured on untagged races.</b> The <code>no-tags</code> card, so the rules are read without personalities on top. Change a knob and the same seeded batch runs with your value — only the knob differs.</li>
-        <li><b>Tags are measured paired and solo.</b> One tag, one carrier, the <code>no-tags</code> card for everyone else, against the identical untagged race. "Places gained" is the carrier's finishing position with the tag minus without, averaged; the ± is the standard error.</li>
+        <li><b>Physics is measured on untagged races.</b> The <code>no-tags</code> rule card, so the rules are read without personalities on top. Change a knob and the same seeded batch runs with your value — only the knob differs.</li>
+        <li><b>Tags are measured paired and solo.</b> One tag, one carrier, the <code>no-tags</code> rule card for everyone else, against the identical untagged race. "Places gained" is the carrier's finishing position with the tag minus without, averaged; the ± is the standard error.</li>
         <li><b>The deck is gated.</b> <code>src/data/tagCalibration.json</code> is committed. <code>npm test</code> fails if a genesis tag is missing from it, if a tag's effects changed since it was measured, or if a tag is out of band. Fix: tune the tag, <code>npm run calibrate</code>, commit both.</li>
         <li><b>Re-roll to see the dice.</b> Both tabs can re-run on a fresh seed. A number that moves a lot between seeds is mostly luck; the ± and the Δ flag tell you when a difference is bigger than the noise.</li>
         <li><b>Export what you see.</b> Tag calibration copies as markdown or downloads as JSON; both tabs give you the code for an edit you liked (Copy as code). Paste it into an issue and anyone can rerun it.</li>
@@ -518,7 +518,7 @@ function MethodTab() {
       <div className="rc-cmds">
         <span className="rs-k">Commands</span>
         <code>npm run lab -- 2026 100 all</code><span className="rs-hint">replay a physics batch, print its fingerprint</span>
-        <code>npm run lab -- 2026 100 all no-tags rain</code><span className="rs-hint">…under a card hand</span>
+        <code>npm run lab -- 2026 100 all no-tags rain</code><span className="rs-hint">…under a rule-card hand</span>
         <code>npm run calibrate</code><span className="rs-hint">re-measure every genesis tag, rewrite the JSON</span>
         <code>npm run calibrate -- 50 glass-cannon</code><span className="rs-hint">one tag, quick read, nothing written</span>
         <code>npx tsx scripts/mechanics-probe.mjs 200</code><span className="rs-hint">the no-tag mechanics gates (#246)</span>

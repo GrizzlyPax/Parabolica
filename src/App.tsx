@@ -4,7 +4,7 @@ import RunSetup from './RunSetup';
 import Glossary from './Glossary';
 import IdeaBox from './IdeaBox';
 import { Ruleset, describeRuleset } from './rules/ruleset';
-import { CARDS_BY_ID } from './data/cards';
+import { RULE_CARDS_BY_ID } from './data/ruleCards';
 import { weatherForRace } from './data/weather';
 import { intrinsicTrackTags } from './data/trackTags';
 import MainMenu from './MainMenu';
@@ -417,7 +417,7 @@ function App() {
         raceEvents={raceEvents}
         fantasy={activeFantasy ?? undefined}
         onExit={handleBackToMainMenu}
-        rulesLines={quickRun ? (quickRun.ruleset.cards.length ? quickRun.ruleset.cards.map(id => `${CARDS_BY_ID.get(id)?.emoji ?? ''} ${CARDS_BY_ID.get(id)?.name ?? id}`.trim()).concat(describeRuleset(quickRun.ruleset)) : ['default']) : undefined}
+        rulesLines={quickRun ? (quickRun.ruleset.cards.length ? quickRun.ruleset.cards.map(id => `${RULE_CARDS_BY_ID.get(id)?.emoji ?? ''} ${RULE_CARDS_BY_ID.get(id)?.name ?? id}`.trim()).concat(describeRuleset(quickRun.ruleset)) : ['default']) : undefined}
         // Race controls - now handled by UniversalHeader inside WatchMode
         isRunning={isRunning}
         raceSpeed={raceSpeed}

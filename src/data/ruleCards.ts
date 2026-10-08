@@ -1,15 +1,16 @@
-// Cards — the rules you pick before a run (#241). Data only; adding one is a
+// Rule cards — the rules you pick before a run (#241). ("Card" alone now means a
+// deck card: gear / traits / effects, docs/CARDS.md.) Data only; adding one is a
 // toss-in. Each card's `readout` is the plain-words effect shown on the card;
 // `patch` is what it actually does to the ruleset (see rules/ruleset.ts).
 //
 // Two scopes (Pax, Oct 5): a RACE card is "Rain"; a SEASON card is "Always
 // Raining". Underneath they're the same lever — for one race, odds = certainty.
 
-import type { Card } from '../rules/ruleset';
+import type { RuleCard } from '../rules/ruleset';
 
 const ONLY = (id: string) => ({ clear: 0, windy: 0, scorcher: 0, fog: 0, rain: 0, [id]: 100 });
 
-export const CARDS: Card[] = [
+export const RULE_CARDS: RuleCard[] = [
   // ---- Weather ------------------------------------------------------------
   { id: 'rain', name: 'Rain', emoji: '🌧️', scope: 'race', weight: 'wild',
     blurb: 'The skies open before the formation lap.',
@@ -65,8 +66,8 @@ export const CARDS: Card[] = [
     patch: { simVars: { pits: { minStops: 0, requireAllCompounds: false } } } },
 ];
 
-export const CARDS_BY_ID: Map<string, Card> = new Map(CARDS.map(c => [c.id, c]));
+export const RULE_CARDS_BY_ID: Map<string, RuleCard> = new Map(RULE_CARDS.map(c => [c.id, c]));
 
-export function cardsForScope(scope: 'race' | 'season'): Card[] {
-  return CARDS.filter(c => c.scope === scope || c.scope === 'both');
+export function ruleCardsForScope(scope: 'race' | 'season'): RuleCard[] {
+  return RULE_CARDS.filter(c => c.scope === scope || c.scope === 'both');
 }

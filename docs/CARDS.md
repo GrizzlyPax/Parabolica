@@ -40,7 +40,7 @@ Size by how big the moment is (minor ±2 / notable ±5 / major ±10 / huge ±15)
 ## Build notes
 - **Gear and traits are static for a race,** so they apply by **baking % multipliers into stats at roster build**. No engine change is needed, and that's why they can ship in v0.5.
 - **Effects need an engine hook:** "raise/lower stat X by N% until T". Today the engine reads `driver.stats.*`, `carStats`, `teamStats` directly in many places, and timed tag effects only reach speed, consistency and luck (`activeTagEffects`). v0.6 adds one effective-stat accessor that every read goes through.
-- **Name clash:** `Card` already means a rule modifier (`src/data/cards.ts`, `rules/ruleset.ts`, Run Setup). Rename that to **RuleCard** first.
+- **Name clash (resolved, #330):** rule modifiers are now **RuleCard** / `RULE_CARDS` in `src/data/ruleCards.ts`; "Card" means a deck card.
 
 ## Later (not in either step)
 Flavour pass (names + one-line backstories, personal & superstitious voice) · cosmetic helmet slot · themed decks (Horror, Fantasy, Elements) · families, rivalries, staff, forced cards, base-stat traits.
