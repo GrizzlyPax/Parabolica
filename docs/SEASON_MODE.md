@@ -44,9 +44,9 @@ Instead of 2 drivers pre-assigned to each named team, the seed summons a **share
 - **CPU turns are no-ops in v0.5:** build the framework and per-team hook only. CPU actions come later with no rework.
 - Each human's turn has **two decisions**:
   1. **Pick who races:** 2 of your 3 start, and the 3rd is benched.
-  2. **Apply your mystery box:** the box has a **metal** (severity, set by standing: Bronze leader → Platinum last) and a **slot** (driver / car / team). Open it (a loot-box reveal), then choose the recipient (any driver, car or team, yours or a rival's).
-- Box rules: dealt every race · **the box has no expiry: how long a reward lasts belongs to the tag itself** (Pax). Some rewards are equipment, some are permanent traits; that split comes from the tag revamp. Until a tag declares a duration, box tags are permanent · cap 4 tags, replacing the weakest · it's an `attach-tag` intervention, so no new physics.
-- Metal odds (C/U/R/L, illustrative): Bronze 60/30/9/1 · Silver 52/32/13/3 · Gold 43/34/18/5 · Platinum 35/35/22/8.
+  2. **Open your mystery box:** its **metal** is set by standing (Bronze leader → Silver → Gold → 🟣 Iridium last). It deals a **gear card** (equipment / upgrade / facility), or about **1 in 4** times a **trait card**, from the 🏁 Motorsport deck ([docs/CARDS.md](CARDS.md)). Open it (a loot-box reveal) and choose where it goes: any driver, car or team, yours or a rival's. Gear into a full slot **swaps** out the old card.
+- Box rules: dealt every race · gear lasts until swapped, traits are permanent · teams start each season with no gear and 1 slot of each kind · slot traits add slots.
+- Metal odds (C/U/R/L, illustrative): Bronze 60/30/9/1 · Silver 52/32/13/3 · Gold 43/34/18/5 · Iridium 35/35/22/8.
 
 ## 5. Race & standings
 - The **existing engine** races the drafted drivers, cars and tags, with no new physics. Each race **holds for "Go"**, then you **watch live or skip to the result**.
@@ -58,10 +58,10 @@ Instead of 2 drivers pre-assigned to each named team, the seed summons a **share
 - **The mystery box reveal is an over-the-top loot-box moment** that escalates with the metal: Bronze is a quick pop, Platinum a full build-up.
 
 ## Out of scope (hooks only)
-Patron Mode · CPU Paddock actions · free agents / transfers · events · spend economy · online / wall-clock / accounts · views-followers metric · cosmetic/story tag content.
+Effect cards from the sim (v0.6) · Patron Mode · CPU Paddock actions · free agents / transfers · events · spend economy · online / wall-clock / accounts · views-followers metric · cosmetic/story tag content.
 
 ## Decided (Pax, Oct 8)
-- **Box expiry:** none on the box; duration lives on the tag/reward (equipment vs permanent traits, from the tag revamp).
+- **Box expiry:** none on the box. Gear lasts until swapped, traits forever (Cards revamp, docs/CARDS.md).
 - **Lineups:** free choice of your 2 racers every race.
 - **Drivers'-champ bonus:** worth more than one race win; Telemetry proposes the exact value.
 - **Grid size:** 5–10 teams, default 10.
