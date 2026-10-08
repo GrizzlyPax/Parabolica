@@ -19,6 +19,7 @@ Parabolica is an F1-style race sim building toward Commissioner Mode: wall-clock
 | [CONDITIONS_LAYER](CONDITIONS_LAYER.md) | Track tags + weather (companion to TAG_SYSTEM) |
 | [SEASON_MODE](SEASON_MODE.md) | **v0.5 Spa build spec:** League Setup, draft, Paddock loop |
 | [FANTASY](FANTASY.md) | Fantasy teams: snake draft, obfuscated draft info, scoring |
+| [ICONS](ICONS.md) | **Design change:** game-icons.net replaces every emoji; icons + UI take your team's colours |
 | [PROCEDURAL_IDENTITY](PROCEDURAL_IDENTITY.md) | Generated driver names, league names, team identity |
 
 ## Leagues & online
