@@ -12,7 +12,9 @@ import RaceStartCountdown from './RaceStartCountdown';
 import WatchMode from './WatchMode';
 import RaceControl from './racecontrol/RaceControl';
 import SeasonScreen, { seasonScreenFor } from './season/ui/SeasonScreen';
-import { loadSeason, seasonState } from './season/season';
+import { leagueForRound, loadSeason, saveSeason, seasonState, settleRound } from './season/season';
+import { teamsOf } from './season/ui/teams';
+import { teamThemeVars, type TeamLike } from './icons/GameIcon';
 import { seasonName } from './season/setup';
 import FoundingScreen, { FoundingChoices } from './league/ui/FoundingScreen';
 import LeagueScreen from './league/ui/LeagueScreen';
@@ -252,6 +254,63 @@ function App() {
     }
   }, [screen, engine]);
 
+  // === Season Mode race (#322) ===
+  // Go opens the live broadcast of the round; Skip to result fast-forwards
+  // the same race to its finish. The round is recorded by settleRound (the
+  // headless run of the same seeded race), so watching changes nothing.
+  const onSeasonRace = route.name === 'season' && route.screen === 'race';
+  const [seasonRace, setSeasonRace] = useState<{ round: number; sealed: Set<number>; you: TeamLike } | null>(null);
+  const settlingSeason = useRef(false);
+  useEffect(() => {
+    if (!onSeasonRace) {
+      if (seasonRace) {
+        engine.stop(); engine.reset(); engine.clearSeed(); engine.setSimVars(null); engine.setWeather(null);
+        setSeasonRace(null);
+      }
+      return;
+    }
+    if (seasonRace) return;
+    const facts = loadSeason();
+    const state = facts ? seasonState(facts) : null;
+    if (!facts || !state || state.phase !== 'ready-for-go') {
+      navigate({ name: 'season', screen: facts ? seasonScreenFor(facts) : 'setup' }, { replace: true });
+      return;
+    }
+    const track = getTrackById(facts.setup.calendar[state.round]);
+    if (!track) return;
+    const leagueNow = leagueForRound(facts, state.round);
+    engine.stop();
+    prepareScheduledRace(engine, leagueNow, state.round, track, facts.setup.ruleset?.simVars ?? CANON_VARIABLES);
+    setTrackInfo(engine.getTrackInfo());
+    setRaceSpeed(1);
+    engine.updateConfig({ tickInterval: 100 });
+    engine.reset();
+    engine.start();
+    settlingSeason.current = false;
+    const humans = new Set(facts.setup.humans.map(h => h.teamId));
+    setSeasonRace({
+      round: state.round,
+      sealed: new Set(leagueNow.roster.filter(d => !humans.has(d.kingdomId ?? '')).map(d => d.id)),
+      you: teamsOf(facts)[facts.setup.humans[0].teamId],
+    });
+  }, [onSeasonRace]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /** Finished: record the round, then the Paddock (or the final standings). Left mid-race: back to the Paddock, round not run. */
+  const leaveSeasonRace = (finished: boolean) => {
+    if (settlingSeason.current) return;
+    settlingSeason.current = true;
+    engine.stop();
+    const facts = loadSeason();
+    const state = facts ? seasonState(facts) : null;
+    if (finished && facts && state?.phase === 'ready-for-go' && state.round === seasonRace?.round) {
+      const next = settleRound(facts);
+      saveSeason(next);
+      navigate({ name: 'season', screen: seasonState(next).phase === 'finished' ? 'standings' : 'paddock' }, { replace: true });
+    } else {
+      navigate({ name: 'season', screen: 'paddock' }, { replace: true });
+    }
+  };
+
   // Refresh lands on a screen whose state can't be rebuilt (a race in
   // progress, a league that isn't there): fall back to its start page.
   useEffect(() => {
@@ -372,6 +431,32 @@ function App() {
         onCredits={() => setScreen('credits')}
         league={leagueSummary}
       />
+    );
+  }
+
+  if (onSeasonRace) {
+    if (!seasonRace || !config || !raceState) return null;
+    return (
+      <div className="watch-container season-race" style={teamThemeVars(seasonRace.you)}>
+        <WatchMode
+          drivers={drivers}
+          config={config}
+          raceState={raceState}
+          trackInfo={trackInfo}
+          raceEvents={raceEvents}
+          sealedDriverIds={seasonRace.sealed}
+          onExit={() => leaveSeasonRace(raceState.raceFinished)}
+          exitLabel="Paddock"
+          isRunning={isRunning}
+          raceSpeed={raceSpeed}
+          onStart={() => engine.start()}
+          onStop={handleStop}
+          onSpeedChange={setRaceSpeed}
+        />
+        {!raceState.raceFinished && (
+          <button type="button" className="season-skip" onClick={() => engine.fastForward(Infinity)}>Skip to result</button>
+        )}
+      </div>
     );
   }
 

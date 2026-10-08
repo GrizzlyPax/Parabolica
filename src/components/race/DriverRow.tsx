@@ -58,8 +58,14 @@ function DriverRow({ driver, columns, context, gridTemplate, isFocused, expandab
           <div className="expanded-content">
             <span className="expanded-full-name">{driver.name}</span>
             {context.fantasyTeam && <span className="expanded-fact"><span className="expanded-k">Fantasy</span> <span className="fantasy-badge" style={{ '--fantasy-color': context.fantasyTeam.color } as React.CSSProperties}>{context.fantasyTeam.name}</span></span>}
-            <span className="expanded-fact"><span className="expanded-k">Driver</span> <RankChip r={context.driverRank} what="Driver skill" unit="drivers" /></span>
-            <span className="expanded-fact"><span className="expanded-k">Car</span> <RankChip r={context.carRank} what="Car package (shared with the teammate)" unit="cars" /></span>
+            {context.sealed ? (
+              <span className="expanded-fact"><span className="expanded-k">Rival</span> stats and cards stay sealed</span>
+            ) : (
+              <>
+                <span className="expanded-fact"><span className="expanded-k">Driver</span> <RankChip r={context.driverRank} what="Driver skill" unit="drivers" /></span>
+                <span className="expanded-fact"><span className="expanded-k">Car</span> <RankChip r={context.carRank} what="Car package (shared with the teammate)" unit="cars" /></span>
+              </>
+            )}
             {driver.tireState && (
               <span className="expanded-fact"><span className="expanded-k">Tyre</span>
                 <span className="expanded-tire" data-compound={driver.tireState.compound}>{driver.tireState.compound.charAt(0).toUpperCase()}</span>
@@ -69,7 +75,7 @@ function DriverRow({ driver, columns, context, gridTemplate, isFocused, expandab
           </div>
           {/* The effect stack: everything acting on this driver, with the reason (#243) */}
           <div className="effect-stack">
-            {(context.effectStack ?? []).length === 0 && (
+            {!context.sealed && (context.effectStack ?? []).length === 0 && (
               <div className="effect-row inactive"><span className="effect-name">Nothing acting on this car right now</span></div>
             )}
             {(context.effectStack ?? []).map(e => {
