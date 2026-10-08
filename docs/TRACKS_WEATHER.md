@@ -1,0 +1,51 @@
+# Tracks & Weather v2 (v0.6)
+
+*Build spec. Source: Dev's design artifact "Tracks & Weather v2" (Oct 8). Ships in **v0.6 Monza**, all of it (Pax, Oct 8). Where this doc and Pax disagree, Pax wins; tell Pit.*
+
+## TL;DR
+- **Audit:** today's tracks and weather change pace and passing, but **not who wins**.
+- **v2 makes them decide which stats matter.** A favoured stat counts **+10%** (placeholder) for the race, and track and weather favours stack.
+- **6 generic tracks replace all 31 themed ones** (one stat combo each, named for it). **6 weathers + Neutral replace the 5 old weathers.** Exactly one is **Wet**, which changes lap by lap and brings a wet tyre.
+- **Retired:** track events, the 17 condition tags, the 5 old weathers, the 5 inflictions. The inflictions are parked as **Horror deck** material (Pax).
+
+## Tracks (6)
+| Track | Driver stat | Car / team stat | Layout drawing |
+|---|---|---|---|
+| Speed + Power | Speed | Power | power |
+| Consistency + Grip | Consistency | Grip | technical |
+| Aggression + Reliability | Aggression | Reliability | street |
+| Endurance + Tyre Management | Endurance | Tyre Management | flowing |
+| Acceleration + Pit Crew | Acceleration | Pit Crew | modern |
+| Luck + Reliability | Luck | Reliability | classic |
+
+- Each favoured stat counts +10%, field-wide. That widens the gap between drivers who are strong and weak in it.
+- The six existing layout drawings map one-to-one, so no new art.
+- Passing is normal everywhere for now; the per-track passing dial stays in the system.
+- A 10-race season draws from 6 tracks, so tracks repeat.
+
+## Weather (6 + Neutral)
+| Weather | Odds | Favours | Kind |
+|---|---|---|---|
+| Neutral | 60% | — | consistent |
+| Speed + Tyre Management | ~7% | Speed · TM | consistent |
+| Consistency + Pit Crew | ~7% | Consistency · PC | consistent |
+| Acceleration + Reliability | ~7% | Acceleration · Reliability | consistent |
+| Endurance + Power | ~7% | Endurance · Power | consistent |
+| Aggression + Grip | ~7% | Aggression · Grip | consistent |
+| **Wet: Luck + Grip** | ~7% | Luck · Grip | **volatile** |
+
+- Favour = +10% × intensity on each stat. A weather's combo can match the track's.
+- **Wet is the only volatile weather,** the only one that slows the race, and the only one with wet tyres and a suspended pit rule.
+- **Wet patterns** (rolled from the race seed): passing shower · building storm · clearing · on and off.
+- **One Wet compound:** fast in the wet, slow and quick-wearing when dry. **The sim makes the pit calls** using strategy archetypes (some teams jump early, some wait). You own the team, not the pit wall.
+- **Rough forecast** before lights out ("rain likely mid-race"), never the exact laps.
+- **The pit rule (2 stops, all 3 compounds) is suspended in any race where rain falls.**
+
+## Build notes
+- **Dry favours are static for the race,** so they apply like gear and traits: field-wide multipliers at race build, reusing the card math (`applyCards`).
+- **Wet needs the engine hook** ([any stat ± N% on a timer](https://github.com/GrizzlyPax/Parabolica/issues/332)) plus lap-by-lap state, the wet tyre in tyre and pit logic, and the pit-rule suspension.
+- **Deleting 31 tracks and the old weathers moves the golden fingerprint.** Intended content change: bump the version.
+- Weather and track determinism stay as they are: same seed, same storm, on every device.
+
+## Later
+Volatile weathers in themed decks (raining frogs, blood moon) · more volatile weather (fog rolling in, gusts) · intermediates · more tracks + flavour names · calibration of the +10%.
