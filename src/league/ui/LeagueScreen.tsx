@@ -12,8 +12,7 @@ import { RaceEvent } from '../../RaceEngine';
 import { LeagueState, RaceDigest, LiveRace } from '../types';
 import { settleLeague, nextRaceAt, isSeasonOver, liveRaceSnapshot, LiveSnapshot } from '../settle';
 import { buildSeasonReport } from '../seasonReport';
-import { weatherForRace } from '../../data/weather';
-import { intrinsicTrackTags } from '../../data/trackTags';
+import { weatherForRace, isNeutralWeather } from '../../data/weather';
 import { saveLeagueState } from '../../storage/persistence';
 import { publishLeague, syncRemote, postDigest, leagueLink, RemoteError } from '../remote';
 import { getSeasonStandings, calculatePointsForPosition } from '../../types/season';
@@ -119,7 +118,7 @@ function DigestCard({ league, digest, open, onToggle }: {
           )}
         </span>
         <span className="digest-winner">
-          <TeamMarble color={winner?.color} accentColor={winner?.accentColor}
+          <TeamMarble color={winner?.color} ink={winner?.ink} number={winner?.number}
             emoji={winner?.emoji} size={20} slot={winner?.driverSlot} />
           <span>{winner?.fullName ?? '—'}</span>
         </span>
@@ -133,7 +132,7 @@ function DigestCard({ league, digest, open, onToggle }: {
               return (
                 <span key={id} className="digest-podium-spot">
                   <span className="digest-podium-pos">P{i + 1}</span>
-                  <TeamMarble color={d?.color} accentColor={d?.accentColor}
+                  <TeamMarble color={d?.color} ink={d?.ink} number={d?.number}
                     emoji={d?.emoji} size={20} slot={d?.driverSlot} />
                   <span>{d?.fullName}</span>
                 </span>
@@ -234,7 +233,7 @@ function DigestCard({ league, digest, open, onToggle }: {
                   {trace.strategies.map(s => (
                     <tr key={s.driverId} className={s.finalPosition === null ? 'dnf' : ''}>
                       <td className="strategy-pos">{s.finalPosition ?? 'DNF'}</td>
-                      <td><TeamMarble color={s.color} accentColor={s.accentColor} emoji={s.emoji} size={16} /></td>
+                      <td><TeamMarble color={s.color} ink={s.ink} emoji={s.emoji} size={16} /></td>
                       <td className="strategy-name">{s.name}</td>
                       <td className="strategy-stints">
                         {s.stints.map((c, i) => (
@@ -388,7 +387,7 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onOpenGrid,
   // Constructor standings: both seats tallied per team.
   const constructorStandings = useMemo(() => {
     const byTeam = new Map<string, {
-      kingdomId: string; name: string; emoji: string; color?: string; accentColor?: string;
+      kingdomId: string; name: string; emoji: string; color?: string; ink?: string;
       points: number; wins: number; podiums: number; dnfs: number;
     }>();
     for (const d of league.roster) {
@@ -401,7 +400,7 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onOpenGrid,
         name: team?.name ?? d.teamName ?? kingdomId,
         emoji: team?.emoji ?? d.emoji,
         color: d.color,
-        accentColor: d.accentColor,
+        ink: d.ink,
         points: 0, wins: 0, podiums: 0, dnfs: 0,
       };
       entry.points += stats.points;
@@ -446,7 +445,7 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onOpenGrid,
       return {
         id: kingdomId,
         color: lead?.color ?? '#888',
-        accentColor: lead?.accentColor,
+        ink: lead?.ink,
         values,
         label: team?.name ?? kingdomId,
         // Teams are known by their emoji — rendered as a marble so it
@@ -516,7 +515,8 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onOpenGrid,
         id: idx,
         name: s.label ?? String(s.id),
         color: s.color,
-        accentColor: s.accentColor ?? rd?.accentColor,
+        ink: s.ink ?? rd?.ink,
+        number: rd?.number,
         dashed: s.dashed,
         code: s.code ?? '',
         emoji: rd?.emoji ?? (s.marble ? s.code : undefined),
@@ -571,7 +571,7 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onOpenGrid,
             <h2><GameIcon name="race.finish" size={22} /> The season is complete</h2>
             {champion && (
               <p className="league-champion">
-                Champion: <TeamMarble color={champion.color} accentColor={champion.accentColor}
+                Champion: <TeamMarble color={champion.color} ink={champion.ink} number={champion.number}
                   emoji={champion.emoji} size={24} slot={champion.driverSlot} />{' '}
                 <strong>{champion.fullName}</strong>
                 {' '}— {standings[0].points} pts, {standings[0].wins} wins
@@ -614,7 +614,7 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onOpenGrid,
                 {(() => {
                   const track = getTrackById(live.trackId);
                   const weather = weatherForRace(league.leagueSeed, live.index);
-                  const wx = weather.id !== 'clear' ? ` ${weather.emoji}` : '';
+                  const wx = !isNeutralWeather(weather) ? ` ${weather.emoji}` : '';
                   return `R${live.index + 1} — ${track?.funEmoji ?? ''} ${track?.name ?? ''}${wx}`;
                 })()}
               </span>
@@ -627,7 +627,7 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onOpenGrid,
                       {snapshot.runningOrder.slice(0, 5).map(id => {
                         const d = driver(id);
                         return (
-                          <TeamMarble key={id} color={d?.color} accentColor={d?.accentColor}
+                          <TeamMarble key={id} color={d?.color} ink={d?.ink} number={d?.number}
                             emoji={d?.emoji} size={18} slot={d?.driverSlot} />
                         );
                       })}
@@ -658,7 +658,6 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onOpenGrid,
               const isNext = !settled && !isLiveRace && race.index === league.settledThrough + 1;
               const winner = settled ? driver(winnerByRace.get(race.index) ?? -1) : null;
               const forecast = weatherForRace(league.leagueSeed, race.index);
-              const tags = intrinsicTrackTags(race.trackId);
               const cls = `ribbon-cell ${settled ? 'settled' : ''} ${isLiveRace ? 'live' : ''} ${isNext ? 'next' : ''}`;
               return (
                 <button
@@ -674,7 +673,7 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onOpenGrid,
                   <span className="ribbon-track">{track?.funEmoji ?? <GameIcon name="race.finish" size={18} />}</span>
                   <span className="ribbon-foot">
                     {settled ? (
-                      <TeamMarble color={winner?.color} accentColor={winner?.accentColor}
+                      <TeamMarble color={winner?.color} ink={winner?.ink} number={winner?.number}
                         emoji={winner?.emoji} size={18} slot={winner?.driverSlot} />
                     ) : isLiveRace ? (
                       <span className="ribbon-live" aria-label="live" />
@@ -682,8 +681,7 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onOpenGrid,
                       <span className="ribbon-next-when">{nextAt !== null && nextAt > now ? formatCountdown(nextAt - now) : 'next'}</span>
                     ) : (
                       <span className="ribbon-conditions">
-                        {tags.slice(0, 1).map(t => <span key={t.id} title={t.name}>{t.emoji}</span>)}
-                        {forecast.id !== 'clear' && <span title={forecast.name}>{forecast.emoji}</span>}
+                        {!isNeutralWeather(forecast) && <span title={forecast.name}>{forecast.emoji}</span>}
                       </span>
                     )}
                   </span>
@@ -796,7 +794,7 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onOpenGrid,
                           <tr key={s.driverId}>
                             <td className="standings-pos">{i + 1}</td>
                             <td className="standings-marble">
-                              <TeamMarble color={d?.color} accentColor={d?.accentColor}
+                              <TeamMarble color={d?.color} ink={d?.ink} number={d?.number}
                                 emoji={d?.emoji} slot={d?.driverSlot} />
                             </td>
                             <td className="standings-name">{d?.fullName}</td>
@@ -819,7 +817,7 @@ function LeagueScreen({ league, onLeagueUpdate, onWatchLive, onExit, onOpenGrid,
                         <tr key={t.kingdomId}>
                           <td className="standings-pos">{i + 1}</td>
                           <td className="standings-marble">
-                            <TeamMarble color={t.color} accentColor={t.accentColor} emoji={t.emoji} />
+                            <TeamMarble color={t.color} ink={t.ink} emoji={t.emoji} />
                           </td>
                           <td className="standings-name">{t.name}</td>
                           <td className="standings-pts">{t.points}</td>

@@ -14,7 +14,7 @@ export function DeckTab() {
   return (
     <>
       <section className="rs-row rc-explain">
-        <p><b>The card deck, not in the sim yet.</b> The Motorsport base deck: {MOTORSPORT_DECK.length} cards generated from the stat grid (src/cards/deck.ts). Races still run on tags until genesis (#313) and Quick Race (#337) deal cards, so there's nothing to measure here yet.</p>
+        <p><b>The card deck.</b> The Motorsport base deck: {MOTORSPORT_DECK.length} cards generated from the stat grid (src/cards/deck.ts). Quick Race and Season Mode deal trait cards at genesis and bake them into the stats; the lab's calibration still measures tags (leagues and Race Control move to cards in v0.6). Nothing to measure here yet.</p>
         <p className="rc-bands">Ladder: {RARITIES.map(r => <span key={r}><span className={`rarity-word rarity-${r}`}>{r}</span> {METAL_LADDER[r].stats} stat{METAL_LADDER[r].stats > 1 ? 's' : ''} × +{METAL_LADDER[r].pct}%</span>)}</p>
       </section>
       <section className="rs-row">

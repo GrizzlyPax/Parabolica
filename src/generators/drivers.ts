@@ -1,7 +1,8 @@
 import { generateDriverName } from './names';
 import { DriverStats } from '../RaceEngine';
-import { TEAMS, Team, DriverSlot, getTeamsByIds } from '../data/teams';
+import { TEAMS, STANDARD_GRID_TEAMS, Team, DriverSlot, getTeamsByIds } from '../data/teams';
 import { Rng, pick } from '../engine/rng';
+import { inkFor } from '../icons/ink';
 
 export interface GeneratedDriver {
   id: number;
@@ -14,7 +15,7 @@ export interface GeneratedDriver {
   teamName: string;
   kingdomId: string;      // Reference to team (legacy name kept for compatibility)
   color: string;
-  accentColor: string;    // Secondary/accent team color
+  ink: string;            // Text/icon colour on the team colour (docs/ICONS.md)
   driverSlot: DriverSlot; // 1 = primary driver, 2 = secondary driver
   stats: DriverStats;
   backstory: string;
@@ -129,7 +130,7 @@ function generateStats(rng: Rng): DriverStats {
 /** A driver before any team: the person, their stats and their story. Season
  * Mode's shared pool (#313) drafts these; a league driver is one of these plus
  * a team. */
-export type PoolDriver = Omit<GeneratedDriver, 'emoji' | 'teamName' | 'kingdomId' | 'color' | 'accentColor' | 'driverSlot'>;
+export type PoolDriver = Omit<GeneratedDriver, 'emoji' | 'teamName' | 'kingdomId' | 'color' | 'ink' | 'driverSlot'>;
 
 /** Name, backstory, quirk, stats — in this rng order, which the golden
  * fingerprint pins. Both the team and the pool paths come through here. */
@@ -173,7 +174,7 @@ export function generateDriverForTeam(
     teamName: team.name,
     kingdomId: team.id,  // Legacy field name
     color: team.color,
-    accentColor: team.accentColor,
+    ink: team.ink ?? inkFor(team.color),
     driverSlot: slot,
   };
 }
@@ -181,12 +182,12 @@ export function generateDriverForTeam(
 // Legacy alias
 export const generateDriverForKingdom = generateDriverForTeam;
 
-// Generate a full roster of drivers (2 per team)
+// Generate a standard grid's roster (2 per team, the first STANDARD_GRID_TEAMS teams)
 export function generateRoster(rng: Rng = Math.random): GeneratedDriver[] {
   const drivers: GeneratedDriver[] = [];
   let id = 0;
 
-  for (const team of TEAMS) {
+  for (const team of TEAMS.slice(0, STANDARD_GRID_TEAMS)) {
     // Generate two drivers for each team
     drivers.push(generateDriverForTeam(id++, team, 1, rng)); // Primary driver
     drivers.push(generateDriverForTeam(id++, team, 2, rng)); // Secondary driver

@@ -9,11 +9,9 @@ import type { RuleCard } from '../rules/ruleset';
 import { ACQUISITION_RULES, AcquisitionRule, AcquisitionTrigger } from './acquisitions';
 import { IN_RACE_RULES, InRaceRule, InRaceDuration } from './inRace';
 import { WEATHER_TYPES } from './weather';
-import { TRACK_TAGS, intrinsicTrackTags } from './trackTags';
-import { INFLICTIONS } from './inflictions';
 import { TAG_CALIBRATION, calibrationFor } from './tagCalibration';
 import { describeCalibration } from '../racecontrol/calibrate';
-import { CURRENT_TRACKS, HISTORIC_TRACKS, LAYOUTS } from '../generators/tracks';
+import { CURRENT_TRACKS, HISTORIC_TRACKS } from '../generators/tracks';
 import { CURRENT_TEAMS, HISTORIC_TEAMS } from './teams';
 import { BASE_DECK_TEAMS, TEAM_KINDS } from './deckTeams';
 import { BASE_DECK_TRACKS } from './deckTracks';
@@ -40,7 +38,7 @@ export function effectsOf(fx: { speedModifier?: number; consistencyModifier?: nu
   return out;
 }
 
-export type TagGroup = 'genesis' | 'acquired' | 'in-race' | 'condition';
+export type TagGroup = 'genesis' | 'acquired' | 'in-race';
 
 export interface GlossaryTag {
   tag: Tag;
@@ -68,7 +66,6 @@ export function describeAction(a: TagAction): string {
 }
 
 export function tagGroup(t: Tag): TagGroup {
-  if (t.target === 'condition') return 'condition';
   if (t.sources?.includes('in-race')) return 'in-race';
   if (t.sources?.includes('acquired')) return 'acquired';
   return 'genesis';
@@ -122,7 +119,6 @@ export function buildGlossaryTags(): GlossaryTag[] {
       source = rules.length ? rules.map(r => `mid-race, after ${EVENT_WORDS[r.on] ?? r.on}`).join('; ') : 'no rule awards it yet';
       lasts = rules.length ? describeInRaceDuration(rules[0].duration) : lasts;
     }
-    if (group === 'condition') { source = 'stamped by a track event for one race'; lasts = 'one race'; }
     return { tag, group, fires, lasts, effects: effectsOf(tag.effects), source, does: (tag.afterRace ?? []).map(describeAction) };
   });
 }
@@ -133,8 +129,6 @@ export interface Glossary {
   acquisitionRules: AcquisitionRule[];
   inRaceRules: InRaceRule[];
   weather: typeof WEATHER_TYPES;
-  trackTags: typeof TRACK_TAGS;
-  inflictions: typeof INFLICTIONS;
   tracks: typeof CURRENT_TRACKS;
   historicTracks: typeof HISTORIC_TRACKS;
   /** The 28 base-deck teams: shown now, on the grid after #356. */
@@ -154,7 +148,7 @@ export function buildGlossary(): Glossary {
   const tags = buildGlossaryTags();
   return {
     tags, cards: RULE_CARDS, acquisitionRules: ACQUISITION_RULES, inRaceRules: IN_RACE_RULES,
-    weather: WEATHER_TYPES, trackTags: TRACK_TAGS, inflictions: INFLICTIONS, tracks: CURRENT_TRACKS,
+    weather: WEATHER_TYPES, tracks: CURRENT_TRACKS,
     historicTracks: HISTORIC_TRACKS, deckTeams: BASE_DECK_TEAMS, deckTracks: BASE_DECK_TRACKS, deckWeather: BASE_DECK_WEATHER, teams: CURRENT_TEAMS, historicTeams: HISTORIC_TEAMS, gods: GODS,
     pools: [
       { id: 'names-intl-first', title: `Driver first names · international (${Math.round(NAME_TIER_WEIGHTS.international * 100)}% of drivers)`, where: 'src/generators/names.ts INTL_FIRST_NAMES', size: INTL_FIRST_NAMES.length, samples: INTL_FIRST_NAMES.slice(0, 8) },
@@ -176,9 +170,8 @@ export function buildGlossary(): Glossary {
       genesis: tags.filter(t => t.group === 'genesis').length,
       acquired: tags.filter(t => t.group === 'acquired').length,
       inRace: tags.filter(t => t.group === 'in-race').length,
-      condition: tags.filter(t => t.group === 'condition').length,
       cards: RULE_CARDS.length, rules: ACQUISITION_RULES.length + IN_RACE_RULES.length,
-      weather: WEATHER_TYPES.length, trackTags: TRACK_TAGS.length, inflictions: INFLICTIONS.length, tracks: CURRENT_TRACKS.length,
+      weather: WEATHER_TYPES.length, tracks: CURRENT_TRACKS.length,
       historicTracks: HISTORIC_TRACKS.length, deckTeams: BASE_DECK_TEAMS.length, deckTracks: BASE_DECK_TRACKS.length, deckWeather: BASE_DECK_WEATHER.length, teams: CURRENT_TEAMS.length, historicTeams: HISTORIC_TEAMS.length, gods: GODS.length,
     },
   };
@@ -189,23 +182,19 @@ export function renderGlossaryMd(g: Glossary, version: string): string {
   const L: string[] = [];
   const fx = (e: GlossaryEffect[]) => e.length ? e.map(x => `${x.value} ${x.label}`).join(', ') : '—';
   L.push(`# Parabolica World Deck`, '', `*Everything in the sim and the world, generated from the data modules by \`npm run glossary\` — do not edit by hand; edit the source files named in each section and re-run. Engine v${version}. How to add content: docs/WORLD_DECK.md.*`, '');
-  L.push(`${g.counts.deckTeams} base-deck teams · ${g.counts.teams} teams on today's grid (+${g.counts.historicTeams} historic) · ${g.counts.tracks} tracks (+${g.counts.historicTracks} historic) · ${g.counts.tags} tags (${g.counts.genesis} genesis · ${g.counts.acquired} acquired · ${g.counts.inRace} in-race · ${g.counts.condition} condition) · ${g.counts.cards} rule cards · ${g.counts.rules} rules · ${g.counts.weather} weathers · ${g.counts.trackTags} track characters · ${g.counts.inflictions} inflictions · ${g.counts.gods} gods`, '');
-  L.push('## Base-deck teams', '', '*Source: `src/data/deckTeams.ts` (from docs/story/team-identity.md; not canon yet). The 28 world factions, seven of each kind. Shown in the World Deck now; they replace today\'s grid when the sim switches (#356). Logo = the icon in `ink` on the team colour.*', '');
+  L.push(`${g.counts.deckTeams} teams · ${g.counts.tracks} tracks · ${g.counts.tags} tags (${g.counts.genesis} genesis · ${g.counts.acquired} acquired · ${g.counts.inRace} in-race) · ${g.counts.cards} rule cards · ${g.counts.rules} rules · ${g.counts.weather} weathers · ${g.counts.gods} gods`, '');
+  L.push('## Base-deck teams', '', '*Source: `src/data/deckTeams.ts` (from docs/story/team-identity.md; not canon yet). The 28 world factions, seven of each kind: Quick Race draws its 11 and Season Mode its CPU teams from these. Logo = the icon in `ink` on the team colour.*', '');
   for (const k of TEAM_KINDS) {
     L.push(`### ${k.title}`, '', '| Team | Colour · ink | Icon | Line |', '|---|---|---|---|');
     for (const t of g.deckTeams.filter(x => x.kind === k.kind)) L.push(`| **${t.name}** \`${t.id}\` | ${t.color} · ${t.ink} | \`${t.iconId}\` | ${t.description} |`);
     L.push('');
   }
   const favs = (f: { stat: keyof typeof STAT_LABELS; pct: number }[]) => f.length ? f.map(x => `+${x.pct}% ${STAT_LABELS[x.stat]}`).join(' · ') : '—';
-  L.push('## Tracks (v0.5)', '', '*Source: `src/data/deckTracks.ts` (docs/TRACKS_WEATHER.md). Six stat-combo tracks; each favours one driver stat and one car/team stat for the race, field-wide. Raced once the sim switches (#359); until then races use the themed tracks below.*', '', '| Track | Favours | Layout |', '|---|---|---|');
+  L.push('## Tracks', '', '*Source: `src/data/deckTracks.ts` (docs/TRACKS_WEATHER.md). Six stat-combo tracks; each favours one driver stat and one car/team stat for the race, field-wide (+10%, through the card math at race build). Every race and season calendar draws from these; the 31 themed circuits, track events and track characters retired with Tracks & Weather v2.*', '', '| Track | Favours | Layout |', '|---|---|---|');
   for (const t of g.deckTracks) L.push(`| **${t.name}** \`${t.id}\` | ${favs(t.favours)} | ${t.layoutId} |`);
-  L.push('', '## Weather (v0.5)', '', '*Source: `src/data/deckWeather.ts`. Neutral + five dry weathers, favours × intensity, stacking with the track. No rain until Wet arrives in v0.6.*', '', '| Weather | Odds | Favours |', '|---|---|---|');
+  L.push('', '## Weather', '', '*Source: `src/data/deckWeather.ts`. Neutral + five dry weathers, favours × intensity, stacking with the track. No rain until Wet arrives in v0.6; the old weathers and the inflictions retired (the inflictions are parked as Horror-deck material).*', '', '| Weather | Odds | Favours |', '|---|---|---|');
   for (const w of g.deckWeather) L.push(`| **${w.name}** \`${w.id}\` | ${w.odds}% | ${favs(w.favours)} |`);
   L.push('');
-  L.push('## Teams on today\'s grid (retiring)', '', '*Source: `src/data/teams.ts`. Quick Race and leagues still race these until #356 swaps in the base deck.*', '', '| Team | Colours | Vibe |', '|---|---|---|');
-  for (const t of g.teams) L.push(`| ${t.emoji} **${t.name}** \`${t.id}\` | ${t.color} / ${t.accentColor} | ${t.description} |`);
-  L.push('', '### Historic teams (unlockable)', '', '| Team | Colours | Vibe |', '|---|---|---|');
-  for (const t of g.historicTeams) L.push(`| ${t.emoji} **${t.name}** \`${t.id}\` | ${t.color} / ${t.accentColor} | ${t.description} |`);
   L.push('', '## Gods (retiring)', '', '*Source: `src/league/gods.ts`. Parked: founding no longer asks, and gods retire with Commissioner leagues (#339). Not shown in the World Deck.*', '', '| God | Epithet | Hunger | Appetite |', '|---|---|---|---|');
   for (const d of g.gods) L.push(`| ${d.emoji} **${d.name}** \`${d.id}\` | ${d.epithet} | ${d.hunger} | ${d.appetite} |`);
   L.push('');
@@ -221,8 +210,8 @@ export function renderGlossaryMd(g: Glossary, version: string): string {
     '| Commissionary | Attached by you, from the next race (`attach-tag`) |',
     '| Acquired | Awarded by the settle loop for what happened in a race (`acquire-tag`), from the next race |',
     '| In-race | Picked up mid-race from a race event; may expire by lap, at the next stop, or carry over |',
-    '| Condition | Stamped on drivers by a track event for that race only |', '');
-  const groups: [TagGroup, string][] = [['genesis', 'Genesis tags'], ['acquired', 'Acquired tags'], ['in-race', 'In-race tags'], ['condition', 'Condition tags']];
+    '');
+  const groups: [TagGroup, string][] = [['genesis', 'Genesis tags'], ['acquired', 'Acquired tags'], ['in-race', 'In-race tags']];
   for (const [grp, title] of groups) {
     const measured = grp === 'genesis';
     L.push(`## ${title}`, '');
@@ -240,19 +229,6 @@ export function renderGlossaryMd(g: Glossary, version: string): string {
   for (const r of g.acquisitionRules) { const t = ALL_TAGS.find(x => x.id === r.tagId); L.push(`| \`${r.id}\` | ${r.family} | ${describeTrigger(r.when)} | ${t?.emoji ?? ''} ${t?.name ?? r.tagId} |`); }
   L.push('', '## In-race rules (during a race)', '', '| Rule | After | Awards | Lasts |', '|---|---|---|---|');
   for (const r of g.inRaceRules) { const t = ALL_TAGS.find(x => x.id === r.tagId); L.push(`| \`${r.id}\` | ${EVENT_WORDS[r.on] ?? r.on}${r.match ? ` (${String(r.match).replace(/^\/\^?|\/$/g, '')})` : ''} | ${t?.emoji ?? ''} ${t?.name ?? r.tagId} | ${describeInRaceDuration(r.duration)} |`); }
-  L.push('', '## Weather', '', '| Weather | Odds (default) | Stamps | Field-wide at full intensity |', '|---|---|---|---|');
-  const total = g.weather.reduce((s, w) => s + w.weight, 0);
-  for (const w of g.weather) L.push(`| ${w.emoji} **${w.name}** \`${w.id}\` | ${Math.round(w.weight / total * 100)}% | ${w.conditions.join(', ') || '—'} | ${fx(effectsOf(w.baseEffects))} |`);
-  L.push('', '## Track characters', '', '| Character | Field-wide | Stamps |', '|---|---|---|');
-  for (const t of g.trackTags) L.push(`| ${t.emoji} **${t.name}** \`${t.id}\` | ${fx(effectsOf(t.passive ?? {}))} | ${(t.conditions ?? []).join(', ') || '—'} |`);
-  L.push('', '## Inflictions (mid-race, from conditions)', '', '| Infliction | Needs | Effect | Lasts |', '|---|---|---|---|');
-  for (const i of g.inflictions) L.push(`| ${i.emoji} **${i.name}** \`${i.id}\` | ${i.requiresCondition.join(', ')} | ${fx(effectsOf(i.effects))} | ~${Math.round(i.durationTicks / 10)}s |`);
-  const layoutName = (t: { layout: { id: string } }) => Object.entries(LAYOUTS).find(([, v]) => v.id === t.layout.id)?.[0] ?? t.layout.id;
-  const trackRow = (t: typeof g.tracks[number]) => { const tt = g.trackTags.filter(x => intrinsicTrackTags(t.id).some(i => i.id === x.id)); return `| ${t.emoji} ${t.funEmoji} **${t.name}** \`${t.id}\` | ${t.laps} | ${t.length}m | ${layoutName(t)} | ${tt.map(x => `${x.emoji} ${x.name}`).join(', ') || '—'} | ${t.event ? `${t.event.emoji} ${t.event.name}` : '—'} | ${t.description} |`; };
-  L.push('', '## Tracks', '', `*Source: \`src/generators/tracks.ts\`. Layouts: ${Object.keys(LAYOUTS).join(', ')}. Character is assigned by hashing the id until tracks declare their own.*`, '', '| Track | Laps | Length | Layout | Character | Event | Vibe |', '|---|---|---|---|---|---|---|');
-  for (const t of g.tracks) L.push(trackRow(t));
-  L.push('', '### Historic tracks (unlockable)', '', '| Track | Laps | Length | Layout | Character | Event | Vibe |', '|---|---|---|---|---|---|---|');
-  for (const t of g.historicTracks) L.push(trackRow(t));
   L.push('', '## Flavour pools', '', '*Names, backstories, quirks. Each is a plain list in the file named; add lines, keep the voice.*', '', '| Pool | Size | Where | Samples |', '|---|---|---|---|');
   for (const p of g.pools) L.push(`| **${p.title}** | ${p.size} | \`${p.where}\` | ${p.samples.map(x => x.replace(/\|/g, '\\|')).join(' · ')} |`);
   L.push('');

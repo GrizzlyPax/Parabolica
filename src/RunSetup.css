@@ -98,6 +98,8 @@
 .rs-team { border-top: 1px solid var(--pw-hairline); border-left: 3px solid var(--team-color, var(--pw-border-strong)); padding: 10px 0 10px 12px; display: flex; flex-direction: column; gap: 6px; }
 .rs-team-head { display: flex; align-items: center; gap: 8px; }
 .rs-team-marble { width: 22px; height: 22px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: var(--team-color, var(--pw-border-strong)); font-size: 12px; }
+.rs-driver-number { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 18px; padding: 0 4px; font-family: var(--look-data); font-size: 11px; font-weight: 600; border-radius: 2px; margin-right: 4px; }
+.rs-driver-tags { display: inline-flex; gap: 4px; }
 .rs-team-name { font-family: var(--look-display); font-weight: 700; font-size: 17px; color: var(--pw-text-1); }
 .rs-team-car { margin-left: auto; font-family: var(--look-data); font-size: 11px; color: var(--pw-text-3); white-space: nowrap; }
 .rs-driver { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 10px; min-height: 28px; font-size: 15px; }

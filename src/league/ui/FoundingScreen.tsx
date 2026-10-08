@@ -10,6 +10,7 @@ import { randomSeed } from '../../engine/rng';
 import { DraftPanel, emptyFantasy } from '../../fantasy/DraftPanel';
 import { draftComplete, type FantasyConfig } from '../../fantasy/types';
 import { CURRENT_TEAMS, HISTORIC_TEAMS, makeCustomTeam, Team } from '../../data/teams';
+import { inkFor } from '../../icons/ink';
 import { generateTeamIdentities } from '../../generators/teamIdentity';
 import { ruleCardsForScope, RULE_CARDS_BY_ID } from '../../data/ruleCards';
 import { resolveRuleset, describeRuleset, describeChance, describeOdds, Ruleset } from '../../rules/ruleset';
@@ -70,7 +71,7 @@ function FoundingScreen({ onFound, onBack }: FoundingScreenProps) {
   );
   const [customTeams, setCustomTeams] = useState<Team[]>([]);
   // The in-progress custom team (null = form closed).
-  const [draft, setDraft] = useState<{ name: string; emoji: string; color: string; accent: string } | null>(null);
+  const [draft, setDraft] = useState<{ name: string; emoji: string; color: string } | null>(null);
 
   const teamCount = selectedIds.size + customTeams.length;
   const teamsOk = teamCount >= MIN_TEAMS && teamCount <= MAX_TEAMS;
@@ -86,16 +87,16 @@ function FoundingScreen({ onFound, onBack }: FoundingScreenProps) {
 
   const openDraft = () => {
     const [id] = generateTeamIdentities(Math.random, 1);
-    setDraft({ name: '', emoji: id.emoji, color: id.color, accent: id.accentColor });
+    setDraft({ name: '', emoji: id.emoji, color: id.color });
   };
   const rollDraftLook = () => {
     const [id] = generateTeamIdentities(Math.random, 1);
-    setDraft(d => d && { ...d, emoji: id.emoji, color: id.color, accent: id.accentColor });
+    setDraft(d => d && { ...d, emoji: id.emoji, color: id.color });
   };
   const addCustomTeam = () => {
     if (!draft || teamCount >= MAX_TEAMS) return;
     const suffix = Math.random().toString(36).slice(2, 6);
-    setCustomTeams(prev => [...prev, makeCustomTeam(draft.name, draft.emoji, draft.color, draft.accent, suffix)]);
+    setCustomTeams(prev => [...prev, makeCustomTeam(draft.name, draft.emoji, draft.color, suffix)]);
     setDraft(null);
   };
 
@@ -182,7 +183,7 @@ function FoundingScreen({ onFound, onBack }: FoundingScreenProps) {
                 key={t.id}
                 type="button"
                 className={`team-chip ${selectedIds.has(t.id) ? 'selected' : ''}`}
-                style={{ '--chip-color': t.color, '--chip-accent': t.accentColor } as React.CSSProperties}
+                style={{ '--chip-color': t.color, '--chip-accent': t.ink } as React.CSSProperties}
                 onClick={() => toggleTeam(t.id)}
               >
                 <span className="team-chip-emoji">{t.emoji}</span>
@@ -198,7 +199,7 @@ function FoundingScreen({ onFound, onBack }: FoundingScreenProps) {
                 key={t.id}
                 type="button"
                 className={`team-chip ${selectedIds.has(t.id) ? 'selected' : ''}`}
-                style={{ '--chip-color': t.color, '--chip-accent': t.accentColor } as React.CSSProperties}
+                style={{ '--chip-color': t.color, '--chip-accent': t.ink } as React.CSSProperties}
                 onClick={() => toggleTeam(t.id)}
               >
                 <span className="team-chip-emoji">{t.emoji}</span>
@@ -216,7 +217,7 @@ function FoundingScreen({ onFound, onBack }: FoundingScreenProps) {
                     key={t.id}
                     type="button"
                     className="team-chip selected custom"
-                    style={{ '--chip-color': t.color, '--chip-accent': t.accentColor } as React.CSSProperties}
+                    style={{ '--chip-color': t.color, '--chip-accent': t.ink } as React.CSSProperties}
                     onClick={() => setCustomTeams(prev => prev.filter(c => c.id !== t.id))}
                     title="Remove"
                   >
@@ -230,7 +231,7 @@ function FoundingScreen({ onFound, onBack }: FoundingScreenProps) {
           )}
 
           {draft ? (
-            <div className="custom-team-form" style={{ '--chip-color': draft.color, '--chip-accent': draft.accent } as React.CSSProperties}>
+            <div className="custom-team-form" style={{ '--chip-color': draft.color, '--chip-accent': inkFor(draft.color) } as React.CSSProperties}>
               <div className="custom-team-preview">{draft.emoji || <GameIcon name="race.finish" size={22} />}</div>
               <input
                 className="custom-team-name"
@@ -251,9 +252,6 @@ function FoundingScreen({ onFound, onBack }: FoundingScreenProps) {
               />
               <label className="custom-team-color" title="Primary color">
                 <input type="color" value={draft.color} onChange={e => setDraft(d => d && { ...d, color: e.target.value })} />
-              </label>
-              <label className="custom-team-color" title="Accent color">
-                <input type="color" value={draft.accent} onChange={e => setDraft(d => d && { ...d, accent: e.target.value })} />
               </label>
               <button type="button" className="custom-team-roll" onClick={rollDraftLook} title="Random look" aria-label="Random look"><GameIcon name="ui.restart" size={18} /></button>
               <button type="button" className="custom-team-add" onClick={addCustomTeam} disabled={teamCount >= MAX_TEAMS}>Add</button>

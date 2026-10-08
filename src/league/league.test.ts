@@ -64,7 +64,7 @@ describe('league creation', () => {
   it('seats player-created custom teams on the grid (identity baked into the roster)', () => {
     const custom = {
       id: 'custom-banana-zzzz', name: 'Team Banana', emoji: '🍌',
-      color: '#ffe135', accentColor: '#7a5c00',
+      color: '#ffe135', ink: '#0b0b0c',
       description: 'custom', isCustom: true,
     };
     const setup = makeSetup({ teamIds: TEAMS.slice(0, 3).map(t => t.id), customTeams: [custom] });
@@ -398,7 +398,7 @@ describe('weather (C2)', () => {
     // Each digest's weather matches what weatherForRace says, and replays exactly.
     a.digests.forEach((d, i) => {
       const w = weatherForRace(a.leagueSeed, d.index);
-      const expected = w.id === 'clear' ? undefined : { id: w.id, name: w.name, emoji: w.emoji };
+      const expected = w.id === 'neutral' ? undefined : { id: w.id, name: w.name, emoji: w.emoji };
       expect(d.weather).toEqual(expected);
       expect(b.digests[i].weather).toEqual(d.weather);
     });

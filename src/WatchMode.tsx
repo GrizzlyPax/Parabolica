@@ -1,4 +1,6 @@
 import { fantasyStandings, fantasyHex, type FantasyConfig } from './fantasy/types';
+import { isNeutralWeather } from './data/weather';
+import { favourText } from './cards/favourText';
 import RaceEngine, { Driver, RaceConfig, RaceState, TrackInfo, RaceEvent, EffectStackEntry } from './RaceEngine';
 import { useMemo, useRef, useEffect, useState } from 'react';
 import {
@@ -566,7 +568,7 @@ function WatchMode({
       // Add to status effects (persists for timing tower display)
       const statusToAdd: StatusEffect[] = newEffects.map(e => ({
         driverId: e.driverId,
-        emoji: e.emoji || trackInfo?.event?.emoji || '⚡',
+        emoji: e.emoji || '⚡',
         expiresAtTick: raceState.totalTicks + 500,
       }));
       setStatusEffects(prev => [...prev, ...statusToAdd]);
@@ -975,8 +977,7 @@ function WatchMode({
   const headerConditions = useMemo(() => {
     const chips: { emoji: string; label: string }[] = [];
     const weather = engine.getWeather();
-    if (weather && weather.id !== 'clear') chips.push({ emoji: weather.emoji, label: weather.name });
-    for (const tt of engine.getTrackTags()) chips.push({ emoji: tt.emoji, label: tt.name });
+    if (weather && !isNeutralWeather(weather)) chips.push({ emoji: weather.emoji, label: weather.name });
     return chips;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [engine, trackInfo]);
@@ -985,8 +986,8 @@ function WatchMode({
   const buildReport = () => {
     const weather = engine.getWeather();
     const conditions = [
-      ...(weather && weather.id !== 'clear' ? [`${weather.emoji} ${weather.name}${weather.intensity < 1 ? ` (${Math.round(weather.intensity * 100)}%)` : ''}`] : []),
-      ...engine.getTrackTags().map(t => `${t.emoji} ${t.name}`),
+      ...(weather && !isNeutralWeather(weather) ? [`${weather.emoji} ${weather.name}${weather.intensity < 1 ? ` (${Math.round(weather.intensity * 100)}%)` : ''}`] : []),
+      ...(trackInfo?.favours?.length ? [`${trackInfo.name}: ${favourText(trackInfo.favours)}`] : []),
     ];
     const teamIds = Array.from(new Set(drivers.map(d => d.kingdomId).filter((k): k is string => !!k)));
     return buildRaceReportMd(
@@ -1289,7 +1290,7 @@ function WatchMode({
               </section>
 
               <section className="bf-footer">
-                <ConditionsPanel weather={engine.getWeather()} trackTags={engine.getTrackTags()} />
+                <ConditionsPanel weather={engine.getWeather()} trackFavours={trackInfo?.favours ?? []} />
                 <div className="bf-strips">
                   <TrackStrip
                     drivers={drivers}
@@ -1321,12 +1322,6 @@ function WatchMode({
                   <button
                     className="bf-copy-report-btn"
                     onClick={async () => {
-                      const weather = engine.getWeather();
-                      const conditions = [
-                        ...(weather && weather.id !== 'clear' ? [`${weather.emoji} ${weather.name}`] : []),
-                        ...engine.getTrackTags().map(t => `${t.emoji} ${t.name}`),
-                      ];
-                      void conditions;
                       const md = buildReport();
                       try {
                         await navigator.clipboard.writeText(md);

@@ -94,8 +94,7 @@ describe('team identity (#183)', () => {
     expect(new Set(ids.map(i => i.emoji)).size).toBe(11); // no repeats across the grid
     for (const id of ids) {
       expect(id.color).toMatch(/^#[0-9a-f]{6}$/);
-      expect(id.accentColor).toMatch(/^#[0-9a-f]{6}$/);
-      expect(id.accentColor).not.toBe(id.color);
+      expect(['#ffffff', '#0b0b0c']).toContain(id.ink);
     }
   });
 

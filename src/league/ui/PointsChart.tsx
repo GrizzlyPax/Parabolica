@@ -18,10 +18,10 @@ export interface ChartSeries {
   label?: string;
   /** 3-letter code shown at the line's end for top series. */
   code?: string;
-  /** Render the code as a team marble (emoji on team color, accent ring)
-   * instead of text — bare emoji is illegible on the dark background. */
+  /** Render the code as a team marble (the code in the team's ink on the team
+   * colour) instead of text — bare emoji is illegible on the dark background. */
   marble?: boolean;
-  accentColor?: string;
+  ink?: string;
 }
 
 interface PointsChartProps {
@@ -58,7 +58,7 @@ function PointsChart({ series, raceCount, viewH }: PointsChartProps) {
     .filter(s => s.code)
     .map(s => ({
       code: s.code!, color: s.color, dashed: s.dashed,
-      marble: s.marble, accentColor: s.accentColor,
+      marble: s.marble, ink: s.ink,
       y: y(finalValue(s)),
     }))
     .sort((a, b) => a.y - b.y);
@@ -131,7 +131,7 @@ function PointsChart({ series, raceCount, viewH }: PointsChartProps) {
             cy={l.y}
             r={9}
             fill={l.color}
-            stroke={l.accentColor || '#fff'}
+            stroke={l.ink || '#fff'}
             strokeWidth={1.8}
           />
           <text

@@ -209,7 +209,7 @@ export function seasonRoster(pool: SeasonPool, rosters: TeamRoster[], lineups: L
         shortName: driver.shortName,
         emoji: identity.emoji,
         color: identity.color,
-        accentColor: identity.ink,
+        ink: identity.ink,
         teamName: identity.name,
         kingdomId: team.id,
         driverSlot: (slot + 1) as 1 | 2,

@@ -402,13 +402,13 @@ function TrackMap({
                 cy={0}
                 r={radius}
                 fill={driver.color}
-                stroke={driver.accentColor || '#fff'}
+                stroke={driver.ink || '#fff'}
                 strokeWidth={strokeWidth}
                 opacity={opacity}
                 className="marker-circle"
               />
 
-              {/* Emoji inside marker for focused and highlighted (podium) drivers */}
+              {/* Racing number (in the team's ink) inside the marker for focused and highlighted (podium) drivers */}
               {(isFocused || isHighlighted) && !isDNF && (
                 <text
                   x={0}
@@ -416,9 +416,9 @@ function TrackMap({
                   textAnchor="middle"
                   dominantBaseline="central"
                   className="marker-emoji"
-                  style={{ fontSize: isFocused ? '12px' : '10px' }}
+                  style={{ fontSize: isFocused ? '11px' : '9px', fill: driver.ink || '#fff', fontFamily: 'var(--look-data, monospace)', fontWeight: 600 }}
                 >
-                  {driver.emoji}
+                  {driver.number ?? driver.emoji}
                 </text>
               )}
 

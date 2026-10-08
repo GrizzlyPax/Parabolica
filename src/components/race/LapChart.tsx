@@ -18,10 +18,11 @@ export interface LapChartSeries {
   id: number;
   name: string;
   color: string;
-  accentColor?: string;
+  ink?: string;
   dashed?: boolean;
   code: string;
   emoji?: string;
+  number?: number;
   /** Position (1-based) at each sampled lap; null = not classified (DNF/after). */
   positions: (number | null)[];
   /** Lap numbers at which this driver pitted. */
@@ -204,9 +205,9 @@ function LapChart({ series, laps, totalLaps, fieldSize, scSampleIdx, focusedDriv
               <>
                 <text x={gx + 26} y={l.ly} textAnchor="end" dominantBaseline="central"
                   className={`lap-rank ${focused ? 'focused' : ''} ${l.dnf ? 'dnf' : ''}`}>{l.label}</text>
-                <circle cx={gx + 41} cy={l.ly} r={8} fill={l.s.color} stroke={l.s.accentColor || '#fff'} strokeWidth={1.6} />
-                <text x={gx + 41} y={l.ly} textAnchor="middle" dominantBaseline="central" style={{ fontSize: '8px' }}>
-                  {l.s.emoji || l.s.code.slice(0, 1)}
+                <circle cx={gx + 41} cy={l.ly} r={8} fill={l.s.color} stroke={l.s.ink || '#fff'} strokeWidth={1.6} />
+                <text x={gx + 41} y={l.ly} textAnchor="middle" dominantBaseline="central" style={{ fontSize: '8px', fill: l.s.ink || '#fff', fontWeight: 600 }}>
+                  {l.s.number ?? l.s.emoji ?? l.s.code.slice(0, 1)}
                 </text>
                 <text x={gx + 55} y={l.ly} dominantBaseline="central"
                   className={`lap-name ${focused ? 'focused' : ''}`}>
@@ -215,9 +216,9 @@ function LapChart({ series, laps, totalLaps, fieldSize, scSampleIdx, focusedDriv
               </>
             ) : l.s.marble ? (
               <>
-                <circle cx={gx + 18} cy={l.ly} r={9} fill={l.s.color} stroke={l.s.accentColor || '#fff'} strokeWidth={1.8} />
-                <text x={gx + 18} y={l.ly} textAnchor="middle" dominantBaseline="central" style={{ fontSize: '10px' }}>
-                  {l.s.emoji || l.s.code.slice(0, 1)}
+                <circle cx={gx + 18} cy={l.ly} r={9} fill={l.s.color} stroke={l.s.ink || '#fff'} strokeWidth={1.8} />
+                <text x={gx + 18} y={l.ly} textAnchor="middle" dominantBaseline="central" style={{ fontSize: '9px', fill: l.s.ink || '#fff', fontWeight: 600 }}>
+                  {l.s.number ?? l.s.emoji ?? l.s.code.slice(0, 1)}
                 </text>
               </>
             ) : (

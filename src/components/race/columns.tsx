@@ -8,6 +8,7 @@ import TireHistory from './TireHistory';
 import type { ColumnConfig, RowContext } from './types';
 import { Driver } from '../../RaceEngine';
 import TagChips, { EffectChips } from './TagChips';
+import { CardFace } from '../../cards/CardFace';
 import { CANON_VARIABLES } from '../../simlab/types';
 
 // Suffixes to ignore when extracting surname
@@ -57,7 +58,7 @@ export const COLUMN_TEAM_STRIPE: ColumnConfig = {
   render: (driver: Driver) => <TeamStripe color={driver.color} />,
 };
 
-// Team marble column (colored circle with emoji and accent border)
+// Team marble column: the racing number in the team's ink on the team colour (#381)
 export const COLUMN_TEAM_MARBLE: ColumnConfig = {
   id: 'teamMarble',
   header: '',
@@ -74,13 +75,16 @@ export const COLUMN_TEAM_MARBLE: ColumnConfig = {
         height: '22px',
         borderRadius: '50%',
         background: driver.color,
-        border: `2px solid ${driver.accentColor || '#fff'}`,
-        fontSize: '12px',
+        color: driver.ink || '#fff',
+        border: `2px solid ${driver.ink || '#fff'}`,
+        fontSize: driver.number !== undefined ? '10px' : '12px',
+        fontFamily: driver.number !== undefined ? 'var(--look-data, monospace)' : undefined,
+        fontWeight: 600,
         lineHeight: 1,
         boxShadow: `0 0 6px ${driver.color}60`,
       }}
     >
-      {driver.emoji}
+      {driver.number ?? driver.emoji}
     </span>
   ),
 };
@@ -344,9 +348,11 @@ export const COLUMN_TAGS: ColumnConfig = {
     // One column for everything on the car: identity tags, then the transient
     // ones (track events, inflictions, damage) — they're all tags at heart.
     const hits = (ctx.effectStack ?? []).filter(e => e.source === 'track_event' || e.source === 'infliction' || e.source === 'damage');
-    if (driver.tags.length === 0 && hits.length === 0) return <span className="muted-cell">—</span>;
+    const cards = driver.cards ?? [];
+    if (driver.tags.length === 0 && cards.length === 0 && hits.length === 0) return <span className="muted-cell">—</span>;
     return (
       <span className="tag-chips">
+        {cards.map(c => <CardFace key={c.id} card={c} size="mini" flippable={false} />)}
         {driver.tags.length > 0 && <TagChips tags={driver.tags} stack={ctx.effectStack} />}
         {hits.length > 0 && <EffectChips entries={hits} />}
       </span>

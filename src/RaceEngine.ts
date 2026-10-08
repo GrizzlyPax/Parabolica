@@ -1,10 +1,9 @@
 import { Tag, getTagById, RaceContext, evaluateTagCondition, describeCondition, TRIGGER_LABELS } from './data/tags';
 import { IN_RACE_RULES, InRaceRule, InRaceDuration } from './data/inRace';
-import { WeatherState } from './data/weather';
-import { TrackTag } from './data/trackTags';
-import { INFLICTIONS } from './data/inflictions';
+import { WeatherState, isNeutralWeather } from './data/weather';
+import type { Card, CardStat } from './cards/types';
 import { SimVariables, CANON_VARIABLES } from './simlab/types';
-import { Rng, mulberry32, shuffle, deriveSeed, randomSeed } from './engine/rng';
+import { Rng, mulberry32, deriveSeed, randomSeed } from './engine/rng';
 
 export interface DriverStats {
   baseSpeed: number;      // Base speed multiplier (0.85 - 1.15)
@@ -37,7 +36,8 @@ export interface RosterDriver {
   shortName: string;
   emoji: string;
   color: string;
-  accentColor?: string;
+  /** Text/icon colour on the team colour (white or near-black). */
+  ink?: string;
   stats: DriverStats;
   firstName?: string;
   lastName?: string;
@@ -49,8 +49,10 @@ export interface RosterDriver {
   carStats?: CarStats;
   carName?: string;
   teamStats?: TeamStats;
-  /** Racing number 2–99 (Season Mode, #313). Display only. */
+  /** Racing number 2–99 (#313 / #337). Display only. */
   number?: number;
+  /** Trait cards baked into the stats (Quick Race #337, Season Mode). Display only. */
+  cards?: Card[];
   /** Every tag on this driver (driver, car and team tags together — a tag's
    * `target` says which). Genesis rolls, interventions and acquisitions all
    * land here; capped per driver by the league (MAX_TAGS_PER_DRIVER). */
@@ -64,7 +66,7 @@ export interface Driver {
   emoji: string;          // Kingdom emoji avatar
   position: number;
   color: string;
-  accentColor?: string;   // Secondary/accent team color
+  ink?: string;           // Text/icon colour on the team colour
   stats: DriverStats;
   currentLap: number;
   lapTimes: number[];     // Time (in ticks) for each completed lap
@@ -86,7 +88,8 @@ export interface Driver {
   carName?: string;       // Name of the car
   // Team stats (shared by team)
   teamStats?: TeamStats;  // Team operational stats (tire management, pit crew)
-  number?: number;        // Racing number (Season Mode); display only
+  number?: number;        // Racing number; display only
+  cards?: Card[];         // Trait cards already baked into the stats; display only
   // Tire/Pit/Crash state
   tireState: TireState;
   status: DriverStatus;
@@ -270,7 +273,6 @@ export interface RaceEvent {
 }
 
 // Track info for display purposes
-import type { TrackEventTrigger, TrackEventEffect } from './generators/tracks';
 
 export interface TrackInfo {
   id: string;
@@ -287,17 +289,8 @@ export interface TrackInfo {
     straightEnd: { x: number; y: number };
     totalLength: number;
   };
-  // Track event info (for display)
-  event?: {
-    id: string;
-    name: string;
-    emoji: string;
-    description: string;
-    flavorText: string;
-  };
-  // Full event data (for engine processing)
-  eventTrigger?: TrackEventTrigger;
-  eventEffect?: TrackEventEffect;
+  /** The track's favoured stats (display; already baked into the roster). */
+  favours?: CardStat[];
 }
 
 // Track active event state during race (legacy - kept for API compatibility)
@@ -446,9 +439,6 @@ class RaceEngine {
   // === UNIFIED EFFECT STORAGE ===
   // All effects (from tags and track events) go here
   private unifiedEffects: Map<number, ActiveEffect[]> = new Map();
-  private trackEventTriggeredLaps: Set<number> = new Set();  // Laps where one-time events have triggered
-  private lastEventCheckLap: number = 0;  // For interval-based triggers
-  private leaderLapCount: Map<number, number> = new Map();  // Track how many laps each driver has led
 
   // Lap chart history (#208/#173): one running-order snapshot per leader-lap.
   // Recorded inside tick(), so it's complete from lap 1 whether the race runs
@@ -508,9 +498,6 @@ class RaceEngine {
   // sets currentConditions so condition-gated tags wake. Null = no weather
   // (Quick Race). Set per race; not cleared by reset() (it's race setup).
   private weather: WeatherState | null = null;
-  // This race's track tags (C3) — the track's intrinsic character. Also a
-  // field-wide lean + condition stamper, alongside weather. Set per race.
-  private trackTags: TrackTag[] = [];
 
   private constructor() {
     this.initializeDrivers();
@@ -701,7 +688,7 @@ class RaceEngine {
         emoji: d.emoji,
         position: 0,
         color: d.color,
-        accentColor: d.accentColor,
+        ink: d.ink,
         stats: { ...d.stats },
         currentLap: 0,
         lapTimes: [],
@@ -720,6 +707,7 @@ class RaceEngine {
         carName: d.carName,
         teamStats: d.teamStats,
         number: d.number,
+        cards: d.cards,
         tags: [...(d.tags ?? [])],
         // Tire/Pit/Crash initial state
         tireState: {
@@ -1156,9 +1144,6 @@ class RaceEngine {
     this.mistakeBlockedUntilTick.clear();
     // Reset track event state
     this.activeTrackEffects = [];
-    this.trackEventTriggeredLaps = new Set();
-    this.lastEventCheckLap = 0;
-    this.leaderLapCount = new Map();
     this.lapPositionHistory = [];
     this.gridOrder = [];
     this.qualiScores.clear();
@@ -1513,11 +1498,11 @@ class RaceEngine {
   getBattles(): { chaserId: number; aheadId: number; ticks: number }[] {
     return [...this.stuckBehind.entries()].map(([chaserId, v]) => ({ chaserId, aheadId: v.aheadId, ticks: v.ticks }));
   }
+  /** Per-track passing dial (simVars overtaking.trackDifficulty, keyed by track
+   * id). Every v0.5 track is normal; the dial stays for later tuning. */
   private trackOvertakingDifficulty(): number {
     const table = this.getOvertakingVars().trackDifficulty;
-    let d = 1;
-    for (const t of this.trackTags) d *= table[t.id] ?? 1;
-    return d;
+    return table[this.trackInfo?.id ?? ''] ?? 1;
   }
 
   /**
@@ -1843,162 +1828,6 @@ class RaceEngine {
     return { crashed: false, dnfDriverIds: [], damagedDriverIds: [] };
   }
 
-  // === TRACK EVENT SYSTEM ===
-
-  /**
-   * Check if the track event should trigger based on current race state
-   */
-  private shouldTrackEventTrigger(leaderLap: number): boolean {
-    if (!this.trackInfo?.eventTrigger) return false;
-
-    const trigger = this.trackInfo.eventTrigger;
-    const totalLaps = this.config.totalLaps;
-
-    switch (trigger.type) {
-      case 'lap':
-        // Trigger on specific laps (not repeating)
-        if (trigger.laps.includes(leaderLap) && !this.trackEventTriggeredLaps.has(leaderLap)) {
-          return true;
-        }
-        return false;
-
-      case 'interval':
-        // Trigger every N laps
-        if (leaderLap > 0 && leaderLap % trigger.every === 0 && leaderLap !== this.lastEventCheckLap) {
-          return true;
-        }
-        return false;
-
-      case 'random':
-        // Random chance per lap (check only once per lap transition)
-        if (leaderLap !== this.lastEventCheckLap && this.rng() < trigger.chance) {
-          return true;
-        }
-        return false;
-
-      case 'halfway':
-        // Trigger at halfway point
-        const halfwayLap = Math.floor(totalLaps / 2);
-        if (leaderLap === halfwayLap && !this.trackEventTriggeredLaps.has(halfwayLap)) {
-          return true;
-        }
-        return false;
-
-      case 'condition':
-        // Special conditions
-        if (trigger.condition === 'leader_3_laps') {
-          // Check if any driver has led for 3 consecutive laps
-          const currentLeaderId = this.raceState.currentLeader;
-          if (currentLeaderId !== null) {
-            const count = (this.leaderLapCount.get(currentLeaderId) || 0);
-            if (count >= 3 && !this.trackEventTriggeredLaps.has(leaderLap)) {
-              return true;
-            }
-          }
-        }
-        return false;
-
-      case 'final_laps':
-        // Trigger in final N laps
-        const finalLapsStart = totalLaps - trigger.count;
-        if (leaderLap >= finalLapsStart && !this.trackEventTriggeredLaps.has(leaderLap)) {
-          return true;
-        }
-        return false;
-    }
-  }
-
-  /**
-   * Apply the track event effect to the race
-   */
-  private applyTrackEventEffect(): void {
-    if (!this.trackInfo?.eventEffect || !this.trackInfo?.event) return;
-
-    const effect = this.trackInfo.eventEffect;
-    const event = this.trackInfo.event;
-    const racingDrivers = this.drivers.filter(d => d.status === 'racing');
-
-    // Log the event trigger - pass event name and flavor text separately, emoji as last param
-    this.logEvent(
-      'track_event',
-      null,
-      `${event.name}: ${event.flavorText}`,
-      'neutral',
-      1.0,
-      event.emoji
-    );
-
-    // Sort drivers by position for targeting
-    const sortedDrivers = [...racingDrivers].sort((a, b) => {
-      const aDistance = a.currentLap * this.config.lapLength + a.position;
-      const bDistance = b.currentLap * this.config.lapLength + b.position;
-      return bDistance - aDistance;
-    });
-
-    const getTargets = (
-      targets: string,
-      count: number
-    ): Driver[] => {
-      switch (targets) {
-        case 'bottom':
-          return sortedDrivers.slice(-count);
-        case 'top':
-          return sortedDrivers.slice(0, count);
-        case 'random':
-          return shuffle(racingDrivers, this.rng).slice(0, count);
-        case 'leader':
-          return sortedDrivers.slice(0, 1);
-        case 'last':
-          return sortedDrivers.slice(-count);
-        default:
-          return [];
-      }
-    };
-
-    // All track events now use apply_tag through the unified effect system
-    // Look up the condition tag
-    const tag = getTagById(effect.triggerTag);
-    if (!tag) {
-      console.warn(`Track event references unknown tag: ${effect.triggerTag}`);
-      return;
-    }
-
-    // Get target drivers based on effect targets
-    const targets = getTargets(effect.targets, effect.count || 1);
-    const durationTicks = effect.duration * 10;
-    const expiresAt = this.raceState.totalTicks + durationTicks;
-    const targetIds = targets.map(d => d.id);
-
-    // Create effect using the tag's effects
-    this.createTrackEffect(
-      `${event.id}-${tag.id}`,
-      `${event.name} (${tag.name})`,
-      tag.emoji,
-      targetIds,
-      expiresAt,
-      {
-        speedModifier: tag.effects.speedModifier,
-        consistencyModifier: tag.effects.consistencyModifier,
-        luckModifier: tag.effects.luckModifier,
-        crashResistance: tag.effects.crashResistance,
-        pitSpeedModifier: tag.effects.pitSpeedModifier,
-      }
-    );
-
-    // Log the event for each affected driver
-    for (const driver of targets) {
-      this.logEvent(
-        'track_event_effect',
-        driver,
-        tag.activationText || `Affected by ${tag.name}`,
-        tag.effects.speedModifier && tag.effects.speedModifier > 1 ? 'positive' :
-        tag.effects.crashResistance && tag.effects.crashResistance < 0 ? 'negative' : 'neutral',
-        0.7,
-        tag.emoji
-      );
-    }
-  }
-
   /**
    * Get speed modifier from active track effects for a specific driver
    */
@@ -2222,18 +2051,15 @@ class RaceEngine {
   }
 
   /** Directly set the active conditions (e.g. ['rain']) — used by tests. The
-   * normal path is setWeather/setTrackTags, which recompute from their sources. */
+   * normal path is setWeather, which recomputes from its source. */
   setRaceConditions(ids: string[]): void {
     this.currentConditions = new Set(ids);
   }
 
-  /** Recompute the active condition set from every environmental source
-   * (weather + track tags), so condition-gated tags see the union. */
+  /** Recompute the active condition set from the weather, so
+   * condition-gated tags see it (none stamp anything until Wet, v0.6). */
   private recomputeConditions(): void {
-    this.currentConditions = new Set([
-      ...(this.weather?.conditions ?? []),
-      ...this.trackTags.flatMap(t => t.conditions ?? []),
-    ]);
+    this.currentConditions = new Set(this.weather?.conditions ?? []);
   }
 
   /** Set this race's weather (C2): applies a field-wide lean and stamps its
@@ -2245,59 +2071,6 @@ class RaceEngine {
 
   getWeather(): WeatherState | null {
     return this.weather;
-  }
-
-  /** Set this race's track tags (C3): the track's intrinsic character. Like
-   * weather, a field-wide lean + condition stamper. Pass [] for none. */
-  setTrackTags(tags: TrackTag[]): void {
-    this.trackTags = tags;
-    this.recomputeConditions();
-  }
-
-  getTrackTags(): TrackTag[] {
-    return this.trackTags;
-  }
-
-  // === INFLICTIONS (mid-race state tags from the environment) ===
-
-  /** Roll environment inflictions for this tick: when an infliction's required
-   * condition is active, a small seeded chance strikes ONE racing driver with a
-   * temporary effect. Rare by design — each application is a feed event.
-   * Rides the unified effect system + track_event_effect logging, so the
-   * timing-tower status icons and notifications light up with no extra UI. */
-  private processInflictions(): void {
-    if (this.currentConditions.size === 0) return;
-
-    for (const inf of INFLICTIONS) {
-      if (!inf.requiresCondition.some(c => this.currentConditions.has(c))) continue;
-      if (this.rng() >= inf.perTickChance) continue;
-
-      const candidates = this.drivers.filter(d => d.status === 'racing');
-      if (candidates.length === 0) continue;
-      const victim = candidates[Math.floor(this.rng() * candidates.length)];
-
-      this.createTrackEffect(
-        `infliction-${inf.id}`,
-        inf.name,
-        inf.emoji,
-        [victim.id],
-        this.raceState.totalTicks + inf.durationTicks,
-        {
-          speedModifier: inf.effects.speedModifier,
-          consistencyModifier: inf.effects.consistencyModifier,
-          luckModifier: inf.effects.luckModifier,
-          crashResistance: inf.effects.crashResistance,
-        }
-      );
-      this.logEvent(
-        'track_event_effect',
-        victim,
-        `${inf.name}: ${inf.activationText}`,
-        inf.impact,
-        0.8,
-        inf.emoji
-      );
-    }
   }
 
   /** #82 mistakes layer — non-terminal driver errors (spin, lock-up, wide
@@ -2382,18 +2155,16 @@ class RaceEngine {
     return active;
   }
 
-  // === ENVIRONMENT EFFECTS (weather + track tags, field-wide) ===
+  // === ENVIRONMENT EFFECTS (weather, field-wide) ===
+  // Dry weathers and tracks favour stats through the card math at roster build
+  // (src/cards/apply.ts); these leans are empty until Wet returns in v0.6.
 
   private getEnvSpeedModifier(): number {
-    let m = this.weather?.effects.speedModifier ?? 1;
-    for (const t of this.trackTags) m *= t.passive?.speedModifier ?? 1;
-    return m;
+    return this.weather?.effects.speedModifier ?? 1;
   }
 
   private getEnvConsistencyModifier(): number {
-    let m = this.weather?.effects.consistencyModifier ?? 1;
-    for (const t of this.trackTags) m *= t.passive?.consistencyModifier ?? 1;
-    return m;
+    return this.weather?.effects.consistencyModifier ?? 1;
   }
 
   /**
@@ -2447,19 +2218,14 @@ class RaceEngine {
       }
     }
 
-    // Environment: weather + track tags, field-wide
-    if (this.weather && this.weather.id !== 'clear') {
+    // Environment: weather, field-wide (favours are baked into the stats)
+    if (this.weather && !isNeutralWeather(this.weather) && Object.keys(this.weather.effects).length) {
       const w = this.weather.effects;
       out.push({ source: 'weather', id: this.weather.id, name: this.weather.name, emoji: this.weather.emoji, active: true,
         reason: 'field-wide', speed: w.speedModifier ?? 1, consistency: w.consistencyModifier ?? 1, luck: 1, crash: w.crashResistance ?? 0, pit: 1 });
     }
-    for (const t of this.trackTags) {
-      if (!t.passive) continue;
-      out.push({ source: 'track', id: t.id, name: t.name, emoji: t.emoji, active: true, reason: 'this track, field-wide',
-        speed: t.passive.speedModifier ?? 1, consistency: t.passive.consistencyModifier ?? 1, luck: 1, crash: t.passive.crashResistance ?? 0, pit: 1 });
-    }
 
-    // Track events + inflictions on this driver (unified effects, source 'track')
+    // Mistakes and other timed strikes on this driver (unified effects, source 'track')
     for (const e of this.unifiedEffects.get(driverId) ?? []) {
       if (e.source !== 'track') continue;
       if (e.expiresAtTick !== null && e.expiresAtTick <= now) continue;
@@ -2478,9 +2244,7 @@ class RaceEngine {
   }
 
   private getEnvCrashResistance(): number {
-    let r = this.weather?.effects.crashResistance ?? 0;
-    for (const t of this.trackTags) r += t.passive?.crashResistance ?? 0;
-    return r;
+    return this.weather?.effects.crashResistance ?? 0;
   }
 
   // === UNIFIED EFFECT SYSTEM METHODS ===
@@ -2640,8 +2404,6 @@ class RaceEngine {
     // tick, before crash resistance and speed modifiers are read below.
     this.rebuildRaceContexts();
 
-    // Environment inflictions (mid-race state tags: storm strikes, fog, etc.)
-    this.processInflictions();
     this.processMistakes();
 
     const crashedThisTick: Set<number> = new Set();
@@ -3149,39 +2911,6 @@ class RaceEngine {
         'neutral',
         0.3
       );
-    }
-
-    // === TRACK EVENT TRIGGER CHECK ===
-    // Find the leader's current lap for event triggering
-    const sortedForEvent = [...this.drivers]
-      .filter(d => d.status === 'racing')
-      .sort((a, b) => {
-        const aDistance = a.currentLap * this.config.lapLength + a.position;
-        const bDistance = b.currentLap * this.config.lapLength + b.position;
-        return bDistance - aDistance;
-      });
-
-    const leaderForEvent = sortedForEvent[0];
-    if (leaderForEvent && lapCompletions.length > 0) {
-      // Update leader lap count (for condition-based triggers)
-      if (previousLeader === leaderForEvent.id) {
-        this.leaderLapCount.set(leaderForEvent.id, (this.leaderLapCount.get(leaderForEvent.id) || 0) + 1);
-      } else if (previousLeader !== null) {
-        // Leader changed, reset counts
-        this.leaderLapCount.set(leaderForEvent.id, 1);
-      }
-
-      // Check if any lap completions should trigger the track event
-      const highestLapCompleted = Math.max(...lapCompletions.map(lc => lc.lap));
-
-      // Only check event triggers once per lap (using leader's lap)
-      if (highestLapCompleted > this.lastEventCheckLap) {
-        if (this.shouldTrackEventTrigger(highestLapCompleted)) {
-          this.applyTrackEventEffect();
-          this.trackEventTriggeredLaps.add(highestLapCompleted);
-        }
-        this.lastEventCheckLap = highestLapCompleted;
-      }
     }
 
     // Log race finish events

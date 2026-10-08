@@ -9,11 +9,12 @@
 // setup) to flip a league onto procedural looks. Team *names* are untouched —
 // this is icon + colors only.
 import { Rng, mulberry32, deriveSeed, shuffle } from '../engine/rng';
+import { inkFor } from '../icons/ink';
 
 export interface TeamIdentity {
   emoji: string;
   color: string;        // primary, hex
-  accentColor: string;  // secondary, hex — distinct from primary
+  ink: string;          // white or near-black, picked for the colour
 }
 
 // Chaotic-but-curated emoji pool (animals, objects, symbols). Leaning fun over
@@ -60,10 +61,7 @@ export function generateTeamIdentities(rng: Rng, count: number): TeamIdentity[] 
     const sat = 0.62 + rng() * 0.28;   // 0.62–0.90
     const light = 0.48 + rng() * 0.12; // 0.48–0.60
     const color = hslToHex(hue, sat, light);
-    // Accent: analogous shift + lighter, so it reads as the same team's second
-    // colour rather than a clashing one.
-    const accentColor = hslToHex(hue + 25, Math.min(1, sat + 0.05), Math.min(0.72, light + 0.18));
-    out.push({ emoji: emojis[i] ?? '🏁', color, accentColor });
+    out.push({ emoji: emojis[i] ?? '🏁', color, ink: inkFor(color) });
   }
   return out;
 }

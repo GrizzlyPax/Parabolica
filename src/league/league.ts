@@ -4,7 +4,7 @@
 
 import { mulberry32, deriveSeed } from '../engine/rng';
 import { Tag, getTagById } from '../data/tags';
-import { buildRoster } from '../rules/genesis';
+import { buildRoster, buildCardRoster } from '../rules/genesis';
 import { Ruleset, defaultRuleset, upgradeRuleset } from '../rules/ruleset';
 import { getTeamsByIds, Team } from '../data/teams';
 import { generateRosterFromTeamList } from '../generators/drivers';
@@ -21,14 +21,16 @@ export function generateGenesisRoster(
   leagueSeed: number,
   teamIds: string[],
   customTeams: Team[] = [],
-  ruleset: Ruleset = defaultRuleset()
+  ruleset: Ruleset = defaultRuleset(),
+  /** Deal trait cards instead of tags (Quick Race, #337). Leagues stay on tags until v0.6. */
+  cards: boolean = false
 ): RosterDriver[] {
   const teams = [...getTeamsByIds(teamIds), ...customTeams];
   const driverRng = mulberry32(deriveSeed(leagueSeed, 'genesis', 'drivers'));
   const carRng = mulberry32(deriveSeed(leagueSeed, 'genesis', 'cars'));
   const roster = generateRosterFromTeamList(teams, driverRng);
-  const cars = generateCarsForKingdoms(teams.map(t => t.id), carRng);
-  return buildRoster(roster, cars, leagueSeed, ruleset);
+  const generated = generateCarsForKingdoms(teams.map(t => t.id), carRng);
+  return cards ? buildCardRoster(roster, generated, leagueSeed, ruleset) : buildRoster(roster, generated, leagueSeed, ruleset);
 }
 
 /** Fix the calendar: every race gets its wall-clock slot and seed at founding.
@@ -45,7 +47,7 @@ export function buildSchedule(leagueSeed: number, setup: LeagueSetupConfig): Sch
 
 export function createLeague(leagueSeed: number, setup: LeagueSetupConfig): LeagueState {
   // Old saves name rarities common…legendary (#385); the facts stay as saved.
-  const roster = generateGenesisRoster(leagueSeed, setup.teamIds, setup.customTeams, setup.ruleset ? upgradeRuleset(setup.ruleset) : defaultRuleset());
+  const roster = generateGenesisRoster(leagueSeed, setup.teamIds, setup.customTeams, setup.ruleset ? upgradeRuleset(setup.ruleset) : defaultRuleset(), setup.cards ?? false);
   return {
     engineVersion,
     leagueSeed,

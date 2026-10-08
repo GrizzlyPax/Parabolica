@@ -13,7 +13,7 @@ const TARGET_GAP = CANON_VARIABLES.safetyCar.targetGap;
 
 function makeEngine(seed: number): RaceEngine {
   const engine = RaceEngine.createForWorker(undefined, seed);
-  engine.loadGeneratedRoster(generateGenesisRoster(seed, TEAMS.map(t => t.id)));
+  engine.loadGeneratedRoster(generateGenesisRoster(seed, TEAMS.slice(0, 11).map(t => t.id)));
   engine.updateConfig({ totalLaps: TRACK.laps, lapLength: TRACK.length, maxStoredEvents: 50 });
   engine.reset();
   return engine;
