@@ -55,7 +55,7 @@ Closing note forms: "Done in [#M Title]", "Replaced by [#M Title]", "Parked: <wh
 ## Milestone, crew, paste line (required)
 
 - **Milestone:** the current release's step (`v0.5 · 1 Core` … `5 Ship`) or a later release (`v0.6 Monza`, `v0.7 Suzuka`). Not in a release → no milestone + label `queued` or `icebox`.
-- **Crew label** (current release only): `crew: apex` (Fable-only work) · `crew: hub` · `crew: wrench` (tightly scoped, small model) · `crew: radio` · `crew: telemetry` · `crew: pit` · `crew: pax` (needs a decision).
+- **Crew label** (current release only): `crew: apex` (Fable-only work) · `crew: hub` · `crew: radio` (story, identity, icons) · `crew: steward` (game design, balance, fun) · `crew: pit` · `crew: pax` (needs a decision).
 - **First line of the body:** `> **Paste (<model>):** <crew opener> Issue: #N`. Openers are in CLAUDE.md.
 - **Order:** a `**Depends on:**` line linking the issues that must close first. No due dates.
 
