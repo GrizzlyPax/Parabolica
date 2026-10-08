@@ -134,7 +134,7 @@ export default function IdeaBox({ context }: { context: IdeaContext }) {
             <button type="button" className="rs-btn rs-btn-ghost" disabled={!text.trim()} onClick={keep}>Keep for later</button>
             <button type="button" className="rs-btn rs-btn-primary" disabled={!text.trim()} onClick={send}>Send to GitHub →</button>
           </div>
-          <div className="idea-foot">Send opens a prefilled issue with the <code>idea</code> label; you press Submit. The repo is private, so that tab needs to be signed in to GitHub — if it shows a 404, sign in and use <em>resend</em> from World Deck → Inbox. Kept ideas live there too.</div>
+          <div className="idea-foot">Send opens a prefilled issue with the <code>idea</code> label; you press Submit. That tab needs to be signed in to GitHub; if it shows a 404, sign in and use <em>resend</em> from World Deck → Inbox. Kept ideas live there too.</div>
         </div>
       )}
     </>
