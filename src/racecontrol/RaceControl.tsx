@@ -28,8 +28,14 @@ const TABS: { id: TabId; label: string; hint: string }[] = [
   { id: 'method', label: 'Method', hint: 'why these numbers can be trusted' },
 ];
 
-export default function RaceControl({ onBack }: { onBack: () => void }) {
-  const [tab, setTab] = useState<TabId>('calibration');
+const TAB_IDS: TabId[] = ['calibration', 'physics', 'deck', 'notebook', 'method'];
+const tabFromSlug = (slug?: string): TabId => TAB_IDS.find(t => t === slug) ?? 'calibration';
+
+/** `tab` / `onTabChange` keep the open tab in the URL (#186): /#/race-control/<tab>. */
+export default function RaceControl({ onBack, tab: tabSlug, onTabChange }: { onBack: () => void; tab?: string; onTabChange?: (tab: string) => void }) {
+  const [localTab, setLocalTab] = useState<TabId>(() => tabFromSlug(tabSlug));
+  const tab = onTabChange ? tabFromSlug(tabSlug) : localTab;
+  const setTab = (t: TabId) => (onTabChange ? onTabChange(t) : setLocalTab(t));
   const [working, setWorking] = useState<Working>({ tagEdits: {}, knobEdits: {}, preset: null });
   const [notebook, setNotebook] = useState<Notebook>(() => loadNotebook());
   useEffect(() => { saveNotebook(notebook); }, [notebook]);

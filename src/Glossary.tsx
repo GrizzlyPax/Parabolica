@@ -26,9 +26,20 @@ import { SAMPLE_SHEET } from './cards/sample';
 import './RunSetup.css';
 import './Glossary.css';
 
-interface GlossaryProps { onBack: () => void }
+interface GlossaryProps {
+  onBack: () => void;
+  /** The tab in the URL (#186): /#/world-deck/<slug>. */
+  tab?: string;
+  onTabChange?: (slug: string) => void;
+}
 
 type TabId = 'deck' | 'teams' | 'tracks' | 'cards' | 'rules' | 'conditions' | 'flavour' | 'add' | 'inbox';
+/** URL slugs for the tabs (#186). */
+const TAB_SLUG: Record<TabId, string> = {
+  deck: 'cards', teams: 'teams', tracks: 'tracks', cards: 'rule-cards', rules: 'rules', conditions: 'weather', flavour: 'flavour', add: 'add', inbox: 'inbox',
+};
+const tabFromSlug = (slug?: string): TabId => (Object.keys(TAB_SLUG) as TabId[]).find(k => TAB_SLUG[k] === slug) ?? 'deck';
+
 const TABS: { id: TabId; label: string }[] = [
   { id: 'deck', label: 'Cards' }, { id: 'teams', label: 'Teams' }, { id: 'tracks', label: 'Tracks' }, { id: 'cards', label: 'Rule cards' },
   { id: 'rules', label: 'Rules' }, { id: 'conditions', label: 'Weather' }, { id: 'flavour', label: 'Flavour' }, { id: 'inbox', label: 'Inbox' }, { id: 'add', label: '+ Add' },
@@ -275,10 +286,12 @@ function InboxTab() {
 
 // ---------- The deck ----------
 
-export default function Glossary({ onBack }: GlossaryProps) {
+export default function Glossary({ onBack, tab: tabSlug, onTabChange }: GlossaryProps) {
   const g = useMemo(() => buildGlossary(), []);
   const rs = useMemo(() => defaultRuleset(), []);
-  const [tab, setTab] = useState<TabId>('deck');
+  const [localTab, setLocalTab] = useState<TabId>(() => tabFromSlug(tabSlug));
+  const tab = onTabChange ? tabFromSlug(tabSlug) : localTab;
+  const setTab = (t: TabId) => (onTabChange ? onTabChange(TAB_SLUG[t]) : setLocalTab(t));
   const [q, setQ] = useState('');
   const [open, setOpen] = useState<Set<string>>(() => new Set());
   // Sections start collapsed. `mode` is the baseline; `flipped` are the

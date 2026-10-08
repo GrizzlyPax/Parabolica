@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import RaceEngine, { Driver, RaceConfig, RaceState, TrackInfo, RaceEvent, RosterDriver } from './RaceEngine';
 import RunSetup from './RunSetup';
 import Glossary from './Glossary';
@@ -25,13 +25,28 @@ import { CANON_VARIABLES } from './simlab/types';
 import { saveLeagueState, loadLeagueState, clearLeagueState } from './storage/persistence';
 import { mulberry32, deriveSeed } from './engine/rng';
 import { generateTrack, getRandomTracks, getTrackById, getDynamicEventDescription, Track } from './generators/tracks';
+import { useRoute, type Route } from './router';
 import './App.css';
 
 type AppScreen = 'main-menu' | 'setup' | 'race' | 'compendium' | 'founding' | 'league' | 'broadcast' | 'grid' | 'glossary' | 'credits';
 type RaceSpeed = 0.5 | 1 | 2 | 10;
 
+// Each screen has an address (#186, src/router.ts); the URL is the source of
+// truth for which screen shows, so refresh and the back button work.
+const SCREEN_OF: Record<Route['name'], AppScreen> = {
+  'menu': 'main-menu', 'quick-race': 'setup', 'race': 'race', 'world-deck': 'glossary', 'race-control': 'compendium',
+  'credits': 'credits', 'season': 'main-menu', 'league': 'league', 'league-found': 'founding', 'league-grid': 'grid', 'league-watch': 'broadcast',
+};
+const ROUTE_OF: Record<AppScreen, Route> = {
+  'main-menu': { name: 'menu' }, 'setup': { name: 'quick-race' }, 'race': { name: 'race' }, 'glossary': { name: 'world-deck' },
+  'compendium': { name: 'race-control' }, 'credits': { name: 'credits' }, 'league': { name: 'league' }, 'founding': { name: 'league-found' },
+  'grid': { name: 'league-grid' }, 'broadcast': { name: 'league-watch' },
+};
+
 function App() {
-  const [screen, setScreen] = useState<AppScreen>('main-menu');
+  const { route, navigate, back } = useRoute();
+  const screen = SCREEN_OF[route.name];
+  const setScreen = useCallback((s: AppScreen, opts?: { replace?: boolean }) => navigate(ROUTE_OF[s], opts), [navigate]);
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [isRunning, setIsRunning] = useState(false);
   const [config, setConfig] = useState<RaceConfig | null>(null);
@@ -153,7 +168,7 @@ function App() {
   const handleDissolveLeague = () => {
     clearLeagueState();
     setLeague(null);
-    setScreen('main-menu');
+    setScreen('main-menu', { replace: true });
   };
 
   // Join a live broadcast mid-race. The race is deterministic from its seed,
@@ -182,19 +197,12 @@ function App() {
     engine.start();
 
     setShowCountdown(false);
+    watchingLive.current = true;
     setScreen('broadcast');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [engine]);
 
-  const handleLeaveBroadcast = useCallback(() => {
-    engine.stop();
-    engine.reset();
-    engine.clearSeed();
-    engine.setSimVars(null); // back to Quick Race defaults
-    engine.setWeather(null);  // drop this race's weather off the shared engine
-    engine.setTrackTags([]);  // and its track tags
-    setScreen('league');
-  }, [engine]);
+  const handleLeaveBroadcast = useCallback(() => back({ name: 'league' }), [back]);
 
   // === Quick Race ===
 
@@ -217,12 +225,39 @@ function App() {
     engine.start();
   }, [engine]);
 
-  const handleBackToMainMenu = () => {
-    engine.stop();
-    engine.reset();
-    setShowCountdown(false);
-    setScreen('main-menu');
-  };
+  // In-app back buttons use history (#186): back where you came from, or the
+  // parent screen when the page was opened from a link.
+  const handleBackToMainMenu = () => back({ name: 'menu' });
+  const handleExitRace = () => back({ name: 'quick-race' });
+
+  // Leaving a race by any route (exit button, browser back, a typed URL) stops
+  // the shared engine; leaving a broadcast also drops that race's setup.
+  const prevScreen = useRef(screen);
+  const watchingLive = useRef(false);
+  useEffect(() => {
+    const was = prevScreen.current;
+    prevScreen.current = screen;
+    if (was === screen) return;
+    if (was === 'race') { engine.stop(); engine.reset(); setShowCountdown(false); }
+    if (was === 'broadcast') {
+      watchingLive.current = false;
+      engine.stop();
+      engine.reset();
+      engine.clearSeed();
+      engine.setSimVars(null); // back to Quick Race defaults
+      engine.setWeather(null);  // drop this race's weather off the shared engine
+      engine.setTrackTags([]);  // and its track tags
+    }
+  }, [screen, engine]);
+
+  // Refresh lands on a screen whose state can't be rebuilt (a race in
+  // progress, a league that isn't there): fall back to its start page.
+  useEffect(() => {
+    if (screen === 'race' && !quickRun) setScreen('setup', { replace: true });
+    else if (screen === 'broadcast' && !watchingLive.current) setScreen(league ? 'league' : 'main-menu', { replace: true });
+    else if ((screen === 'league' || screen === 'grid') && !league) setScreen('main-menu', { replace: true });
+    else if (route.name === 'season') navigate({ name: 'menu' }, { replace: true }); // Season screens register here as they land
+  }, [screen, route.name, quickRun, league, setScreen, navigate]);
 
   const handleStart = () => {
     if (!isRunning && raceState && raceState.totalTicks === 0) {
@@ -339,11 +374,11 @@ function App() {
   }
 
   if (screen === 'glossary') {
-    return <Glossary onBack={handleBackToMainMenu} />;
+    return <Glossary onBack={handleBackToMainMenu} tab={route.name === 'world-deck' ? route.tab : undefined} onTabChange={tab => navigate({ name: 'world-deck', tab }, { replace: true })} />;
   }
 
   if (screen === 'compendium') {
-    return <RaceControl onBack={handleBackToMainMenu} />;
+    return <RaceControl onBack={handleBackToMainMenu} tab={route.name === 'race-control' ? route.tab : undefined} onTabChange={tab => navigate({ name: 'race-control', tab }, { replace: true })} />;
   }
 
   // Commissioner Mode: founding
@@ -372,7 +407,7 @@ function App() {
 
   // The Grid: the league's roster as its own screen — driver-detail hub.
   if (screen === 'grid' && league) {
-    return <GridScreen league={league} onExit={() => setScreen('league')} />;
+    return <GridScreen league={league} onExit={() => back({ name: 'league' })} />;
   }
 
   // Commissioner Mode: live broadcast (spectator — no controls, no countdown)
@@ -422,7 +457,7 @@ function App() {
         onNextRace={handleNextRace}
         raceEvents={raceEvents}
         fantasy={activeFantasy ?? undefined}
-        onExit={handleBackToMainMenu}
+        onExit={handleExitRace}
         rulesLines={quickRun ? (quickRun.ruleset.cards.length ? quickRun.ruleset.cards.map(id => `${RULE_CARDS_BY_ID.get(id)?.emoji ?? ''} ${RULE_CARDS_BY_ID.get(id)?.name ?? id}`.trim()).concat(describeRuleset(quickRun.ruleset)) : ['default']) : undefined}
         // Race controls - now handled by UniversalHeader inside WatchMode
         isRunning={isRunning}
