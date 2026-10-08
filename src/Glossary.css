@@ -103,3 +103,7 @@
 .gl-plain .game-icon, .gl-team .team-logo { vertical-align: -3px; }
 .card-marks { display: inline-flex; align-items: center; gap: 3px; vertical-align: -3px; }
 .gl-card { display: inline-flex; align-items: center; gap: 8px; }
+.gl-sheet-toggle { display: inline-flex; gap: 12px; }
+.gl-sheet-toggle .rs-link.on { text-decoration-color: var(--pw-text-1); color: var(--pw-text-1); }
+.gl-sheet-toggle .rs-link:not(.on) { color: var(--pw-text-3); }
+.gl-sheet { padding: 4px 0 8px; }

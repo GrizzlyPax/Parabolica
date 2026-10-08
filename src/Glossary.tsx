@@ -13,7 +13,7 @@ import { defaultRuleset, describeChance } from './rules/ruleset';
 import { intrinsicTrackTags } from './data/trackTags';
 import TagChips from './components/race/TagChips';
 import { Idea, loadIdeas, saveIdeas, issueUrl, ideasAsPrompt } from './IdeaBox';
-import { GameIcon, TeamLogo } from './icons/GameIcon';
+import { GameIcon, TeamLogo, teamThemeVars } from './icons/GameIcon';
 import { TEAM_KINDS } from './data/deckTeams';
 import { BASE_DECK_TRACKS } from './data/deckTracks';
 import { BASE_DECK_WEATHER } from './data/deckWeather';
@@ -21,6 +21,8 @@ import type { CardStat } from './cards';
 import { STAT_ICONS } from './icons/registry';
 import { MOTORSPORT_DECK, cardsBy, STAT_LABELS, type Card } from './cards';
 import { CardMarks, cardReadout, KIND_LABELS } from './cards/CardMarks';
+import { CardSheet, type SheetView } from './cards/CardSheet';
+import { SAMPLE_SHEET } from './cards/sample';
 import './RunSetup.css';
 import './Glossary.css';
 
@@ -289,7 +291,10 @@ export default function Glossary({ onBack }: GlossaryProps) {
   // The retiring grid stays folded even on "Expand all"; open it by hand (#402).
   const STAY_FOLDED = new Set(['teams:current', 'teams:historic', 'tracks:current', 'tracks:historic', 'weather', 'characters', 'inflictions']);
   const staysFolded = (id: string) => STAY_FOLDED.has(id) || id === 'roll' || id.startsWith('tags:');
-  const isCollapsed = (id: string) => (staysFolded(id) || mode === 'collapsed') !== flipped.has(id);
+  // The sample card sheet starts open so the deck tab leads with it (#331).
+  const startsOpen = (id: string) => id === 'deck:sheet';
+  const isCollapsed = (id: string) => (startsOpen(id) ? false : staysFolded(id) || mode === 'collapsed') !== flipped.has(id);
+  const [sheetView, setSheetView] = useState<SheetView>('mine');
   const setAll = (m: 'collapsed' | 'expanded') => { setMode(m); setFlipped(new Set()); };
   const needle = q.trim().toLowerCase();
   const match = (...parts: (string | undefined)[]) => !needle || parts.some(p => p?.toLowerCase().includes(needle));
@@ -383,6 +388,12 @@ export default function Glossary({ onBack }: GlossaryProps) {
         )}
       </nav>
 
+      {tab === 'deck' && (
+        <Section {...sec('deck:sheet')} title="Card sheet (sample)" hint="How a racer's cards read in the Paddock: traits, gear slots, effects and the team locker. A rival sees metal dots only. Example data; the Paddock wires it in (#319)."
+          extra={<span className="gl-sheet-toggle">{(['mine', 'rival'] as const).map(v => <button key={v} type="button" className={`rs-link ${sheetView === v ? 'on' : ''}`} aria-pressed={sheetView === v} onClick={() => setSheetView(v)}>{v === 'mine' ? 'Yours' : 'Rival'}</button>)}</span>}>
+          <div className="gl-sheet" style={teamThemeVars(SAMPLE_SHEET.team)}><CardSheet data={SAMPLE_SHEET} view={sheetView} /></div>
+        </Section>
+      )}
       {tab === 'deck' && DECK_GROUPS.map(grp => {
         const rows = grp.rows.filter(c => match(c.name, c.id, c.kind, c.rarity, ...c.stats.map(x => STAT_LABELS[x.stat])));
         if (!rows.length) return null;

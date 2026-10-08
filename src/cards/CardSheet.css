@@ -1,0 +1,53 @@
+/* Card sheet (#331), The look (docs/ICONS.md): white rules, square corners,
+   typewriter caps labels, serif names; metal colours only on chips and dots;
+   the team colour only on the header block. */
+.card-sheet { display: flex; flex-direction: column; gap: 0; max-width: 520px; font-family: var(--look-serif); color: var(--pw-text-1); }
+
+.cs-head { display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: var(--team-primary); color: var(--team-ink); }
+.cs-head .team-logo { outline: 1px solid color-mix(in srgb, var(--team-ink) 35%, transparent); }
+.cs-who { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.cs-name { font-family: var(--look-display); font-weight: 700; font-size: 20px; line-height: 1.05; display: flex; align-items: baseline; gap: 8px; overflow-wrap: anywhere; }
+.cs-num { font-family: var(--look-data); font-weight: 400; font-size: 16px; }
+.cs-team { font-style: italic; font-size: 14px; line-height: 1.3; opacity: 0.85; }
+.cs-bench { font-family: var(--look-data); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; border: 1px solid currentColor; padding: 2px 6px; }
+.cs-note { margin: 8px 0 0; font-style: italic; font-size: 14px; color: var(--pw-text-2); }
+
+.cs-group { border-top: 1px solid var(--pw-text-1); padding: 8px 0 14px; display: flex; flex-direction: column; gap: 8px; }
+.cs-group:first-of-type { margin-top: 14px; }
+.cs-k { font-family: var(--look-data); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--pw-text-2); display: flex; gap: 8px; align-items: baseline; }
+.cs-count { color: var(--pw-text-3); }
+.cs-sub { font-family: var(--look-data); font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--pw-text-3); margin-top: 2px; }
+.cs-empty { margin: 0; font-style: italic; font-size: 14px; color: var(--pw-text-3); }
+
+/* Chips: your cards, one per line, outlined in their metal */
+.cs-chips { display: flex; flex-direction: column; gap: 6px; }
+.cs-chip { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--metal, var(--pw-border-strong)); min-width: 0; }
+.cs-chip .card-marks { display: inline-flex; gap: 3px; flex: none; }
+.cs-chip-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.cs-chip-name { font-size: 16px; line-height: 1.15; overflow-wrap: anywhere; }
+.cs-chip-sub { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; font-size: 13px; color: var(--pw-text-2); }
+.cs-metal.rarity-word { font-family: var(--look-data); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; font-weight: 400; }
+.cs-chip-does { font-style: italic; }
+
+.metal-bronze { --metal: var(--rarity-bronze); }
+.metal-silver { --metal: var(--rarity-silver); }
+.metal-gold { --metal: var(--rarity-gold); }
+.metal-iridium { --metal: var(--rarity-iridium); }
+.metal-none { --metal: var(--pw-border-strong); }
+
+/* Rivals: metal dots only */
+.cs-dots { display: flex; flex-wrap: wrap; gap: 6px; }
+.cs-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--metal); display: inline-block; flex: none; }
+
+/* Gear slots: one row each; empty slots stay visible */
+.cs-slot { display: flex; flex-direction: column; gap: 6px; padding: 8px 0; border-top: 1px solid var(--pw-hairline); }
+.cs-slot:first-of-type { border-top: 0; padding-top: 0; }
+.cs-slot-k { display: flex; align-items: center; gap: 6px; font-family: var(--look-data); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--pw-text-1); }
+.cs-slot-holder { color: var(--pw-text-3); margin-left: 2px; }
+.cs-slot-open { display: block; padding: 10px; border: 1px dashed var(--pw-border-strong); font-style: italic; font-size: 14px; color: var(--pw-text-3); }
+.view-rival .cs-slot { flex-direction: row; align-items: center; justify-content: space-between; }
+.view-rival .cs-slot-open { padding: 2px 8px; }
+
+@media (min-width: 800px) {
+  .cs-chips { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
