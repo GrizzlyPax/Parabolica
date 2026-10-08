@@ -26,7 +26,7 @@
 |---|---|---|
 | **M1** | **Core** | (nothing visible) A whole season runs headless in tests and replays identically |
 | **M2** | **Playable** | Play a full solo season on his phone: setup → draft → pick racers → watch/skip → standings → champion |
-| **M3** | **The pack** | Open a card pack every race, equip gear and traits, manage the locker; see his cards |
+| **M3** | **The box** | Open a card pack every race, equip gear and traits, manage the locker; see his cards |
 | **M4** | **Identity** | Build his own team (icon + colours), race the 28 new teams, Quick Race on cards (one bump, Pax merges), the screen in his colours |
 | **M5** | **Clean-up + ship** | Old leagues gone, no emoji left anywhere, hotseat checked, balance read done |
 

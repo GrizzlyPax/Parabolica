@@ -1,6 +1,6 @@
 # Season Mode — v0.5 "Spa" build spec
 
-*The build cut for v0.5. Source: Dev's design artifact (Fantasy Design, "v0.5 · Spa" tab), with the design reasoning in [#305 fantasy modes](https://github.com/GrizzlyPax/Parabolica/pull/305) and [#303 card pack](https://github.com/GrizzlyPax/Parabolica/pull/303). Where this doc and Pax disagree, Pax wins; tell Pit.*
+*The build cut for v0.5. Source: Dev's design artifact (Fantasy Design, "v0.5 · Spa" tab), with the design reasoning in [#305 fantasy modes](https://github.com/GrizzlyPax/Parabolica/pull/305) and [#303 mystery box (now card packs)](https://github.com/GrizzlyPax/Parabolica/pull/303). Where this doc and Pax disagree, Pax wins; tell Pit.*
 
 ## TL;DR
 - **Season Mode replaces Commissioner leagues entirely** (Pax, Oct 8): founding, the wall-clock league screens and open-by-code are removed in v0.5. **Live seasons** (wall clock, any device) return for Season Mode in v0.6. Quick Race and Race Control stay.

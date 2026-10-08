@@ -29,8 +29,8 @@
 - **Feel:** "one more race". You finish a season in one sitting and want to start another.
 - **Look for:** the draft makes you hesitate at least twice · picking 2 of 3 is a real choice, not "the obvious two" · standings after each race tell a story (who's rising, who's collapsing) · Go / skip pacing never drags · the last two races still matter to you.
 
-**M3 The pack** (open a pack every race, equip gear and traits, locker)
-- **Feel:** anticipation. You *want* to open the pack, and the metal colour already tells you something.
+**M3 The box** (open a pack every race, equip gear and traits, locker)
+- **Feel:** anticipation. You *want* to open the pack, and its tier (Common → Legendary) already tells you something.
 - **Look for:** a trailing team gets Iridium and it **feels like a lifeline, not a pity prize** · at least one card per season you remember by name · a swap that's a real dilemma (keep or bench to the locker) · you can see **in the race result** that a card did something · the card sheet reads at a glance on a phone.
 
 ## Red flags: not fun yet
