@@ -134,6 +134,16 @@ Every size is **the same card scaled down**, never a re-drawn variant: stripes, 
 - **A new card** (pack reveal, #320) arrives **face-down**, slides up, then flips face-up.
 - `prefers-reduced-motion`: no lift, flip or slide.
 
+## Data screens: roster tables + grades (Pax, Oct 8)
+
+Picked live in the Paddock layout session ([#452](https://github.com/GrizzlyPax/Parabolica/issues/452)) and called the strongest work yet. **Every data screen is a roster table** (Madden-style): one table, rows are drivers (plus car and team), fixed grade cells, an **OVR** column. Built from `src/season/ui/RosterTable.tsx` (`GradeCell`, `ReadingSheet`, `.rt` styles); rollout in [#453](https://github.com/GrizzlyPax/Parabolica/issues/453).
+
+- **Grades:** F → A+ in 13 even bands on a 0–100 scale, plus **S** past the best possible roll. A 50 reads C+.
+- **Grade colours:** S purple · A green · C yellow · F red; B and D plain.
+- **The scale is dynamic:** 0 = worst possible roll, 100 = best, read from the generators' ranges (`src/season/grades.ts`), so it stays true after any re-tune. Car and team 1–5 stars use the same scale.
+- **Who sees what:** your own team shows grades everywhere; rivals show the read (Front / Middle / Back) + metal dots.
+- **One table, not two:** car and team rows sit in the same table so columns line up.
+
 ## Why
 - Emoji render differently on every device, can't be recoloured, and read as placeholder art.
 - game-icons.net has ~4,000 icons in one consistent silhouette style, covering motorsport and the weirder themed decks we've planned (Horror, Fantasy).
