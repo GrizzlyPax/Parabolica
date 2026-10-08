@@ -170,7 +170,7 @@ function AddTab() {
           <span className="rs-k">Preview</span>
           {d.kind === 'tag'
             ? <><TagChips tags={[draftPreviewTag(d)]} showName /> <Pills effects={effectsOf(draftPreviewTag(d).effects)} /></>
-            : <span className="gl-plain"><span className="gl-swatch" style={{ background: d.color, boxShadow: `inset 0 0 0 2px ${d.accentColor}` }} />{d.emoji || '✨'} {d.name || 'Untitled'}</span>}
+            : <span className="gl-plain"><span className="gl-swatch" style={{ background: d.color }} />{d.emoji || '✨'} {d.name || 'Untitled'}</span>}
           <span className="gl-note">{problems.length ? problems.join(' · ') : `goes in ${draftFile(d)}`}</span>
         </div>
         <div className="gl-actions">
@@ -371,7 +371,7 @@ export default function Glossary({ onBack }: GlossaryProps) {
             <div className="gl-list">
               {rows.map(t => (
                 <Row key={t.id} id={`team:${t.id}`} open={isOpen(`team:${t.id}`)} onToggle={toggle}
-                  lead={<span className="gl-plain"><span className="gl-swatch" style={{ background: t.color, boxShadow: `inset 0 0 0 2px ${t.accentColor}` }} />{t.emoji} {t.name}</span>}
+                  lead={<span className="gl-plain"><span className="gl-swatch" style={{ background: t.color }} />{t.emoji} {t.name}</span>}
                   pills={<span className="gl-readout">{t.description}</span>}>
                   <p className="gl-desc">{t.description}</p>
                   <div className="gl-facts"><Fact k="Colours">{t.color} / {t.accentColor}</Fact><Fact k="Id">{t.id}</Fact></div>
