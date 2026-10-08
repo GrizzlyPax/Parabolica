@@ -119,7 +119,7 @@ Fallbacks: Old Standard TT → `Georgia, serif`; Special Elite → `'Courier New
 | Season Mode chrome | coloured accents everywhere | black + white, your team's primary as the only accent |
 
 ## Who does what
-- **Team icons + palette:** 📻 Radio with Pax (in progress).
+- **Team icons + palette:** 📻 Radio with Pax, done: 28 deck teams, the creator's 28 colours and 20 logo-picker icons in [story/team-identity.md](story/team-identity.md).
 - **Icon map for everything else:** 🎤 Pit drafts it from the meaning list the sweep finds; Pax approves.
 - **Build:** 🛞 Hub. Icon system (registry, `<GameIcon>`, `<TeamLogo>`, credits, theming tokens) → emoji sweep. 🔧 Wrench adds icon ids to content data.
 
