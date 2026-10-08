@@ -76,6 +76,14 @@ Every current-release issue has a `crew:` label saying who (and which model) sho
 - **Story is Pax's:** Radio proposes and captures; nothing is canon until Pax moves it into `docs/STORY_BIBLE.md`.
 - **Stay in your lane:** if a task turns out bigger than its crew, stop, comment why on the issue, and hand it back to Pit to re-route.
 - Start every message with your emoji and name (e.g. "🛞 Hub:").
+- **End every session with a handoff to Pit**, ready for Pax to paste, headed `<emoji> <Name> → 🎤 Pit: handoff (<date>)`:
+  - **TL;DR** (2–3 lines)
+  - **Shipped:** issue · PR · what, and where Pax sees it
+  - **Decisions** Pax made (for the decision log)
+  - **Issue edits needed:** stale text, new follow-ups, scope changes
+  - **Traps** the next person should know
+  - **Next:** what you'd pick up, and what's blocked on whom
+  Check what Pit already handled before listing it.
 
 ## Docs
 - `docs/V05_PLAN.md` - The v0.5 Spa plan: milestones, crew lanes, build order, risks, decision log
