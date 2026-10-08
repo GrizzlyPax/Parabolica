@@ -25,7 +25,7 @@ One page with defaults, so a solo player can hit Start immediately.
 | Teams | 10 | **5–10** (Pax). **Drivers = teams × 3, cars = teams** |
 | Player-controlled | 1 | Each human names and colours their team. >1 = local hotseat |
 | CPU teams | auto | = teams − humans; generated identities; dumb AI |
-| Calendar | random, ~16 | Random from the pool or hand-picked; reuses existing tracks |
+| Calendar | random, 10 races | Random from the pool or hand-picked; reuses existing tracks |
 
 Fixed (not settings): squad 3 / race 2 / bench 1 · car rack = team count · reverse-standings Paddock order · points championship, no elimination · one draft opacity for everyone.
 
@@ -45,7 +45,8 @@ Instead of 2 drivers pre-assigned to each named team, the seed summons a **share
 - **CPU turns are no-ops in v0.5:** build the framework and per-team hook only. CPU actions come later with no rework.
 - Each human's turn has **two decisions**:
   1. **Pick who races:** 2 of your 3 start, and the 3rd is benched.
-  2. **Open your mystery box:** its **metal** is set by standing (Bronze leader → Silver → Gold → 🟣 Iridium last). It deals a **gear card** (equipment / upgrade / facility), or about **1 in 4** times a **trait card**, from the 🏁 Motorsport deck ([docs/CARDS.md](CARDS.md)). Open it (a loot-box reveal) and choose where it goes: any driver, car or team, yours or a rival's. Gear into a full slot **swaps** out the old card.
+  2. **Open your mystery box:** its **metal** is set by standing (Bronze leader → Silver → Gold → 🟣 Iridium last). It deals a **gear card** (equipment / upgrade / facility), or about **1 in 4** times a **trait card**, from the 🏁 Motorsport deck ([docs/CARDS.md](CARDS.md)). Open it (a loot-box reveal) and put it on **your own team** (driver, car or team). Gear into a full slot **swaps**; the old card goes to your **team locker**.
+- **Gear management:** in any Paddock you can equip from the locker, move equipment between your drivers (bench included), or unequip to the locker. Free, unlimited.
 - Box rules: dealt every race · gear lasts until swapped, traits are permanent · teams start each season with no gear and 1 slot of each kind · slot traits add slots.
 - Metal odds (C/U/R/L, illustrative): Bronze 60/30/9/1 · Silver 52/32/13/3 · Gold 43/34/18/5 · Iridium 35/35/22/8.
 
