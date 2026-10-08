@@ -43,7 +43,9 @@
 
 **v0.5 odds:** Neutral 60% · each dry weather **8%** (Wet's share spread across them). Wet returns in v0.6.
 
-**Weather rule cards** (Rain, Fog, Clear Skies, Wild Weather) are **remapped** to the new dry weathers in v0.5 (Quick Race only).
+**Weather rule cards, remapped in v0.5** (ids kept so presets and the ledger still load; names are placeholders for Radio): `rain` → **Grip Weather** (Aggression + Grip) · `fog` → **Steady Weather** (Consistency + Pit Crew) · `clear-skies` → **Neutral Skies** · `always-raining` → **Always Grip Weather** · `wild-weather` → Neutral 10% / each dry 18%.
+
+**Status (Oct 8):** the dry half is built in the v0.5 bundle PR (version 0.5.0, merged by Pax). Retired with it: the 31 tracks, track events, the 17 condition tags, the 3 track characters, the 5 inflictions (parked in `docs/story/2026-10-08-horror-deck-parked.md`).
 
 ## Build notes
 - **Dry favours are static for the race,** so they apply like gear and traits: field-wide multipliers at race build, reusing the card math (`applyCards`).
