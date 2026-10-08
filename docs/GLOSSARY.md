@@ -56,6 +56,32 @@
 | **Caldera** `caldera` | #F87103 · #FFFFFF | `volcano` | A city built inside an old crater. Race day starts with the bells. |
 | **Tessaly** `tessaly` | #0DB98E · #FFFFFF | `water-drop` | Spa town. Drivers take the waters before every race and won't say why. |
 
+## Tracks (v0.5)
+
+*Source: `src/data/deckTracks.ts` (docs/TRACKS_WEATHER.md). Six stat-combo tracks; each favours one driver stat and one car/team stat for the race, field-wide. Raced once the sim switches (#359); until then races use the themed tracks below.*
+
+| Track | Favours | Layout |
+|---|---|---|
+| **Speed + Power** `speed-power` | +10% Speed · +10% Power | power |
+| **Consistency + Grip** `consistency-grip` | +10% Consistency · +10% Grip | technical |
+| **Aggression + Reliability** `aggression-reliability` | +10% Aggression · +10% Reliability | street |
+| **Endurance + Tyre Management** `endurance-tyre-management` | +10% Endurance · +10% Tyre Management | flowing |
+| **Acceleration + Pit Crew** `acceleration-pit-crew` | +10% Acceleration · +10% Pit Crew | modern |
+| **Luck + Reliability** `luck-reliability` | +10% Luck · +10% Reliability | classic |
+
+## Weather (v0.5)
+
+*Source: `src/data/deckWeather.ts`. Neutral + five dry weathers, favours × intensity, stacking with the track. No rain until Wet arrives in v0.6.*
+
+| Weather | Odds | Favours |
+|---|---|---|
+| **Neutral** `neutral` | 60% | — |
+| **Speed + Tyre Management** `speed-tyre-management` | 8% | +10% Speed · +10% Tyre Management |
+| **Consistency + Pit Crew** `consistency-pit-crew` | 8% | +10% Consistency · +10% Pit Crew |
+| **Acceleration + Reliability** `acceleration-reliability` | 8% | +10% Acceleration · +10% Reliability |
+| **Endurance + Power** `endurance-power` | 8% | +10% Endurance · +10% Power |
+| **Aggression + Grip** `aggression-grip` | 8% | +10% Aggression · +10% Grip |
+
 ## Teams on today's grid (retiring)
 
 *Source: `src/data/teams.ts`. Quick Race and leagues still race these until #356 swaps in the base deck.*
