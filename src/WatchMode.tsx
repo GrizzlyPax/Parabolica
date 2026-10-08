@@ -58,6 +58,10 @@ interface WatchModeProps {
   spectator?: boolean;
   /** Fantasy teams in play: drafted rows carry their colour in the tower. */
   fantasy?: FantasyConfig;
+  /** Season Mode (#322): rivals' drivers, whose stats and cards stay sealed. */
+  sealedDriverIds?: ReadonlySet<number>;
+  /** The way out, when it isn't the menu or the league ("Paddock"). */
+  exitLabel?: string;
   // Race controls
   isRunning?: boolean;
   raceSpeed?: RaceSpeed;
@@ -107,6 +111,8 @@ function WatchMode({
   raceEvents,
   onExit,
   spectator = false,
+  sealedDriverIds,
+  exitLabel,
   // Race controls
   isRunning = false,
   raceSpeed = 1,
@@ -1172,7 +1178,7 @@ function WatchMode({
         onViewChange={setActiveView}
         onClose={() => setNavPanelOpen(false)}
         onExit={onExit}
-        exitLabel={spectator ? 'League' : 'Main Menu'}
+        exitLabel={exitLabel ?? (spectator ? 'League' : 'Main Menu')}
         exitDescription={spectator ? 'Back to the league view' : 'Leave the race'}
       />
 
@@ -1193,7 +1199,7 @@ function WatchMode({
             buildReport={buildReport}
             onNextRace={onNextRace}
             onExit={onExit}
-            exitLabel={spectator ? '⚜️ Back to League' : 'Menu'}
+            exitLabel={exitLabel ?? (spectator ? '⚜️ Back to League' : 'Menu')}
             fantasy={fantasy ? (() => {
               const digest = { finishOrder: raceState.finishOrder, dnfDriverIds: drivers.filter(d => d.status === 'dnf').map(d => d.id) };
               return fantasyStandings(fantasy, [digest]).map(l => ({
@@ -1214,6 +1220,7 @@ function WatchMode({
                   </button>
                 )}
                 <TimingTower
+                  sealed={sealedDriverIds}
                   drivers={sortedDrivers}
                   columns={TRACK_COLUMNS}
                   raceState={raceState}
@@ -1263,6 +1270,7 @@ function WatchMode({
                   </button>
                 )}
                 <TimingTower
+                  sealed={sealedDriverIds}
                   drivers={sortedDrivers}
                   columns={DETAIL_COLUMNS}
                   raceState={raceState}

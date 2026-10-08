@@ -8,7 +8,7 @@ import TireHistory from './TireHistory';
 import type { ColumnConfig, RowContext } from './types';
 import { Driver } from '../../RaceEngine';
 import TagChips, { EffectChips } from './TagChips';
-import { CardFace } from '../../cards/CardFace';
+import { CardDot, CardFace } from '../../cards/CardFace';
 import { CANON_VARIABLES } from '../../simlab/types';
 
 // Suffixes to ignore when extracting surname
@@ -352,7 +352,7 @@ export const COLUMN_TAGS: ColumnConfig = {
     if (driver.tags.length === 0 && cards.length === 0 && hits.length === 0) return <span className="muted-cell">—</span>;
     return (
       <span className="tag-chips">
-        {cards.map(c => <CardFace key={c.id} card={c} size="mini" flippable={false} />)}
+        {cards.map(c => (ctx.sealed ? <CardDot key={c.id} card={c} /> : <CardFace key={c.id} card={c} size="mini" flippable={false} />))}
         {driver.tags.length > 0 && <TagChips tags={driver.tags} stack={ctx.effectStack} />}
         {hits.length > 0 && <EffectChips entries={hits} />}
       </span>

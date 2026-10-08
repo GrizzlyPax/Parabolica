@@ -41,6 +41,7 @@ function TimingTower({
   battles,
   fastestLapOverall,
   fantasy,
+  sealed,
   className = '',
 }: TimingTowerProps) {
   const { finishOrder } = raceState;
@@ -115,6 +116,7 @@ function TimingTower({
     const isDNF = driver.status === 'dnf';
     const isPitting = driver.status === 'pitting';
     const isFocused = focusedDriverIds.has(driver.id);
+    const isSealed = sealed?.has(driver.id) ?? false;
 
     // Display position
     let displayPosition: string;
@@ -248,8 +250,9 @@ function TimingTower({
       displayPosition,
       positionDelta,
       gridSlot,
-      driverRank: fieldRanking.driver.get(driver.id),
-      carRank: fieldRanking.car.get(driver.id),
+      driverRank: isSealed ? undefined : fieldRanking.driver.get(driver.id),
+      carRank: isSealed ? undefined : fieldRanking.car.get(driver.id),
+      sealed: isSealed || undefined,
       fantasyTeam: fantasyBy.get(driver.id),
       battle,
       speedTone,
@@ -262,7 +265,7 @@ function TimingTower({
       bestLapClass,
       statusEmoji,
       activeTagIds: activeTags?.get(driver.id),
-      effectStack: effectStacks?.get(driver.id),
+      effectStack: isSealed ? undefined : effectStacks?.get(driver.id),
       history: histories?.get(driver.id),
       isFocused,
       isFinished,

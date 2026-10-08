@@ -33,6 +33,8 @@ export interface RowContext {
   carRank?: FieldRank;
   /** The fantasy team that drafted this driver, if any. */
   fantasyTeam?: { name: string; color: string };
+  /** A rival in Season Mode (#322): no ranks, no effect stack, cards as metal dots. */
+  sealed?: boolean;
   /** Speed vs the running pack's median this tick: 'hot' ≥ +4%, 'quick' ≥ +1%, 'slow' ≤ −3%, else 'pack'. */
   speedTone?: 'hot' | 'quick' | 'pack' | 'slow';
   /** Speed relative to the pack median, −1…+1 over ±8%. */
@@ -97,6 +99,8 @@ export interface TimingTowerProps {
   fastestLapOverall?: number;
   /** Fantasy teams in play: drafted rows carry their team's colour. */
   fantasy?: FantasyConfig;
+  /** Season Mode (#322): drivers whose detail stays dark (rivals). */
+  sealed?: ReadonlySet<number>;
   className?: string;
 }
 
