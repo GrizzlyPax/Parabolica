@@ -52,13 +52,12 @@ gh api -X PATCH repos/GrizzlyPax/Parabolica/issues/N -f state=closed -f state_re
 
 Closing note forms: "Done in [#M Title]", "Replaced by [#M Title]", "Parked: <why>".
 
-## Asana (required)
+## Milestone, crew, paste line (required)
 
-Every issue you create gets a matching task in the Asana project "🏁 Parabolica" (GID `1219276019625158`):
-- Title: plain words, no issue number. Description: `GitHub: <issue url>` + one-line why.
-- Section: the current release's milestone section (`🇧🇪 v0.5 · 1 Core` … `5 Ship`), a later release, `📥 Queued`, or `🧊 Icebox`. **No due dates:** set the order with the milestone section and "waiting on" dependencies. Crew only for the current release.
-- **Crew** field: who builds it (Apex = Fable-only work; Hub; Wrench = tightly scoped, small model; Telemetry; Pit; Pax = needs a decision). 
-- Closing an issue → complete its Asana task. No Asana connector in this chat → list the Asana changes in your reply.
+- **Milestone:** the current release's step (`v0.5 · 1 Core` … `5 Ship`) or a later release (`v0.6 Monza`, `v0.7 Suzuka`). Not in a release → no milestone + label `queued` or `icebox`.
+- **Crew label** (current release only): `crew: apex` (Fable-only work) · `crew: hub` · `crew: wrench` (tightly scoped, small model) · `crew: radio` · `crew: telemetry` · `crew: pit` · `crew: pax` (needs a decision).
+- **First line of the body:** `> **Paste (<model>):** <crew opener> Issue: #N`. Openers are in CLAUDE.md.
+- **Order:** a `**Depends on:**` line linking the issues that must close first. No due dates.
 
 ## Lane
 
