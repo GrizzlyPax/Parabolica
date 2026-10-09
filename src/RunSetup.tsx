@@ -21,7 +21,7 @@ import { draftComplete, type FantasyConfig } from './fantasy/types';
 import { buildCardRoster } from './rules/genesis';
 import { weatherForRace, isNeutralWeather } from './data/weather';
 import { applyFavours } from './cards/apply';
-import { favourText } from './cards/favourText';
+import { PriorityLine } from './cards/PriorityLine';
 import { CardFace } from './cards/CardFace';
 import { GameIcon } from './icons/GameIcon';
 import './RunSetup.css';
@@ -133,10 +133,10 @@ export default function RunSetup({ onStartRace, onBack }: RunSetupProps) {
           <div>
             <div className="rs-track-name">{track.name} <span className="rs-flag">{track.emoji}</span></div>
             <div className="rs-track-meta">{track.laps} laps · {track.length}m
-              <span className="rs-chip" title="Favoured stats count +10% for the race, field-wide">{favourText(track.favours)}</span>
-              {weather && !isNeutralWeather(weather) && <span className="rs-chip rs-chip-weather" title={favourText(weather.favours)}>{weather.emoji} {weather.name}{weather.intensity < 1 ? ` ${Math.round(weather.intensity * 100)}%` : ''}</span>}
+              {weather && !isNeutralWeather(weather) && <span className="rs-chip rs-chip-weather">{weather.emoji} {weather.name}{weather.intensity < 1 ? ` ${Math.round(weather.intensity * 100)}%` : ''}</span>}
               {(!weather || isNeutralWeather(weather)) && <span className="rs-chip rs-chip-dim">Neutral weather</span>}
             </div>
+            <PriorityLine label="Priority stats" track={track} weather={weather} />
           </div>
         </div>
         <label className="rs-track-pick">
