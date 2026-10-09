@@ -147,9 +147,9 @@ export function DraftPanel({ roster, value, onChange, context }: DraftPanelProps
                       <span className={`fd-third ${dr.cls}`} title={`Driver: ${dr.label} of the grid`}>D · {dr.label}</span>
                       <span className={`fd-third ${cr.cls}`} title={`Car: ${cr.label} of the field`}>C · {cr.label}</span>
                     </span>
-                    <span className="fd-card-tags" title={d.tags.length ? `${d.tags.length} tag${d.tags.length > 1 ? 's' : ''} — rarity shown, not what they do` : 'No tags'}>
-                      {d.tags.map((t, i) => <span key={i} className={`fd-tag-dot rarity-${t.rarity}`} />)}
-                      {d.tags.length === 0 && <span className="fd-no-tags">—</span>}
+                    <span className="fd-card-tags" title={d.cards?.length ? `${d.cards.length} card${d.cards.length > 1 ? 's' : ''} — metal shown, not what they do` : 'No cards'}>
+                      {(d.cards ?? []).map((c, i) => <span key={i} className={`fd-tag-dot rarity-${c.rarity ?? 'bronze'}`} />)}
+                      {!d.cards?.length && <span className="fd-no-tags">—</span>}
                     </span>
                     {owner && <span className="fd-owner">{owner.name}</span>}
                   </button>

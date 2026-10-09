@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { labSpec, runLabRace, raceFingerprint, batchFingerprint, carriersOf } from './runner';
+import { labSpec, runLabRace, raceFingerprint, batchFingerprint } from './runner';
 import { CURRENT_TRACKS } from '../generators/tracks';
 
 describe('Race Control runner', () => {
@@ -20,14 +20,13 @@ describe('Race Control runner', () => {
     for (const s of [a, b]) expect(CURRENT_TRACKS.some(t => t.id === s.trackId)).toBe(true);
   });
 
-  it('no-tags + override puts exactly one tag in the race; team tags land on both drivers', () => {
+  it('the No Traits card clears every genesis card; the default hand deals some', () => {
     const spec = labSpec(7, 0, ['no-tags']);
-    // Driver 3: a final-lap tag needs a driver who reaches the final lap (Pass One, #481).
-    const solo = runLabRace(spec, { override: { driverIndex: 3, tagId: 'clutch-performer' } });
-    expect(solo.roster.flatMap(d => d.tags).map(t => t.id)).toEqual(['clutch-performer']);
-    const team = runLabRace(spec, { override: { driverIndex: 5, tagId: 'underdog-spirit' } });
-    expect(carriersOf(team, { driverIndex: 5, tagId: 'underdog-spirit' })).toHaveLength(2);
-    expect(raceFingerprint(runLabRace(spec))).not.toBe(raceFingerprint(solo));
+    const clean = runLabRace(spec);
+    expect(clean.roster.every(d => d.cards?.length === 0)).toBe(true);
+    const dealt = runLabRace(labSpec(7, 0, []));
+    expect(dealt.roster.some(d => (d.cards?.length ?? 0) > 0)).toBe(true);
+    expect(raceFingerprint(clean)).not.toBe(raceFingerprint(dealt));
     expect(batchFingerprint(['a', 'b'])).toMatch(/^[0-9a-f]{8}$/);
   });
 });

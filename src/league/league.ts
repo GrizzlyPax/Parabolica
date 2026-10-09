@@ -3,8 +3,7 @@
 // generation step later never shifts existing ones.
 
 import { mulberry32, deriveSeed } from '../engine/rng';
-import { Tag, getTagById } from '../data/tags';
-import { buildRoster, buildCardRoster } from '../rules/genesis';
+import { buildRoster } from '../rules/genesis';
 import { Ruleset, defaultRuleset, upgradeRuleset } from '../rules/ruleset';
 import { getTeamsByIds, Team } from '../data/teams';
 import { generateRosterFromTeamList } from '../generators/drivers';
@@ -14,23 +13,21 @@ import { createInitialSeasonState } from '../types/season';
 import { LeagueSetupConfig, LeagueState, ScheduledRace } from './types';
 import { version as engineVersion } from '../../package.json';
 
-/** Build the genesis grid for a league seed: drivers + cars, tags attached.
- * The grid is the registry teams (by id) plus any player-created customTeams,
- * in that order. */
+/** Build the genesis grid for a league seed: drivers + cars, genesis trait
+ * cards baked in (rules/genesis.ts). The grid is the registry teams (by id)
+ * plus any player-created customTeams, in that order. */
 export function generateGenesisRoster(
   leagueSeed: number,
   teamIds: string[],
   customTeams: Team[] = [],
   ruleset: Ruleset = defaultRuleset(),
-  /** Deal trait cards instead of tags (Quick Race, #337). Leagues stay on tags until v0.6. */
-  cards: boolean = false
 ): RosterDriver[] {
   const teams = [...getTeamsByIds(teamIds), ...customTeams];
   const driverRng = mulberry32(deriveSeed(leagueSeed, 'genesis', 'drivers'));
   const carRng = mulberry32(deriveSeed(leagueSeed, 'genesis', 'cars'));
   const roster = generateRosterFromTeamList(teams, driverRng);
   const generated = generateCarsForKingdoms(teams.map(t => t.id), carRng);
-  return cards ? buildCardRoster(roster, generated, leagueSeed, ruleset) : buildRoster(roster, generated, leagueSeed, ruleset);
+  return buildRoster(roster, generated, leagueSeed, ruleset);
 }
 
 /** Fix the calendar: every race gets its wall-clock slot and seed at founding.
@@ -47,7 +44,7 @@ export function buildSchedule(leagueSeed: number, setup: LeagueSetupConfig): Sch
 
 export function createLeague(leagueSeed: number, setup: LeagueSetupConfig): LeagueState {
   // Old saves name rarities common…legendary (#385); the facts stay as saved.
-  const roster = generateGenesisRoster(leagueSeed, setup.teamIds, setup.customTeams, setup.ruleset ? upgradeRuleset(setup.ruleset) : defaultRuleset(), setup.cards ?? false);
+  const roster = generateGenesisRoster(leagueSeed, setup.teamIds, setup.customTeams, setup.ruleset ? upgradeRuleset(setup.ruleset) : defaultRuleset());
   return {
     engineVersion,
     leagueSeed,
@@ -62,43 +59,11 @@ export function createLeague(leagueSeed: number, setup: LeagueSetupConfig): Leag
 }
 
 /**
- * The roster state a given race runs with: genesis grid + every intervention
- * whose atRaceIndex is at or before that race. Pure — never mutates inputs.
+ * The roster state a given race runs with: the genesis grid plus every decree
+ * whose atRaceIndex is at or before that race. The only decree so far
+ * (attach-tag) retired with tags (#334), so today this is the genesis grid;
+ * the hook stays for when decrees return. Pure — never mutates inputs.
  */
-export function rosterStateAt(league: LeagueState, raceIndex: number): RosterDriver[] {
-  const applicable = league.interventionLog.filter(i => i.atRaceIndex <= raceIndex);
-  if (applicable.length === 0) return league.roster;
-  const cap = (league.setup.ruleset ?? defaultRuleset()).tags.slotCap;
-
-  return league.roster.map(driver => {
-    let tags = driver.tags;
-    for (const entry of applicable) {
-      if (entry.targetDriverId !== driver.id) continue;
-      const tag = getTagById(entry.tagId);
-      if (!tag) continue;
-      if (entry.type === 'expire-tag') {
-        tags = tags.filter(t => t.id !== tag.id);
-      } else {
-        // attach-tag (Commissionary) and acquire-tag (the sim) land the same way
-        tags = attachTag(tags, tag, cap);
-      }
-    }
-    return tags === driver.tags ? driver : { ...driver, tags };
-  });
-}
-
-/**
- * Add a tag to a stack. Pure. A duplicate id is a no-op; a full stack
- * (MAX_TAGS_PER_DRIVER) refuses — the log entry is kept (history is
- * append-only) but has no effect. Validate with canAttachTag before committing
- * so the UI never offers an attachment that would be ignored.
- */
-export function attachTag(tags: Tag[], tag: Tag, cap: number = defaultRuleset().tags.slotCap): Tag[] {
-  if (!canAttachTag(tags, tag, cap)) return tags;
-  return [...tags, tag];
-}
-
-export function canAttachTag(tags: Tag[], tag: Tag, cap: number = defaultRuleset().tags.slotCap): boolean {
-  if (tags.some(t => t.id === tag.id)) return false;
-  return tags.length < cap;
+export function rosterStateAt(league: LeagueState, _raceIndex: number): RosterDriver[] {
+  return league.roster;
 }

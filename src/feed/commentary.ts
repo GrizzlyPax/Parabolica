@@ -132,9 +132,9 @@ const BOOTH: Partial<Record<NotificationType, TemplateFn>> = {
     `It's done — ${name(n)} wins. History will remember. We might not.`,
   ], seed),
 
-  tag_activation: (n) =>
-    // Title already carries "{emoji} {driver}", message carries the tag text
-    `${n.title} — ${n.message || 'something just activated.'}`,
+  effect_applied: (n) =>
+    // Title already carries "{emoji} {driver}", message carries the effect text
+    `${n.title} — ${n.message || 'something just landed.'}`,
 
   overtake: (n, _ctx, seed) => pick([
     `${n.message || `${name(n)} makes a move.`}`,

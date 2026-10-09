@@ -6,8 +6,8 @@
 import { SeasonState, DriverSeasonStats } from '../types/season';
 import { LeagueState } from '../league/types';
 
-// v2 (#231): RosterDriver.tags[] replaced driverTag/carTag/teamTag; genesis draws
-// weight by tier; tag rolls moved to a side stream. v1 saves are not migrated
+// v2 (#231): RosterDriver.tags[] replaced driverTag/carTag/teamTag (tags themselves
+// retired in #334; cards took the slot). v1 saves are not migrated
 // (archive-don't-migrate, pre-1.0).
 export const SCHEMA_VERSION = 2;
 const LEAGUE_KEY = 'parabolica.league.v1';

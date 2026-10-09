@@ -173,11 +173,10 @@ export interface PitStopResults {
 // Track how events affect driver performance
 
 export interface EventPerformance {
-  eventId: string;              // Unique ID (track event id or tag id)
+  eventId: string;              // Unique ID (track event id or in-race effect id)
   eventName: string;            // Display name
   eventEmoji: string;           // Emoji for display
-  eventSource: 'track' | 'tag'; // Where this event comes from
-  tagType?: 'driver' | 'car' | 'team'; // If source is 'tag'
+  eventSource: 'track' | 'effect'; // Where this event comes from
   description?: string;         // What the event does
   flavorText?: string;          // Flavor text for the event
 

@@ -83,7 +83,7 @@ interface WatchModeProps {
 }
 
 // Modular notification system for race events
-export type NotificationType = 'crash' | 'lead_change' | 'pit_stop' | 'slow_pit_stop' | 'quick_pit_stop' | 'weather' | 'finish' | 'info' | 'overtake' | 'fastest_lap' | 'milestone' | 'power_blessing' | 'power_curse' | 'power_god' | 'track_event' | 'tag_activation';
+export type NotificationType = 'crash' | 'lead_change' | 'pit_stop' | 'slow_pit_stop' | 'quick_pit_stop' | 'weather' | 'finish' | 'info' | 'overtake' | 'fastest_lap' | 'milestone' | 'power_blessing' | 'power_curse' | 'power_god' | 'track_event' | 'effect_applied';
 
 export interface RaceNotification {
   id: number;
@@ -162,7 +162,7 @@ function WatchMode({
   const winnerAnnouncedRef = useRef(false); // Track if winner notification sent
   const lastPowerTimestampRef = useRef<number>(0); // Track last power activation to avoid duplicates
   const lastTrackEventTickRef = useRef<number>(-1); // Track last track event tick to avoid duplicates
-  const seenTagActivationsRef = useRef<Set<string>>(new Set()); // Track which tag activations we've shown
+  const seenEffectsRef = useRef<Set<string>>(new Set()); // Which in-race effects we've shown
 
   // Status effects for timing tower (longer duration - persists for ~1 lap)
   const [statusEffects, setStatusEffects] = useState<StatusEffect[]>([]);
@@ -348,7 +348,7 @@ function WatchMode({
     }
     fastestLapRef.current = fastest;
 
-    // Past track events, unsafety car deployments, effects, tag activations
+    // Past track events, unsafety car deployments, effects, in-race effects
     for (const e of raceEvents ?? []) {
       if (e.type === 'track_event' && e.tick > lastTrackEventTickRef.current) {
         lastTrackEventTickRef.current = e.tick;
@@ -360,8 +360,8 @@ function WatchMode({
       if ((e.type === 'track_event_effect' || e.type === 'driver_error') && e.driverId >= 0) {
         seenTrackEffectsRef.current.add(`${e.tick}-${e.driverId}`);
       }
-      if (e.type === 'tag_activation') {
-        seenTagActivationsRef.current.add(`${e.tick}-${e.driverId}-${e.description}`);
+      if (e.type === 'effect_applied') {
+        seenEffectsRef.current.add(`${e.tick}-${e.driverId}-${e.description}`);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -610,28 +610,28 @@ function WatchMode({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [raceEvents, trackInfo, raceState.totalTicks]);
 
-  // Detect tag activations and show notifications
+  // Detect in-race effects landing (damage, a spin, cooked tyres, a stop's mood) and show notifications
   useEffect(() => {
     if (!raceEvents || raceEvents.length === 0) return;
 
-    // Find tag_activation events we haven't shown yet
-    const tagActivations = raceEvents.filter(e => {
-      if (e.type !== 'tag_activation') return false;
+    // Find effect_applied events we haven't shown yet
+    const applied = raceEvents.filter(e => {
+      if (e.type !== 'effect_applied') return false;
       const key = `${e.tick}-${e.driverId}-${e.description}`;
-      if (seenTagActivationsRef.current.has(key)) return false;
+      if (seenEffectsRef.current.has(key)) return false;
       return true;
     });
 
-    for (const event of tagActivations) {
+    for (const event of applied) {
       const key = `${event.tick}-${event.driverId}-${event.description}`;
-      seenTagActivationsRef.current.add(key);
+      seenEffectsRef.current.add(key);
 
       // Find the driver to get their name
       const driver = drivers.find(d => d.id === event.driverId);
       const driverName = driver ? driver.name : 'Unknown Driver';
 
       addNotification(
-        'tag_activation',
+        'effect_applied',
         event.emoji ? `${event.emoji} ${driverName}` : driverName,
         event.description,
         event.emoji || 'race.card_trigger',
@@ -652,7 +652,7 @@ function WatchMode({
       lastTrackEventTickRef.current = -1;
       setStatusEffects([]);
       seenTrackEffectsRef.current.clear();
-      seenTagActivationsRef.current.clear();
+      seenEffectsRef.current.clear();
     }
   }, [raceState.totalTicks]);
 
@@ -995,7 +995,7 @@ function WatchMode({
   }, [statusEffects]);
 
   // Ambient race conditions (weather + track character) for the header, and
-  // per-driver active-tag state for the tower's tag chips. WatchMode always
+  // per-driver effect stacks for the tower's chips. WatchMode always
   // renders the app singleton's race, so reading it directly is sound; both
   // refresh on every drivers-notify render.
   const engine = RaceEngine.getInstance();
@@ -1051,7 +1051,7 @@ function WatchMode({
     const map = new Map<number, Map<string, DriverHistoryEntry>>();
     const kindOf = (t: RaceEvent['type']): DriverHistoryEntry['kind'] | null => {
       switch (t) {
-        case 'tag_activation': case 'tag_acquired': return 'tag';
+        case 'effect_applied': return 'effect';
         case 'track_event_effect': return 'event';
         case 'driver_error': return 'error';
         case 'slow_pit_stop': case 'quick_pit_stop': return 'pit';
@@ -1064,10 +1064,9 @@ function WatchMode({
     for (const e of engine.getFullEvents()) {
       const kind = kindOf(e.type);
       if (!kind || e.driverId < 0) continue;
-      // Name = the part before ':' for tags/errors ("Pit Lane Special: flies…" → "Pit Lane Special")
+      // Name = the part before ':' for effects/errors ("Damaged: limps on…" → "Damaged")
       let name = e.description;
-      if (kind === 'tag' || kind === 'error') name = e.description.split(':')[0].trim();
-      if (e.type === 'tag_acquired') name = `+${name}`;
+      if (kind === 'effect' || kind === 'error') name = e.description.split(':')[0].trim();
       else if (kind === 'pit') name = e.type === 'slow_pit_stop' ? 'Slow stop' : 'Quick stop';
       else if (kind === 'crash') name = e.type === 'dnf' ? 'Retired' : e.type === 'crash' ? 'Crash' : e.type === 'mechanical_failure' ? 'Mechanical failure' : 'Tyre failure';
       else if (kind === 'pass') name = /passes/.test(e.description) ? 'Passes' : 'Gains places';
@@ -1105,16 +1104,6 @@ function WatchMode({
     return map;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [drivers, engine]);
-  const activeTagsMap = useMemo(() => {
-    const map = new Map<number, Set<string>>();
-    for (const d of drivers) {
-      if (d.tags.length > 0) {
-        map.set(d.id, new Set(engine.getActiveTagIds(d.id)));
-      }
-    }
-    return map;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [drivers, raceState.totalTicks]);
 
   // === Lap-chart history (the position trace, #208) ===
   // The engine records a snapshot per leader-lap inside tick(), so the history
@@ -1266,7 +1255,6 @@ function WatchMode({
                   onDriverClick={toggleDriverFocus}
                   condensed={false}
                   statusEffects={statusEffectsMap}
-                  activeTags={activeTagsMap}
                   effectStacks={effectStacksMap}
                   histories={historiesMap}
                   positionDeltas={positionDeltasForTower}
@@ -1322,7 +1310,6 @@ function WatchMode({
                   condensed={false}
                   expandable={true}
                   statusEffects={statusEffectsMap}
-                  activeTags={activeTagsMap}
                   effectStacks={effectStacksMap}
                   histories={historiesMap}
                   positionDeltas={positionDeltasForTower}

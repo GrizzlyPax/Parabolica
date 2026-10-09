@@ -2,7 +2,7 @@
 import { describe, it, expect } from 'vitest';
 import { MOTORSPORT_DECK, motorsportDeck, cardsBy, pickCard, slotsFor, METAL_LADDER, CARDS_BY_ID, DRIVER_STATS, CAR_STATS, TEAM_STATS } from './deck';
 import { applyCards, cardPercents } from './apply';
-import { DEFAULT_RARITY_ODDS, RARITIES } from '../data/tags';
+import { DEFAULT_RARITY_ODDS, RARITIES } from './rarity';
 import { mulberry32 } from '../engine/rng';
 import type { Card, CardTarget, StatKey } from './types';
 

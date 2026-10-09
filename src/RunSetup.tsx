@@ -5,7 +5,7 @@
 //
 // Everything is derived from one seed + the hand of cards, so a report's seed
 // reproduces the race and flipping a card re-rolls only what it touches
-// (tags), never names, stats, teams or track.
+// (trait cards), never names, stats, teams or track.
 import { useEffect, useMemo, useState } from 'react';
 import RaceEngine, { RosterDriver } from './RaceEngine';
 import { generateRosterFromTeams } from './generators/drivers';
@@ -18,7 +18,7 @@ import { resolveRuleset, applyLabPreset, describeRuleset, describeChance, descri
 import { loadNotebook, fetchLedger, presetSummary, type LabPreset } from './racecontrol/notebook';
 import { DraftPanel, emptyFantasy } from './fantasy/DraftPanel';
 import { draftComplete, type FantasyConfig } from './fantasy/types';
-import { buildCardRoster } from './rules/genesis';
+import { buildRoster } from './rules/genesis';
 import { weatherForRace, isNeutralWeather } from './data/weather';
 import { applyFavours } from './cards/apply';
 import { PriorityLine } from './cards/PriorityLine';
@@ -48,7 +48,7 @@ export default function RunSetup({ onStartRace, onBack }: RunSetupProps) {
   const [trackOverride, setTrackOverride] = useState<Track | null>(null);
   const [showRules, setShowRules] = useState(false);
 
-  // Race Control presets (edited tags + knobs) saved in this browser.
+  // Race Control presets (knob edits) saved in this browser.
   const [presets, setPresets] = useState<LabPreset[]>(() => loadNotebook().presets);
   useEffect(() => {
     // Shared presets from the repo ledger join the local ones (local wins on the same id).
@@ -71,7 +71,7 @@ export default function RunSetup({ onStartRace, onBack }: RunSetupProps) {
   const track = trackOverride ?? universe.track;
 
   // Trait cards depend on the rule cards (genesis chance + metal odds); everything above does not (#337).
-  const roster = useMemo(() => buildCardRoster(universe.drivers, universe.cars, seed, ruleset), [universe, seed, ruleset]);
+  const roster = useMemo(() => buildRoster(universe.drivers, universe.cars, seed, ruleset), [universe, seed, ruleset]);
   const weather = useMemo(() => ruleset.weather.quickRace ? weatherForRace(seed, 0, ruleset.weather.weights) : null, [seed, ruleset]);
   // Fantasy draft for this race; picks are cleared if the grid changes under them.
   const [fantasy, setFantasy] = useState<FantasyConfig | null>(null);
@@ -173,12 +173,12 @@ export default function RunSetup({ onStartRace, onBack }: RunSetupProps) {
               <option value="">none — the rules as shipped</option>
               {presets.map(p => <option key={p.id} value={p.id}>{p.name} · {presetSummary(p)}</option>)}
             </select>
-            <span className="rs-hint">{preset ? `Racing under "${preset.name}": its tag edits are what genesis draws, its knobs are the physics. From Race Control → Notebook.` : 'A setup you saved in Race Control. Pick one to race under it.'}</span>
+            <span className="rs-hint">{preset ? `Racing under "${preset.name}": its knobs are the physics. From Race Control → Notebook.` : 'A setup you saved in Race Control. Pick one to race under it.'}</span>
           </div>
         )}
         {showRules && (
           <div className="rs-rules">
-            {rulesLines.length === 0 ? <div className="rs-rule">Default rules: {describeChance(ruleset.tags.genesisChance)} per slot (driver, car, team) to be born with a trait card ({describeOdds(ruleset.tags.rarityOdds)}); pit rule: {ruleset.simVars.pits.minStops} stops{ruleset.simVars.pits.requireAllCompounds ? ', all 3 compounds' : ''}; canon physics.</div>
+            {rulesLines.length === 0 ? <div className="rs-rule">Default rules: {describeChance(ruleset.traits.genesisChance)} per slot (driver, car, team) to be born with a trait card ({describeOdds(ruleset.traits.rarityOdds)}); pit rule: {ruleset.simVars.pits.minStops} stops{ruleset.simVars.pits.requireAllCompounds ? ', all 3 compounds' : ''}; canon physics.</div>
               : rulesLines.map(l => <div key={l} className="rs-rule">{l}</div>)}
             <div className="rs-rules-actions">
               <button type="button" className="rs-link" onClick={() => navigator.clipboard?.writeText(serializeRuleset(ruleset))}>Copy ruleset JSON</button>

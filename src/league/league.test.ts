@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
 import { createLeague, buildSchedule, rosterStateAt } from './league';
-import { MAX_TAGS_PER_DRIVER } from '../data/tags';
 import {
   settleLeague, nextRaceAt, isSeasonOver, prepareScheduledRace,
   FULL_EVENT_RETENTION, LIVE_TICK_MS,
@@ -234,56 +233,28 @@ describe('settleLeague (fake clock)', () => {
   });
 });
 
-describe('interventions', () => {
-  it('applies tag attachments from their race onward, never retroactively', () => {
-    const league = createLeague(42, makeSetup());
+describe('decrees (#334: the attach-tag decree retired with tags)', () => {
+  it('a legacy attach-tag decree still parses, is kept in the log, and changes nothing', () => {
+    const setup = makeSetup();
+    const league = createLeague(42, setup);
     const targetId = league.roster[0].id;
-    const withIntervention: LeagueState = {
+    const withDecree: LeagueState = {
       ...league,
-      interventionLog: [{
-        type: 'attach-tag',
-        atRaceIndex: 2,
-        targetDriverId: targetId,
-        tagId: 'sunday-driver',
-        committedAt: T0 + 5 * HOUR,
-      }],
+      interventionLog: [{ type: 'attach-tag', atRaceIndex: 2, targetDriverId: targetId, tagId: 'sunday-driver', committedAt: T0 + 5 * HOUR }],
     };
+    expect(rosterStateAt(withDecree, 1)).toEqual(league.roster);
+    expect(rosterStateAt(withDecree, 2)).toEqual(league.roster);
 
-    const before = rosterStateAt(withIntervention, 1).find(d => d.id === targetId)!;
-    const after = rosterStateAt(withIntervention, 2).find(d => d.id === targetId)!;
-    const has = (d: typeof before) => d.tags.some(t => t.id === 'sunday-driver');
-    expect(has(before)).toBe(false);
-    expect(has(after)).toBe(true);
-    // the attachment stacks on top of genesis tags rather than replacing them
-    expect(after.tags.length).toBe(before.tags.length + 1);
-    // genesis roster untouched (pure function)
-    expect(has(league.roster[0])).toBe(false);
+    const base = settleLeague(createLeague(42, setup), { now: T0 + 13 * HOUR }).league;
+    const altered = settleLeague(withDecree, { now: T0 + 13 * HOUR }).league;
+    expect(altered.digests.map(d => [d.finishOrder, d.totalTicks])).toEqual(base.digests.map(d => [d.finishOrder, d.totalTicks]));
+    // history is append-only: the decree stays on the record
+    expect(altered.interventionLog).toEqual(withDecree.interventionLog);
   });
 
-  it('changes the affected race but not the already-deterministic earlier ones', () => {
-    const setup = makeSetup();
-    const base = settleLeague(createLeague(42, setup), { now: T0 + 13 * HOUR }).league;
-
-    const tampered = createLeague(42, setup);
-    // Curse race 2's winner (certain to be on track to the flag), with an
-    // always-on tag so the change can't hide behind a closed gate.
-    tampered.interventionLog.push({
-      type: 'attach-tag',
-      atRaceIndex: 2,
-      targetDriverId: base.digests[2].finishOrder[0],
-      tagId: 'glass-cannon',
-      committedAt: T0 + 5 * HOUR,
-    });
-    const altered = settleLeague(tampered, { now: T0 + 13 * HOUR }).league;
-
-    // Races 0 and 1 ran before the intervention: identical
-    expect(altered.digests[0].finishOrder).toEqual(base.digests[0].finishOrder);
-    expect(altered.digests[1].finishOrder).toEqual(base.digests[1].finishOrder);
-    // Race 2 ran with a cursed driver: the race itself must differ
-    expect(altered.digests[2].totalTicks !== base.digests[2].totalTicks ||
-           JSON.stringify(altered.digests[2].finishOrder) !== JSON.stringify(base.digests[2].finishOrder) ||
-           altered.digests[2].highlights.length !== base.digests[2].highlights.length
-    ).toBe(true);
+  it('settling adds nothing to the log (the sim no longer writes entries)', () => {
+    const settled = settleLeague(createLeague(42, makeSetup()), { now: T0 + 13 * HOUR }).league;
+    expect(settled.interventionLog).toEqual([]);
   });
 });
 
@@ -312,9 +283,9 @@ describe('weather (C2)', () => {
       .toEqual(once.digests.map(d => [d.finishOrder, d.totalTicks, d.weather]));
   });
 
-  it('track tags (C3) are woven in deterministically too', () => {
-    // Intrinsic track tags ride on the same shared prepare path; a re-settle
-    // reproduces identical races (track tags affect crashes/pace).
+  it('track favours are woven in deterministically too', () => {
+    // Track favours ride on the same shared prepare path; a re-settle
+    // reproduces identical races.
     const setup = makeSetup();
     const a = settleLeague(createLeague(88, setup), { now: T0 + 13 * HOUR }).league;
     const b = settleLeague(createLeague(88, setup), { now: T0 + 13 * HOUR }).league;
@@ -347,19 +318,3 @@ describe('league persistence', () => {
   });
 });
 
-describe('tag stack cap (#231)', () => {
-  it('attach-tag stacks up to MAX_TAGS_PER_DRIVER, ignores duplicates and overflow', () => {
-    const league = createLeague(7, makeSetup());
-    const id = league.roster[0].id;
-    const base = league.roster[0].tags.length;
-    const pool = ['sunday-driver', 'clutch-performer', 'glass-cannon', 'cursed-chassis', 'front-runners', 'chaotic-energy'];
-    const log = pool.map((tagId, i) => ({ type: 'attach-tag' as const, atRaceIndex: 0, targetDriverId: id, tagId, committedAt: i }));
-    // a duplicate of the first, appended last
-    log.push({ ...log[0], committedAt: 99 });
-    const after = rosterStateAt({ ...league, interventionLog: log }, 0).find(d => d.id === id)!;
-    expect(after.tags.length).toBe(Math.min(base + pool.length, MAX_TAGS_PER_DRIVER));
-    expect(new Set(after.tags.map(t => t.id)).size).toBe(after.tags.length);
-    // genesis stays first; attachments keep log order
-    expect(after.tags.slice(0, base)).toEqual(league.roster[0].tags);
-  });
-});

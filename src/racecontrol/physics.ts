@@ -1,7 +1,7 @@
 // Physics calibration: what the race rules produce, measured.
 //
-// The same idea as tag calibration, pointed at the simulation variables: run a
-// seeded batch of untagged races and read the numbers that say whether racing
+// Pointed at the simulation variables: run a seeded batch of card-free races
+// (the No Traits card) and read the numbers that say whether racing
 // looks like racing — how much pace decides the result, how often pole wins,
 // stops, passes, DNFs, safety cars. Change a variable, run the same batch,
 // compare. Metrics mirror scripts/mechanics-probe.mjs (#246).

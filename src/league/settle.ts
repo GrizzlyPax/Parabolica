@@ -14,8 +14,6 @@ import { getTrackById, Track } from '../generators/tracks';
 import { updateSeasonWithRaceResult } from '../types/season';
 import { LeagueState, RaceDigest, SettleResult, LiveRace } from './types';
 import { rosterStateAt } from './league';
-import { evaluateAcquisitions, expiriesAt, carryoverEntries } from './acquisition';
-import { evaluateActions } from './actions';
 import { pickHighlights } from './highlights';
 import { weatherForRace, isNeutralWeather } from '../data/weather';
 import { applyFavours } from '../cards/apply';
@@ -161,7 +159,6 @@ export function runScheduledRace(
       : undefined,
     highlights: pickHighlights(events),
     events,
-    inRaceCarryovers: engine.getInRaceCarryovers(),
   };
   return { digest, drivers };
 }
@@ -202,9 +199,7 @@ export function settleLeague(league: LeagueState, options: SettleOptions): Settl
   let season = league.season;
   const newlySettled: RaceDigest[] = [];
   let live: LiveRace | undefined;
-  // The log grows as races settle (acquisitions), and each race must run with
-  // the log as it stood when that race began — so work on a copy that grows.
-  let working: LeagueState = league;
+  const working: LeagueState = league;
 
   for (const race of pending) {
     const startedAt = Math.max(race.scheduledAt, prevEnd);
@@ -239,19 +234,6 @@ export function settleLeague(league: LeagueState, options: SettleOptions): Settl
       digest.trackEmoji,
       digest.fastestLapDriverId
     );
-    // The sim hands out tags for what just happened (#232). Entries land in
-    // the same append-only log as interventions and take effect next race.
-    const rosterIn = rosterStateAt(working, race.index);
-    const acquired = evaluateAcquisitions(working, digest, season, rosterIn);
-    const carried = carryoverEntries(working, digest, rosterIn);
-    const expired = expiriesAt(working, race.index, rosterIn);
-    // Then every tag carried into the race gets to DO something (#233).
-    const acted = evaluateActions(working, digest, rosterIn, [...acquired.entries, ...carried.entries]);
-    digest.tagChanges = [...expired, ...acquired.changes, ...carried.changes, ...acted.changes];
-    const newEntries = [...acquired.entries, ...carried.entries, ...acted.entries];
-    if (newEntries.length) {
-      working = { ...working, interventionLog: [...working.interventionLog, ...newEntries] };
-    }
     newlySettled.push(digest);
     prevEnd = endedAt;
     options.onRaceSettled?.(digest, newlySettled.length, pending.length);

@@ -122,7 +122,6 @@ describe('seasonRoster', () => {
       for (const r of rows) {
         expect(r.teamName).toBe(team.name);
         expect(r.color).toBe(team.color);
-        expect(r.tags).toEqual([]);
         expect(r.carName).toBe(pool.cars.find(c => c.id === rosters.find(x => x.teamId === team.id)!.carId)!.name);
         expect(typeof r.number).toBe('number');
       }

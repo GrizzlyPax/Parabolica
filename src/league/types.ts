@@ -30,7 +30,8 @@ export interface LeagueSetupConfig {
   fantasy?: FantasyConfig;
   /** The rules this run plays under (#241). Absent = defaults (pre-ruleset saves). */
   ruleset?: Ruleset;
-  /** Genesis deals trait cards instead of tags (Quick Race, #337). Leagues stay on tags until v0.6. */
+  /** Pre-#334 flag: genesis dealt trait cards instead of tags. Every league is
+   * on cards now; kept so old setups still parse. */
   cards?: boolean;
   /** Epoch ms of league founding; race i is scheduled at createdAt + i*interval
    * (the inaugural race airs at founding). A race that outlasts the interval
@@ -47,46 +48,19 @@ export interface ScheduledRace {
 }
 
 /**
- * Commissioner actions, append-only. Interventions change the roster state a
- * race runs with — never its seed. atRaceIndex is the first race affected.
+ * Commissioner decrees, append-only: the one input besides the seed and the
+ * setup that the server holds and every device replays. The only decree so
+ * far was `attach-tag`; tags retired in #334, so a decree changes nothing
+ * today and old published leagues' logs still parse. atRaceIndex is the
+ * first race affected when decrees return.
  */
-export type Intervention =
-  | {
-      /** The Commissionary spent a token. */
-      type: 'attach-tag';
-      atRaceIndex: number;
-      targetDriverId: number;
-      tagId: string;
-      committedAt: number;
-    }
-  | {
-      /** The sim awarded a tag for what happened in a race (#232). */
-      type: 'acquire-tag';
-      atRaceIndex: number;
-      targetDriverId: number;
-      tagId: string;
-      /** Which rule fired, and the plain-words reason for the digest. */
-      ruleId: string;
-      reason: string;
-      /** The race whose result earned it. */
-      earnedAtRaceIndex: number;
-    }
-  | {
-      /** A timed tag runs out (#232). Emitted at acquisition time, since the
-       * future is already known; rosterStateAt simply applies it in order. */
-      type: 'expire-tag';
-      atRaceIndex: number;
-      targetDriverId: number;
-      tagId: string;
-    };
-
-/** One line the settle loop writes when a tag changes hands. */
-export interface TagChange {
-  kind: 'acquire' | 'expire';
-  driverId: number;
-  tagId: string;
-  /** "Vex is now 👻 Haunted — three straight retirements" */
-  headline: string;
+export interface Intervention {
+  type: string;
+  atRaceIndex: number;
+  targetDriverId?: number;
+  committedAt?: number;
+  /** Legacy attach-tag payload (pre-#334). */
+  tagId?: string;
 }
 
 /** What a settled race leaves behind for feeds, gods, and the chronicle. */
@@ -112,12 +86,6 @@ export interface RaceDigest {
   damagedDriverIds?: number[];
   /** Who crashed with whom (for rivalry memory, #233). */
   crashPairs?: [number, number][];
-  /** Tags the sim handed out or took away because of this race (#232).
-   * Take effect from the NEXT race. */
-  tagChanges?: TagChange[];
-  /** Tags picked up mid-race with a {races:n} duration (#232b) — settle
-   * turns these into acquire/expire log entries. */
-  inRaceCarryovers?: { driverId: number; tagId: string; races: number; lap: number }[];
   /** Top-magnitude events, always retained (gods and chronicles eat these). */
   highlights: RaceEvent[];
   /** Full event log; only retained for the most recent races (see settle). */

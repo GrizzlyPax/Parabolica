@@ -58,9 +58,9 @@ export function definitionOf(league: LeagueState): LeagueDefinition {
   return { engineVersion: league.engineVersion, leagueSeed: league.leagueSeed, setup: league.setup };
 }
 
-/** Commissioner decrees are the only interventions that are facts; the rest the sim regenerates. */
+/** Commissioner decrees are facts: the whole intervention log, since #334 retired the sim's own entries. */
 export function decreesOf(league: LeagueState): Intervention[] {
-  return league.interventionLog.filter(i => i.type === 'attach-tag');
+  return league.interventionLog;
 }
 
 /** Publish this league. Returns the same league with its server link attached. */
@@ -141,7 +141,7 @@ export async function syncRemote(league: LeagueState): Promise<{ league: LeagueS
 }
 
 function keyOf(i: Intervention): string {
-  return `${i.type}|${i.atRaceIndex}|${i.targetDriverId}|${i.tagId}|${'committedAt' in i ? i.committedAt : ''}`;
+  return `${i.type}|${i.atRaceIndex}|${i.targetDriverId ?? ''}|${i.tagId ?? ''}|${i.committedAt ?? ''}`;
 }
 
 export function leagueLink(code: string): string {

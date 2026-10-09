@@ -1,10 +1,9 @@
-// Race Control → Deck (#403): the Motorsport base deck as a table, before the
-// sim uses it. Cards can't be measured yet; calibration arrives once genesis
-// (#313) and Quick Race (#337) deal them.
+// Race Control → Deck (#403): the Motorsport base deck as a table. Every
+// path (Quick Race, leagues, Season Mode, the lab) deals these at genesis.
 import { useMemo, useState } from 'react';
 import { MOTORSPORT_DECK, METAL_LADDER, type Card, type CardKind } from '../cards';
 import { CardMarks, cardReadout, KIND_LABELS } from '../cards/CardMarks';
-import { RARITIES } from '../data/tags';
+import { RARITIES } from '../cards/rarity';
 
 const KINDS: (CardKind | 'all')[] = ['all', 'equipment', 'upgrade', 'facility', 'trait', 'effect'];
 
@@ -14,7 +13,7 @@ export function DeckTab() {
   return (
     <>
       <section className="rs-row rc-explain">
-        <p><b>The card deck.</b> The Motorsport base deck: {MOTORSPORT_DECK.length} cards generated from the stat grid (src/cards/deck.ts). Quick Race and Season Mode deal trait cards at genesis and bake them into the stats; the lab's calibration still measures tags (leagues and Race Control move to cards in v0.6). Nothing to measure here yet.</p>
+        <p><b>The card deck.</b> The Motorsport base deck: {MOTORSPORT_DECK.length} cards generated from the stat grid (src/cards/deck.ts). Every race deals trait cards at genesis and bakes them into the stats (src/cards/apply.ts); a card is arithmetic on a stat, so the stat's weight (Physics) is the card's weight.</p>
         <p className="rc-bands">Ladder: {RARITIES.map(r => <span key={r}><span className={`rarity-word rarity-${r}`}>{r}</span> {METAL_LADDER[r].stats} stat{METAL_LADDER[r].stats > 1 ? 's' : ''} × +{METAL_LADDER[r].pct}%</span>)}</p>
       </section>
       <section className="rs-row">
@@ -36,7 +35,7 @@ export function DeckTab() {
                 <td className="rc-dim">{c.target}</td>
                 <td>{c.rarity ? <span className={`rc-rarity rarity-word rarity-${c.rarity}`}>{c.rarity}</span> : <span className="rc-dim">v0.6</span>}</td>
                 <td className="rc-num">{cardReadout(c)}</td>
-                <td className="rc-dim">not yet</td>
+                <td className="rc-dim">in the stats</td>
               </tr>
             ))}</tbody>
           </table>

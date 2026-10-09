@@ -8,9 +8,9 @@ describe('docs/GLOSSARY.md is the source of truth', () => {
     const onDisk = readFileSync(new URL('../../docs/GLOSSARY.md', import.meta.url), 'utf8');
     expect(onDisk).toBe(renderGlossaryMd(buildGlossary(), version));
   });
-  it('every tag has a target and a plain-words source', () => {
-    for (const t of buildGlossary().tags) {
-      expect(t.source.length, t.tag.id).toBeGreaterThan(0);
-    }
+  it('every deck card and in-race effect has a name', () => {
+    const g = buildGlossary();
+    for (const c of g.deck) expect(c.name.length, c.id).toBeGreaterThan(0);
+    for (const e of g.inRaceEffects) expect(e.text.length, e.id).toBeGreaterThan(0);
   });
 });

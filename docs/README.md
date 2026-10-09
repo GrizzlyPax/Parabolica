@@ -11,7 +11,7 @@ Parabolica is an F1-style race sim: draft a team, race a Season, chase two champ
 | [V05_PLAN](V05_PLAN.md) | **The v0.5 Spa plan (✅ shipped Oct 9, v0.5.1):** milestones, lanes, order, risks, decision log |
 | [HANDOFF_2026-10-08](HANDOFF_2026-10-08.md) | Oct 8: GitHub-only planning, the crew, the Almanac look, icons, metals, numbers, what's next |
 | [HANDOFF_2026-10-07](HANDOFF_2026-10-07.md) | What shipped Oct 5–7, how the pieces fit, traps, open work |
-| [GLOSSARY](GLOSSARY.md) | Every team, track, tag, card, rule, weather and flavour pool (**generated**: `npm run glossary`) |
+| [GLOSSARY](GLOSSARY.md) | Every team, track, card, in-race effect, rule card, weather and flavour pool (**generated**: `npm run glossary`) |
 
 ## Game systems
 | Doc | What it's for |
@@ -42,7 +42,7 @@ Parabolica is an F1-style race sim: draft a team, race a Season, chase two champ
 ## Lab & balance
 | Doc | What it's for |
 |---|---|
-| [RACE_CONTROL](RACE_CONTROL.md) | The lab: parity rule, fingerprints, tag calibration bands |
+| [RACE_CONTROL](RACE_CONTROL.md) | The lab: parity rule, fingerprints, physics calibration |
 | [BALANCE_HANDOFF](BALANCE_HANDOFF.md) | Data exports, tuning surface, balance workflow |
 | [BALANCE_RECOMMENDATION](BALANCE_RECOMMENDATION.md) | June 2026 umbrella balance plan (shipped as Canon v3) |
 | [BALANCE_DOMINANCE_PASS](BALANCE_DOMINANCE_PASS.md) | June 2026 season-dominance pass (shipped) |

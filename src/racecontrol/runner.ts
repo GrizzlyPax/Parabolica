@@ -5,11 +5,11 @@
 // two calls the live broadcast and the wall-clock settle use — so whatever the
 // lab measures is what the game plays. Nothing here touches Math.random: a
 // batch is fully described by (batchSeed, race index, cards), and the same
-// spec gives the same race in the browser worker, in `npm run calibrate`, and
-// in a vitest.
+// spec gives the same race in the browser worker, in `npm run lab`, and in a
+// vitest.
 //
 // Seed streams (all from deriveSeed(batchSeed, 'lab', i)):
-//   universe seed  → createLeague(seed, …)   (roster, cars, genesis tags)
+//   universe seed  → createLeague(seed, …)   (roster, cars, genesis traits)
 //   teams          → shuffle(TEAMS).slice(0, 11)
 //   track          → CURRENT_TRACKS pick   (or i % n when every track is wanted)
 // The race itself then runs on league.schedule[0].seed = deriveSeed(seed,'race',0),
@@ -18,13 +18,12 @@ import RaceEngine from '../RaceEngine';
 import type { Driver, RaceEvent, RaceState, RosterDriver } from '../RaceEngine';
 import { createLeague, rosterStateAt } from '../league/league';
 import type { LeagueState } from '../league/types';
-import { prepareScheduledRace, favouredRoster } from '../league/settle';
+import { prepareScheduledRace } from '../league/settle';
 import { CURRENT_TRACKS, type Track } from '../generators/tracks';
 import { TEAMS } from '../data/teams';
 import { resolveRuleset, type Ruleset } from '../rules/ruleset';
 import { RULE_CARDS_BY_ID } from '../data/ruleCards';
 import { deriveSeed, mulberry32, shuffle } from '../engine/rng';
-import { getTagById, type Tag } from '../data/tags';
 import { weatherForRace, type WeatherState } from '../data/weather';
 import type { SimVariables } from '../simlab/types';
 
@@ -57,21 +56,6 @@ export function labSpec(batchSeed: number, index: number, cardIds: string[], tra
   return { batchSeed, index, seed, teamIds, trackId: track.id, cardIds };
 }
 
-/** A tag forced onto one slot — the calibration lab's "solo carrier". */
-export interface TagOverride {
-  /** Roster index (0..21) of the carrier. Team tags also land on the teammate. */
-  driverIndex: number;
-  tagId: string;
-  /** A tag definition to use instead of the deck's (the lab's "try a change"). */
-  tag?: Tag;
-}
-
-export function overrideTag(override: TagOverride): Tag {
-  const tag = override.tag ?? getTagById(override.tagId);
-  if (!tag) throw new Error(`Unknown tag ${override.tagId}`);
-  return tag;
-}
-
 export interface LabRaceResult {
   spec: LabRaceSpec;
   league: LeagueState;
@@ -90,11 +74,9 @@ export function labRuleset(cardIds: string[]): Ruleset {
 
 /**
  * Build and run one lab race. `variables` overrides the ruleset's simVars (the
- * Heretic). `override` forces one tag onto one carrier after genesis — the
- * rest of the grid is untouched, so with the `no-tags` card it is the only tag
- * in the race.
+ * Heretic).
  */
-export function runLabRace(spec: LabRaceSpec, options: { variables?: SimVariables; override?: TagOverride; engine?: RaceEngine } = {}): LabRaceResult {
+export function runLabRace(spec: LabRaceSpec, options: { variables?: SimVariables; engine?: RaceEngine } = {}): LabRaceResult {
   const ruleset = labRuleset(spec.cardIds);
   const track = CURRENT_TRACKS.find(t => t.id === spec.trackId);
   if (!track) throw new Error(`Unknown track ${spec.trackId}`);
@@ -106,14 +88,7 @@ export function runLabRace(spec: LabRaceSpec, options: { variables?: SimVariable
   prepareScheduledRace(engine, league, 0, track, options.variables ?? ruleset.simVars);
   engine.updateConfig({ maxStoredEvents: Number.MAX_SAFE_INTEGER });
 
-  let roster = rosterStateAt(league, 0);
-  if (options.override) {
-    roster = applyOverride(roster, options.override);
-    // Same favours as prepareScheduledRace gave the untouched grid, so a
-    // calibration run differs from its baseline by the tag alone.
-    engine.loadGeneratedRoster(favouredRoster(league, 0, track, roster));
-  }
-
+  const roster = rosterStateAt(league, 0);
   const { drivers, raceState, events } = engine.runHeadless(league.schedule[0].seed);
   return {
     spec, league, track, roster,
@@ -121,21 +96,6 @@ export function runLabRace(spec: LabRaceSpec, options: { variables?: SimVariable
     drivers, raceState, events,
     gridOrder: engine.getGridOrder(),
   };
-}
-
-function applyOverride(roster: RosterDriver[], override: TagOverride): RosterDriver[] {
-  const tag = overrideTag(override);
-  const carrier = roster[override.driverIndex];
-  if (!carrier) throw new Error(`No roster slot ${override.driverIndex}`);
-  const carries = (d: RosterDriver) => d.id === carrier.id || (tag.target === 'team' && d.kingdomId === carrier.kingdomId);
-  return roster.map(d => carries(d) ? { ...d, tags: [...d.tags.filter(t => t.id !== tag.id), tag] } : d);
-}
-
-/** Who carries the tag in a race prepared with `override` (ids). */
-export function carriersOf(result: LabRaceResult, override: TagOverride): number[] {
-  const tag = overrideTag(override);
-  const carrier = result.roster[override.driverIndex];
-  return result.roster.filter(d => d.id === carrier.id || (tag.target === 'team' && d.kingdomId === carrier.kingdomId)).map(d => d.id);
 }
 
 /** Classified finishing position (1-based; DNFs after the finishers in retirement order). */

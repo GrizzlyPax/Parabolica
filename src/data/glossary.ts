@@ -2,21 +2,18 @@
 // the data modules so it can never drift. docs/GLOSSARY.md (npm run
 // glossary) and the in-game Glossary screen both render this.
 
-import { ALL_TAGS, ActionTarget, Tag, TagAction, TRIGGER_LABELS, RARITIES, describeCondition, describeDuration, getTagById, isGenesisTag } from './tags';
 import { defaultRuleset, describeChance, describeOdds } from '../rules/ruleset';
 import { RULE_CARDS } from './ruleCards';
 import type { RuleCard } from '../rules/ruleset';
-import { ACQUISITION_RULES, AcquisitionRule, AcquisitionTrigger } from './acquisitions';
-import { IN_RACE_RULES, InRaceRule, InRaceDuration } from './inRace';
+import { MOTORSPORT_DECK, METAL_LADDER, STAT_LABELS, type Card } from '../cards';
+import { RARITIES } from '../cards/rarity';
+import { IN_RACE_EFFECTS, type InRaceEffect, type InRaceDuration } from '../RaceEngine';
 import { WEATHER_TYPES } from './weather';
-import { TAG_CALIBRATION, calibrationFor } from './tagCalibration';
-import { describeCalibration } from '../racecontrol/calibrate';
 import { CURRENT_TRACKS, HISTORIC_TRACKS } from '../generators/tracks';
 import { CURRENT_TEAMS, HISTORIC_TEAMS } from './teams';
 import { BASE_DECK_TEAMS, TEAM_KINDS } from './deckTeams';
 import { BASE_DECK_TRACKS } from './deckTracks';
 import { BASE_DECK_WEATHER } from './deckWeather';
-import { STAT_LABELS } from '../cards/deck';
 import { INTL_FIRST_NAMES, INTL_LAST_NAMES, ABSURD_FIRST_NAMES, ABSURD_LAST_NAMES, NAME_TIER_WEIGHTS, ONE_WORD_CHANCE } from '../generators/names';
 import { LEAGUE_ADJECTIVES, LEAGUE_NOUNS } from '../generators/leagueName';
 import { BACKSTORY_TEMPLATES, BACKSTORY_FILLS, QUIRKS } from '../generators/drivers';
@@ -37,55 +34,10 @@ export function effectsOf(fx: { speedModifier?: number; consistencyModifier?: nu
   return out;
 }
 
-export type TagGroup = 'genesis' | 'acquired' | 'in-race';
-
-export interface GlossaryTag {
-  tag: Tag;
-  group: TagGroup;
-  /** "always on", "on a pit stop (70% chance)", "while running top 3" */
-  fires: string;
-  lasts: string;
-  effects: GlossaryEffect[];
-  /** How you get it, in words. */
-  source: string;
-  /** What it does after a race, in words (#233). Empty = nothing. */
-  does: string[];
-}
-
-const TARGET_WORDS: Record<ActionTarget, string> = { self: 'themselves', teammate: 'their teammate', rival: 'whoever they crashed with', random: 'a random driver' };
-
-/** "20%: spreads 👻 Haunted to their teammate" */
-export function describeAction(a: TagAction): string {
-  const pct = a.chance >= 1 ? 'always' : `${Math.round(a.chance * 100)}%`;
-  if (a.do === 'expire-self') return `${pct}: wears off`;
-  const t = getTagById(a.tagId);
-  const name = t ? `${t.emoji} ${t.name}` : a.tagId;
-  if (a.do === 'remove-tag') return `${pct}: shakes off ${name}`;
-  return `${pct}: gives ${name} to ${TARGET_WORDS[a.to]}`;
-}
-
-export function tagGroup(t: Tag): TagGroup {
-  if (t.sources?.includes('in-race')) return 'in-race';
-  if (t.sources?.includes('acquired')) return 'acquired';
-  return 'genesis';
-}
-
-export function describeTrigger(t: AcquisitionTrigger): string {
-  switch (t.on) {
-    case 'streak': return `${t.count} ${t.stat === 'dnf' ? 'retirements' : t.stat === 'win' ? 'wins' : 'podiums'} in a row`;
-    case 'climb': return `gained ${t.places}+ places from the grid${t.finishedTop ? ` and finished top ${t.finishedTop}` : ''}`;
-    case 'crashed-out': return 'retired in a crash';
-    case 'survived-crash': return `damaged in a crash and still classified${t.finishedTop ? ` in the top ${t.finishedTop}` : ''}`;
-    case 'fastest-lap': return 'set the fastest lap';
-    case 'lottery': return `${(t.chance * 100).toFixed(1)}% lottery per driver per race`;
-  }
-}
-
 export function describeInRaceDuration(d: InRaceDuration): string {
   if (d === 'race') return 'rest of the race';
   if (d === 'until-pit') return 'until the next pit stop';
-  if ('laps' in d) return `${d.laps} lap${d.laps === 1 ? '' : 's'}`;
-  return `rest of the race, then ${d.races} more race${d.races === 1 ? '' : 's'}`;
+  return `${d.laps} lap${d.laps === 1 ? '' : 's'}`;
 }
 
 const EVENT_WORDS: Record<string, string> = {
@@ -94,39 +46,23 @@ const EVENT_WORDS: Record<string, string> = {
   overtake: 'an overtake', mechanical_failure: 'a mechanical failure', unsafety_car_deployed: 'the safety car',
 };
 
-export function describeInRaceRule(r: InRaceRule): string {
+/** "a driver error (Spin) → 2 laps" */
+export function describeInRaceEffect(r: InRaceEffect): string {
   const ev = EVENT_WORDS[r.on] ?? r.on.replace(/_/g, ' ');
   return `${ev}${r.match ? ` (${String(r.match).replace(/^\/\^?|\/$/g, '')})` : ''} → ${describeInRaceDuration(r.duration)}`;
 }
 
-export function buildGlossaryTags(): GlossaryTag[] {
-  return ALL_TAGS.map(tag => {
-    const group = tagGroup(tag);
-    const chance = tag.triggerChance !== undefined && tag.triggerChance < 1 ? ` (${Math.round(tag.triggerChance * 100)}% chance)` : '';
-    const fires = tag.condition ? `while ${describeCondition(tag.condition)}` : `${TRIGGER_LABELS[tag.trigger]}${chance}`;
-    let source = '';
-    let lasts = describeDuration(tag.duration);
-    if (group === 'genesis') source = `born with it (${isGenesisTag(tag) ? 'in the genesis pool' : 'not in the pool'}), or granted by the Commissionary`;
-    if (group === 'acquired') {
-      const rules = ACQUISITION_RULES.filter(r => r.tagId === tag.id);
-      const givers = ALL_TAGS.filter(o => o.afterRace?.some(a => a.do === 'attach-tag' && a.tagId === tag.id)).map(o => `passed on by ${o.emoji} ${o.name}`);
-      const ways = [...rules.map(r => `${r.family}: ${describeTrigger(r.when)}`), ...givers];
-      source = ways.length ? ways.join('; ') : 'no rule awards it yet';
-    }
-    if (group === 'in-race') {
-      const rules = IN_RACE_RULES.filter(r => r.tagId === tag.id);
-      source = rules.length ? rules.map(r => `mid-race, after ${EVENT_WORDS[r.on] ?? r.on}`).join('; ') : 'no rule awards it yet';
-      lasts = rules.length ? describeInRaceDuration(rules[0].duration) : lasts;
-    }
-    return { tag, group, fires, lasts, effects: effectsOf(tag.effects), source, does: (tag.afterRace ?? []).map(describeAction) };
-  });
+/** "+5% Speed · +5% Grip" — what a card adds, in grade points of each stat. */
+export function describeCard(c: Card): string {
+  if (c.kind === 'effect') return `${STAT_LABELS[c.stats[0].stat]} ${c.direction === 'up' ? 'up' : 'down'}`;
+  return c.stats.map(s => `+${s.pct}% ${STAT_LABELS[s.stat]}`).join(' · ');
 }
 
 export interface Glossary {
-  tags: GlossaryTag[];
+  /** The Motorsport deck (src/cards/deck.ts): traits, gear, effects. */
+  deck: readonly Card[];
+  inRaceEffects: InRaceEffect[];
   cards: RuleCard[];
-  acquisitionRules: AcquisitionRule[];
-  inRaceRules: InRaceRule[];
   weather: typeof WEATHER_TYPES;
   tracks: typeof CURRENT_TRACKS;
   historicTracks: typeof HISTORIC_TRACKS;
@@ -143,9 +79,8 @@ export interface Glossary {
 }
 
 export function buildGlossary(): Glossary {
-  const tags = buildGlossaryTags();
   return {
-    tags, cards: RULE_CARDS, acquisitionRules: ACQUISITION_RULES, inRaceRules: IN_RACE_RULES,
+    deck: MOTORSPORT_DECK, inRaceEffects: IN_RACE_EFFECTS, cards: RULE_CARDS,
     weather: WEATHER_TYPES, tracks: CURRENT_TRACKS,
     historicTracks: HISTORIC_TRACKS, deckTeams: BASE_DECK_TEAMS, deckTracks: BASE_DECK_TRACKS, deckWeather: BASE_DECK_WEATHER, teams: CURRENT_TEAMS, historicTeams: HISTORIC_TEAMS,
     pools: [
@@ -163,11 +98,12 @@ export function buildGlossary(): Glossary {
       { id: 'identity-emoji', title: 'Procedural team emoji', where: 'src/generators/teamIdentity.ts IDENTITY_EMOJI', size: IDENTITY_EMOJI.length, samples: IDENTITY_EMOJI.slice(0, 10) },
     ],
     counts: {
-      tags: tags.length,
-      genesis: tags.filter(t => t.group === 'genesis').length,
-      acquired: tags.filter(t => t.group === 'acquired').length,
-      inRace: tags.filter(t => t.group === 'in-race').length,
-      cards: RULE_CARDS.length, rules: ACQUISITION_RULES.length + IN_RACE_RULES.length,
+      deck: MOTORSPORT_DECK.length,
+      traits: MOTORSPORT_DECK.filter(c => c.kind === 'trait').length,
+      gear: MOTORSPORT_DECK.filter(c => c.kind === 'equipment' || c.kind === 'upgrade' || c.kind === 'facility').length,
+      effects: MOTORSPORT_DECK.filter(c => c.kind === 'effect').length,
+      inRaceEffects: IN_RACE_EFFECTS.length,
+      cards: RULE_CARDS.length,
       weather: WEATHER_TYPES.length, tracks: CURRENT_TRACKS.length,
       historicTracks: HISTORIC_TRACKS.length, deckTeams: BASE_DECK_TEAMS.length, deckTracks: BASE_DECK_TRACKS.length, deckWeather: BASE_DECK_WEATHER.length, teams: CURRENT_TEAMS.length, historicTeams: HISTORIC_TEAMS.length,
     },
@@ -177,9 +113,8 @@ export function buildGlossary(): Glossary {
 /** Render the whole glossary as markdown — docs/GLOSSARY.md. */
 export function renderGlossaryMd(g: Glossary, version: string): string {
   const L: string[] = [];
-  const fx = (e: GlossaryEffect[]) => e.length ? e.map(x => `${x.value} ${x.label}`).join(', ') : '—';
   L.push(`# Parabolica World Deck`, '', `*Everything in the sim and the world, generated from the data modules by \`npm run glossary\` — do not edit by hand; edit the source files named in each section and re-run. Engine v${version}. How to add content: docs/WORLD_DECK.md.*`, '');
-  L.push(`${g.counts.deckTeams} teams · ${g.counts.tracks} tracks · ${g.counts.tags} tags (${g.counts.genesis} genesis · ${g.counts.acquired} acquired · ${g.counts.inRace} in-race) · ${g.counts.cards} rule cards · ${g.counts.rules} rules · ${g.counts.weather} weathers`, '');
+  L.push(`${g.counts.deckTeams} teams · ${g.counts.tracks} tracks · ${g.counts.deck} cards (${g.counts.traits} traits · ${g.counts.gear} gear · ${g.counts.effects} effects) · ${g.counts.inRaceEffects} in-race effects · ${g.counts.cards} rule cards · ${g.counts.weather} weathers`, '');
   L.push('## Base-deck teams', '', '*Source: `src/data/deckTeams.ts` (from docs/story/team-identity.md; not canon yet). The 28 world factions, seven of each kind: Quick Race draws its 11 and Season Mode its CPU teams from these. Logo = the icon in `ink` on the team colour.*', '');
   for (const k of TEAM_KINDS) {
     L.push(`### ${k.title}`, '', '| Team | Colour · ink | Icon | Line |', '|---|---|---|---|');
@@ -194,36 +129,18 @@ export function renderGlossaryMd(g: Glossary, version: string): string {
   L.push('');
   L.push('');
   const rs = defaultRuleset();
-  L.push('## How genesis tags are rolled', '',
+  L.push('## How genesis traits are rolled', '',
     `Each driver gets three slots: driver, car (their own chassis), team (one roll, shared by teammates). Per slot:`, '',
-    `1. **Does it hit?** ${describeChance(rs.tags.genesisChance)}.`,
-    `2. **Which bucket?** ${describeOdds(rs.tags.rarityOdds)}. Fixed odds — adding tags to a bucket never changes how often it comes up, only which tag you get.`,
-    `3. **Which tag?** An even pick inside the bucket. An empty bucket falls to the next more common one.`, '',
-    `Bucket sizes in the default pool: ${RARITIES.map(r => `${r} ${g.tags.filter(t => t.group === 'genesis' && isGenesisTag(t.tag) && t.tag.rarity === r).length}`).join(' · ')}. Cards change the hit chance and the odds.`, '');
-  L.push('## How tags enter the world', '', '| Door | What it means |', '|---|---|',
-    '| Genesis | Rolled when a driver, car or team is born (chance and pool set by the ruleset) |',
-    '| Commissionary | Attached by you, from the next race (`attach-tag`) |',
-    '| Acquired | Awarded by the settle loop for what happened in a race (`acquire-tag`), from the next race |',
-    '| In-race | Picked up mid-race from a race event; may expire by lap, at the next stop, or carry over |',
-    '');
-  const groups: [TagGroup, string][] = [['genesis', 'Genesis tags'], ['acquired', 'Acquired tags'], ['in-race', 'In-race tags']];
-  for (const [grp, title] of groups) {
-    const measured = grp === 'genesis';
-    L.push(`## ${title}`, '');
-    if (measured) L.push(`Measured: each tag alone on one driver over ${TAG_CALIBRATION.races} seeded races vs the same races untagged (Race Control → Tag calibration; \`npm run calibrate\`, batch ${TAG_CALIBRATION.batchSeed}).`, '');
-    L.push(`| Tag | Rarity | Target | Fires | Effect | Lasts | After a race | How you get it |${measured ? ' Measured |' : ''}`, `|---|---|---|---|---|---|---|---|${measured ? '---|' : ''}`);
-    for (const t of g.tags.filter(x => x.group === grp)) {
-      const c = measured ? calibrationFor(t.tag.id) : undefined;
-      L.push(`| ${t.tag.emoji} **${t.tag.name}** \`${t.tag.id}\` — ${t.tag.description} | ${t.tag.rarity} | ${t.tag.target} | ${t.fires} | ${fx(t.effects)} | ${t.lasts} | ${t.does.join('; ') || '—'} | ${t.source} |${measured ? ` ${c ? describeCalibration(c) : 'not measured'} |` : ''}`);
-    }
-    L.push('');
-  }
-  L.push('## Rule cards', '', '| Rule card | Scope | Weight | Does |', '|---|---|---|---|');
+    `1. **Does it hit?** ${describeChance(rs.traits.genesisChance)}.`,
+    `2. **Which metal?** ${describeOdds(rs.traits.rarityOdds)}. Fixed odds — adding cards to a metal never changes how often it comes up, only which card you get.`,
+    `3. **Which card?** An even pick among that metal's trait cards for the slot. An empty metal falls to the next more common one.`, '',
+    `A card adds grade points to its stats at race build (src/cards/apply.ts): ${RARITIES.map(r => `${r} ${METAL_LADDER[r].stats} stat${METAL_LADDER[r].stats > 1 ? 's' : ''} × +${METAL_LADDER[r].pct}`).join(' · ')}. Rule cards change the hit chance and the odds. Season Mode deals gear from packs the same way (docs/CARDS.md).`, '');
+  L.push('## The Motorsport deck', '', '*Source: `src/cards/deck.ts` (docs/CARDS.md), generated from the stat grid. Traits are born with (genesis); gear (equipment, upgrades, facilities) comes from packs; effects are one-race modifiers.*', '', '| Card | Kind | On | Metal | Does |', '|---|---|---|---|---|');
+  for (const c of g.deck) L.push(`| **${c.name}** \`${c.id}\` | ${c.kind} | ${c.target} | ${c.rarity ?? '—'} | ${describeCard(c)} |`);
+  L.push('', '## In-race effects', '', '*Source: `src/RaceEngine.ts` IN_RACE_EFFECTS. Timed states a race puts on a car; they show in the timing tower and the feed and expire on their own.*', '', '| Effect | After | Does | Lasts |', '|---|---|---|---|');
+  for (const r of g.inRaceEffects) L.push(`| ${r.emoji} **${r.name}** \`${r.id}\` — ${r.text} | ${EVENT_WORDS[r.on] ?? r.on}${r.match ? ` (${String(r.match).replace(/^\/\^?|\/$/g, '')})` : ''} | ${effectsOf(r.effects).map(x => `${x.value} ${x.label}`).join(', ') || '—'} | ${describeInRaceDuration(r.duration)} |`);
+  L.push('', '## Rule cards', '', '| Rule card | Scope | Weight | Does |', '|---|---|---|---|');
   for (const c of g.cards) L.push(`| ${c.emoji} **${c.name}** \`${c.id}\` | ${c.scope} | ${c.weight} | ${c.readout} |`);
-  L.push('', '## Acquisition rules (after a race)', '', '| Rule | Family | Trigger | Awards |', '|---|---|---|---|');
-  for (const r of g.acquisitionRules) { const t = ALL_TAGS.find(x => x.id === r.tagId); L.push(`| \`${r.id}\` | ${r.family} | ${describeTrigger(r.when)} | ${t?.emoji ?? ''} ${t?.name ?? r.tagId} |`); }
-  L.push('', '## In-race rules (during a race)', '', '| Rule | After | Awards | Lasts |', '|---|---|---|---|');
-  for (const r of g.inRaceRules) { const t = ALL_TAGS.find(x => x.id === r.tagId); L.push(`| \`${r.id}\` | ${EVENT_WORDS[r.on] ?? r.on}${r.match ? ` (${String(r.match).replace(/^\/\^?|\/$/g, '')})` : ''} | ${t?.emoji ?? ''} ${t?.name ?? r.tagId} | ${describeInRaceDuration(r.duration)} |`); }
   L.push('', '## Flavour pools', '', '*Names, backstories, quirks. Each is a plain list in the file named; add lines, keep the voice.*', '', '| Pool | Size | Where | Samples |', '|---|---|---|---|');
   for (const p of g.pools) L.push(`| **${p.title}** | ${p.size} | \`${p.where}\` | ${p.samples.map(x => x.replace(/\|/g, '\\|')).join(' · ')} |`);
   L.push('');

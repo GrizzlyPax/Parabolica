@@ -38,15 +38,15 @@ export const RULE_CARDS: RuleCard[] = [
     readout: 'Neutral skies become rare; every dry weather is as likely.',
     patch: { weather: { neutral: 10, ...Object.fromEntries(DRY.map(d => [d, 18])) } } },
 
-  // ---- Tags ---------------------------------------------------------------
-  { id: 'tag-soup', name: 'Tag Soup', emoji: '🍲', scope: 'both', weight: 'wild',
+  // ---- Traits (ids kept from the tag era so saved hands still resolve) ----
+  { id: 'tag-soup', name: 'Trait Soup', emoji: '🍲', scope: 'both', weight: 'wild',
     blurb: 'Everyone arrives with baggage.',
-    readout: 'Most drivers are born with tags; up to 6 each.',
-    patch: { tags: { genesisChance: 0.45, slotCap: 6 } } },
-  { id: 'no-tags', name: 'No Tags', emoji: '🧼', scope: 'both', weight: 'mild',
+    readout: 'Most slots (driver, car, team) are born with a trait card.',
+    patch: { traits: { genesisChance: 0.45 } } },
+  { id: 'no-tags', name: 'No Traits', emoji: '🧼', scope: 'both', weight: 'mild',
     blurb: 'A clean grid. Pure stats, nothing weird.',
-    readout: 'Nobody is born with a tag.',
-    patch: { tags: { genesisChance: 0 } } },
+    readout: 'Nobody is born with a trait card.',
+    patch: { traits: { genesisChance: 0 } } },
 
   // ---- Physics ------------------------------------------------------------
   { id: 'demolition-derby', name: 'Demolition Derby', emoji: '💥', scope: 'both', weight: 'cursed',

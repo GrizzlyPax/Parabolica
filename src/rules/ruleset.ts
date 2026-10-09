@@ -10,7 +10,7 @@
 // toss-in: an object in data/ruleCards.ts, no engine edits.
 
 import { SimVariables, CANON_VARIABLES } from '../simlab/types';
-import { ALL_TAGS, Tag, MAX_TAGS_PER_DRIVER, isGenesisTag, RarityOdds, DEFAULT_RARITY_ODDS, RARITIES, upgradeRarityOdds, upgradeTag } from '../data/tags';
+import { RarityOdds, DEFAULT_RARITY_ODDS, RARITIES, upgradeRarityOdds } from '../cards/rarity';
 import { WEATHER_TYPES } from '../data/weather';
 
 export const RULESET_VERSION = 1 as const;
@@ -21,15 +21,11 @@ export interface Ruleset {
   /** Card ids in hand order. The rest of this object is derived from them
    * (plus the defaults) — kept so the UI can show the hand and re-resolve. */
   cards: string[];
-  tags: {
-    /** Tag ids genesis may draw from (and the intervention pool, later). */
-    pool: string[];
-    /** Chance each slot (driver / car / team) is born with a tag. */
+  traits: {
+    /** Chance each slot (driver / car / team) is born with a trait card. */
     genesisChance: number;
-    /** Once a slot hits, the odds of each rarity bucket. */
+    /** Once a slot hits, the odds of each metal. */
     rarityOdds: RarityOdds;
-    /** Max tags per driver, all sources. */
-    slotCap: number;
   };
   weather: {
     /** Draw weight per weather id. 0 = never. */
@@ -39,22 +35,17 @@ export interface Ruleset {
   };
   /** Physics, fully resolved (CANON with card patches applied). */
   simVars: SimVariables;
-  /** A Race Control preset applied on top: edited tag definitions and knob
-   * values. Genesis draws the edited tags; simVars already carry the knobs. */
-  lab?: { name: string; tagEdits: Record<string, Tag>; knobEdits: Record<string, number> };
+  /** A Race Control preset applied on top: knob values. simVars already
+   * carry them; this is the label. */
+  lab?: { name: string; knobEdits: Record<string, number> };
 }
 
 /** A card's patch: the small vocabulary cards speak. All optional. */
 export interface RuleCardPatch {
-  tags?: {
-    /** Restrict the pool to these ids (applied before add/remove). */
-    only?: string[];
-    add?: string[];
-    remove?: string[];
+  traits?: {
     genesisChance?: number;
-    /** Override some or all bucket odds. */
+    /** Override some or all metal odds. */
     rarityOdds?: Partial<RarityOdds>;
-    slotCap?: number;
   };
   /** Weight overrides per weather id; ids not named keep their weight. */
   weather?: Partial<Record<string, number>>;
@@ -96,11 +87,9 @@ export function defaultRuleset(): Ruleset {
   return {
     v: RULESET_VERSION,
     cards: [],
-    tags: {
-      pool: ALL_TAGS.filter(isGenesisTag).map(t => t.id),
+    traits: {
       genesisChance: 1 / 6,
       rarityOdds: { ...DEFAULT_RARITY_ODDS },
-      slotCap: MAX_TAGS_PER_DRIVER,
     },
     weather: {
       weights: Object.fromEntries(WEATHER_TYPES.map(w => [w.id, w.weight])),
@@ -137,15 +126,9 @@ export function applyRuleCard(rs: Ruleset, card: RuleCard): Ruleset {
   const p = card.patch;
   const next: Ruleset = structuredClone(rs);
   next.cards = [...rs.cards, card.id];
-  if (p.tags) {
-    let pool = next.tags.pool;
-    if (p.tags.only) pool = pool.filter(id => p.tags!.only!.includes(id));
-    if (p.tags.remove) pool = pool.filter(id => !p.tags!.remove!.includes(id));
-    if (p.tags.add) for (const id of p.tags.add) if (!pool.includes(id)) pool.push(id);
-    next.tags.pool = pool;
-    if (p.tags.genesisChance !== undefined) next.tags.genesisChance = p.tags.genesisChance;
-    if (p.tags.rarityOdds) next.tags.rarityOdds = { ...next.tags.rarityOdds, ...upgradeRarityOdds(p.tags.rarityOdds) };
-    if (p.tags.slotCap !== undefined) next.tags.slotCap = p.tags.slotCap;
+  if (p.traits) {
+    if (p.traits.genesisChance !== undefined) next.traits.genesisChance = p.traits.genesisChance;
+    if (p.traits.rarityOdds) next.traits.rarityOdds = { ...next.traits.rarityOdds, ...upgradeRarityOdds(p.traits.rarityOdds) };
   }
   if (p.weather) {
     for (const [id, w] of Object.entries(p.weather)) if (w !== undefined) next.weather.weights[id] = w;
@@ -166,15 +149,9 @@ export function resolveRuleset(cardIds: string[], cardsById: Map<string, RuleCar
   return rs;
 }
 
-/** The tag pool as Tag objects, for generators. */
-export function poolTags(rs: Ruleset): Tag[] {
-  const set = new Set(rs.tags.pool);
-  return ALL_TAGS.filter(t => set.has(t.id)).map(t => rs.lab?.tagEdits[t.id] ?? t);
-}
-
-/** Apply a Race Control preset: knob edits into simVars, tag edits for genesis. */
-export function applyLabPreset(rs: Ruleset, preset: { name: string; tagEdits: Record<string, Tag>; knobEdits: Record<string, number> } | null): Ruleset {
-  if (!preset || (Object.keys(preset.tagEdits).length === 0 && Object.keys(preset.knobEdits).length === 0)) return rs;
+/** Apply a Race Control preset: knob edits into simVars. */
+export function applyLabPreset(rs: Ruleset, preset: { name: string; knobEdits: Record<string, number> } | null): Ruleset {
+  if (!preset || Object.keys(preset.knobEdits).length === 0) return rs;
   const simVars = structuredClone(rs.simVars);
   for (const [path, value] of Object.entries(preset.knobEdits)) {
     const parts = path.split('.');
@@ -182,8 +159,7 @@ export function applyLabPreset(rs: Ruleset, preset: { name: string; tagEdits: Re
     for (let i = 0; i < parts.length - 1; i++) cur = cur[parts[i]] as Record<string, unknown>;
     if (typeof cur[parts[parts.length - 1]] === 'number') cur[parts[parts.length - 1]] = value;
   }
-  const tagEdits = Object.fromEntries(Object.entries(preset.tagEdits).map(([id, t]) => [id, upgradeTag(t)]));
-  return { ...rs, simVars, lab: { name: preset.name, tagEdits, knobEdits: preset.knobEdits } };
+  return { ...rs, simVars, lab: { name: preset.name, knobEdits: preset.knobEdits } };
 }
 
 /** Is this ruleset byte-for-byte the default (no cards, nothing tweaked)? */
@@ -204,9 +180,9 @@ export function parseRuleset(json: string): Ruleset | null {
   try {
     const o = JSON.parse(json);
     if (!o || o.v !== RULESET_VERSION) return null;
-    if (!Array.isArray(o.cards) || !o.tags || !o.weather || !o.simVars) return null;
-    if (!Array.isArray(o.tags.pool) || typeof o.tags.genesisChance !== 'number' || typeof o.tags.slotCap !== 'number') return null;
+    if (!Array.isArray(o.cards) || !(o.traits || o.tags) || !o.weather || !o.simVars) return null;
     upgradeRulesetInPlace(o);
+    if (typeof o.traits.genesisChance !== 'number') return null;
     if (typeof o.weather.weights !== 'object' || typeof o.weather.quickRace !== 'boolean') return null;
     // simVars: deep-merge over CANON so a partial or stale file still resolves
     return { ...o, simVars: deepMerge(structuredClone(CANON_VARIABLES), o.simVars) };
@@ -215,11 +191,23 @@ export function parseRuleset(json: string): Ruleset | null {
   }
 }
 
-/** Old saves (pre-#385) name rarities common…legendary; move them to the
- * metals. Missing odds (pre-rarity saves) become the defaults. */
-function upgradeRulesetInPlace(o: { tags: { rarityOdds?: Partial<Record<string, number>> }; lab?: { tagEdits?: Record<string, Tag> } }): void {
-  o.tags.rarityOdds = upgradeRarityOdds(o.tags.rarityOdds);
-  if (o.lab?.tagEdits) o.lab.tagEdits = Object.fromEntries(Object.entries(o.lab.tagEdits).map(([id, t]) => [id, upgradeTag(t)]));
+/** Old saves: pre-#334 rulesets keep the genesis odds under `tags` (with a
+ * pool and a slot cap that no longer exist); pre-#385 ones name rarities
+ * common…legendary. Move both to today's shape. Missing odds become the
+ * defaults. A lab preset's tag edits are dropped. */
+function upgradeRulesetInPlace(o: {
+  traits?: { genesisChance?: number; rarityOdds?: Partial<Record<string, number>> };
+  tags?: { genesisChance?: number; rarityOdds?: Partial<Record<string, number>> };
+  lab?: { name: string; knobEdits: Record<string, number>; tagEdits?: unknown };
+}): void {
+  const d = defaultRuleset().traits;
+  const src = o.traits ?? o.tags ?? {};
+  o.traits = {
+    genesisChance: typeof src.genesisChance === 'number' ? src.genesisChance : d.genesisChance,
+    rarityOdds: upgradeRarityOdds(src.rarityOdds),
+  };
+  delete o.tags;
+  if (o.lab) delete o.lab.tagEdits;
 }
 
 /** A ruleset from any era, on today's rarity names. Returns a copy. */
@@ -248,11 +236,9 @@ export function describeOdds(given: RarityOdds): string {
 export function describeRuleset(rs: Ruleset): string[] {
   const d = defaultRuleset();
   const lines: string[] = [];
-  if (rs.lab) lines.push(`Lab preset "${rs.lab.name}": ${Object.keys(rs.lab.tagEdits).length} tag edit(s), ${Object.keys(rs.lab.knobEdits).length} knob edit(s)`);
-  if (rs.tags.pool.length !== d.tags.pool.length) lines.push(`Tag pool: ${rs.tags.pool.length} of ${d.tags.pool.length} tags`);
-  if (rs.tags.genesisChance !== d.tags.genesisChance) lines.push(`Born with a tag: ${describeChance(rs.tags.genesisChance)} per slot (default ${describeChance(d.tags.genesisChance)})`);
-  if (RARITIES.some(r => rs.tags.rarityOdds[r] !== d.tags.rarityOdds[r])) lines.push(`Rarity odds: ${describeOdds(rs.tags.rarityOdds)}`);
-  if (rs.tags.slotCap !== d.tags.slotCap) lines.push(`Tags per driver: up to ${rs.tags.slotCap} (default ${d.tags.slotCap})`);
+  if (rs.lab) lines.push(`Lab preset "${rs.lab.name}": ${Object.keys(rs.lab.knobEdits).length} knob edit(s)`);
+  if (rs.traits.genesisChance !== d.traits.genesisChance) lines.push(`Born with a trait: ${describeChance(rs.traits.genesisChance)} per slot (default ${describeChance(d.traits.genesisChance)})`);
+  if (RARITIES.some(r => rs.traits.rarityOdds[r] !== d.traits.rarityOdds[r])) lines.push(`Metal odds: ${describeOdds(rs.traits.rarityOdds)}`);
   const wChanged = Object.keys(rs.weather.weights).filter(id => rs.weather.weights[id] !== d.weather.weights[id]);
   if (wChanged.length) {
     const total = Object.values(rs.weather.weights).reduce((a, b) => a + b, 0);

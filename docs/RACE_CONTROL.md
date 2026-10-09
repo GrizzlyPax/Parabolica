@@ -26,35 +26,19 @@ Every lab job goes through `src/racecontrol/labRunner.ts`: it uses a Web Worker 
 
 ## Physics calibration
 
-**Question:** do the race rules produce racing? `src/racecontrol/physics.ts` runs a seeded batch of untagged races (card `no-tags`, 100 races by default, current tracks in order) and reads the mechanics-probe metrics: pace→finish and grid→finish Spearman, pole wins, top-3-package wins, passes, battles, distinct leaders, winning margin, stops per finisher, first-stop distance, stop-lap spread, quick/slow stop share, DNF rate and split, safety cars, close calls, lapped and penalised finishers, race length. Each has a plain-words meaning and a band; out-of-band rows are flagged.
+**Question:** do the race rules produce racing? `src/racecontrol/physics.ts` runs a seeded batch of card-free races (card `no-tags`, No Traits, 100 races by default, current tracks in order) and reads the mechanics-probe metrics: pace→finish and grid→finish Spearman, pole wins, top-3-package wins, passes, battles, distinct leaders, winning margin, stops per finisher, first-stop distance, stop-lap spread, quick/slow stop share, DNF rate and split, safety cars, close calls, lapped and penalised finishers, race length. Each has a plain-words meaning and a band; out-of-band rows are flagged.
 
 The knobs table lists every `SimVariables` entry (`src/racecontrol/knobs.ts`: path, label, meaning, format, range). Click a knob, edit it (field or slider), **Measure**: the same seeded batch runs with your variables and the metrics table gains Yours and Δ columns (Δ above 10% is highlighted). Edits accumulate; **Copy as code** gives `path: value` lines for `CANON_VARIABLES`. **Re-roll** changes the seed so you can see how much of a number is dice.
 
-## Tag calibration
+## Cards (no calibration)
 
-**Question:** what does a tag do to the driver who carries it?
-
-**Method (paired, solo):** for race *i* of batch 2026 (200 races, card `no-tags`), run it untagged, then again with one tag forced onto roster slot *i mod 22* (a team tag lands on the teammate too). Same seed, grid, weather — only the tag differs. Read the carrier:
-
-| Column | Meaning |
-|---|---|
-| Places gained | finish position untagged − finish position tagged, averaged (+ = better); ± is the standard error |
-| Wins / Podiums / DNF | carrier's rate, with the untagged rate beside it ("field") |
-| Procs / race | `tag_activation` events for the carrier per race (passive tags don't log) |
-
-**Bands** (`CALIBRATION_BANDS` in `src/racecontrol/calibrate.ts`): |places| ≤ 6, DNF ≤ 60%, wins ≤ 50%.
-
-**Where it lives:** `src/data/tagCalibration.json` (generated) → `src/data/tagCalibration.ts` → the Race Control table, the World Deck tag detail ("Measured"), and the Measured column of `docs/GLOSSARY.md`.
-
-**The gate:** `src/data/worldDeck.test.ts` fails when a genesis tag is missing from the file, when its mechanical definition (target, trigger, effects, condition, chance, duration — `effectsHash`) changed since it was measured, or when it is out of band. Fix: tune the tag → `npm run calibrate` → commit the tag, the JSON and `npm run glossary`.
-
-**Try a change:** click a tag row, edit its effect numbers (and trigger chance), **Measure**: your version is calibrated the same way (same seeds, same pairing) and shown beside the shipped row with a verdict (real change / within noise / out of band) and **Copy as code**. Leaving the numbers alone and measuring at 200 races lands exactly on the table's row — the parity check. **Re-roll** re-measures every tag on a fresh seed (25–100 races each) and adds a Δ column, flagged when the difference is beyond the noise.
+Tags retired in #334 (the map is on the issue). A card is arithmetic on a stat at roster build (`src/cards/apply.ts`), so there is nothing to measure per card: the stat's weight under Physics is the card's weight. **Race Control → Deck** lists every card with its numbers. The five in-race states that used to be tags (Damaged, Spun, Cooked tyres, Sulking, Fired up) are now plain timed effects in the engine (`IN_RACE_EFFECTS` in `src/RaceEngine.ts`); the World Deck → Effects tab lists them.
 
 ## Working changes, presets and the notebook
 
-Both tabs edit one shared set of **working changes** (tag definitions + knob values). Measure on either tab runs everything edited together — tag calibration runs under your knob edits too. Name the set in the strip → **Save as preset**. Presets and every finished measurement (seed, races, preset, full result) live in this browser's **Notebook** tab (`src/racecontrol/notebook.ts`, localStorage `parabolica.lab.notebook`, last 60 runs); download it as JSON to keep or share, copy any run as markdown.
+Physics edits one set of **working changes** (knob values). Name the set in the strip → **Save as preset**. Presets and every finished measurement (seed, races, preset, full result) live in this browser's **Notebook** tab (`src/racecontrol/notebook.ts`, localStorage `parabolica.lab.notebook`, last 60 runs); download it as JSON to keep or share, copy any run as markdown.
 
-**Race under a preset:** Quick Race → Run Setup → *Lab preset*. `applyLabPreset(ruleset, preset)` (`src/rules/ruleset.ts`) patches `simVars` with the knob edits and makes `poolTags` return the edited tag definitions, so genesis draws your versions. The rules readout names the preset. Acquired / in-race tags are not patched (presets edit genesis tags only).
+**Race under a preset:** Quick Race → Run Setup → *Lab preset*. `applyLabPreset(ruleset, preset)` (`src/rules/ruleset.ts`) patches `simVars` with the knob edits. The rules readout names the preset.
 
 ## The shared ledger (any device, readable by agents)
 
@@ -66,13 +50,10 @@ The repo is the database. **Notebook → Send N new** opens one prefilled GitHub
 |---|---|
 | `npm run lab -- 2026 100 all no-tags` | replay a Physics batch, print fingerprint + headline numbers |
 | `npm run lab -- 2026 100 all no-tags rain` | …under a card hand |
-| `npm run calibrate` | re-measure every genesis tag, rewrite the JSON (~15 min) |
-| `npm run calibrate -- 50 glass-cannon the-natural` | quick read of named tags, nothing written |
-| `npx tsx scripts/mechanics-probe.mjs 200` | the no-tag mechanics gates (#246) |
+| `npx tsx scripts/mechanics-probe.mjs 200` | the card-free mechanics gates (#246) |
 
 ## Exports
 
-- Calibration: Copy as markdown (the table with seed, cards, fingerprint) · Download JSON (the file itself).
 - Physics: Copy as code for edited knobs; the seed, race count and fingerprint are on screen and in `npm run lab`.
 
 ## Known gaps (parked)

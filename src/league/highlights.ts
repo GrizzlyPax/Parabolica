@@ -8,7 +8,7 @@
 //
 // Tiers (see COMMISSIONER_MODE.md feedback, June 2026):
 //   CANON   — always retold: crashes, blowouts, mechanical deaths, DNFs,
-//             track events, tag activations (rare and characterful)
+//             track events
 //   STORY   — one each: the race-winning move (final lead change), the worst
 //             pit fumble, the best stop, the closest call, plus the winner
 //             crossing the line
@@ -27,7 +27,6 @@ const CANON_TYPES = new Set<RaceEvent['type']>([
   'tire_failure',
   'mechanical_failure',
   'track_event',
-  'tag_activation',
 ]);
 
 /** Highest-magnitude event of a type, or none. */

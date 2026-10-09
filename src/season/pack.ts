@@ -19,7 +19,7 @@
 
 import { mulberry32, deriveSeed } from '../engine/rng';
 import { MOTORSPORT_DECK, cardsBy, pickCard, slotsFor, GEAR_KIND, CARDS_BY_ID, type Card, type CardTarget, type Slots } from '../cards';
-import type { RarityOdds } from '../data/tags';
+import type { RarityOdds } from '../cards/rarity';
 import type { SeasonCards } from './genesis';
 import { draftState } from './draft';
 import { constructorStandings, isHuman, poolFor, seasonState, type SeasonFacts } from './season';

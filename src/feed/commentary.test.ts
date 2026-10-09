@@ -32,7 +32,7 @@ describe('voiceNotification', () => {
     { type: 'milestone', title: 'FINAL LAP' },
     { type: 'milestone', title: 'HALFWAY' },
     { type: 'finish', title: 'CHECKERED FLAG' },
-    { type: 'tag_activation', title: '🏷️ Comfort Phillips' },
+    { type: 'effect_applied', title: '🔧 Comfort Phillips' },
     { type: 'track_event', title: 'Monsoon Season' },
     { type: 'track_event', title: 'THE VOID OPENS' },
   ];

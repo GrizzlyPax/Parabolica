@@ -1,4 +1,4 @@
-// #246 mechanics probe: pure drivers, no tags, canon physics. Measures the
+// #246 mechanics probe: pure drivers, no trait cards, canon physics. Measures the
 // things a race fan would check: does pace rank predict results, how much
 // does the running order change, stops/pit loss, lapped cars, margins,
 // attrition. npx tsx scripts/mechanics-probe.mjs [races] [noTags=1]
@@ -90,7 +90,7 @@ for (let r = 0; r < RACES; r++) {
 const mean = v => v.length ? v.reduce((a, b) => a + b, 0) / v.length : NaN;
 const pct = v => `${(100 * mean(v)).toFixed(1)}%`;
 const med = v => { const s = [...v].sort((a, b) => a - b); return s[Math.floor(s.length / 2)]; };
-console.log(`\n== Mechanics probe · ${RACES} races · ${NO_TAGS ? 'NO TAGS' : 'tags on'} · ${laps}-ish laps ==`);
+console.log(`\n== Mechanics probe · ${RACES} races · ${NO_TAGS ? 'NO TRAITS' : 'traits on'} · ${laps}-ish laps ==`);
 console.log(`Pace rank → finish rank (Spearman): ${mean(acc.rho).toFixed(2)}  (1 = results are pure stats, 0 = lottery)`);
 console.log(`Winner's pace rank (median): P${med(acc.winnerPaceRank)}   top-3 package wins ${pct(acc.winnerPaceRank.map(x => x <= 3 ? 1 : 0))}, outside top-10 wins ${pct(acc.winnerPaceRank.map(x => x > 10 ? 1 : 0))}`);
 console.log(`Grid → finish (Spearman): ${mean(acc.gridRho).toFixed(2)}   grid vs package: ${mean(acc.gridPaceRho).toFixed(2)}   pole wins ${pct(acc.poleWins)}   winner from P${med(acc.winnerGrid)} (median)`);

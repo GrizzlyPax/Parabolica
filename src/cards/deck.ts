@@ -5,7 +5,7 @@
 //
 // Pure data. Nothing in the sim reads it yet: genesis (#313) and Quick Race
 // (#337) wire it in.
-import { RARITIES, rollRarity, type Rarity, type RarityOdds } from '../data/tags';
+import { RARITIES, rollRarity, type Rarity, type RarityOdds } from './rarity';
 import type { Rng } from '../engine/rng';
 import type { Card, CardKind, CardTarget, CarStatKey, DriverStatKey, Slots, StatKey, TeamStatKey } from './types';
 
