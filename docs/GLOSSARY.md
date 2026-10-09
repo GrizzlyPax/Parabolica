@@ -2,7 +2,7 @@
 
 *Everything in the sim and the world, generated from the data modules by `npm run glossary` — do not edit by hand; edit the source files named in each section and re-run. Engine v0.5.1. How to add content: docs/WORLD_DECK.md.*
 
-28 teams · 6 tracks · 43 tags (30 genesis · 8 acquired · 5 in-race) · 12 rule cards · 12 rules · 6 weathers · 3 gods
+28 teams · 6 tracks · 43 tags (30 genesis · 8 acquired · 5 in-race) · 12 rule cards · 12 rules · 6 weathers
 
 ## Base-deck teams
 
@@ -82,16 +82,6 @@
 | **Endurance + Power** `endurance-power` | 8% | +10% Endurance · +10% Power |
 | **Aggression + Grip** `aggression-grip` | 8% | +10% Aggression · +10% Grip |
 
-
-## Gods (retiring)
-
-*Source: `src/league/gods.ts`. Parked: founding no longer asks, and gods retire with Commissioner leagues (#339). Not shown in the World Deck.*
-
-| God | Epithet | Hunger | Appetite |
-|---|---|---|---|
-| 🔥 **The Scrap Heap** `the-scrap-heap` | That Which Collects | Bring me the bent chassis and the blown engine. A clean race is a wasted race. | Hungers for carnage — crashes, blowouts, DNFs. Safe seasons starve it. |
-| ⚖️ **The Stewards** `the-stewards` | The Ones Who Watch | Order. Procession. The strong shall finish ahead of the weak, as is written. | Hungers for order — favorites winning, clean finishes. Chaos offends it. |
-| 📸 **The Photo Finish** `the-photo-finish` | Witness of the Margin | Let no one pull away. I want ten winners in sixteen races and a title decided by a lap. | Hungers for parity — different winners, tight championships. Dynasties bore it. |
 
 ## How genesis tags are rolled
 

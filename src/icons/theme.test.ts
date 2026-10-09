@@ -10,7 +10,6 @@ const THEMED = [
   'RunSetup.css',
   'Glossary.css',
   'racecontrol/RaceControl.css',
-  'league/ui/League.css',
   'fantasy/Fantasy.css',
   'IdeaBox.css',
   'components/Tooltip.css',
@@ -22,7 +21,6 @@ const THEMED = [
 
 // Race rendering inside a themed file stays with Apex (#381) until it moves.
 const RACE_BLOCKS: Record<string, [string, string]> = {
-  'league/ui/League.css': ['/* === Race replay in the chronicle (#173)', '/* The season chart box'],
 };
 
 const COLOUR = /#[0-9a-fA-F]{3,8}\b|rgba?\(/;

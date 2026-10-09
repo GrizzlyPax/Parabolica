@@ -28,7 +28,6 @@ describe('Emoji sweep: the UI uses game-icons (race view included, #397)', () =>
 
   it('finds the UI files', () => {
     expect(files).toContain('MainMenu.tsx');
-    expect(files).toContain('league/ui/LeagueScreen.tsx');
     expect(files).toContain('WatchMode.tsx');
     expect(files).toContain('components/race/TrackMap.tsx');
     expect(files).toContain('feed/commentary.ts');

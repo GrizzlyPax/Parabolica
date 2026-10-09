@@ -17,7 +17,6 @@ import { BASE_DECK_TEAMS, TEAM_KINDS } from './deckTeams';
 import { BASE_DECK_TRACKS } from './deckTracks';
 import { BASE_DECK_WEATHER } from './deckWeather';
 import { STAT_LABELS } from '../cards/deck';
-import { GODS } from '../league/gods';
 import { INTL_FIRST_NAMES, INTL_LAST_NAMES, ABSURD_FIRST_NAMES, ABSURD_LAST_NAMES, NAME_TIER_WEIGHTS, ONE_WORD_CHANCE } from '../generators/names';
 import { LEAGUE_ADJECTIVES, LEAGUE_NOUNS } from '../generators/leagueName';
 import { BACKSTORY_TEMPLATES, BACKSTORY_FILLS, QUIRKS } from '../generators/drivers';
@@ -138,7 +137,6 @@ export interface Glossary {
   deckWeather: typeof BASE_DECK_WEATHER;
   teams: typeof CURRENT_TEAMS;
   historicTeams: typeof HISTORIC_TEAMS;
-  gods: typeof GODS;
   /** Flavour pools, each with its size and a few samples. */
   pools: { id: string; title: string; where: string; size: number; samples: string[] }[];
   counts: Record<string, number>;
@@ -149,7 +147,7 @@ export function buildGlossary(): Glossary {
   return {
     tags, cards: RULE_CARDS, acquisitionRules: ACQUISITION_RULES, inRaceRules: IN_RACE_RULES,
     weather: WEATHER_TYPES, tracks: CURRENT_TRACKS,
-    historicTracks: HISTORIC_TRACKS, deckTeams: BASE_DECK_TEAMS, deckTracks: BASE_DECK_TRACKS, deckWeather: BASE_DECK_WEATHER, teams: CURRENT_TEAMS, historicTeams: HISTORIC_TEAMS, gods: GODS,
+    historicTracks: HISTORIC_TRACKS, deckTeams: BASE_DECK_TEAMS, deckTracks: BASE_DECK_TRACKS, deckWeather: BASE_DECK_WEATHER, teams: CURRENT_TEAMS, historicTeams: HISTORIC_TEAMS,
     pools: [
       { id: 'names-intl-first', title: `Driver first names · international (${Math.round(NAME_TIER_WEIGHTS.international * 100)}% of drivers)`, where: 'src/generators/names.ts INTL_FIRST_NAMES', size: INTL_FIRST_NAMES.length, samples: INTL_FIRST_NAMES.slice(0, 8) },
       { id: 'names-intl-last', title: 'Driver last names · international', where: 'src/generators/names.ts INTL_LAST_NAMES', size: INTL_LAST_NAMES.length, samples: INTL_LAST_NAMES.slice(0, 8) },
@@ -171,7 +169,7 @@ export function buildGlossary(): Glossary {
       inRace: tags.filter(t => t.group === 'in-race').length,
       cards: RULE_CARDS.length, rules: ACQUISITION_RULES.length + IN_RACE_RULES.length,
       weather: WEATHER_TYPES.length, tracks: CURRENT_TRACKS.length,
-      historicTracks: HISTORIC_TRACKS.length, deckTeams: BASE_DECK_TEAMS.length, deckTracks: BASE_DECK_TRACKS.length, deckWeather: BASE_DECK_WEATHER.length, teams: CURRENT_TEAMS.length, historicTeams: HISTORIC_TEAMS.length, gods: GODS.length,
+      historicTracks: HISTORIC_TRACKS.length, deckTeams: BASE_DECK_TEAMS.length, deckTracks: BASE_DECK_TRACKS.length, deckWeather: BASE_DECK_WEATHER.length, teams: CURRENT_TEAMS.length, historicTeams: HISTORIC_TEAMS.length,
     },
   };
 }
@@ -181,7 +179,7 @@ export function renderGlossaryMd(g: Glossary, version: string): string {
   const L: string[] = [];
   const fx = (e: GlossaryEffect[]) => e.length ? e.map(x => `${x.value} ${x.label}`).join(', ') : '—';
   L.push(`# Parabolica World Deck`, '', `*Everything in the sim and the world, generated from the data modules by \`npm run glossary\` — do not edit by hand; edit the source files named in each section and re-run. Engine v${version}. How to add content: docs/WORLD_DECK.md.*`, '');
-  L.push(`${g.counts.deckTeams} teams · ${g.counts.tracks} tracks · ${g.counts.tags} tags (${g.counts.genesis} genesis · ${g.counts.acquired} acquired · ${g.counts.inRace} in-race) · ${g.counts.cards} rule cards · ${g.counts.rules} rules · ${g.counts.weather} weathers · ${g.counts.gods} gods`, '');
+  L.push(`${g.counts.deckTeams} teams · ${g.counts.tracks} tracks · ${g.counts.tags} tags (${g.counts.genesis} genesis · ${g.counts.acquired} acquired · ${g.counts.inRace} in-race) · ${g.counts.cards} rule cards · ${g.counts.rules} rules · ${g.counts.weather} weathers`, '');
   L.push('## Base-deck teams', '', '*Source: `src/data/deckTeams.ts` (from docs/story/team-identity.md; not canon yet). The 28 world factions, seven of each kind: Quick Race draws its 11 and Season Mode its CPU teams from these. Logo = the icon in `ink` on the team colour.*', '');
   for (const k of TEAM_KINDS) {
     L.push(`### ${k.title}`, '', '| Team | Colour · ink | Icon | Line |', '|---|---|---|---|');
@@ -194,8 +192,6 @@ export function renderGlossaryMd(g: Glossary, version: string): string {
   L.push('', '## Weather', '', '*Source: `src/data/deckWeather.ts`. Neutral + five dry weathers, favours × intensity, stacking with the track. No rain until Wet arrives in v0.6; the old weathers and the inflictions retired (the inflictions are parked as Horror-deck material).*', '', '| Weather | Odds | Favours |', '|---|---|---|');
   for (const w of g.deckWeather) L.push(`| **${w.name}** \`${w.id}\` | ${w.odds}% | ${favs(w.favours)} |`);
   L.push('');
-  L.push('', '## Gods (retiring)', '', '*Source: `src/league/gods.ts`. Parked: founding no longer asks, and gods retire with Commissioner leagues (#339). Not shown in the World Deck.*', '', '| God | Epithet | Hunger | Appetite |', '|---|---|---|---|');
-  for (const d of g.gods) L.push(`| ${d.emoji} **${d.name}** \`${d.id}\` | ${d.epithet} | ${d.hunger} | ${d.appetite} |`);
   L.push('');
   const rs = defaultRuleset();
   L.push('## How genesis tags are rolled', '',

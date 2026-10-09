@@ -6,7 +6,7 @@
 import { useMemo, useState } from 'react';
 import type { RosterDriver } from '../RaceEngine';
 import { rosterRanks, type RankTone } from '../betting/utils';
-import { TeamMarble } from '../league/ui/TeamMarble';
+import { TeamMarble } from './TeamMarble';
 import { FANTASY_COLORS, MAX_FANTASY_TEAMS, MIN_FANTASY_TEAMS, SQUAD_SIZE, draftComplete, fantasyHex, fantasyOwners, onTheClock, snakeOrder, type FantasyColorId, type FantasyConfig, type FantasyTeam } from './types';
 import './Fantasy.css';
 

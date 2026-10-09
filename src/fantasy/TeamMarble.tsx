@@ -1,3 +1,4 @@
+import './Fantasy.css';
 // The team marble: the driver's racing number in the team's ink on the team
 // colour (docs/ICONS.md → colour system; #381). Teammates share the colour and
 // are told apart by their number. Use it everywhere a driver appears so the

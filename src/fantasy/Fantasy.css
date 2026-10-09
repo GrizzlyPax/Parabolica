@@ -76,3 +76,15 @@
 .race-complete-fantasy { display: inline-flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; font-size: 13px; }
 .rc-fantasy-team { display: inline-flex; align-items: center; gap: 2px; color: var(--pw-text-1); }
 .rc-fantasy-team .fantasy-badge { margin-left: 0; }
+
+/* The team marble (TeamMarble.tsx): number on team colour, inline size/colours. */
+.lg-marble {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border-width: 2px;
+  flex-shrink: 0;
+  line-height: 1;
+}

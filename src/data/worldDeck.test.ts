@@ -1,6 +1,6 @@
 // World Deck content checks (docs/WORLD_DECK.md): the rules every content
 // contribution must pass. Run `npm test` after adding teams, tracks, tags,
-// cards, weather, inflictions, gods or flavour lines.
+// cards, weather, inflictions or flavour lines.
 import { describe, it, expect } from 'vitest';
 import { ALL_TAGS, DRIVER_TAGS, CAR_TAGS, TEAM_TAGS, RARITIES, getTagById } from './tags';
 import { ACQUISITION_RULES } from './acquisitions';
@@ -14,7 +14,6 @@ import { BASE_DECK_WEATHER } from './deckWeather';
 import { DRIVER_STATS, CAR_STATS, TEAM_STATS } from '../cards/deck';
 import { resolveIcon } from '../icons/registry';
 import { CURRENT_TRACKS, HISTORIC_TRACKS, LAYOUTS } from '../generators/tracks';
-import { GODS } from '../league/gods';
 import { INTL_FIRST_NAMES, INTL_LAST_NAMES, ABSURD_FIRST_NAMES, ABSURD_LAST_NAMES } from '../generators/names';
 import { LEAGUE_ADJECTIVES, LEAGUE_NOUNS } from '../generators/leagueName';
 import { BACKSTORY_TEMPLATES, BACKSTORY_FILLS, QUIRKS } from '../generators/drivers';
@@ -36,7 +35,7 @@ const nonEmpty = (s: string | undefined, what: string) => expect((s ?? '').trim(
 describe('ids are unique, kebab-case, and every record has a name and emoji', () => {
   const registries: [string, { id: string; name: string; emoji: string }[]][] = [
     ['tags', ALL_TAGS], ['cards', RULE_CARDS], ['weather', WEATHER_TYPES],
-    ['teams', [...CURRENT_TEAMS, ...HISTORIC_TEAMS]], ['tracks', [...CURRENT_TRACKS, ...HISTORIC_TRACKS]], ['gods', GODS],
+    ['teams', [...CURRENT_TEAMS, ...HISTORIC_TEAMS]], ['tracks', [...CURRENT_TRACKS, ...HISTORIC_TRACKS]],
   ];
   for (const [what, rows] of registries) {
     it(what, () => {
@@ -95,7 +94,7 @@ describe('tags are well-formed', () => {
   });
 });
 
-describe('teams, tracks, gods, weather', () => {
+describe('teams, tracks, weather', () => {
   it('the grid is the 28 base-deck teams: one hex colour + a white or near-black ink', () => {
     expect(CURRENT_TEAMS.map(t => t.id)).toEqual(BASE_DECK_TEAMS.map(t => t.id));
     expect(HISTORIC_TEAMS).toEqual([]);
@@ -115,9 +114,6 @@ describe('teams, tracks, gods, weather', () => {
       expect(t.length).toBeGreaterThanOrEqual(500); expect(t.length).toBeLessThanOrEqual(1500);
       nonEmpty(t.description, `${t.id} description`); nonEmpty(t.funEmoji, `${t.id} funEmoji`);
     }
-  });
-  it('gods have an epithet, a hunger and an appetite', () => {
-    for (const g of GODS) { nonEmpty(g.epithet, g.id); nonEmpty(g.hunger, g.id); nonEmpty(g.appetite, g.id); }
   });
   it('weather weights are positive, sum to 100 and neutral is the most common', () => {
     for (const w of WEATHER_TYPES) expect(w.weight).toBeGreaterThan(0);
