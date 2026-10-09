@@ -31,7 +31,7 @@ import { overall, readStat, type StatReading } from '../grades';
 import Handoff from './Handoff';
 import EndSeason from './EndSeason';
 import PackReveal from './PackReveal';
-import { GradeCell, ReadingSheet } from './RosterTable';
+import { CAR_STATS, CT_STATS, DRIVER_STATS, GradeCell, PAD, ReadingSheet, STAT_ABBR, TEAM_STATS } from './RosterTable';
 import { SeasonChart } from './SeasonChart';
 import { humanLabel, teamsOf } from './teams';
 
@@ -46,15 +46,7 @@ interface Props {
 
 const TIER_LABEL = { common: 'Common', uncommon: 'Uncommon', rare: 'Rare', legendary: 'Legendary' } as const;
 const GEAR_FOR: Record<CardHolder['kind'], Card['kind']> = { driver: 'equipment', car: 'upgrade', team: 'facility' };
-const DRIVER_STATS: StatKey[] = ['baseSpeed', 'consistency', 'luck', 'acceleration', 'endurance', 'aggression'];
-const CAR_STATS: StatKey[] = ['power', 'grip', 'reliability'];
-const TEAM_STATS: StatKey[] = ['tireManagement', 'pitCrew'];
-const CT_STATS: StatKey[] = [...CAR_STATS, ...TEAM_STATS];
-const PAD = DRIVER_STATS.length - CT_STATS.length;
-const ABBR: Record<StatKey, string> = {
-  baseSpeed: 'SPD', consistency: 'CON', luck: 'LCK', acceleration: 'ACC', endurance: 'END', aggression: 'AGG',
-  power: 'PWR', grip: 'GRP', reliability: 'REL', tireManagement: 'TYR', pitCrew: 'PIT',
-};
+const ABBR = STAT_ABBR;
 const ord = (n: number) => `${n}${['th', 'st', 'nd', 'rd'][(n % 100 - 20) % 10] || ['th', 'st', 'nd', 'rd'][n % 100] || 'th'}`;
 
 type HolderKey = string; // a driver id, 'car' or 'team'
