@@ -23,6 +23,8 @@ Parabolica is an F1-style race sim building toward Commissioner Mode: wall-clock
 | [SEASON_MODE](SEASON_MODE.md) | **v0.5 Spa build spec:** League Setup, draft, Paddock loop |
 | [FUN_CHECK](FUN_CHECK.md) | **Is a season fun?** Six signals with probe targets, playtest look-fors, red flags |
 | [BALANCE_REPORT_2026-10-09](BALANCE_REPORT_2026-10-09.html) | **Steward's balance report (Oct 9):** stat parity, tracks & weather, how Season titles are decided; findings only ([published copy](https://claude.ai/artifact/MC5fwYaqd6KJD8Gk9q8E94)) |
+| [BALANCE_DIALS_2026-10-09](BALANCE_DIALS_2026-10-09.html) | **Steward: raw-stat balance philosophy:** king stat vs emperor, stat balance vs competitive balance, the three dials ([published copy](https://claude.ai/artifact/SBycLd28QF1vfPtihJLWmd)) |
+| [BALANCE_PASS_ONE_2026-10-09](BALANCE_PASS_ONE_2026-10-09.html) | **Steward: recommended balance pass (draft 2):** 23 existing dials tuned to Pax's Oct 9 calls, measured; the dial sheet ([published copy](https://claude.ai/artifact/3E8HBPYh8sz4F9zSHwuwML)) |
 | [FANTASY](FANTASY.md) | Fantasy teams: snake draft, obfuscated draft info, scoring |
 | [ICONS](ICONS.md) | **Design change:** game-icons.net replaces every emoji; icons + UI take your team's colours |
 | [PROCEDURAL_IDENTITY](PROCEDURAL_IDENTITY.md) | Generated driver names, league names, team identity |
