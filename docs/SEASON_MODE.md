@@ -54,7 +54,7 @@ Instead of 2 drivers pre-assigned to each named team, the seed summons a **share
 
 ## 5. Race & standings
 - The **existing engine** races the drafted drivers, cars and tags, with no new physics. Each race **holds for "Go"**, then you **watch live or skip to the result**.
-- **Score:** constructor points (your 2 racers combined) plus a **drivers'-champion bonus**. Pax wants it worth *more* than one race win; Telemetry sets the number from seeded seasons. A finale crowns the champion.
+- **Score:** two championships, like F1 (Pax, Oct 9, #509): **Constructors'** = your 2 racers' points combined; **Drivers'** = each driver's own. No bonus. A finale crowns both champions.
 - **The in-race UI hides rivals' detailed stats**, matching the draft opacity.
 
 ## 6. Look & feel
@@ -64,7 +64,7 @@ Instead of 2 drivers pre-assigned to each named team, the seed summons a **share
 ## Decided (Pax, Oct 8, round 2)
 - **Hotseat ships in v0.5** (basic): several humans, a hand-off screen in each team's colour between turns.
 - **One save slot:** a new season overwrites the old one (asks first).
-- **Drivers'-champion bonus = 50 points** (two race wins) to start; Telemetry may tune it.
+- ~~Drivers'-champion bonus = 50 points~~ retired (#509): it flipped the title in 28% of seasons after v0.5.1.
 - **After the finale:** "Play again" = League Setup with a fresh seed and draft. No carry-over in v0.5.
 - **No Rule cards** in Season Mode v0.5 (default ruleset).
 - **Race view:** Go opens the live broadcast; Skip to result is always one tap away.

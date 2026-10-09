@@ -411,3 +411,6 @@ button.rt-g:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset:
   .fn-crown-name { font-size: 26px; }
 }
 .fn > .pk-chart { max-width: 760px; }
+.fn-result { padding: 4px 0 0; }
+.fn-result-line { margin: 0; font-size: 22px; font-family: var(--look-display); }
+.fn-result-line b { color: var(--pw-text-1); }
