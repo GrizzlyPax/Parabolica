@@ -16,8 +16,8 @@ const NO_TAGS = (process.argv[3] ?? '1') === '1';
 const meta = mulberry32(246);
 const ruleset = resolveRuleset(NO_TAGS ? ['no-tags'] : [], RULE_CARDS_BY_ID);
 
-// Deterministic "pace score" from stats, the thing a fan would call "the package".
-const pace = d => (1 + (d.stats.baseSpeed - 1) * 0.12) * (0.942 + (d.carStats?.power ?? 3) * 0.014);
+// "The package": all 11 stats on the grade scale (shared with Race Control, #507).
+import { packageScore as pace } from '../src/racecontrol/pace.ts';
 const spearman = (a, b) => { const n = a.length; const ra = rank(a), rb = rank(b); let s = 0; for (let i = 0; i < n; i++) s += (ra[i] - rb[i]) ** 2; return 1 - 6 * s / (n * (n * n - 1)); };
 const rank = v => { const idx = v.map((x, i) => [x, i]).sort((p, q) => q[0] - p[0]); const r = new Array(v.length); idx.forEach(([, i], k) => r[i] = k + 1); return r; };
 
