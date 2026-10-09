@@ -32,7 +32,7 @@
 
 **Playtest 1 (Oct 8):** the loop works; the Paddock reads badly (oversized on desktop, no driver stats, one driver at a time). Fixes go in **before** the pack reveal, so #320 isn't built twice: #451, #452, then #453 in M4.
 
-**Status (Oct 9, late):** ✅ **v0.5.1 merged** (#503): Balance Pass One + Speed nudge + names on their own stream. Steward's re-measure: within noise (Speed 25% / Power 18%; favourite wins 58% of titles, was 74%). M4 left: #489, #361 (Run Setup), #453. M5 left: Hub clean-up + two championships (#509) + the Race Control pace-check fix (#507); Steward's Tracks & Weather re-probe (#362).
+**Status (Oct 9, late):** ✅ **v0.5.1 merged** (#503): Balance Pass One + Speed nudge + names on their own stream. Steward's re-measure: within noise (Speed 25% / Power 18%; favourite wins 58% of titles, was 74%). ✅ **M4 done** (#489 vehicles + portraits, #361, #453). M5 left: Hub clean-up + two championships (#509) + the Race Control pace-check fix (#507); Steward's Tracks & Weather re-probe (#362).
 
 **Status (Oct 9):** ✅ **M1, M2, M3 done** (a full season with pack reveals). 🏛️ Steward's three balance reads are in ([Balance Report](BALANCE_REPORT_2026-10-09.html)): findings only; **Pax + Steward talk the options, then Steward writes the recommended passes, then Pit writes build issues.** Hub is on M4.
 
@@ -64,12 +64,12 @@
 8. ✅ Packs rename + pack icon (#421, PR #456)
 9. ✅ Paddock redesign (#452, PR #458): roster table + letter grades, picked live with Pax
 10. ✅ Pack opening reveal (#320) → **M3 ✅**
-11. **Car vehicles + driver portraits (#489)**: next (Pax, Oct 9)
+11. ✅ Car vehicles + driver portraits (#489)
 12. ✅ **The balance bump** (#481 + #467 → PR #503, v0.5.1)
 12b. Race Control pace check reads live `simVars` (#507)
 12c. **Two championships, no bonus** (#509): Drivers' + Constructors', finale mock-up first
-13. The rest of favoured stats (#361): Run Setup only (race header done in #500)
-14. The rest of roster tables (#453): Draft, finale, Setup, World Deck → **M4**
+13. ✅ Favoured stats (#361)
+14. ✅ Roster tables everywhere (#453) → **M4 ✅**
 15. Race-view emoji become game-icons (#397)
 16. Hide the Reset button in Season races (#449)
 17. Weather rule cards: rename to Pax's one-word names (#473), strings only
