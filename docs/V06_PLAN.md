@@ -36,7 +36,7 @@
 - Per-track wear dial (#536), after Steward's values
 - **Retire tags (#334)**: map first; aim for no fingerprint move; if results must move, fold into the bump PR
 
-**🛞 Hub — milestone 3:** retire tags from the screens (#541), after #334
+**🛞 Hub — milestone 3:** star glyph test fix (#546, now) · after #545 merges: retire tags from the screens (#541) · tyre-wear pill (#547)
 
 Milestone 1 and 2 run in parallel: Hub's work moves no fingerprint.
 
@@ -58,3 +58,5 @@ First owner choice = **pick 1 of 3 from a pack**; other levers wait for a balanc
 **Oct 10 (Pax, [Monza Roadmap](https://claude.ai/artifact/3MxTvzbH62QcwuQd4YgWhS)):** **car and team cards keep helping both drivers** (worth twice a driver card; those slots become the prized picks) · **everything outside owner choices moves to v0.7** · **retire tags pulls up into v0.6** (#334 engine/data/lab, #541 screens) · v0.6 scope locked
 
 **Oct 10 (Pax, via Hub, #533 / PR #543):** keep 1 of 3 works by **"try them on"**: the reveal flips all three, all three come into your hand on the Paddock table, rows glow and grades flash, you place one and the other two go back · turn steps read Open pack · Keep one · Pick 2 · Lock in · ✅ **milestone 1 (Choices) done**
+
+**The bump is built (Apex, Oct 10): [PR #545](https://github.com/GrizzlyPax/Parabolica/pull/545), v0.6.0, unmerged.** Closes #335 #496 #534 #535 #536 #334; tags retired inside the one bump (card-free races are byte-identical; default grids move because cards now bake into stats). **Pax merges after Steward's "OK to merge" on #537.** Apex's calls for Pax to confirm: track + weather favours use grade points too (+10 grade, ~1/3 of the old +10% on driver stats; Steward re-reads on #362) · decrees stay a generic record so old published leagues still parse · in-race effects (Damaged, Spun, Cooked tyres, Sulking, Fired up) stay as timed effects but are no longer digest highlights · rule-card ids kept: `tag-soup` = Trait Soup, `no-tags` = No Traits · wear shows in World Deck only for now (pill: #547)
