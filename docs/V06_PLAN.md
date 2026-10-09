@@ -36,7 +36,7 @@
 - Per-track wear dial (#536), after Steward's values
 - **Retire tags (#334)**: map first; aim for no fingerprint move; if results must move, fold into the bump PR
 
-**🛞 Hub — milestone 3:** star glyph test fix (#546, now) · after #545 merges: retire tags from the screens (#541) · tyre-wear pill (#547)
+**🛞 Hub — milestone 3, in order:** v0.6.1 Acceleration fix (#550, moves race results; Pit/Pax merges) · star glyph test fix (#546) · retire tags from the screens (#541) · tyre-wear pill (#547) · republish the preview
 
 Milestone 1 and 2 run in parallel: Hub's work moves no fingerprint.
 
@@ -60,3 +60,5 @@ First owner choice = **pick 1 of 3 from a pack**; other levers wait for a balanc
 **Oct 10 (Pax, via Hub, #533 / PR #543):** keep 1 of 3 works by **"try them on"**: the reveal flips all three, all three come into your hand on the Paddock table, rows glow and grades flash, you place one and the other two go back · turn steps read Open pack · Keep one · Pick 2 · Lock in · ✅ **milestone 1 (Choices) done**
 
 **✅ The bump is merged (Oct 10): [PR #545](https://github.com/GrizzlyPax/Parabolica/pull/545), v0.6.0.** Pit merged it on Pax's word ("feel free to merge") after 356 tests + tsc passed on the merge with main; Steward re-probes on main (#537), and any tuning is a data-only follow-up. Built by Apex: Closes #335 #496 #534 #535 #536 #334; tags retired inside the one bump (card-free races are byte-identical; default grids move because cards now bake into stats). Apex's calls for Pax to confirm: track + weather favours use grade points too (+10 grade, ~1/3 of the old +10% on driver stats; Steward re-reads on #362) · decrees stay a generic record so old published leagues still parse · in-race effects (Damaged, Spun, Cooked tyres, Sulking, Fired up) stay as timed effects but are no longer digest highlights · rule-card ids kept: `tag-soup` = Trait Soup, `no-tags` = No Traits · wear shows in World Deck only for now (pill: #547)
+
+**Steward's re-probe of v0.6.0 (10/9, [v0.6 Bump Re-probe Report](https://claude.ai/artifact/JzRcEimZkeBihSJkvy5MpU)):** wear values final (the starting set) · last stop with ≤2 laps left 35% → 19% · finishing on short hards 26% → 0% · final set's life used 47% → 67% · stops forced by the rule 12% → 2% · stops per car 1.39 (Speed+Power) → 1.91 (Accel+Pit Crew) · cards Bronze/Silver/Gold/Iridium ≈ 0.19 / 0.38 / 0.76 / 1.7 pts/race, car/team ~2× (as decided) · pole wins 18.5% → 24.5% · **one fix: Acceleration became the strongest stat → `accelEffect` 1.2 → 0.6 (v0.6.1, #550)** · ruined quali laps stay 1 in 12 · **the real-F1 pit rule costs some season variety** (5+ winner seasons 83% → 68%); catch-up between races (CPU packs #478, v0.7) is the lever · **track favours are inert under grade points**; sizing them up doesn't help → **#362 moves to v0.7** as a design call (A widen the gap, Steward's pick · B cosmetic · C drop)
