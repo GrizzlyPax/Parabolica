@@ -115,3 +115,36 @@ Samples: *The Adequate Hillclimb* · *The Harvest Rally* · *The Municipal Grand
 6. Determinism: new draws change every seeded grid, so this moves generated rosters for a given seed. Treat it as an intended content change (version bump, fingerprint update per `ship-pr`).
 
 Review board used in the session (all candidates, including ones not picked): [Name Pools](https://claude.ai/artifact/HZ5J3T5Zgx31GdaQM2VAeB).
+
+
+## Update, Oct 10: mostly American, fewer silly-plus-silly
+
+*Pax, Oct 10: "quite international… rein it in, more Americanized or English-speaking." Review page: [American Grid](https://claude.ai/artifact/ScYntAXwNjiR3jyUd1GaNB) (today vs proposed, reroll).*
+
+**What Pax asked about:** "first and last name always pulled from the same family?" For real names, no: the two halves are already drawn independently from the whole pool, and a matched pair like "Giulia Rossi" only happens by chance (~4%). What he noticed was the **full-absurd tier**, where both halves are silly ("Thistle Hedgerow"). That tier shrinks below.
+
+### Decisions (Pax, Oct 10)
+- **About 80% English-speaking, American flavour.**
+- **Each half picks its own source:** a real first name is American 80% of the time, otherwise international; the last name rolls the same way, **separately**. Result: mostly "Tyler Brooks", sometimes America's own mix ("Diego Parker", "Megan Okafor"), occasionally fully international ("Kiprono Habib").
+- **Fewer silly-plus-silly:** full-absurd 8% → **2%**, hybrid 12% → **16%** (so "Thistle Hedgerow" mostly becomes "Thistle Johnson").
+
+### Tier weights (replaces the table above)
+| Kind | Was | Now |
+|---|---|---|
+| Real | 78% | **80%** (each half 80% American / 20% international) |
+| Hybrid (one absurd half on a real name) | 12% | **16%** (the real half follows the same 80/20 rule) |
+| Absurd (both halves) | 8% | **2%** |
+| Glitch | 2% | 2% |
+| One word | ~1% on top | unchanged |
+
+### New pools
+- **`US_FIRST_NAMES` (104):** Tyler, Megan, Brandon, Ashley, Jake, Kayla, Cody, Dustin, Chase, Hunter, Brittany, Kevin, Jessica, Ryan, Amanda, Derek, Travis, Kyle, Shane, Bobby, Ricky, Dale, Darrell, Tony, Danny, Mike, Chris, Matt, Josh, Justin, Brad, Lauren, Taylor, Madison, Morgan, Casey, Jordan, Riley, Avery, Logan, Mason, Caleb, Wyatt, Colton, Brooke, Hailey, Savannah, Jenna, Kelsey, Rachel, Molly, Katie, Erin, Marcus, Darius, Andre, Terrence, Jamal, Keisha, Tasha, Luis, Miguel, Rosa, Nick, Joey, Becky, Tammy, Wade, Clint, Rusty, Buck, Earl, Jimmy, Dwayne, Stacy, Crystal, Amber, Heather, Nicole, Brian, Scott, Jeff, Greg, Todd, Lisa, Kim, Tina, Donna, James, Mary, William, Sarah, Thomas, Emily, George, Grace, Henry, Alice, Edward, Charlotte, Oliver, Amelia, Arthur, Florence
+- **`US_LAST_NAMES` (89):** Johnson, Williams, Brown, Jones, Miller, Davis, Wilson, Anderson, Thomas, Taylor, Moore, Jackson, Martin, Thompson, White, Harris, Clark, Lewis, Robinson, Young, Allen, King, Wright, Scott, Hill, Green, Adams, Baker, Nelson, Carter, Mitchell, Roberts, Turner, Phillips, Campbell, Parker, Evans, Edwards, Collins, Stewart, Morris, Murphy, Cook, Rogers, Morgan, Cooper, Peterson, Bailey, Kelly, Howard, Cox, Ward, Richardson, Watson, Wood, Gray, James, Sullivan, McCoy, O'Brien, Dawson, Hayes, Brooks, Walker, Coleman, Foster, Bennett, Barnes, Reed, Ford, Lane, Holt, Webb, Shaw, Wells, Hughes, Smith, Price, Russell, Griffin, Wallace, Fisher, Henderson, Simmons, Jenkins, Perry, Powell, Long, Patterson
+- Today's 16 English/Anglophone first and last names move into the US pools; the international pools keep everything else (257 / 253).
+
+### For the builder
+1. Add the two US pools; remove the 16 English entries from `INTL_FIRST_NAMES` / `INTL_LAST_NAMES` (they now live in the US pools).
+2. Real-name halves: `first = rng() < 0.8 ? pick(US_FIRST) : pick(INTL_FIRST)`, same for last, independently. Keep a fixed number of draws per name so the stream doesn't shift by outcome.
+3. Hybrid: the real half uses the same 80/20 rule.
+4. Weights: `international 0.80 · hybrid 0.16 · absurd 0.02 · corrupted 0.02` (rename the `international` tier to `real` if convenient).
+5. Names are on their own stream (v0.5.1), so this changes names only, never stats.
