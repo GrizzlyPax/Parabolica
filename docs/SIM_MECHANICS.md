@@ -176,6 +176,8 @@ staggers the start: P1 on the line, each slot `grid.slotSpacing` (0.5%) of
 a lap back. `engine.getGridOrder()`; the lap-0 snapshot is the grid.
 Measured: grid vs package Spearman 0.70.
 
+**v0.6.1 (#550):** with Acceleration now counting in qualifying too, Steward's re-probe found it the strongest stat (29% of the signal vs Speed 13%). `performance.accelEffect` 1.2 → **0.6** puts it just behind Speed (Speed 1.52 · Acceleration 1.40 · Power 1.31 pts/race per step).
+
 **The qualifying show (#495, display only).** `engine.qualifyingLaps()` reads the same side stream before the start (roster order, with each lap's `ruined` roll), and `nominalLapTicks()` turns a score into a lap time (`nominal / score / 10` seconds). The race view plays the session out (`components/race/QualiBoard.tsx`) and ends on exactly `getGridOrder()`; nothing in the race moves.
 
 **Overtaking (`resolveOvertake`).** Drivers move front-to-back each tick.
