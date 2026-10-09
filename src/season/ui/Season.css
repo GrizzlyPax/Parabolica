@@ -186,8 +186,11 @@ button.rt-g { cursor: pointer; }
 button.rt-g:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset: -2px; }
 .rt-g.strong { font-size: 20px; }
 .rt-g.tone-s { color: var(--signal-purple); }
+/* The full grade ramp (Pax, Oct 9): S purple · A green · B light green · C yellow · D orange · F red */
 .rt-g.tone-a { color: var(--signal-green); }
+.rt-g.tone-b { color: color-mix(in srgb, var(--signal-green) 55%, var(--signal-yellow)); }
 .rt-g.tone-c { color: var(--signal-yellow); }
+.rt-g.tone-d { color: color-mix(in srgb, var(--signal-red) 50%, var(--signal-yellow)); }
 .rt-g.tone-f { color: var(--signal-red); }
 .rt-g.dim { opacity: 0.45; }
 .rt-notch { position: absolute; top: 0; left: 0; width: 0; height: 0; border-top: 8px solid var(--team-primary); border-right: 8px solid transparent; }
@@ -313,6 +316,12 @@ button.rt-g:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset:
 .pr.done .pr-cta { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
 .pr-cta .rs-btn { height: 52px; font-size: 18px; }
 @media (prefers-reduced-motion: reduce) { .pr-dim, .pr-cta { transition: none; } }
+
+/* End season (Pax, Oct 9) */
+.ss-end { margin-left: auto; align-self: flex-start; font-size: 13px; color: var(--pw-text-2); }
+.ss-end-confirm { margin-left: auto; display: grid; gap: 8px; padding: 10px 12px; border: 1px solid var(--signal-red); max-width: 340px; font-size: 14px; }
+.ss-end-btns { display: flex; gap: 8px; }
+.ss-end-btns .rs-btn { height: 36px; font-size: 15px; }
 
 /* Standings + finale (#321) */
 .ss-standings { padding-bottom: 96px; }

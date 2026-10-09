@@ -8,16 +8,18 @@ import { draftState } from '../draft';
 import { driverStandings, poolFor, type SeasonFacts } from '../season';
 import { DRIVERS_CHAMPION_BONUS, seasonTable } from '../scoring';
 import { seasonName } from '../setup';
+import EndSeason from './EndSeason';
 import { humanLabel, teamsOf } from './teams';
 
 interface Props {
   facts: SeasonFacts;
   onMenu: () => void;
+  onEndSeason: () => void;
   onPaddock: () => void;
   onPlayAgain: () => void;
 }
 
-export default function Standings({ facts, onMenu, onPaddock, onPlayAgain }: Props) {
+export default function Standings({ facts, onMenu, onPaddock, onPlayAgain, onEndSeason }: Props) {
   const teams = useMemo(() => teamsOf(facts), [facts]);
   const pool = useMemo(() => poolFor(facts), [facts]);
   const table = useMemo(() => seasonTable(facts), [facts]);
@@ -40,6 +42,7 @@ export default function Standings({ facts, onMenu, onPaddock, onPlayAgain }: Pro
           <h1 className="rs-title">{table.final ? 'Champions' : 'Standings'}</h1>
           <span className="rs-sub">{seasonName(facts.setup)} · {table.final ? `all ${total} races run` : `after ${facts.results.length} of ${total} races`}</span>
         </div>
+        <EndSeason onEnded={onEndSeason} />
       </header>
 
       {champion && (

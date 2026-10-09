@@ -56,14 +56,15 @@ function SavedSeason({ screen, navigate, onMenu }: Props) {
     if (wrongPlace) navigate({ name: 'season', screen: at! }, { replace: true });
   }, [wrongPlace, at, navigate]);
   if (wrongPlace) return null;
+  const onEndSeason = () => navigate({ name: 'season', screen: 'setup' }, { replace: true });
   if (facts && screen === 'draft') {
-    return <DraftBoard facts={facts} onChange={setFacts} onMenu={onMenu} onDone={() => navigate({ name: 'season', screen: 'paddock' })} />;
+    return <DraftBoard facts={facts} onChange={setFacts} onMenu={onMenu} onEndSeason={onEndSeason} onDone={() => navigate({ name: 'season', screen: 'paddock' })} />;
   }
   if (facts && screen === 'paddock') {
-    return <Paddock facts={facts} onChange={setFacts} onMenu={onMenu} onGo={() => navigate({ name: 'season', screen: 'race' })} onStandings={() => navigate({ name: 'season', screen: 'standings' })} />;
+    return <Paddock facts={facts} onChange={setFacts} onMenu={onMenu} onEndSeason={onEndSeason} onGo={() => navigate({ name: 'season', screen: 'race' })} onStandings={() => navigate({ name: 'season', screen: 'standings' })} />;
   }
   if (facts && screen === 'standings') {
-    return <Standings facts={facts} onMenu={onMenu} onPaddock={() => navigate({ name: 'season', screen: 'paddock' })} onPlayAgain={() => navigate({ name: 'season', screen: 'setup' }, { replace: true })} />;
+    return <Standings facts={facts} onMenu={onMenu} onEndSeason={onEndSeason} onPaddock={() => navigate({ name: 'season', screen: 'paddock' })} onPlayAgain={() => navigate({ name: 'season', screen: 'setup' }, { replace: true })} />;
   }
   return <SeasonHolding screen={screen} navigate={navigate} onMenu={onMenu} />;
 }

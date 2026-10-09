@@ -1,6 +1,7 @@
 // Roster tables (#452, Pax Oct 8): the house style for data. A real table, every
 // cell the same size, one value per cell. A stat is a grade (src/season/grades.ts)
-// coloured by family (S purple · A green · C yellow · F red; B and D plain); a
+// coloured on the full ramp (S purple · A green · B light green · C yellow ·
+// D orange · F red); a
 // corner notch marks a stat cards change; ▲ / ▼ marks a previewed change. Tap a
 // cell for the sum. Styles: .rt in Season.css.
 import { GameIcon } from '../../icons/GameIcon';
