@@ -24,6 +24,7 @@ description: Write, clean up, triage or close a Parabolica GitHub issue in the h
 - Title says the thing ("Season report: add fantasy section"), not "Idea: so here's one…".
 - Start smaller than feels exciting. Ship the smallest thing that proves it; list the rest under Out of scope.
 - Open design questions go in the issue as multiple choice (A / B / C, pick marked). The issue is **not** `ready` until Pax answers.
+- **Ask for an artifact** whenever Pax has to see, pick or judge something (Pax, Oct 9): a To do bullet like "show Pax 2–3 artifact mock-ups first" (layouts), "publish the read as an artifact report with charts" (balance), or "show samples in an artifact as they'd appear in the game" (names, flavour). Put the same ask in the paste prompt Pit hands Pax.
 
 ## Labels
 
