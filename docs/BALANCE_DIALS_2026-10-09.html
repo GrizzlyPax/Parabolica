@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- Steward: The Balance Dials, Oct 9 2026. Published copy: https://claude.ai/artifact/SBycLd28QF1vfPtihJLWmd -->
+<title>The Balance Dials</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&family=Special+Elite&display=swap">
+<style>
+  /* Layout: the Balance Report's almanac column, now a design argument: one claim per section, one figure per claim.
+     Series colours: ochre = today, violet = stat tune, teal = tune + half car spread. Tiers use a neutral ramp. */
+  :root {
+    --bg: #0e0d11;
+    --panel: #16141b;
+    --fg: #efece6;
+    --muted: #a39fab;
+    --rule: #37343f;
+    --today: #b07a1e;
+    --fix: #9d6bff;
+    --alt: #2a9a86;
+    --tier1: #ebe6f3;
+    --tier2: #9b94aa;
+    --tier3: #5b556c;
+    --target: rgba(95, 191, 127, .22);
+    --target-edge: #5fbf7f;
+    --look-display: "Old Standard TT", Georgia, serif;
+    --look-serif: "Old Standard TT", Georgia, serif;
+    --look-data: "Special Elite", "Courier New", monospace;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body { background: var(--bg); color: var(--fg); font-family: var(--look-serif); font-size: 16px; line-height: 1.45; -webkit-font-smoothing: antialiased; }
+  .page { max-width: 760px; margin: 0 auto; padding-inline: 20px; padding-block: 28px 64px; display: grid; gap: 44px; }
+  a { color: var(--fg); text-decoration-color: var(--fix); text-underline-offset: 3px; }
+  a:focus-visible { outline: 2px solid var(--fix); outline-offset: 2px; }
+  .label { font-family: var(--look-data); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .data { font-family: var(--look-data); font-variant-numeric: tabular-nums; }
+  h1, h2, h3 { font-family: var(--look-display); font-weight: 700; text-wrap: balance; margin: 0; }
+  h1 { font-size: clamp(34px, 8vw, 50px); line-height: .95; letter-spacing: -.02em; }
+  h2 { font-size: 26px; line-height: 1.05; }
+  h3 { font-size: 18px; line-height: 1.15; }
+  p { margin: 0; max-width: 64ch; }
+  .flavour { font-style: italic; color: var(--muted); }
+  section { display: grid; gap: 18px; border-top: 1px solid var(--fg); padding-top: 14px; }
+  .sechead { display: grid; gap: 6px; }
+  .mast { display: grid; gap: 12px; border-bottom: 3px double var(--fg); padding-bottom: 18px; }
+  .mast .row { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 16px; }
+
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); }
+  .tile { background: var(--bg); padding: 12px 12px 14px; display: grid; gap: 4px; align-content: start; min-width: 0; }
+  .tile .big { font-family: var(--look-display); font-weight: 700; font-size: 32px; line-height: 1; }
+  .tile p { font-size: 14px; color: var(--muted); line-height: 1.3; }
+  .tile .k { display: inline-flex; align-items: center; gap: 6px; }
+
+  figure { margin: 0; display: grid; gap: 12px; border: 1px solid var(--rule); padding: 14px; background: var(--panel); min-width: 0; }
+  figcaption { display: grid; gap: 3px; }
+  figcaption .t { font-family: var(--look-display); font-weight: 700; font-size: 17px; line-height: 1.15; }
+  .note { font-size: 13px; color: var(--muted); font-style: italic; line-height: 1.35; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; }
+  .key { display: inline-flex; align-items: center; gap: 6px; font-family: var(--look-data); font-size: 12px; color: var(--fg); }
+  .sw { width: 12px; height: 12px; display: inline-block; flex: none; }
+  .sw.today { background: var(--today); } .sw.fix { background: var(--fix); } .sw.alt { background: var(--alt); }
+  .sw.t1 { background: var(--tier1); } .sw.t2 { background: var(--tier2); } .sw.t3 { background: var(--tier3); }
+  .sw.band { background: var(--target); border: 1px solid var(--target-edge); }
+
+  /* 100% stacked bars */
+  .stack { display: grid; gap: 10px; }
+  .srow { display: grid; grid-template-columns: 6.4rem 1fr; gap: 10px; align-items: center; }
+  .srow .name { font-size: 15px; line-height: 1.1; }
+  .seg { display: flex; height: 26px; gap: 2px; min-width: 0; }
+  .seg span { display: flex; align-items: center; justify-content: center; font-family: var(--look-data); font-size: 11px; color: var(--bg); overflow: hidden; white-space: nowrap; min-width: 2px; }
+  .seg .t1 { background: var(--tier1); } .seg .t2 { background: var(--tier2); } .seg .t3 { background: var(--tier3); color: var(--fg); }
+
+  /* per-stat share bars */
+  .hbars { display: grid; gap: 6px; }
+  .hrow { display: grid; grid-template-columns: 6.4rem 1fr; gap: 10px; align-items: center; }
+  .hrow .name { font-size: 14px; line-height: 1.1; }
+  .track { display: grid; gap: 2px; padding-right: 3.2rem; min-width: 0; }
+  .bar { height: 11px; display: flex; align-items: center; }
+  .bar i { display: block; height: 100%; min-width: 2px; border-radius: 0 3px 3px 0; }
+  .bar.today i { background: var(--today); } .bar.fix i { background: var(--fix); }
+  .bar .v { font-family: var(--look-data); font-size: 11px; padding-left: 6px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+  /* dial scales */
+  .dial { display: grid; gap: 8px; padding-block: 6px 4px; }
+  .dial + .dial { border-top: 1px solid var(--rule); padding-top: 14px; }
+  .dial .q { font-family: var(--look-display); font-weight: 700; font-size: 17px; line-height: 1.15; }
+  .scale { position: relative; height: 54px; margin-inline: 6px; }
+  .scale .line { position: absolute; left: 0; right: 0; top: 26px; border-top: 1px solid var(--muted); }
+  .scale .band { position: absolute; top: 16px; height: 20px; background: var(--target); border: 1px solid var(--target-edge); }
+  .scale .tick { position: absolute; top: 31px; font-family: var(--look-data); font-size: 10px; color: var(--muted); transform: translateX(-50%); }
+  .scale .mk { position: absolute; top: 18px; width: 14px; height: 14px; transform: translateX(-50%) rotate(45deg); border: 2px solid var(--panel); }
+  .scale .mk.today { background: var(--today); } .scale .mk.fix { background: var(--fix); } .scale .mk.alt { background: var(--alt); }
+  .scale .mv { position: absolute; top: 0; font-family: var(--look-data); font-size: 11px; transform: translateX(-50%); white-space: nowrap; }
+  .readout { display: flex; flex-wrap: wrap; gap: 4px 14px; font-family: var(--look-data); font-size: 12px; color: var(--muted); }
+  .readout b { color: var(--fg); font-weight: 400; }
+
+  svg .ax { font-family: var(--look-data); font-size: 11px; fill: var(--muted); }
+  svg .lab { font-family: var(--look-data); font-size: 11px; fill: var(--fg); }
+  .chartwrap { overflow-x: auto; }
+  .chartwrap svg { min-width: 520px; }
+
+  .two { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
+  .callout { border-left: 3px solid var(--fix); padding: 4px 0 4px 14px; display: grid; gap: 6px; }
+  .math { font-family: var(--look-data); font-size: 13px; line-height: 1.6; background: var(--bg); border: 1px dashed var(--rule); padding: 10px 12px; overflow-x: auto; white-space: pre-wrap; }
+  ol.wins { margin: 0; padding: 0; list-style: none; display: grid; gap: 0; }
+  ol.wins li { display: grid; grid-template-columns: 2.2rem 1fr; gap: 10px; padding-block: 14px; border-bottom: 1px solid var(--rule); }
+  ol.wins li:last-child { border-bottom: 0; }
+  ol.wins .n { font-family: var(--look-display); font-size: 30px; line-height: 1; }
+  ol.wins .body { display: grid; gap: 6px; min-width: 0; }
+  .tablewrap { overflow-x: auto; border: 1px solid var(--rule); }
+  table { border-collapse: collapse; width: 100%; min-width: 640px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  th { font-family: var(--look-data); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 400; }
+  td { font-size: 15px; }
+  td.num { font-family: var(--look-data); font-size: 13px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  tr:last-child td { border-bottom: 0; }
+  footer { border-top: 3px double var(--fg); padding-top: 14px; display: grid; gap: 8px; font-size: 14px; color: var(--muted); }
+
+  @media (max-width: 480px) {
+    .page { padding-inline: 16px; }
+    .srow, .hrow { grid-template-columns: 5.2rem 1fr; gap: 8px; }
+    .srow .name, .hrow .name { font-size: 13px; }
+    .seg span { font-size: 10px; }
+  }
+</style>
+</head>
+<body style="margin:0">
+<div class="page">
+
+  <header class="mast">
+    <div class="row"><span class="label">Parabolica · raw stats, no cards</span><span class="label">Steward · 9 Oct 2026</span></div>
+    <h1>The Balance Dials</h1>
+    <p class="flavour">What a competitive race series looks like, where ours misses, and which dials move it. A follow-up to the Balance Report.</p>
+  </header>
+
+  <section aria-labelledby="king">
+    <div class="sechead"><span class="label">Your point first</span><h2 id="king">A king stat is good. We have an emperor.</h2></div>
+    <p>You're right that some stats should just matter more. In college football a 95-speed receiver is a 95-speed receiver, and everyone knows it without being told. A clear "king stat" makes drafting legible and gives the game a fantasy: go get the fast one.</p>
+    <p>The problem today isn't that one stat leads. It's how much. Measure what decides a race, and Power plus Speed take <b>87%</b> of it. Power alone, a car stat you draft once, takes <b>61%</b>. Seven stats share under 2%. Those seven still appear on every card and every grade, so they are noise to the player.</p>
+
+    <figure>
+      <figcaption><span class="t">What decides a race, by stat tier</span><span class="note">Share of the stat signal in a driver's result (each stat's measured weight, squared). Raw stats only.</span></figcaption>
+      <div class="legend">
+        <span class="key"><span class="sw t1"></span>Headline: Speed, Power</span>
+        <span class="key"><span class="sw t2"></span>Shape: Aggression, Consistency, Acceleration, Grip</span>
+        <span class="key"><span class="sw t3"></span>Specialist: Tyre Mgmt, Endurance, Pit Crew, Luck, Reliability</span>
+      </div>
+      <div class="stack" role="img" aria-label="Today: headline 87%, shape 13%, specialist 1%. Stat tune: headline 38%, shape 39%, specialist 23%. Proposed: headline about 45%, shape about 35%, specialist about 20%.">
+        <div class="srow"><span class="name">Today</span><div class="seg"><span class="t1" style="width:86.6%" title="Headline 87%">87%</span><span class="t2" style="width:12.6%" title="Shape 13%"></span><span class="t3" style="width:0.8%" title="Specialist 1%"></span></div></div>
+        <div class="srow"><span class="name">Stat tune</span><div class="seg"><span class="t1" style="width:37.9%" title="Headline 38%">38%</span><span class="t2" style="width:39.4%" title="Shape 39%">39%</span><span class="t3" style="width:22.7%" title="Specialist 23%">23%</span></div></div>
+        <div class="srow"><span class="name">I'd aim for</span><div class="seg"><span class="t1" style="width:45%" title="Headline about 45%">45%</span><span class="t2" style="width:35%" title="Shape about 35%">35%</span><span class="t3" style="width:20%" title="Specialist about 20%">20%</span></div></div>
+      </div>
+      <p class="note">Today the shape tier is 13% and the specialist tier is under 1%, too thin to label. "Stat tune" is the 17-dial test from the Balance Report.</p>
+    </figure>
+
+    <figure>
+      <figcaption><span class="t">Each stat's share</span><span class="note">Same measure, stat by stat.</span></figcaption>
+      <div class="legend"><span class="key"><span class="sw today"></span>Today</span><span class="key"><span class="sw fix"></span>Stat tune</span></div>
+      <div class="hbars" role="img" aria-label="Share of stat signal per stat, today vs stat tune.">
+        <div class="hrow"><span class="name">Power</span><div class="track"><div class="bar today"><i style="width:100%"></i><span class="v">61%</span></div><div class="bar fix"><i style="width:29.4%"></i><span class="v">18%</span></div></div></div>
+        <div class="hrow"><span class="name">Speed</span><div class="track"><div class="bar today"><i style="width:42.2%"></i><span class="v">26%</span></div><div class="bar fix"><i style="width:32.8%"></i><span class="v">20%</span></div></div></div>
+        <div class="hrow"><span class="name">Aggression</span><div class="track"><div class="bar today"><i style="width:9.5%"></i><span class="v">6%</span></div><div class="bar fix"><i style="width:23.8%"></i><span class="v">15%</span></div></div></div>
+        <div class="hrow"><span class="name">Consistency</span><div class="track"><div class="bar today"><i style="width:9.4%"></i><span class="v">6%</span></div><div class="bar fix"><i style="width:12.2%"></i><span class="v">7%</span></div></div></div>
+        <div class="hrow"><span class="name">Grip</span><div class="track"><div class="bar today"><i style="width:0.5%"></i><span class="v">0%</span></div><div class="bar fix"><i style="width:19.5%"></i><span class="v">12%</span></div></div></div>
+        <div class="hrow"><span class="name">Tyre Mgmt</span><div class="track"><div class="bar today"><i style="width:0.2%"></i><span class="v">0%</span></div><div class="bar fix"><i style="width:16.9%"></i><span class="v">10%</span></div></div></div>
+        <div class="hrow"><span class="name">Acceleration</span><div class="track"><div class="bar today"><i style="width:1.3%"></i><span class="v">1%</span></div><div class="bar fix"><i style="width:9.2%"></i><span class="v">6%</span></div></div></div>
+        <div class="hrow"><span class="name">Endurance</span><div class="track"><div class="bar today"><i style="width:0.2%"></i><span class="v">0%</span></div><div class="bar fix"><i style="width:8.9%"></i><span class="v">5%</span></div></div></div>
+        <div class="hrow"><span class="name">Pit Crew</span><div class="track"><div class="bar today"><i style="width:1%"></i><span class="v">1%</span></div><div class="bar fix"><i style="width:6.4%"></i><span class="v">4%</span></div></div></div>
+        <div class="hrow"><span class="name">Luck</span><div class="track"><div class="bar today"><i style="width:0.1%"></i><span class="v">0%</span></div><div class="bar fix"><i style="width:4.9%"></i><span class="v">3%</span></div></div></div>
+        <div class="hrow"><span class="name">Reliability</span><div class="track"><div class="bar today"><i style="width:0.1%"></i><span class="v">0%</span></div><div class="bar fix"><i style="width:0.2%"></i><span class="v">0%</span></div></div></div>
+      </div>
+      <p class="note">The tune flattens too far for your taste: Speed and Power end up barely ahead of Aggression. A middle path keeps Speed clearly first.</p>
+    </figure>
+  </section>
+
+  <section aria-labelledby="two">
+    <div class="sechead"><span class="label">Two different questions</span><h2 id="two">Stat balance and competitive balance are separate dials</h2></div>
+    <div class="two">
+      <div class="callout"><h3>Stat balance</h3><p>Inside one racer: which stats matter, and how much. This is your NCAA question. It shapes the draft, the cards and whether a grade means anything.</p></div>
+      <div class="callout"><h3>Competitive balance</h3><p>Across the grid: how often the best team on paper wins. This is what makes a season fun to follow. A series can have a clear king stat and still be wide open.</p></div>
+    </div>
+    <p>They interact, but fixing one doesn't fix the other. The data below shows why.</p>
+  </section>
+
+  <section aria-labelledby="sort">
+    <div class="sechead"><span class="label">Competitive balance</span><h2 id="sort">A season sorts itself by paper strength</h2></div>
+    <p>One race is noisy. A season isn't. Rate every team before race 1 from its raw stats, then check how closely the standings match that rating after each race. Today the table is already 0.76 sorted after race 2, and the team that's best on paper wins the title <b>74%</b> of the time.</p>
+
+    <figure>
+      <figcaption><span class="t">How closely the standings match pre-season strength</span><span class="note">Rank correlation, 200 all-CPU seasons per line. 1.0 = the table is exactly the paper ranking.</span></figcaption>
+      <div class="legend"><span class="key"><span class="sw today"></span>Today</span><span class="key"><span class="sw fix"></span>Stat tune</span><span class="key"><span class="sw alt"></span>Tune + half car spread</span></div>
+      <div class="chartwrap"><svg viewBox="0 0 640 300" width="100%" role="img" aria-label="Correlation between pre-season team strength and the standings after each race. Today rises from 0.66 after race 1 to 0.89 after race 10; the stat tune from 0.56 to 0.81; tune plus half car spread from 0.51 to 0.78." style="display:block;max-width:100%">
+<line x1="44" x2="548" y1="266.0" y2="266.0" stroke="var(--rule)" stroke-width="1"/>
+<text x="36" y="270.0" text-anchor="end" class="ax">0.5</text>
+<line x1="44" x2="548" y1="203.5" y2="203.5" stroke="var(--rule)" stroke-width="1"/>
+<text x="36" y="207.5" text-anchor="end" class="ax">0.6</text>
+<line x1="44" x2="548" y1="141.0" y2="141.0" stroke="var(--rule)" stroke-width="1"/>
+<text x="36" y="145.0" text-anchor="end" class="ax">0.7</text>
+<line x1="44" x2="548" y1="78.5" y2="78.5" stroke="var(--rule)" stroke-width="1"/>
+<text x="36" y="82.5" text-anchor="end" class="ax">0.8</text>
+<line x1="44" x2="548" y1="16.0" y2="16.0" stroke="var(--rule)" stroke-width="1"/>
+<text x="36" y="20.0" text-anchor="end" class="ax">0.9</text>
+<text x="44.0" y="288" text-anchor="middle" class="ax">R1</text>
+<text x="100.0" y="288" text-anchor="middle" class="ax">R2</text>
+<text x="156.0" y="288" text-anchor="middle" class="ax">R3</text>
+<text x="212.0" y="288" text-anchor="middle" class="ax">R4</text>
+<text x="268.0" y="288" text-anchor="middle" class="ax">R5</text>
+<text x="324.0" y="288" text-anchor="middle" class="ax">R6</text>
+<text x="380.0" y="288" text-anchor="middle" class="ax">R7</text>
+<text x="436.0" y="288" text-anchor="middle" class="ax">R8</text>
+<text x="492.0" y="288" text-anchor="middle" class="ax">R9</text>
+<text x="548.0" y="288" text-anchor="middle" class="ax">R10</text>
+<polyline points="44.0,163.5 100.0,104.8 156.0,78.5 212.0,62.3 268.0,54.1 324.0,43.5 380.0,37.3 436.0,29.1 492.0,22.3 548.0,20.4" fill="none" stroke="var(--today)" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="44.0" cy="163.5" r="4" fill="var(--today)" stroke="var(--panel)" stroke-width="2"><title>Today, after race 1: 0.66</title></circle>
+<circle cx="100.0" cy="104.8" r="4" fill="var(--today)" stroke="var(--panel)" stroke-width="2"><title>Today, after race 2: 0.76</title></circle>
+<circle cx="156.0" cy="78.5" r="4" fill="var(--today)" stroke="var(--panel)" stroke-width="2"><title>Today, after race 3: 0.80</title></circle>
+<circle cx="212.0" cy="62.3" r="4" fill="var(--today)" stroke="var(--panel)" stroke-width="2"><title>Today, after race 4: 0.83</title></circle>
+<circle cx="268.0" cy="54.1" r="4" fill="var(--today)" stroke="var(--panel)" stroke-width="2"><title>Today, after race 5: 0.84</title></circle>
+<circle cx="324.0" cy="43.5" r="4" fill="var(--today)" stroke="var(--panel)" stroke-width="2"><title>Today, after race 6: 0.86</title></circle>
+<circle cx="380.0" cy="37.3" r="4" fill="var(--today)" stroke="var(--panel)" stroke-width="2"><title>Today, after race 7: 0.87</title></circle>
+<circle cx="436.0" cy="29.1" r="4" fill="var(--today)" stroke="var(--panel)" stroke-width="2"><title>Today, after race 8: 0.88</title></circle>
+<circle cx="492.0" cy="22.3" r="4" fill="var(--today)" stroke="var(--panel)" stroke-width="2"><title>Today, after race 9: 0.89</title></circle>
+<circle cx="548.0" cy="20.4" r="4" fill="var(--today)" stroke="var(--panel)" stroke-width="2"><title>Today, after race 10: 0.89</title></circle>
+<text x="558.0" y="24.4" class="lab">Today 0.89</text>
+<polyline points="44.0,231.0 100.0,184.8 156.0,149.1 212.0,129.1 268.0,110.4 324.0,106.6 380.0,93.5 436.0,85.4 492.0,79.7 548.0,74.1" fill="none" stroke="var(--fix)" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="44.0" cy="231.0" r="4" fill="var(--fix)" stroke="var(--panel)" stroke-width="2"><title>Stat tune, after race 1: 0.56</title></circle>
+<circle cx="100.0" cy="184.8" r="4" fill="var(--fix)" stroke="var(--panel)" stroke-width="2"><title>Stat tune, after race 2: 0.63</title></circle>
+<circle cx="156.0" cy="149.1" r="4" fill="var(--fix)" stroke="var(--panel)" stroke-width="2"><title>Stat tune, after race 3: 0.69</title></circle>
+<circle cx="212.0" cy="129.1" r="4" fill="var(--fix)" stroke="var(--panel)" stroke-width="2"><title>Stat tune, after race 4: 0.72</title></circle>
+<circle cx="268.0" cy="110.4" r="4" fill="var(--fix)" stroke="var(--panel)" stroke-width="2"><title>Stat tune, after race 5: 0.75</title></circle>
+<circle cx="324.0" cy="106.6" r="4" fill="var(--fix)" stroke="var(--panel)" stroke-width="2"><title>Stat tune, after race 6: 0.76</title></circle>
+<circle cx="380.0" cy="93.5" r="4" fill="var(--fix)" stroke="var(--panel)" stroke-width="2"><title>Stat tune, after race 7: 0.78</title></circle>
+<circle cx="436.0" cy="85.4" r="4" fill="var(--fix)" stroke="var(--panel)" stroke-width="2"><title>Stat tune, after race 8: 0.79</title></circle>
+<circle cx="492.0" cy="79.7" r="4" fill="var(--fix)" stroke="var(--panel)" stroke-width="2"><title>Stat tune, after race 9: 0.80</title></circle>
+<circle cx="548.0" cy="74.1" r="4" fill="var(--fix)" stroke="var(--panel)" stroke-width="2"><title>Stat tune, after race 10: 0.81</title></circle>
+<text x="558.0" y="78.1" class="lab">Stat tune 0.81</text>
+<polyline points="44.0,257.9 100.0,227.9 156.0,179.1 212.0,152.2 268.0,131.0 324.0,121.0 380.0,109.1 436.0,104.1 492.0,99.7 548.0,91.0" fill="none" stroke="var(--alt)" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="44.0" cy="257.9" r="4" fill="var(--alt)" stroke="var(--panel)" stroke-width="2"><title>+ half car, after race 1: 0.51</title></circle>
+<circle cx="100.0" cy="227.9" r="4" fill="var(--alt)" stroke="var(--panel)" stroke-width="2"><title>+ half car, after race 2: 0.56</title></circle>
+<circle cx="156.0" cy="179.1" r="4" fill="var(--alt)" stroke="var(--panel)" stroke-width="2"><title>+ half car, after race 3: 0.64</title></circle>
+<circle cx="212.0" cy="152.2" r="4" fill="var(--alt)" stroke="var(--panel)" stroke-width="2"><title>+ half car, after race 4: 0.68</title></circle>
+<circle cx="268.0" cy="131.0" r="4" fill="var(--alt)" stroke="var(--panel)" stroke-width="2"><title>+ half car, after race 5: 0.72</title></circle>
+<circle cx="324.0" cy="121.0" r="4" fill="var(--alt)" stroke="var(--panel)" stroke-width="2"><title>+ half car, after race 6: 0.73</title></circle>
+<circle cx="380.0" cy="109.1" r="4" fill="var(--alt)" stroke="var(--panel)" stroke-width="2"><title>+ half car, after race 7: 0.75</title></circle>
+<circle cx="436.0" cy="104.1" r="4" fill="var(--alt)" stroke="var(--panel)" stroke-width="2"><title>+ half car, after race 8: 0.76</title></circle>
+<circle cx="492.0" cy="99.7" r="4" fill="var(--alt)" stroke="var(--panel)" stroke-width="2"><title>+ half car, after race 9: 0.77</title></circle>
+<circle cx="548.0" cy="91.0" r="4" fill="var(--alt)" stroke="var(--panel)" stroke-width="2"><title>+ half car, after race 10: 0.78</title></circle>
+<text x="558.0" y="103.0" class="lab">+ half car 0.78</text>
+</svg></div>
+    </figure>
+
+    <div class="tiles">
+      <div class="tile"><span class="label k"><span class="sw today"></span>Today</span><span class="big data">74%</span><p>paper favourite wins the title</p></div>
+      <div class="tile"><span class="label k"><span class="sw fix"></span>Stat tune</span><span class="big data">54%</span><p>paper favourite wins the title</p></div>
+      <div class="tile"><span class="label k"><span class="sw alt"></span>+ half car</span><span class="big data">58%</span><p>about the same as the tune</p></div>
+      <div class="tile"><span class="label">By pure chance</span><span class="big data">10%</span><p>one team in ten</p></div>
+    </div>
+
+    <h3>Why a season is so predictable</h3>
+    <div class="math">one race:   stats explain about half the order   (ρ ≈ 0.7, so ρ² ≈ 0.5)
+the rest:   dice (luck procs, mistakes, crashes, pit stops)
+10 races:   the dice average out; their spread shrinks by √10 ≈ 3.2×
+            the stats don't shrink: they repeat every race
+so:         a team that is slightly better on paper finishes ahead almost every time</div>
+    <p>This is the core of sports design. To keep a title open you can shrink the gaps between teams, add more dice per race, or add catch-up between races (packs already do this, but only for you). The stat tune shrank the gaps and the favourite rate fell from 74% to 54%. Halving the car spread fixed who gets the advantage (the draft slot), not how big the advantage is.</p>
+  </section>
+
+  <section aria-labelledby="car">
+    <div class="sechead"><span class="label">The biggest gap</span><h2 id="car">One car is worth more than the best driver</h2></div>
+    <div class="two">
+      <figure>
+        <figcaption><span class="t">Pace edge over an average entry</span><span class="note">Today's engine numbers.</span></figcaption>
+        <div class="hbars" role="img" aria-label="5 star car versus 3 star: 2.8% faster for both drivers. Best driver of 30 versus average: 1.7% faster for one driver.">
+          <div class="hrow"><span class="name">5★ car</span><div class="track"><div class="bar today"><i style="width:100%"></i><span class="v">+2.8%</span></div><div class="bar today"><i style="width:100%"></i><span class="v">×2 drivers</span></div></div></div>
+          <div class="hrow"><span class="name">Best driver of 30</span><div class="track"><div class="bar today"><i style="width:60%"></i><span class="v">+1.7%</span></div></div></div>
+        </div>
+        <div class="math">car:     2 stars × 0.014 per star = +2.8%, both drivers
+driver:  best Speed of 30 ≈ 1.14 → 0.14 × 0.12 = +1.7%
+odds:    a 5★ Power car is on the rack in 72% of seasons
+         (1 − 0.88¹⁰)</div>
+      </figure>
+      <figure>
+        <figcaption><span class="t">Where a team's strength comes from</span><span class="note">Share of the gap between teams.</span></figcaption>
+        <div class="legend"><span class="key"><span class="sw t1"></span>Car</span><span class="key"><span class="sw t2"></span>Two drivers</span><span class="key"><span class="sw t3"></span>Team crew</span></div>
+        <div class="stack" role="img" aria-label="Today: car 76%, drivers 24%, team 1%. Stat tune: car 42%, drivers 39%, team 20%.">
+          <div class="srow"><span class="name">Today</span><div class="seg"><span class="t1" style="width:76%">76%</span><span class="t2" style="width:23%">24%</span><span class="t3" style="width:1%"></span></div></div>
+          <div class="srow"><span class="name">Stat tune</span><div class="seg"><span class="t1" style="width:41%">42%</span><span class="t2" style="width:39%">39%</span><span class="t3" style="width:20%">20%</span></div></div>
+        </div>
+        <p class="note">Today the car is three quarters of a team, and it's one draft pick out of four. Even after the tune, the single best car stays an outlier: its team still wins 31% of titles. Narrowing the car spread brings that to 18%.</p>
+      </figure>
+    </div>
+  </section>
+
+  <section aria-labelledby="dials">
+    <div class="sechead"><span class="label">How I'd steer</span><h2 id="dials">Three dials, three targets</h2>
+      <p>Each dial is one question with one number we can measure. The green band is my proposed target. These are opinions for us to argue about, not decisions.</p></div>
+    <figure>
+      <div class="legend"><span class="key"><span class="sw today"></span>Today</span><span class="key"><span class="sw fix"></span>Stat tune</span><span class="key"><span class="sw alt"></span>Tune + half car</span><span class="key"><span class="sw band"></span>Target</span></div>
+
+      <div class="dial">
+        <span class="q">1 · How much do the king stats decide?</span>
+        <span class="note">Speed + Power share of the stat signal. Speed stays king; Power stops being emperor.</span>
+        <div class="scale" role="img" aria-label="Today 87%, stat tune 38%, tune plus half car 32%, target 40 to 50%.">
+          <div class="line"></div><div class="band" style="left:40%;width:10%"></div>
+          <span class="tick" style="left:0%">0</span><span class="tick" style="left:25%">25</span><span class="tick" style="left:50%">50</span><span class="tick" style="left:75%">75</span><span class="tick" style="left:100%">100%</span>
+          <span class="mk today" style="left:87%" title="Today 87%"></span><span class="mv" style="left:87%">87</span>
+          <span class="mk fix" style="left:38%" title="Stat tune 38%"></span><span class="mv" style="left:38%">38</span>
+          <span class="mk alt" style="left:32%" title="Tune + half car 32%"></span><span class="mv" style="left:30.5%">32</span>
+        </div>
+        <div class="readout"><span>Target <b>40–50%</b></span><span>No single stat <b>over 30%</b></span><span>Every stat <b>at least 2%</b></span></div>
+      </div>
+
+      <div class="dial">
+        <span class="q">2 · How much does the best car decide?</span>
+        <span class="note">Title share of the team that drafts the best car. One great pick, not the title.</span>
+        <div class="scale" role="img" aria-label="Today 30%, stat tune 31%, tune plus half car 18%, target 10 to 20%. Scale 0 to 50%.">
+          <div class="line"></div><div class="band" style="left:20%;width:20%"></div>
+          <span class="tick" style="left:0%">0</span><span class="tick" style="left:20%">10</span><span class="tick" style="left:40%">20</span><span class="tick" style="left:60%">30</span><span class="tick" style="left:80%">40</span><span class="tick" style="left:100%">50%</span>
+          <span class="mk today" style="left:60%" title="Today 30%"></span><span class="mv" style="left:57%">30</span>
+          <span class="mk fix" style="left:62%" title="Stat tune 31%"></span><span class="mv" style="left:65%">31</span>
+          <span class="mk alt" style="left:36%" title="Tune + half car 18%"></span><span class="mv" style="left:36%">18</span>
+        </div>
+        <div class="readout"><span>Target <b>10–20%</b></span><span>Every draft slot <b>5–20%</b> of titles</span></div>
+      </div>
+
+      <div class="dial">
+        <span class="q">3 · How often does the paper favourite win?</span>
+        <span class="note">The best pre-season team wins the title. Chance would be 10%.</span>
+        <div class="scale" role="img" aria-label="Today 74%, stat tune 54%, tune plus half car 58%, target 30 to 45%.">
+          <div class="line"></div><div class="band" style="left:30%;width:15%"></div>
+          <span class="tick" style="left:0%">0</span><span class="tick" style="left:25%">25</span><span class="tick" style="left:50%">50</span><span class="tick" style="left:75%">75</span><span class="tick" style="left:100%">100%</span>
+          <span class="mk today" style="left:74%" title="Today 74%"></span><span class="mv" style="left:74%">74</span>
+          <span class="mk fix" style="left:54%" title="Stat tune 54%"></span><span class="mv" style="left:52.5%">54</span>
+          <span class="mk alt" style="left:58%" title="Tune + half car 58%"></span><span class="mv" style="left:59.5%">58</span>
+        </div>
+        <div class="readout"><span>Target <b>30–45%</b></span><span>Single race: stats → finish <b>0.6–0.7</b></span><span>Leader settles <b>race 6+</b></span></div>
+      </div>
+    </figure>
+  </section>
+
+  <section aria-labelledby="wins">
+    <div class="sechead"><span class="label">Biggest wins, in order</span><h2 id="wins">Where I'd spend effort</h2></div>
+    <ol class="wins">
+      <li><span class="n">1</span><div class="body"><h3>Make the car one great pick, not the title</h3><p>Shrink how far apart the rack cars roll, or how much a star is worth. It's the biggest single change: it evens the draft slots (2–30% becomes 6–18%), and it hands the king stat back to the drivers. Today 76% of a team is its car.</p></div></li>
+      <li><span class="n">2</span><div class="body"><h3>Build a hierarchy: one king, a court, specialists</h3><p>Keep Speed first. Bring Aggression, Consistency, Acceleration and Grip up to "you notice them" (around 8–10% each). Then Tyre Mgmt, Endurance, Pit Crew and Luck become specialists (3–5% each), so every stat on a card means something. That gives drivers identities you can draft for: the qualifier, the brawler, the tyre whisperer.</p></div></li>
+      <li><span class="n">3</span><div class="body"><h3>Then set the dice</h3><p>Once 1 and 2 are in, choose how often the favourite wins. We have dials for more dice per race (mistakes, safety cars, qualifying noise) and catch-up between races (packs for CPU teams too). This one is taste, so we choose it together: lower means more upsets, higher means the best team usually wins.</p></div></li>
+      <li><span class="n">4</span><div class="body"><h3>Later: tracks crown different kings</h3><p>Once the court stats are alive, a track can promote one of them for the day (Consistency is king at the twisty track). That's how Speed can be king on average and still lose. It doesn't work today because the court is dead (Balance Report, Finding 2).</p></div></li>
+    </ol>
+  </section>
+
+  <section aria-labelledby="aim">
+    <div class="sechead"><span class="label">A starting point to argue with</span><h2 id="aim">What I'd aim for, raw stats only</h2></div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Tier</th><th>Stats</th><th>Today</th><th>Aim</th><th>What the player feels</th></tr></thead>
+        <tbody>
+          <tr><td>King</td><td>Speed</td><td class="num">26%</td><td class="num">25–30%</td><td>The fast one is the fast one. First-round pick.</td></tr>
+          <tr><td>Car</td><td>Power</td><td class="num">61%</td><td class="num">15–20%</td><td>A great car helps a lot but doesn't win alone.</td></tr>
+          <tr><td>Court</td><td>Aggression · Consistency · Acceleration · Grip</td><td class="num">0–6% each</td><td class="num">8–10% each</td><td>Two drivers with the same Speed race differently.</td></tr>
+          <tr><td>Specialists</td><td>Tyre Mgmt · Endurance · Pit Crew · Luck</td><td class="num">0–1% each</td><td class="num">3–5% each</td><td>Small edges that matter on the right day.</td></tr>
+          <tr><td>Safety</td><td>Reliability</td><td class="num">0%</td><td class="num">judged on DNFs</td><td>Fewer breakdowns over a season. Needs an engine change to show.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">Shares are of the stat signal in one driver's result, like the charts above. Car and team stats count for both drivers, so their team-level weight is higher than the table shows.</p>
+  </section>
+
+  <footer>
+    <span class="label">Where the numbers come from</span>
+    <p>Stat shares: the per-stat weights measured for the Balance Report (1,600 races, same-seed bumps), squared and normalised. Standings and favourite rates: the 200 seeded all-CPU seasons from the season read, with each team rated before race 1 from its raw stats. Car math: today's engine values. Engine v0.5.0; nothing in the game has changed. Companion to <a href="https://claude.ai/artifact/MC5fwYaqd6KJD8Gk9q8E94">The Balance Report</a>.</p>
+  </footer>
+</div>
+</body>
+</html>

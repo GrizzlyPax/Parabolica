@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- Steward: Balance Pass One (draft 2), Oct 9 2026. Published copy: https://claude.ai/artifact/3E8HBPYh8sz4F9zSHwuwML -->
+<title>Balance Pass One</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&family=Special+Elite&display=swap">
+<style>
+  /* Layout: the Balance Report's almanac column, now a design argument: one claim per section, one figure per claim.
+     Series colours: ochre = today, violet = stat tune, teal = tune + half car spread. Tiers use a neutral ramp. */
+  :root {
+    --bg: #0e0d11;
+    --panel: #16141b;
+    --fg: #efece6;
+    --muted: #a39fab;
+    --rule: #37343f;
+    --today: #b07a1e;
+    --fix: #9d6bff;
+    --alt: #2a9a86;
+    --tier1: #ebe6f3;
+    --tier2: #9b94aa;
+    --tier3: #5b556c;
+    --target: rgba(95, 191, 127, .22);
+    --target-edge: #5fbf7f;
+    --look-display: "Old Standard TT", Georgia, serif;
+    --look-serif: "Old Standard TT", Georgia, serif;
+    --look-data: "Special Elite", "Courier New", monospace;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body { background: var(--bg); color: var(--fg); font-family: var(--look-serif); font-size: 16px; line-height: 1.45; -webkit-font-smoothing: antialiased; }
+  .page { max-width: 760px; margin: 0 auto; padding-inline: 20px; padding-block: 28px 64px; display: grid; gap: 44px; }
+  a { color: var(--fg); text-decoration-color: var(--fix); text-underline-offset: 3px; }
+  a:focus-visible { outline: 2px solid var(--fix); outline-offset: 2px; }
+  .label { font-family: var(--look-data); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .data { font-family: var(--look-data); font-variant-numeric: tabular-nums; }
+  h1, h2, h3 { font-family: var(--look-display); font-weight: 700; text-wrap: balance; margin: 0; }
+  h1 { font-size: clamp(34px, 8vw, 50px); line-height: .95; letter-spacing: -.02em; }
+  h2 { font-size: 26px; line-height: 1.05; }
+  h3 { font-size: 18px; line-height: 1.15; }
+  p { margin: 0; max-width: 64ch; }
+  .flavour { font-style: italic; color: var(--muted); }
+  section { display: grid; gap: 18px; border-top: 1px solid var(--fg); padding-top: 14px; }
+  .sechead { display: grid; gap: 6px; }
+  .mast { display: grid; gap: 12px; border-bottom: 3px double var(--fg); padding-bottom: 18px; }
+  .mast .row { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 16px; }
+
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); }
+  .tile { background: var(--bg); padding: 12px 12px 14px; display: grid; gap: 4px; align-content: start; min-width: 0; }
+  .tile .big { font-family: var(--look-display); font-weight: 700; font-size: 32px; line-height: 1; }
+  .tile p { font-size: 14px; color: var(--muted); line-height: 1.3; }
+  .tile .k { display: inline-flex; align-items: center; gap: 6px; }
+
+  figure { margin: 0; display: grid; gap: 12px; border: 1px solid var(--rule); padding: 14px; background: var(--panel); min-width: 0; }
+  figcaption { display: grid; gap: 3px; }
+  figcaption .t { font-family: var(--look-display); font-weight: 700; font-size: 17px; line-height: 1.15; }
+  .note { font-size: 13px; color: var(--muted); font-style: italic; line-height: 1.35; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; }
+  .key { display: inline-flex; align-items: center; gap: 6px; font-family: var(--look-data); font-size: 12px; color: var(--fg); }
+  .sw { width: 12px; height: 12px; display: inline-block; flex: none; }
+  .sw.today { background: var(--today); } .sw.fix { background: var(--fix); } .sw.alt { background: var(--alt); }
+  .sw.t1 { background: var(--tier1); } .sw.t2 { background: var(--tier2); } .sw.t3 { background: var(--tier3); }
+  .sw.band { background: var(--target); border: 1px solid var(--target-edge); }
+
+  /* 100% stacked bars */
+  .stack { display: grid; gap: 10px; }
+  .srow { display: grid; grid-template-columns: 6.4rem 1fr; gap: 10px; align-items: center; }
+  .srow .name { font-size: 15px; line-height: 1.1; }
+  .seg { display: flex; height: 26px; gap: 2px; min-width: 0; }
+  .seg span { display: flex; align-items: center; justify-content: center; font-family: var(--look-data); font-size: 11px; color: var(--bg); overflow: hidden; white-space: nowrap; min-width: 2px; }
+  .seg .t1 { background: var(--tier1); } .seg .t2 { background: var(--tier2); } .seg .t3 { background: var(--tier3); color: var(--fg); }
+
+  /* per-stat share bars */
+  .hbars { display: grid; gap: 6px; }
+  .hrow { display: grid; grid-template-columns: 6.4rem 1fr; gap: 10px; align-items: center; }
+  .hrow .name { font-size: 14px; line-height: 1.1; }
+  .track { display: grid; gap: 2px; padding-right: 3.2rem; min-width: 0; }
+  .bar { height: 11px; display: flex; align-items: center; }
+  .bar i { display: block; height: 100%; min-width: 2px; border-radius: 0 3px 3px 0; }
+  .bar.today i { background: var(--today); } .bar.fix i { background: var(--fix); }
+  .bar .v { font-family: var(--look-data); font-size: 11px; padding-left: 6px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+  /* dial scales */
+  .dial { display: grid; gap: 8px; padding-block: 6px 4px; }
+  .dial + .dial { border-top: 1px solid var(--rule); padding-top: 14px; }
+  .dial .q { font-family: var(--look-display); font-weight: 700; font-size: 17px; line-height: 1.15; }
+  .scale { position: relative; height: 54px; margin-inline: 6px; }
+  .scale .line { position: absolute; left: 0; right: 0; top: 26px; border-top: 1px solid var(--muted); }
+  .scale .band { position: absolute; top: 16px; height: 20px; background: var(--target); border: 1px solid var(--target-edge); }
+  .scale .tick { position: absolute; top: 31px; font-family: var(--look-data); font-size: 10px; color: var(--muted); transform: translateX(-50%); }
+  .scale .mk { position: absolute; top: 18px; width: 14px; height: 14px; transform: translateX(-50%) rotate(45deg); border: 2px solid var(--panel); }
+  .scale .mk.today { background: var(--today); } .scale .mk.fix { background: var(--fix); } .scale .mk.alt { background: var(--alt); }
+  .scale .mv { position: absolute; top: 0; font-family: var(--look-data); font-size: 11px; transform: translateX(-50%); white-space: nowrap; }
+  .readout { display: flex; flex-wrap: wrap; gap: 4px 14px; font-family: var(--look-data); font-size: 12px; color: var(--muted); }
+  .readout b { color: var(--fg); font-weight: 400; }
+
+  svg .ax { font-family: var(--look-data); font-size: 11px; fill: var(--muted); }
+  svg .lab { font-family: var(--look-data); font-size: 11px; fill: var(--fg); }
+  .chartwrap { overflow-x: auto; }
+  .chartwrap svg { min-width: 520px; }
+
+  .two { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
+  .callout { border-left: 3px solid var(--fix); padding: 4px 0 4px 14px; display: grid; gap: 6px; }
+  .math { font-family: var(--look-data); font-size: 13px; line-height: 1.6; background: var(--bg); border: 1px dashed var(--rule); padding: 10px 12px; overflow-x: auto; white-space: pre-wrap; }
+  ol.wins { margin: 0; padding: 0; list-style: none; display: grid; gap: 0; }
+  ol.wins li { display: grid; grid-template-columns: 2.2rem 1fr; gap: 10px; padding-block: 14px; border-bottom: 1px solid var(--rule); }
+  ol.wins li:last-child { border-bottom: 0; }
+  ol.wins .n { font-family: var(--look-display); font-size: 30px; line-height: 1; }
+  ol.wins .body { display: grid; gap: 6px; min-width: 0; }
+  .tablewrap { overflow-x: auto; border: 1px solid var(--rule); }
+  table { border-collapse: collapse; width: 100%; }
+  table.wide { min-width: 640px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  th { font-family: var(--look-data); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 400; }
+  td { font-size: 15px; }
+  td.num { font-family: var(--look-data); font-size: 13px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  tr:last-child td { border-bottom: 0; }
+  footer { border-top: 3px double var(--fg); padding-top: 14px; display: grid; gap: 8px; font-size: 14px; color: var(--muted); }
+
+  @media (max-width: 480px) {
+    .page { padding-inline: 16px; }
+    th, td { padding: 6px 6px; }
+    td { font-size: 13px; }
+    td.num { font-size: 11px; white-space: normal; }
+    table:not(.wide) th { font-size: 9px; letter-spacing: .03em; }
+    .chip { font-size: 10px; padding: 1px 4px; }
+    .srow, .hrow { grid-template-columns: 5.2rem 1fr; gap: 8px; }
+    .srow .name, .hrow .name { font-size: 13px; }
+    .seg span { font-size: 10px; }
+  }
+</style>
+</head>
+<body style="margin:0">
+<div class="page">
+
+  <header class="mast">
+    <div class="row"><span class="label">Parabolica · raw stats, no cards</span><span class="label">Steward · draft 2 · 9 Oct 2026</span></div>
+    <h1>Balance Pass One</h1>
+    <p class="flavour">The recommended balance pass, built on your calls from today. One set of dials, measured on the same seeds as the Balance Report. Cards, track favours and effects come later.</p>
+  </header>
+
+  <section aria-labelledby="score">
+    <div class="sechead"><span class="label">Your calls, scored</span><h2 id="score">Five of seven land</h2>
+      <p>Pass One hits the stat shape, the team split, Reliability and race feel. Two season targets get closer but don't arrive; the last section explains why and what would close them.</p></div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Your call</th><th>Target</th><th>Today</th><th>Pass One</th><th></th></tr></thead>
+        <tbody>
+          <tr><td>Speed + Power decide a race</td><td class="num">~45%</td><td class="num">87%</td><td class="num">43%</td><td><span class="chip good">✓ lands</span></td></tr>
+          <tr><td>Car / drivers / team crew</td><td class="num">42 / 39 / 20</td><td class="num">76 / 24 / 1</td><td class="num">41 / 40 / 20</td><td><span class="chip good">✓ lands</span></td></tr>
+          <tr><td>Reliability strikes through DNFs</td><td class="num">weak cars break</td><td class="num">1★ 12% · 5★ 6%</td><td class="num">1★ 23% · 5★ 6%</td><td><span class="chip good">✓ lands</span></td></tr>
+          <tr><td>Narrower cars</td><td class="num">smaller spread</td><td class="num">5★ = +2.8%</td><td class="num">5★ = +1.7%</td><td><span class="chip good">✓ lands</span></td></tr>
+          <tr><td>Race feel stays healthy</td><td class="num">all checks in range</td><td class="num">in range</td><td class="num">in range</td><td><span class="chip good">✓ lands</span></td></tr>
+          <tr><td>Paper favourite wins the title</td><td class="num">30–45%</td><td class="num">74%</td><td class="num">58%</td><td><span class="chip warn">! closer</span></td></tr>
+          <tr><td>Best car's title share</td><td class="num">10–20%</td><td class="num">30%</td><td class="num">25%</td><td><span class="chip warn">! closer</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">"5★ = +2.8%" is how much faster a 5★ Power car is than a 3★. Measured shares carry about ±3 points of noise.</p>
+  </section>
+
+  <section aria-labelledby="shape">
+    <div class="sechead"><span class="label">Stat balance</span><h2 id="shape">A king, a court and specialists</h2>
+      <p>Speed and Power still lead, together just under half. The four court stats each matter enough to tell two drivers apart. Every specialist now shows up in results.</p></div>
+    <figure>
+      <figcaption><span class="t">What decides a race, by stat tier</span><span class="note">Share of the stat signal in a driver's result.</span></figcaption>
+      <div class="legend">
+        <span class="key"><span class="sw t1"></span>Headline: Speed, Power</span>
+        <span class="key"><span class="sw t2"></span>Court: Aggression, Consistency, Grip, Acceleration</span>
+        <span class="key"><span class="sw t3"></span>Specialist: Tyre Mgmt, Endurance, Luck, Pit Crew, Reliability</span>
+      </div>
+      <div class="stack" role="img" aria-label="Today: headline 87%, court 13%, specialist 1%. Pass One: headline 43%, court 32%, specialist 24%. Your aim: 45, 35, 20.">
+        <div class="srow"><span class="name">Today</span><div class="seg"><span class="t1" style="width:86.6%" title="Headline 87%">87%</span><span class="t2" style="width:12.6%" title="Court 13%"></span><span class="t3" style="width:0.8%" title="Specialist 1%"></span></div></div>
+        <div class="srow"><span class="name">Pass One</span><div class="seg"><span class="t1" style="width:43.3%" title="Headline 43%">43%</span><span class="t2" style="width:32.3%" title="Court 32%">32%</span><span class="t3" style="width:24.4%" title="Specialist 24%">24%</span></div></div>
+        <div class="srow"><span class="name">Your aim</span><div class="seg"><span class="t1" style="width:45%" title="Headline 45%">45%</span><span class="t2" style="width:35%" title="Court 35%">35%</span><span class="t3" style="width:20%" title="Specialist 20%">20%</span></div></div>
+      </div>
+    </figure>
+    <figure>
+      <figcaption><span class="t">Each stat's share</span><span class="note">Same measure, stat by stat.</span></figcaption>
+      <div class="legend"><span class="key"><span class="sw today"></span>Today</span><span class="key"><span class="sw fix"></span>Pass One</span></div>
+      <div class="hbars" role="img" aria-label="Share of stat signal per stat, today vs Pass One.">
+        <div class="hrow"><span class="name">Power</span><div class="track"><div class="bar today"><i style="width:100%"></i><span class="v">61%</span></div><div class="bar fix"><i style="width:36.1%"></i><span class="v">22%</span></div></div></div>
+        <div class="hrow"><span class="name">Speed</span><div class="track"><div class="bar today"><i style="width:42.6%"></i><span class="v">26%</span></div><div class="bar fix"><i style="width:34.9%"></i><span class="v">21%</span></div></div></div>
+        <div class="hrow"><span class="name">Aggression</span><div class="track"><div class="bar today"><i style="width:9.5%"></i><span class="v">6%</span></div><div class="bar fix"><i style="width:16.4%"></i><span class="v">10%</span></div></div></div>
+        <div class="hrow"><span class="name">Tyre Mgmt</span><div class="track"><div class="bar today"><i style="width:0.2%"></i><span class="v">0%</span></div><div class="bar fix"><i style="width:15.9%"></i><span class="v">10%</span></div></div></div>
+        <div class="hrow"><span class="name">Consistency</span><div class="track"><div class="bar today"><i style="width:9.3%"></i><span class="v">6%</span></div><div class="bar fix"><i style="width:15.2%"></i><span class="v">9%</span></div></div></div>
+        <div class="hrow"><span class="name">Grip</span><div class="track"><div class="bar today"><i style="width:0.5%"></i><span class="v">0%</span></div><div class="bar fix"><i style="width:11.5%"></i><span class="v">7%</span></div></div></div>
+        <div class="hrow"><span class="name">Acceleration</span><div class="track"><div class="bar today"><i style="width:1.3%"></i><span class="v">1%</span></div><div class="bar fix"><i style="width:9.8%"></i><span class="v">6%</span></div></div></div>
+        <div class="hrow"><span class="name">Endurance</span><div class="track"><div class="bar today"><i style="width:0.2%"></i><span class="v">0%</span></div><div class="bar fix"><i style="width:9%"></i><span class="v">6%</span></div></div></div>
+        <div class="hrow"><span class="name">Luck</span><div class="track"><div class="bar today"><i style="width:0.1%"></i><span class="v">0%</span></div><div class="bar fix"><i style="width:7.5%"></i><span class="v">5%</span></div></div></div>
+        <div class="hrow"><span class="name">Pit Crew</span><div class="track"><div class="bar today"><i style="width:1%"></i><span class="v">1%</span></div><div class="bar fix"><i style="width:7.2%"></i><span class="v">4%</span></div></div></div>
+        <div class="hrow"><span class="name">Reliability</span><div class="track"><div class="bar today"><i style="width:0.1%"></i><span class="v">0%</span></div><div class="bar fix"><i style="width:0.3%"></i><span class="v">0%</span></div></div></div>
+      </div>
+      <p class="note">Power and Speed tie at the top. If you want Speed clearly king, the build can nudge Speed up a notch and re-measure. Reliability still reads near 0% here because this chart averages points per race and breakdowns are rare. Its weight shows across a season (next section).</p>
+    </figure>
+  </section>
+
+  <section aria-labelledby="rel">
+    <div class="sechead"><span class="label">Your Reliability call</span><h2 id="rel">Weak cars break down, strong cars finish</h2>
+      <p>The total number of DNFs barely moves (15.5% of starters today, 17.6% in Pass One). What changes is who they land on.</p></div>
+    <figure>
+      <figcaption><span class="t">Mechanical breakdowns per race, by car Reliability</span><span class="note">600 season races per bar set, every car on the grid.</span></figcaption>
+      <div class="legend"><span class="key"><span class="sw today"></span>Today</span><span class="key"><span class="sw fix"></span>Pass One</span></div>
+      <div class="hbars" role="img" aria-label="Breakdowns per race by reliability stars. 1 star: today 12%, Pass One 23%. 2 stars: 9% vs 12%. 3 stars: 7% vs 9%. 4 stars: 6% vs 7%. 5 stars: 6% vs 6%.">
+        <div class="hrow"><span class="name">1★</span><div class="track"><div class="bar today"><i style="width:51.7%"></i><span class="v">12%</span></div><div class="bar fix"><i style="width:100%"></i><span class="v">23%</span></div></div></div>
+        <div class="hrow"><span class="name">2★</span><div class="track"><div class="bar today"><i style="width:39%"></i><span class="v">9%</span></div><div class="bar fix"><i style="width:53%"></i><span class="v">12%</span></div></div></div>
+        <div class="hrow"><span class="name">3★</span><div class="track"><div class="bar today"><i style="width:30%"></i><span class="v">7%</span></div><div class="bar fix"><i style="width:40.4%"></i><span class="v">9%</span></div></div></div>
+        <div class="hrow"><span class="name">4★</span><div class="track"><div class="bar today"><i style="width:27.4%"></i><span class="v">6%</span></div><div class="bar fix"><i style="width:31.3%"></i><span class="v">7%</span></div></div></div>
+        <div class="hrow"><span class="name">5★</span><div class="track"><div class="bar today"><i style="width:24.8%"></i><span class="v">6%</span></div><div class="bar fix"><i style="width:25.7%"></i><span class="v">6%</span></div></div></div>
+      </div>
+    </figure>
+    <div class="tiles">
+      <div class="tile"><span class="label">1★ car, one season</span><span class="big data">2.3</span><p>breakdowns per driver (today 1.2)</p></div>
+      <div class="tile"><span class="label">5★ car, one season</span><span class="big data">0.6</span><p>breakdowns per driver (same as today)</p></div>
+      <div class="tile"><span class="label">The trade-off</span><span class="big data">4×</span><p>a 1★ car breaks four times as often as a 5★ (today 2×)</p></div>
+    </div>
+    <p>That's the engineering-series story you described: the fastest car on the grid can lose the title to its own gearbox. Damage that forces a pit stop instead of a retirement is on the v0.6 list.</p>
+  </section>
+
+  <section aria-labelledby="season">
+    <div class="sechead"><span class="label">Competitive balance</span><h2 id="season">Seasons stay open longer</h2>
+      <p>200 all-CPU seasons, same seeds as the Balance Report.</p></div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Season signal</th><th>Target</th><th>Today</th><th>Pass One</th></tr></thead>
+        <tbody>
+          <tr><td>Paper favourite wins the title</td><td class="num">30–45%</td><td class="num">74%</td><td class="num">58%</td></tr>
+          <tr><td>Leader takes over for good (median)</td><td class="num">race 6+</td><td class="num">R2</td><td class="num">R5</td></tr>
+          <tr><td>Settled by race 6</td><td class="num">≤ 15%</td><td class="num">79%</td><td class="num">62%</td></tr>
+          <tr><td>Lead changes after race 3 (mean)</td><td class="num">2–4</td><td class="num">0.7</td><td class="num">1.2</td></tr>
+          <tr><td>5+ different race winners</td><td class="num">most</td><td class="num">50%</td><td class="num">78%</td></tr>
+          <tr><td>One driver wins 6+ of 10</td><td class="num">rare</td><td class="num">23%</td><td class="num">7%</td></tr>
+          <tr><td>Title rate by draft slot</td><td class="num">5–20% each</td><td class="num">2–30%</td><td class="num">2–25%</td></tr>
+          <tr><td>Best car's title share</td><td class="num">10–20%</td><td class="num">30%</td><td class="num">25%</td></tr>
+          <tr><td>Champion bonus 50 changes the champion</td><td class="num">5–20%</td><td class="num">19%</td><td class="num">20%</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">The bonus can stay at 50 with Pass One: it changes the champion in 20% of seasons, the top of the range. At 35 it would be 16%.</p>
+  </section>
+
+  <section aria-labelledby="feel">
+    <div class="sechead"><span class="label">Race feel</span><h2 id="feel">Races still look like races</h2></div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Race check</th><th>Healthy range</th><th>Today</th><th>Pass One</th></tr></thead>
+        <tbody>
+          <tr><td>The better package finishes ahead</td><td class="num">F1 ≈ 0.70</td><td class="num">0.71</td><td class="num">0.58</td></tr>
+          <tr><td>Grid position predicts the finish</td><td class="num">0.40–0.85</td><td class="num">0.70</td><td class="num">0.50</td></tr>
+          <tr><td>Pole-sitter wins</td><td class="num">15–60%</td><td class="num">25%</td><td class="num">20%</td></tr>
+          <tr><td>Finishers a lap down</td><td class="num">≤ 40%</td><td class="num">29%</td><td class="num">32%</td></tr>
+          <tr><td>Battles a race</td><td class="num">10–100</td><td class="num">45</td><td class="num">35</td></tr>
+          <tr><td>Passes a race</td><td class="num">20–120</td><td class="num">72</td><td class="num">76</td></tr>
+          <tr><td>Did not finish</td><td class="num">8–25%</td><td class="num">15.5%</td><td class="num">17.6%</td></tr>
+          <tr><td>Safety cars a race</td><td class="num">0.3–1.2</td><td class="num">0.66</td><td class="num">0.98</td></tr>
+          <tr><td>Race length (ticks)</td><td class="num">—</td><td class="num">2031</td><td class="num">2189</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">Every check stays in range. Single races get a little less predictable (0.71 to 0.58), which is the price of more stats mattering and more safety cars. Races run about 8% longer because late-race tyre and body fade now matters.</p>
+  </section>
+
+  <section aria-labelledby="gap">
+    <div class="sechead"><span class="label">What tuning can't fix</span><h2 id="gap">The last gap needs catch-up</h2>
+      <p>I tried shrinking the car further to pull the favourite rate into 30–45%. It moves slowly, and the best car's title share hardly moves at all until the car stops mattering, which goes against your 42% call.</p></div>
+    <div class="two">
+      <figure>
+        <figcaption><span class="t">Paper favourite wins the title</span><span class="note">Target 30–45%.</span></figcaption>
+        <div class="hbars" role="img" aria-label="Favourite title rate: today 74%, Pass One (car 41%) 58%, car at 32% 49%.">
+          <div class="hrow"><span class="name">Today</span><div class="track"><div class="bar today"><i style="width:100%"></i><span class="v">74%</span></div></div></div>
+          <div class="hrow"><span class="name">Pass One</span><div class="track"><div class="bar fix"><i style="width:78.4%"></i><span class="v">58%</span></div></div></div>
+          <div class="hrow"><span class="name">Car at 32%</span><div class="track"><div class="bar fix"><i style="width:66.2%"></i><span class="v">49%</span></div></div></div>
+        </div>
+      </figure>
+      <figure>
+        <figcaption><span class="t">Best car's title share</span><span class="note">Target 10–20%.</span></figcaption>
+        <div class="hbars" role="img" aria-label="Best car title share: today 30%, Pass One 25%, car at 32% 24%, car at 15% 18%.">
+          <div class="hrow"><span class="name">Today</span><div class="track"><div class="bar today"><i style="width:100%"></i><span class="v">30%</span></div></div></div>
+          <div class="hrow"><span class="name">Pass One</span><div class="track"><div class="bar fix"><i style="width:83.3%"></i><span class="v">25%</span></div></div></div>
+          <div class="hrow"><span class="name">Car at 32%</span><div class="track"><div class="bar fix"><i style="width:80%"></i><span class="v">24%</span></div></div></div>
+          <div class="hrow"><span class="name">Car at 15%</span><div class="track"><div class="bar fix"><i style="width:60%"></i><span class="v">18%</span></div></div></div>
+        </div>
+      </figure>
+    </div>
+    <div class="callout">
+      <p><b>Why:</b> over ten races the dice average out (√10 ≈ 3.2× less noise), so a team that's stronger on paper keeps finishing ahead. Extra chaos inside a race (more safety cars, more qualifying flubs) helped, but each race still resets to the same pecking order.</p>
+      <p><b>What closes it:</b> catch-up between races. Today only your team opens packs, and the worse your standing, the better the pack. Give every team a pack on the same rule and the teams at the back get stronger as the season goes. That's the CPU Paddock hook already planned for v0.6, and I can measure it once it exists.</p>
+    </div>
+  </section>
+
+  <section aria-labelledby="sheet">
+    <div class="sechead"><span class="label">The dial sheet</span><h2 id="sheet">23 values, all existing dials</h2>
+      <p>No new engine code. Every value already lives in the sim's tuning file.</p></div>
+    <div class="tablewrap">
+      <table class="wide">
+        <thead><tr><th>Stat</th><th>Dial</th><th>Today</th><th>Pass One</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr><td>Speed</td><td class="num">speedStatMultiplier</td><td class="num">0.12</td><td class="num">0.095</td><td>The fastest driver's edge shrinks a little</td></tr>
+          <tr><td>Power</td><td class="num">powerPerStar · powerBase</td><td class="num">0.014 · 0.942</td><td class="num">0.0085 · 0.9585</td><td>Each Power star is worth 39% less; a 3★ car is unchanged</td></tr>
+          <tr><td>Grip</td><td class="num">gripPerStar · gripBase</td><td class="num">0.045 · 0.82</td><td class="num">0.15 · 0.505</td><td>Grip finally helps a driver hold a steady pace; 3★ unchanged</td></tr>
+          <tr><td>Reliability</td><td class="num">reliabilityBase · reliabilityPerStar · baseFailureChance</td><td class="num">0.4 · 0.2 · 5e-5</td><td class="num">0 · 0.35 · 6e-5</td><td>Breakdowns pile onto weak cars</td></tr>
+          <tr><td>Consistency</td><td class="num">consistencyWeight</td><td class="num">0.35</td><td class="num">0.4</td><td>Steadier drivers lose less to bad laps</td></tr>
+          <tr><td>Consistency · Aggression</td><td class="num">mistakeBaseChance</td><td class="num">1.5e-4</td><td class="num">2.5e-4</td><td>More driver errors; shaky and reckless drivers make most of them</td></tr>
+          <tr><td>Aggression</td><td class="num">aggressionTrafficBoost</td><td class="num">0.10</td><td class="num">0.20</td><td>Aggressive drivers gain more in traffic</td></tr>
+          <tr><td>Acceleration</td><td class="num">accelEffect · accelLaunchTicks</td><td class="num">0.5 · 80</td><td class="num">1.2 · 160</td><td>Good launchers gain more at the start, pit exits and restarts</td></tr>
+          <tr><td>Endurance</td><td class="num">endurancePenaltyMultiplier · enduranceMaxPenalty</td><td class="num">0.5 · 0.15</td><td class="num">3.0 · 0.35</td><td>Late-race fade is real, and strong drivers resist it</td></tr>
+          <tr><td>Tyre Mgmt</td><td class="num">teamTireMgmtWearPerStar</td><td class="num">0.03</td><td class="num">0.25</td><td>Good crews make tyres last; 1★ crews burn through them</td></tr>
+          <tr><td>Pit Crew</td><td class="num">slowStopMultiplier · quickStopMultiplier</td><td class="num">1.5 · 0.75</td><td class="num">3.0 · 0.5</td><td>A botched stop costs more and a perfect one gains more</td></tr>
+          <tr><td>Luck</td><td class="num">luckProcChance · luckMin/MaxBoostPerStat</td><td class="num">0.045 · 0.125 / 0.25</td><td class="num">0.2 · 0.4 / 0.8</td><td>Lucky drivers catch more breaks, and bigger ones</td></tr>
+          <tr><td>Race chaos</td><td class="num">qualiFlubChance</td><td class="num">0.06</td><td class="num">0.20</td><td>More qualifying upsets, so grids shuffle</td></tr>
+          <tr><td>Race chaos</td><td class="num">deployChancePerDnf</td><td class="num">0.5</td><td class="num">1.0</td><td>A stranded car always brings out the safety car</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section aria-labelledby="later">
+    <div class="sechead"><span class="label">Not in this pass</span><h2 id="later">Saved for later</h2></div>
+    <ul class="plain">
+      <li><b>Cards and traits.</b> Their sizes get set once raw stats settle (your call: raw first, additives later).</li>
+      <li><b>Track and weather favours.</b> They need live court stats first. Pass One provides that, so the favour fix can follow.</li>
+      <li><b>Catch-up for CPU teams.</b> The v0.6 CPU Paddock. Then I measure the favourite rate again.</li>
+      <li><b>Damage that forces a pit stop.</b> Your idea, a v0.6 engine job.</li>
+    </ul>
+    <p class="note">Shipping Pass One changes race results, so it needs a new engine version. The v0.5 plan allows one such change and we've used it; that's your call. Measured on engine v0.5.0 with throwaway scripts; nothing in the game has changed.</p>
+  </section>
+
+  <footer>
+    <span class="label">Where the numbers come from</span>
+    <p>Stat shares: same-seed bumps on 2,400 driver-races per stat. Season signals: 200 seeded all-CPU seasons. Race checks: 200 races through the mechanics probe. Breakdowns: 600 season races per setup, every car. Companion to <a href="https://claude.ai/artifact/MC5fwYaqd6KJD8Gk9q8E94">The Balance Report</a> and <a href="https://claude.ai/artifact/SBycLd28QF1vfPtihJLWmd">The Balance Dials</a>.</p>
+  </footer>
+</div>
+</body>
+</html>
