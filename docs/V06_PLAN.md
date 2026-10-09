@@ -47,4 +47,6 @@ Live seasons (#340, #288, #523) · Wet weather (#360, #358) · pit-stop damage (
 
 ## Decision log (Pax, 10/9, [Owner Choices Report](https://claude.ai/artifact/SwjizYrejSE8Nvp52A3DWd))
 First owner choice = **pick 1 of 3 from a pack**; other levers wait for a balance check · CPU packs not yet · **cards add grade points: Bronze +5 (1 stat) · Silver +10 (1) · Gold +10 (2) · Iridium +15 (3)** · **qualifying: Acceleration doubles as one-lap pace, ~+1% per step (~2 grid places)**; ruined laps 1 in 5 → ~1 in 12 · **pit rule: real F1**, 1 stop minimum, compound must change · **tyre life is a share of the race**: soft 1/3 · medium ~1/2 · hard 3/5 · end window ~last 13% · **tyre luck ±10% per new set, hidden** · **one wear dial per track** · reports are named "MM/DD <Subject> Report"
+
+**Oct 10 (Pax, via Hub, PR #532):** iridium a notch deeper (`--rarity-iridium` #9479ee, sheen #63bfb1) · iridium traits carry one sheen across the whole card face
 **Open for Pax:** car and team cards count for both drivers (double value): keep or halve?
