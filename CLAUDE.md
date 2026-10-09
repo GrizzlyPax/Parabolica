@@ -97,6 +97,7 @@ Every current-release issue has a `crew:` label saying who (and which model) sho
 - `docs/COMMISSIONER_MODE.md` - Gamification north star (wall-clock roguelite seasons, gods, decrees)
 - `docs/COMMISSIONER_MODE_TECH.md` - Technical plan (seeded RNG, persistence, settle/scheduler, league runtime)
 - `docs/SIM_MECHANICS.md` - The stat truth doc: formulas, magnitudes, rebalance history, lab workflow
+- `docs/BALANCE_REPORT_2026-10-09.html` - Steward's balance report: stat parity, tracks & weather, how Season titles are decided (findings; recommendations follow)
 - `docs/BALANCE_HANDOFF.md` - Game-dev handoff: data exports, tuning surface, balance state, workflow
 - `docs/CARDS.md` - Cards revamp: tags → gear / traits / effects, placeholder ladder, Motorsport base deck, two-step rollout
 - `docs/TAG_SYSTEM.md` - Tag system design framework (five sources, magnitude ladder, acquisition engine, interview)
