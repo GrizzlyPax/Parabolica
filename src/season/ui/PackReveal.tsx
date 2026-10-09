@@ -4,8 +4,10 @@
 // the card arrives face down and flips to its Almanac Plate face. Rays stay
 // white until the card turns, then take its metal. A tap skips to the card.
 //
-// Keep 1 of 3 (#533): the pack holds three cards; they come out together,
-// face down, and flip side by side. "Try them on" takes all three to the table.
+// Keep 1 of 3 (#533), picked right here (#552, Pax Oct 10): the pack's three
+// cards come out together and flip side by side. Tap one to lift it, then
+// Keep. Gear goes to your locker; a trait asks once who gets it (valid targets
+// only). The other two go back.
 //
 // Display only: the cards are already dealt by the seed (pendingPack), so a
 // refresh just brings the pack back sealed.
@@ -17,16 +19,24 @@ import type { PackTier } from '../pack';
 
 const TIER_LABEL: Record<PackTier, string> = { common: 'Common', uncommon: 'Uncommon', rare: 'Rare', legendary: 'Legendary' };
 
+export type HolderKey = string; // a driver id as text, 'car' or 'team' (Paddock's HolderKey)
+
 interface Props {
   cards: Card[];
   tier: PackTier;
-  /** The reveal is over: back to the table with the card in hand. */
-  onDone: () => void;
+  /** Where a picked trait can go (its own target type only). */
+  traitTargets: (card: Card) => { key: HolderKey; label: string }[];
+  /** Keep this card: gear to the locker; a trait onto `target`. */
+  onKeep: (card: Card, target?: HolderKey) => void;
+  /** Close without picking (the pack stays sealed). */
+  onClose: () => void;
 }
 
 const METAL_RANK = { bronze: 0, silver: 1, gold: 2, iridium: 3 } as const;
 
-export default function PackReveal({ cards, tier, onDone }: Props) {
+export default function PackReveal({ cards, tier, traitTargets, onKeep, onClose }: Props) {
+  const [pick, setPick] = useState<string | null>(null);
+  const [askTrait, setAskTrait] = useState(false);
   // The rays take the best metal in the pack.
   const card = cards.reduce((best, c) => ((METAL_RANK[c.rarity ?? 'bronze'] ?? 0) > (METAL_RANK[best.rarity ?? 'bronze'] ?? 0) ? c : best), cards[0]);
   const stage = useRef<HTMLDivElement>(null);
@@ -102,6 +112,7 @@ export default function PackReveal({ cards, tier, onDone }: Props) {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const skip = () => { if (!done) finish(); };
+  const chosen = cards.find(c => c.id === pick) ?? null;
 
   return (
     <div
@@ -120,16 +131,45 @@ export default function PackReveal({ cards, tier, onDone }: Props) {
         <div className="pr-plate"><GameIcon name="season.pack" size={34} /><b>{TIER_LABEL[tier].toUpperCase()}</b><span>Base deck</span></div>
       </div>
       <div className={`pr-card ${slowFlip ? 'slow' : ''}`} ref={cardBox}>
-        <div className="pr-three">
-          {cards.map(c => <CardFace key={c.id} card={c} size="full" className="pr-three-card" faceDown={!faceUp} flippable={false} />)}
+        <div className="pr-three" role="group" aria-label="Pick one of three">
+          {cards.map(c => (
+            <button
+              key={c.id}
+              type="button"
+              className={`pr-pick ${pick === c.id ? 'on' : pick ? 'off' : ''}`}
+              disabled={!done}
+              aria-pressed={pick === c.id}
+              onClick={e => { e.stopPropagation(); setPick(c.id); setAskTrait(false); }}
+            >
+              <CardFace card={c} size="full" className="pr-three-card" faceDown={!faceUp} flippable={false} />
+            </button>
+          ))}
         </div>
         <div className="pr-sheen" ref={sheen} />
       </div>
       <div className="pr-flash" ref={flash} />
       {!done && <span className="pr-skip">Tap to skip</span>}
-      <div className="pr-cta">
-        <button type="button" className="rs-btn rs-btn-primary" onClick={e => { e.stopPropagation(); onDone(); }} disabled={!done}>Try them on</button>
-        <span className="rs-hint">Keep one of three. In the table, tap a card to see where it goes and what it does; the two you don't place go back.</span>
+      <div className="pr-cta" onClick={e => e.stopPropagation()}>
+        {askTrait && chosen ? (
+          <div className="pr-ask" role="group" aria-label="Who gets the trait">
+            <span className="rs-k">{chosen.name} · trait</span>
+            <b>Who gets it? It stays for good.</b>
+            <span className="pr-ask-btns">
+              {traitTargets(chosen).map(t => <button key={t.key} type="button" className="rs-btn" onClick={() => onKeep(chosen, t.key)}>{t.label}</button>)}
+            </span>
+            <button type="button" className="rs-link" onClick={() => setAskTrait(false)}>Back to the three</button>
+          </div>
+        ) : (
+          <>
+            <button
+              type="button"
+              className="rs-btn rs-btn-primary"
+              disabled={!done || !chosen}
+              onClick={() => { if (!chosen) return; if (chosen.kind === 'trait') setAskTrait(true); else onKeep(chosen); }}
+            >{chosen ? `Keep ${chosen.name}` : 'Tap a card to pick it'}</button>
+            <span className="rs-hint">{chosen ? (chosen.kind === 'trait' ? 'A trait goes on for good; next you choose who gets it.' : 'Gear goes to your locker; equip it from the Team table any time.') : 'Keep one of three. The other two go back.'} <button type="button" className="rs-link" onClick={onClose}>Later</button></span>
+          </>
+        )}
       </div>
     </div>
   );
