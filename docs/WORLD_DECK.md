@@ -4,6 +4,8 @@
 
 > **v0.5 layout (Oct 8):** the World Deck now leads with the **new content**: the 94-card Motorsport deck (`src/cards/`, docs/CARDS.md), the 28 base-deck teams (`src/data/deckTeams.ts`), the 6 stat-combo tracks and Neutral + 5 dry weathers (`src/data/deckTracks.ts`, `deckWeather.ts`). Old content (tags, the old 22 teams, themed tracks, old weathers, inflictions) sits in collapsed **"(retiring)"** groups until each sim swap lands, then it's deleted. **Gods are retired** (their tab is gone; the data goes with #339). **Credits** live on their own screen (menu footer). Sections below that describe retiring content are kept for reference only. New content follows the new shapes above.
 
+> **v0.6 (Oct 10, #545): tags are retired.** `src/data/tags.ts`, `trackTags.ts`, tag calibration and the tag drafts are gone; cards are the only system. The five in-race states (Damaged, Spun, Cooked tyres, Sulking, Fired up) live on as timed effects (`IN_RACE_EFFECTS`, World Deck → Effects). The tag and track-character sections below (§6, §11) are history.
+
 
 **The generated deck** — every record currently in the game, with sources — is `docs/GLOSSARY.md` (`npm run glossary`). The in-game Glossary screen renders the same model. Read it first to see what exists and match the voice.
 
@@ -112,7 +114,7 @@ Voice: deadpan HR file. The driver is a person something strange happened to, de
 
 Car *stats* are rolled (power / grip / reliability, 1–5★) — not content.
 
-## 6. Tags — `src/data/tags.ts`
+## 6. Tags — `src/data/tags.ts` *(retired in v0.6; history)*
 
 The main oddity vocabulary. One record shape for every kind; most tags leave most fields blank.
 
@@ -201,7 +203,7 @@ event: {
 ```
 `weight` is relative odds (clear 60 is the anchor; dramatic weather should stay rare). `conditions` are the ids tags and inflictions gate on. Effects are field-wide at intensity 1 and scale down. Wet tyres and lap-by-lap rain are a later engine pass; a new weather type today is a field-wide lean plus a condition id.
 
-## 11. Track characters — `src/data/trackTags.ts`
+## 11. Track characters — `src/data/trackTags.ts` *(retired; history)*
 
 Three today (High-Speed, Technical, Hazardous). A character is a field-wide lean plus optional stamped conditions. New ones are cheap; assigning them per track (instead of by hash) is a small engine task.
 
