@@ -18,7 +18,7 @@ import { BASE_DECK_TRACKS } from './deckTracks';
 import { BASE_DECK_WEATHER } from './deckWeather';
 import { STAT_LABELS } from '../cards/deck';
 import { GODS } from '../league/gods';
-import { INTL_FIRST_NAMES, INTL_LAST_NAMES, ABSURD_FIRST_NAMES, ABSURD_LAST_NAMES, MONONYMS, NAME_TIER_WEIGHTS } from '../generators/names';
+import { INTL_FIRST_NAMES, INTL_LAST_NAMES, ABSURD_FIRST_NAMES, ABSURD_LAST_NAMES, NAME_TIER_WEIGHTS, ONE_WORD_CHANCE } from '../generators/names';
 import { LEAGUE_ADJECTIVES, LEAGUE_NOUNS } from '../generators/leagueName';
 import { BACKSTORY_TEMPLATES, BACKSTORY_FILLS, QUIRKS } from '../generators/drivers';
 import { CAR_QUIRKS, CAR_PREFIXES_GENERIC, CAR_SUFFIXES, CAR_ACRONYMS } from '../generators/cars';
@@ -153,9 +153,8 @@ export function buildGlossary(): Glossary {
     pools: [
       { id: 'names-intl-first', title: `Driver first names · international (${Math.round(NAME_TIER_WEIGHTS.international * 100)}% of drivers)`, where: 'src/generators/names.ts INTL_FIRST_NAMES', size: INTL_FIRST_NAMES.length, samples: INTL_FIRST_NAMES.slice(0, 8) },
       { id: 'names-intl-last', title: 'Driver last names · international', where: 'src/generators/names.ts INTL_LAST_NAMES', size: INTL_LAST_NAMES.length, samples: INTL_LAST_NAMES.slice(0, 8) },
-      { id: 'names-absurd-first', title: `Driver first names · absurd (${Math.round(NAME_TIER_WEIGHTS.absurd * 100)}%)`, where: 'src/generators/names.ts ABSURD_FIRST_NAMES', size: ABSURD_FIRST_NAMES.length, samples: ABSURD_FIRST_NAMES.slice(0, 8) },
+      { id: 'names-absurd-first', title: `Driver first names · absurd (${Math.round(NAME_TIER_WEIGHTS.absurd * 100)}% both halves, ${Math.round(NAME_TIER_WEIGHTS.hybrid * 100)}% one half on a real name; ${Math.round(ONE_WORD_CHANCE * 100)}% of all names show as one word)`, where: 'src/generators/names.ts ABSURD_FIRST_NAMES', size: ABSURD_FIRST_NAMES.length, samples: ABSURD_FIRST_NAMES.slice(0, 8) },
       { id: 'names-absurd-last', title: 'Driver last names · absurd', where: 'src/generators/names.ts ABSURD_LAST_NAMES', size: ABSURD_LAST_NAMES.length, samples: ABSURD_LAST_NAMES.slice(0, 8) },
-      { id: 'names-mononym', title: `Driver mononyms (${Math.round(NAME_TIER_WEIGHTS.mononym * 100)}%)`, where: 'src/generators/names.ts MONONYMS', size: MONONYMS.length, samples: MONONYMS.slice(0, 8) },
       { id: 'league-adjectives', title: 'League names · adjectives ("The ___ Circuit")', where: 'src/generators/leagueName.ts LEAGUE_ADJECTIVES', size: LEAGUE_ADJECTIVES.length, samples: LEAGUE_ADJECTIVES.slice(0, 8) },
       { id: 'league-nouns', title: 'League names · nouns', where: 'src/generators/leagueName.ts LEAGUE_NOUNS', size: LEAGUE_NOUNS.length, samples: LEAGUE_NOUNS.slice(0, 8) },
       { id: 'backstory-templates', title: 'Driver backstory templates ({slot} fills below)', where: 'src/generators/drivers.ts BACKSTORY_TEMPLATES', size: BACKSTORY_TEMPLATES.length, samples: BACKSTORY_TEMPLATES.slice(0, 4) },

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { mulberry32 } from '../engine/rng';
-import { generateDriverName, NAME_TIER_WEIGHTS, NameTier } from './names';
+import { generateDriverName, NAME_TIER_WEIGHTS, NameTier, ABSURD_FIRST_NAMES, ABSURD_LAST_NAMES, INTL_FIRST_NAMES, INTL_LAST_NAMES, ONE_WORD_CHANCE } from './names';
 import { generateLeagueName, leagueNameForSeed, LEAGUE_ADJECTIVES, LEAGUE_NOUNS } from './leagueName';
 import { generateTeamIdentities, teamIdentitiesForSeed } from './teamIdentity';
 
@@ -15,7 +15,7 @@ describe('driver names (#191)', () => {
 
   it('tier weights come out within tolerance over many draws', () => {
     const rng = mulberry32(7);
-    const counts: Record<NameTier, number> = { international: 0, absurd: 0, mononym: 0, corrupted: 0 };
+    const counts: Record<NameTier, number> = { international: 0, hybrid: 0, absurd: 0, corrupted: 0 };
     const N = 50000;
     for (let i = 0; i < N; i++) counts[generateDriverName(rng).tier]++;
     for (const tier of Object.keys(counts) as NameTier[]) {
@@ -27,18 +27,34 @@ describe('driver names (#191)', () => {
     expect(counts.corrupted / N).toBeLessThan(0.04);
   });
 
-  it('mononyms have no last name and a clean short name', () => {
+  it('one-word names (~1%, any tier but corrupted) have no last name and a clean short name', () => {
     const rng = mulberry32(99);
-    let sawMononym = false;
-    for (let i = 0; i < 2000; i++) {
+    let oneWord = 0;
+    const N = 40000;
+    for (let i = 0; i < N; i++) {
       const n = generateDriverName(rng);
-      if (n.tier !== 'mononym') continue;
-      sawMononym = true;
+      if (!n.oneWord) continue;
+      oneWord++;
+      expect(n.isCorrupted).toBe(false);
       expect(n.lastName).toBe('');
       expect(n.fullName).toBe(n.firstName);
       expect(n.shortName).toBe(n.firstName.length > 10 ? n.firstName.slice(0, 10) : n.firstName);
     }
-    expect(sawMononym).toBe(true);
+    expect(Math.abs(oneWord / N - ONE_WORD_CHANCE * 0.98)).toBeLessThan(0.003);
+  });
+
+  it('hybrid names put one absurd half on a real name, either way round', () => {
+    const rng = mulberry32(31);
+    let absurdFirst = 0, absurdLast = 0;
+    for (let i = 0; i < 20000; i++) {
+      const n = generateDriverName(rng);
+      if (n.tier !== 'hybrid' || n.oneWord) continue;
+      if (ABSURD_FIRST_NAMES.includes(n.firstName) && INTL_LAST_NAMES.includes(n.lastName)) absurdFirst++;
+      else if (INTL_FIRST_NAMES.includes(n.firstName) && ABSURD_LAST_NAMES.includes(n.lastName)) absurdLast++;
+      else throw new Error(`not a hybrid: ${n.fullName}`);
+    }
+    expect(absurdFirst / (absurdFirst + absurdLast)).toBeGreaterThan(0.45);
+    expect(absurdFirst / (absurdFirst + absurdLast)).toBeLessThan(0.55);
   });
 
   it('no name ever produces an "undefined" short name (the mononym bug guard)', () => {

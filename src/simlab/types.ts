@@ -666,7 +666,7 @@ export const CANON_VARIABLES: SimVariables = {
     flatPenalty: 0.05,
     minSpeedFloor: 0.60,
     aggressionWearMultiplier: 0.4,
-    teamTireMgmtWearPerStar: 0.03,      // Rebalance v2 (lab-verified Δ+2.0%): crews that preserve rubber
+    teamTireMgmtWearPerStar: 0.25,         // Balance Pass One (#481)
   },
   crashes: {
     baseCrashChance: 0.00008,           // Reduced from 0.0001 for stable DNF rate
@@ -682,16 +682,16 @@ export const CANON_VARIABLES: SimVariables = {
     safetyCarsReduction: 0.05,
   },
   mechanical: {
-    baseFailureChance: 0.00005,
-    reliabilityBase: 0.4,
-    reliabilityPerStar: 0.2,
+    baseFailureChance: 6e-5,               // Balance Pass One (#481)
+    reliabilityBase: 0,                    // Pass One (#481): a 0★ car breaks down every race; a Reliability Down effect needs a floor
+    reliabilityPerStar: 0.35,              // Balance Pass One (#481)
     luckBase: 1.4,
     luckMultiplier: 0.75,
   },
   pits: {
     basePitDuration: 24,                // #246: a stop costs ~25% of a lap all-in (was ~60%)
-    slowStopMultiplier: 1.5,
-    quickStopMultiplier: 0.75,
+    slowStopMultiplier: 3.0,               // Balance Pass One (#481)
+    quickStopMultiplier: 0.5,              // Balance Pass One (#481)
     slowStopBase: 0.42,
     slowStopPerStar: 0.07,
     quickStopBase: 0.03,
@@ -705,25 +705,25 @@ export const CANON_VARIABLES: SimVariables = {
     scPitMinWear: 15,
   },
   performance: {
-    luckProcChance: 0.045,              // Rebalance v2: more visible fortune (win-impact neutral, survival real)
+    luckProcChance: 0.2,                   // Balance Pass One (#481)
     luckMinBoostBase: 0.02,             // Reduced luck boost range
-    luckMinBoostPerStat: 0.125,
+    luckMinBoostPerStat: 0.4,              // Balance Pass One (#481)
     luckMaxBoostBase: 0.08,             // Reduced luck boost range
-    luckMaxBoostPerStat: 0.25,
+    luckMaxBoostPerStat: 0.8,              // Balance Pass One (#481)
     enduranceDecay: 0.1,
-    enduranceMaxPenalty: 0.15,
-    endurancePenaltyMultiplier: 0.5,
+    enduranceMaxPenalty: 0.35,             // Balance Pass One (#481)
+    endurancePenaltyMultiplier: 3.0,       // Balance Pass One (#481)
     damageSpeedPenalty: 0.85,
-    accelLaunchTicks: 80,
-    accelEffect: 0.5,                   // Rebalance v2 (lab-verified Δ+2.6%): launches, pit exits, SC restarts
-    aggressionTrafficBoost: 0.10,       // Rebalance v2 (lab-verified Δ+1.4% with DNF cost intact): the gamble pays
+    accelLaunchTicks: 160,                 // Balance Pass One (#481)
+    accelEffect: 1.2,                      // Balance Pass One (#481); keep under ~1.5 (pit exits)
+    aggressionTrafficBoost: 0.20,          // Balance Pass One (#481)
     // #82 mistakes layer — CANON since v0.3.31 (rebalance v3, #220 dominance
     // pass). Validated on the 80-paired-universe A/B stacked with the #162
     // compression below: median champ win share 38%→33%, >50% runaway
     // universes 18%→10% (target 8–12%), DNF flat 22.9%. Raising
     // mistakeBaseChance further bought nothing but feed spam (sweep was
     // non-monotonic noise above this value).
-    mistakeBaseChance: 1.5e-4,
+    mistakeBaseChance: 2.5e-4,             // Balance Pass One (#481)
     mistakeConsistencyWeight: 1.5,
     mistakeAggressionWeight: 0.5,
     mistakeDamageWeight: 0,
@@ -736,10 +736,10 @@ export const CANON_VARIABLES: SimVariables = {
     // 3★ midpoint preserved (0.984). Re-baseline measured the uncompressed
     // Car Power win Δ at 13.2% (~1.8× the #2 stat); compression shifts
     // championships car-led → driver-led (champ 5★-power share ~36%→34%).
-    powerBase: 0.942,
-    powerPerStar: 0.014,
-    gripBase: 0.82,                     // Higher base, less per-star spread
-    gripPerStar: 0.045,
+    powerBase: 0.9606,                     // Pass One + Speed nudge (#481): 3★ stays 0.984
+    powerPerStar: 0.0078,                  // Pass One + Speed nudge (#481)
+    gripBase: 0.445,                       // Pass One + Speed nudge (#481): 3★ stays 0.955
+    gripPerStar: 0.17,                     // Pass One + Speed nudge (#481)
     reliabilityBase: 0.4,
     reliabilityPerStar: 0.2,
     tireManagementBase: 0.8,            // Slightly higher base
@@ -750,7 +750,7 @@ export const CANON_VARIABLES: SimVariables = {
   grid: {
     slotSpacing: 0.005,
     qualiNoise: 0.02,
-    qualiFlubChance: 0.06,
+    qualiFlubChance: 0.20,                 // Balance Pass One (#481)
   },
   overtaking: {
     followGap: 0.006,
@@ -772,7 +772,7 @@ export const CANON_VARIABLES: SimVariables = {
     cruiseSpeed: 0.50,
     catchUpSpeed: 0.65,
     unsafetyCarSpeed: 0.0035,
-    deployChancePerDnf: 0.5,            // #246: was every crash, ~1 SC/race
+    deployChancePerDnf: 1.0,               // Balance Pass One (#481)
   },
   blowouts: {
     riskExponent: 2,
@@ -781,8 +781,8 @@ export const CANON_VARIABLES: SimVariables = {
     safetyCarReduction: 0.02,
   },
   driverSpeed: {
-    speedStatMultiplier: 0.12,  // Heavy compression: speed stat has 12% effect (was 100%)
-    consistencyWeight: 0.35,    // Reduced consistency impact
+    speedStatMultiplier: 0.115,            // Pass One + Speed nudge (#481)
+    consistencyWeight: 0.4,                // Balance Pass One (#481)
     baseSpeedMin: 5,            // Tighter speed range (was 3)
     baseSpeedMax: 10,           // Tighter speed range (was 12)
   },

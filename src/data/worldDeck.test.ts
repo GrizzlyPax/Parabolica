@@ -15,7 +15,7 @@ import { DRIVER_STATS, CAR_STATS, TEAM_STATS } from '../cards/deck';
 import { resolveIcon } from '../icons/registry';
 import { CURRENT_TRACKS, HISTORIC_TRACKS, LAYOUTS } from '../generators/tracks';
 import { GODS } from '../league/gods';
-import { INTL_FIRST_NAMES, INTL_LAST_NAMES, ABSURD_FIRST_NAMES, ABSURD_LAST_NAMES, MONONYMS } from '../generators/names';
+import { INTL_FIRST_NAMES, INTL_LAST_NAMES, ABSURD_FIRST_NAMES, ABSURD_LAST_NAMES } from '../generators/names';
 import { LEAGUE_ADJECTIVES, LEAGUE_NOUNS } from '../generators/leagueName';
 import { BACKSTORY_TEMPLATES, BACKSTORY_FILLS, QUIRKS } from '../generators/drivers';
 import { CAR_QUIRKS } from '../generators/cars';
@@ -139,7 +139,7 @@ describe('teams, tracks, gods, weather', () => {
 describe('flavour pools', () => {
   const pools: [string, string[]][] = [
     ['INTL_FIRST_NAMES', INTL_FIRST_NAMES], ['INTL_LAST_NAMES', INTL_LAST_NAMES], ['ABSURD_FIRST_NAMES', ABSURD_FIRST_NAMES], ['ABSURD_LAST_NAMES', ABSURD_LAST_NAMES],
-    ['MONONYMS', MONONYMS], ['LEAGUE_ADJECTIVES', LEAGUE_ADJECTIVES], ['LEAGUE_NOUNS', LEAGUE_NOUNS], ['QUIRKS', QUIRKS], ['CAR_QUIRKS', CAR_QUIRKS],
+    ['LEAGUE_ADJECTIVES', LEAGUE_ADJECTIVES], ['LEAGUE_NOUNS', LEAGUE_NOUNS], ['QUIRKS', QUIRKS], ['CAR_QUIRKS', CAR_QUIRKS],
   ];
   it('no blank or duplicate lines', () => {
     for (const [what, xs] of pools) { for (const x of xs) nonEmpty(x, what); uniq(xs.map(x => x.trim().toLowerCase()), what); }
