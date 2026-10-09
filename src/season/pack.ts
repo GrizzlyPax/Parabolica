@@ -66,6 +66,8 @@ export interface GearMove {
   round: number;
   teamId: string;
   cardId: string;
+  /** Where this copy sits now (#556): with two of the same card, names which one moves. Absent = the first found. */
+  from?: CardHolder | 'locker';
   to: CardHolder | 'locker';
 }
 
@@ -218,7 +220,8 @@ export function teamCardState(facts: SeasonFacts, teamId: string, round: number 
     } else {
       // A move: find the card wherever it sits on this team, then place it.
       const sources: Card[][] = [state.locker, ...Object.values(state.drivers).map(d => d.equipment), state.car.upgrade, state.team.facility];
-      const from = sources.find(s => s.some(x => x.id === f.cardId));
+      const from = f.from ? (f.from === 'locker' ? state.locker : gearSlot(state, f.from)) : sources.find(s => s.some(x => x.id === f.cardId));
+      if (from && !from.some(x => x.id === f.cardId)) throw new Error(`pack: card ${f.cardId} is not there`);
       if (!from) throw new Error(`pack: card ${f.cardId} is not on team ${teamId}`);
       if (f.to === 'locker') {
         if (from === state.locker) throw new Error('pack: already in the locker');

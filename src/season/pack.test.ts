@@ -320,3 +320,31 @@ describe('keep 1 of 3 (#533)', () => {
     expect(() => teamCardState(legacy, human)).not.toThrow();
   });
 });
+
+describe('duplicate cards (#556)', () => {
+  it('two copies of the same gear: each moves on its own when the move names where it comes from', () => {
+    // Build a team with one copy equipped on the car and one in the locker, via plain facts.
+    let facts = scripted(21, 8);
+    const human = facts.setup.humans[0].teamId;
+    const up = 'up-bronze-power';
+    const pack0 = pendingPack(facts)!;
+    const dealt = pack0.cards.map(c => c.id);
+    // Use raw facts (the deal check is a validation concern; the fold is what this tests).
+    facts = { ...facts, cardFacts: [
+      { type: 'pack', round: 0, teamId: human, tier: pack0.tier, cardId: up, dealt, target: { kind: 'car' } },
+      { type: 'move', round: 0, teamId: human, cardId: up, to: 'locker' },
+      { type: 'pack', round: 0, teamId: human, tier: pack0.tier, cardId: up, dealt, target: { kind: 'car' } },
+    ] };
+    let s = teamCardState(facts, human);
+    expect(s.locker.map(c => c.id)).toEqual([up]);
+    expect(s.car.upgrade.map(c => c.id)).toEqual([up]);
+    // Unequip the car's copy: without `from` the locker copy would be found first.
+    const unequip = { type: 'move' as const, round: 0, teamId: human, cardId: up, from: { kind: 'car' as const }, to: 'locker' as const };
+    s = teamCardState({ ...facts, cardFacts: [...facts.cardFacts, unequip] }, human);
+    expect(s.locker.map(c => c.id)).toEqual([up, up]);
+    expect(s.car.upgrade).toEqual([]);
+    // Naming a place the card isn't is refused.
+    const wrong = { ...unequip, from: { kind: 'team' as const } };
+    expect(() => teamCardState({ ...facts, cardFacts: [...facts.cardFacts, wrong] }, human)).toThrow();
+  });
+});
