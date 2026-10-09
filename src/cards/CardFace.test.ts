@@ -12,15 +12,26 @@ describe('CardFace', () => {
   it('the face: name banner, one icon, type tag, every change, the number; no metal word or holder', () => {
     const out = html({ card: card('eq-gold-speed+consistency'), size: 'full' });
     expect(out).toContain('Gold Speed + Consistency');
-    expect(out).toContain('Equipment');
+    // #526: the type tag is the kind's icon (cog = gear), the word only in its title.
+    expect(out).toContain('aria-label="Gear"');
+    expect(out).not.toMatch(/>Equipment</);
     expect(out).toContain('<b>+10%</b> Speed');
     expect(out).toContain('Speed');
     expect(out).toContain('Consistency');
     expect(out).toContain('013');
     expect(out).toContain('metal-gold');
-    expect((out.match(/class="game-icon/g) ?? []).length).toBe(2); // the art + the back's flag
+    expect((out.match(/class="game-icon/g) ?? []).length).toBe(3); // the art + the kind icon + the back's flag
     expect(out).not.toMatch(/>gold</i);
     expect(out).not.toMatch(/>(Driver|Car|Team)</);
+  });
+
+  it('#526: a trait reads as a trait (DNA icon, dashed frame class); gear as gear', () => {
+    const trait = MOTORSPORT_DECK.find(c => c.kind === 'trait')!;
+    const t = html({ card: trait, size: 'full' });
+    expect(t).toContain('cf-trait');
+    expect(t).toContain('aria-label="Trait"');
+    expect(html({ card: card('eq-gold-speed+consistency'), size: 'full' })).toContain('cf-gear');
+    expect(html({ card: trait, faceDown: true })).not.toContain('cf-trait'); // the back hides the kind
   });
 
   it('the back says PARABOLICA · Base deck and hides nothing', () => {

@@ -36,6 +36,11 @@ export function nameSize(name: string): number {
 }
 
 const metalClass = (card: Card) => `metal-${card.rarity ?? 'none'}`;
+/** Gear or trait at a glance (#526, Pax): the type tag is one icon per kind
+ * instead of a word (every gear card shares the cog, traits the DNA), and a
+ * trait's frame is dashed like its chip. */
+export const kindIcon = (card: Card) => (card.kind === 'trait' ? 'card.trait' : card.kind === 'effect' ? 'card.effect' : 'card.gear');
+const kindClass = (card: Card) => (card.kind === 'trait' ? 'cf-trait' : card.kind === 'effect' ? 'cf-effect' : 'cf-gear');
 /** Placeholder art: the first stat's icon (the flavour pass gives each card its own). */
 const artIcon = (card: Card) => STAT_ICONS[card.stats[0].stat];
 
@@ -45,7 +50,7 @@ function Face({ card, mini }: { card: Card; mini: boolean }) {
     <div className="cf-rule">
       <div className="cf-banner"><span className="cf-name" style={{ '--cf-name': `${nameSize(card.name)}px` } as CSSProperties}>{card.name}</span></div>
       <div className="cf-art"><GameIcon name={artIcon(card)} size={70} /></div>
-      <div className="cf-type"><span>{KIND_LABELS[card.kind]}</span></div>
+      <div className="cf-type" title={KIND_LABELS[card.kind]}><GameIcon name={kindIcon(card)} size={18} title={card.kind === 'trait' ? 'Trait' : card.kind === 'effect' ? 'Effect' : 'Gear'} /></div>
       <div className="cf-desc">
         {card.kind === 'effect'
           ? <div>{STAT_LABELS[card.stats[0].stat]} <b>{card.direction === 'up' ? '▲ up' : '▼ down'}</b></div>
@@ -91,7 +96,7 @@ export function CardFace({ card, size = 'small', faceDown = false, flippable = !
   const label = faceDown ? `Face-down ${card.rarity ?? 'effect'} card` : card.name;
   return (
     <div
-      className={`card-face cf-${size} ${metalClass(card)} ${showBack ? 'cf-flipped' : ''} ${flippable ? 'cf-tap' : ''} ${className}`.trim()}
+      className={`card-face cf-${size} ${metalClass(card)} ${faceDown ? '' : kindClass(card)} ${showBack ? 'cf-flipped' : ''} ${flippable ? 'cf-tap' : ''} ${className}`.trim()}
       style={{ width: w, height: h, ...style }}
       {...(flippable ? { role: 'button', tabIndex: 0, onClick: flip, onKeyDown: onKey, 'aria-pressed': flipped } : { role: 'img' })}
       aria-label={label}
