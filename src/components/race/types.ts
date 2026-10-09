@@ -43,6 +43,9 @@ export interface RowContext {
   /** Speed vs the running pack's median this tick: 'hot' ≥ +4%, 'quick' ≥ +1%, 'slow' ≤ −3%, else 'pack'. */
   speedTone?: 'hot' | 'quick' | 'pack' | 'slow';
   /** Speed relative to the pack median, −1…+1 over ±8%. */
+  /** Pace bar (#557): last lap vs the pack's median last lap, −1…+1 over ±6% (positive = quicker), and the raw %. */
+  paceRel?: number;
+  pacePct?: number;
   speedRel?: number;
   /** In a fight right now: attacking the car ahead or defending from the car behind. */
   battle?: { role: 'attacking' | 'defending'; ticks: number; otherId: number };
