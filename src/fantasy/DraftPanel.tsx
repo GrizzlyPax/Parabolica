@@ -1,8 +1,8 @@
 // The fantasy draft: name a few teams, pick colours, then snake-draft squads
 // from the grid. One device, before a league is founded or a quick race
 // starts. What drafters see is deliberately rough: a driver's and car's
-// third of the field, and that a driver carries tags of a given rarity —
-// not which tags. The inference is the game.
+// third of the field, and that a driver carries cards of a given metal —
+// not which cards. The inference is the game.
 import { useMemo, useState } from 'react';
 import type { RosterDriver } from '../RaceEngine';
 import { rosterRanks, type RankTone } from '../betting/utils';
@@ -118,7 +118,7 @@ export function DraftPanel({ roster, value, onChange, context }: DraftPanelProps
           <button type="button" className="rs-link" onClick={() => setPhase('teams')}>edit teams</button>
         </span>
       </div>
-      <div className="fd-hint rs-hint">What you can see: each driver's and car's third of the field, and the rarity of any tags they carry — not what the tags do. Pick well.</div>
+      <div className="fd-hint rs-hint">What you can see: each driver's and car's third of the field, and the metal of any cards they carry — not what the cards do. Pick well.</div>
       <div className="fd-body">
         <div className="fd-squads">
           {value.teams.map((t, i) => (

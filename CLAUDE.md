@@ -100,18 +100,18 @@ Every current-release issue has a `crew:` label saying who (and which model) sho
 - `docs/BALANCE_PASS_ONE_2026-10-09.html` - Steward's recommended pass: 23 dials tuned to Pax's Oct 9 targets, measured, with the dial sheet
 - `docs/BALANCE_HANDOFF.md` - Game-dev handoff: data exports, tuning surface, balance state, workflow
 - `docs/CARDS.md` - Cards revamp: tags → gear / traits / effects, placeholder ladder, Motorsport base deck, two-step rollout
-- `docs/TAG_SYSTEM.md` - Tag system design framework (five sources, magnitude ladder, acquisition engine, interview)
+- `docs/TAG_SYSTEM.md` - History: the tag system (retired in v0.6, #334 / #541; cards replaced it)
 - `docs/TRACKS_WEATHER.md` - 6 stat-combo tracks + Neutral and 5 dry weathers (live in v0.5); lap-by-lap Wet with a wet tyre (v0.6)
-- `docs/CONDITIONS_LAYER.md` - Track tags + weather design build (the conditions stack; companion to TAG_SYSTEM)
+- `docs/CONDITIONS_LAYER.md` - History: track tags + weather (retired in v0.6; see TRACKS_WEATHER)
 - `docs/STORY_WORKSTREAM.md` - Handoff for ANY agent/collaborator: orientation, where things are, fixed vs flexible, flavour pass vs theme change, the loop, prompts
 - `docs/STORY_BIBLE.md` - Pax's theme/voice bible; agents read it before any flavour pass (story workstream)
 - `docs/story/` - Story brainstorms and working notes (NOT canon until moved into the bible); index in `docs/story/README.md`
 - `docs/WORLD_DECK.md` - Content framework: how to add teams, tracks, names, tags, cards, weather, gods, commentary (shapes, rules, voice, backlog, agent prompt)
-- `docs/GLOSSARY.md` - GENERATED World Deck: every team, track, tag, card, rule, weather, infliction, god and flavour pool (`npm run glossary`; `src/data/worldDeck.test.ts` checks content)
+- `docs/GLOSSARY.md` - GENERATED World Deck: every team, track, card, rule, weather and flavour pool (`npm run glossary`; `src/data/worldDeck.test.ts` checks content)
 - `docs/SEASON_MODE.md` - v0.5 Spa build spec: Season Mode (League Setup, snake draft, Paddock → Race loop, card packs)
 - `docs/FANTASY.md` - Fantasy teams: snake draft, obfuscated draft info, scoring, where it shows
 - `docs/LEAGUE_SERVER.md` - One league, every device: the server holds facts + decrees + canonical digests; devices replay; publish / open by code / link; deploy secrets
-- `docs/RACE_CONTROL.md` - The lab: parity rule, seeds and fingerprints, tag calibration method and bands, how to replicate and export
+- `docs/RACE_CONTROL.md` - The lab: parity rule, seeds and fingerprints, physics calibration, how to replicate and export
 - `docs/ICONS.md` - Design change: game-icons.net replaces every emoji (meaning registry, currentColor), and the UI + icons take your team's colours
 - `docs/PROCEDURAL_IDENTITY.md` - Procedural universe identity (driver names #191, league names #185, team identity #183)
 - `docs/HANDOFF_2026-10-08.md` - Oct 8: GitHub-only planning, the crew, the Almanac look, icons, metal rarity, racing numbers, what's next (read first)

@@ -1,5 +1,7 @@
 # The Conditions Layer — Design Build
 
+> **History (v0.6, #334 / #541):** tags were retired; cards are the only system now (docs/CARDS.md). This doc is kept as design history.
+
 *June 2026. Companion to `TAG_SYSTEM.md`. Where the tag system meets the
 world: a track has character, weather rolls on top, and both speak to racer
 tags through one shared signal. The constructive half of the #156 balance

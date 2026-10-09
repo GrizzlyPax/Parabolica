@@ -81,7 +81,7 @@ function MainMenu({ onSingleRace, onSeason, season, onCompendium, onGlossary, on
             <span className="mm-row-icon"><GameIcon name="view.detail" size={20} /></span>
             <span className="mm-row-text">
               <span className="mm-row-title">Race Control</span>
-              <span className="mm-row-sub">The lab: seeded batches, tag calibration, odds. Every number replicable.</span>
+              <span className="mm-row-sub">The lab: seeded batches, physics calibration, the deck. Every number replicable.</span>
             </span>
             <span className="mm-row-chev">›</span>
           </button>
