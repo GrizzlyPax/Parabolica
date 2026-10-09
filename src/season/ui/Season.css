@@ -88,19 +88,6 @@
 .ss-open { display: flex; flex-wrap: wrap; gap: 4px 10px; }
 .ss-open-card { display: inline-flex; align-items: center; gap: 5px; font-style: italic; font-size: 13px; color: var(--pw-text-2); }
 .ss-num { width: 30px; flex: none; font-family: var(--look-data); font-size: 16px; color: var(--pw-text-1); display: inline-flex; justify-content: center; }
-.ss-pick .avatar, .ss-roster-slot .avatar { width: 26px; justify-content: center; }
-.ss-pick-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
-.ss-pick-name { font-size: 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ss-board, .ss-roster { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); column-gap: 20px; }
-.ss-pick, .ss-roster-slot {
-  display: flex; align-items: center; gap: 10px; width: 100%; min-height: 52px; padding: 6px 0; text-align: left;
-  background: transparent; border: 0; border-top: 1px solid var(--pw-hairline); border-radius: 0; color: inherit; font: inherit;
-}
-.ss-pick { cursor: pointer; }
-.ss-pick:disabled { cursor: default; }
-.ss-pick.taken { opacity: 0.35; }
-.ss-pick.selected { box-shadow: inset 3px 0 0 var(--team-primary); background: var(--pw-surface); }
-.ss-roster-slot.empty .ss-pick-name { color: var(--pw-text-3); font-style: italic; }
 .ss-roster-logo { margin-left: auto; display: inline-flex; }
 .ss-tabs { display: flex; gap: 0; }
 .ss-tab {
@@ -404,3 +391,22 @@ button.rt-g:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset:
 .ss-teams-table tr.mine th, .ss-teams-table tr.mine td { background: color-mix(in srgb, var(--team-primary) 14%, transparent); }
 .ss-teams-table tr.held { opacity: 0.45; }
 .ss-teams-table .rt-pick:disabled { cursor: default; }
+
+/* Draft board as roster tables (#453). */
+.dr-mine .rt-traits { width: 220px; padding: 0 10px; }
+.dr-mine .dr-empty .rt-nm { color: var(--pw-text-3); font-style: italic; font-weight: 400; padding-left: 8px; }
+.dr-mine .rt-name > .rt-numsq:first-child, .dr-mine .rt-name > .avatar:first-child { margin-left: 8px; }
+.dr-pool .rt-name { min-width: 230px; }
+.dr-pool .rt-pick { height: 35px; }
+.dr-pool .rt-pick:disabled { cursor: default; }
+.dr-pool .dr-read { width: 110px; text-align: center; border-left: 1px solid var(--pw-hairline); }
+.dr-pool .dr-cards { width: 110px; padding: 0 10px; border-left: 1px solid var(--pw-hairline); }
+.dr-pool td.dr-cards .ss-open { flex-wrap: nowrap; white-space: nowrap; }
+.dr-pool .dr-by { width: 220px; padding: 0 10px; border-left: 1px solid var(--pw-hairline); white-space: nowrap; }
+.dr-pool td.dr-by { font-size: 14px; color: var(--pw-text-2); }
+.dr-pool td.dr-by .team-logo { margin-right: 8px; vertical-align: middle; }
+.dr-pool tr.taken th, .dr-pool tr.taken td { opacity: 0.4; }
+.dr-pool tr.selected th, .dr-pool tr.selected td { background: var(--pw-surface); }
+.dr-pool tr.selected th { box-shadow: inset 3px 0 0 var(--team-primary); }
+.ss-draft.season-setup { max-width: 960px; }
+.ss-draft .ss-dock-btn { max-width: 928px; }

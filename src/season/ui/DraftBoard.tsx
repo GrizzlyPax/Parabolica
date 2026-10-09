@@ -4,8 +4,12 @@
 // and sealed rarity dots; trait names show on your own picks alone.
 import { useEffect, useMemo, useState } from 'react';
 import { Avatar } from '../../icons/Avatar';
+import { RaceNumber } from '../../icons/RaceNumber';
+import { STAT_LABELS } from '../../cards/deck';
+import { overall, readStat } from '../grades';
+import { CAR_STATS, DRIVER_STATS, GradeCell, PAD, STAT_ABBR } from './RosterTable';
 import { portraitFor, vehicleFor } from '../../generators/avatars';
-import { GameIcon, TeamLogo, teamThemeVars } from '../../icons/GameIcon';
+import { TeamLogo, teamThemeVars } from '../../icons/GameIcon';
 import { CardDot } from '../../cards/CardFace';
 import type { FieldRank } from '../../betting/utils';
 import type { Card } from '../../cards/types';
@@ -96,41 +100,39 @@ export default function DraftBoard({ facts, onChange, onMenu, onDone, onEndSeaso
   };
 
   const total = pool.teams.length * 4;
+  // One pool row: tap the name to select. Rivals and the open pool read only
+  // Front / Middle / Back and sealed dots (Pax, Oct 9); your picks name their cards.
+  const poolRow = (kind: PickKind, id: number | string, name: JSX.Element, traits: Card[], rank?: FieldRank) => {
+    const owner = takenBy.get(`${kind}:${id}`);
+    const own = owner === viewer;
+    const canPick = !owner && !!picker && slot?.kind === kind;
+    return (
+      <tr key={id} className={`${owner ? 'taken' : ''} ${selected === id ? 'selected' : ''}`.trim()}>
+        <th className="rt-name" scope="row">
+          <button type="button" className="rt-pick" disabled={!canPick} onClick={() => setSelected(id)} aria-pressed={selected === id}>{name}</button>
+        </th>
+        <td className="dr-read">{owner ? null : <Third rank={rank} />}</td>
+        <td className="dr-cards">{own ? <Open traits={traits} /> : <Sealed traits={traits} />}</td>
+        <td className="dr-by">{owner && <><TeamLogo team={teams[owner]} size={16} /><span>{own ? `${teams[owner].name} · ${label(owner)}` : teams[owner].name}</span></>}</td>
+      </tr>
+    );
+  };
   const driverRow = (d: PoolDriver) => {
     const owner = takenBy.get(`driver:${d.id}`);
-    const own = owner === viewer;
-    const canPick = !owner && picker && slot?.kind === 'driver';
-    return (
-      <li key={d.id}>
-        <button type="button" className={`ss-pick ${owner ? 'taken' : ''} ${selected === d.id ? 'selected' : ''}`} disabled={!canPick} onClick={() => setSelected(d.id)} aria-pressed={selected === d.id}>
-          <span className="ss-num">{d.number}</span>
-          <Avatar icon={portraitFor(pool.seed, d.id)} color={owner ? teams[owner].color : undefined} size={22} />
-          <span className="ss-pick-main">
-            <span className="ss-pick-name">{d.fullName}</span>
-            {own ? <Open traits={d.traits} /> : <Sealed traits={d.traits} />}
-          </span>
-          {owner ? <TeamLogo team={teams[owner]} size={16} /> : <Third rank={state.ranks.driver.get(d.id)} />}
-        </button>
-      </li>
-    );
+    const t = owner ? teams[owner] : null;
+    return poolRow('driver', d.id, (
+      <>
+        {t ? <RaceNumber n={d.number} color={t.color} ink={t.ink} size={22} shape="square" className="rt-numsq" /> : <RaceNumber n={d.number} color="var(--pw-ground)" ink="var(--pw-text-1)" ring size={22} shape="square" className="rt-numsq" />}
+        <Avatar icon={portraitFor(pool.seed, d.id)} color={t?.color} size={20} />
+        <span className="rt-nm">{d.fullName}</span>
+      </>
+    ), d.traits, state.ranks.driver.get(d.id));
   };
   const carRow = (c: RackCar) => {
     const owner = takenBy.get(`car:${c.id}`);
-    const own = owner === viewer;
-    const canPick = !owner && picker && slot?.kind === 'car';
-    return (
-      <li key={c.id}>
-        <button type="button" className={`ss-pick ${owner ? 'taken' : ''} ${selected === c.id ? 'selected' : ''}`} disabled={!canPick} onClick={() => setSelected(c.id)} aria-pressed={selected === c.id}>
-          <span className="ss-num" />
-          <Avatar icon={vehicleFor(pool.seed, c.id)} color={owner ? teams[owner].color : undefined} size={26} />
-          <span className="ss-pick-main">
-            <span className="ss-pick-name">{c.name}</span>
-            {own ? <Open traits={c.traits} /> : <Sealed traits={c.traits} />}
-          </span>
-          {owner ? <TeamLogo team={teams[owner]} size={16} /> : <Third rank={state.ranks.car.get(c.id)} />}
-        </button>
-      </li>
-    );
+    return poolRow('car', c.id, (
+      <><Avatar icon={vehicleFor(pool.seed, c.id)} color={owner ? teams[owner].color : undefined} size={26} /><span className="rt-nm">{c.name}</span></>
+    ), c.traits, state.ranks.car.get(c.id));
   };
   const chosen = selected == null ? null : slot?.kind === 'driver' ? pool.drivers.find(d => d.id === selected) : pool.cars.find(c => c.id === selected);
 
@@ -150,36 +152,65 @@ export default function DraftBoard({ facts, onChange, onMenu, onDone, onEndSeaso
           <span className="rs-k">{hotseat ? `${label(viewer)} · ${you.name}` : 'Your team'}</span>
           <span className="ss-roster-logo"><TeamLogo team={you} size={20} /></span>
         </div>
-        <ol className="ss-roster">
-          {[0, 1, 2].map(i => {
-            const d = pool.drivers.find(x => x.id === mine.driverIds[i]);
-            return (
-              <li key={i} className={`ss-roster-slot ${d ? '' : 'empty'}`}>
-                <span className="ss-num">{d ? d.number : ''}</span>
-                {d && <Avatar icon={portraitFor(pool.seed, d.id)} color={you.color} size={22} />}
-                <span className="ss-pick-main">
-                  <span className="ss-pick-name">{d ? d.fullName : `Driver ${i + 1}`}</span>
-                  {d && <Open traits={d.traits} />}
-                </span>
-                {d && <Third rank={state.ranks.driver.get(d.id)} />}
-              </li>
-            );
-          })}
-          {(() => {
-            const c = pool.cars.find(x => x.id === mine.carId);
-            return (
-              <li className={`ss-roster-slot ${c ? '' : 'empty'}`}>
-                <span className="ss-num">{c ? null : <GameIcon name="card.upgrade" size={14} />}</span>
-                {c && <Avatar icon={vehicleFor(pool.seed, c.id)} color={you.color} size={26} />}
-                <span className="ss-pick-main">
-                  <span className="ss-pick-name">{c ? c.name : 'Car (last round)'}</span>
-                  {c && <Open traits={c.traits} />}
-                </span>
-                {c && <Third rank={state.ranks.car.get(c.id)} />}
-              </li>
-            );
-          })()}
-        </ol>
+        <p className="rs-hint">Your picks show grades. Rivals and the pool stay sealed until the season starts.</p>
+        <div className="rt-scroll">
+          <table className="rt dr-mine">
+            <thead>
+              <tr>
+                <th className="rt-name">Driver</th>
+                <th className="rt-oc">OVR</th>
+                {DRIVER_STATS.map(st => <th key={st} className="rt-stat" title={STAT_LABELS[st]}>{STAT_ABBR[st]}</th>)}
+                <th className="rt-traits">Traits</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[0, 1, 2].map(i => {
+                const d = pool.drivers.find(x => x.id === mine.driverIds[i]);
+                if (!d) return (
+                  <tr key={i} className="dr-empty">
+                    <th className="rt-name" scope="row"><span className="rt-nm">Driver {i + 1}</span></th>
+                    <td className="rt-cell" />{DRIVER_STATS.map(st => <td key={st} className="rt-cell" />)}<td className="rt-traits" />
+                  </tr>
+                );
+                const reads = DRIVER_STATS.map(st => readStat(st, d.stats[st as keyof typeof d.stats], d.traits));
+                return (
+                  <tr key={i}>
+                    <th className="rt-name" scope="row"><RaceNumber n={d.number} color={you.color} ink={you.ink} size={24} shape="square" className="rt-numsq" /><Avatar icon={portraitFor(pool.seed, d.id)} color={you.color} size={22} /><span className="rt-nm">{d.fullName}</span></th>
+                    <GradeCell value={overall(reads).total} strong />
+                    {reads.map(r => <GradeCell key={r.stat} value={r.total} notch={r.parts.length > 0} />)}
+                    <td className="rt-traits"><Open traits={d.traits} /></td>
+                  </tr>
+                );
+              })}
+              <tr className="rt-sub">
+                <th className="rt-name">Car</th>
+                <th className="rt-oc">OVR</th>
+                {CAR_STATS.map(st => <th key={st} className="rt-stat" title={STAT_LABELS[st]}>{STAT_ABBR[st]}</th>)}
+                {Array.from({ length: PAD + 2 }, (_, i) => <th key={i} className="rt-stat rt-pad" />)}
+                <th className="rt-traits" />
+              </tr>
+              {(() => {
+                const c = pool.cars.find(x => x.id === mine.carId);
+                if (!c) return (
+                  <tr className="dr-empty">
+                    <th className="rt-name" scope="row"><span className="rt-nm">Car · last round</span></th>
+                    <td className="rt-cell" />{DRIVER_STATS.map(st => <td key={st} className="rt-cell" />)}<td className="rt-traits" />
+                  </tr>
+                );
+                const reads = CAR_STATS.map(st => readStat(st, c.stats[st as keyof typeof c.stats], c.traits));
+                return (
+                  <tr>
+                    <th className="rt-name" scope="row"><Avatar icon={vehicleFor(pool.seed, c.id)} color={you.color} size={26} /><span className="rt-nm">{c.name}</span></th>
+                    <GradeCell value={overall(reads).total} strong />
+                    {reads.map(r => <GradeCell key={r.stat} value={r.total} notch={r.parts.length > 0} />)}
+                    {Array.from({ length: PAD + 2 }, (_, i) => <td key={i} className="rt-cell rt-pad" />)}
+                    <td className="rt-traits"><Open traits={c.traits} /></td>
+                  </tr>
+                );
+              })()}
+            </tbody>
+          </table>
+        </div>
       </section>
 
       {state.done ? (
@@ -196,8 +227,13 @@ export default function DraftBoard({ facts, onChange, onMenu, onDone, onEndSeaso
             </div>
             <button type="button" className="rs-link" onClick={quick}>{confirmQuick ? 'Sim the rest, your picks too?' : 'Quick Draft'}</button>
           </div>
-          <p className="rs-hint">Front / Middle / Back: where they sit in this pool. Dots are sealed cards; you see yours once they’re drafted.</p>
-          <ol className="ss-board">{tab === 'driver' ? pool.drivers.map(driverRow) : pool.cars.map(carRow)}</ol>
+          <p className="rs-hint">Read: where they sit in this pool (Front / Middle / Back). Dots are sealed cards, by metal; you see yours once they’re drafted.</p>
+          <div className="rt-scroll">
+            <table className="rt rt-compact dr-pool">
+              <thead><tr><th className="rt-name">{tab === 'driver' ? 'Driver' : 'Car'}</th><th className="dr-read">Read</th><th className="dr-cards">Cards</th><th className="dr-by">Drafted by</th></tr></thead>
+              <tbody>{tab === 'driver' ? pool.drivers.map(driverRow) : pool.cars.map(carRow)}</tbody>
+            </table>
+          </div>
         </section>
       )}
 

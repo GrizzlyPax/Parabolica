@@ -6,6 +6,19 @@
 import { GameIcon } from '../../icons/GameIcon';
 import { STAT_LABELS } from '../../cards/deck';
 import { grade, gradeTone, type StatReading } from '../grades';
+import type { StatKey } from '../../cards/types';
+
+/** The table columns, in order: a driver row, then car + team under one sub-header. */
+export const DRIVER_STATS: StatKey[] = ['baseSpeed', 'consistency', 'luck', 'acceleration', 'endurance', 'aggression'];
+export const CAR_STATS: StatKey[] = ['power', 'grip', 'reliability'];
+export const TEAM_STATS: StatKey[] = ['tireManagement', 'pitCrew'];
+export const CT_STATS: StatKey[] = [...CAR_STATS, ...TEAM_STATS];
+/** Blank cells that square the car/team rows up with the driver rows. */
+export const PAD = DRIVER_STATS.length - CT_STATS.length;
+export const STAT_ABBR: Record<StatKey, string> = {
+  baseSpeed: 'SPD', consistency: 'CON', luck: 'LCK', acceleration: 'ACC', endurance: 'END', aggression: 'AGG',
+  power: 'PWR', grip: 'GRP', reliability: 'REL', tireManagement: 'TYR', pitCrew: 'PIT',
+};
 
 interface GradeCellProps {
   /** On the 0–100 scale (may pass 100: S). */
