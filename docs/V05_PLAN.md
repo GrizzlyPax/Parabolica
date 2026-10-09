@@ -116,6 +116,8 @@ Teams 5–10, default 10 · 10-race default · free lineups · bench keeps gear 
 
 **Balance bump shipped (Pax, Oct 9):** v0.5.1 (#503), merged by Pit with Pax's OK · Speed nudge = **Speed 0.115 · Power 0.0078 · Grip 0.17** (Speed clearly king: 25% vs 18%) · known gap: the car is 33% of a team vs the 42% target (a separate pass if wanted) · **the champion bonus is axed: two championships, Drivers' and Constructors', like real F1** (#509; the +50 flipped 28% of titles)
 
+**Hub, Oct 9 (#489, #361, #453):** vehicles + portraits shipped (white until drafted, then team colour) · Run Setup and the Paddock say "Priority stats … (+10%), for everyone" · roster tables in League Setup, World Deck, the Draft (your picks graded, the pool shows the read + sealed dots) and the finale · **Draft A and Finale A are Hub's picks** ([mock-ups](https://claude.ai/artifact/V5866a3hGPkgdo2nGyZsVD)); Pax can switch either to B
+
 **Qualifying (Pax, Oct 9):** both pieces open **v0.6**: Steward designs whether qualifying becomes a driver stat (#496) first, then Hub builds the qualifying show once (#495: drivers go out in turn, times drop onto a board, the grid forms; watch or skip)
 
 **Vehicles + portraits (Pax, Oct 9, via Radio; [docs/story/vehicles-portraits.md](story/vehicles-portraits.md)):** 90% normal (f1-car · full-motorcycle-helmet) · 8% road / works vehicles and paddock faces · 2% oddballs, about 1–3 per season; don't drift the weights up · themed icons (tanks, clowns, plague doctors…) held back for themed decks (#485) · f1-car leaves the team-creator logo picker (speed-boat replaces it) · undrafted icons white, team colour once picked · **desktop matters, not just phone**
