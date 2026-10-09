@@ -60,7 +60,7 @@ export const RULE_CARDS: RuleCard[] = [
   { id: 'tough-tyres', name: 'Tough Tyres', emoji: '🪨', scope: 'both', weight: 'mild',
     blurb: 'A rubber compound from a kinder era.',
     readout: 'Tyres wear half as fast. Fewer stops.',
-    patch: { scale: [['tires.soft.lifeLaps', 2], ['tires.medium.lifeLaps', 2], ['tires.hard.lifeLaps', 2]] } },
+    patch: { scale: [['tires.soft.lifeShare', 2], ['tires.medium.lifeShare', 2], ['tires.hard.lifeShare', 2]] } },
   { id: 'fast-pit-crews', name: 'Fast Pit Crews', emoji: '🏎️', scope: 'both', weight: 'mild',
     blurb: 'Every crew drilled all winter.',
     readout: 'Pit stops 25% quicker; fewer fumbled stops.',
@@ -68,7 +68,7 @@ export const RULE_CARDS: RuleCard[] = [
   { id: 'no-pit-rules', name: 'No Pit Rules', emoji: '🔓', scope: 'both', weight: 'wild',
     blurb: 'The stewards went home. Run one hard set all day or stop six times for softs.',
     readout: 'No minimum stops, no compound rule. Anything goes.',
-    patch: { simVars: { pits: { minStops: 0, requireAllCompounds: false } } } },
+    patch: { simVars: { pits: { minStops: 0, requireCompoundChange: false, requireAllCompounds: false } } } },
 ];
 
 export const RULE_CARDS_BY_ID: Map<string, RuleCard> = new Map(RULE_CARDS.map(c => [c.id, c]));

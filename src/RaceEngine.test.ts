@@ -171,9 +171,9 @@ describe('engine layers on a card-free grid', () => {
     }
   });
 
-  it('lastPitLapBuffer is a live knob (no farcical final-lap stops) — #195', () => {
-    // The pit-window decision now routes the late-race cutoff through one knob
-    // (pits.lastPitLapBuffer) instead of inconsistent inline literals. Cranking
+  it('lastPitShare is a live knob (no farcical final-lap stops) — #195 / #534', () => {
+    // The pit-window decision routes the late-race cutoff through one knob
+    // (pits.lastPitShare, a share of the race) instead of inline literals. Cranking
     // it up must change races: it suppresses non-critical stops in the closing
     // laps (a stop you can't recover the pit-loss from before the flag is
     // strictly worse than running a compound short — there's no penalty for
@@ -181,7 +181,7 @@ describe('engine layers on a card-free grid', () => {
     const base = cleanRoster();
     const wideBuffer = {
       ...CANON_VARIABLES,
-      pits: { ...CANON_VARIABLES.pits, lastPitLapBuffer: 8 },
+      pits: { ...CANON_VARIABLES.pits, lastPitShare: 0.5 },
     };
     const runWith = (vars: typeof CANON_VARIABLES, seed: number) => {
       const grid = structuredClone(base);
@@ -459,22 +459,43 @@ describe('the stop rule at the flag (#249 / #246)', () => {
     return engine.runHeadless(seed);
   };
 
-  it('at canon every classified driver makes 2 stops on 3 compounds, or is penalised', () => {
-    const { drivers } = run({});
-    const finishers = drivers.filter(d => d.status === 'finished');
-    expect(finishers.length).toBeGreaterThan(5);
-    for (const d of finishers) {
-      const ok = d.pitStops.length >= 2 && new Set(d.usedCompounds).size === 3;
-      if (ok) expect(d.penaltyTicks).toBe(0);
-      else { expect(d.penaltyTicks).toBeGreaterThan(0); expect(d.penaltyReason).toBeTruthy(); }
+  it('at canon (#534, real F1) every classified driver stops once on two compounds, or is penalised', () => {
+    let penalised = 0;
+    for (const seed of [0x249, 0x24a, 0x24b]) {
+      const { drivers } = run({}, seed);
+      const finishers = drivers.filter(d => d.status === 'finished');
+      expect(finishers.length).toBeGreaterThan(5);
+      for (const d of finishers) {
+        const ok = d.pitStops.length >= 1 && new Set(d.usedCompounds).size >= 2;
+        if (ok) expect(d.penaltyTicks).toBe(0);
+        else { penalised++; expect(d.penaltyTicks).toBeGreaterThan(0); expect(d.penaltyReason).toBeTruthy(); }
+      }
     }
+    // The rule is met by racing, not by penalties: nearly everyone stops and changes.
+    expect(penalised).toBeLessThan(3);
+  });
+
+  it('the last planned stop stays out of the closing window (#534)', () => {
+    // pit_entry logs the decision with lap = currentLap + 1, so laps left at the
+    // decision = laps − lap + 1. A planned stop ("ahead of the cliff", "the rule",
+    // "safety car") needs more than the window left; only the cliff may box later.
+    const window = Math.max(1, Math.round(CANON_VARIABLES.pits.lastPitShare * track.laps));
+    let planned = 0;
+    for (const seed of [0x249, 0x24a, 0x24b, 0x24c]) {
+      const { events } = run({}, seed);
+      for (const e of events.filter(e => e.type === 'pit_entry')) {
+        const lapsLeft = track.laps - (e.lap ?? 0) + 1;
+        if (!/— cliff$/.test(e.description)) { planned++; expect(lapsLeft, `${e.description} with ${lapsLeft} laps left`).toBeGreaterThan(window); }
+      }
+    }
+    expect(planned).toBeGreaterThan(20);
   });
 
   it('a penalty is time, not laps: it reorders within the lead lap', () => {
     // Tyres that never wear and no room to pit voluntarily → nobody stops,
     // everyone owes the rule; the classification must follow finishTick + penalty.
-    const { drivers, raceState } = run({ minStops: 1, requireAllCompounds: false, lastPitLapBuffer: 40, penaltyLapFraction: 0.5 }, 0x249,
-      { soft: { ...CANON_VARIABLES.tires.soft, lifeLaps: 100 }, medium: { ...CANON_VARIABLES.tires.medium, lifeLaps: 100 }, hard: { ...CANON_VARIABLES.tires.hard, lifeLaps: 100 } });
+    const { drivers, raceState } = run({ minStops: 1, requireCompoundChange: false, requireAllCompounds: false, lastPitShare: 1, penaltyLapFraction: 0.5 }, 0x249,
+      { soft: { ...CANON_VARIABLES.tires.soft, lifeShare: 10 }, medium: { ...CANON_VARIABLES.tires.medium, lifeShare: 10 }, hard: { ...CANON_VARIABLES.tires.hard, lifeShare: 10 } });
     const byId = new Map(drivers.map(d => [d.id, d]));
     const lead = raceState.finishOrder.map(id => byId.get(id)!).filter(d => d.status === 'finished' && d.lapsBehind === 0);
     expect(lead.some(d => d.penaltyTicks > 0)).toBe(true);
@@ -483,15 +504,18 @@ describe('the stop rule at the flag (#249 / #246)', () => {
     }
   });
 
-  it('No Pit Rules: minStops 0 and no compound rule → no penalties, fewer stops', () => {
+  it('No Pit Rules: no minimum, no compound rule → no penalties; the tyres alone still make people stop', () => {
     const strict = run({});
-    const loose = run({ minStops: 0, requireAllCompounds: false });
+    const loose = run({ minStops: 0, requireCompoundChange: false, requireAllCompounds: false });
     expect(loose.drivers.every(d => d.penaltyTicks === 0)).toBe(true);
     const stops = (r: typeof strict) => r.drivers.filter(d => d.status === 'finished').reduce((s, d) => s + d.pitStops.length, 0) / Math.max(1, r.drivers.filter(d => d.status === 'finished').length);
-    expect(stops(loose)).toBeLessThan(stops(strict));
+    // Since #534 the canon rule is one stop + a change, which the tyres force
+    // anyway (soft lasts a third of the race), so No Pit Rules barely moves stops.
+    expect(stops(loose)).toBeLessThanOrEqual(stops(strict));
+    expect(stops(loose)).toBeGreaterThan(0.5);
   });
 
-  it('tyre life is in laps: a 2× longer race needs more stops', () => {
+  it('tyre life is a share of the race (#534): a 2× longer race plans about the same stops', () => {
     const go = (laps: number) => {
       const engine = RaceEngine.createForWorker(CANON_VARIABLES, 7);
       engine.loadGeneratedRoster(generateGenesisRoster(7, TEAMS.slice(0, 6).map(t => t.id)));
@@ -500,7 +524,34 @@ describe('the stop rule at the flag (#249 / #246)', () => {
       const f = drivers.filter(d => d.status === 'finished');
       return f.reduce((s, d) => s + d.pitStops.length, 0) / Math.max(1, f.length);
     };
-    expect(go(32)).toBeGreaterThan(go(16) + 1);
+    expect(Math.abs(go(32) - go(16))).toBeLessThan(1);
+  });
+
+  it('tyre luck (#535) is hidden, seeded and off-stream: turning it off changes races but not the replay', () => {
+    const a = run({}, 0x535), b = run({}, 0x535);
+    expect(b.events).toEqual(a.events);
+    const noLuck = (() => {
+      const engine = RaceEngine.createForWorker({ ...CANON_VARIABLES, tires: { ...CANON_VARIABLES.tires, setLifeLuck: 0 } }, 0x535);
+      engine.loadGeneratedRoster(generateGenesisRoster(0x535, TEAMS.slice(0, 6).map(t => t.id)));
+      engine.updateConfig({ totalLaps: track.laps, lapLength: track.length, maxStoredEvents: Number.MAX_SAFE_INTEGER });
+      return engine.runHeadless(0x535);
+    })();
+    expect(noLuck.events).not.toEqual(a.events);
+  });
+
+  it('the track wear dial (#536) is live: a hungrier track means more stops', () => {
+    const go = (tyreWear: number) => {
+      let stops = 0, n = 0;
+      for (const seed of [0x536, 0x537, 0x538]) {
+        const engine = RaceEngine.createForWorker(CANON_VARIABLES, seed);
+        engine.loadGeneratedRoster(generateGenesisRoster(seed, TEAMS.slice(0, 6).map(t => t.id)));
+        engine.updateConfig({ totalLaps: track.laps, lapLength: track.length, tyreWear });
+        const { drivers } = engine.runHeadless(seed);
+        for (const d of drivers.filter(d => d.status === 'finished')) { stops += d.pitStops.length; n++; }
+      }
+      return stops / Math.max(1, n);
+    };
+    expect(go(1.6)).toBeGreaterThan(go(0.7));
   });
 });
 
@@ -569,7 +620,7 @@ describe('overtaking is an event (#246 pass 3)', () => {
   it('the grid predicts the result better than a lottery', () => {
     // Over a few seeds, the pole-sitter finishes in the top half far more often than 50%.
     let topHalf = 0, n = 0;
-    for (const seed of [41, 42, 43, 44, 45, 46]) {
+    for (const seed of [41, 42, 43, 44, 45, 46, 47, 48, 49, 50]) {
       const { engine, raceState } = run(seed);
       const pole = engine.getGridOrder()[0];
       const pos = raceState.finishOrder.indexOf(pole);
@@ -599,5 +650,23 @@ describe('qualifying show (#495)', () => {
     const b = build().runHeadless();
     expect(a.raceState.finishOrder).toEqual(b.raceState.finishOrder);
     expect(a.raceState.totalTicks).toBe(b.raceState.totalTicks);
+  });
+});
+
+describe('acceleration doubles as one-lap pace (#496)', () => {
+  const track = CURRENT_TRACKS[0];
+  it('a higher Acceleration qualifies better on the same seed; the weight is a live knob', () => {
+    const quali = (acc: number, weight = CANON_VARIABLES.grid.qualiAccelWeight) => {
+      const engine = RaceEngine.createForWorker({ ...CANON_VARIABLES, grid: { ...CANON_VARIABLES.grid, qualiAccelWeight: weight } }, 0x496);
+      const roster = generateGenesisRoster(0x496, GRID_TEAM_IDS).map((d, i) => i === 0 ? { ...d, stats: { ...d.stats, acceleration: acc } } : d);
+      engine.loadGeneratedRoster(roster);
+      engine.updateConfig({ totalLaps: track.laps, lapLength: track.length });
+      return engine.qualifyingLaps()[0].score;
+    };
+    expect(quali(1.15)).toBeGreaterThan(quali(0.85));
+    // ~+1% per 0.1 step at the canon weight
+    expect(quali(1.1) / quali(1.0)).toBeCloseTo(1 + 0.1 * CANON_VARIABLES.grid.qualiAccelWeight, 6);
+    // weight 0 → acceleration is not a one-lap stat
+    expect(quali(1.15, 0)).toBeCloseTo(quali(0.85, 0), 9);
   });
 });

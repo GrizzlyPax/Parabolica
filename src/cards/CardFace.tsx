@@ -54,7 +54,7 @@ function Face({ card, mini }: { card: Card; mini: boolean }) {
       <div className="cf-desc">
         {card.kind === 'effect'
           ? <div>{STAT_LABELS[card.stats[0].stat]} <b>{card.direction === 'up' ? '▲ up' : '▼ down'}</b></div>
-          : card.stats.map(s => <div key={s.stat}><b>+{s.pct}%</b> {STAT_LABELS[s.stat]}</div>)}
+          : card.stats.map(s => <div key={s.stat}><b>+{s.pct}</b> {STAT_LABELS[s.stat]}</div>)}
       </div>
       <div className="cf-no">{cardNumber(card)}</div>
     </div>

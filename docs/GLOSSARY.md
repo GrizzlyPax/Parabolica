@@ -1,6 +1,6 @@
 # Parabolica World Deck
 
-*Everything in the sim and the world, generated from the data modules by `npm run glossary` — do not edit by hand; edit the source files named in each section and re-run. Engine v0.5.1. How to add content: docs/WORLD_DECK.md.*
+*Everything in the sim and the world, generated from the data modules by `npm run glossary` — do not edit by hand; edit the source files named in each section and re-run. Engine v0.6.0. How to add content: docs/WORLD_DECK.md.*
 
 28 teams · 6 tracks · 94 cards (36 traits · 36 gear · 22 effects) · 5 in-race effects · 12 rule cards · 6 weathers
 
@@ -58,29 +58,29 @@
 
 ## Tracks
 
-*Source: `src/data/deckTracks.ts` (docs/TRACKS_WEATHER.md). Six stat-combo tracks; each favours one driver stat and one car/team stat for the race, field-wide (+10%, through the card math at race build). Every race and season calendar draws from these; the 31 themed circuits, track events and track characters retired with Tracks & Weather v2.*
+*Source: `src/data/deckTracks.ts` (docs/TRACKS_WEATHER.md). Six stat-combo tracks; each favours one driver stat and one car/team stat for the race, field-wide (+10 grade points, through the card math at race build). Each has a tyre-wear dial (#536): wear per tick × `tyreWear`. Every race and season calendar draws from these; the 31 themed circuits, track events and track characters retired with Tracks & Weather v2.*
 
-| Track | Favours | Layout |
-|---|---|---|
-| **Speed + Power** `speed-power` | +10% Speed · +10% Power | power |
-| **Consistency + Grip** `consistency-grip` | +10% Consistency · +10% Grip | technical |
-| **Aggression + Reliability** `aggression-reliability` | +10% Aggression · +10% Reliability | street |
-| **Endurance + Tyre Management** `endurance-tyre-management` | +10% Endurance · +10% Tyre Management | flowing |
-| **Acceleration + Pit Crew** `acceleration-pit-crew` | +10% Acceleration · +10% Pit Crew | modern |
-| **Luck + Reliability** `luck-reliability` | +10% Luck · +10% Reliability | classic |
+| Track | Favours | Tyre wear | Layout |
+|---|---|---|---|
+| **Speed + Power** `speed-power` | +10 Speed · +10 Power | ×0.85 | power |
+| **Consistency + Grip** `consistency-grip` | +10 Consistency · +10 Grip | ×1.1 | technical |
+| **Aggression + Reliability** `aggression-reliability` | +10 Aggression · +10 Reliability | ×1 | street |
+| **Endurance + Tyre Management** `endurance-tyre-management` | +10 Endurance · +10 Tyre Management | ×1.25 | flowing |
+| **Acceleration + Pit Crew** `acceleration-pit-crew` | +10 Acceleration · +10 Pit Crew | ×1.15 | modern |
+| **Luck + Reliability** `luck-reliability` | +10 Luck · +10 Reliability | ×0.95 | classic |
 
 ## Weather
 
-*Source: `src/data/deckWeather.ts`. Neutral + five dry weathers, favours × intensity, stacking with the track. No rain until Wet arrives in v0.6; the old weathers and the inflictions retired (the inflictions are parked as Horror-deck material).*
+*Source: `src/data/deckWeather.ts`. Neutral + five dry weathers, favours (grade points) × intensity, stacking with the track. No rain until Wet arrives in v0.6; the old weathers and the inflictions retired (the inflictions are parked as Horror-deck material).*
 
 | Weather | Odds | Favours |
 |---|---|---|
 | **Neutral** `neutral` | 60% | — |
-| **Speed + Tyre Management** `speed-tyre-management` | 8% | +10% Speed · +10% Tyre Management |
-| **Consistency + Pit Crew** `consistency-pit-crew` | 8% | +10% Consistency · +10% Pit Crew |
-| **Acceleration + Reliability** `acceleration-reliability` | 8% | +10% Acceleration · +10% Reliability |
-| **Endurance + Power** `endurance-power` | 8% | +10% Endurance · +10% Power |
-| **Aggression + Grip** `aggression-grip` | 8% | +10% Aggression · +10% Grip |
+| **Speed + Tyre Management** `speed-tyre-management` | 8% | +10 Speed · +10 Tyre Management |
+| **Consistency + Pit Crew** `consistency-pit-crew` | 8% | +10 Consistency · +10 Pit Crew |
+| **Acceleration + Reliability** `acceleration-reliability` | 8% | +10 Acceleration · +10 Reliability |
+| **Endurance + Power** `endurance-power` | 8% | +10 Endurance · +10 Power |
+| **Aggression + Grip** `aggression-grip` | 8% | +10 Aggression · +10 Grip |
 
 
 ## How genesis traits are rolled
@@ -91,7 +91,7 @@ Each driver gets three slots: driver, car (their own chassis), team (one roll, s
 2. **Which metal?** 60% bronze · 30% silver · 9% gold · 1% iridium. Fixed odds — adding cards to a metal never changes how often it comes up, only which card you get.
 3. **Which card?** An even pick among that metal's trait cards for the slot. An empty metal falls to the next more common one.
 
-A card adds grade points to its stats at race build (src/cards/apply.ts): bronze 1 stat × +2 · silver 1 stat × +5 · gold 2 stats × +10 · iridium 3 stats × +15. Rule cards change the hit chance and the odds. Season Mode deals gear from packs the same way (docs/CARDS.md).
+A card adds grade points to its stats at race build (src/cards/apply.ts): bronze 1 stat × +5 · silver 1 stat × +10 · gold 2 stats × +10 · iridium 3 stats × +15. Rule cards change the hit chance and the odds. Season Mode deals gear from packs the same way (docs/CARDS.md).
 
 ## The Motorsport deck
 
@@ -99,78 +99,78 @@ A card adds grade points to its stats at race build (src/cards/apply.ts): bronze
 
 | Card | Kind | On | Metal | Does |
 |---|---|---|---|---|
-| **Bronze Speed** `eq-bronze-speed` | equipment | driver | bronze | +2% Speed |
-| **Bronze Consistency** `eq-bronze-consistency` | equipment | driver | bronze | +2% Consistency |
-| **Bronze Luck** `eq-bronze-luck` | equipment | driver | bronze | +2% Luck |
-| **Bronze Acceleration** `eq-bronze-acceleration` | equipment | driver | bronze | +2% Acceleration |
-| **Bronze Endurance** `eq-bronze-endurance` | equipment | driver | bronze | +2% Endurance |
-| **Bronze Aggression** `eq-bronze-aggression` | equipment | driver | bronze | +2% Aggression |
-| **Silver Speed** `eq-silver-speed` | equipment | driver | silver | +5% Speed |
-| **Silver Consistency** `eq-silver-consistency` | equipment | driver | silver | +5% Consistency |
-| **Silver Luck** `eq-silver-luck` | equipment | driver | silver | +5% Luck |
-| **Silver Acceleration** `eq-silver-acceleration` | equipment | driver | silver | +5% Acceleration |
-| **Silver Endurance** `eq-silver-endurance` | equipment | driver | silver | +5% Endurance |
-| **Silver Aggression** `eq-silver-aggression` | equipment | driver | silver | +5% Aggression |
-| **Gold Speed + Consistency** `eq-gold-speed+consistency` | equipment | driver | gold | +10% Speed · +10% Consistency |
-| **Gold Consistency + Luck** `eq-gold-consistency+luck` | equipment | driver | gold | +10% Consistency · +10% Luck |
-| **Gold Luck + Acceleration** `eq-gold-luck+acceleration` | equipment | driver | gold | +10% Luck · +10% Acceleration |
-| **Gold Acceleration + Endurance** `eq-gold-acceleration+endurance` | equipment | driver | gold | +10% Acceleration · +10% Endurance |
-| **Gold Endurance + Aggression** `eq-gold-endurance+aggression` | equipment | driver | gold | +10% Endurance · +10% Aggression |
-| **Gold Aggression + Speed** `eq-gold-aggression+speed` | equipment | driver | gold | +10% Aggression · +10% Speed |
-| **Iridium Speed + Acceleration + Aggression** `eq-iridium-speed+acceleration+aggression` | equipment | driver | iridium | +15% Speed · +15% Acceleration · +15% Aggression |
-| **Iridium Consistency + Endurance + Luck** `eq-iridium-consistency+endurance+luck` | equipment | driver | iridium | +15% Consistency · +15% Endurance · +15% Luck |
-| **Bronze Power** `up-bronze-power` | upgrade | car | bronze | +2% Power |
-| **Bronze Grip** `up-bronze-grip` | upgrade | car | bronze | +2% Grip |
-| **Bronze Reliability** `up-bronze-reliability` | upgrade | car | bronze | +2% Reliability |
-| **Silver Power** `up-silver-power` | upgrade | car | silver | +5% Power |
-| **Silver Grip** `up-silver-grip` | upgrade | car | silver | +5% Grip |
-| **Silver Reliability** `up-silver-reliability` | upgrade | car | silver | +5% Reliability |
-| **Gold Power + Grip** `up-gold-power+grip` | upgrade | car | gold | +10% Power · +10% Grip |
-| **Gold Grip + Reliability** `up-gold-grip+reliability` | upgrade | car | gold | +10% Grip · +10% Reliability |
-| **Gold Reliability + Power** `up-gold-reliability+power` | upgrade | car | gold | +10% Reliability · +10% Power |
-| **Iridium Power + Grip + Reliability** `up-iridium-power+grip+reliability` | upgrade | car | iridium | +15% Power · +15% Grip · +15% Reliability |
-| **Bronze Tyre Management** `fa-bronze-tyre-management` | facility | team | bronze | +2% Tyre Management |
-| **Bronze Pit Crew** `fa-bronze-pit-crew` | facility | team | bronze | +2% Pit Crew |
-| **Silver Tyre Management** `fa-silver-tyre-management` | facility | team | silver | +5% Tyre Management |
-| **Silver Pit Crew** `fa-silver-pit-crew` | facility | team | silver | +5% Pit Crew |
-| **Gold Tyre Management + Pit Crew** `fa-gold-tyre-management+pit-crew` | facility | team | gold | +10% Tyre Management · +10% Pit Crew |
-| **Iridium Tyre Management + Pit Crew** `fa-iridium-tyre-management+pit-crew` | facility | team | iridium | +15% Tyre Management · +15% Pit Crew |
-| **Bronze Speed** `tr-driver-bronze-speed` | trait | driver | bronze | +2% Speed |
-| **Bronze Consistency** `tr-driver-bronze-consistency` | trait | driver | bronze | +2% Consistency |
-| **Bronze Luck** `tr-driver-bronze-luck` | trait | driver | bronze | +2% Luck |
-| **Bronze Acceleration** `tr-driver-bronze-acceleration` | trait | driver | bronze | +2% Acceleration |
-| **Bronze Endurance** `tr-driver-bronze-endurance` | trait | driver | bronze | +2% Endurance |
-| **Bronze Aggression** `tr-driver-bronze-aggression` | trait | driver | bronze | +2% Aggression |
-| **Silver Speed** `tr-driver-silver-speed` | trait | driver | silver | +5% Speed |
-| **Silver Consistency** `tr-driver-silver-consistency` | trait | driver | silver | +5% Consistency |
-| **Silver Luck** `tr-driver-silver-luck` | trait | driver | silver | +5% Luck |
-| **Silver Acceleration** `tr-driver-silver-acceleration` | trait | driver | silver | +5% Acceleration |
-| **Silver Endurance** `tr-driver-silver-endurance` | trait | driver | silver | +5% Endurance |
-| **Silver Aggression** `tr-driver-silver-aggression` | trait | driver | silver | +5% Aggression |
-| **Gold Speed + Consistency** `tr-driver-gold-speed+consistency` | trait | driver | gold | +10% Speed · +10% Consistency |
-| **Gold Consistency + Luck** `tr-driver-gold-consistency+luck` | trait | driver | gold | +10% Consistency · +10% Luck |
-| **Gold Luck + Acceleration** `tr-driver-gold-luck+acceleration` | trait | driver | gold | +10% Luck · +10% Acceleration |
-| **Gold Acceleration + Endurance** `tr-driver-gold-acceleration+endurance` | trait | driver | gold | +10% Acceleration · +10% Endurance |
-| **Gold Endurance + Aggression** `tr-driver-gold-endurance+aggression` | trait | driver | gold | +10% Endurance · +10% Aggression |
-| **Gold Aggression + Speed** `tr-driver-gold-aggression+speed` | trait | driver | gold | +10% Aggression · +10% Speed |
-| **Iridium Speed + Acceleration + Aggression** `tr-driver-iridium-speed+acceleration+aggression` | trait | driver | iridium | +15% Speed · +15% Acceleration · +15% Aggression |
-| **Iridium Consistency + Endurance + Luck** `tr-driver-iridium-consistency+endurance+luck` | trait | driver | iridium | +15% Consistency · +15% Endurance · +15% Luck |
-| **Bronze Power** `tr-car-bronze-power` | trait | car | bronze | +2% Power |
-| **Bronze Grip** `tr-car-bronze-grip` | trait | car | bronze | +2% Grip |
-| **Bronze Reliability** `tr-car-bronze-reliability` | trait | car | bronze | +2% Reliability |
-| **Silver Power** `tr-car-silver-power` | trait | car | silver | +5% Power |
-| **Silver Grip** `tr-car-silver-grip` | trait | car | silver | +5% Grip |
-| **Silver Reliability** `tr-car-silver-reliability` | trait | car | silver | +5% Reliability |
-| **Gold Power + Grip** `tr-car-gold-power+grip` | trait | car | gold | +10% Power · +10% Grip |
-| **Gold Grip + Reliability** `tr-car-gold-grip+reliability` | trait | car | gold | +10% Grip · +10% Reliability |
-| **Gold Reliability + Power** `tr-car-gold-reliability+power` | trait | car | gold | +10% Reliability · +10% Power |
-| **Iridium Power + Grip + Reliability** `tr-car-iridium-power+grip+reliability` | trait | car | iridium | +15% Power · +15% Grip · +15% Reliability |
-| **Bronze Tyre Management** `tr-team-bronze-tyre-management` | trait | team | bronze | +2% Tyre Management |
-| **Bronze Pit Crew** `tr-team-bronze-pit-crew` | trait | team | bronze | +2% Pit Crew |
-| **Silver Tyre Management** `tr-team-silver-tyre-management` | trait | team | silver | +5% Tyre Management |
-| **Silver Pit Crew** `tr-team-silver-pit-crew` | trait | team | silver | +5% Pit Crew |
-| **Gold Tyre Management + Pit Crew** `tr-team-gold-tyre-management+pit-crew` | trait | team | gold | +10% Tyre Management · +10% Pit Crew |
-| **Iridium Tyre Management + Pit Crew** `tr-team-iridium-tyre-management+pit-crew` | trait | team | iridium | +15% Tyre Management · +15% Pit Crew |
+| **Bronze Speed** `eq-bronze-speed` | equipment | driver | bronze | +5 Speed |
+| **Bronze Consistency** `eq-bronze-consistency` | equipment | driver | bronze | +5 Consistency |
+| **Bronze Luck** `eq-bronze-luck` | equipment | driver | bronze | +5 Luck |
+| **Bronze Acceleration** `eq-bronze-acceleration` | equipment | driver | bronze | +5 Acceleration |
+| **Bronze Endurance** `eq-bronze-endurance` | equipment | driver | bronze | +5 Endurance |
+| **Bronze Aggression** `eq-bronze-aggression` | equipment | driver | bronze | +5 Aggression |
+| **Silver Speed** `eq-silver-speed` | equipment | driver | silver | +10 Speed |
+| **Silver Consistency** `eq-silver-consistency` | equipment | driver | silver | +10 Consistency |
+| **Silver Luck** `eq-silver-luck` | equipment | driver | silver | +10 Luck |
+| **Silver Acceleration** `eq-silver-acceleration` | equipment | driver | silver | +10 Acceleration |
+| **Silver Endurance** `eq-silver-endurance` | equipment | driver | silver | +10 Endurance |
+| **Silver Aggression** `eq-silver-aggression` | equipment | driver | silver | +10 Aggression |
+| **Gold Speed + Consistency** `eq-gold-speed+consistency` | equipment | driver | gold | +10 Speed · +10 Consistency |
+| **Gold Consistency + Luck** `eq-gold-consistency+luck` | equipment | driver | gold | +10 Consistency · +10 Luck |
+| **Gold Luck + Acceleration** `eq-gold-luck+acceleration` | equipment | driver | gold | +10 Luck · +10 Acceleration |
+| **Gold Acceleration + Endurance** `eq-gold-acceleration+endurance` | equipment | driver | gold | +10 Acceleration · +10 Endurance |
+| **Gold Endurance + Aggression** `eq-gold-endurance+aggression` | equipment | driver | gold | +10 Endurance · +10 Aggression |
+| **Gold Aggression + Speed** `eq-gold-aggression+speed` | equipment | driver | gold | +10 Aggression · +10 Speed |
+| **Iridium Speed + Acceleration + Aggression** `eq-iridium-speed+acceleration+aggression` | equipment | driver | iridium | +15 Speed · +15 Acceleration · +15 Aggression |
+| **Iridium Consistency + Endurance + Luck** `eq-iridium-consistency+endurance+luck` | equipment | driver | iridium | +15 Consistency · +15 Endurance · +15 Luck |
+| **Bronze Power** `up-bronze-power` | upgrade | car | bronze | +5 Power |
+| **Bronze Grip** `up-bronze-grip` | upgrade | car | bronze | +5 Grip |
+| **Bronze Reliability** `up-bronze-reliability` | upgrade | car | bronze | +5 Reliability |
+| **Silver Power** `up-silver-power` | upgrade | car | silver | +10 Power |
+| **Silver Grip** `up-silver-grip` | upgrade | car | silver | +10 Grip |
+| **Silver Reliability** `up-silver-reliability` | upgrade | car | silver | +10 Reliability |
+| **Gold Power + Grip** `up-gold-power+grip` | upgrade | car | gold | +10 Power · +10 Grip |
+| **Gold Grip + Reliability** `up-gold-grip+reliability` | upgrade | car | gold | +10 Grip · +10 Reliability |
+| **Gold Reliability + Power** `up-gold-reliability+power` | upgrade | car | gold | +10 Reliability · +10 Power |
+| **Iridium Power + Grip + Reliability** `up-iridium-power+grip+reliability` | upgrade | car | iridium | +15 Power · +15 Grip · +15 Reliability |
+| **Bronze Tyre Management** `fa-bronze-tyre-management` | facility | team | bronze | +5 Tyre Management |
+| **Bronze Pit Crew** `fa-bronze-pit-crew` | facility | team | bronze | +5 Pit Crew |
+| **Silver Tyre Management** `fa-silver-tyre-management` | facility | team | silver | +10 Tyre Management |
+| **Silver Pit Crew** `fa-silver-pit-crew` | facility | team | silver | +10 Pit Crew |
+| **Gold Tyre Management + Pit Crew** `fa-gold-tyre-management+pit-crew` | facility | team | gold | +10 Tyre Management · +10 Pit Crew |
+| **Iridium Tyre Management + Pit Crew** `fa-iridium-tyre-management+pit-crew` | facility | team | iridium | +15 Tyre Management · +15 Pit Crew |
+| **Bronze Speed** `tr-driver-bronze-speed` | trait | driver | bronze | +5 Speed |
+| **Bronze Consistency** `tr-driver-bronze-consistency` | trait | driver | bronze | +5 Consistency |
+| **Bronze Luck** `tr-driver-bronze-luck` | trait | driver | bronze | +5 Luck |
+| **Bronze Acceleration** `tr-driver-bronze-acceleration` | trait | driver | bronze | +5 Acceleration |
+| **Bronze Endurance** `tr-driver-bronze-endurance` | trait | driver | bronze | +5 Endurance |
+| **Bronze Aggression** `tr-driver-bronze-aggression` | trait | driver | bronze | +5 Aggression |
+| **Silver Speed** `tr-driver-silver-speed` | trait | driver | silver | +10 Speed |
+| **Silver Consistency** `tr-driver-silver-consistency` | trait | driver | silver | +10 Consistency |
+| **Silver Luck** `tr-driver-silver-luck` | trait | driver | silver | +10 Luck |
+| **Silver Acceleration** `tr-driver-silver-acceleration` | trait | driver | silver | +10 Acceleration |
+| **Silver Endurance** `tr-driver-silver-endurance` | trait | driver | silver | +10 Endurance |
+| **Silver Aggression** `tr-driver-silver-aggression` | trait | driver | silver | +10 Aggression |
+| **Gold Speed + Consistency** `tr-driver-gold-speed+consistency` | trait | driver | gold | +10 Speed · +10 Consistency |
+| **Gold Consistency + Luck** `tr-driver-gold-consistency+luck` | trait | driver | gold | +10 Consistency · +10 Luck |
+| **Gold Luck + Acceleration** `tr-driver-gold-luck+acceleration` | trait | driver | gold | +10 Luck · +10 Acceleration |
+| **Gold Acceleration + Endurance** `tr-driver-gold-acceleration+endurance` | trait | driver | gold | +10 Acceleration · +10 Endurance |
+| **Gold Endurance + Aggression** `tr-driver-gold-endurance+aggression` | trait | driver | gold | +10 Endurance · +10 Aggression |
+| **Gold Aggression + Speed** `tr-driver-gold-aggression+speed` | trait | driver | gold | +10 Aggression · +10 Speed |
+| **Iridium Speed + Acceleration + Aggression** `tr-driver-iridium-speed+acceleration+aggression` | trait | driver | iridium | +15 Speed · +15 Acceleration · +15 Aggression |
+| **Iridium Consistency + Endurance + Luck** `tr-driver-iridium-consistency+endurance+luck` | trait | driver | iridium | +15 Consistency · +15 Endurance · +15 Luck |
+| **Bronze Power** `tr-car-bronze-power` | trait | car | bronze | +5 Power |
+| **Bronze Grip** `tr-car-bronze-grip` | trait | car | bronze | +5 Grip |
+| **Bronze Reliability** `tr-car-bronze-reliability` | trait | car | bronze | +5 Reliability |
+| **Silver Power** `tr-car-silver-power` | trait | car | silver | +10 Power |
+| **Silver Grip** `tr-car-silver-grip` | trait | car | silver | +10 Grip |
+| **Silver Reliability** `tr-car-silver-reliability` | trait | car | silver | +10 Reliability |
+| **Gold Power + Grip** `tr-car-gold-power+grip` | trait | car | gold | +10 Power · +10 Grip |
+| **Gold Grip + Reliability** `tr-car-gold-grip+reliability` | trait | car | gold | +10 Grip · +10 Reliability |
+| **Gold Reliability + Power** `tr-car-gold-reliability+power` | trait | car | gold | +10 Reliability · +10 Power |
+| **Iridium Power + Grip + Reliability** `tr-car-iridium-power+grip+reliability` | trait | car | iridium | +15 Power · +15 Grip · +15 Reliability |
+| **Bronze Tyre Management** `tr-team-bronze-tyre-management` | trait | team | bronze | +5 Tyre Management |
+| **Bronze Pit Crew** `tr-team-bronze-pit-crew` | trait | team | bronze | +5 Pit Crew |
+| **Silver Tyre Management** `tr-team-silver-tyre-management` | trait | team | silver | +10 Tyre Management |
+| **Silver Pit Crew** `tr-team-silver-pit-crew` | trait | team | silver | +10 Pit Crew |
+| **Gold Tyre Management + Pit Crew** `tr-team-gold-tyre-management+pit-crew` | trait | team | gold | +10 Tyre Management · +10 Pit Crew |
+| **Iridium Tyre Management + Pit Crew** `tr-team-iridium-tyre-management+pit-crew` | trait | team | iridium | +15 Tyre Management · +15 Pit Crew |
 | **Speed Up** `ef-speed-up` | effect | driver | — | Speed up |
 | **Speed Down** `ef-speed-down` | effect | driver | — | Speed down |
 | **Consistency Up** `ef-consistency-up` | effect | driver | — | Consistency up |

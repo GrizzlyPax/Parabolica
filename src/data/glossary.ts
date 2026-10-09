@@ -52,10 +52,10 @@ export function describeInRaceEffect(r: InRaceEffect): string {
   return `${ev}${r.match ? ` (${String(r.match).replace(/^\/\^?|\/$/g, '')})` : ''} → ${describeInRaceDuration(r.duration)}`;
 }
 
-/** "+5% Speed · +5% Grip" — what a card adds, in grade points of each stat. */
+/** "+5 Speed · +5 Grip" — what a card adds, in grade points of each stat. */
 export function describeCard(c: Card): string {
   if (c.kind === 'effect') return `${STAT_LABELS[c.stats[0].stat]} ${c.direction === 'up' ? 'up' : 'down'}`;
-  return c.stats.map(s => `+${s.pct}% ${STAT_LABELS[s.stat]}`).join(' · ');
+  return c.stats.map(s => `+${s.pct} ${STAT_LABELS[s.stat]}`).join(' · ');
 }
 
 export interface Glossary {
@@ -121,10 +121,10 @@ export function renderGlossaryMd(g: Glossary, version: string): string {
     for (const t of g.deckTeams.filter(x => x.kind === k.kind)) L.push(`| **${t.name}** \`${t.id}\` | ${t.color} · ${t.ink} | \`${t.iconId}\` | ${t.description} |`);
     L.push('');
   }
-  const favs = (f: { stat: keyof typeof STAT_LABELS; pct: number }[]) => f.length ? f.map(x => `+${x.pct}% ${STAT_LABELS[x.stat]}`).join(' · ') : '—';
-  L.push('## Tracks', '', '*Source: `src/data/deckTracks.ts` (docs/TRACKS_WEATHER.md). Six stat-combo tracks; each favours one driver stat and one car/team stat for the race, field-wide (+10%, through the card math at race build). Every race and season calendar draws from these; the 31 themed circuits, track events and track characters retired with Tracks & Weather v2.*', '', '| Track | Favours | Layout |', '|---|---|---|');
-  for (const t of g.deckTracks) L.push(`| **${t.name}** \`${t.id}\` | ${favs(t.favours)} | ${t.layoutId} |`);
-  L.push('', '## Weather', '', '*Source: `src/data/deckWeather.ts`. Neutral + five dry weathers, favours × intensity, stacking with the track. No rain until Wet arrives in v0.6; the old weathers and the inflictions retired (the inflictions are parked as Horror-deck material).*', '', '| Weather | Odds | Favours |', '|---|---|---|');
+  const favs = (f: { stat: keyof typeof STAT_LABELS; pct: number }[]) => f.length ? f.map(x => `+${x.pct} ${STAT_LABELS[x.stat]}`).join(' · ') : '—';
+  L.push('## Tracks', '', '*Source: `src/data/deckTracks.ts` (docs/TRACKS_WEATHER.md). Six stat-combo tracks; each favours one driver stat and one car/team stat for the race, field-wide (+10 grade points, through the card math at race build). Each has a tyre-wear dial (#536): wear per tick × `tyreWear`. Every race and season calendar draws from these; the 31 themed circuits, track events and track characters retired with Tracks & Weather v2.*', '', '| Track | Favours | Tyre wear | Layout |', '|---|---|---|---|');
+  for (const t of g.deckTracks) L.push(`| **${t.name}** \`${t.id}\` | ${favs(t.favours)} | ×${t.tyreWear} | ${t.layoutId} |`);
+  L.push('', '## Weather', '', '*Source: `src/data/deckWeather.ts`. Neutral + five dry weathers, favours (grade points) × intensity, stacking with the track. No rain until Wet arrives in v0.6; the old weathers and the inflictions retired (the inflictions are parked as Horror-deck material).*', '', '| Weather | Odds | Favours |', '|---|---|---|');
   for (const w of g.deckWeather) L.push(`| **${w.name}** \`${w.id}\` | ${w.odds}% | ${favs(w.favours)} |`);
   L.push('');
   L.push('');

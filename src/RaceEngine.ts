@@ -32,7 +32,7 @@ export const IN_RACE_EFFECTS: InRaceEffect[] = [
   { id: 'sulking', name: 'Sulking', emoji: '🐢', on: 'slow_pit_stop', duration: { laps: 1 }, effects: { consistencyModifier: 0.96 }, text: 'is sulking about that stop' },
   { id: 'fired-up', name: 'Fired Up', emoji: '⚡', on: 'quick_pit_stop', duration: { laps: 1 }, effects: { speedModifier: 1.01 }, text: 'is fired up after a lightning stop' },
 ];
-import { SimVariables, CANON_VARIABLES } from './simlab/types';
+import { SimVariables, CANON_VARIABLES, TireCompoundConfig } from './simlab/types';
 import { Rng, mulberry32, deriveSeed, randomSeed } from './engine/rng';
 
 export interface DriverStats {
@@ -161,6 +161,7 @@ export interface TickFactors {
 export interface RaceConfig {
   totalLaps: number;              // How many laps to complete
   lapLength: number;              // Distance units per lap
+  tyreWear: number;               // The track's wear dial (#536): wear per tick × this (1 = canon)
   tickInterval: number;           // Ms between ticks
   baseSpeedMin: number;           // Minimum base speed per tick
   baseSpeedMax: number;           // Maximum base speed per tick
@@ -213,13 +214,13 @@ export interface TireCompoundProperties {
   criticalAt: number;     // Wear % when performance cliff begins
   cliffSeverity: number;  // How steep the performance drop is (0-1, higher = steeper)
   blowoutRisk: number;    // Base blowout chance per tick when past critical (0-1)
-  lifeLaps: number;       // Laps from fresh to the cliff (#246)
+  lifeLaps: number;       // Laps from fresh to the cliff, for THIS race (#534: lifeShare × laps, floored)
 }
 
 // Tire tuning lives in CANON_VARIABLES (simlab/types.ts) — the single source of
 // truth shared by live races, Sim Lab, and Bet Lab. A stale copy here previously
 // gave live races 5× the blowout risk that the labs calibrated against.
-export const TIRE_COMPOUNDS: Record<TireCompound, TireCompoundProperties> = CANON_VARIABLES.tires;
+export const TIRE_COMPOUNDS: Record<TireCompound, TireCompoundConfig> = CANON_VARIABLES.tires;
 
 // === DRIVER STATUS TYPES ===
 
@@ -384,6 +385,7 @@ const DEFAULT_DRIVERS = [
 export const DEFAULT_CONFIG: RaceConfig = {
   totalLaps: 10,
   lapLength: 500,
+  tyreWear: 1,
   tickInterval: 100,
   baseSpeedMin: 3,
   baseSpeedMax: 12,
@@ -549,18 +551,34 @@ class RaceEngine {
   // === SIM VARIABLE HELPERS ===
   // These methods return overridden values from simVars or fall back to hardcoded defaults
 
+  /** A compound's properties for THIS race: life in laps comes from its share
+   * of the race distance (#534), never fewer than its floor. */
   private getTireCompound(compound: TireCompound): TireCompoundProperties {
-    if (this.simVars) {
-      const v = this.simVars.tires[compound];
-      return {
-        speedBonus: v.speedBonus,
-        lifeLaps: v.lifeLaps,
-        criticalAt: v.criticalAt,
-        cliffSeverity: v.cliffSeverity,
-        blowoutRisk: v.blowoutRisk,
-      };
-    }
-    return TIRE_COMPOUNDS[compound];
+    const v = (this.simVars ?? CANON_VARIABLES).tires[compound];
+    return {
+      speedBonus: v.speedBonus,
+      lifeLaps: Math.max(v.lifeFloorLaps, v.lifeShare * this.config.totalLaps),
+      criticalAt: v.criticalAt,
+      cliffSeverity: v.cliffSeverity,
+      blowoutRisk: v.blowoutRisk,
+    };
+  }
+
+  /** The closing window (#534): no planned stop with this many laps left
+   * (`pits.lastPitShare` of the race, at least one lap). */
+  private lastPitLaps(): number {
+    return Math.max(1, Math.round(this.getPitVars().lastPitShare * this.config.totalLaps));
+  }
+
+  /** Tyre luck (#535): each new set has a hidden ±`setLifeLuck` life roll on
+   * its own seeded stream (seed, 'tyres', driver, stint), so identical plans
+   * don't play out identically and the race RNG never moves. Stint = stops so
+   * far; the starting set is stint 0. */
+  private setLifeFactor(driver: Driver): number {
+    const luck = this.getTireVars().setLifeLuck;
+    if (!luck) return 1;
+    const r = mulberry32(deriveSeed(this.strategySeed, 'tyres', driver.id, driver.pitStops.length))();
+    return 1 + (r * 2 - 1) * luck;
   }
 
   private getCrashVars() {
@@ -1368,15 +1386,16 @@ class RaceEngine {
   }
 
   /** Wear per tick, in "cliff units": a compound reaches criticalAt after
-   * lifeLaps laps at mid aggression and 3★ tyre management (#246). Life is in
-   * laps, not race share, so a long race means more stops — like racing. */
+   * lifeLaps laps at mid aggression and 3★ tyre management (#246), where
+   * lifeLaps is its share of the race (#534), × this set's hidden luck (#535),
+   * ÷ the track's wear dial (#536). */
   private calculateTireWear(driver: Driver): number {
     if (!this.config.enableTireWear) return 0;
     const compound = this.getTireCompound(driver.tireState.compound);
     const tireVars = this.getTireVars();
     const distancePerTick = driver.lastTickSpeed || 7;
     const lapFraction = distancePerTick / this.config.lapLength;
-    const wearPerLap = compound.criticalAt / compound.lifeLaps;
+    const wearPerLap = (compound.criticalAt / (compound.lifeLaps * this.setLifeFactor(driver))) * this.config.tyreWear;
     // Aggression 0.3–0.8 → ×1.0–1.4; mid (0.55) is the calibration point.
     const normalizedAggression = (driver.stats.aggression - 0.3) / 0.5;
     const aggressionFactor = (1 + normalizedAggression * tireVars.aggressionWearMultiplier) / (1 + 0.5 * tireVars.aggressionWearMultiplier);
@@ -1392,14 +1411,16 @@ class RaceEngine {
     return perTick * (this.config.lapLength / distancePerTick);
   }
 
-  /** The stop rule as it stands for this driver: stops and compounds still owed. */
-  private stopsOwed(driver: Driver): { stops: number; compounds: TireCompound[]; needed: number } {
+  /** The stop rule as it stands for this driver: stops, compounds and the
+   * compound change (#534, real F1: two different compounds) still owed. */
+  private stopsOwed(driver: Driver): { stops: number; compounds: TireCompound[]; change: boolean; needed: number } {
     const pitVars = this.getPitVars();
     const all: TireCompound[] = ['soft', 'medium', 'hard'];
     const used = driver.usedCompounds || [];
     const compounds = pitVars.requireAllCompounds ? all.filter(c => !used.includes(c)) : [];
     const stops = Math.max(0, pitVars.minStops - driver.pitStops.length);
-    return { stops, compounds, needed: Math.max(stops, compounds.length) };
+    const change = pitVars.requireCompoundChange && new Set(used).size < 2;
+    return { stops, compounds, change, needed: Math.max(stops, compounds.length, change ? 1 : 0) };
   }
 
   /**
@@ -1432,7 +1453,8 @@ class RaceEngine {
     const lean = 1 + this.getStrategyArchetype(driver) * pitVars.strategyWearLean;
     const pitAtWear = compound.criticalAt * lean;
     if (wear >= pitAtWear) { this.pitReasons.set(driver.id, 'cliff'); return true; }
-    if (lapsLeft > pitVars.lastPitLapBuffer && wear + this.wearPerLapFor(driver) >= pitAtWear) {
+    const buffer = this.lastPitLaps();
+    if (lapsLeft > buffer && wear + this.wearPerLapFor(driver) >= pitAtWear) {
       this.pitReasons.set(driver.id, 'ahead of the cliff');
       return true;
     }
@@ -1441,12 +1463,12 @@ class RaceEngine {
     if (owed.needed === 0) return false;
 
     // 4. Cheap stop under the Unsafety Car when a stop is owed.
-    if (pitVars.scPitChance > 0 && this.raceState.unsafetyCarActive && wear >= pitVars.scPitMinWear && lapsLeft > pitVars.lastPitLapBuffer) {
+    if (pitVars.scPitChance > 0 && this.raceState.unsafetyCarActive && wear >= pitVars.scPitMinWear && lapsLeft > buffer) {
       if (this.rng() < pitVars.scPitChance) { this.pitReasons.set(driver.id, 'safety car'); return true; }
     }
 
     // 5. Forced: the room to complete the rule is running out (while there is room).
-    if (lapsLeft > pitVars.lastPitLapBuffer && lapsLeft - pitVars.lastPitLapBuffer <= owed.needed) {
+    if (lapsLeft > buffer && lapsLeft - buffer <= owed.needed) {
       this.pitReasons.set(driver.id, 'the rule'); return true;
     }
     return false;
@@ -1549,7 +1571,9 @@ class RaceEngine {
    * Each driver's qualifying lap, in roster order, without touching the race:
    * the same side stream runQualifying reads, so the qualifying show (#495)
    * can play the session out before the lights and match the grid exactly.
-   * `ruined` is the qualiFlubChance roll. Display only.
+   * Acceleration doubles as one-lap pace (#496): score × (1 + (acc − 1) ×
+   * qualiAccelWeight), about +1% per step. `ruined` is the qualiFlubChance
+   * roll. Display only.
    */
   qualifyingLaps(): { id: number; score: number; ruined: boolean }[] {
     const g = this.getGridVars();
@@ -1560,7 +1584,8 @@ class RaceEngine {
       const ruined = r() < g.qualiFlubChance;
       const flub = ruined ? 0.95 : 1;
       const grip = (this.getCarStatVars().gripBase + (d.carStats?.grip ?? 3) * this.getCarStatVars().gripPerStar);
-      const score = this.packagePace(d) * (1 + z * sd) * flub * (0.98 + 0.02 * grip);
+      const oneLap = 1 + (d.stats.acceleration - 1) * g.qualiAccelWeight;
+      const score = this.packagePace(d) * oneLap * (1 + z * sd) * flub * (0.98 + 0.02 * grip);
       return { id: d.id, score, ruined };
     });
   }
@@ -1605,6 +1630,7 @@ class RaceEngine {
     const parts: string[] = [];
     if (owed.stops > 0) parts.push(`${owed.stops} stop${owed.stops > 1 ? 's' : ''} short`);
     if (owed.compounds.length > 0) parts.push(`never used ${owed.compounds.join(' or ')}`);
+    if (owed.change && owed.compounds.length === 0) parts.push('never changed compound');
     return { ticks, reason: parts.join(', ') };
   }
 

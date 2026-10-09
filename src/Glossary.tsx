@@ -92,7 +92,7 @@ const NOT_YET_TRACK = 'Every race and season calendar draws from these.';
 function FavourIcons({ favours }: { favours: CardStat[] }) {
   return <span className="card-marks">{favours.map(f => <GameIcon key={f.stat} name={STAT_ICONS[f.stat]} size={16} title={STAT_LABELS[f.stat]} />)}</span>;
 }
-const favourText = (favours: CardStat[]) => favours.map(f => `+${f.pct}% ${STAT_LABELS[f.stat]}`).join(' · ');
+const favourText = (favours: CardStat[]) => favours.map(f => `+${f.pct} ${STAT_LABELS[f.stat]}`).join(' · ');
 const DECK_GROUPS: { id: string; title: string; hint: string; rows: Card[] }[] = [
   { id: 'equipment', title: 'Equipment', hint: `Driver gear: one slot, swappable (Season Mode packs). ${IN_SIM}`, rows: cardsBy({ kind: 'equipment' }) },
   { id: 'upgrade', title: 'Upgrades', hint: `Car gear: one slot (Season Mode packs). ${IN_SIM}`, rows: cardsBy({ kind: 'upgrade' }) },
@@ -334,14 +334,14 @@ export default function Glossary({ onBack, tab: tabSlug, onTabChange }: Glossary
         );
       })}
       {tab === 'tracks' && (
-        <Section {...sec('tracks:deck')} title="Tracks (v0.5)" count={BASE_DECK_TRACKS.length} hint={`Six tracks, one stat combo each: the favoured stats count +10% for the race. ${NOT_YET_TRACK}`}>
+        <Section {...sec('tracks:deck')} title="Tracks (v0.5)" count={BASE_DECK_TRACKS.length} hint={`Six tracks, one stat combo each: the favoured stats gain +10 grade for the race, and each has its own tyre-wear dial. ${NOT_YET_TRACK}`}>
           <div className="gl-list">
             {BASE_DECK_TRACKS.filter(t => match(t.name, t.id, t.layoutId)).map(t => (
               <Row key={t.id} id={`dtrack:${t.id}`} open={isOpen(`dtrack:${t.id}`)} onToggle={toggle}
                 lead={<span className="gl-plain gl-card"><FavourIcons favours={t.favours} /> {t.name}</span>}
-                note={t.layoutId}
+                note={`${t.layoutId} · wear ×${t.tyreWear}`}
                 pills={<span className="gl-readout">{favourText(t.favours)}</span>}>
-                <div className="gl-facts"><Fact k="Favours">{favourText(t.favours)}</Fact><Fact k="Layout">{t.layoutId}</Fact><Fact k="Id">{t.id}</Fact></div>
+                <div className="gl-facts"><Fact k="Favours">{favourText(t.favours)}</Fact><Fact k="Tyre wear">×{t.tyreWear}</Fact><Fact k="Layout">{t.layoutId}</Fact><Fact k="Id">{t.id}</Fact></div>
                 <div className="gl-src">src/data/deckTracks.ts</div>
               </Row>
             ))}
@@ -382,7 +382,7 @@ export default function Glossary({ onBack, tab: tabSlug, onTabChange }: Glossary
 
       {tab === 'conditions' && (
         <>
-          <Section {...sec('weather:deck')} title="Weather (v0.5)" count={BASE_DECK_WEATHER.length} hint={`Neutral most races; otherwise a dry weather favouring two stats (+10% × intensity), stacking with the track. No rain until v0.6. ${NOT_YET_TRACK}`}>
+          <Section {...sec('weather:deck')} title="Weather (v0.5)" count={BASE_DECK_WEATHER.length} hint={`Neutral most races; otherwise a dry weather favouring two stats (+10 grade × intensity), stacking with the track. No rain until v0.6. ${NOT_YET_TRACK}`}>
             <div className="gl-list">
               {BASE_DECK_WEATHER.filter(w => match(w.name, w.id)).map(w => (
                 <Row key={w.id} id={`dwx:${w.id}`} open={isOpen(`dwx:${w.id}`)} onToggle={toggle}

@@ -14,7 +14,7 @@ export function DeckTab() {
     <>
       <section className="rs-row rc-explain">
         <p><b>The card deck.</b> The Motorsport base deck: {MOTORSPORT_DECK.length} cards generated from the stat grid (src/cards/deck.ts). Every race deals trait cards at genesis and bakes them into the stats (src/cards/apply.ts); a card is arithmetic on a stat, so the stat's weight (Physics) is the card's weight.</p>
-        <p className="rc-bands">Ladder: {RARITIES.map(r => <span key={r}><span className={`rarity-word rarity-${r}`}>{r}</span> {METAL_LADDER[r].stats} stat{METAL_LADDER[r].stats > 1 ? 's' : ''} × +{METAL_LADDER[r].pct}%</span>)}</p>
+        <p className="rc-bands">Ladder: {RARITIES.map(r => <span key={r}><span className={`rarity-word rarity-${r}`}>{r}</span> {METAL_LADDER[r].stats} stat{METAL_LADDER[r].stats > 1 ? 's' : ''} × +{METAL_LADDER[r].pct} grade</span>)}</p>
       </section>
       <section className="rs-row">
         <div className="rs-row-head">

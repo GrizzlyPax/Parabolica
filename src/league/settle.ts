@@ -48,7 +48,7 @@ function findFastestLap(drivers: Driver[]): number | null {
 }
 
 /**
- * Track + weather favours (Tracks & Weather v2): the favoured stats count +10%
+ * Track + weather favours (Tracks & Weather v2): the favoured stats gain +10 grade
  * for the race, field-wide, baked into the roster the engine loads. The ONE
  * place favours apply to a league race; anything that reloads a roster for a
  * race (the lab's tag override) must come through here too.
@@ -85,6 +85,7 @@ export function prepareScheduledRace(
     // The sim runs off config, not trackInfo — these decide the outcome
     totalLaps: track.laps,
     lapLength: track.length,
+    tyreWear: track.tyreWear,
   });
   engine.setTrackInfo({
     id: track.id,

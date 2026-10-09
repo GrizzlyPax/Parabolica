@@ -90,7 +90,7 @@ export default function RunSetup({ onStartRace, onBack }: RunSetupProps) {
     engine.setSimVars(ruleset.simVars);
     engine.setSeed(deriveSeed(seed, 'race'));
     engine.setWeather(weather);
-    // Track + weather favours count +10% for the race, field-wide (Tracks & Weather v2).
+    // Track + weather favours gain +10 grade for the race, field-wide (Tracks & Weather v2).
     engine.loadGeneratedRoster(applyFavours(roster, [...track.favours, ...(weather?.favours ?? [])]));
     engine.setTrackInfo({
       id: track.id, name: track.name, emoji: track.emoji, funEmoji: track.funEmoji,
@@ -101,7 +101,7 @@ export default function RunSetup({ onStartRace, onBack }: RunSetupProps) {
       },
       favours: track.favours,
     });
-    engine.updateConfig({ lapLength: track.length, totalLaps: track.laps });
+    engine.updateConfig({ lapLength: track.length, totalLaps: track.laps, tyreWear: track.tyreWear });
     onStartRace(roster, ruleset, seed, fantasy && draftComplete(fantasy) ? fantasy : undefined);
   };
 
@@ -178,7 +178,7 @@ export default function RunSetup({ onStartRace, onBack }: RunSetupProps) {
         )}
         {showRules && (
           <div className="rs-rules">
-            {rulesLines.length === 0 ? <div className="rs-rule">Default rules: {describeChance(ruleset.traits.genesisChance)} per slot (driver, car, team) to be born with a trait card ({describeOdds(ruleset.traits.rarityOdds)}); pit rule: {ruleset.simVars.pits.minStops} stops{ruleset.simVars.pits.requireAllCompounds ? ', all 3 compounds' : ''}; canon physics.</div>
+            {rulesLines.length === 0 ? <div className="rs-rule">Default rules: {describeChance(ruleset.traits.genesisChance)} per slot (driver, car, team) to be born with a trait card ({describeOdds(ruleset.traits.rarityOdds)}); pit rule: {ruleset.simVars.pits.minStops} stop{ruleset.simVars.pits.minStops === 1 ? '' : 's'}{ruleset.simVars.pits.requireCompoundChange ? ', change compound' : ''}{ruleset.simVars.pits.requireAllCompounds ? ', all 3 compounds' : ''}; canon physics.</div>
               : rulesLines.map(l => <div key={l} className="rs-rule">{l}</div>)}
             <div className="rs-rules-actions">
               <button type="button" className="rs-link" onClick={() => navigator.clipboard?.writeText(serializeRuleset(ruleset))}>Copy ruleset JSON</button>

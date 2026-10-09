@@ -44,8 +44,10 @@ export interface Track {
   length: number;
   laps: number;
   layout: TrackLayout;
-  /** Stats that count +pct% here, field-wide. Weather favours stack on top. */
+  /** Stats that gain pct grade points here, field-wide. Weather favours stack on top. */
   favours: CardStat[];
+  /** Tyre wear per tick × this (#536): 0.85 gentle … 1.25 hungry. */
+  tyreWear: number;
   isHistoric?: boolean;  // No historic tracks in v0.5; kept for the type's consumers
 }
 
@@ -264,13 +266,14 @@ function trackFromDeck(t: DeckTrack): Track {
   return {
     id: t.id,
     name: t.name,
-    description: `${t.name}: both count +${t.favours[0]?.pct ?? 0}% for the race, field-wide.`,
+    description: `${t.name}: both gain +${t.favours[0]?.pct ?? 0} grade for the race, field-wide; tyre wear ×${t.tyreWear}.`,
     emoji: '🏁',
     funEmoji: shape.funEmoji,
     length: shape.length,
     laps: shape.laps,
     layout: LAYOUTS[t.layoutId],
     favours: t.favours,
+    tyreWear: t.tyreWear,
   };
 }
 

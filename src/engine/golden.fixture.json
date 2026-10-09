@@ -3,71 +3,65 @@
   "track": "speed-power",
   "rosterHash": "011ca3be",
   "finishOrder": [
+    6,
     13,
+    15,
     16,
+    17,
+    21,
     12,
+    4,
+    7,
+    1,
     11,
     2,
-    6,
-    21,
-    4,
-    1,
-    10,
-    20,
-    9,
-    14,
-    8,
-    5,
     0,
-    19,
-    3
+    5,
+    10,
+    8,
+    3,
+    9
   ],
-  "totalTicks": 2211,
-  "leadChanges": 6,
-  "eventsHash": "0ba9203e",
-  "tags": [
-    [
-      "light-footed"
-    ],
-    [
-      "built-like-a-tank",
-      "front-runners"
-    ],
+  "totalTicks": 2148,
+  "leadChanges": 5,
+  "eventsHash": "ec4c4153",
+  "cards": [
+    [],
+    [],
+    [],
     [],
     [],
     [],
     [],
     [],
     [
-      "spun"
+      "tr-driver-silver-aggression",
+      "tr-car-bronze-power"
+    ],
+    [
+      "tr-driver-silver-aggression"
     ],
     [],
-    [],
-    [
-      "damaged",
-      "spun"
-    ],
-    [
-      "crowd-favourite",
-      "cooked-tyres"
-    ],
-    [
-      "damaged"
-    ],
-    [
-      "ice-veins"
-    ],
     [],
     [],
     [],
     [],
     [
-      "front-runners"
-    ],
-    [
-      "rain-shy"
+      "tr-driver-bronze-speed"
     ],
     [],
+    [
+      "tr-car-bronze-reliability"
+    ],
+    [
+      "tr-car-bronze-reliability"
+    ],
+    [
+      "tr-driver-bronze-endurance"
+    ],
+    [
+      "tr-car-bronze-reliability"
+    ],
     []
   ]
 }

@@ -16,7 +16,7 @@ export type CardTarget = 'driver' | 'car' | 'team';
 
 export interface CardStat {
   stat: StatKey;
-  /** Percent, e.g. 10 = +10%. Effects carry 0: their size comes from the moment (v0.6). */
+  /** Grade points on the 0–100 scale (#335), e.g. 10 = +10 grade. Effects carry 0: their size comes from the moment (v0.6). */
   pct: number;
 }
 

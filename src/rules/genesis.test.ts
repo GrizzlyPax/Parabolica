@@ -30,7 +30,7 @@ describe('genesis on cards', () => {
     expect(c.map(d => d.cards!.map(x => x.id))).not.toEqual(a.map(d => d.cards!.map(x => x.id)));
   });
 
-  it('deals trait cards (never gear or effects) and bakes them into the stats', () => {
+  it('deals trait cards (never gear or effects) and bakes them into the stats as grade points (#335)', () => {
     let hits = 0;
     for (let seed = 1; seed <= 20; seed++) {
       const u = universe(seed);
@@ -40,9 +40,9 @@ describe('genesis on cards', () => {
         const d = carded[i];
         for (const c of d.cards!) { expect(c.kind).toBe('trait'); hits++; }
         const speedPct = d.cards!.flatMap(c => c.stats).filter(s => s.stat === 'baseSpeed').reduce((s, x) => s + x.pct, 0);
-        expect(d.stats.baseSpeed).toBeCloseTo(plain[i].stats.baseSpeed * (1 + speedPct / 100), 10);
+        expect(d.stats.baseSpeed).toBeCloseTo(plain[i].stats.baseSpeed + (speedPct * 0.30) / 100, 10);
         const powerPct = d.cards!.flatMap(c => c.stats).filter(s => s.stat === 'power').reduce((s, x) => s + x.pct, 0);
-        expect(d.carStats!.power).toBeCloseTo(plain[i].carStats!.power * (1 + powerPct / 100), 10);
+        expect(d.carStats!.power).toBeCloseTo(plain[i].carStats!.power + (powerPct * 4) / 100, 10);
       }
     }
     // Three slots per driver at 1-in-6 each: about 0.5 cards per driver (the team slot is shared).

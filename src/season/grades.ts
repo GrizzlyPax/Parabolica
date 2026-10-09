@@ -1,23 +1,18 @@
 // Stat grades (#452, Pax Oct 8): every stat on one 0–100 scale, read as a
 // letter. 0 = the worst roll the generator can give, 100 = the best, taken
 // from the generator's own ranges (DRIVER_STAT_ROLLS, STAR_RATING), so a
-// re-tune keeps the scale honest. Cards add percentages of the raw value on
-// top, so a carded stat can pass 100: that is grade S.
+// re-tune keeps the scale honest. Cards add grade points on top (#335), so a
+// carded stat can pass 100: that is grade S.
 //
 // Thirteen even bands (F … A+): natural rolls are uniform, so each letter is
 // as common as the next. Pure; display only, never feeds the sim.
-import { DRIVER_STAT_ROLLS } from '../generators/drivers';
-import { STAR_RATING } from '../generators/cars';
+import { statRange } from '../cards/apply';
 import type { Card, StatKey } from '../cards/types';
+
+export { statRange };
 
 export const GRADES = ['F', 'D−', 'D', 'D+', 'C−', 'C', 'C+', 'B−', 'B', 'B+', 'A−', 'A', 'A+'] as const;
 export type Grade = (typeof GRADES)[number] | 'S';
-
-/** The raw roll range of a stat: [worst, span]. */
-export function statRange(stat: StatKey): { min: number; span: number } {
-  if (stat in DRIVER_STAT_ROLLS) return DRIVER_STAT_ROLLS[stat as keyof typeof DRIVER_STAT_ROLLS];
-  return { min: STAR_RATING.min, span: STAR_RATING.max - STAR_RATING.min };
-}
 
 /** A raw stat value on the 0–100 scale (unrounded). */
 export function rating(stat: StatKey, raw: number): number {
@@ -49,14 +44,14 @@ export interface StatReading {
   baseGrade: Grade;
 }
 
-/** One stat with its cards: the same math as applyCards (base × (1 + Σ% / 100)),
- * split per card so the screen can show where each point comes from. */
+/** One stat with its cards: the same math as applyCards (a card's pct IS its
+ * grade points, #335), split per card so the screen can show where each
+ * point comes from. */
 export function readStat(stat: StatKey, raw: number, cards: readonly Card[]): StatReading {
-  const { span } = statRange(stat);
   const base = rating(stat, raw);
   const parts = cards
     .filter(c => c.kind !== 'effect')
-    .flatMap(c => c.stats.filter(s => s.stat === stat).map(s => ({ card: c, pct: s.pct, points: ((raw * s.pct) / 100 / span) * 100 })));
+    .flatMap(c => c.stats.filter(s => s.stat === stat).map(s => ({ card: c, pct: s.pct, points: s.pct })));
   const total = base + parts.reduce((a, p) => a + p.points, 0);
   return { stat, base, parts, total, grade: grade(total), baseGrade: grade(base) };
 }
