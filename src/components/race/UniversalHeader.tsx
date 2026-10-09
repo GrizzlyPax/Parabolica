@@ -83,7 +83,7 @@ function UniversalHeader({
       </div>
       <div className="uh-sub">
         <span className="uh-track">{trackName}{weather ? <span className="uh-weather"> · {weather}</span> : null}</span>
-        {priority && priority.length > 0 && <span className="uh-prio" title="Next to these stats, everyone gets +10% here">Priority: {priority.join(' · ')}</span>}
+        {priority && priority.length > 0 && <span className="uh-prio" title="Everyone gets +10 grade on these stats here">Priority: {priority.join(' · ')}</span>}
       </div>
     </header>
   );

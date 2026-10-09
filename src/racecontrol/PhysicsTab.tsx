@@ -74,7 +74,7 @@ export function PhysicsTab({ lab }: { lab: LabProps }) {
   return (
     <>
       <section className="rs-row rc-explain">
-        <p><b>The rules, measured.</b> {races} untagged races on one seed, read for the things that make racing look like racing: how much pace decides the result, how often pole wins, stops, passes, DNFs, safety cars. Change any knob below, press Measure, and the same {races} races run again with your number — every metric shows the before and after.</p>
+        <p><b>The rules, measured.</b> {races} card-free races on one seed, read for the things that make racing look like racing: how much pace decides the result, how often pole wins, stops, passes, DNFs, safety cars. Change any knob below, press Measure, and the same {races} races run again with your number — every metric shows the before and after.</p>
         <div className="rc-reroll">
           <span className="rs-k">Seed</span>
           <input type="number" value={seed} disabled={busy} onChange={e => setSeed(Number(e.target.value) >>> 0)} aria-label="Batch seed" />

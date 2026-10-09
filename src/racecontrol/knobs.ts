@@ -25,6 +25,8 @@ export function buildVariableList(): VarDef[] {
   const tireCompoundVars = [
     { key: 'speedBonus', label: 'Speed Bonus', desc: 'Speed multiplier', format: 'multiplier' as const, min: 0.8, max: 1.2, step: 0.01 },
     { key: 'lifeLaps', label: 'Life (laps)', desc: 'Laps from fresh to the cliff', format: 'decimal' as const, min: 2, max: 20, step: 0.5 },
+    { key: 'lifeShare', label: 'Life (share of race)', desc: 'Laps to the cliff = share × race laps (3★ mgmt, mid aggression)', format: 'decimal' as const, min: 0.1, max: 1.5, step: 0.05 },
+    { key: 'lifeFloorLaps', label: 'Life Floor', desc: 'Never fewer laps than this (short races)', format: 'integer' as const, min: 1, max: 10, step: 1 },
     { key: 'criticalAt', label: 'Cliff Start', desc: 'Wear % when cliff begins', format: 'integer' as const, min: 50, max: 95, step: 1 },
     { key: 'cliffSeverity', label: 'Cliff Severity', desc: 'How harsh the cliff is', format: 'decimal' as const, min: 0.1, max: 1.0, step: 0.05 },
     { key: 'blowoutRisk', label: 'Blowout Risk', desc: 'Base blowout chance/tick', format: 'decimal' as const, min: 0, max: 0.01, step: 0.0001 },
@@ -57,6 +59,7 @@ export function buildVariableList(): VarDef[] {
     { key: 'minSpeedFloor', label: 'Min Speed Floor', desc: 'Min speed with dead tires', format: 'percent' as const, min: 0.4, max: 0.8, step: 0.05 },
     { key: 'aggressionWearMultiplier', label: 'Aggression Wear', desc: 'Aggression wear impact', format: 'decimal' as const, min: 0, max: 1, step: 0.05 },
     { key: 'teamTireMgmtWearPerStar', label: 'Tire Mgmt Wear/Star', desc: 'Team tire mgmt wear scaling, 3★ neutral (0 = dormant)', format: 'decimal' as const, min: 0, max: 0.4, step: 0.01 },
+    { key: 'setLifeLuck', label: 'Set Life Luck', desc: 'Hidden ± share of life per new set, seeded (0 = off)', format: 'percent' as const, min: 0, max: 0.3, step: 0.01 },
   ];
   for (const v of tireGeneralVars) {
     vars.push({ category: 'Tires (general)', categoryIcon: 'stat.tyre_management', path: `tires.${v.key}`, label: v.label, description: v.desc, format: v.format, min: v.min, max: v.max, step: v.step });
@@ -103,7 +106,7 @@ export function buildVariableList(): VarDef[] {
     { key: 'slowStopPerStar', label: 'Slow Stop/Star', desc: 'Slow stop reduction/star', format: 'decimal' as const, min: 0.02, max: 0.15, step: 0.01 },
     { key: 'quickStopBase', label: 'Quick Stop Base', desc: 'Base quick stop chance', format: 'percent' as const, min: 0, max: 0.2, step: 0.01 },
     { key: 'quickStopPerStar', label: 'Quick Stop/Star', desc: 'Quick stop bonus/star', format: 'decimal' as const, min: 0.02, max: 0.15, step: 0.01 },
-    { key: 'lastPitLapBuffer', label: 'Last Pit Buffer', desc: 'No stop within N laps of finish', format: 'decimal' as const, min: 1, max: 4, step: 1 },
+    { key: 'lastPitShare', label: 'Last Pit Window', desc: 'No planned stop in the last share of the race', format: 'percent' as const, min: 0.05, max: 0.5, step: 0.01 },
     { key: 'strategyWearLean', label: 'Strategy Lean', desc: 'Archetype wear-trigger lean (0=off)', format: 'percent' as const, min: 0, max: 0.25, step: 0.01 },
     { key: 'scPitChance', label: 'SC Pit Chance', desc: 'Cheap-stop roll under SC (0=off)', format: 'percent' as const, min: 0, max: 0.5, step: 0.02 },
     { key: 'scPitMinWear', label: 'SC Pit Min Wear', desc: 'Wear floor for an SC stop', format: 'decimal' as const, min: 5, max: 50, step: 5 },
@@ -193,6 +196,7 @@ export function buildVariableList(): VarDef[] {
     { key: 'slotSpacing', label: 'Slot Spacing', desc: 'Stagger between grid slots (share of a lap)', format: 'decimal' as const, min: 0.001, max: 0.02, step: 0.001 },
     { key: 'qualiNoise', label: 'Quali Noise', desc: 'Qualifying lap noise (sd, share of pace)', format: 'decimal' as const, min: 0, max: 0.1, step: 0.005 },
     { key: 'qualiFlubChance', label: 'Quali Flub', desc: 'Chance a qualifying is ruined', format: 'percent' as const, min: 0, max: 0.3, step: 0.01 },
+    { key: 'qualiAccelWeight', label: 'Quali Acceleration', desc: 'Acceleration as one-lap pace: score × (1 + (acc − 1) × this)', format: 'decimal' as const, min: 0, max: 0.5, step: 0.005 },
   ];
   for (const v of gridVars) {
     vars.push({ category: 'Grid', categoryIcon: 'race.finish', path: `grid.${v.key}`, label: v.label, description: v.desc, format: v.format, min: v.min, max: v.max, step: v.step });

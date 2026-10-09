@@ -8,7 +8,7 @@ import PositionDelta from './PositionDelta';
 import TireHistory from './TireHistory';
 import type { ColumnConfig, RowContext } from './types';
 import { Driver } from '../../RaceEngine';
-import TagChips, { EffectChips } from './TagChips';
+import { EffectChips } from './EffectChips';
 import { CardDot, CardFace } from '../../cards/CardFace';
 import { CANON_VARIABLES } from '../../simlab/types';
 import { GameIcon } from '../../icons/GameIcon';
@@ -328,24 +328,22 @@ export const COLUMN_TIRES: ColumnConfig = {
   },
 };
 
-// Identity tag chips (driver/car/team tags). Dormant tags render dim; a tag
-// whose condition gate is open (or whose trigger has fired) lights up — you
-// can literally watch Rain Dancer wake when the skies open.
+// Cards on the car (genesis traits, gear) and the things that happened to it
+// mid-race (track events, damage, a spin, cooked tyres, a pit-stop mood).
 export const COLUMN_TAGS: ColumnConfig = {
   id: 'tags',
   header: 'Cards',
   width: '118px',
   align: 'center',
   render: (driver: Driver, ctx: RowContext) => {
-    // One column for everything on the car: identity tags, then the transient
-    // ones (track events, inflictions, damage) — they're all tags at heart.
-    const hits = (ctx.effectStack ?? []).filter(e => e.source === 'track_event' || e.source === 'infliction' || e.source === 'damage');
+    // One column for everything on the car: its cards, then the transient
+    // effects (track events, in-race effects, inflictions, damage).
+    const hits = (ctx.effectStack ?? []).filter(e => e.source === 'track_event' || e.source === 'effect' || e.source === 'infliction' || e.source === 'damage');
     const cards = driver.cards ?? [];
-    if (driver.tags.length === 0 && cards.length === 0 && hits.length === 0) return <span className="muted-cell">—</span>;
+    if (cards.length === 0 && hits.length === 0) return <span className="muted-cell">—</span>;
     return (
       <span className="tag-chips">
         {cards.map(c => (ctx.sealed ? <CardDot key={c.id} card={c} /> : <CardFace key={c.id} card={c} size="mini" flippable={false} />))}
-        {!ctx.sealed && driver.tags.length > 0 && <TagChips tags={driver.tags} stack={ctx.effectStack} />}
         {hits.length > 0 && <EffectChips entries={hits} />}
       </span>
     );

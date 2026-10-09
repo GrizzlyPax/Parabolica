@@ -173,11 +173,10 @@ export interface PitStopResults {
 // Track how events affect driver performance
 
 export interface EventPerformance {
-  eventId: string;              // Unique ID (track event id or tag id)
+  eventId: string;              // Unique ID (track event id or in-race effect id)
   eventName: string;            // Display name
   eventEmoji: string;           // Emoji for display
-  eventSource: 'track' | 'tag'; // Where this event comes from
-  tagType?: 'driver' | 'car' | 'team'; // If source is 'tag'
+  eventSource: 'track' | 'effect'; // Where this event comes from
   description?: string;         // What the event does
   flavorText?: string;          // Flavor text for the event
 
@@ -446,7 +445,8 @@ export const POINTS_SYSTEM = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1];
 
 export interface TireCompoundConfig {
   speedBonus: number;      // Multiplier (1.08 = +8% for soft)
-  lifeLaps: number;           // Laps from fresh to the cliff (criticalAt) at 3★ tyre mgmt, mid aggression
+  lifeShare: number;       // Life as a share of the race (#534): laps to the cliff = lifeShare × totalLaps, at 3★ tyre mgmt, mid aggression
+  lifeFloorLaps: number;   // …never fewer laps than this (short races)
   criticalAt: number;      // Wear % when cliff starts (70 for soft)
   cliffSeverity: number;   // How harsh the cliff is (0.85 for soft)
   blowoutRisk: number;     // Base blowout chance per tick
@@ -468,6 +468,7 @@ export interface SimVariables {
     // Wear factors
     aggressionWearMultiplier: number; // How much aggression affects wear (0.4)
     teamTireMgmtWearPerStar: number;  // Team tire mgmt wear scaling around 3★ neutral (0 = stat dormant)
+    setLifeLuck: number;              // Hidden ± share of life each new set rolls on its own seeded stream (#535: 0.10)
   };
 
   // === CRASH SYSTEM ===
@@ -507,11 +508,12 @@ export interface SimVariables {
     quickStopBase: number;            // Base quick stop chance (0.03)
     quickStopPerStar: number;         // Quick stop bonus per star (0.05)
     // The stop rule (#249): enforced at the flag with a time penalty
-    minStops: number;                 // Classified finish needs at least this many stops (2); 0 = no rule
-    requireAllCompounds: boolean;     // ...and every compound used (true)
+    minStops: number;                 // Classified finish needs at least this many stops (1); 0 = no rule
+    requireCompoundChange: boolean;   // ...on two different compounds (real F1, #534: true)
+    requireAllCompounds: boolean;     // ...or every compound used (false since #534)
     penaltyLapFraction: number;       // Penalty per unmet stop/compound, as a share of the driver's average lap (0.5)
     // The decision
-    lastPitLapBuffer: number;         // No non-critical stop with <= this many laps left (2)
+    lastPitShare: number;             // No non-critical stop in the last this share of the race (#534: 0.13 → 2 laps of 16)
     strategyWearLean: number;         // Archetype lean on the pit point (±fraction of criticalAt; short/std/long camps) (0.1)
     scPitChance: number;              // Per-tick chance to take a cheap stop under the Unsafety Car when one is owed (0.5)
     scPitMinWear: number;             // Min tire wear % before an SC stop is worth it (15)
@@ -568,6 +570,8 @@ export interface SimVariables {
     qualiNoise: number;
     /** Chance a driver's qualifying is ruined (traffic, a mistake) and they drop to the back half. */
     qualiFlubChance: number;
+    /** Acceleration doubles as one-lap pace (#496): score × (1 + (acceleration − 1) × this). */
+    qualiAccelWeight: number;
   };
 
   // === OVERTAKING (#246 pass 3) ===
@@ -653,12 +657,12 @@ export interface SimVariables {
 // Default "Canon" values - tuned for ~40% Lead Lap, ~22% DNF, compressed field
 export const CANON_VARIABLES: SimVariables = {
   tires: {
-    // #246 pass 1: life in LAPS (not race share), a 3% soft→hard gap (was 15%),
-    // and a cliff that hurts on every compound. S+M+H ≈ 21 laps > a 16-lap race,
-    // so the question is which compound carries the long stint, not survival.
-    soft: { speedBonus: 1.015, lifeLaps: 5, criticalAt: 70, cliffSeverity: 0.85, blowoutRisk: 0.0003 },
-    medium: { speedBonus: 1.00, lifeLaps: 7, criticalAt: 75, cliffSeverity: 0.7, blowoutRisk: 0.0002 },
-    hard: { speedBonus: 0.985, lifeLaps: 9, criticalAt: 80, cliffSeverity: 0.6, blowoutRisk: 0.0001 },
+    // #534 (v0.6): life as a SHARE of the race (soft 1/3 · medium 1/2 · hard
+    // 3/5, with floors for short races), so a 14-lap and a 30-lap race plan
+    // alike; a 3% soft→hard gap and a cliff that hurts on every compound.
+    soft: { speedBonus: 1.015, lifeShare: 1 / 3, lifeFloorLaps: 2, criticalAt: 70, cliffSeverity: 0.85, blowoutRisk: 0.0003 },
+    medium: { speedBonus: 1.00, lifeShare: 0.5, lifeFloorLaps: 3, criticalAt: 75, cliffSeverity: 0.7, blowoutRisk: 0.0002 },
+    hard: { speedBonus: 0.985, lifeShare: 0.6, lifeFloorLaps: 4, criticalAt: 80, cliffSeverity: 0.6, blowoutRisk: 0.0001 },
     precliffStart: 40,
     precliffMaxPenalty: 0.05,
     cliffExponent: 1.5,
@@ -667,6 +671,7 @@ export const CANON_VARIABLES: SimVariables = {
     minSpeedFloor: 0.60,
     aggressionWearMultiplier: 0.4,
     teamTireMgmtWearPerStar: 0.25,         // Balance Pass One (#481)
+    setLifeLuck: 0.10,                     // #535 (v0.6)
   },
   crashes: {
     baseCrashChance: 0.00008,           // Reduced from 0.0001 for stable DNF rate
@@ -696,10 +701,11 @@ export const CANON_VARIABLES: SimVariables = {
     slowStopPerStar: 0.07,
     quickStopBase: 0.03,
     quickStopPerStar: 0.05,
-    minStops: 2,
-    requireAllCompounds: true,
+    minStops: 1,                           // #534 (v0.6): real F1 — one stop, change compound
+    requireCompoundChange: true,
+    requireAllCompounds: false,
     penaltyLapFraction: 0.5,
-    lastPitLapBuffer: 2,
+    lastPitShare: 0.13,                    // #534 (v0.6): no planned stop in the last ~13% of the race
     strategyWearLean: 0.1,
     scPitChance: 0.5,
     scPitMinWear: 15,
@@ -750,7 +756,8 @@ export const CANON_VARIABLES: SimVariables = {
   grid: {
     slotSpacing: 0.005,
     qualiNoise: 0.02,
-    qualiFlubChance: 0.20,                 // Balance Pass One (#481)
+    qualiFlubChance: 0.08,                 // #496 (v0.6): about 1 ruined lap in 12 (was 1 in 5)
+    qualiAccelWeight: 0.115,               // #496 (v0.6): ~+1% one-lap pace per Acceleration step
   },
   overtaking: {
     followGap: 0.006,

@@ -2,7 +2,7 @@
 // (equipment / upgrade / facility) sits in capped slots; traits are permanent;
 // effects are timed and dealt by the sim (v0.6). Rule cards are a different
 // thing (src/data/ruleCards.ts).
-import type { Rarity } from '../data/tags';
+import type { Rarity } from './rarity';
 
 /** The 11 stats a card can move, keyed as the engine names them. */
 export type DriverStatKey = 'baseSpeed' | 'consistency' | 'luck' | 'acceleration' | 'endurance' | 'aggression';
@@ -16,7 +16,7 @@ export type CardTarget = 'driver' | 'car' | 'team';
 
 export interface CardStat {
   stat: StatKey;
-  /** Percent, e.g. 10 = +10%. Effects carry 0: their size comes from the moment (v0.6). */
+  /** Grade points on the 0–100 scale (#335), e.g. 10 = +10 grade. Effects carry 0: their size comes from the moment (v0.6). */
   pct: number;
 }
 

@@ -1,7 +1,7 @@
 {
   "name": "race-engine",
   "private": true,
-  "version": "0.5.1",
+  "version": "0.6.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -13,8 +13,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "glossary": "tsx scripts/glossary.mjs",
-    "lab": "tsx scripts/lab.ts",
-    "calibrate": "tsx scripts/calibrate-tags.ts"
+    "lab": "tsx scripts/lab.ts"
   },
   "dependencies": {
     "react": "^18.3.1",

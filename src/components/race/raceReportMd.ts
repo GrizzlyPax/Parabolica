@@ -111,8 +111,8 @@ export function buildRaceReportMd(meta: RaceReportMeta, drivers: Driver[], sampl
   lines.push('');
   const bestLap = (d: Driver) => d.lapTimes.length ? fmtSecs(Math.min(...d.lapTimes)) : '—';
   const avgLap = (d: Driver) => d.lapTimes.length ? fmtSecs(d.lapTimes.reduce((a, b) => a + b, 0) / d.lapTimes.length) : '—';
-  const tagStr = (d: Driver) => d.tags.length ? d.tags.map(t => `${t.emoji} ${t.name}`).join(', ') : '—';
-  lines.push('| P | Driver | Team | Grid | Δ | Best | Avg | Stints | Pits | Tags |');
+  const tagStr = (d: Driver) => d.cards?.length ? d.cards.map(c => c.name).join(', ') : '—';
+  lines.push('| P | Driver | Team | Grid | Δ | Best | Avg | Stints | Pits | Cards |');
   lines.push('|---|--------|------|------|---|------|-----|--------|------|------|');
   classified.forEach((d, i) => {
     const p = i + 1;
@@ -165,15 +165,15 @@ export function buildRaceReportMd(meta: RaceReportMeta, drivers: Driver[], sampl
     if (penalties.length) lines.push(`- Penalties at the flag: ${penalties.map(e => `${byDriver.get(e.driverId)?.name ?? e.driverName} (${e.description})`).join(' · ')}`);
     lines.push('');
 
-    const fired = ev.filter(e => e.type === 'tag_activation' || e.type === 'tag_acquired');
+    const fired = ev.filter(e => e.type === 'effect_applied');
     const hits = ev.filter(e => e.type === 'track_event' || e.type === 'track_event_effect');
     lines.push('## What the oddities did');
     lines.push('');
     if (fired.length) {
-      lines.push('Tag activations and mid-race pickups (passive and gated tags act silently):');
+      lines.push('In-race effects (damage, spins, cooked tyres, pit-stop moods):');
       for (const e of fired) lines.push(`- L${e.lap ?? '?'} ${e.emoji} ${byDriver.get(e.driverId)?.name ?? e.driverName}: ${e.description}`);
     } else {
-      lines.push('- No triggered tag fired this race.');
+      lines.push('- No in-race effect landed this race.');
     }
     if (hits.length) {
       lines.push('');

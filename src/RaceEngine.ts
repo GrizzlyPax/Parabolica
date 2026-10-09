@@ -1,8 +1,38 @@
-import { Tag, getTagById, RaceContext, evaluateTagCondition, describeCondition, TRIGGER_LABELS } from './data/tags';
-import { IN_RACE_RULES, InRaceRule, InRaceDuration } from './data/inRace';
 import { WeatherState, isNeutralWeather } from './data/weather';
 import type { Card, CardStat } from './cards/types';
-import { SimVariables, CANON_VARIABLES } from './simlab/types';
+
+// === IN-RACE EFFECTS (#232b, tag-free since #334) ===
+// Timed states the race hands a driver. Effect cards from the sim (#333) will
+// replace this table; the sizes are the in-race tags' as they were.
+export type InRaceDuration =
+  /** Ends when the driver's lap counter has advanced this many laps. */
+  | { laps: number }
+  /** Until the driver next leaves the pits. */
+  | 'until-pit'
+  /** Rest of this race. */
+  | 'race';
+
+export interface InRaceEffect {
+  id: string;
+  name: string;
+  emoji: string;
+  /** The event that triggers it; `match` narrows it to a description (the mistake flavour). */
+  on: string;
+  match?: RegExp;
+  duration: InRaceDuration;
+  effects: { speedModifier?: number; consistencyModifier?: number; luckModifier?: number; crashResistance?: number; pitSpeedModifier?: number };
+  /** Feed line; the driver's name is prepended by the event system. */
+  text: string;
+}
+
+export const IN_RACE_EFFECTS: InRaceEffect[] = [
+  { id: 'damaged', name: 'Damaged', emoji: '🔧', on: 'crash', duration: 'race', effects: { speedModifier: 0.85 }, text: 'limps on with a damaged car' },
+  { id: 'spun', name: 'Spun', emoji: '🌀', on: 'driver_error', match: /^Spin/, duration: { laps: 2 }, effects: { consistencyModifier: 0.9 }, text: 'is rattled after the spin' },
+  { id: 'cooked-tyres', name: 'Cooked Tyres', emoji: '🔥', on: 'tire_warning', duration: 'until-pit', effects: { speedModifier: 0.97 }, text: 'is nursing cooked tyres to the pits' },
+  { id: 'sulking', name: 'Sulking', emoji: '🐢', on: 'slow_pit_stop', duration: { laps: 1 }, effects: { consistencyModifier: 0.96 }, text: 'is sulking about that stop' },
+  { id: 'fired-up', name: 'Fired Up', emoji: '⚡', on: 'quick_pit_stop', duration: { laps: 1 }, effects: { speedModifier: 1.01 }, text: 'is fired up after a lightning stop' },
+];
+import { SimVariables, CANON_VARIABLES, TireCompoundConfig } from './simlab/types';
 import { Rng, mulberry32, deriveSeed, randomSeed } from './engine/rng';
 
 export interface DriverStats {
@@ -53,10 +83,6 @@ export interface RosterDriver {
   number?: number;
   /** Trait cards baked into the stats (Quick Race #337, Season Mode). Display only. */
   cards?: Card[];
-  /** Every tag on this driver (driver, car and team tags together — a tag's
-   * `target` says which). Genesis rolls, interventions and acquisitions all
-   * land here; capped per driver by the league (MAX_TAGS_PER_DRIVER). */
-  tags: Tag[];
 }
 
 export interface Driver {
@@ -117,8 +143,6 @@ export interface Driver {
   /** Time penalty added at the flag (#249 stop rule), in ticks, and why. */
   penaltyTicks: number;
   penaltyReason: string | null;
-  // Tags — the full stack (driver + car + team), see RosterDriver.tags
-  tags: Tag[];
 }
 
 export interface TickFactors {
@@ -137,6 +161,7 @@ export interface TickFactors {
 export interface RaceConfig {
   totalLaps: number;              // How many laps to complete
   lapLength: number;              // Distance units per lap
+  tyreWear: number;               // The track's wear dial (#536): wear per tick × this (1 = canon)
   tickInterval: number;           // Ms between ticks
   baseSpeedMin: number;           // Minimum base speed per tick
   baseSpeedMax: number;           // Maximum base speed per tick
@@ -189,13 +214,13 @@ export interface TireCompoundProperties {
   criticalAt: number;     // Wear % when performance cliff begins
   cliffSeverity: number;  // How steep the performance drop is (0-1, higher = steeper)
   blowoutRisk: number;    // Base blowout chance per tick when past critical (0-1)
-  lifeLaps: number;       // Laps from fresh to the cliff (#246)
+  lifeLaps: number;       // Laps from fresh to the cliff, for THIS race (#534: lifeShare × laps, floored)
 }
 
 // Tire tuning lives in CANON_VARIABLES (simlab/types.ts) — the single source of
 // truth shared by live races, Sim Lab, and Bet Lab. A stale copy here previously
 // gave live races 5× the blowout risk that the labs calibrated against.
-export const TIRE_COMPOUNDS: Record<TireCompound, TireCompoundProperties> = CANON_VARIABLES.tires;
+export const TIRE_COMPOUNDS: Record<TireCompound, TireCompoundConfig> = CANON_VARIABLES.tires;
 
 // === DRIVER STATUS TYPES ===
 
@@ -248,15 +273,13 @@ export type RaceEventType =
   // Track events
   | 'track_event'      // Track event triggered
   | 'track_event_effect' // Effect from track event applied to driver
-  // Tag events
-  | 'tag_activation'   // A driver/car/team tag triggered
   // Unsafety Car events
   | 'unsafety_car_deployed'  // The Unsafety Car has been deployed
   | 'unsafety_car_recalled'  // The Unsafety Car is returning to the void
   // Mistakes layer (#82)
   | 'driver_error'     // Non-terminal mistake: spin / lock-up / wide moment
-  | 'tag_acquired'     // A tag was picked up mid-race (#232b)
-  | 'tag_expired';     // …and ran out
+  | 'effect_applied'   // A timed in-race effect landed on a driver (damage, a spin, cooked tyres, a stop)
+  | 'effect_expired';  // …and ran out
 
 export interface RaceEvent {
   tick: number;
@@ -304,10 +327,10 @@ export interface ActiveTrackEffect {
 }
 
 // === UNIFIED EFFECT SYSTEM ===
-// Both tags and track events create effects through this unified interface
+// Every timed modifier on a driver (mistakes, damage, in-race states) goes through this
 export interface ActiveEffect {
   id: string;                    // Unique effect ID
-  source: 'track' | 'tag';       // Where it came from
+  source: 'track' | 'effect';    // 'track': mistakes and strikes; 'effect': the in-race states below
   sourceId: string;              // e.g., "fog-rolls-in" or "clutch-performer"
   sourceName: string;            // Display name
   sourceEmoji: string;           // For UI
@@ -325,7 +348,7 @@ export interface ActiveEffect {
 /** One thing acting on a driver right now (or waiting to), in UI terms.
  * Built by getEffectStack — the legibility layer (#243). */
 export interface EffectStackEntry {
-  source: 'tag' | 'weather' | 'track' | 'track_event' | 'infliction' | 'damage' | 'safety_car';
+  source: 'effect' | 'weather' | 'track' | 'track_event' | 'infliction' | 'damage' | 'safety_car';
   id: string;
   name: string;
   emoji: string;
@@ -339,8 +362,6 @@ export interface EffectStackEntry {
   luck: number;
   crash: number;
   pit: number;
-  /** For tags: the tag definition, so the UI can show tier/description. */
-  tag?: Tag;
 }
 
 type RaceListener = (drivers: Driver[]) => void;
@@ -364,6 +385,7 @@ const DEFAULT_DRIVERS = [
 export const DEFAULT_CONFIG: RaceConfig = {
   totalLaps: 10,
   lapLength: 500,
+  tyreWear: 1,
   tickInterval: 100,
   baseSpeedMin: 3,
   baseSpeedMax: 12,
@@ -446,14 +468,9 @@ class RaceEngine {
   private lapPositionHistory: { lap: number; order: number[]; sc: boolean }[] = [];
   private lastRecordedLap = 0;
 
-  // Tag activation state - tracks which tags have activated and when
-  private activeTagEffects: Map<number, { tagId: string; speedModifier: number; consistencyModifier: number; luckModifier: number; expiresAtTick: number | null }[]> = new Map();
-  private tagActivatedThisRace: Set<string> = new Set();  // "driverId-tagId" to track one-time activations
-  // In-race tags (#232b): what each driver picked up mid-race and when it ends.
-  private inRaceRules: InRaceRule[] = IN_RACE_RULES;
-  private inRaceTags: Map<number, { tagId: string; sinceLap: number; duration: InRaceDuration; expiresAtLap: number | null }[]> = new Map();
-  /** Tags picked up with a {races:n} duration — the league carries them over. */
-  private inRaceCarryovers: { driverId: number; tagId: string; races: number; lap: number }[] = [];
+  // In-race effects (#232b, kept when tags retired in #334): what each driver
+  // picked up mid-race and when it ends. The effect itself lives in unifiedEffects.
+  private inRaceEffects: Map<number, { effectId: string; sinceLap: number; duration: InRaceDuration; expiresAtLap: number | null }[]> = new Map();
   /** Events trimmed off raceEvents by the UI cap, in order — so getFullEvents()
    * can hand reports the whole race (#245). Cleared with raceEvents. */
   private droppedEvents: RaceEvent[] = [];
@@ -470,10 +487,6 @@ class RaceEngine {
   // streams (deriveSeed) stay independent of the race rolls, so a feature that
   // reads them is byte-identical to today whenever its gate knob is 0.
   private strategySeed: number = randomSeed();
-  // Tag activation rolls (triggerChance). Derived from the race seed like the
-  // strategy stream, keyed per driver+tag so adding a tag to one driver never
-  // moves another driver's rolls. See tryActivateTag.
-  private tagRngs: Map<string, Rng> = new Map();
 
   // #82 mistakes layer: per-driver tick until which no new mistake may start
   // (active recovery + refractory window). Cleared per race.
@@ -487,16 +500,8 @@ class RaceEngine {
     { id: 'flatspot', name: 'Flat Spot', emoji: '🫨', text: 'flat-spots the tires — the car vibrates like a paint shaker' },
   ] as const;
 
-  // Conditional tags (e.g. Front Runner "when leading") are evaluated live each
-  // tick against this cache, not stored as permanent effects — that's the #156
-  // fix. Rebuilt once per tick; reads engine state only, so it adds no RNG.
-  private raceContextCache: Map<number, RaceContext> = new Map();
-  // Active weather/track condition ids for this race (e.g. 'rain'). Empty until
-  // the weather layer (C2) populates it; Rain Dancer stays dormant until then.
-  private currentConditions: Set<string> = new Set();
-  // This race's weather (C2). Applies a field-wide lean to every driver and
-  // sets currentConditions so condition-gated tags wake. Null = no weather
-  // (Quick Race). Set per race; not cleared by reset() (it's race setup).
+  // This race's weather (C2). Applies a field-wide lean to every driver.
+  // Null = no weather (Quick Race). Set per race; not cleared by reset().
   private weather: WeatherState | null = null;
 
   private constructor() {
@@ -519,7 +524,6 @@ class RaceEngine {
   setSeed(seed: number): void {
     this.rng = mulberry32(seed);
     this.strategySeed = seed; // side streams replay with the race
-    this.tagRngs.clear();
     this.currentSeed = seed;
   }
 
@@ -527,22 +531,10 @@ class RaceEngine {
   getSeed(): number | null { return this.currentSeed; }
   private currentSeed: number | null = null;
 
-  /** One roll from the side stream for (driver, tag) — see tagRngs. */
-  private tagRoll(driverId: number, tagId: string): number {
-    const key = `${driverId}:${tagId}`;
-    let r = this.tagRngs.get(key);
-    if (!r) {
-      r = mulberry32(deriveSeed(this.strategySeed, 'tag', key));
-      this.tagRngs.set(key, r);
-    }
-    return r();
-  }
-
   /** Restore the default unseeded behavior (live Quick Race). */
   clearSeed(): void {
     this.rng = Math.random;
     this.strategySeed = randomSeed(); // stable within a live race, fresh each one
-    this.tagRngs.clear();
     this.currentSeed = null;
   }
 
@@ -559,18 +551,34 @@ class RaceEngine {
   // === SIM VARIABLE HELPERS ===
   // These methods return overridden values from simVars or fall back to hardcoded defaults
 
+  /** A compound's properties for THIS race: life in laps comes from its share
+   * of the race distance (#534), never fewer than its floor. */
   private getTireCompound(compound: TireCompound): TireCompoundProperties {
-    if (this.simVars) {
-      const v = this.simVars.tires[compound];
-      return {
-        speedBonus: v.speedBonus,
-        lifeLaps: v.lifeLaps,
-        criticalAt: v.criticalAt,
-        cliffSeverity: v.cliffSeverity,
-        blowoutRisk: v.blowoutRisk,
-      };
-    }
-    return TIRE_COMPOUNDS[compound];
+    const v = (this.simVars ?? CANON_VARIABLES).tires[compound];
+    return {
+      speedBonus: v.speedBonus,
+      lifeLaps: Math.max(v.lifeFloorLaps, v.lifeShare * this.config.totalLaps),
+      criticalAt: v.criticalAt,
+      cliffSeverity: v.cliffSeverity,
+      blowoutRisk: v.blowoutRisk,
+    };
+  }
+
+  /** The closing window (#534): no planned stop with this many laps left
+   * (`pits.lastPitShare` of the race, at least one lap). */
+  private lastPitLaps(): number {
+    return Math.max(1, Math.round(this.getPitVars().lastPitShare * this.config.totalLaps));
+  }
+
+  /** Tyre luck (#535): each new set has a hidden ±`setLifeLuck` life roll on
+   * its own seeded stream (seed, 'tyres', driver, stint), so identical plans
+   * don't play out identically and the race RNG never moves. Stint = stops so
+   * far; the starting set is stint 0. */
+  private setLifeFactor(driver: Driver): number {
+    const luck = this.getTireVars().setLifeLuck;
+    if (!luck) return 1;
+    const r = mulberry32(deriveSeed(this.strategySeed, 'tyres', driver.id, driver.pitStops.length))();
+    return 1 + (r * 2 - 1) * luck;
   }
 
   private getCrashVars() {
@@ -629,7 +637,6 @@ class RaceEngine {
         position: 0,
         color: d.color,
         stats: { ...d.stats },
-        tags: [],
         currentLap: 0,
         lapTimes: [],
         sectorTimes: [],
@@ -708,7 +715,6 @@ class RaceEngine {
         teamStats: d.teamStats,
         number: d.number,
         cards: d.cards,
-        tags: [...(d.tags ?? [])],
         // Tire/Pit/Crash initial state
         tireState: {
           compound: startingCompound,
@@ -823,77 +829,80 @@ class RaceEngine {
       impact,
       magnitude: Math.min(1, Math.max(0, magnitude)),
     });
-    if (driver && type !== 'tag_acquired' && type !== 'tag_expired') this.applyInRaceRules(type, driver, description);
+    if (driver && type !== 'effect_applied' && type !== 'effect_expired') this.applyInRaceEffects(type, driver, description);
   }
 
-  // === IN-RACE ACQUISITION (#232b) ===
+  // === IN-RACE EFFECTS (#232b; tag-free since #334) ===
+  // Timed states a driver picks up DURING a race because of something that
+  // just happened: damage, a spin, cooked tyres, a fumbled or a lightning
+  // stop. They ride the unified effect system (source 'effect'); the duration
+  // bookkeeping (laps / until the next stop / rest of race) is here. Effect
+  // cards from the sim (#333) will formalise these; the numbers are unchanged
+  // from the in-race tags they replace.
 
-  /** Replace the rule set (rulesets/cards will plumb this). */
-  setInRaceRules(rules: InRaceRule[]): void { this.inRaceRules = rules; }
-
-  private applyInRaceRules(type: RaceEventType, driver: Driver, description: string): void {
-    if (type === 'pit_exit') this.expireInRaceTags(driver, e => e.duration === 'until-pit');
-    for (const rule of this.inRaceRules) {
+  private applyInRaceEffects(type: RaceEventType, driver: Driver, description: string): void {
+    if (type === 'pit_exit') this.expireInRaceEffects(driver, e => e.duration === 'until-pit');
+    for (const rule of IN_RACE_EFFECTS) {
       if (rule.on !== type) continue;
       if (rule.match && !rule.match.test(description)) continue;
-      const tag = getTagById(rule.tagId);
-      if (!tag) continue;
-      this.attachInRaceTag(driver, tag, rule);
+      this.applyInRaceEffect(driver, rule);
     }
   }
 
-  /** Put a tag on a driver mid-race. Transient states bypass the slot cap.
-   * Mutates the driver object passed in (the one the caller holds). */
-  private attachInRaceTag(driver: Driver, tag: Tag, rule: InRaceRule): void {
-    if (driver.tags.some(t => t.id === tag.id)) return;
-    driver.tags = [...driver.tags, tag];
+  /** Put an in-race effect on a driver. One of each at a time. */
+  private applyInRaceEffect(driver: Driver, rule: InRaceEffect): void {
+    const list = this.inRaceEffects.get(driver.id) ?? [];
+    if (list.some(e => e.effectId === rule.id)) return;
     const lap = driver.currentLap;
     const d = rule.duration;
-    const expiresAtLap = typeof d === 'object' && 'laps' in d ? lap + d.laps : null;
-    const list = this.inRaceTags.get(driver.id) ?? [];
-    list.push({ tagId: tag.id, sinceLap: lap, duration: d, expiresAtLap });
-    this.inRaceTags.set(driver.id, list);
-    if (typeof d === 'object' && 'races' in d) this.inRaceCarryovers.push({ driverId: driver.id, tagId: tag.id, races: d.races, lap });
-    // Passive, ungated tags act through the unified effect system; a gated
-    // one is read live by getConditionalModifier, so it needs no activation.
-    if (tag.trigger === 'passive' && !tag.condition) this.tryActivateTag(driver, tag, {});
-    this.logEvent('tag_acquired', driver, `${tag.name}: ${rule.text}`, tag.effects.speedModifier && tag.effects.speedModifier > 1 ? 'positive' : 'negative', 0.6, tag.emoji);
+    const expiresAtLap = typeof d === 'object' ? lap + d.laps : null;
+    list.push({ effectId: rule.id, sinceLap: lap, duration: d, expiresAtLap });
+    this.inRaceEffects.set(driver.id, list);
+    this.addEffect(driver.id, {
+      id: `effect-${rule.id}-${driver.id}-${this.raceState.totalTicks}`,
+      source: 'effect',
+      sourceId: rule.id,
+      sourceName: rule.name,
+      sourceEmoji: rule.emoji,
+      affectedDriverIds: [driver.id],
+      expiresAtTick: null,
+      speedModifier: rule.effects.speedModifier ?? 1,
+      consistencyModifier: rule.effects.consistencyModifier ?? 1,
+      luckModifier: rule.effects.luckModifier ?? 1,
+      crashResistance: rule.effects.crashResistance ?? 0,
+      pitSpeedModifier: rule.effects.pitSpeedModifier ?? 1,
+    });
+    const good = (rule.effects.speedModifier ?? 1) > 1;
+    this.logEvent('effect_applied', driver, `${rule.name}: ${rule.text}`, good ? 'positive' : 'negative', 0.6, rule.emoji);
   }
 
-  private expireInRaceTags(driver: Driver, pred: (e: { tagId: string; duration: InRaceDuration; expiresAtLap: number | null }) => boolean): void {
-    const list = this.inRaceTags.get(driver.id);
+  private expireInRaceEffects(driver: Driver, pred: (e: { effectId: string; duration: InRaceDuration; expiresAtLap: number | null }) => boolean): void {
+    const list = this.inRaceEffects.get(driver.id);
     if (!list) return;
     const keep: typeof list = [];
     for (const e of list) {
       if (!pred(e)) { keep.push(e); continue; }
-      driver.tags = driver.tags.filter(t => t.id !== e.tagId);
       const effects = this.unifiedEffects.get(driver.id);
-      if (effects) for (const fx of effects) if (fx.source === 'tag' && fx.sourceId === e.tagId) fx.expiresAtTick = this.raceState.totalTicks;
-      this.tagActivatedThisRace.delete(`${driver.id}-${e.tagId}`); // may be picked up again
-      const tag = getTagById(e.tagId);
-      this.logEvent('tag_expired', driver, `${tag?.name ?? e.tagId} wears off`, 'neutral', 0.3, tag?.emoji);
+      if (effects) for (const fx of effects) if (fx.source === 'effect' && fx.sourceId === e.effectId) fx.expiresAtTick = this.raceState.totalTicks;
+      const rule = IN_RACE_EFFECTS.find(r => r.id === e.effectId);
+      this.logEvent('effect_expired', driver, `${rule?.name ?? e.effectId} wears off`, 'neutral', 0.3, rule?.emoji);
     }
-    if (keep.length) this.inRaceTags.set(driver.id, keep); else this.inRaceTags.delete(driver.id);
+    if (keep.length) this.inRaceEffects.set(driver.id, keep); else this.inRaceEffects.delete(driver.id);
   }
 
   /** Lap-based expiries, checked every tick. */
-  private expireInRaceTagsByLap(): void {
-    for (const [driverId, list] of this.inRaceTags) {
+  private expireInRaceEffectsByLap(): void {
+    for (const [driverId, list] of this.inRaceEffects) {
       if (!list.some(e => e.expiresAtLap !== null)) continue;
       const driver = this.drivers.find(d => d.id === driverId);
       if (!driver) continue;
-      this.expireInRaceTags(driver, e => e.expiresAtLap !== null && driver.currentLap >= e.expiresAtLap);
+      this.expireInRaceEffects(driver, e => e.expiresAtLap !== null && driver.currentLap >= e.expiresAtLap);
     }
   }
 
-  /** How a mid-race tag got there and how long it has left (for the card). */
-  getInRaceTagInfo(driverId: number, tagId: string): { sinceLap: number; duration: InRaceDuration; expiresAtLap: number | null } | null {
-    return this.inRaceTags.get(driverId)?.find(e => e.tagId === tagId) ?? null;
-  }
-
-  /** Tags picked up mid-race that the league should carry into coming races. */
-  getInRaceCarryovers(): { driverId: number; tagId: string; races: number; lap: number }[] {
-    return [...this.inRaceCarryovers];
+  /** How an in-race effect got there and how long it has left (for the stack). */
+  getInRaceEffectInfo(driverId: number, effectId: string): { sinceLap: number; duration: InRaceDuration; expiresAtLap: number | null } | null {
+    return this.inRaceEffects.get(driverId)?.find(e => e.effectId === effectId) ?? null;
   }
 
   // Calculate pit box positions for all drivers based on team names (alphabetical)
@@ -1149,16 +1158,9 @@ class RaceEngine {
     this.qualiScores.clear();
     this.stuckBehind.clear();
     this.lastRecordedLap = 0;
-    // Reset tag activation state
-    this.activeTagEffects = new Map();
-    this.tagActivatedThisRace = new Set();
-    this.inRaceTags = new Map();
-    this.inRaceCarryovers = [];
-    // Reset unified effect storage
+    // Reset in-race effects + unified effect storage
+    this.inRaceEffects = new Map();
     this.unifiedEffects = new Map();
-    // Conditional-tag context is rebuilt each tick; clear stale data (the active
-    // race conditions in currentConditions are race setup, so they persist).
-    this.raceContextCache = new Map();
     this.notifyListeners();
     this.notifyStateListeners();
     this.notifyEventListeners();
@@ -1208,8 +1210,8 @@ class RaceEngine {
     let luckBonus = 1;
     if (this.rng() < perfVars.luckProcChance) {
       // Luck proc! Driver's luck stat determines how big the boost is
-      // Apply luck modifier from tags/effects (e.g., Cursed Chassis has 0.7x luck)
-      const effectiveLuck = driver.stats.luck * this.getTagLuckModifier(driver.id);
+      // Apply luck modifier from effects
+      const effectiveLuck = driver.stats.luck * this.getEffectModifier(driver.id, 'luckModifier');
       const minBoost = perfVars.luckMinBoostBase + effectiveLuck * perfVars.luckMinBoostPerStat;
       const maxBoost = perfVars.luckMaxBoostBase + effectiveLuck * perfVars.luckMaxBoostPerStat;
       luckBonus = 1 + minBoost + this.rng() * (maxBoost - minBoost);
@@ -1225,17 +1227,17 @@ class RaceEngine {
     // Track event speed modifier (from active effects like speed_boost/speed_penalty)
     const trackEventModifier = this.getActiveSpeedModifier(driver.id);
 
-    // Tag speed modifier (from activated tags)
-    const tagSpeedModifier = this.getTagSpeedModifier(driver.id);
-    const tagConsistencyModifier = this.getTagConsistencyModifier(driver.id);
+    // In-race effect modifiers (damage, a spin, cooked tyres, a stop)
+    const tagSpeedModifier = this.getEffectModifier(driver.id, 'speedModifier');
+    const tagConsistencyModifier = this.getEffectModifier(driver.id, 'consistencyModifier');
 
-    // Field-wide environment lean (C2 weather + C3 track tags): speed scales the
+    // Field-wide environment lean (C2 weather): speed scales the
     // whole field (duration, not order); consistency shrink adds variance that
     // rewards consistent drivers.
     const envSpeedModifier = this.getEnvSpeedModifier();
     const envConsistencyModifier = this.getEnvConsistencyModifier();
 
-    // Apply tag + environment consistency modifiers to the consistency effect
+    // Apply effect + environment consistency modifiers to the consistency effect
     const adjustedConsistencyEffect = consistencyEffect * tagConsistencyModifier * envConsistencyModifier;
 
     // === REBALANCE V1 (gated: both factors are exactly 1 when canon-dormant) ===
@@ -1310,7 +1312,7 @@ class RaceEngine {
       modifier -= tireVars.flatPenalty;
     }
 
-    // (Crash damage is the 'damaged' in-race tag now — #232b.)
+    // (Crash damage is the 'damaged' in-race effect — #232b.)
 
     // Floor at minSpeedFloor (allows for truly punishing degradation)
     return Math.max(tireVars.minSpeedFloor, modifier);
@@ -1384,15 +1386,16 @@ class RaceEngine {
   }
 
   /** Wear per tick, in "cliff units": a compound reaches criticalAt after
-   * lifeLaps laps at mid aggression and 3★ tyre management (#246). Life is in
-   * laps, not race share, so a long race means more stops — like racing. */
+   * lifeLaps laps at mid aggression and 3★ tyre management (#246), where
+   * lifeLaps is its share of the race (#534), × this set's hidden luck (#535),
+   * ÷ the track's wear dial (#536). */
   private calculateTireWear(driver: Driver): number {
     if (!this.config.enableTireWear) return 0;
     const compound = this.getTireCompound(driver.tireState.compound);
     const tireVars = this.getTireVars();
     const distancePerTick = driver.lastTickSpeed || 7;
     const lapFraction = distancePerTick / this.config.lapLength;
-    const wearPerLap = compound.criticalAt / compound.lifeLaps;
+    const wearPerLap = (compound.criticalAt / (compound.lifeLaps * this.setLifeFactor(driver))) * this.config.tyreWear;
     // Aggression 0.3–0.8 → ×1.0–1.4; mid (0.55) is the calibration point.
     const normalizedAggression = (driver.stats.aggression - 0.3) / 0.5;
     const aggressionFactor = (1 + normalizedAggression * tireVars.aggressionWearMultiplier) / (1 + 0.5 * tireVars.aggressionWearMultiplier);
@@ -1408,14 +1411,16 @@ class RaceEngine {
     return perTick * (this.config.lapLength / distancePerTick);
   }
 
-  /** The stop rule as it stands for this driver: stops and compounds still owed. */
-  private stopsOwed(driver: Driver): { stops: number; compounds: TireCompound[]; needed: number } {
+  /** The stop rule as it stands for this driver: stops, compounds and the
+   * compound change (#534, real F1: two different compounds) still owed. */
+  private stopsOwed(driver: Driver): { stops: number; compounds: TireCompound[]; change: boolean; needed: number } {
     const pitVars = this.getPitVars();
     const all: TireCompound[] = ['soft', 'medium', 'hard'];
     const used = driver.usedCompounds || [];
     const compounds = pitVars.requireAllCompounds ? all.filter(c => !used.includes(c)) : [];
     const stops = Math.max(0, pitVars.minStops - driver.pitStops.length);
-    return { stops, compounds, needed: Math.max(stops, compounds.length) };
+    const change = pitVars.requireCompoundChange && new Set(used).size < 2;
+    return { stops, compounds, change, needed: Math.max(stops, compounds.length, change ? 1 : 0) };
   }
 
   /**
@@ -1448,7 +1453,8 @@ class RaceEngine {
     const lean = 1 + this.getStrategyArchetype(driver) * pitVars.strategyWearLean;
     const pitAtWear = compound.criticalAt * lean;
     if (wear >= pitAtWear) { this.pitReasons.set(driver.id, 'cliff'); return true; }
-    if (lapsLeft > pitVars.lastPitLapBuffer && wear + this.wearPerLapFor(driver) >= pitAtWear) {
+    const buffer = this.lastPitLaps();
+    if (lapsLeft > buffer && wear + this.wearPerLapFor(driver) >= pitAtWear) {
       this.pitReasons.set(driver.id, 'ahead of the cliff');
       return true;
     }
@@ -1457,12 +1463,12 @@ class RaceEngine {
     if (owed.needed === 0) return false;
 
     // 4. Cheap stop under the Unsafety Car when a stop is owed.
-    if (pitVars.scPitChance > 0 && this.raceState.unsafetyCarActive && wear >= pitVars.scPitMinWear && lapsLeft > pitVars.lastPitLapBuffer) {
+    if (pitVars.scPitChance > 0 && this.raceState.unsafetyCarActive && wear >= pitVars.scPitMinWear && lapsLeft > buffer) {
       if (this.rng() < pitVars.scPitChance) { this.pitReasons.set(driver.id, 'safety car'); return true; }
     }
 
     // 5. Forced: the room to complete the rule is running out (while there is room).
-    if (lapsLeft > pitVars.lastPitLapBuffer && lapsLeft - pitVars.lastPitLapBuffer <= owed.needed) {
+    if (lapsLeft > buffer && lapsLeft - buffer <= owed.needed) {
       this.pitReasons.set(driver.id, 'the rule'); return true;
     }
     return false;
@@ -1546,7 +1552,6 @@ class RaceEngine {
     if (p > 0 && this.rng() < p) {
       this.stuckBehind.delete(driver.id);
       this.logEvent('overtake', driver, `passes ${ahead.shortName}${ticks >= ov.battleTicks ? ' after a fight' : ''}`, 'positive', 0.6);
-      this.evaluateDriverTags(driver, { isOvertaking: true });
       return Math.max(intended, aheadTotal - myLap * L + gap * 0.5);
     }
     this.stuckBehind.set(driver.id, { aheadId: ahead.id, ticks });
@@ -1566,7 +1571,9 @@ class RaceEngine {
    * Each driver's qualifying lap, in roster order, without touching the race:
    * the same side stream runQualifying reads, so the qualifying show (#495)
    * can play the session out before the lights and match the grid exactly.
-   * `ruined` is the qualiFlubChance roll. Display only.
+   * Acceleration doubles as one-lap pace (#496): score × (1 + (acc − 1) ×
+   * qualiAccelWeight), about +1% per step. `ruined` is the qualiFlubChance
+   * roll. Display only.
    */
   qualifyingLaps(): { id: number; score: number; ruined: boolean }[] {
     const g = this.getGridVars();
@@ -1577,7 +1584,8 @@ class RaceEngine {
       const ruined = r() < g.qualiFlubChance;
       const flub = ruined ? 0.95 : 1;
       const grip = (this.getCarStatVars().gripBase + (d.carStats?.grip ?? 3) * this.getCarStatVars().gripPerStar);
-      const score = this.packagePace(d) * (1 + z * sd) * flub * (0.98 + 0.02 * grip);
+      const oneLap = 1 + (d.stats.acceleration - 1) * g.qualiAccelWeight;
+      const score = this.packagePace(d) * oneLap * (1 + z * sd) * flub * (0.98 + 0.02 * grip);
       return { id: d.id, score, ruined };
     });
   }
@@ -1622,6 +1630,7 @@ class RaceEngine {
     const parts: string[] = [];
     if (owed.stops > 0) parts.push(`${owed.stops} stop${owed.stops > 1 ? 's' : ''} short`);
     if (owed.compounds.length > 0) parts.push(`never used ${owed.compounds.join(' or ')}`);
+    if (owed.change && owed.compounds.length === 0) parts.push('never changed compound');
     return { ticks, reason: parts.join(', ') };
   }
 
@@ -1671,10 +1680,8 @@ class RaceEngine {
       finalDuration = Math.floor(baseDuration * pitVars.quickStopMultiplier);
     }
 
-    // Apply pit speed modifier from tags/effects
-    // < 1 = faster pits (e.g., Pit Lane Special 0.75x)
-    // > 1 = slower pits (e.g., track pit_delay event)
-    const pitModifier = this.getTagPitModifier(driver.id);
+    // Apply pit speed modifier from effects (< 1 = faster, > 1 = slower)
+    const pitModifier = this.getEffectModifier(driver.id, 'pitSpeedModifier');
     finalDuration = Math.floor(finalDuration * pitModifier);
 
     return { duration: finalDuration, isSlowStop, isQuickStop };
@@ -1775,9 +1782,9 @@ class RaceEngine {
     const avgLuck = (d1.stats.luck + d2.stats.luck) / 2;
     crashChance *= (1 - avgLuck * crashVars.luckReduction); // Luck can save you
 
-    // Apply crash resistance from tags/effects (additive resistance, capped at -0.5 to +0.5)
+    // Apply crash resistance from effects + the field-wide environment (additive, capped at -0.5 to +0.5)
     // Positive resistance = less likely to crash, negative resistance = more likely
-    const avgCrashResistance = (this.getTagCrashResistance(d1.id) + this.getTagCrashResistance(d2.id)) / 2;
+    const avgCrashResistance = (this.getCrashResistance(d1.id) + this.getCrashResistance(d2.id)) / 2;
     crashChance *= (1 - avgCrashResistance);
     // A car held in line behind another (#246 pass 3) is following, not
     // wrecking: the risk of a battle lives in the pass attempts, not the queue.
@@ -1884,15 +1891,6 @@ class RaceEngine {
       effect => effect.expiresAtTick > this.raceState.totalTicks
     );
 
-    // Clean up legacy tag effects
-    for (const [driverId, effects] of this.activeTagEffects.entries()) {
-      const activeEffects = effects.filter(e => e.expiresAtTick === null || e.expiresAtTick > this.raceState.totalTicks);
-      if (activeEffects.length === 0) {
-        this.activeTagEffects.delete(driverId);
-      } else {
-        this.activeTagEffects.set(driverId, activeEffects);
-      }
-    }
 
     // Clean up unified effect storage
     for (const [driverId, effects] of this.unifiedEffects.entries()) {
@@ -1905,187 +1903,9 @@ class RaceEngine {
     }
   }
 
-  // === TAG TRIGGER SYSTEM ===
-
-  /**
-   * Evaluate if a tag should trigger based on its trigger type and current race state
-   */
-  private shouldTagTrigger(driver: Driver, tag: Tag, context: { isOvertaking?: boolean; isPitting?: boolean; isFinalLap?: boolean; isRaceStart?: boolean; inCrashProximity?: boolean }): boolean {
-    // Check if already activated (for non-passive tags)
-    const activationKey = `${driver.id}-${tag.id}`;
-    if (tag.trigger !== 'passive' && this.tagActivatedThisRace.has(activationKey)) {
-      return false;
-    }
-
-    // Check trigger condition
-    switch (tag.trigger) {
-      case 'passive':
-        // Passive tags are always "active" but we only log them once
-        return !this.tagActivatedThisRace.has(activationKey);
-      case 'race_start':
-        return context.isRaceStart === true;
-      case 'pit_stop':
-        return context.isPitting === true;
-      case 'overtake':
-        return context.isOvertaking === true;
-      case 'crash_proximity':
-        return context.inCrashProximity === true;
-      case 'final_lap':
-        return context.isFinalLap === true;
-      default:
-        return false;
-    }
-  }
-
-  /**
-   * Attempt to activate a tag for a driver
-   */
-  private tryActivateTag(driver: Driver, tag: Tag, context: { isOvertaking?: boolean; isPitting?: boolean; isFinalLap?: boolean; isRaceStart?: boolean; inCrashProximity?: boolean }): boolean {
-    if (!this.shouldTagTrigger(driver, tag, context)) {
-      return false;
-    }
-    // Trigger chance (default 100%). Rolled on the TAG side stream, never the
-    // main `rng`: a tag's presence must not reshuffle the race for everyone
-    // else — a zero-effect Quirk has to be byte-inert (#231). A certain
-    // trigger draws nothing at all.
-    const triggerChance = tag.triggerChance ?? 1.0;
-    if (triggerChance < 1 && this.tagRoll(driver.id, tag.id) > triggerChance) {
-      return false;
-    }
-
-    // Mark as activated
-    const activationKey = `${driver.id}-${tag.id}`;
-    this.tagActivatedThisRace.add(activationKey);
-
-    // Determine effect duration (passive = rest of race, others = temporary)
-    const duration = tag.trigger === 'passive' ? null : 200; // ~200 ticks for triggered effects
-    const expiresAtTick = duration ? this.raceState.totalTicks + duration : null;
-
-    // Add to unified effect system (includes all modifiers: speed, consistency, luck, crashResistance, pitSpeed)
-    const effect = this.createTagEffect(tag, driver.id, expiresAtTick);
-    this.addEffect(driver.id, effect);
-
-    // Also add to legacy storage for backward compatibility
-    const legacyEffects = this.activeTagEffects.get(driver.id) || [];
-    legacyEffects.push({
-      tagId: tag.id,
-      speedModifier: tag.effects.speedModifier ?? 1,
-      consistencyModifier: tag.effects.consistencyModifier ?? 1,
-      luckModifier: tag.effects.luckModifier ?? 1,
-      expiresAtTick,
-    });
-    this.activeTagEffects.set(driver.id, legacyEffects);
-
-    // Only log event for non-passive tags (passive tags are always active, no need to announce)
-    if (tag.trigger !== 'passive') {
-      const activationText = tag.activationText || 'tag activated!';
-      this.logEvent(
-        'tag_activation',
-        driver,
-        `${tag.name}: ${activationText}`,
-        tag.effects.speedModifier && tag.effects.speedModifier > 1 ? 'positive' :
-          tag.effects.speedModifier && tag.effects.speedModifier < 1 ? 'negative' : 'neutral',
-        0.7,
-        tag.emoji
-      );
-    }
-
-    return true;
-  }
-
-  /**
-   * Check and activate tags for a driver based on current context
-   */
-  private evaluateDriverTags(driver: Driver, context: { isOvertaking?: boolean; isPitting?: boolean; isFinalLap?: boolean; isRaceStart?: boolean; inCrashProximity?: boolean }): void {
-    for (const tag of driver.tags) {
-      // Conditional tags are gated live every tick (getConditional*), not stored
-      // as a one-time activation — skip them here so they don't become always-on.
-      if (tag.condition) continue;
-      this.tryActivateTag(driver, tag, context);
-    }
-  }
-
-  // === CONDITIONAL TAG EVALUATION (the live, per-tick gate — see #156) ===
-
-  /** Rebuild the per-driver race context used to gate conditional tags. Called
-   * once per tick after positions and traffic settle. Deterministic (no RNG). */
-  private rebuildRaceContexts(): void {
-    const ordered = this.getDrivers(); // race order: P1 at index 0
-    const fieldSize = ordered.filter(d => d.status !== 'dnf').length;
-    const lapLength = this.config.lapLength;
-    const totalLaps = this.config.totalLaps;
-    const dist = (d: Driver) => d.currentLap * lapLength + d.position;
-    const conditions = [...this.currentConditions];
-
-    this.raceContextCache = new Map();
-    ordered.forEach((d, i) => {
-      const ahead = i > 0 ? ordered[i - 1] : null;
-      const behind = i < ordered.length - 1 ? ordered[i + 1] : null;
-      this.raceContextCache.set(d.id, {
-        position: i + 1,
-        fieldSize,
-        lapProgress: totalLaps > 0 ? Math.min(1, d.currentLap / totalLaps) : 0,
-        gapAhead: ahead ? dist(ahead) - dist(d) : Infinity,
-        gapBehind: behind ? dist(d) - dist(behind) : Infinity,
-        inTraffic: this.driversInTraffic.has(d.id),
-        tireWear: d.tireState?.wear ?? 0,
-        isDamaged: d.isDamaged,
-        safetyCar: this.raceState.unsafetyCarActive,
-        conditions,
-      });
-    });
-  }
-
-  /** Combined multiplier from this driver's currently-satisfied conditional tags. */
-  private getConditionalModifier(driverId: number, modifier: 'speedModifier' | 'consistencyModifier' | 'luckModifier' | 'pitSpeedModifier'): number {
-    const ctx = this.raceContextCache.get(driverId);
-    if (!ctx) return 1;
-    const driver = this.drivers.find(d => d.id === driverId);
-    if (!driver) return 1;
-
-    let result = 1;
-    for (const tag of driver.tags) {
-      if (!tag.condition) continue;
-      if (!evaluateTagCondition(tag.condition, ctx)) continue;
-      const v = tag.effects[modifier];
-      if (typeof v === 'number') result *= v;
-    }
-    return result;
-  }
-
-  /** Combined crash-resistance delta from this driver's satisfied conditional tags. */
-  private getConditionalCrashResistance(driverId: number): number {
-    const ctx = this.raceContextCache.get(driverId);
-    if (!ctx) return 0;
-    const driver = this.drivers.find(d => d.id === driverId);
-    if (!driver) return 0;
-
-    let result = 0;
-    for (const tag of driver.tags) {
-      if (!tag.condition) continue;
-      if (!evaluateTagCondition(tag.condition, ctx)) continue;
-      result += tag.effects.crashResistance ?? 0;
-    }
-    return result;
-  }
-
-  /** Directly set the active conditions (e.g. ['rain']) — used by tests. The
-   * normal path is setWeather, which recomputes from its source. */
-  setRaceConditions(ids: string[]): void {
-    this.currentConditions = new Set(ids);
-  }
-
-  /** Recompute the active condition set from the weather, so
-   * condition-gated tags see it (none stamp anything until Wet, v0.6). */
-  private recomputeConditions(): void {
-    this.currentConditions = new Set(this.weather?.conditions ?? []);
-  }
-
-  /** Set this race's weather (C2): applies a field-wide lean and stamps its
-   * conditions so condition-gated tags (Rain Dancer) wake. Pass null for none. */
+  /** Set this race's weather (C2): a field-wide lean. Pass null for none. */
   setWeather(weather: WeatherState | null): void {
     this.weather = weather;
-    this.recomputeConditions();
   }
 
   getWeather(): WeatherState | null {
@@ -2148,44 +1968,6 @@ class RaceEngine {
     }
   }
 
-  /** Tag ids currently contributing effects for a driver: conditional tags
-   * whose gate is open this tick + stored tag activations still live. Display
-   * surface for the timing tower (lit vs dormant chips). */
-  getActiveTagIds(driverId: number): string[] {
-    const active: string[] = [];
-
-    const ctx = this.raceContextCache.get(driverId);
-    const driver = this.drivers.find(d => d.id === driverId);
-    if (driver && ctx) {
-      for (const tag of driver.tags) {
-        if (tag.condition && evaluateTagCondition(tag.condition, ctx)) active.push(tag.id);
-      }
-    }
-
-    const effects = this.unifiedEffects.get(driverId);
-    if (effects) {
-      for (const e of effects) {
-        if (e.source === 'tag' &&
-            (e.expiresAtTick === null || e.expiresAtTick > this.raceState.totalTicks)) {
-          active.push(e.sourceId);
-        }
-      }
-    }
-    return active;
-  }
-
-  // === ENVIRONMENT EFFECTS (weather, field-wide) ===
-  // Dry weathers and tracks favour stats through the card math at roster build
-  // (src/cards/apply.ts); these leans are empty until Wet returns in v0.6.
-
-  private getEnvSpeedModifier(): number {
-    return this.weather?.effects.speedModifier ?? 1;
-  }
-
-  private getEnvConsistencyModifier(): number {
-    return this.weather?.effects.consistencyModifier ?? 1;
-  }
-
   /**
    * Everything acting on one driver, with plain-words reasons — the data the
    * tag card and the focus row's effect stack read (#243). Inert entries
@@ -2195,46 +1977,20 @@ class RaceEngine {
   getEffectStack(driverId: number): EffectStackEntry[] {
     const driver = this.drivers.find(d => d.id === driverId);
     if (!driver) return [];
-    const ctx = this.raceContextCache.get(driverId);
     const now = this.raceState.totalTicks;
     const out: EffectStackEntry[] = [];
-    const liveTagEffects = (this.unifiedEffects.get(driverId) ?? []).filter(e => e.source === 'tag');
 
-    for (const tag of driver.tags) {
-      const fx = tag.effects;
-      const base = { source: 'tag' as const, id: tag.id, name: tag.name, emoji: tag.emoji, tag,
-        speed: fx.speedModifier ?? 1, consistency: fx.consistencyModifier ?? 1, luck: fx.luckModifier ?? 1,
-        crash: fx.crashResistance ?? 0, pit: fx.pitSpeedModifier ?? 1 };
-      if (tag.condition) {
-        const open = ctx ? evaluateTagCondition(tag.condition, ctx) : false;
-        const words = describeCondition(tag.condition);
-        out.push({ ...base, active: open, reason: open ? `on: ${words}` : `needs: ${words}` });
-        continue;
-      }
-      if (tag.trigger === 'passive') {
-        const ir = this.getInRaceTagInfo(driverId, tag.id);
-        if (ir) {
-          const left = ir.duration === 'until-pit' ? 'until the next stop' : ir.duration === 'race' ? 'rest of race'
-            : ir.expiresAtLap !== null ? `${Math.max(0, ir.expiresAtLap - driver.currentLap)} lap${ir.expiresAtLap - driver.currentLap === 1 ? '' : 's'} left`
-            : 'carries into the next race';
-          out.push({ ...base, active: true, reason: `picked up L${ir.sinceLap + 1} · ${left}` });
-        } else {
-          out.push({ ...base, active: true, reason: 'always on' });
-        }
-        continue;
-      }
-      const live = liveTagEffects.find(e => e.sourceId === tag.id && (e.expiresAtTick === null || e.expiresAtTick > now));
-      const fired = this.tagActivatedThisRace.has(`${driverId}-${tag.id}`);
-      const chance = tag.triggerChance ?? 1;
-      const chanceWords = chance < 1 ? ` (${Math.round(chance * 100)}% chance)` : '';
-      if (live) {
-        const left = live.expiresAtTick === null ? 'rest of race' : `${live.expiresAtTick - now} ticks left`;
-        out.push({ ...base, active: true, reason: `fired ${TRIGGER_LABELS[tag.trigger]} · ${left}` });
-      } else if (fired) {
-        out.push({ ...base, active: false, speed: 1, consistency: 1, luck: 1, crash: 0, pit: 1, reason: `fired earlier this race · spent` });
-      } else {
-        out.push({ ...base, active: false, speed: 1, consistency: 1, luck: 1, crash: 0, pit: 1, reason: `waits for: ${TRIGGER_LABELS[tag.trigger]}${chanceWords}` });
-      }
+    // In-race effects: damage, a spin, cooked tyres, a stop (source 'effect')
+    for (const e of this.unifiedEffects.get(driverId) ?? []) {
+      if (e.source !== 'effect') continue;
+      if (e.expiresAtTick !== null && e.expiresAtTick <= now) continue;
+      const ir = this.getInRaceEffectInfo(driverId, e.sourceId);
+      const left = !ir ? 'rest of race' : ir.duration === 'until-pit' ? 'until the next stop' : ir.duration === 'race' ? 'rest of race'
+        : ir.expiresAtLap !== null ? `${Math.max(0, ir.expiresAtLap - driver.currentLap)} lap${ir.expiresAtLap - driver.currentLap === 1 ? '' : 's'} left`
+        : 'rest of race';
+      out.push({ source: 'effect', id: e.sourceId, name: e.sourceName, emoji: e.sourceEmoji, active: true,
+        reason: ir ? `picked up L${ir.sinceLap + 1} · ${left}` : left,
+        speed: e.speedModifier, consistency: e.consistencyModifier, luck: e.luckModifier, crash: e.crashResistance, pit: e.pitSpeedModifier });
     }
 
     // Environment: weather, field-wide (favours are baked into the stats)
@@ -2262,6 +2018,18 @@ class RaceEngine {
     return out;
   }
 
+  // === ENVIRONMENT EFFECTS (weather, field-wide) ===
+  // Dry weathers and tracks favour stats through the card math at roster build
+  // (src/cards/apply.ts); these leans are empty until Wet returns in v0.6.
+
+  private getEnvSpeedModifier(): number {
+    return this.weather?.effects.speedModifier ?? 1;
+  }
+
+  private getEnvConsistencyModifier(): number {
+    return this.weather?.effects.consistencyModifier ?? 1;
+  }
+
   private getEnvCrashResistance(): number {
     return this.weather?.effects.crashResistance ?? 0;
   }
@@ -2275,26 +2043,6 @@ class RaceEngine {
     const effects = this.unifiedEffects.get(driverId) || [];
     effects.push(effect);
     this.unifiedEffects.set(driverId, effects);
-  }
-
-  /**
-   * Create a unified effect from a tag
-   */
-  private createTagEffect(tag: Tag, driverId: number, expiresAtTick: number | null): ActiveEffect {
-    return {
-      id: `tag-${tag.id}-${driverId}-${this.raceState.totalTicks}`,
-      source: 'tag',
-      sourceId: tag.id,
-      sourceName: tag.name,
-      sourceEmoji: tag.emoji,
-      affectedDriverIds: [driverId],
-      expiresAtTick,
-      speedModifier: tag.effects.speedModifier ?? 1,
-      consistencyModifier: tag.effects.consistencyModifier ?? 1,
-      luckModifier: tag.effects.luckModifier ?? 1,
-      crashResistance: tag.effects.crashResistance ?? 0,
-      pitSpeedModifier: tag.effects.pitSpeedModifier ?? 1,
-    };
   }
 
   /**
@@ -2355,32 +2103,10 @@ class RaceEngine {
     return Math.max(-0.5, Math.min(0.5, result));
   }
 
-  // Legacy getters that now combine stored effects (one-time activations + track
-  // events) with live conditional-tag contributions (gated every tick).
-  private getTagSpeedModifier(driverId: number): number {
-    return this.getEffectModifier(driverId, 'speedModifier') * this.getConditionalModifier(driverId, 'speedModifier');
-  }
-
-  private getTagConsistencyModifier(driverId: number): number {
-    return this.getEffectModifier(driverId, 'consistencyModifier') * this.getConditionalModifier(driverId, 'consistencyModifier');
-  }
-
-  private getTagLuckModifier(driverId: number): number {
-    return this.getEffectModifier(driverId, 'luckModifier') * this.getConditionalModifier(driverId, 'luckModifier');
-  }
-
-  private getTagCrashResistance(driverId: number): number {
-    // Stored effects + live conditional tags + field-wide environment (weather
-    // rain/fog and hazardous tracks raise everyone's crash risk; a Rain Dancer's
-    // own resistance offsets it).
-    const combined = this.getEffectCrashResistance(driverId)
-      + this.getConditionalCrashResistance(driverId)
-      + this.getEnvCrashResistance();
+  /** Crash resistance from a driver's effects plus the field-wide environment, capped. */
+  private getCrashResistance(driverId: number): number {
+    const combined = this.getEffectCrashResistance(driverId) + this.getEnvCrashResistance();
     return Math.max(-0.5, Math.min(0.5, combined));
-  }
-
-  private getTagPitModifier(driverId: number): number {
-    return this.getEffectModifier(driverId, 'pitSpeedModifier') * this.getConditionalModifier(driverId, 'pitSpeedModifier');
   }
 
   private tick(): void {
@@ -2391,24 +2117,7 @@ class RaceEngine {
     // === TRACK EVENT SYSTEM ===
     // Clean up expired effects
     this.cleanupExpiredEffects();
-    this.expireInRaceTagsByLap();
-
-    // === TAG TRIGGER EVALUATION ===
-    const isRaceStart = this.raceState.totalTicks === 1;
-
-    // Evaluate passive and race_start tags on first tick
-    if (isRaceStart) {
-      for (const driver of this.drivers) {
-        this.evaluateDriverTags(driver, { isRaceStart: true });
-      }
-    }
-
-    // Evaluate final_lap tags when entering final lap (check each driver individually)
-    for (const driver of this.drivers) {
-      if (driver.status === 'racing' && driver.currentLap >= this.config.totalLaps - 1) {
-        this.evaluateDriverTags(driver, { isFinalLap: true });
-      }
-    }
+    this.expireInRaceEffectsByLap();
 
     // === CRASH DETECTION (before movement) ===
     const proximityPairs = this.detectProximityPairs();
@@ -2419,10 +2128,6 @@ class RaceEngine {
       this.driversInTraffic.add(pair[1].id);
     }
 
-    // Refresh conditional-tag context now that position + traffic are known this
-    // tick, before crash resistance and speed modifiers are read below.
-    this.rebuildRaceContexts();
-
     this.processMistakes();
 
     const crashedThisTick: Set<number> = new Set();
@@ -2431,10 +2136,6 @@ class RaceEngine {
     for (const pair of proximityPairs) {
       // Skip if either driver already crashed this tick
       if (crashedThisTick.has(pair[0].id) || crashedThisTick.has(pair[1].id)) continue;
-
-      // Evaluate crash_proximity tags for both drivers in proximity
-      this.evaluateDriverTags(pair[0], { inCrashProximity: true });
-      this.evaluateDriverTags(pair[1], { inCrashProximity: true });
 
       const result = this.processCrashRisk(pair);
       if (result.crashed) {
@@ -2658,9 +2359,6 @@ class RaceEngine {
 
       // Check if driver should pit
       if (this.shouldDriverPit(driver)) {
-        // Evaluate pit_stop tags when entering the pits
-        this.evaluateDriverTags(driver, { isPitting: true });
-
         // Calculate pit WORK duration (stationary part) and slow/quick status
         const { duration, isSlowStop, isQuickStop } = this.calculatePitWorkDuration(driver);
 

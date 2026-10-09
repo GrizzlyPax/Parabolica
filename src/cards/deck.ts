@@ -5,15 +5,16 @@
 //
 // Pure data. Nothing in the sim reads it yet: genesis (#313) and Quick Race
 // (#337) wire it in.
-import { RARITIES, rollRarity, type Rarity, type RarityOdds } from '../data/tags';
+import { RARITIES, rollRarity, type Rarity, type RarityOdds } from './rarity';
 import type { Rng } from '../engine/rng';
 import type { Card, CardKind, CardTarget, CarStatKey, DriverStatKey, Slots, StatKey, TeamStatKey } from './types';
 
-/** The placeholder ladder: how many stats a card moves and by how much.
- * Calibration replaces it later; keep it in this one constant. */
+/** The ladder (#335, Pax Oct 9): how many stats a card moves and by how many
+ * GRADE POINTS (`pct` is kept as the field name; it is points on the 0–100
+ * grade scale, not a percent). Steward re-measures on each bump. */
 export const METAL_LADDER: Record<Rarity, { stats: number; pct: number }> = {
-  bronze: { stats: 1, pct: 2 },
-  silver: { stats: 1, pct: 5 },
+  bronze: { stats: 1, pct: 5 },
+  silver: { stats: 1, pct: 10 },
   gold: { stats: 2, pct: 10 },
   iridium: { stats: 3, pct: 15 },
 };
@@ -44,7 +45,7 @@ const GRID: Record<CardTarget, { singles: StatKey[]; gold: StatKey[][]; iridium:
   },
   team: {
     singles: TEAM_STATS,
-    // Team has two stats, so its gold and iridium are the same pair at +10% / +15%.
+    // Team has two stats, so its gold and iridium are the same pair at +10 / +15.
     gold: [['tireManagement', 'pitCrew']],
     iridium: [['tireManagement', 'pitCrew']],
   },

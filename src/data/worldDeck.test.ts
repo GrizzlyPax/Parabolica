@@ -1,11 +1,9 @@
 // World Deck content checks (docs/WORLD_DECK.md): the rules every content
-// contribution must pass. Run `npm test` after adding teams, tracks, tags,
-// cards, weather, inflictions or flavour lines.
+// contribution must pass. Run `npm test` after adding teams, tracks, cards,
+// weather or flavour lines.
 import { describe, it, expect } from 'vitest';
-import { ALL_TAGS, DRIVER_TAGS, CAR_TAGS, TEAM_TAGS, RARITIES, getTagById } from './tags';
-import { ACQUISITION_RULES } from './acquisitions';
-import { IN_RACE_RULES } from './inRace';
 import { RULE_CARDS } from './ruleCards';
+import { IN_RACE_EFFECTS } from '../RaceEngine';
 import { WEATHER_TYPES } from './weather';
 import { CURRENT_TEAMS, HISTORIC_TEAMS } from './teams';
 import { BASE_DECK_TEAMS, TEAM_KINDS } from './deckTeams';
@@ -20,9 +18,6 @@ import { BACKSTORY_TEMPLATES, BACKSTORY_FILLS, QUIRKS } from '../generators/driv
 import { CAR_QUIRKS } from '../generators/cars';
 import { resolveRuleset, defaultRuleset } from '../rules/ruleset';
 import { RULE_CARDS_BY_ID } from './ruleCards';
-import { TAG_CALIBRATION, calibrationFor } from './tagCalibration';
-import { effectsHash, bandViolation, CALIBRATION_CARDS } from '../racecontrol/calibrate';
-import { isGenesisTag } from './tags';
 
 const HEX = /^#[0-9a-fA-F]{6}$/;
 const ID = /^[a-z0-9]+(-[a-z0-9]+)*$/;
@@ -34,7 +29,7 @@ const nonEmpty = (s: string | undefined, what: string) => expect((s ?? '').trim(
 
 describe('ids are unique, kebab-case, and every record has a name and emoji', () => {
   const registries: [string, { id: string; name: string; emoji: string }[]][] = [
-    ['tags', ALL_TAGS], ['cards', RULE_CARDS], ['weather', WEATHER_TYPES],
+    ['cards', RULE_CARDS], ['weather', WEATHER_TYPES],
     ['teams', [...CURRENT_TEAMS, ...HISTORIC_TEAMS]], ['tracks', [...CURRENT_TRACKS, ...HISTORIC_TRACKS]],
   ];
   for (const [what, rows] of registries) {
@@ -47,50 +42,26 @@ describe('ids are unique, kebab-case, and every record has a name and emoji', ()
       }
     });
   }
-  it('rules', () => { uniq(ACQUISITION_RULES.map(r => r.id), 'acquisition rules'); uniq(IN_RACE_RULES.map(r => r.id), 'in-race rules'); });
+  it('in-race effects', () => { uniq(IN_RACE_EFFECTS.map(r => r.id), 'in-race effects'); });
 });
 
 describe('references point at things that exist', () => {
-  it('acquisition and in-race rules award real tags', () => {
-    for (const r of ACQUISITION_RULES) expect(getTagById(r.tagId), `rule ${r.id} → ${r.tagId}`).toBeDefined();
-    for (const r of IN_RACE_RULES) expect(getTagById(r.tagId), `rule ${r.id} → ${r.tagId}`).toBeDefined();
-  });
-  it('tag actions point at real tags', () => {
-    for (const t of ALL_TAGS) for (const a of t.afterRace ?? []) if (a.do !== 'expire-self') expect(getTagById(a.tagId), `${t.id} → ${a.tagId}`).toBeDefined();
-  });
-  it('condition gates name a known condition id (dormant until Wet returns in v0.6)', () => {
-    // No v0.5 weather or track stamps a condition, so these tags sleep; they wake with Wet ('rain').
-    const KNOWN = new Set(['rain', 'scorcher']);
-    for (const t of ALL_TAGS) if (t.condition?.when === 'condition') expect(KNOWN.has(t.condition.has), `${t.id} gates on unknown "${t.condition.has}"`).toBe(true);
-  });
   it('cards resolve and change something', () => {
     const base = JSON.stringify(defaultRuleset());
     for (const c of RULE_CARDS) expect(JSON.stringify(resolveRuleset([c.id], RULE_CARDS_BY_ID)), `card ${c.id} does nothing`).not.toBe(base);
   });
-  it('card tag patches name real tags', () => {
-    for (const c of RULE_CARDS) for (const id of [...(c.patch.tags?.only ?? []), ...(c.patch.tags?.add ?? []), ...(c.patch.tags?.remove ?? [])]) expect(getTagById(id), `card ${c.id} → ${id}`).toBeDefined();
-  });
 });
 
-describe('tags are well-formed', () => {
-  it('every tag has a description, a rarity, and sane effects', () => {
-    for (const t of ALL_TAGS) {
-      nonEmpty(t.description, `tag ${t.id} description`);
-      expect(RARITIES.includes(t.rarity), `${t.id} rarity`).toBe(true);
-      const fx = t.effects;
-      for (const [k, v] of Object.entries(fx)) {
+describe('in-race effects are well-formed', () => {
+  it('every effect has a name, a line and sane modifiers', () => {
+    for (const r of IN_RACE_EFFECTS) {
+      nonEmpty(r.name, `${r.id} name`); nonEmpty(r.text, `${r.id} text`); nonEmpty(r.emoji, `${r.id} emoji`);
+      for (const [k, v] of Object.entries(r.effects)) {
         if (v === undefined) continue;
-        if (k === 'crashResistance') expect(Math.abs(v), `${t.id} ${k}`).toBeLessThanOrEqual(0.5);
-        else { expect(v, `${t.id} ${k}`).toBeGreaterThan(0.5); expect(v, `${t.id} ${k}`).toBeLessThan(1.5); }
+        if (k === 'crashResistance') expect(Math.abs(v), `${r.id} ${k}`).toBeLessThanOrEqual(0.5);
+        else { expect(v, `${r.id} ${k}`).toBeGreaterThan(0.5); expect(v, `${r.id} ${k}`).toBeLessThan(1.5); }
       }
-      if (t.triggerChance !== undefined) { expect(t.triggerChance).toBeGreaterThan(0); expect(t.triggerChance).toBeLessThanOrEqual(1); }
-      for (const a of t.afterRace ?? []) { expect(a.chance).toBeGreaterThan(0); expect(a.chance).toBeLessThanOrEqual(1); nonEmpty(a.headline, `${t.id} action headline`); }
     }
-  });
-  it('genesis tags sit in the right list for their target', () => {
-    for (const t of DRIVER_TAGS) expect(t.target).toBe('driver');
-    for (const t of CAR_TAGS) expect(t.target).toBe('car');
-    for (const t of TEAM_TAGS) expect(t.target).toBe('team');
   });
 });
 
@@ -144,21 +115,6 @@ describe('flavour pools', () => {
     const slots = new Set(Object.keys(BACKSTORY_FILLS));
     for (const tpl of BACKSTORY_TEMPLATES) for (const m of tpl.matchAll(/\{(\w+)\}/g)) expect(slots.has(m[1]), `template "${tpl}" uses {${m[1]}} with no fills`).toBe(true);
     for (const [k, v] of Object.entries(BACKSTORY_FILLS)) expect(v.length, `fills for {${k}}`).toBeGreaterThanOrEqual(3);
-  });
-});
-
-describe('tag calibration is current and in band', () => {
-  const genesis = ALL_TAGS.filter(isGenesisTag);
-  it('every genesis tag has been measured since its effects last changed (npm run calibrate)', () => {
-    expect(TAG_CALIBRATION.cards).toEqual(CALIBRATION_CARDS);
-    for (const t of genesis) {
-      const c = calibrationFor(t.id);
-      expect(c, `${t.id} is not in src/data/tagCalibration.json — run npm run calibrate`).toBeDefined();
-      expect(c!.effectsHash, `${t.id} changed since it was calibrated — run npm run calibrate`).toBe(effectsHash(t));
-    }
-  });
-  it('no genesis tag is out of band', () => {
-    for (const c of TAG_CALIBRATION.tags) expect(bandViolation(c), `${c.tagId}: ${bandViolation(c)}`).toBeNull();
   });
 });
 

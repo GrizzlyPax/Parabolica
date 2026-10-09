@@ -418,7 +418,7 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo }: 
       {detail && (
         <div className="pk-sheet" role="dialog" aria-label="Detail">
           {'card' in detail
-            ? <><CardFace card={detail.card} size="small" flippable={false} /><div className="pk-sheet-text"><span className="rs-k">{detail.card.kind} · {detail.card.target}{detail.card.rarity ? ` · ${detail.card.rarity}` : ''}</span><b>{detail.card.name}</b>{detail.card.stats.map(s => <span key={s.stat}>+{s.pct}% {STAT_LABELS[s.stat]}</span>)}<span className="rs-hint">{detail.card.kind === 'trait' ? 'Traits are for good.' : 'Gear: move it freely in any Paddock.'}</span></div></>
+            ? <><CardFace card={detail.card} size="small" flippable={false} /><div className="pk-sheet-text"><span className="rs-k">{detail.card.kind} · {detail.card.target}{detail.card.rarity ? ` · ${detail.card.rarity}` : ''}</span><b>{detail.card.name}</b>{detail.card.stats.map(s => <span key={s.stat}>+{s.pct} {STAT_LABELS[s.stat]}</span>)}<span className="rs-hint">{detail.card.kind === 'trait' ? 'Traits are for good.' : 'Gear: move it freely in any Paddock.'}</span></div></>
             : <ReadingSheet title={detail.title} reading={detail.reading} icon={STAT_ICONS[detail.reading.stat]} />}
           <button type="button" className="rs-link pk-sheet-x" onClick={() => setDetail(null)}>Close</button>
         </div>

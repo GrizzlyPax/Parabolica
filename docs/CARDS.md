@@ -5,7 +5,7 @@
 ## TL;DR
 - **Tags become cards.** Every piece is a typed card: **Gear** (capped slots, swappable), **Traits** (permanent, uncapped), **Effects** (timed, sim-dealt). Today's rule modifiers are renamed **Rule cards**.
 - **Rarity is a metal** (Pax, Oct 8): **Bronze · Silver · Gold · Iridium**, names and colours, everywhere (replaces common / uncommon / rare / legendary).
-- **One placeholder ladder:** bronze +2% (1 stat) · silver +5% (1) · gold +10% (2 stats) · iridium +15% (3). Calibration replaces it later.
+- **The ladder (v0.6, #335, Pax Oct 9): cards add GRADE POINTS**, not a percent of the raw stat: bronze +5 (1 stat) · silver +10 (1) · gold +10 (2 stats) · iridium +15 (3). `stat += pct × span / 100` with the stat's generator span (`src/cards/apply.ts`), so "+10 Speed" moves the Paddock grade by exactly 10 whatever the stat. Car and team cards count for both drivers (Pax, Oct 10: keep). Steward re-measures per bump (#537).
 - **The 🏁 Motorsport base deck (94 cards) is generated from a grid,** not hand-written: one card per stat at bronze/silver, combos at gold/iridium with every stat represented evenly.
 - **Ships in two steps:** v0.5 Spa = gear + traits in Season Mode, and **Quick Race on trait cards** (Pax, Oct 8). v0.6 = effects, the engine hook, and retiring tags in leagues, Race Control and World Deck.
 
@@ -24,7 +24,7 @@ Driver: Speed · Consistency · Luck · Acceleration · Endurance · Aggression.
 ## The base deck (94)
 - **Equipment 20:** 6 bronze + 6 silver (one per driver stat) · 6 gold pairs (Spd+Con, Con+Lck, Lck+Acc, Acc+End, End+Agg, Agg+Spd) · 2 iridium (Spd+Acc+Agg, Con+End+Lck).
 - **Upgrades 10:** 3 + 3 · gold Pow+Grp, Grp+Rel, Rel+Pow · iridium Pow+Grp+Rel.
-- **Facilities 6:** 2 + 2 · gold TM+PC · iridium TM+PC (+15%).
+- **Facilities 6:** 2 + 2 · gold TM+PC · iridium TM+PC (+15).
 - **Traits 36:** the same grids again for driver (20), car (10) and team (6). **Slot traits** (Extra Equipment / Upgrade / Facility Slot) are cut from v0.5 and return in v0.6 (Pax + Apex, Oct 8).
 - **Effects 22:** every stat Up and Down (driver 12 · car 6 · team 4).
 - Names are utilitarian for now ("Rare Speed + Consistency"). Gear and traits are **upside only**; downsides live in effects. Straight motorsport tone; supernatural tags leave the base deck (→ a later Horror deck).

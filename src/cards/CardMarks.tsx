@@ -14,10 +14,10 @@ export function cardColor(card: Card): string | undefined {
   return card.rarity ? `var(--rarity-${card.rarity})` : undefined;
 }
 
-/** "+10% Speed · +10% Consistency", or "Speed ▲" for an effect. */
+/** "+10 Speed · +10 Consistency" (grade points), or "Speed ▲" for an effect. */
 export function cardReadout(card: Card): string {
   if (card.kind === 'effect') return `${STAT_LABELS[card.stats[0].stat]} ${card.direction === 'up' ? '▲' : '▼'}`;
-  return card.stats.map(s => `+${s.pct}% ${STAT_LABELS[s.stat]}`).join(' · ');
+  return card.stats.map(s => `+${s.pct} ${STAT_LABELS[s.stat]}`).join(' · ');
 }
 
 export function CardMarks({ card, size = 16 }: { card: Card; size?: number }) {

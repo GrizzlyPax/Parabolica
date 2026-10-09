@@ -10,7 +10,8 @@ const setup = { name: 'Remote', godId: 'g', teamIds: CURRENT_TEAMS.slice(0, 11).
 describe('a published league replays identically on another device', () => {
   it('rebuilds from the definition + decrees and settles to the same results', () => {
     const home = createLeague(777, setup);
-    const decree = { type: 'attach-tag' as const, atRaceIndex: 1, targetDriverId: home.roster[4].id, tagId: 'steady-hands', committedAt: 5 };
+    // A legacy attach-tag decree (#334): a fact the server holds, inert today.
+    const decree = { type: 'attach-tag', atRaceIndex: 1, targetDriverId: home.roster[4].id, tagId: 'steady-hands', committedAt: 5 };
     const homeWithDecree = { ...home, interventionLog: [decree] };
     const homeRun = settleLeague(homeWithDecree, { now: 3_600_000 });
     const homeSettled = homeRun.league;
@@ -27,7 +28,7 @@ describe('a published league replays identically on another device', () => {
 
     expect(phoneSettled.settledThrough).toBe(homeSettled.settledThrough);
     expect(JSON.stringify(phoneSettled.interventionLog)).toBe(JSON.stringify(homeSettled.interventionLog));
-    expect(phoneSettled.roster.map(d => d.tags.map(t => t.id))).toEqual(homeSettled.roster.map(d => d.tags.map(t => t.id)));
+    expect(phoneSettled.roster.map(d => (d.cards ?? []).map(c => c.id))).toEqual(homeSettled.roster.map(d => (d.cards ?? []).map(c => c.id)));
   });
   it('fingerprints differ when the result differs', () => {
     const a = settleLeague(createLeague(1, setup), { now: 3_600_000 }).newlySettled[0];

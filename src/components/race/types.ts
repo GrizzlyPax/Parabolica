@@ -11,7 +11,7 @@ export interface DriverHistoryEntry {
   emoji: string;
   name: string;
   laps: number[];
-  kind: 'tag' | 'event' | 'error' | 'pit' | 'crash' | 'pass' | 'penalty';
+  kind: 'effect' | 'event' | 'error' | 'pit' | 'crash' | 'pass' | 'penalty';
 }
 
 // Column configuration for TimingTower
@@ -53,9 +53,6 @@ export interface RowContext {
   bestLapTime: number | null;
   bestLapClass: LapTimeClass;
   statusEmoji?: string;
-  /** Tag ids currently contributing effects (conditional gates open / triggered
-   * activations live) — drives lit vs dormant tag chips. */
-  activeTagIds?: Set<string>;
   /** Everything acting on this driver right now, with reasons (engine.getEffectStack). */
   effectStack?: EffectStackEntry[];
   /** What has happened TO this driver so far, grouped: "🔧 Pit Lane Special · L3, L9". */
@@ -90,8 +87,6 @@ export interface TimingTowerProps {
   condensed?: boolean;
   expandable?: boolean; // Show expanded row details on focus (default true, false for Detail View)
   statusEffects?: Map<number, string>;
-  /** Per-driver tag ids currently contributing effects (see RowContext). */
-  activeTags?: Map<number, Set<string>>;
   /** Per-driver effect stacks (see RowContext.effectStack). */
   effectStacks?: Map<number, EffectStackEntry[]>;
   /** Per-driver event history (see RowContext.history). */

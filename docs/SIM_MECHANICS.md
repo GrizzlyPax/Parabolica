@@ -84,65 +84,94 @@ Lab: soft 3.06% blowout/stint, hard 1.01%.
 Per tick: `0.00005 / (0.4 + reliability×0.2) × (1.4 − luck×0.75)`.
 Reliability 1★→5★ roughly halves failures (lab DNF: 23.7%→19.2%).
 
-## 4. Tires & pits — rewritten v0.4.0 (#246 pass 1, #249)
+## 4. Tires & pits — v0.6.0 (#534 / #535 / #536 on top of #246 / #249)
 
 *The audit (Oct 2026, `claude/mechanics-audit`) found tyre life was a share
 of race distance, a stop cost ~60% of a lap, soft→hard was a 15% pace gap,
-and the "pit window" was dead code. All four are gone.*
+and the "pit window" was dead code. v0.4.0 fixed all four with life in laps.
+v0.6.0 (Pax, Oct 9) brought life back to a share of the race, on purpose, with
+the real-F1 stop rule: a 14-lap and a 30-lap race now plan alike.*
 
-- **Life is in laps.** `lifeLaps` per compound = laps from fresh to the
-  cliff (`criticalAt`) at mid aggression and 3★ tyre management: **soft 5,
-  medium 7, hard 9**. Wear/tick = `criticalAt/lifeLaps × lapFraction ×
-  aggF × mgmtF`. A 32-lap race needs twice the stops of a 16-lap one.
+- **Life is a share of the race (#534).** `lifeShare` per compound = the part
+  of the race a set lasts to the cliff (`criticalAt`) at mid aggression and
+  3★ tyre management: **soft 1/3 · medium 1/2 · hard 3/5**, never fewer than
+  `lifeFloorLaps` (2 / 3 / 4) on a short race. `getTireCompound` resolves it
+  to `lifeLaps = max(floor, share × totalLaps)` for the race; everything
+  downstream (wear, the stop decision, compound choice) reads laps as before.
+  Wear/tick = `criticalAt / (lifeLaps × setLuck) × tyreWear × lapFraction ×
+  aggF × mgmtF`.
+- **Tyre luck (#535).** Every new set rolls a hidden **±10%** life factor
+  (`tires.setLifeLuck`) on its own seeded stream
+  `deriveSeed(seed, 'tyres', driverId, stint)` (stint = stops so far; the
+  starting set is 0): identical plans don't play out identically, replays are
+  exact, and the race RNG never moves. Not shown in the UI.
+- **The track's wear dial (#536).** `RaceConfig.tyreWear` multiplies wear per
+  tick; each deck track carries its value (Steward's measured set, Oct 9):
+  Speed + Power **0.85** · Luck + Reliability **0.95** · Aggression +
+  Reliability **1.0** · Consistency + Grip **1.1** · Acceleration + Pit Crew
+  **1.15** · Endurance + Tyre Mgmt **1.25**. Measured: the gentle track is a
+  1-stop race (67%), the hungry ones split three ways; Tyre Mgmt is worth
+  ~2.0 pts/race where wear is high vs 1.5 where it is low.
 - **Pace gap 3%**: soft 1.015 / medium 1.00 / hard 0.985. Pre-cliff fade
   (−5% from 40% wear) means a 60%-worn soft is already slower than a fresh
   medium — that is the crossover the stop decision reads.
-- **The cliff hurts on every compound**: severity S 0.85 / M 0.7 / H 0.6
-  (hard was 0.3 and softer than a worn medium). One lap past the cliff on a
-  soft is roughly −16% pace plus blowout exposure.
-- **A stop costs ~25% of a lap all-in** (was ~60%): pit-lane speed limit 6
-  (was 4), stationary work 24 ticks (was 60; slow ×1.5, quick ×0.75). Under
-  the Unsafety Car the field runs half pace so the same stop costs ~half.
-- **The stop rule (#249)**: `pits.minStops 2`, `pits.requireAllCompounds
-  true`, enforced at the flag: each unmet stop or compound adds
-  `penaltyLapFraction` (0.5) of the driver's own average lap to their finish
-  time. Classification sorts lead-lap finishers by `finishTick +
-  penaltyTicks`; a `penalty` event and `Driver.penaltyReason` carry the why.
-  The **No Pit Rules** card sets both to off.
+- **The cliff hurts on every compound**: severity S 0.85 / M 0.7 / H 0.6.
+  One lap past the cliff on a soft is roughly −16% pace plus blowout exposure.
+- **A stop costs ~25% of a lap all-in**: pit-lane speed limit 6, stationary
+  work 24 ticks (slow ×3, quick ×0.5). Under the Unsafety Car the field runs
+  half pace so the same stop costs ~half.
+- **The stop rule (#534, real F1)**: `pits.minStops 1`,
+  `pits.requireCompoundChange true` (two different compounds over the race),
+  `pits.requireAllCompounds false`; enforced at the flag: each unmet stop or
+  compound adds `penaltyLapFraction` (0.5) of the driver's own average lap to
+  their finish time. Classification sorts lead-lap finishers by `finishTick +
+  penaltyTicks`; a `penalty` event and `Driver.penaltyReason` carry the why
+  ("1 stop short", "never changed compound"). The **No Pit Rules** card
+  switches all three off — and since the tyres alone force a stop (a soft
+  lasts a third of the race) it now barely changes the stop count; what it
+  removes is the compound change and the penalty.
 - **The decision (`shouldDriverPit`)**, once per lap at the pit-entry zone,
   every path a radio line (logged in the `pit_entry` event):
   1. never on the last lap;
   2. **cliff** — wear ≥ `criticalAt × (1 + archetype × strategyWearLean)`;
   3. **ahead of the cliff** — wear + this driver's wear-per-lap would cross
-     it before the next chance (so stops land a lap *before* the cliff;
-     the archetype lean 0.1 lets aggressive camps dip into it and
-     conservative camps pit a lap early);
+     it before the next chance, while more than the closing window remains;
   4. **safety car** — a stop is owed and the SC is out: `scPitChance 0.5`;
-  5. **the rule** — a stop is owed and `lapsLeft − buffer ≤ owed`.
-  No random window roll remains; the old `basePitChance/wearPitBonus/
-  windowOffsetPerStat/windowHalfWidth/luckPit*` knobs are deleted.
+  5. **the rule** — a stop is owed and `lapsLeft − window ≤ owed`.
+  The **closing window** is `pits.lastPitShare` (**0.13**) of the race, at
+  least one lap (2 laps of 16, 4 of 30): no planned stop lands in it, only a
+  cliff stop can.
 - **Compound choice (`selectNewTires`)**: from the compounds still owed (or
-  anything but the one coming off), score = shortfall vs the stint it has to
-  cover (laps left ÷ stops still owed + 1) × 4 + pace penalty + archetype
-  tie-break (aggressive softer, conservative harder).
+  anything but the one coming off — which is how the compound change is
+  met), score = shortfall vs the stint it has to cover (laps left ÷ stops
+  still owed + 1) × 4 + pace penalty + archetype tie-break (aggressive
+  softer, conservative harder).
 - **Unsafety Car trigger** (also here): a stranded car brings it out with
-  `safetyCar.deployChancePerDnf` (0.5); 3+ cars always. Every crash used to.
+  `safetyCar.deployChancePerDnf` (0.5); 3+ cars always.
 
-Probe (`scripts/mechanics-probe.mjs 150 1`, no tags): stops/finisher
-3.0→2.1, pit lane time 0.87→0.53 lap (net ~0.2), blowouts 29%→4% of DNFs,
-winning margin 14%→6% of a lap, top-3 package wins 36%→46%, SC/race
-0.97→0.75, stops by reason: ahead of the cliff 68% · safety car 28% · the
-rule 3%. Plans seen: M→S→H, S→M→H, M→H→S, H→S→M, H→M→S.
+Steward's pre-build probe (#536, 200 season-path races × 6 tracks, the bump's
+pit side emulated): stops/finisher 1.38 (Speed + Power) → 1.96 (Acceleration
++ Pit Crew); final set's life used 65–70% everywhere; stints under 2 laps
+< 1%. The post-build re-probe is #537.
 
-Still open from the audit: no grid, no overtaking, no undercut (position
-has no value yet), weather/wets, the consistency formula.
+**Cards (#335, v0.6.0).** A card adds **grade points**: `stat += pct × span /
+100` with the stat's generator span (`DRIVER_STAT_ROLLS`: 0.30 on the speed
+stats, 0.5 on consistency / luck / aggression; stars: 4). Ladder bronze +5 (1
+stat) · silver +10 (1) · gold +10 (2) · iridium +15 (3). Track and weather
+favours ride the same math (+10 grade on their two stats, field-wide), so a
+Speed+Power track and a Luck+Reliability track are the same size. Before
+v0.6 a card multiplied the raw stat, which made +10% worth 12× more on Speed
+than on Consistency.
 
 ## 4b. Qualifying, the grid and overtaking — new in v0.4.1–0.4.2 (#246 passes 2–3)
 
 **Qualifying (`runQualifying`, tick 1).** One scored hot lap per driver:
-`packagePace × (1 + z·qualiNoise·(1.2 − consistency)) × flub × (0.98 + 0.02·grip)`,
+`packagePace × (1 + (acceleration − 1)·qualiAccelWeight) × (1 + z·qualiNoise·(1.2 − consistency)) × flub × (0.98 + 0.02·grip)`,
 z ~ N(0,1) from `deriveSeed(seed,'quali',id)` (a side stream; the race RNG
-is untouched), `qualiFlubChance` 6% of a ruined lap (×0.95). The grid
+is untouched). **Acceleration doubles as one-lap pace (#496, v0.6.0):**
+`qualiAccelWeight` 0.115 ≈ +1% a lap per 0.1 of Acceleration, about two grid
+places per step; no new draw. `qualiFlubChance` **0.08** (was 0.20 since
+Balance Pass One): about one ruined lap (×0.95) in twelve. The grid
 staggers the start: P1 on the line, each slot `grid.slotSpacing` (0.5%) of
 a lap back. `engine.getGridOrder()`; the lap-0 snapshot is the grid.
 Measured: grid vs package Spearman 0.70.

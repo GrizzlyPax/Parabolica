@@ -1,18 +1,16 @@
 // The lab notebook: what you changed and what you measured, kept in this
 // browser so you can come back to it, compare runs, and race with a setup.
 //
-// A preset is a named bundle of edits — tag definitions and physics knobs —
-// that the lab measures and that Quick Race can play under. A run is one
-// measurement: what was run (seed, races, preset) and what came out.
-import { upgradeTag, type Tag } from '../data/tags';
-import type { CalibrationFile } from './calibrate';
+// A preset is a named bundle of physics knob edits that the lab measures and
+// that Quick Race can play under. A run is one measurement: what was run
+// (seed, races, preset) and what came out. (Tag edits and tag-calibration
+// runs retired with tags, #334; old entries are dropped on load.)
 import { compactReport, expandReport, type PhysicsReport } from './physics';
 
 export interface LabPreset {
   id: string;
   name: string;
   createdAt: number;
-  tagEdits: Record<string, Tag>;
   knobEdits: Record<string, number>;
   sentAt?: number;
   user?: string;
@@ -20,22 +18,26 @@ export interface LabPreset {
 }
 
 interface RunBase { id: string; at: number; seed: number; races: number; presetId?: string; presetName?: string; note: string; /** When it was sent to the shared ledger. */ sentAt?: number; /** Set on ledger entries: who sent it, from which issue. */ user?: string; issue?: number }
-export type LabRun =
-  | (RunBase & { kind: 'tags'; result: CalibrationFile })
-  | (RunBase & { kind: 'physics'; result: PhysicsReport });
+export type LabRun = RunBase & { kind: 'physics'; result: PhysicsReport };
 
 export interface Notebook { presets: LabPreset[]; runs: LabRun[] }
 
 export const NOTEBOOK_KEY = 'parabolica.lab.notebook';
 const MAX_RUNS = 60;
 
-/** A preset from any era, its tag edits on today's rarity names (#385). */
-export function upgradePreset(p: LabPreset): LabPreset {
-  return { ...p, tagEdits: Object.fromEntries(Object.entries(p.tagEdits ?? {}).map(([id, t]) => [id, upgradeTag(t)])) };
+/** A preset from any era: tag edits (pre-#334) are dropped. */
+export function upgradePreset(p: LabPreset & { tagEdits?: unknown }): LabPreset {
+  const { tagEdits: _t, ...rest } = p;
+  return { ...rest, knobEdits: rest.knobEdits ?? {} };
+}
+
+/** Only physics runs survive; tag-calibration runs (pre-#334) are dropped. */
+export function upgradeRuns(runs: unknown[]): LabRun[] {
+  return runs.filter((r): r is LabRun => !!r && typeof r === 'object' && (r as LabRun).kind === 'physics');
 }
 
 export function loadNotebook(): Notebook {
-  try { const n = JSON.parse(localStorage.getItem(NOTEBOOK_KEY) ?? 'null'); if (n && Array.isArray(n.presets) && Array.isArray(n.runs)) return { ...n, presets: n.presets.map(upgradePreset) }; } catch { /* private window */ }
+  try { const n = JSON.parse(localStorage.getItem(NOTEBOOK_KEY) ?? 'null'); if (n && Array.isArray(n.presets) && Array.isArray(n.runs)) return { presets: n.presets.map(upgradePreset), runs: upgradeRuns(n.runs) }; } catch { /* private window */ }
   return { presets: [], runs: [] };
 }
 export function saveNotebook(n: Notebook) { try { localStorage.setItem(NOTEBOOK_KEY, JSON.stringify({ ...n, runs: n.runs.slice(0, MAX_RUNS) })); } catch { /* private window */ } }
@@ -43,12 +45,12 @@ export function saveNotebook(n: Notebook) { try { localStorage.setItem(NOTEBOOK_
 export const newId = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
 
 export function presetSummary(p: LabPreset): string {
-  const t = Object.keys(p.tagEdits).length, k = Object.keys(p.knobEdits).length;
-  return [t ? `${t} tag${t > 1 ? 's' : ''}` : '', k ? `${k} knob${k > 1 ? 's' : ''}` : ''].filter(Boolean).join(' · ') || 'no changes';
+  const k = Object.keys(p.knobEdits).length;
+  return k ? `${k} knob${k > 1 ? 's' : ''}` : 'no changes';
 }
 
-export function isEmptyPreset(p: Pick<LabPreset, 'tagEdits' | 'knobEdits'>): boolean {
-  return Object.keys(p.tagEdits).length === 0 && Object.keys(p.knobEdits).length === 0;
+export function isEmptyPreset(p: Pick<LabPreset, 'knobEdits'>): boolean {
+  return Object.keys(p.knobEdits).length === 0;
 }
 
 /** Everything in the notebook as one JSON file, for sharing or an issue. */
@@ -66,8 +68,7 @@ export interface LedgerBatch { kind: 'ledger-batch'; sentAt: number; runs: LabRu
 
 function compactRun(r: LabRun): LabRun {
   const { sentAt: _s, ...rest } = r;
-  if (rest.kind === 'physics') return { ...rest, result: compactReport(rest.result) };
-  return rest;
+  return { ...rest, result: compactReport(rest.result) };
 }
 
 /**
@@ -120,7 +121,7 @@ export async function fetchLedger(base = ''): Promise<Ledger> {
     fetch(`${base}ledger/runs.jsonl`, { cache: 'no-store' }).then(r => r.ok ? r.text() : '').catch(() => ''),
     fetch(`${base}ledger/presets.json`, { cache: 'no-store' }).then(r => r.ok ? r.json() : []).catch(() => []),
   ]);
-  const runs: LabRun[] = runsText.split('\n').filter(Boolean).map(l => { try { return JSON.parse(l) as LabRun; } catch { return null; } }).filter((r): r is LabRun => !!r)
-    .map(r => r.kind === 'physics' ? { ...r, result: expandReport(r.result) } : r).sort((a, b) => b.at - a.at);
+  const runs: LabRun[] = upgradeRuns(runsText.split('\n').filter(Boolean).map(l => { try { return JSON.parse(l); } catch { return null; } }))
+    .map(r => ({ ...r, result: expandReport(r.result) })).sort((a, b) => b.at - a.at);
   return { runs, presets: Array.isArray(presetsJson) ? (presetsJson as LabPreset[]).map(upgradePreset) : [] };
 }

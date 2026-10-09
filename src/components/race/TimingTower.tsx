@@ -33,7 +33,6 @@ function TimingTower({
   condensed: _condensed = false, // Reserved for future styling differences
   expandable = true, // Show expanded row details on focus
   statusEffects,
-  activeTags,
   effectStacks,
   histories,
   positionDeltas,
@@ -269,7 +268,6 @@ function TimingTower({
       bestLapTime,
       bestLapClass,
       statusEmoji,
-      activeTagIds: activeTags?.get(driver.id),
       effectStack: isSealed ? undefined : effectStacks?.get(driver.id),
       history: histories?.get(driver.id),
       isFocused,

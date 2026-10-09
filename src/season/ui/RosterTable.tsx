@@ -72,7 +72,7 @@ export function ReadingSheet({ title, reading, icon }: { title: string; reading:
       <b className={`rt-g tone-${gradeTone(reading.grade)}`}>{reading.grade}</b>
       <span className="rt-sum">
         <span>{reading.baseGrade} · {r(reading.base)} base roll <span className="rs-hint">(0 worst, 100 best possible)</span></span>
-        {reading.parts.map(p => <span key={p.card.id}>+{r(p.points)} · {p.card.name} (+{p.pct}% {STAT_LABELS[reading.stat]})</span>)}
+        {reading.parts.map(p => <span key={p.card.id}>+{r(p.points)} {STAT_LABELS[reading.stat]} · {p.card.name}</span>)}
         <span className="rt-sum-total">{reading.grade} · {r(reading.total)} total{reading.total > 100 ? ' · past the best possible roll' : ''}</span>
       </span>
     </div>

@@ -36,7 +36,8 @@ describe('grades', () => {
     const r = readStat('baseSpeed', raw, cards);
     const simmed = applyCards({ driver: { baseSpeed: raw } as never }, cards).driver!.baseSpeed;
     expect(r.total).toBeCloseTo(rating('baseSpeed', simmed), 9);
-    expect(r.parts.map(p => p.pct)).toEqual([10, 5]);
+    expect(r.parts.map(p => p.pct)).toEqual([10, 10]);
+    expect(r.parts.map(p => p.points)).toEqual([10, 10]); // #335: a card's pct IS its grade points
     expect(r.baseGrade).toBe(grade(r.base));
     expect(overall([r, readStat('luck', 0.55, [])]).total).toBeCloseTo((r.total + rating('luck', 0.55)) / 2);
   });

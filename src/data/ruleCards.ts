@@ -38,15 +38,15 @@ export const RULE_CARDS: RuleCard[] = [
     readout: 'Neutral skies become rare; every dry weather is as likely.',
     patch: { weather: { neutral: 10, ...Object.fromEntries(DRY.map(d => [d, 18])) } } },
 
-  // ---- Tags ---------------------------------------------------------------
-  { id: 'tag-soup', name: 'Tag Soup', emoji: '🍲', scope: 'both', weight: 'wild',
+  // ---- Traits (ids kept from the tag era so saved hands still resolve) ----
+  { id: 'tag-soup', name: 'Trait Soup', emoji: '🍲', scope: 'both', weight: 'wild',
     blurb: 'Everyone arrives with baggage.',
-    readout: 'Most drivers are born with tags; up to 6 each.',
-    patch: { tags: { genesisChance: 0.45, slotCap: 6 } } },
-  { id: 'no-tags', name: 'No Tags', emoji: '🧼', scope: 'both', weight: 'mild',
+    readout: 'Most slots (driver, car, team) are born with a trait card.',
+    patch: { traits: { genesisChance: 0.45 } } },
+  { id: 'no-tags', name: 'No Traits', emoji: '🧼', scope: 'both', weight: 'mild',
     blurb: 'A clean grid. Pure stats, nothing weird.',
-    readout: 'Nobody is born with a tag.',
-    patch: { tags: { genesisChance: 0 } } },
+    readout: 'Nobody is born with a trait card.',
+    patch: { traits: { genesisChance: 0 } } },
 
   // ---- Physics ------------------------------------------------------------
   { id: 'demolition-derby', name: 'Demolition Derby', emoji: '💥', scope: 'both', weight: 'cursed',
@@ -60,7 +60,7 @@ export const RULE_CARDS: RuleCard[] = [
   { id: 'tough-tyres', name: 'Tough Tyres', emoji: '🪨', scope: 'both', weight: 'mild',
     blurb: 'A rubber compound from a kinder era.',
     readout: 'Tyres wear half as fast. Fewer stops.',
-    patch: { scale: [['tires.soft.lifeLaps', 2], ['tires.medium.lifeLaps', 2], ['tires.hard.lifeLaps', 2]] } },
+    patch: { scale: [['tires.soft.lifeShare', 2], ['tires.medium.lifeShare', 2], ['tires.hard.lifeShare', 2]] } },
   { id: 'fast-pit-crews', name: 'Fast Pit Crews', emoji: '🏎️', scope: 'both', weight: 'mild',
     blurb: 'Every crew drilled all winter.',
     readout: 'Pit stops 25% quicker; fewer fumbled stops.',
@@ -68,7 +68,7 @@ export const RULE_CARDS: RuleCard[] = [
   { id: 'no-pit-rules', name: 'No Pit Rules', emoji: '🔓', scope: 'both', weight: 'wild',
     blurb: 'The stewards went home. Run one hard set all day or stop six times for softs.',
     readout: 'No minimum stops, no compound rule. Anything goes.',
-    patch: { simVars: { pits: { minStops: 0, requireAllCompounds: false } } } },
+    patch: { simVars: { pits: { minStops: 0, requireCompoundChange: false, requireAllCompounds: false } } } },
 ];
 
 export const RULE_CARDS_BY_ID: Map<string, RuleCard> = new Map(RULE_CARDS.map(c => [c.id, c]));

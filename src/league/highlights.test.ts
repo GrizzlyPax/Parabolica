@@ -48,12 +48,11 @@ describe('digest highlight curation', () => {
       ev('crash', 1.0),
       ev('tire_failure', 0.9),
       ev('mechanical_failure', 0.9),
-      ev('tag_activation', 0.3), // low magnitude but characterful — still in
       ev('track_event', 0.5),
       ...Array.from({ length: 20 }, () => ev('overtake', 1.0)),
     ];
     const picked = pickHighlights(events);
-    for (const type of ['crash', 'tire_failure', 'mechanical_failure', 'tag_activation', 'track_event']) {
+    for (const type of ['crash', 'tire_failure', 'mechanical_failure', 'track_event']) {
       expect(picked.some(e => e.type === type), `${type} missing`).toBe(true);
     }
   });

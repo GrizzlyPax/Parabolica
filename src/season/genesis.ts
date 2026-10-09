@@ -5,13 +5,13 @@
 // pool; the season loop (#315) turns picks + lineups into a race grid here.
 //
 // Streams are all new ('season', …) so Quick Race, leagues and the lab keep
-// their 'genesis' / 'tags' streams untouched: the golden fingerprint must not
-// move. Everything is derived from (seed, teamCount, ruleset); same inputs →
+// their 'genesis' / 'traits' streams untouched: the golden fingerprint must
+// not move. Everything is derived from (seed, teamCount, ruleset); same inputs →
 // deep-equal pool.
 //
-// Genesis rolls TRAIT CARDS, not tags (docs/CARDS.md): one slot per pool
-// driver, per rack car and per competitor team, the same shape as the tag
-// roll (1-in-6 hit, metal odds 60/30/9/1, always three rng draws). No gear
+// Genesis rolls TRAIT CARDS (docs/CARDS.md): one slot per pool driver, per
+// rack car and per competitor team (1-in-6 hit, metal odds 60/30/9/1, always
+// three rng draws). No gear
 // at genesis; every driver, car and team starts with one empty slot.
 
 import { mulberry32, deriveSeed, shuffle, type Rng } from '../engine/rng';
@@ -73,8 +73,8 @@ export interface SeasonPool {
  * draws (one here, two in pickCard) so odds changes never shift the stream. */
 function maybeTrait(target: CardTarget, rs: Ruleset, rng: Rng): Card | null {
   const roll = rng();
-  const pick = pickCard(cardsBy({ kind: 'trait', target }, MOTORSPORT_DECK), rs.tags.rarityOdds, rng);
-  return roll < rs.tags.genesisChance ? pick : null;
+  const pick = pickCard(cardsBy({ kind: 'trait', target }, MOTORSPORT_DECK), rs.traits.rarityOdds, rng);
+  return roll < rs.traits.genesisChance ? pick : null;
 }
 
 function traitsFor(target: CardTarget, seed: number, id: string | number, rs: Ruleset): Card[] {
@@ -180,8 +180,8 @@ export function cardsForDriver(pool: SeasonPool, teamId: string, driverId: numbe
 /**
  * The engine-ready grid for one round: each racing driver carries their
  * competitor team's identity, the team's claimed car, the team's stats, and
- * every card baked into those stats with applyCards. Engine `tags` stay empty
- * for season races in v0.5. Pure; grid order = lineup order, then lineup slot.
+ * every card baked into those stats with applyCards. Pure; grid order =
+ * lineup order, then lineup slot.
  */
 export function seasonRoster(pool: SeasonPool, rosters: TeamRoster[], lineups: Lineup[], opts: SeasonRosterOptions = {}): RosterDriver[] {
   const out: RosterDriver[] = [];
@@ -220,7 +220,6 @@ export function seasonRoster(pool: SeasonPool, rosters: TeamRoster[], lineups: L
         carName: car.name,
         teamStats: adjusted.team,
         number: driver.number,
-        tags: [],
         // Display only: already baked into the stats above. The race view shows them (#451).
         cards,
       });

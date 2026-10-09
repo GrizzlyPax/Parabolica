@@ -250,6 +250,7 @@ function App() {
     engine.updateConfig({
       lapLength: track.length,
       totalLaps: track.laps,
+      tyreWear: track.tyreWear,
     });
     setTrackInfo(engine.getTrackInfo());
   }, [engine]);

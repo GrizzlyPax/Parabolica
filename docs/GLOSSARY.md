@@ -1,8 +1,8 @@
 # Parabolica World Deck
 
-*Everything in the sim and the world, generated from the data modules by `npm run glossary` — do not edit by hand; edit the source files named in each section and re-run. Engine v0.5.1. How to add content: docs/WORLD_DECK.md.*
+*Everything in the sim and the world, generated from the data modules by `npm run glossary` — do not edit by hand; edit the source files named in each section and re-run. Engine v0.6.0. How to add content: docs/WORLD_DECK.md.*
 
-28 teams · 6 tracks · 43 tags (30 genesis · 8 acquired · 5 in-race) · 12 rule cards · 12 rules · 6 weathers
+28 teams · 6 tracks · 94 cards (36 traits · 36 gear · 22 effects) · 5 in-race effects · 12 rule cards · 6 weathers
 
 ## Base-deck teams
 
@@ -58,109 +58,153 @@
 
 ## Tracks
 
-*Source: `src/data/deckTracks.ts` (docs/TRACKS_WEATHER.md). Six stat-combo tracks; each favours one driver stat and one car/team stat for the race, field-wide (+10%, through the card math at race build). Every race and season calendar draws from these; the 31 themed circuits, track events and track characters retired with Tracks & Weather v2.*
+*Source: `src/data/deckTracks.ts` (docs/TRACKS_WEATHER.md). Six stat-combo tracks; each favours one driver stat and one car/team stat for the race, field-wide (+10 grade points, through the card math at race build). Each has a tyre-wear dial (#536): wear per tick × `tyreWear`. Every race and season calendar draws from these; the 31 themed circuits, track events and track characters retired with Tracks & Weather v2.*
 
-| Track | Favours | Layout |
-|---|---|---|
-| **Speed + Power** `speed-power` | +10% Speed · +10% Power | power |
-| **Consistency + Grip** `consistency-grip` | +10% Consistency · +10% Grip | technical |
-| **Aggression + Reliability** `aggression-reliability` | +10% Aggression · +10% Reliability | street |
-| **Endurance + Tyre Management** `endurance-tyre-management` | +10% Endurance · +10% Tyre Management | flowing |
-| **Acceleration + Pit Crew** `acceleration-pit-crew` | +10% Acceleration · +10% Pit Crew | modern |
-| **Luck + Reliability** `luck-reliability` | +10% Luck · +10% Reliability | classic |
+| Track | Favours | Tyre wear | Layout |
+|---|---|---|---|
+| **Speed + Power** `speed-power` | +10 Speed · +10 Power | ×0.85 | power |
+| **Consistency + Grip** `consistency-grip` | +10 Consistency · +10 Grip | ×1.1 | technical |
+| **Aggression + Reliability** `aggression-reliability` | +10 Aggression · +10 Reliability | ×1 | street |
+| **Endurance + Tyre Management** `endurance-tyre-management` | +10 Endurance · +10 Tyre Management | ×1.25 | flowing |
+| **Acceleration + Pit Crew** `acceleration-pit-crew` | +10 Acceleration · +10 Pit Crew | ×1.15 | modern |
+| **Luck + Reliability** `luck-reliability` | +10 Luck · +10 Reliability | ×0.95 | classic |
 
 ## Weather
 
-*Source: `src/data/deckWeather.ts`. Neutral + five dry weathers, favours × intensity, stacking with the track. No rain until Wet arrives in v0.6; the old weathers and the inflictions retired (the inflictions are parked as Horror-deck material).*
+*Source: `src/data/deckWeather.ts`. Neutral + five dry weathers, favours (grade points) × intensity, stacking with the track. No rain until Wet arrives in v0.6; the old weathers and the inflictions retired (the inflictions are parked as Horror-deck material).*
 
 | Weather | Odds | Favours |
 |---|---|---|
 | **Neutral** `neutral` | 60% | — |
-| **Speed + Tyre Management** `speed-tyre-management` | 8% | +10% Speed · +10% Tyre Management |
-| **Consistency + Pit Crew** `consistency-pit-crew` | 8% | +10% Consistency · +10% Pit Crew |
-| **Acceleration + Reliability** `acceleration-reliability` | 8% | +10% Acceleration · +10% Reliability |
-| **Endurance + Power** `endurance-power` | 8% | +10% Endurance · +10% Power |
-| **Aggression + Grip** `aggression-grip` | 8% | +10% Aggression · +10% Grip |
+| **Speed + Tyre Management** `speed-tyre-management` | 8% | +10 Speed · +10 Tyre Management |
+| **Consistency + Pit Crew** `consistency-pit-crew` | 8% | +10 Consistency · +10 Pit Crew |
+| **Acceleration + Reliability** `acceleration-reliability` | 8% | +10 Acceleration · +10 Reliability |
+| **Endurance + Power** `endurance-power` | 8% | +10 Endurance · +10 Power |
+| **Aggression + Grip** `aggression-grip` | 8% | +10 Aggression · +10 Grip |
 
 
-## How genesis tags are rolled
+## How genesis traits are rolled
 
 Each driver gets three slots: driver, car (their own chassis), team (one roll, shared by teammates). Per slot:
 
 1. **Does it hit?** 1 in 6.
-2. **Which bucket?** 60% bronze · 30% silver · 9% gold · 1% iridium. Fixed odds — adding tags to a bucket never changes how often it comes up, only which tag you get.
-3. **Which tag?** An even pick inside the bucket. An empty bucket falls to the next more common one.
+2. **Which metal?** 60% bronze · 30% silver · 9% gold · 1% iridium. Fixed odds — adding cards to a metal never changes how often it comes up, only which card you get.
+3. **Which card?** An even pick among that metal's trait cards for the slot. An empty metal falls to the next more common one.
 
-Bucket sizes in the default pool: bronze 12 · silver 9 · gold 6 · iridium 3. Cards change the hit chance and the odds.
+A card adds grade points to its stats at race build (src/cards/apply.ts): bronze 1 stat × +5 · silver 1 stat × +10 · gold 2 stats × +10 · iridium 3 stats × +15. Rule cards change the hit chance and the odds. Season Mode deals gear from packs the same way (docs/CARDS.md).
 
-## How tags enter the world
+## The Motorsport deck
 
-| Door | What it means |
-|---|---|
-| Genesis | Rolled when a driver, car or team is born (chance and pool set by the ruleset) |
-| Commissionary | Attached by you, from the next race (`attach-tag`) |
-| Acquired | Awarded by the settle loop for what happened in a race (`acquire-tag`), from the next race |
-| In-race | Picked up mid-race from a race event; may expire by lap, at the next stop, or carry over |
+*Source: `src/cards/deck.ts` (docs/CARDS.md), generated from the stat grid. Traits are born with (genesis); gear (equipment, upgrades, facilities) comes from packs; effects are one-race modifiers.*
 
-## Genesis tags
+| Card | Kind | On | Metal | Does |
+|---|---|---|---|---|
+| **Bronze Speed** `eq-bronze-speed` | equipment | driver | bronze | +5 Speed |
+| **Bronze Consistency** `eq-bronze-consistency` | equipment | driver | bronze | +5 Consistency |
+| **Bronze Luck** `eq-bronze-luck` | equipment | driver | bronze | +5 Luck |
+| **Bronze Acceleration** `eq-bronze-acceleration` | equipment | driver | bronze | +5 Acceleration |
+| **Bronze Endurance** `eq-bronze-endurance` | equipment | driver | bronze | +5 Endurance |
+| **Bronze Aggression** `eq-bronze-aggression` | equipment | driver | bronze | +5 Aggression |
+| **Silver Speed** `eq-silver-speed` | equipment | driver | silver | +10 Speed |
+| **Silver Consistency** `eq-silver-consistency` | equipment | driver | silver | +10 Consistency |
+| **Silver Luck** `eq-silver-luck` | equipment | driver | silver | +10 Luck |
+| **Silver Acceleration** `eq-silver-acceleration` | equipment | driver | silver | +10 Acceleration |
+| **Silver Endurance** `eq-silver-endurance` | equipment | driver | silver | +10 Endurance |
+| **Silver Aggression** `eq-silver-aggression` | equipment | driver | silver | +10 Aggression |
+| **Gold Speed + Consistency** `eq-gold-speed+consistency` | equipment | driver | gold | +10 Speed · +10 Consistency |
+| **Gold Consistency + Luck** `eq-gold-consistency+luck` | equipment | driver | gold | +10 Consistency · +10 Luck |
+| **Gold Luck + Acceleration** `eq-gold-luck+acceleration` | equipment | driver | gold | +10 Luck · +10 Acceleration |
+| **Gold Acceleration + Endurance** `eq-gold-acceleration+endurance` | equipment | driver | gold | +10 Acceleration · +10 Endurance |
+| **Gold Endurance + Aggression** `eq-gold-endurance+aggression` | equipment | driver | gold | +10 Endurance · +10 Aggression |
+| **Gold Aggression + Speed** `eq-gold-aggression+speed` | equipment | driver | gold | +10 Aggression · +10 Speed |
+| **Iridium Speed + Acceleration + Aggression** `eq-iridium-speed+acceleration+aggression` | equipment | driver | iridium | +15 Speed · +15 Acceleration · +15 Aggression |
+| **Iridium Consistency + Endurance + Luck** `eq-iridium-consistency+endurance+luck` | equipment | driver | iridium | +15 Consistency · +15 Endurance · +15 Luck |
+| **Bronze Power** `up-bronze-power` | upgrade | car | bronze | +5 Power |
+| **Bronze Grip** `up-bronze-grip` | upgrade | car | bronze | +5 Grip |
+| **Bronze Reliability** `up-bronze-reliability` | upgrade | car | bronze | +5 Reliability |
+| **Silver Power** `up-silver-power` | upgrade | car | silver | +10 Power |
+| **Silver Grip** `up-silver-grip` | upgrade | car | silver | +10 Grip |
+| **Silver Reliability** `up-silver-reliability` | upgrade | car | silver | +10 Reliability |
+| **Gold Power + Grip** `up-gold-power+grip` | upgrade | car | gold | +10 Power · +10 Grip |
+| **Gold Grip + Reliability** `up-gold-grip+reliability` | upgrade | car | gold | +10 Grip · +10 Reliability |
+| **Gold Reliability + Power** `up-gold-reliability+power` | upgrade | car | gold | +10 Reliability · +10 Power |
+| **Iridium Power + Grip + Reliability** `up-iridium-power+grip+reliability` | upgrade | car | iridium | +15 Power · +15 Grip · +15 Reliability |
+| **Bronze Tyre Management** `fa-bronze-tyre-management` | facility | team | bronze | +5 Tyre Management |
+| **Bronze Pit Crew** `fa-bronze-pit-crew` | facility | team | bronze | +5 Pit Crew |
+| **Silver Tyre Management** `fa-silver-tyre-management` | facility | team | silver | +10 Tyre Management |
+| **Silver Pit Crew** `fa-silver-pit-crew` | facility | team | silver | +10 Pit Crew |
+| **Gold Tyre Management + Pit Crew** `fa-gold-tyre-management+pit-crew` | facility | team | gold | +10 Tyre Management · +10 Pit Crew |
+| **Iridium Tyre Management + Pit Crew** `fa-iridium-tyre-management+pit-crew` | facility | team | iridium | +15 Tyre Management · +15 Pit Crew |
+| **Bronze Speed** `tr-driver-bronze-speed` | trait | driver | bronze | +5 Speed |
+| **Bronze Consistency** `tr-driver-bronze-consistency` | trait | driver | bronze | +5 Consistency |
+| **Bronze Luck** `tr-driver-bronze-luck` | trait | driver | bronze | +5 Luck |
+| **Bronze Acceleration** `tr-driver-bronze-acceleration` | trait | driver | bronze | +5 Acceleration |
+| **Bronze Endurance** `tr-driver-bronze-endurance` | trait | driver | bronze | +5 Endurance |
+| **Bronze Aggression** `tr-driver-bronze-aggression` | trait | driver | bronze | +5 Aggression |
+| **Silver Speed** `tr-driver-silver-speed` | trait | driver | silver | +10 Speed |
+| **Silver Consistency** `tr-driver-silver-consistency` | trait | driver | silver | +10 Consistency |
+| **Silver Luck** `tr-driver-silver-luck` | trait | driver | silver | +10 Luck |
+| **Silver Acceleration** `tr-driver-silver-acceleration` | trait | driver | silver | +10 Acceleration |
+| **Silver Endurance** `tr-driver-silver-endurance` | trait | driver | silver | +10 Endurance |
+| **Silver Aggression** `tr-driver-silver-aggression` | trait | driver | silver | +10 Aggression |
+| **Gold Speed + Consistency** `tr-driver-gold-speed+consistency` | trait | driver | gold | +10 Speed · +10 Consistency |
+| **Gold Consistency + Luck** `tr-driver-gold-consistency+luck` | trait | driver | gold | +10 Consistency · +10 Luck |
+| **Gold Luck + Acceleration** `tr-driver-gold-luck+acceleration` | trait | driver | gold | +10 Luck · +10 Acceleration |
+| **Gold Acceleration + Endurance** `tr-driver-gold-acceleration+endurance` | trait | driver | gold | +10 Acceleration · +10 Endurance |
+| **Gold Endurance + Aggression** `tr-driver-gold-endurance+aggression` | trait | driver | gold | +10 Endurance · +10 Aggression |
+| **Gold Aggression + Speed** `tr-driver-gold-aggression+speed` | trait | driver | gold | +10 Aggression · +10 Speed |
+| **Iridium Speed + Acceleration + Aggression** `tr-driver-iridium-speed+acceleration+aggression` | trait | driver | iridium | +15 Speed · +15 Acceleration · +15 Aggression |
+| **Iridium Consistency + Endurance + Luck** `tr-driver-iridium-consistency+endurance+luck` | trait | driver | iridium | +15 Consistency · +15 Endurance · +15 Luck |
+| **Bronze Power** `tr-car-bronze-power` | trait | car | bronze | +5 Power |
+| **Bronze Grip** `tr-car-bronze-grip` | trait | car | bronze | +5 Grip |
+| **Bronze Reliability** `tr-car-bronze-reliability` | trait | car | bronze | +5 Reliability |
+| **Silver Power** `tr-car-silver-power` | trait | car | silver | +10 Power |
+| **Silver Grip** `tr-car-silver-grip` | trait | car | silver | +10 Grip |
+| **Silver Reliability** `tr-car-silver-reliability` | trait | car | silver | +10 Reliability |
+| **Gold Power + Grip** `tr-car-gold-power+grip` | trait | car | gold | +10 Power · +10 Grip |
+| **Gold Grip + Reliability** `tr-car-gold-grip+reliability` | trait | car | gold | +10 Grip · +10 Reliability |
+| **Gold Reliability + Power** `tr-car-gold-reliability+power` | trait | car | gold | +10 Reliability · +10 Power |
+| **Iridium Power + Grip + Reliability** `tr-car-iridium-power+grip+reliability` | trait | car | iridium | +15 Power · +15 Grip · +15 Reliability |
+| **Bronze Tyre Management** `tr-team-bronze-tyre-management` | trait | team | bronze | +5 Tyre Management |
+| **Bronze Pit Crew** `tr-team-bronze-pit-crew` | trait | team | bronze | +5 Pit Crew |
+| **Silver Tyre Management** `tr-team-silver-tyre-management` | trait | team | silver | +10 Tyre Management |
+| **Silver Pit Crew** `tr-team-silver-pit-crew` | trait | team | silver | +10 Pit Crew |
+| **Gold Tyre Management + Pit Crew** `tr-team-gold-tyre-management+pit-crew` | trait | team | gold | +10 Tyre Management · +10 Pit Crew |
+| **Iridium Tyre Management + Pit Crew** `tr-team-iridium-tyre-management+pit-crew` | trait | team | iridium | +15 Tyre Management · +15 Pit Crew |
+| **Speed Up** `ef-speed-up` | effect | driver | — | Speed up |
+| **Speed Down** `ef-speed-down` | effect | driver | — | Speed down |
+| **Consistency Up** `ef-consistency-up` | effect | driver | — | Consistency up |
+| **Consistency Down** `ef-consistency-down` | effect | driver | — | Consistency down |
+| **Luck Up** `ef-luck-up` | effect | driver | — | Luck up |
+| **Luck Down** `ef-luck-down` | effect | driver | — | Luck down |
+| **Acceleration Up** `ef-acceleration-up` | effect | driver | — | Acceleration up |
+| **Acceleration Down** `ef-acceleration-down` | effect | driver | — | Acceleration down |
+| **Endurance Up** `ef-endurance-up` | effect | driver | — | Endurance up |
+| **Endurance Down** `ef-endurance-down` | effect | driver | — | Endurance down |
+| **Aggression Up** `ef-aggression-up` | effect | driver | — | Aggression up |
+| **Aggression Down** `ef-aggression-down` | effect | driver | — | Aggression down |
+| **Power Up** `ef-power-up` | effect | car | — | Power up |
+| **Power Down** `ef-power-down` | effect | car | — | Power down |
+| **Grip Up** `ef-grip-up` | effect | car | — | Grip up |
+| **Grip Down** `ef-grip-down` | effect | car | — | Grip down |
+| **Reliability Up** `ef-reliability-up` | effect | car | — | Reliability up |
+| **Reliability Down** `ef-reliability-down` | effect | car | — | Reliability down |
+| **Tyre Management Up** `ef-tyre-management-up` | effect | team | — | Tyre Management up |
+| **Tyre Management Down** `ef-tyre-management-down` | effect | team | — | Tyre Management down |
+| **Pit Crew Up** `ef-pit-crew-up` | effect | team | — | Pit Crew up |
+| **Pit Crew Down** `ef-pit-crew-down` | effect | team | — | Pit Crew down |
 
-Measured: each tag alone on one driver over 200 seeded races vs the same races untagged (Race Control → Tag calibration; `npm run calibrate`, batch 2026).
+## In-race effects
 
-| Tag | Rarity | Target | Fires | Effect | Lasts | After a race | How you get it | Measured |
-|---|---|---|---|---|---|---|---|---|
-| 🎯 **Clutch Performer** `clutch-performer` — Raises their game when it matters most | silver | driver | on the final lap (70% chance) | +8% speed, +15% consistency | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +0.3 places · 1.7× wins · 20% DNF (field 20%) |
-| 🌧️ **Rain Dancer** `rain-dancer` — Mysteriously faster when the skies open | gold | driver | while in rain | +8% consistency, −15% crash risk | for good | — | born with it (in the genesis pool), or granted by the Commissionary | no measurable effect · 1.0× wins · 20% DNF (field 20%) |
-| 🐢 **Sunday Driver** `sunday-driver` — Slow starter who builds to a strong finish | silver | driver | while last 40% of the race | +5% speed | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +1.1 places · 3.0× wins · 17% DNF (field 20%) |
-| 🧤 **Steady Hands** `steady-hands` — Rarely puts a wheel wrong | bronze | driver | always on | +4% consistency | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +2.5 places · 4.2× wins · 10% DNF (field 20%) |
-| 🛑 **Late Braker** `late-braker` — Brave into the corners. Sometimes too brave | bronze | driver | always on | +1% speed, +3% crash risk | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +0.2 places · 1.5× wins · 17% DNF (field 20%) |
-| 🚦 **Quick Starter** `quick-starter` — Lights out and gone | bronze | driver | at the start | +5% speed | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +0.7 places · 1.8× wins · 15% DNF (field 20%) |
-| 🙌 **Crowd Favourite** `crowd-favourite` — Things just seem to go their way | bronze | driver | always on | +10% luck | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +0.5 places · 1.7× wins · 16% DNF (field 20%) |
-| 🌂 **Rain Shy** `rain-shy` — Would rather be indoors when it rains | silver | driver | while in rain | -3% speed | for good | — | born with it (in the genesis pool), or granted by the Commissionary | no measurable effect · 1.0× wins · 20% DNF (field 20%) |
-| 🧊 **Ice Veins** `ice-veins` — Unflappable with the lead in sight | gold | driver | while running top 3 | +8% consistency | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +1.0 places · 4.5× wins · 18% DNF (field 20%) |
-| ⭐ **The Natural** `the-natural` — Born for this. Everyone can tell | iridium | driver | always on | +3% speed, +5% consistency, +10% luck | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +2.9 places · 6.8× wins · 14% DNF (field 20%) |
-| 💎 **Glass Cannon** `glass-cannon` — Blazingly fast but fragile | silver | car | always on | +3% speed, +25% crash risk | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +0.8 places · 3.3× wins · 21% DNF (field 20%) |
-| 👻 **Cursed Chassis** `cursed-chassis` — Something is wrong with this car. Nobody knows what. | silver | car | always on | -2% consistency, -12% luck | for good | — | born with it (in the genesis pool), or granted by the Commissionary | -0.8 places · 1.0× wins · 18% DNF (field 20%) |
-| 🔧 **Pit Lane Special** `pit-lane-special` — Optimized for quick pit stops | bronze | car | on a pit stop | -25% pit time | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +1.2 places · 2.2× wins · 16% DNF (field 20%) |
-| 🔋 **Big Engine** `big-engine` — More horsepower than manners | bronze | car | always on | +1% speed | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +1.4 places · 2.5× wins · 16% DNF (field 20%) |
-| 🛡️ **Built Like a Tank** `built-like-a-tank` — Shrugs off contact that would end other cars | bronze | car | always on | −6% crash risk | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +0.0 places · 1.0× wins · 20% DNF (field 20%) |
-| 🪶 **Light-Footed** `light-footed` — Flies on fresh rubber | bronze | car | while tyre wear under 40% | +2% speed | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +1.0 places · 2.2× wins · 16% DNF (field 20%) |
-| 🌡️ **Runs Hot** `runs-hot` — Hates a scorcher | silver | car | while in scorcher | -4% speed | for good | — | born with it (in the genesis pool), or granted by the Commissionary | no measurable effect · 1.0× wins · 20% DNF (field 20%) |
-| 🌧️ **Wet Weather Package** `wet-weather-package` — Built for the rain; sure-footed when it pours | gold | car | while in rain | +3% speed, −5% crash risk | for good | — | born with it (in the genesis pool), or granted by the Commissionary | no measurable effect · 1.0× wins · 20% DNF (field 20%) |
-| 🛸 **Spaceship** `spaceship` — Nobody is sure how it works, including the team | gold | car | always on | +3% speed, -10% luck | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +0.8 places · 3.3× wins · 21% DNF (field 20%) |
-| 🦄 **The Unicorn** `the-unicorn` — The car every team dreams of building once | iridium | car | always on | +3% speed, +4% consistency, −5% crash risk | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +2.3 places · 5.7× wins · 17% DNF (field 20%) |
-| 🐕 **Underdog Spirit** `underdog-spirit` — Performs better when behind | bronze | team | while bottom 50% of the field | +3% speed, +10% luck | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +0.8 places · 1.1× wins · 15% DNF (field 18%) |
-| 👑 **Front Runners** `front-runners` — Thrives when leading the pack | bronze | team | while running top 5 | +4% consistency, −8% crash risk | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +0.8 places · 2.1× wins · 16% DNF (field 18%) |
-| 🌀 **Chaotic Energy** `chaotic-energy` — Unpredictable - could be brilliant or disastrous | silver | team | at the start (50% chance) | -20% consistency | for good | — | born with it (in the genesis pool), or granted by the Commissionary | -0.4 places · 0.9× wins · 20% DNF (field 18%) |
-| 🔧 **Drilled Crew** `drilled-crew` — Every stop rehearsed a hundred times | bronze | team | always on | -8% pit time | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +0.8 places · 1.0× wins · 16% DNF (field 18%) |
-| 🍲 **Home Cooking** `home-cooking` — Well fed, well loved, a little lucky | bronze | team | always on | +8% luck | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +0.3 places · 0.9× wins · 19% DNF (field 18%) |
-| 🌱 **Late Bloomers** `late-bloomers` — Find their pace when the race gets long | silver | team | while last 30% of the race | +1% speed | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +0.2 places · 1.1× wins · 18% DNF (field 18%) |
-| 🧈 **Butterfingers** `butterfingers` — Something always rolls under the car | silver | team | always on | +15% pit time | for good | — | born with it (in the genesis pool), or granted by the Commissionary | -0.7 places · 0.4× wins · 18% DNF (field 18%) |
-| 🏰 **Siege Mentality** `siege-mentality` — Defend the lead at all costs | gold | team | while running top 3 | +3% consistency, −8% crash risk | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +0.6 places · 1.8× wins · 16% DNF (field 18%) |
-| 🕳️ **Void-Touched** `void-touched` — Fast, and the Void is watching | gold | team | always on | +2% speed, -15% luck | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +0.8 places · 1.8× wins · 19% DNF (field 18%) |
-| 👑 **Dynasty** `dynasty` — Generations of winning, and it shows everywhere | iridium | team | always on | +2% speed, +3% consistency, +5% luck, -5% pit time | for good | — | born with it (in the genesis pool), or granted by the Commissionary | +2.4 places · 2.6× wins · 16% DNF (field 18%) |
+*Source: `src/RaceEngine.ts` IN_RACE_EFFECTS. Timed states a race puts on a car; they show in the timing tower and the feed and expire on their own.*
 
-## Acquired tags
-
-| Tag | Rarity | Target | Fires | Effect | Lasts | After a race | How you get it |
-|---|---|---|---|---|---|---|---|
-| 🔥 **Hot Streak** `hot-streak` — Two wins on the bounce. Everything is coming easy. | silver | driver | always on | +2% speed, +5% consistency | 3 races | 15%: gives 🐎 The Charger to themselves | earned: 2 wins in a row |
-| 🐎 **The Charger** `the-charger` — Came through the field like it owed them money. Faster in traffic. | silver | driver | while bottom 50% of the field | +3% speed | rest of the season | — | earned: gained 10+ places from the grid and finished top 5; passed on by 🔥 Hot Streak |
-| 🛡️ **Unkillable** `unkillable` — Walked away from a wreck and kept racing. Harder to put out now. | silver | driver | always on | −12% crash risk | for good | — | earned: damaged in a crash and still classified in the top 8 |
-| 👻 **Haunted** `haunted` — Three retirements in a row. Something followed them home. | gold | driver | always on | -20% luck, +5% crash risk | 4 races | 10%: gives 👻 Haunted to their teammate | inflicted: 3 retirements in a row; passed on by 👻 Haunted |
-| 😵 **Shaken** `shaken` — Crashed out last time. The hands are not quite steady yet. | silver | driver | always on | -6% consistency | 2 races | 50%: gives 👊 Bad Blood to whoever they crashed with | inflicted: retired in a crash |
-| 👂 **Hears the Track** `hears-the-track` — They say the asphalt talks to them. It has not said anything useful yet. | bronze | driver | always on | — | rest of the season | always: shakes off 😵 Shaken | cosmic: 0.5% lottery per driver per race |
-| 🕳️ **Marked by the Void** `marked-by-the-void` — The universe simply decided. Fortune looks the other way for a while. | silver | driver | always on | -10% luck | 2 races | 10%: gives 🕳️ Marked by the Void to a random driver; 10%: wears off | cosmic: 0.3% lottery per driver per race; passed on by 🕳️ Marked by the Void |
-| 👊 **Bad Blood** `bad-blood` — Someone is driving angry. Quicker, and less careful about it. | silver | driver | always on | +2% speed, +6% crash risk | 3 races | — | passed on by 😵 Shaken |
-
-## In-race tags
-
-| Tag | Rarity | Target | Fires | Effect | Lasts | After a race | How you get it |
-|---|---|---|---|---|---|---|---|
-| 🔧 **Damaged** `damaged` — Survived a crash. The car is 15% slower for the rest of the race. | gold | driver | always on | -15% speed | rest of the race | — | mid-race, after surviving a crash |
-| 🌀 **Spun** `spun` — Just swapped ends. The next couple of laps are ragged. | silver | driver | always on | -10% consistency | 2 laps | — | mid-race, after a driver error |
-| 🔥 **Cooked Tyres** `cooked-tyres` — Past the cliff. Slower until the next stop. | silver | driver | always on | -3% speed | until the next pit stop | — | mid-race, after tyres falling off the cliff |
-| 🐢 **Sulking** `sulking` — That stop was slow and everyone knows it. | bronze | driver | always on | -4% consistency | 1 lap | — | mid-race, after a slow pit stop |
-| ⚡ **Fired Up** `fired-up` — A lightning stop. The whole crew is buzzing. | bronze | driver | always on | +1% speed | 1 lap | — | mid-race, after a lightning pit stop |
+| Effect | After | Does | Lasts |
+|---|---|---|---|
+| 🔧 **Damaged** `damaged` — limps on with a damaged car | surviving a crash | -15% speed | rest of the race |
+| 🌀 **Spun** `spun` — is rattled after the spin | a driver error (Spin) | -10% consistency | 2 laps |
+| 🔥 **Cooked Tyres** `cooked-tyres` — is nursing cooked tyres to the pits | tyres falling off the cliff | -3% speed | until the next pit stop |
+| 🐢 **Sulking** `sulking` — is sulking about that stop | a slow pit stop | -4% consistency | 1 lap |
+| ⚡ **Fired Up** `fired-up` — is fired up after a lightning stop | a lightning pit stop | +1% speed | 1 lap |
 
 ## Rule cards
 
@@ -171,35 +215,13 @@ Measured: each tag alone on one driver over 200 seeded races vs the same races u
 | ☀️ **Calm** `clear-skies` | race | mild | No weather favours this race. |
 | 🌬️ **Windswept** `always-raining` | season | wild | Every race favours Aggression and Grip. |
 | 🌪️ **Changeable** `wild-weather` | season | wild | Neutral skies become rare; every dry weather is as likely. |
-| 🍲 **Tag Soup** `tag-soup` | both | wild | Most drivers are born with tags; up to 6 each. |
-| 🧼 **No Tags** `no-tags` | both | mild | Nobody is born with a tag. |
+| 🍲 **Trait Soup** `tag-soup` | both | wild | Most slots (driver, car, team) are born with a trait card. |
+| 🧼 **No Traits** `no-tags` | both | mild | Nobody is born with a trait card. |
 | 💥 **Demolition Derby** `demolition-derby` | both | cursed | Crashes 2.5× more likely. |
 | 🧨 **Unreliable Cars** `unreliable-cars` | both | cursed | Engines fail 3× as often. |
 | 🪨 **Tough Tyres** `tough-tyres` | both | mild | Tyres wear half as fast. Fewer stops. |
 | 🏎️ **Fast Pit Crews** `fast-pit-crews` | both | mild | Pit stops 25% quicker; fewer fumbled stops. |
 | 🔓 **No Pit Rules** `no-pit-rules` | both | wild | No minimum stops, no compound rule. Anything goes. |
-
-## Acquisition rules (after a race)
-
-| Rule | Family | Trigger | Awards |
-|---|---|---|---|
-| `two-wins` | earned | 2 wins in a row | 🔥 Hot Streak |
-| `big-climb` | earned | gained 10+ places from the grid and finished top 5 | 🐎 The Charger |
-| `walked-away` | earned | damaged in a crash and still classified in the top 8 | 🛡️ Unkillable |
-| `three-dnfs` | inflicted | 3 retirements in a row | 👻 Haunted |
-| `crashed-out` | inflicted | retired in a crash | 😵 Shaken |
-| `the-whisper` | cosmic | 0.5% lottery per driver per race | 👂 Hears the Track |
-| `the-marking` | cosmic | 0.3% lottery per driver per race | 🕳️ Marked by the Void |
-
-## In-race rules (during a race)
-
-| Rule | After | Awards | Lasts |
-|---|---|---|---|
-| `damage` | surviving a crash | 🔧 Damaged | rest of the race |
-| `spin` | a driver error (Spin) | 🌀 Spun | 2 laps |
-| `cliff` | tyres falling off the cliff | 🔥 Cooked Tyres | until the next pit stop |
-| `fumble` | a slow pit stop | 🐢 Sulking | 1 lap |
-| `lightning` | a lightning pit stop | ⚡ Fired Up | 1 lap |
 
 ## Flavour pools
 

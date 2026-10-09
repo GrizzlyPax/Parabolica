@@ -152,7 +152,8 @@ describe('applying a pack', () => {
     expect(after).toHaveLength(2);
     for (const stat of pack.cards[0].stats) {
       const key = stat.stat as 'tireManagement' | 'pitCrew';
-      for (let i = 0; i < 2; i++) expect(after[i].teamStats![key]).toBeCloseTo(before[i].teamStats![key] * (1 + stat.pct / 100), 10);
+      // #335: grade points on the 1–5 star scale: +pct × 4 / 100 stars.
+      for (let i = 0; i < 2; i++) expect(after[i].teamStats![key]).toBeCloseTo(before[i].teamStats![key] + (stat.pct * 4) / 100, 10);
     }
     // Rivals untouched.
     const rival = leagueForRound(next, 0).roster.find(d => d.kingdomId !== human)!;

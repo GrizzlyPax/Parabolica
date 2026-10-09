@@ -2,7 +2,7 @@
 import { describe, it, expect } from 'vitest';
 import { MOTORSPORT_DECK, motorsportDeck, cardsBy, pickCard, slotsFor, METAL_LADDER, CARDS_BY_ID, DRIVER_STATS, CAR_STATS, TEAM_STATS } from './deck';
 import { applyCards, cardPercents } from './apply';
-import { DEFAULT_RARITY_ODDS, RARITIES } from '../data/tags';
+import { DEFAULT_RARITY_ODDS, RARITIES } from './rarity';
 import { mulberry32 } from '../engine/rng';
 import type { Card, CardTarget, StatKey } from './types';
 
@@ -83,21 +83,22 @@ describe('applyCards', () => {
   const team = { tireManagement: 3, pitCrew: 5 };
   const card = (id: string) => CARDS_BY_ID.get(id)!;
 
-  it('adds percentages within a stat, then multiplies once (hand-computed)', () => {
-    // Gold Speed+Consistency (+10/+10) and Bronze Speed trait (+2): speed +12%, consistency +10%.
+  it('adds grade points within a stat (#335): pct × the stat span / 100 (hand-computed)', () => {
+    // Gold Speed+Consistency (+10/+10) and Bronze Speed trait (+5): speed +15 grade = +0.045 on a 0.30 span,
+    // consistency +10 grade = +0.05 on a 0.5 span.
     const out = applyCards({ driver }, [card('eq-gold-speed+consistency'), card('tr-driver-bronze-speed')]);
-    expect(out.driver!.baseSpeed).toBeCloseTo(1.12, 10);
+    expect(out.driver!.baseSpeed).toBeCloseTo(1.045, 10);
     expect(out.driver!.consistency).toBeCloseTo(0.55, 10);
     expect(out.driver!.luck).toBe(0.6);
   });
 
-  it('car and team cards scale the stars, not the multiplier', () => {
+  it('car and team cards add stars: +10 grade = +0.4★ on the 1–5 scale', () => {
     const out = applyCards({ car, team }, [card('up-gold-power+grip'), card('fa-iridium-tyre-management+pit-crew')]);
-    expect(out.car!.power).toBeCloseTo(3.3, 10);
+    expect(out.car!.power).toBeCloseTo(3.4, 10);
     expect(out.car!.grip).toBeCloseTo(4.4, 10);
     expect(out.car!.reliability).toBe(2);
-    expect(out.team!.tireManagement).toBeCloseTo(3.45, 10);
-    expect(out.team!.pitCrew).toBeCloseTo(5.75, 10);
+    expect(out.team!.tireManagement).toBeCloseTo(3.6, 10);
+    expect(out.team!.pitCrew).toBeCloseTo(5.6, 10);
   });
 
   it('is pure and ignores effects (v0.6)', () => {
@@ -107,8 +108,8 @@ describe('applyCards', () => {
     expect(JSON.stringify({ driver, car, team })).toBe(before);
     expect(a).toEqual(b);
     expect(cardPercents([card('ef-speed-up')])).toEqual({});
-    expect(a.driver!.baseSpeed).toBeCloseTo(1.15, 10);
-    expect(a.driver!.aggression).toBeCloseTo(0.46, 10);
+    expect(a.driver!.baseSpeed).toBeCloseTo(1.045, 10);
+    expect(a.driver!.aggression).toBeCloseTo(0.475, 10);
   });
 
   it('no cards → the same stats', () => {

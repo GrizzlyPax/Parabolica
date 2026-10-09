@@ -122,7 +122,6 @@ describe('seasonRoster', () => {
       for (const r of rows) {
         expect(r.teamName).toBe(team.name);
         expect(r.color).toBe(team.color);
-        expect(r.tags).toEqual([]);
         expect(r.carName).toBe(pool.cars.find(c => c.id === rosters.find(x => x.teamId === team.id)!.carId)!.name);
         expect(typeof r.number).toBe('number');
       }
@@ -147,29 +146,31 @@ describe('seasonRoster', () => {
     for (const t of pool.teams) t.traits = [];
     const { rosters, lineups } = naiveDraft(pool);
     const [teamId, driverId, carId] = [rosters[0].teamId, rosters[0].driverIds[0], rosters[0].carId];
-    pool.drivers.find(d => d.id === driverId)!.traits = [CARDS_BY_ID.get('tr-driver-silver-speed')!]; // +5% speed
+    pool.drivers.find(d => d.id === driverId)!.traits = [CARDS_BY_ID.get('tr-driver-silver-speed')!]; // +10 grade speed
     const cards = {
-      driver: { [driverId]: [CARDS_BY_ID.get('eq-gold-speed+consistency')!] },  // +10% speed, +10% consistency
-      car: { [carId]: [CARDS_BY_ID.get('up-bronze-power')!] },                   // +2% power (stars)
-      team: { [teamId]: [CARDS_BY_ID.get('fa-silver-pit-crew')!] },              // +5% pit crew (stars), both racers
+      driver: { [driverId]: [CARDS_BY_ID.get('eq-gold-speed+consistency')!] },  // +10 speed, +10 consistency
+      car: { [carId]: [CARDS_BY_ID.get('up-bronze-power')!] },                   // +5 grade power (+0.2★)
+      team: { [teamId]: [CARDS_BY_ID.get('fa-silver-pit-crew')!] },              // +10 grade pit crew (+0.4★), both racers
     };
+    // #335: a card adds grade points: pct × the stat's span / 100 (speed span 0.30, consistency 0.5, stars 4).
+    const spd = (g: number) => (g * 0.30) / 100, con = (g: number) => (g * 0.5) / 100, star = (g: number) => (g * 4) / 100;
     const base = seasonRoster(pool, rosters, lineups);
     const boosted = seasonRoster(pool, rosters, lineups, { cards });
     const raw = pool.drivers.find(d => d.id === driverId)!.stats;
     const b0 = base.find(d => d.id === driverId)!, x0 = boosted.find(d => d.id === driverId)!;
-    expect(b0.stats.baseSpeed).toBeCloseTo(raw.baseSpeed * 1.05, 10);          // the trait alone
-    expect(x0.stats.baseSpeed).toBeCloseTo(raw.baseSpeed * 1.15, 10);          // trait + equipment, additive
-    expect(x0.stats.consistency).toBeCloseTo(raw.consistency * 1.10, 10);
+    expect(b0.stats.baseSpeed).toBeCloseTo(raw.baseSpeed + spd(10), 10);       // the trait alone
+    expect(x0.stats.baseSpeed).toBeCloseTo(raw.baseSpeed + spd(20), 10);       // trait + equipment, additive
+    expect(x0.stats.consistency).toBeCloseTo(raw.consistency + con(10), 10);
     expect(x0.stats.luck).toBe(raw.luck);
-    expect(x0.carStats!.power).toBeCloseTo(b0.carStats!.power * 1.02, 10);
+    expect(x0.carStats!.power).toBeCloseTo(b0.carStats!.power + star(5), 10);
     expect(x0.carStats!.grip).toBe(b0.carStats!.grip);
-    expect(x0.teamStats!.pitCrew).toBeCloseTo(b0.teamStats!.pitCrew * 1.05, 10);
+    expect(x0.teamStats!.pitCrew).toBeCloseTo(b0.teamStats!.pitCrew + star(10), 10);
     // The teammate shares the car and the facility, not the equipment or the trait.
     const mate = rosters[0].driverIds[1];
     const b1 = base.find(d => d.id === mate)!, x1 = boosted.find(d => d.id === mate)!;
     expect(x1.stats).toEqual(b1.stats);
-    expect(x1.carStats!.power).toBeCloseTo(b1.carStats!.power * 1.02, 10);
-    expect(x1.teamStats!.pitCrew).toBeCloseTo(b1.teamStats!.pitCrew * 1.05, 10);
+    expect(x1.carStats!.power).toBeCloseTo(b1.carStats!.power + star(5), 10);
+    expect(x1.teamStats!.pitCrew).toBeCloseTo(b1.teamStats!.pitCrew + star(10), 10);
     // Rivals untouched.
     const rival = rosters[1].driverIds[0];
     expect(boosted.find(d => d.id === rival)).toEqual(base.find(d => d.id === rival));
