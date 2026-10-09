@@ -62,15 +62,16 @@
 8. ✅ Packs rename + pack icon (#421, PR #456)
 9. ✅ Paddock redesign (#452, PR #458): roster table + letter grades, picked live with Pax
 10. ✅ Pack opening reveal (#320) → **M3 ✅**
-11. Favoured stats on Run Setup, Paddock, race header (#361)
-12. Roster tables everywhere: Draft, Standings, Setup, World Deck (#453)
-13. Team creator: build your own (#346)
-13b. Car vehicles + driver portraits (#489), after Radio's picks (#488) → **M4**
-14. Race-view emoji become game-icons (#397)
-15. Hide the Reset button in Season races (#449)
-15b. Weather rule cards: rename to Pax's one-word names (#473), strings only
-15c. **The balance bump, one PR:** Balance Pass One + Speed nudge (#481) **and** names on their own seed stream + Radio's pools (#467). Waits on Steward's nudge value; Pax merges; Steward re-measures
-16. Remove Commissioner leagues, gods and league routes (#339) → **M5**
+11. **Car vehicles + driver portraits (#489)**: next (Pax, Oct 9)
+12. **The balance bump, one PR:** Balance Pass One + Speed nudge (#481, nudge posted on #457) **and** names on their own seed stream + Radio's pools (#467). Pax merges; Steward re-measures
+13. The rest of favoured stats (#361): race-header chip + Run Setup
+14. The rest of roster tables (#453): Draft, finale, Setup, World Deck → **M4**
+15. Race-view emoji become game-icons (#397)
+16. Hide the Reset button in Season races (#449)
+17. Weather rule cards: rename to Pax's one-word names (#473), strings only
+18. Remove Commissioner leagues, gods and league routes (#339) → **M5**
+
+*Moved to v0.6 (Pax, Oct 9): team creator, build your own (#346).*
 
 **🎤 Pit:** keep this doc and the milestones current
 
@@ -90,7 +91,7 @@
 ## Risks
 - **Apex slips → everything slips.** If the season loop stalls, Pit moves Hub to the non-Season tasks first.
 - **Fable limits.** Apex's chain is 6 tasks. If the limit hits, the pack logic can drop to Opus with Apex reviewing; the season loop can't.
-- **Hub is busy:** one chat, 19 items in a row. If it slips, the team creator and pack reveal polish move to a v0.5.x patch, not the core.
+- **Hub is busy:** one chat, 18 items in a row. If it slips, the team creator and pack reveal polish move to a v0.5.x patch, not the core.
 - **Hotseat** touches every screen. Each Season screen checks two humans before merging.
 
 ## Out of v0.5 (on purpose)
@@ -105,7 +106,7 @@ Teams 5–10, default 10 · 10-race default · free lineups · bench keeps gear 
 
 **Story first instincts (Pax, Oct 9, via Radio; [grounding note](story/2026-10-09-grounding.md); NOT canon):** the sport is straight motorsport that runs the world · touchstone: early-season Blaseball · **base deck is "gloves on"**: motorsport with one small tweak; strangeness is opt-in by choosing decks (#485) · cards = kit and know-how; sponsorship and superstition packs later (#486) · undecided: who speaks, what a deck is in-world, whether the TV-channel / Management layer returns · the next flavour pass is the v0.6 effect cards (#333)
 
-**Playtest pass 2 (Pax, Oct 9, via Hub; PRs #465 #468 #470 #475 #483 #491):** End season button (asks first, clears the save) · grades in the four F1 colours only · **Paddock = Team / League tabs** (standings live there; League shows every driver with Wins · Podiums · Points and a constructors' chart) · cards as compact square chips; holding a card flashes the grades it would change · number badges square in tables, marbles round in the race · the sealed pack sparkles · race view: no Cards column, your rows tinted, driver panel with OVR grades + history (bottom sheet on phone) · a mobile-first race view later, mock-ups first (#492)
+**Playtest pass 2 (Pax, Oct 9, via Hub; PRs #465 #468 #470 #475 #483 #491):** End season button (asks first, clears the save) · grades in the four F1 colours only · **Paddock = Team / League tabs** (standings live there; League shows every driver with Wins · Podiums · Points and a constructors' chart) · cards as compact square chips; holding a card flashes the grades it would change · number badges square in tables, marbles round in the race · the sealed pack sparkles · race view: no Cards column, your rows tinted, driver panel with OVR grades + history (bottom sheet on phone) · a mobile-first race view later, mock-ups first (#492) · **build-your-own team moves to v0.6** (#346); the balance bump and vehicles + portraits come first
 
 **Qualifying (Pax, Oct 9):** both pieces open **v0.6**: Steward designs whether qualifying becomes a driver stat (#496) first, then Hub builds the qualifying show once (#495: drivers go out in turn, times drop onto a board, the grid forms; watch or skip)
 
