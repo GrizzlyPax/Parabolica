@@ -79,7 +79,7 @@ Fallbacks: Old Standard TT → `Georgia, serif`; Special Elite → `'Courier New
 | `--team-primary` | the active team's primary (no team: purple `#a98bff`) | the one accent |
 | `--team-ink` | the team's `ink` (no team: `#0b0b0c`) | text and icons drawn **on** the primary |
 | `--signal-red` · `--signal-yellow` · `--signal-green` · `--signal-purple` | `#ff5a4f` · `#f2c230` · `#34d27a` · `#a98bff` | traffic lights, gains (green) / losses (red), best / fastest (purple) |
-| `--rarity-bronze` · `--rarity-silver` · `--rarity-gold` · `--rarity-iridium` | `#C98B5B` · `#9FB4C8` · `#E6BE4A` · `#B7A3FF` | card and tag rarity (the rename is [#385](https://github.com/GrizzlyPax/Parabolica/issues/385); until it lands, today's `--rarity-common`… carry these values) |
+| `--rarity-bronze` · `--rarity-silver` · `--rarity-gold` · `--rarity-iridium` | `#C98B5B` · `#9FB4C8` · `#E6BE4A` · `#9479EE` (deepened Oct 10; was `#B7A3FF`) | card and tag rarity (the rename is [#385](https://github.com/GrizzlyPax/Parabolica/issues/385); until it lands, today's `--rarity-common`… carry these values) |
 
 **Silver is a cool steel tone on purpose:** a true near-white silver vanished on the black + white UI.
 

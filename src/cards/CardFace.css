@@ -66,7 +66,11 @@
 .cf-trait .cf-rule { color: var(--pw-ground); border-color: var(--pw-ground); }
 .cf-trait .cf-banner { background: var(--m); border-color: var(--pw-ground); }
 .cf-trait .cf-art { color: var(--pw-ground); border-color: color-mix(in srgb, var(--pw-ground) 45%, transparent); background: color-mix(in srgb, var(--pw-ground) 12%, var(--m)); }
-.metal-iridium.cf-trait .cf-art, .metal-iridium.cf-trait .cf-miniface { background: linear-gradient(135deg, var(--rarity-iridium) 0%, var(--rarity-silver) 50%, var(--rarity-iridium-sheen) 100%); }
+/* Iridium traits: one sheen across the whole face (Pax, Oct 10: the art window
+   and the face didn't match), so the banner and art window let it show through. */
+.metal-iridium.cf-trait .cf-front, .metal-iridium.cf-trait .cf-miniface { background: linear-gradient(135deg, var(--rarity-iridium) 0%, color-mix(in srgb, var(--rarity-iridium) 55%, var(--rarity-silver)) 50%, var(--rarity-iridium-sheen) 100%); }
+.metal-iridium.cf-trait .cf-banner { background: transparent; }
+.metal-iridium.cf-trait .cf-art { margin-top: 4px; background: color-mix(in srgb, var(--pw-ground) 12%, transparent); }
 .cf-trait .cf-type { background: var(--pw-ground); border-color: var(--pw-ground); }
 .cf-trait .cf-no { color: color-mix(in srgb, var(--pw-ground) 70%, transparent); }
 .cf-trait .cf-miniface { background: var(--m); color: var(--pw-ground); }

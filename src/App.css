@@ -28,8 +28,8 @@
   --rarity-bronze: #c98b5b;
   --rarity-silver: #9fb4c8;
   --rarity-gold: #e6be4a;
-  --rarity-iridium: #b7a3ff;
-  --rarity-iridium-sheen: #7fd3c6; /* the teal end of the iridium card sheen (docs/ICONS.md → Cards) */
+  --rarity-iridium: #9479ee; /* a notch deeper (Pax, Oct 10: was #b7a3ff, too light) */
+  --rarity-iridium-sheen: #63bfb1; /* the teal end of the iridium card sheen (docs/ICONS.md → Cards) */
   /* The active team's colour (docs/ICONS.md). No team yet = Parabolica
      purple + near-black ink (Pax, Oct 8); a screen sets them from your team
      (Season Mode) or whoever's turn it is (hotseat) via teamThemeVars() in
