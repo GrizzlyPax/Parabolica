@@ -19,7 +19,7 @@
 
 **Rule 3: one Hub chat, one queue.** Hub works the list below top to bottom, one PR per issue. (The two-Hub split was dropped on Oct 8: Pax runs one Hub thread.)
 
-**Rule 4: one fingerprint bump.** The two content changes that move race results (Quick Race on trait cards + the 28 teams) land together in one PR that Pax merges. Nothing else should move the golden fingerprint.
+**Rule 4: one fingerprint bump.** The two content changes that move race results (Quick Race on trait cards + the 28 teams) land together in one PR that Pax merges. Nothing else should move the golden fingerprint. *(Used by #438. **Open (Oct 9):** a balance tune from Steward's report would be a second bump; Pax decides after the recommendations draft.)*
 
 ## Milestones
 | # | Milestone | Pax can… |
@@ -31,6 +31,8 @@
 | **M5** | **Clean-up + ship** | Old leagues gone, no emoji left anywhere, hotseat checked, balance read done |
 
 **Playtest 1 (Oct 8):** the loop works; the Paddock reads badly (oversized on desktop, no driver stats, one driver at a time). Fixes go in **before** the pack reveal, so #320 isn't built twice: #451, #452, then #453 in M4.
+
+**Status (Oct 9):** ✅ **M1, M2, M3 done** (a full season with pack reveals). 🏛️ Steward's three balance reads are in ([Balance Report](BALANCE_REPORT_2026-10-09.html)): findings only; **Pax + Steward talk the options, then Steward writes the recommended passes, then Pit writes build issues.** Hub is on M4.
 
 **Status (Oct 8, evening):** ✅ **M1 done.** ✅ **M2 done: a full season is playable** (Menu → Play a Season). ✅ The race-changing bundle (#438, v0.5.0) is merged. **Apex's v0.5 chain is complete**; Fable's next work is v0.6. Now: Hub on M3 (packs); Steward on the balance reads; Radio on weather card names.
 
@@ -59,7 +61,7 @@
 7. ✅ Race view playtest fixes (#451, PR #455)
 8. ✅ Packs rename + pack icon (#421, PR #456)
 9. ✅ Paddock redesign (#452, PR #458): roster table + letter grades, picked live with Pax
-10. Pack opening reveal (#320): the reveal goes in the Paddock's "Open pack" step → **M3**
+10. ✅ Pack opening reveal (#320) → **M3 ✅**
 11. Favoured stats on Run Setup, Paddock, race header (#361)
 12. Roster tables everywhere: Draft, Standings, Setup, World Deck (#453)
 13. Team creator: build your own (#346) → **M4**
