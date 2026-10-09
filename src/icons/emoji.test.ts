@@ -11,7 +11,8 @@ const SRC = join(__dirname, '..');
 // The feed's persona voices are UI too (the Booth, Mister Marbles, the Track).
 const EXTRA = ['feed/commentary.ts'];
 
-const EMOJI = /\p{Extended_Pictographic}/u;
+// Star glyphs too (#546): ratings are grades, not ★☆.
+const EMOJI = /\p{Extended_Pictographic}|[★☆]/u;
 
 function uiFiles(): string[] {
   return (readdirSync(SRC, { recursive: true }) as string[])

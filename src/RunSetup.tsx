@@ -24,6 +24,8 @@ import { applyFavours } from './cards/apply';
 import { PriorityLine } from './cards/PriorityLine';
 import { CardFace } from './cards/CardFace';
 import { GameIcon } from './icons/GameIcon';
+import { gradeTone, readStat } from './season/grades';
+import type { StatKey } from './cards/types';
 import './RunSetup.css';
 
 interface RunSetupProps {
@@ -38,8 +40,11 @@ const streams = (seed: number) => ({
   cars: mulberry32(deriveSeed(seed, 'genesis', 'cars')),
 });
 
-function stars(n: number | undefined): string {
-  return n === undefined ? '—' : '★'.repeat(Math.round(n)) + '☆'.repeat(Math.max(0, 5 - Math.round(n)));
+/** A car stat as a grade in the four F1 colours, like the Paddock (#546). */
+function CarGrade({ stat, n }: { stat: StatKey; n: number | undefined }) {
+  if (n === undefined) return <span className="rs-grade">—</span>;
+  const g = readStat(stat, n, []).grade;
+  return <span className={`rs-grade tone-${gradeTone(g)}`}>{g}</span>;
 }
 
 export default function RunSetup({ onStartRace, onBack }: RunSetupProps) {
@@ -207,7 +212,7 @@ export default function RunSetup({ onStartRace, onBack }: RunSetupProps) {
                 <span className="rs-team-marble">{team.emoji}</span>
                 <span className="rs-team-name">{team.name}</span>
                 <span className="rs-team-car" title={`Power ${car?.stats.power} · Grip ${car?.stats.grip} · Reliability ${car?.stats.reliability}`}>
-                  P {stars(car?.stats.power)} · G {stars(car?.stats.grip)} · R {stars(car?.stats.reliability)}
+                  PWR <CarGrade stat="power" n={car?.stats.power} /> · GRP <CarGrade stat="grip" n={car?.stats.grip} /> · REL <CarGrade stat="reliability" n={car?.stats.reliability} />
                 </span>
               </div>
               {drivers.map(d => (
