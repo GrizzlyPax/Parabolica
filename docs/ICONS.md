@@ -88,7 +88,7 @@ Fallbacks: Old Standard TT → `Georgia, serif`; Special Elite → `'Courier New
 - **Your rows** in the tower get a 14% wash of the primary plus the edge; nothing else changes.
 - **Rivals:** their colour only on their marble and their 3px row edge. Names stay white.
 - **Rarity:** the metal as a **word** (Label style, coloured) plus a **1px outline** on chips; sealed draft dots in the metal colour. Rarity always shows its word, so the three teams that wear metal colours (Ostler & Finch, Tinplate, Ambergate) still read.
-- **Card packs have no colour:** they are Common → Uncommon → Rare → Legendary packs by standing; the pack icon stays white.
+- **Card packs are coloured by tier** (Pax, Oct 10, #558; reverses Oct 8's "no colour"): Common red · Uncommon yellow · Rare green · Legendary purple (the signal tokens), on the sealed pack and its back. Metals stay on the cards.
 - **Icons:** `currentColor` always. 16 px inline, 20 px in rows, 24–26 px on tools; `--team-ink` when drawn on the primary.
 
 ## Cards (Pax, Oct 8)
@@ -258,7 +258,7 @@ Hand-tuned icons for headline teams · animated icon states (pack reveal) · the
 | `card.rule` | Rule card | Run Setup | — | [`scroll-unfurled`](https://game-icons.net/1x1/lorc/scroll-unfurled.html) |
 | **Season (new)** | | | | |
 | `entity.driver` | Driver (ratings, driver cards) | Draft board, Paddock lineup, card sheet | — | [`full-motorcycle-helmet`](https://game-icons.net/1x1/delapouite/full-motorcycle-helmet.html) |
-| `season.pack` | Card pack (tier word, no colour) | Paddock | — | [`card-random`](https://game-icons.net/1x1/faithtoken/card-random.html) |
+| `season.pack` | Card pack (tier word; the pack takes its tier colour, #558) | Paddock | — | [`card-random`](https://game-icons.net/1x1/faithtoken/card-random.html) |
 | `season.pack_open` | Pack reveal | Pack reveal | — | [`card-pick`](https://game-icons.net/1x1/faithtoken/card-pick.html) |
 | `season.locker` | Team locker | Paddock, card sheet | — | [`lockers`](https://game-icons.net/1x1/delapouite/lockers.html) |
 | `season.draft` | Draft | Draft board | — | [`card-draw`](https://game-icons.net/1x1/faithtoken/card-draw.html) |
@@ -267,4 +267,4 @@ Hand-tuned icons for headline teams · animated icon states (pack reveal) · the
 | `season.handoff` | Hotseat hand-off | Hand-off screen | — | [`back-forth`](https://game-icons.net/1x1/lorc/back-forth.html) |
 | `season.champion` | Champion | Finale, standings | — | [`laurels-trophy`](https://game-icons.net/1x1/delapouite/laurels-trophy.html) |
 
-Rarity is a metal colour (`--rarity-*`: bronze · silver · gold · iridium), not an icon. Card packs are Common → Uncommon → Rare → Legendary (a property of `season.pack`, renamed in [#385](https://github.com/GrizzlyPax/Parabolica/issues/385)); packs carry no colour, just the white pack icon and the word.
+Rarity is a metal colour (`--rarity-*`: bronze · silver · gold · iridium), not an icon. Card packs are Common → Uncommon → Rare → Legendary (a property of `season.pack`, renamed in [#385](https://github.com/GrizzlyPax/Parabolica/issues/385)); packs carry their tier colour (#558: Common red · Uncommon yellow · Rare green · Legendary purple) plus the word.
