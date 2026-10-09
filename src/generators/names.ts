@@ -4,10 +4,11 @@
 // gift precisely because it sits in a grid of believable international names.
 //   T1  international common names — the dominant base
 //   T2  absurdist names — the memorable minority (Blaseball-inspired)
-//   T3  mononyms — one-name legends ("Indigo", "Blaze")
+//   hybrid  one absurd half on a real name ("Hollyhock Abenov", "Aditya Undefined")
 //   T4  corrupted names — a glitch in the universe, genuinely rare
-// Every draw runs off the shared seeded rng (engine/rng.ts), so a league seed
-// always produces the same grid.
+// Plus the one-word rule: ~1% of names show as one word ("Ottoman"). The old
+// mononym list retired in #467. Names draw on their own stream (drivers.ts),
+// so these pools can grow without moving a single stat.
 import { Rng, pick } from '../engine/rng';
 
 // === TIER 1 — international common names (the believable base) ===
@@ -50,6 +51,38 @@ export const INTL_FIRST_NAMES = [
   'Andrei', 'Ola', 'Tomas', 'Nadia', 'Luka', 'Petra', 'Nikola', 'Ana',
   // Korean / SE Asian additions
   'Minjun', 'Seoyeon', 'Jihoon', 'Linh', 'Anh', 'Ravi', 'Indah',
+  // Italian
+  'Luca', 'Giulia', 'Marco', 'Chiara', 'Lorenzo', 'Francesca', 'Matteo', 'Elena',
+  // Nordic + Finnish
+  'Erik', 'Astrid', 'Lars', 'Ingrid', 'Magnus', 'Sigrid', 'Anders', 'Freya',
+  // Irish + Scottish
+  'Ciarán', 'Niamh', 'Declan', 'Aoife', 'Callum', 'Isla', 'Fergus', 'Siobhan',
+  // Dutch + Flemish
+  'Daan', 'Sanne', 'Bram', 'Fleur', 'Joris', 'Anouk',
+  // Greek
+  'Nikos', 'Eleni', 'Yannis', 'Dimitra', 'Kostas', 'Katerina',
+  // Turkish
+  'Emre', 'Elif', 'Burak', 'Zeynep', 'Mert', 'Ayşe',
+  // Persian
+  'Dariush', 'Shirin', 'Kian', 'Parisa', 'Arash', 'Leila',
+  // Hebrew
+  'Noa', 'Eitan', 'Tamar', 'Ari', 'Yael', 'Itai',
+  // East African
+  'Wanjiru', 'Kiprono', 'Abebe', 'Selam', 'Baraka', 'Amani', 'Tesfaye', 'Neema',
+  // Southern African
+  'Thabo', 'Lerato', 'Sipho', 'Nandi', 'Themba', 'Zanele',
+  // Filipino
+  'Paolo', 'Bea', 'Jericho', 'Angelica', 'Marlon', 'Kristine',
+  // Thai
+  'Somchai', 'Malee', 'Anan', 'Ploy', 'Kittisak', 'Nok',
+  // Pacific (Māori, Samoan, Tongan, Hawaiian)
+  'Tama', 'Aroha', 'Wiremu', 'Moana', 'Sione', 'Leilani',
+  // Andean (Quechua / Aymara)
+  'Inti', 'Killa', 'Wayra', 'Ccori', 'Amaru', 'Sisa',
+  // Hungarian
+  'Bence', 'Réka', 'Levente', 'Zsófia', 'Gergő', 'Dóra',
+  // Central Asian
+  'Aibek', 'Aigerim', 'Timur', 'Dana', 'Ruslan', 'Madina',
 ];
 
 export const INTL_LAST_NAMES = [
@@ -88,6 +121,38 @@ export const INTL_LAST_NAMES = [
   'Wójcik', 'Kaczmarek', 'Ivanov', 'Marković', 'Kovač', 'Popescu',
   // Korean / SE Asian additions
   'Kim', 'Park', 'Choi', 'Nguyen', 'Tran', 'Pham', 'Wijaya', 'Putra',
+  // Italian
+  'Rossi', 'Russo', 'Esposito', 'Bianchi', 'Romano', 'Colombo', 'Ricci', 'Greco',
+  // Nordic + Finnish
+  'Johansson', 'Andersen', 'Nilsson', 'Berg', 'Halvorsen', 'Lund', 'Dahl', 'Virtanen',
+  // Irish + Scottish
+  'Murphy', 'Byrne', 'O\'Neill', 'Gallagher', 'MacLeod', 'Fraser', 'Doyle', 'Quinn',
+  // Dutch + Flemish
+  'de Vries', 'Janssen', 'Bakker', 'Visser', 'van Dijk', 'Peeters',
+  // Greek
+  'Papadopoulos', 'Georgiou', 'Nikolaidis', 'Karras', 'Vlachos', 'Antonopoulos',
+  // Turkish
+  'Yılmaz', 'Kaya', 'Demir', 'Şahin', 'Çelik', 'Aydın',
+  // Persian
+  'Hosseini', 'Tehrani', 'Karimi', 'Moradi', 'Jafari', 'Rostami',
+  // Hebrew
+  'Cohen', 'Levi', 'Mizrahi', 'Friedman', 'Shapiro', 'Peretz',
+  // East African
+  'Otieno', 'Kamau', 'Mwangi', 'Haile', 'Tadesse', 'Wanyama', 'Njoroge', 'Mutua',
+  // Southern African
+  'Dlamini', 'Nkosi', 'Mokoena', 'Ndlovu', 'Khumalo', 'Mahlangu',
+  // Filipino
+  'Reyes', 'dela Cruz', 'Bautista', 'Villanueva', 'Aquino', 'Dizon',
+  // Thai
+  'Srisuk', 'Chaiyaporn', 'Wongsakul', 'Boonmee', 'Rattanakorn', 'Saelim',
+  // Pacific (Māori, Samoan, Tongan, Hawaiian)
+  'Ngata', 'Parata', 'Tuilagi', 'Faleolo', 'Tupou', 'Kealoha',
+  // Andean (Quechua / Aymara)
+  'Mamani', 'Quispe', 'Condori', 'Huamán', 'Choque', 'Apaza',
+  // Hungarian
+  'Nagy', 'Tóth', 'Szabó', 'Horváth', 'Varga', 'Kiss',
+  // Central Asian
+  'Abenov', 'Seitkali', 'Nurlanov', 'Tokayev', 'Iskakov', 'Bekova',
 ];
 
 // === TIER 2 — absurdist names (the memorable minority) ===
@@ -102,6 +167,12 @@ export const ABSURD_FIRST_NAMES = [
   'Foggy', 'Drizzle', 'Frost', 'Thunder', 'Blizzard', 'Tropical', 'Hazy',
   'Sixto', 'Cricket', 'Tuesday', 'Decimal', 'Toggle', 'Provisional', 'Quasi',
   'Loading', 'Buffering', 'Offline', 'Cached', 'Corrupted', 'Pixelated', 'Stale',
+  // almanac + farm
+  'Harvest', 'Solstice', 'Equinox', 'Bramble', 'Thistle', 'Barley', 'Turnip',
+  'Sleet', 'Gale', 'Hollyhock',
+  // household
+  'Doily', 'Teaspoon', 'Lampshade', 'Ottoman', 'Thimble', 'Colander', 'Kettle',
+  'Duvet', 'Spatula', 'Doorstop',
 ];
 
 export const ABSURD_LAST_NAMES = [
@@ -114,24 +185,27 @@ export const ABSURD_LAST_NAMES = [
   'Mechanic', 'Consultant', 'Auditor', 'Liaison', 'Foreman', 'Custodian',
   'Archivist', 'Steward', 'Warden', 'Underwriter', 'Appraiser', 'Surveyor',
   'Placeholder', 'Undefined', 'Redacted', 'Classified', 'Anonymous', 'Miscellaneous',
-];
-
-// === TIER 3 — mononyms (one-name legends) ===
-export const MONONYMS = [
-  'Indigo', 'Blaze', 'Nugget', 'Vesper', 'Echo', 'Onyx', 'Sol', 'Wren',
-  'Cinder', 'Marlow', 'Zephyr', 'Atlas', 'Juno', 'Cypher', 'Kestrel', 'Nova',
-  'Quill', 'Rook', 'Sable', 'Tempest', 'Vex', 'Bishop', 'Cleo', 'Dash',
-  'Ember', 'Fable', 'Ghost', 'Halo', 'Jinx', 'Lux', 'Maverick', 'Phoenix',
-  'Rebel', 'Slate', 'Tigris', 'Vault', 'Wilder', 'Zenith', 'Banjo', 'Comet',
+  // almanac + farm
+  'Furrow', 'Hedgerow', 'Haybale', 'Millpond', 'Weathervane', 'Scarecrow', 'Almanac',
+  'Plowshare', 'Turnipseed', 'Stubble',
+  // household
+  'Sideboard', 'Doormat', 'Breadbin', 'Coathook', 'Mantelpiece', 'Footstool', 'Hatstand',
+  'Tablecloth',
 ];
 
 // Tier weights (approximate — see tests). T1 must dominate.
+// Radio's mix (docs/story/name-pools.md, #467): grounded, with a twist.
 export const NAME_TIER_WEIGHTS = {
-  international: 0.72,
-  absurd: 0.17,
-  mononym: 0.09,
+  international: 0.78,
+  hybrid: 0.12,
+  absurd: 0.08,
   corrupted: 0.02,
 } as const;
+
+/** Any non-corrupted name has this chance of showing as one word (#467):
+ * the first half 3 in 4, else the last. Replaces the old mononym list. */
+export const ONE_WORD_CHANCE = 0.01;
+export const ONE_WORD_FIRST_SHARE = 0.75;
 
 export type NameTier = keyof typeof NAME_TIER_WEIGHTS;
 
@@ -143,6 +217,8 @@ export interface DriverName {
   shortName: string;
   tier: NameTier;
   isCorrupted: boolean;
+  /** Shown as one word ("Ottoman", "Okonkwo"): the ~1% rule. */
+  oneWord?: boolean;
 }
 
 /** Pick a tier by weight from a single rng draw. */
@@ -229,14 +305,6 @@ function makeShortName(firstName: string, lastName: string, corrupted: boolean):
 export function generateDriverName(rng: Rng = Math.random): DriverName {
   const tier = rollTier(rng);
 
-  if (tier === 'mononym') {
-    const firstName = pick(MONONYMS, rng);
-    return {
-      firstName, middleName: '', lastName: '', fullName: firstName,
-      shortName: makeShortName(firstName, '', false), tier, isCorrupted: false,
-    };
-  }
-
   if (tier === 'corrupted') {
     // Corrupt an otherwise-normal international name — a glitch in a real grid.
     const baseFirst = pick(INTL_FIRST_NAMES, rng);
@@ -250,13 +318,24 @@ export function generateDriverName(rng: Rng = Math.random): DriverName {
     };
   }
 
-  const [firsts, lasts] = tier === 'absurd'
-    ? [ABSURD_FIRST_NAMES, ABSURD_LAST_NAMES]
-    : [INTL_FIRST_NAMES, INTL_LAST_NAMES];
-  const firstName = pick(firsts, rng);
-  const lastName = pick(lasts, rng);
+  // Hybrid: one absurd half on a real name, 50/50 which half.
+  const absurdFirst = tier === 'absurd' || (tier === 'hybrid' && rng() < 0.5);
+  const absurdLast = tier === 'absurd' || (tier === 'hybrid' && !absurdFirst);
+  const first = pick(absurdFirst ? ABSURD_FIRST_NAMES : INTL_FIRST_NAMES, rng);
+  const last = pick(absurdLast ? ABSURD_LAST_NAMES : INTL_LAST_NAMES, rng);
+
+  // The one-word rule: always two draws, so the odds never shift the stream.
+  const oneWord = rng() < ONE_WORD_CHANCE;
+  const keepFirst = rng() < ONE_WORD_FIRST_SHARE;
+  if (oneWord) {
+    const word = keepFirst ? first : last;
+    return {
+      firstName: word, middleName: '', lastName: '', fullName: word,
+      shortName: makeShortName(word, '', false), tier, isCorrupted: false, oneWord: true,
+    };
+  }
   return {
-    firstName, middleName: '', lastName, fullName: `${firstName} ${lastName}`,
-    shortName: makeShortName(firstName, lastName, false), tier, isCorrupted: false,
+    firstName: first, middleName: '', lastName: last, fullName: `${first} ${last}`,
+    shortName: makeShortName(first, last, false), tier, isCorrupted: false,
   };
 }

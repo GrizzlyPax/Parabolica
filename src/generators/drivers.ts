@@ -1,7 +1,7 @@
 import { generateDriverName } from './names';
 import { DriverStats } from '../RaceEngine';
 import { TEAMS, STANDARD_GRID_TEAMS, Team, DriverSlot, getTeamsByIds } from '../data/teams';
-import { Rng, pick } from '../engine/rng';
+import { Rng, pick, mulberry32, deriveSeed } from '../engine/rng';
 import { inkFor } from '../icons/ink';
 
 export interface GeneratedDriver {
@@ -148,17 +148,16 @@ function generateStats(rng: Rng): DriverStats {
  * a team. */
 export type PoolDriver = Omit<GeneratedDriver, 'emoji' | 'teamName' | 'kingdomId' | 'color' | 'ink' | 'driverSlot'>;
 
-/** Name, backstory, quirk, stats — in this rng order, which the golden
- * fingerprint pins. Both the team and the pool paths come through here. */
+/** One draw seeds the driver's flavour stream (name, backstory, quirk); the
+ * stats follow on the main stream. So name pools can grow, or a name roll
+ * take more draws, without moving a single stat (#467). The golden
+ * fingerprint pins this order. Both the team and the pool paths come
+ * through here. */
 export function generatePoolDriver(id: number, rng: Rng = Math.random): PoolDriver {
-  const name = generateDriverName(rng);
-
-  // Generate backstory
-  const backstoryTemplate = pick(BACKSTORY_TEMPLATES, rng);
-  const backstory = fillBackstoryTemplate(backstoryTemplate, rng);
-
-  // Pick a quirk
-  const quirk = pick(QUIRKS, rng);
+  const flavour = mulberry32(deriveSeed(Math.floor(rng() * 0x100000000), 'flavour'));
+  const name = generateDriverName(flavour);
+  const backstory = fillBackstoryTemplate(pick(BACKSTORY_TEMPLATES, flavour), flavour);
+  const quirk = pick(QUIRKS, flavour);
 
   // Tags are no longer rolled here: genesis tags come from the ruleset on their
   // own seed stream (rules/genesis.ts), so a card can re-roll tags without
@@ -169,7 +168,7 @@ export function generatePoolDriver(id: number, rng: Rng = Math.random): PoolDriv
     middleName: name.middleName,
     lastName: name.lastName,
     fullName: name.fullName,
-    // Short name handles mononyms / corrupted names (computed in names.ts).
+    // Short name handles one-word / corrupted names (computed in names.ts).
     shortName: name.shortName,
     stats: generateStats(rng),
     backstory,

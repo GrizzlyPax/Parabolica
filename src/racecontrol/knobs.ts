@@ -56,7 +56,7 @@ export function buildVariableList(): VarDef[] {
     { key: 'flatPenalty', label: 'Flat Penalty', desc: 'Immediate penalty at critical', format: 'percent' as const, min: 0, max: 0.15, step: 0.01 },
     { key: 'minSpeedFloor', label: 'Min Speed Floor', desc: 'Min speed with dead tires', format: 'percent' as const, min: 0.4, max: 0.8, step: 0.05 },
     { key: 'aggressionWearMultiplier', label: 'Aggression Wear', desc: 'Aggression wear impact', format: 'decimal' as const, min: 0, max: 1, step: 0.05 },
-    { key: 'teamTireMgmtWearPerStar', label: 'Tire Mgmt Wear/Star', desc: 'Team tire mgmt wear scaling, 3★ neutral (0 = dormant)', format: 'decimal' as const, min: 0, max: 0.15, step: 0.01 },
+    { key: 'teamTireMgmtWearPerStar', label: 'Tire Mgmt Wear/Star', desc: 'Team tire mgmt wear scaling, 3★ neutral (0 = dormant)', format: 'decimal' as const, min: 0, max: 0.4, step: 0.01 },
   ];
   for (const v of tireGeneralVars) {
     vars.push({ category: 'Tires (general)', categoryIcon: 'stat.tyre_management', path: `tires.${v.key}`, label: v.label, description: v.desc, format: v.format, min: v.min, max: v.max, step: v.step });
@@ -83,8 +83,8 @@ export function buildVariableList(): VarDef[] {
   // Mechanical
   const mechVars = [
     { key: 'baseFailureChance', label: 'Base Failure', desc: 'Mechanical failure/tick', format: 'decimal' as const, min: 0, max: 0.002, step: 0.0001 },
-    { key: 'reliabilityBase', label: 'Reliability Base', desc: 'Base protection', format: 'decimal' as const, min: 0.1, max: 0.8, step: 0.05 },
-    { key: 'reliabilityPerStar', label: 'Reliability/Star', desc: 'Protection per star', format: 'decimal' as const, min: 0.05, max: 0.4, step: 0.05 },
+    { key: 'reliabilityBase', label: 'Reliability Base', desc: 'Base protection', format: 'decimal' as const, min: 0, max: 0.8, step: 0.05 },
+    { key: 'reliabilityPerStar', label: 'Reliability/Star', desc: 'Protection per star', format: 'decimal' as const, min: 0.05, max: 0.6, step: 0.05 },
     { key: 'luckBase', label: 'Luck Base', desc: 'Base luck factor', format: 'decimal' as const, min: 1, max: 2, step: 0.1 },
     { key: 'luckMultiplier', label: 'Luck Multiplier', desc: 'Luck reduction mult', format: 'decimal' as const, min: 0.25, max: 1, step: 0.05 },
   ];
@@ -97,8 +97,8 @@ export function buildVariableList(): VarDef[] {
     { key: 'basePitDuration', label: 'Base Duration', desc: 'Stationary pit work, ticks', format: 'integer' as const, min: 10, max: 120, step: 2 },
     { key: 'minStops', label: 'Min Stops', desc: 'Stop rule: stops required (0 = no rule)', format: 'integer' as const, min: 0, max: 4, step: 1 },
     { key: 'penaltyLapFraction', label: 'Rule Penalty', desc: 'Per unmet stop, in laps', format: 'decimal' as const, min: 0, max: 2, step: 0.1 },
-    { key: 'slowStopMultiplier', label: 'Slow Stop Mult', desc: 'Slow stop time mult', format: 'multiplier' as const, min: 1.1, max: 2.5, step: 0.1 },
-    { key: 'quickStopMultiplier', label: 'Quick Stop Mult', desc: 'Quick stop time mult', format: 'multiplier' as const, min: 0.5, max: 0.95, step: 0.05 },
+    { key: 'slowStopMultiplier', label: 'Slow Stop Mult', desc: 'Slow stop time mult', format: 'multiplier' as const, min: 1.1, max: 4, step: 0.1 },
+    { key: 'quickStopMultiplier', label: 'Quick Stop Mult', desc: 'Quick stop time mult', format: 'multiplier' as const, min: 0.3, max: 0.95, step: 0.05 },
     { key: 'slowStopBase', label: 'Slow Stop Base', desc: 'Base slow stop chance', format: 'percent' as const, min: 0.1, max: 0.7, step: 0.02 },
     { key: 'slowStopPerStar', label: 'Slow Stop/Star', desc: 'Slow stop reduction/star', format: 'decimal' as const, min: 0.02, max: 0.15, step: 0.01 },
     { key: 'quickStopBase', label: 'Quick Stop Base', desc: 'Base quick stop chance', format: 'percent' as const, min: 0, max: 0.2, step: 0.01 },
@@ -114,18 +114,18 @@ export function buildVariableList(): VarDef[] {
 
   // Performance
   const perfVars = [
-    { key: 'luckProcChance', label: 'Luck Proc Chance', desc: 'Luck boost chance/tick', format: 'percent' as const, min: 0, max: 0.1, step: 0.005 },
+    { key: 'luckProcChance', label: 'Luck Proc Chance', desc: 'Luck boost chance/tick', format: 'percent' as const, min: 0, max: 0.3, step: 0.005 },
     { key: 'luckMinBoostBase', label: 'Luck Min Base', desc: 'Base min luck boost', format: 'percent' as const, min: 0, max: 0.15, step: 0.01 },
-    { key: 'luckMinBoostPerStat', label: 'Luck Min/Stat', desc: 'Min boost per luck point', format: 'decimal' as const, min: 0.05, max: 0.3, step: 0.025 },
+    { key: 'luckMinBoostPerStat', label: 'Luck Min/Stat', desc: 'Min boost per luck point', format: 'decimal' as const, min: 0.05, max: 0.6, step: 0.025 },
     { key: 'luckMaxBoostBase', label: 'Luck Max Base', desc: 'Base max luck boost', format: 'percent' as const, min: 0.05, max: 0.3, step: 0.01 },
-    { key: 'luckMaxBoostPerStat', label: 'Luck Max/Stat', desc: 'Max boost per luck point', format: 'decimal' as const, min: 0.1, max: 0.4, step: 0.025 },
+    { key: 'luckMaxBoostPerStat', label: 'Luck Max/Stat', desc: 'Max boost per luck point', format: 'decimal' as const, min: 0.1, max: 1.2, step: 0.025 },
     { key: 'enduranceDecay', label: 'Endurance Decay', desc: 'Base fatigue rate', format: 'percent' as const, min: 0, max: 0.3, step: 0.02 },
-    { key: 'enduranceMaxPenalty', label: 'Max Fatigue', desc: 'Max fatigue penalty', format: 'percent' as const, min: 0.05, max: 0.3, step: 0.01 },
-    { key: 'endurancePenaltyMultiplier', label: 'Endurance Mult', desc: 'Endurance penalty factor', format: 'decimal' as const, min: 0.2, max: 1, step: 0.1 },
+    { key: 'enduranceMaxPenalty', label: 'Max Fatigue', desc: 'Max fatigue penalty', format: 'percent' as const, min: 0.05, max: 0.5, step: 0.01 },
+    { key: 'endurancePenaltyMultiplier', label: 'Endurance Mult', desc: 'Endurance penalty factor', format: 'decimal' as const, min: 0.2, max: 4, step: 0.1 },
     { key: 'damageSpeedPenalty', label: 'Damage Penalty', desc: 'Speed when damaged', format: 'percent' as const, min: 0.6, max: 0.95, step: 0.05 },
     { key: 'accelLaunchTicks', label: 'Accel Window', desc: 'Ticks accel matters (launch/pit exit/SC restart)', format: 'decimal' as const, min: 0, max: 300, step: 10 },
     { key: 'accelEffect', label: 'Accel Effect', desc: 'Accel stat strength in windows (0 = dormant)', format: 'decimal' as const, min: 0, max: 2, step: 0.1 },
-    { key: 'aggressionTrafficBoost', label: 'Aggro Traffic Boost', desc: 'Aggression speed reward in traffic (0 = dormant)', format: 'percent' as const, min: 0, max: 0.15, step: 0.005 },
+    { key: 'aggressionTrafficBoost', label: 'Aggro Traffic Boost', desc: 'Aggression speed reward in traffic (0 = dormant)', format: 'percent' as const, min: 0, max: 0.3, step: 0.005 },
     { key: 'mistakeBaseChance', label: 'Mistake Chance', desc: '#82 per-tick error roll (0 = dormant)', format: 'decimal' as const, min: 0, max: 0.001, step: 0.00005 },
     { key: 'mistakeConsistencyWeight', label: 'Mistake Cons Wt', desc: 'Low consistency → more mistakes', format: 'decimal' as const, min: 0, max: 3, step: 0.25 },
     { key: 'mistakeAggressionWeight', label: 'Mistake Aggro Wt', desc: 'Aggression → more mistakes', format: 'decimal' as const, min: 0, max: 2, step: 0.25 },
@@ -141,9 +141,9 @@ export function buildVariableList(): VarDef[] {
   // Car Stats
   const carStatVars = [
     { key: 'powerBase', label: 'Power Base', desc: 'Base power multiplier', format: 'decimal' as const, min: 0.7, max: 1, step: 0.02 },
-    { key: 'powerPerStar', label: 'Power/Star', desc: 'Power added per star', format: 'decimal' as const, min: 0.01, max: 0.1, step: 0.01 },
-    { key: 'gripBase', label: 'Grip Base', desc: 'Base grip multiplier', format: 'decimal' as const, min: 0.6, max: 0.9, step: 0.025 },
-    { key: 'gripPerStar', label: 'Grip/Star', desc: 'Grip added per star', format: 'decimal' as const, min: 0.025, max: 0.15, step: 0.025 },
+    { key: 'powerPerStar', label: 'Power/Star', desc: 'Power added per star', format: 'decimal' as const, min: 0.005, max: 0.1, step: 0.0005 },
+    { key: 'gripBase', label: 'Grip Base', desc: 'Base grip multiplier', format: 'decimal' as const, min: 0.3, max: 0.9, step: 0.025 },
+    { key: 'gripPerStar', label: 'Grip/Star', desc: 'Grip added per star', format: 'decimal' as const, min: 0.025, max: 0.25, step: 0.01 },
     { key: 'reliabilityBase', label: 'Reliability Base', desc: 'Base reliability', format: 'decimal' as const, min: 0.2, max: 0.6, step: 0.05 },
     { key: 'reliabilityPerStar', label: 'Reliability/Star', desc: 'Reliability per star', format: 'decimal' as const, min: 0.1, max: 0.3, step: 0.05 },
     { key: 'tireManagementBase', label: 'Tire Mgmt Base', desc: 'Base tire management', format: 'decimal' as const, min: 0.6, max: 0.9, step: 0.025 },
@@ -179,7 +179,7 @@ export function buildVariableList(): VarDef[] {
 
   // Driver Speed (Field Compression)
   const speedVars = [
-    { key: 'speedStatMultiplier', label: 'Speed Stat Effect', desc: 'How much speed stat matters (lower = compressed field)', format: 'decimal' as const, min: 0.1, max: 1.0, step: 0.05 },
+    { key: 'speedStatMultiplier', label: 'Speed Stat Effect', desc: 'How much speed stat matters (lower = compressed field)', format: 'decimal' as const, min: 0.05, max: 1.0, step: 0.005 },
     { key: 'consistencyWeight', label: 'Consistency Weight', desc: 'How much consistency reduces variance', format: 'decimal' as const, min: 0.1, max: 1.0, step: 0.05 },
     { key: 'baseSpeedMin', label: 'Base Speed Min', desc: 'Min random speed/tick', format: 'integer' as const, min: 1, max: 10, step: 1 },
     { key: 'baseSpeedMax', label: 'Base Speed Max', desc: 'Max random speed/tick', format: 'integer' as const, min: 5, max: 20, step: 1 },

@@ -22,7 +22,8 @@ describe('Race Control runner', () => {
 
   it('no-tags + override puts exactly one tag in the race; team tags land on both drivers', () => {
     const spec = labSpec(7, 0, ['no-tags']);
-    const solo = runLabRace(spec, { override: { driverIndex: 5, tagId: 'clutch-performer' } });
+    // Driver 3: a final-lap tag needs a driver who reaches the final lap (Pass One, #481).
+    const solo = runLabRace(spec, { override: { driverIndex: 3, tagId: 'clutch-performer' } });
     expect(solo.roster.flatMap(d => d.tags).map(t => t.id)).toEqual(['clutch-performer']);
     const team = runLabRace(spec, { override: { driverIndex: 5, tagId: 'underdog-spirit' } });
     expect(carriersOf(team, { driverIndex: 5, tagId: 'underdog-spirit' })).toHaveLength(2);

@@ -482,13 +482,22 @@ describe('tag stacks (#231)', () => {
     const faster: Tag = { id: 't-faster', name: 'Faster', emoji: '2', description: '', target: 'car', trigger: 'passive', rarity: 'bronze', condition: { when: 'lapProgress', after: 0 }, effects: { speedModifier: 1.1 } };
     const with1 = base.map(x => x.id === d ? { ...x, tags: [fast] } : x);
     const with2 = base.map(x => x.id === d ? { ...x, tags: [fast, faster] } : x);
-    // Best lap is robust to DNFs and to where the driver finishes, but one
-    // seed can still hand the tagged run a safety-car lap, so take the best
-    // lap over a few seeds.
+    // One tag bites in a real race: best lap over a few seeds (robust to DNFs
+    // and safety-car laps).
     const best = (grid: RosterDriver[]) => Math.min(...[5, 6, 7].flatMap(seed => run(grid, seed).drivers.find(x => x.id === d)!.lapTimes));
-    const t0 = best(base), t1 = best(with1), t2 = best(with2);
-    expect(t1).toBeLessThan(t0);
-    expect(t2).toBeLessThan(t1);
+    expect(best(with1)).toBeLessThan(best(base));
+    // Two tags multiply. Since Balance Pass One (#481) late-race fade and
+    // traffic swamp a best-lap read of the second tag, so read the modifier
+    // the engine applies each tick instead.
+    const speedMod = (grid: RosterDriver[]) => {
+      const engine = RaceEngine.createForWorker(CANON_VARIABLES, 5);
+      engine.loadGeneratedRoster(structuredClone(grid));
+      engine.updateConfig({ totalLaps: track.laps, lapLength: track.length });
+      engine.fastForward(30);
+      return (engine as unknown as { getConditionalModifier(id: number, m: 'speedModifier'): number }).getConditionalModifier(d, 'speedModifier');
+    };
+    expect(speedMod(with1)).toBeCloseTo(1.1, 9);
+    expect(speedMod(with2)).toBeCloseTo(1.21, 9);
   });
 
   it('a zero-effect tag leaves the race byte-identical (quiet quirks)', () => {

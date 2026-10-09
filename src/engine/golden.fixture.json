@@ -1,71 +1,72 @@
 {
   "seed": 24301,
   "track": "speed-power",
-  "rosterHash": "6ed404b2",
+  "rosterHash": "011ca3be",
   "finishOrder": [
-    8,
-    16,
-    21,
-    9,
-    2,
-    18,
-    12,
     13,
-    20,
-    14,
-    19,
+    16,
+    12,
+    11,
+    2,
+    6,
+    21,
     4,
+    1,
     10,
-    7,
-    17,
-    15,
+    20,
+    9,
+    14,
+    8,
     5,
-    6
+    0,
+    19,
+    3
   ],
-  "totalTicks": 1993,
-  "leadChanges": 0,
-  "eventsHash": "1a48c5e5",
+  "totalTicks": 2211,
+  "leadChanges": 6,
+  "eventsHash": "0ba9203e",
   "tags": [
     [
-      "ice-veins"
+      "light-footed"
     ],
     [
       "built-like-a-tank",
       "front-runners"
     ],
     [],
-    [
-      "crowd-favourite"
-    ],
     [],
     [],
-    [
-      "damaged"
-    ],
-    [
-      "light-footed"
-    ],
     [],
     [],
     [
       "spun"
     ],
     [],
+    [],
+    [
+      "damaged",
+      "spun"
+    ],
+    [
+      "crowd-favourite",
+      "cooked-tyres"
+    ],
     [
       "damaged"
+    ],
+    [
+      "ice-veins"
+    ],
+    [],
+    [],
+    [],
+    [],
+    [
+      "front-runners"
     ],
     [
       "rain-shy"
     ],
-    [
-      "front-runners",
-      "damaged"
-    ],
-    [],
-    [],
-    [],
-    [],
-    [],
     [],
     []
   ]

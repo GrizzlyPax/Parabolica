@@ -21,6 +21,12 @@ export const LEAGUE_ADJECTIVES = [
   'Feral', 'Untamed', 'Wild', 'Gentle', 'Cruel', 'Noble', 'Humble', 'Vain',
   'Drowned', 'Burning', 'Frozen', 'Shattered', 'Splintered', 'Buried', 'Risen',
   'Last', 'First', 'Final', 'Lost', 'Found', 'Holy', 'Cursed', 'Blessed', 'Doomed',
+  // understated
+  'Modest', 'Reasonable', 'Adequate', 'Moderate', 'Regional', 'Municipal',
+  'Local', 'Seasonal', 'Fair-to-middling', 'Satisfactory',
+  // countryside
+  'Harvest', 'Midsummer', 'Midwinter', 'Weathered', 'Threadbare', 'Provincial',
+  'Rural', 'Hedgerow', 'Lamplit', 'Rainward',
 ];
 
 // League-flavored organizing nouns. Should read like a real championship body —
@@ -35,6 +41,12 @@ export const LEAGUE_NOUNS = [
   'Crown', 'Throne', 'Court', 'Council', 'Senate', 'Tribunal', 'Society', 'Circle',
   'Run', 'Rush', 'Dash', 'Charge', 'Drift', 'Slipstream', 'Apex', 'Chicane',
   'Expanse', 'Frontier', 'Theatre', 'Spectacle', 'Exhibition', 'Tour', 'Odyssey',
+  // fairs + gatherings
+  'Fair', 'Fête', 'Gathering', 'Muster', 'Pilgrimage', 'Show',
+  'Moot', 'Wake', 'Feast', 'Harvest Run',
+  // old racing words
+  'Rally', 'Enduro', 'Hillclimb', 'Shield', 'Plate', 'Stakes',
+  'Challenge', 'Memorial', 'Trophy Run', 'Concours',
 ];
 
 /** Generate a league name from an rng: "The Molten Circuit". */
