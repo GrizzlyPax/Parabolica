@@ -17,10 +17,24 @@ interface GradeCellProps {
   /** The OVR column: a touch heavier. */
   strong?: boolean;
   onOpen?: () => void;
+  /** Holding a card that would change this stat: the cell flashes between now and this value. */
+  flashTo?: number;
 }
 
-export function GradeCell({ value, notch, move = 0, dim, strong, onOpen }: GradeCellProps) {
+export function GradeCell({ value, notch, move = 0, dim, strong, onOpen, flashTo }: GradeCellProps) {
   const g = grade(value);
+  if (flashTo !== undefined && Math.round(flashTo) !== Math.round(value)) {
+    const to = grade(flashTo), up = flashTo > value;
+    return (
+      <td className="rt-cell pv">
+        <span className={`rt-g rt-flash ${strong ? 'strong' : ''}`} aria-label={`${g} would become ${to}`} onClick={onOpen}>
+          <span className={`rt-flash-now tone-${gradeTone(g)}`}>{g}</span>
+          <span className={`rt-flash-new tone-${gradeTone(to)}`}>{to}</span>
+          <i className={`rt-move ${up ? 'up' : 'down'}`} aria-hidden="true">{up ? '▲' : '▼'}</i>
+        </span>
+      </td>
+    );
+  }
   const body = (
     <>
       {g}

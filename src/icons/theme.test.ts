@@ -16,6 +16,7 @@ const THEMED = [
   'components/Tooltip.css',
   'cards/CardSheet.css',
   'cards/CardFace.css',
+  'cards/CardChip.css',
   'season/ui/Season.css',
 ];
 
