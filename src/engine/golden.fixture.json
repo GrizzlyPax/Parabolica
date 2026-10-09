@@ -3,65 +3,65 @@
   "track": "speed-power",
   "rosterHash": "011ca3be",
   "finishOrder": [
-    6,
+    18,
     13,
-    15,
-    16,
+    1,
     17,
     21,
-    12,
-    4,
     7,
-    1,
+    6,
+    15,
+    9,
     11,
+    20,
+    14,
+    16,
     2,
-    0,
+    19,
     5,
-    10,
     8,
-    3,
-    9
+    3
   ],
-  "totalTicks": 2148,
-  "leadChanges": 5,
-  "eventsHash": "ec4c4153",
+  "totalTicks": 2250,
+  "leadChanges": 15,
+  "eventsHash": "cfb0ec68",
   "cards": [
+    [
+      "tr-car-bronze-reliability"
+    ],
     [],
-    [],
-    [],
-    [],
-    [],
-    [],
+    [
+      "tr-driver-silver-aggression"
+    ],
     [],
     [],
     [
       "tr-driver-silver-aggression",
       "tr-car-bronze-power"
     ],
+    [],
+    [],
     [
-      "tr-driver-silver-aggression"
+      "tr-car-bronze-reliability"
     ],
     [],
     [],
+    [
+      "tr-driver-bronze-endurance"
+    ],
     [],
     [],
+    [
+      "tr-car-bronze-reliability"
+    ],
     [],
     [
       "tr-driver-bronze-speed"
     ],
     [],
-    [
-      "tr-car-bronze-reliability"
-    ],
-    [
-      "tr-car-bronze-reliability"
-    ],
-    [
-      "tr-driver-bronze-endurance"
-    ],
-    [
-      "tr-car-bronze-reliability"
-    ],
+    [],
+    [],
+    [],
     []
   ]
 }

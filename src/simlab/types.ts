@@ -721,7 +721,7 @@ export const CANON_VARIABLES: SimVariables = {
     endurancePenaltyMultiplier: 3.0,       // Balance Pass One (#481)
     damageSpeedPenalty: 0.85,
     accelLaunchTicks: 160,                 // Balance Pass One (#481)
-    accelEffect: 1.2,                      // Balance Pass One (#481); keep under ~1.5 (pit exits)
+    accelEffect: 0.6,                      // v0.6.1 (#550, Steward re-probe): halved, since Acceleration also drives qualifying (#496)
     aggressionTrafficBoost: 0.20,          // Balance Pass One (#481)
     // #82 mistakes layer — CANON since v0.3.31 (rebalance v3, #220 dominance
     // pass). Validated on the 80-paired-universe A/B stacked with the #162
