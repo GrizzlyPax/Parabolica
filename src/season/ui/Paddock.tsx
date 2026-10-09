@@ -31,7 +31,7 @@ import { constructorStandings, driverStandings, lineupFor, poolFor, saveSeason, 
 import { overall, readStat, type StatReading } from '../grades';
 import Handoff from './Handoff';
 import EndSeason from './EndSeason';
-import PackReveal from './PackReveal';
+import PackPick from './PackPick';
 import { CAR_STATS, CT_STATS, DRIVER_STATS, GradeCell, PAD, ReadingSheet, STAT_ABBR, TEAM_STATS } from './RosterTable';
 import { SeasonChart } from './SeasonChart';
 import { LeagueTables } from './LeagueTables';
@@ -252,7 +252,7 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo }: 
       <ol aria-label="Your turn">
         {STEPS.map((s, i) => <li key={s} className={i < step ? 'done' : i === step ? 'now' : ''}>{i + 1} · {s}</li>)}
       </ol>
-      {step === 0 && <button type="button" className="rs-btn rs-btn-primary" onClick={() => setRevealing(true)}>Open pack</button>}
+      {step === 0 && !revealing && <button type="button" className="rs-btn rs-btn-primary" onClick={() => setRevealing(true)}>Open pack</button>}
       {step >= 1 && <button type="button" className="rs-btn rs-btn-primary" disabled={lineup.length !== 2} onClick={lock}>Lock in</button>}
     </div>
   );
@@ -270,7 +270,17 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo }: 
     <>
       {turnLine}
       {priorityLine}
-      {pack && myTurn && (
+      {pack && myTurn && (revealing ? (
+        <PackPick
+          key={`${pack.round}:${pack.teamId}`}
+          cards={pack.cards}
+          tier={pack.tier}
+          traitTargets={traitTargets}
+          onKeep={(kept, k) => (kept.kind === 'trait' ? k && givePack(kept, k) : packToLocker(kept))}
+          onDetail={c => setDetail({ card: c })}
+          onClose={() => setRevealing(false)}
+        />
+      ) : (
         <div className="pk-pack">
           <button type="button" className={`pk-sealed tier-${pack.tier}`} onClick={() => setRevealing(true)} aria-label={`Open your ${TIER_LABEL[pack.tier]} pack`}><GameIcon name="season.pack" size={30} /><i className="pk-twinkle a" /><i className="pk-twinkle b" /><i className="pk-twinkle c" /></button>
           <div className="pk-pack-text">
@@ -279,7 +289,7 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo }: 
             <span className="rs-hint">Tap the pack to open it. Three cards inside; you keep one.</span>
           </div>
         </div>
-      )}
+      ))}
       {hand && <p className="rs-hint pk-hint">{hint}</p>}
       <div className="rt-legend">
         {priority.size > 0 && <span><span className="rt-prio-key">{ABBR[[...priority][0]]}</span> next race priority</span>}
@@ -395,15 +405,6 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo }: 
 
       {tab === 'team' ? teamTab : leagueTab}
 
-      {revealing && pack && (
-        <PackReveal
-          cards={pack.cards}
-          tier={pack.tier}
-          traitTargets={traitTargets}
-          onKeep={(kept, k) => (kept.kind === 'trait' ? k && givePack(kept, k) : packToLocker(kept))}
-          onClose={() => setRevealing(false)}
-        />
-      )}
 
       {equipSheet && (() => {
         const { card: c, from } = equipSheet;

@@ -317,37 +317,6 @@ button.rt-g:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset:
 .rt-compact .team-logo { margin-right: 8px; }
 @media (max-width: 760px) { .pk-league { grid-template-columns: 1fr; } }
 
-/* Pack reveal (#320): full screen over the Paddock. Neutral until the card turns. */
-.pr { position: fixed; inset: 0; z-index: 1000; /* over everything, the idea box included, while it plays */ overflow: hidden; isolation: isolate; cursor: pointer; background: var(--pw-ground); --pr-m: var(--pw-text-1); }
-.pr:focus-visible { outline: none; }
-.pr.pr-metal-bronze { --pr-m: var(--rarity-bronze); }
-.pr.pr-metal-silver { --pr-m: var(--rarity-silver); }
-.pr.pr-metal-gold { --pr-m: var(--rarity-gold); }
-.pr.pr-metal-iridium { --pr-m: var(--rarity-iridium); }
-.pr-dim { position: absolute; inset: 0; background: var(--pw-ground); filter: brightness(0); transition: opacity 0.5s; z-index: 0; }
-.pr-rays {
-  position: absolute; left: 50%; top: 46%; width: 1100px; height: 1100px; margin: -550px 0 0 -550px; z-index: 1; opacity: 0;
-  background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--pr-m) 42%, transparent) 0 6deg, transparent 6deg 18deg);
-  -webkit-mask: radial-gradient(circle, var(--pw-ground) 0 16%, transparent 58%); mask: radial-gradient(circle, var(--pw-ground) 0 16%, transparent 58%);
-  transition: background 0.4s;
-}
-.pr-hud { position: absolute; left: 0; right: 0; top: calc(18px + env(safe-area-inset-top)); z-index: 5; display: grid; gap: 4px; justify-items: center; text-align: center; }
-.pr-hud b { font-family: var(--look-display); font-size: 28px; }
-.pr-pack { position: absolute; left: 50%; top: 46%; width: 168px; height: 236px; margin: -118px 0 0 -84px; z-index: 2; display: grid; place-items: center; border: 3px solid var(--pw-text-1); background: var(--pw-ground); }
-.pr-pack::before { content: ""; position: absolute; inset: 5px; border: 1px solid var(--pw-text-1); background: repeating-linear-gradient(-45deg, color-mix(in srgb, var(--pw-text-1) 16%, transparent) 0 14px, transparent 14px 26px); }
-.pr-plate { position: relative; display: grid; gap: 6px; justify-items: center; padding: 10px 12px; background: var(--pw-ground); border: 1px solid var(--pw-text-1); text-align: center; color: var(--pw-text-1); }
-.pr-plate b { font-family: var(--look-display); font-size: 17px; letter-spacing: 0.04em; }
-.pr-plate span { font-family: var(--look-data); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--pw-text-2); }
-.pr-card { position: absolute; left: 50%; top: 46%; width: 210px; height: 294px; margin: -147px 0 0 -105px; z-index: 3; opacity: 0; overflow: hidden; }
-.pr-card.slow .cf-in { transition-duration: 1.1s; }
-.pr-sheen { position: absolute; inset: 0; z-index: 4; pointer-events: none; transform: translateX(-120%);
-  background: linear-gradient(105deg, transparent 30%, color-mix(in srgb, var(--rarity-iridium-sheen) 45%, transparent) 45%, color-mix(in srgb, var(--pw-text-1) 55%, transparent) 50%, transparent 62%); }
-.pr-flash { position: absolute; inset: 0; z-index: 4; background: var(--pw-text-1); opacity: 0; pointer-events: none; }
-.pr-skip { position: absolute; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom)); z-index: 6; font-family: var(--look-data); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--pw-text-3); }
-.pr-cta { position: absolute; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom)); transform: translate(-50%, 10px); z-index: 6; width: min(420px, calc(100% - 32px)); display: grid; gap: 8px; text-align: center; opacity: 0; transition: opacity 0.3s, transform 0.3s; pointer-events: none; }
-.pr.done .pr-cta { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
-.pr-cta .rs-btn { height: 52px; font-size: 18px; }
-@media (prefers-reduced-motion: reduce) { .pr-dim, .pr-cta { transition: none; } }
 
 /* End season (Pax, Oct 9) */
 .ss-end { margin-left: auto; align-self: flex-start; font-size: 13px; color: var(--pw-text-2); }
@@ -415,36 +384,31 @@ button.rt-g:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset:
 .fn-result-line { margin: 0; font-size: 22px; font-family: var(--look-display); }
 .fn-result-line b { color: var(--pw-text-1); }
 
-/* Keep 1 of 3 (#533): the reveal shows the pack's three cards side by side. */
-.pr-card { left: 0; right: 0; width: 690px; max-width: 100vw; margin: -147px auto 0; }
-.pr-three { display: flex; gap: 20px; justify-content: center; }
-@media (max-width: 720px) { .pr-three { zoom: 0.55; } .pr-card { margin-top: -90px; } }
-.pk-three { display: inline-flex; gap: 8px; flex: none; }
 
-/* Pick on the reveal (#552): tap a card to lift it; the others dim. */
-.pr-pick { padding: 0; border: 0; background: none; cursor: pointer; transition: transform 0.18s ease, opacity 0.18s ease; }
-.pr-pick:disabled { cursor: default; }
-.pr-pick.on { transform: translateY(-14px); outline: 3px solid var(--pw-text-1); outline-offset: 6px; }
-.pr-pick.off { opacity: 0.4; }
-.pr-pick:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset: 6px; }
-.pr-ask { display: flex; flex-direction: column; gap: 8px; align-items: center; text-align: center; }
-.pr-ask-btns { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
-@media (prefers-reduced-motion: reduce) { .pr-pick { transition: none; } }
-.pr-card { height: auto; overflow: visible; }
-.pr-three { padding: 20px 10px 10px; }
 
 /* Pack backs by tier (#558, Pax Oct 10; reverses Oct 8's "packs have no colour"):
    Common red · Uncommon yellow · Rare green · Legendary purple, the four F1
    colours. Metals (bronze → iridium) stay on the cards themselves. */
-.pk-sealed.tier-common, .pr-pack.tier-common { --tier: var(--signal-red); }
-.pk-sealed.tier-uncommon, .pr-pack.tier-uncommon { --tier: var(--signal-yellow); }
-.pk-sealed.tier-rare, .pr-pack.tier-rare { --tier: var(--signal-green); }
-.pk-sealed.tier-legendary, .pr-pack.tier-legendary { --tier: var(--signal-purple); }
+.pk-sealed.tier-common, .pp.tier-common { --tier: var(--signal-red); }
+.pk-sealed.tier-uncommon, .pp.tier-uncommon { --tier: var(--signal-yellow); }
+.pk-sealed.tier-rare, .pp.tier-rare { --tier: var(--signal-green); }
+.pk-sealed.tier-legendary, .pp.tier-legendary { --tier: var(--signal-purple); }
 .pk-sealed[class*="tier-"] { border-color: var(--tier); color: var(--tier); background: repeating-linear-gradient(-45deg, color-mix(in srgb, var(--tier) 30%, var(--pw-ground)) 0 8px, var(--pw-ground) 8px 15px); }
-.pr-pack[class*="tier-"] { border-color: var(--tier); }
-.pr-pack[class*="tier-"]::before { border-color: var(--tier); background: repeating-linear-gradient(-45deg, color-mix(in srgb, var(--tier) 42%, transparent) 0 14px, transparent 14px 26px); }
-.pr-pack[class*="tier-"] .pr-plate { border-color: var(--tier); }
-.pr-pack[class*="tier-"] .pr-plate b { color: var(--tier); }
 
 /* Priority stats + the tyre-wear pill (#547) */
 .pk-priority-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+
+/* Pick 1 of 3 in place (#552 follow-up): a strip at the top of the Paddock. */
+.pp { border: 2px solid var(--tier, var(--pw-border-strong)); background: var(--pw-surface); padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.pp-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.pp-three { display: flex; gap: 10px; justify-content: center; padding-top: 8px; }
+.pp-card { padding: 0; border: 0; background: none; cursor: pointer; transition: transform 0.18s ease, opacity 0.18s ease; }
+.pp-card:disabled { cursor: default; }
+.pp-card.on { transform: translateY(-8px); outline: 2px solid var(--pw-text-1); outline-offset: 4px; }
+.pp-card.off { opacity: 0.45; }
+.pp-card:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset: 4px; }
+.pp-keep, .pp-ask { display: flex; flex-direction: column; gap: 6px; align-items: center; text-align: center; }
+.pp-keep .rs-btn { width: 100%; max-width: 420px; }
+.pp-ask-btns { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+@media (max-width: 400px) { .pp-three { gap: 6px; } .pp-three .card-face { zoom: 0.92; } }
+@media (prefers-reduced-motion: reduce) { .pp-card { transition: none; } }
