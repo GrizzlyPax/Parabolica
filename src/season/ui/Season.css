@@ -198,6 +198,14 @@ button.rt-g:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset:
 .rt-move { position: absolute; top: 3px; right: 4px; font-style: normal; font-size: 9px; }
 .rt-move.up { color: var(--signal-green); }
 .rt-move.down { color: var(--signal-red); }
+/* Holding a card: a stat it would change flashes between its grade now and after */
+@keyframes rt-flash-a { 0%, 40% { opacity: 1; } 50%, 90% { opacity: 0; } 100% { opacity: 1; } }
+@keyframes rt-flash-b { 0%, 40% { opacity: 0; } 50%, 90% { opacity: 1; } 100% { opacity: 0; } }
+.rt-flash { cursor: pointer; }
+.rt-flash-now, .rt-flash-new { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+.rt-flash-now { animation: rt-flash-a 1.6s ease-in-out infinite; }
+.rt-flash-new { animation: rt-flash-b 1.6s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .rt-flash-now { animation: none; opacity: 0; } .rt-flash-new { animation: none; opacity: 1; } }
 .rt-cell.pv { background: color-mix(in srgb, var(--team-primary) 22%, transparent); }
 .rt-na { color: var(--pw-text-3); font-family: var(--look-data); }
 .rt .rt-pad { width: 56px; min-width: 56px; border-left: 1px solid var(--pw-hairline); }
@@ -285,6 +293,36 @@ button.rt-g:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset:
 .pk-confirm-btns { display: flex; gap: 10px; margin-top: 6px; }
 @media (max-width: 599px) { .pk-pack { flex-wrap: wrap; } }
 @media (prefers-reduced-motion: reduce) { .pk-card.inhand, .pk-card.held, .rt tr.target th.rt-name, .rt-slot.pulse, .pk-locker.pulse { animation: none; } }
+
+/* Paddock v2 (Pax, Oct 9): header, Team / League tabs, one-line turn */
+.pk-head { display: flex; align-items: flex-end; gap: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--pw-text-1); }
+.pk-title { display: grid; gap: 4px; min-width: 0; }
+.pk-head .ss-end, .pk-head .ss-end-confirm { margin-left: auto; }
+.pk-tabs { display: flex; align-items: flex-end; border-bottom: 1px solid var(--pw-border-strong); }
+.pk-tabs button { background: none; border: 0; border-bottom: 3px solid transparent; border-radius: 0; padding: 10px 18px 8px; cursor: pointer; font-family: var(--look-display); font-weight: 700; font-size: 18px; color: var(--pw-text-3); }
+.pk-tabs button[aria-selected="true"] { color: var(--pw-text-1); border-bottom-color: var(--team-primary); }
+.pk-tabs button:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset: -2px; }
+.pk-rank { margin-left: auto; align-self: center; font-family: var(--look-data); font-size: 12px; color: var(--pw-text-2); }
+.pk-turn { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.pk-turn ol { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px; }
+.pk-turn li { padding: 4px 8px; border: 1px solid var(--pw-hairline); font-family: var(--look-data); font-size: 12px; color: var(--pw-text-3); }
+.pk-turn li.done { text-decoration: line-through; }
+.pk-turn li.now { background: var(--team-primary); border-color: var(--team-primary); color: var(--team-ink); }
+.pk-turn .rs-btn { height: 40px; margin-left: auto; }
+.pk-priority b { font-style: normal; color: var(--pw-text-1); }
+.pk-sealed { width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; border: 2px solid var(--pw-text-1); color: var(--pw-text-1); }
+.pk-hint { margin: 0; }
+.pk-league { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 18px 28px; align-items: start; }
+.pk-chart { border-top: 1px solid var(--pw-text-1); padding-top: 8px; display: grid; gap: 6px; }
+.pk-tables { display: grid; gap: 16px; }
+.season-chart { width: 100%; height: auto; display: block; }
+.season-chart .sc-grid { stroke: var(--pw-hairline); }
+.season-chart .sc-axis { fill: var(--pw-text-3); font-family: var(--look-data); font-size: 10px; }
+.season-chart .sc-other { stroke: var(--pw-border-strong); stroke-width: 1.5; }
+.season-chart .sc-end { font-family: var(--look-data); font-size: 11px; }
+.rt-compact .rt-numsq { margin-right: 8px; }
+.rt-compact .team-logo { margin-right: 8px; }
+@media (max-width: 760px) { .pk-league { grid-template-columns: 1fr; } }
 
 /* Pack reveal (#320): full screen over the Paddock. Neutral until the card turns. */
 .pr { position: fixed; inset: 0; z-index: 1000; /* over everything, the idea box included, while it plays */ overflow: hidden; isolation: isolate; cursor: pointer; background: var(--pw-ground); --pr-m: var(--pw-text-1); }
