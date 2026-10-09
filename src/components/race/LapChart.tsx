@@ -12,6 +12,7 @@
 //   get a marble, drivers get their 3-letter code (dotted second seats marked
 //   with *). The whole field stays visible: it's a standings chart.
 
+import { NUMBER_DY } from '../../icons/RaceNumber';
 import './LapChart.css';
 
 export interface LapChartSeries {
@@ -206,7 +207,7 @@ function LapChart({ series, laps, totalLaps, fieldSize, scSampleIdx, focusedDriv
                 <text x={gx + 26} y={l.ly} textAnchor="end" dominantBaseline="central"
                   className={`lap-rank ${focused ? 'focused' : ''} ${l.dnf ? 'dnf' : ''}`}>{l.label}</text>
                 <circle cx={gx + 41} cy={l.ly} r={8} fill={l.s.color} stroke={l.s.ink || '#fff'} strokeWidth={1.6} />
-                <text x={gx + 41} y={l.ly} textAnchor="middle" dominantBaseline="central" style={{ fontSize: '8px', fill: l.s.ink || '#fff', fontWeight: 600 }}>
+                <text x={gx + 41} y={l.ly} dy={NUMBER_DY} textAnchor="middle" style={{ fontSize: '8px', fontFamily: 'var(--look-data, monospace)', fill: l.s.ink || '#fff', fontWeight: 600 }}>
                   {l.s.number ?? l.s.emoji ?? l.s.code.slice(0, 1)}
                 </text>
                 <text x={gx + 55} y={l.ly} dominantBaseline="central"
@@ -217,7 +218,7 @@ function LapChart({ series, laps, totalLaps, fieldSize, scSampleIdx, focusedDriv
             ) : l.s.marble ? (
               <>
                 <circle cx={gx + 18} cy={l.ly} r={9} fill={l.s.color} stroke={l.s.ink || '#fff'} strokeWidth={1.8} />
-                <text x={gx + 18} y={l.ly} textAnchor="middle" dominantBaseline="central" style={{ fontSize: '9px', fill: l.s.ink || '#fff', fontWeight: 600 }}>
+                <text x={gx + 18} y={l.ly} dy={NUMBER_DY} textAnchor="middle" style={{ fontSize: '9px', fontFamily: 'var(--look-data, monospace)', fill: l.s.ink || '#fff', fontWeight: 600 }}>
                   {l.s.number ?? l.s.emoji ?? l.s.code.slice(0, 1)}
                 </text>
               </>

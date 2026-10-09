@@ -1,5 +1,6 @@
 // TrackMap - Simplified track visualization
 // Single thin path, no lanes, marker hierarchy for emphasis
+import { NUMBER_DY } from '../../icons/RaceNumber';
 import { useMemo, useCallback, useState } from 'react';
 import type { Driver } from '../../RaceEngine';
 import './TrackMap.css';
@@ -412,9 +413,9 @@ function TrackMap({
               {(isFocused || isHighlighted) && !isDNF && (
                 <text
                   x={0}
-                  y={1}
+                  y={0}
+                  dy={NUMBER_DY}
                   textAnchor="middle"
-                  dominantBaseline="central"
                   className="marker-emoji"
                   style={{ fontSize: isFocused ? '11px' : '9px', fill: driver.ink || '#fff', fontFamily: 'var(--look-data, monospace)', fontWeight: 600 }}
                 >

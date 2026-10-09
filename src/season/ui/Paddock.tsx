@@ -10,6 +10,7 @@
 // The pack reveal theatre is #320; this step shows the card plainly.
 import { useMemo, useState, type DragEvent } from 'react';
 import { GameIcon, TeamLogo, teamThemeVars } from '../../icons/GameIcon';
+import { RaceNumber } from '../../icons/RaceNumber';
 import { CardFace } from '../../cards/CardFace';
 import { STAT_LABELS } from '../../cards/deck';
 import { STAT_ICONS } from '../../icons/registry';
@@ -330,7 +331,7 @@ export default function Paddock({ facts, onChange, onMenu, onGo, onStandings, on
               const traits = [...d.traits, ...cards.drivers[id].traits];
               return (
                 <tr key={id} className={`${aim === k && aiming ? 'aimed' : ''} ${isTarget(k) && aim !== k ? 'target' : ''} ${carNo < 0 ? 'benched' : ''}`}>
-                  <th className="rt-name" scope="row">{nameBody(k, <><span className="rt-num" style={teamThemeVars(you)}>{d.number}</span><span className="rt-nm">{d.fullName}</span></>)}</th>
+                  <th className="rt-name" scope="row">{nameBody(k, <><RaceNumber n={d.number} color={you.color} ink={you.ink} size={24} shape="square" className="rt-numsq" /><span className="rt-nm">{d.fullName}</span></>)}</th>
                   {statCells(k, d.fullName, DRIVER_STATS, 0, carNo < 0)}
                   {slotCell({ kind: 'driver', id })}
                   <td className="rt-traits"><span className="rt-minis">{traits.map(c => mini(c, false))}</span></td>
