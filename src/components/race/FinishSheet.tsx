@@ -9,6 +9,7 @@ import { GameIcon } from '../../icons/GameIcon';
 import { RaceNumber } from '../../icons/RaceNumber';
 import { inkFor } from '../../icons/ink';
 import { F1_POINTS } from '../../types/season';
+import type { DriverDebrief, WinnerEdge } from './debrief';
 
 interface FinishSheetProps {
   /** Finish order, classified first. */
@@ -26,6 +27,8 @@ interface FinishSheetProps {
   exitLabel?: string;
   /** Fantasy points this race, per team (Quick Race). */
   fantasy?: { name: string; color: string; points: number }[];
+  /** The race debrief (#581): your drivers' grid → finish, strategy and moments, and how the winner did it. */
+  debrief?: { mine: DriverDebrief[]; winner: WinnerEdge | null };
 }
 
 async function copyText(text: string): Promise<boolean> {
@@ -53,7 +56,26 @@ const num = (d: Driver, size: number) => (
   <RaceNumber n={d.number ?? '–'} color={d.color} ink={d.ink ?? inkFor(d.color)} size={size} shape="square" />
 );
 
-export default function FinishSheet({ podium, drivers, dnfCount, fastestLap, seed, trackName, mine, buildReport, onNextRace, onExit, exitLabel = 'Menu', fantasy }: FinishSheetProps) {
+/** Under each of your drivers: grid → finish, strategy, then the moments by lap. */
+function DebriefLines({ db }: { db: DriverDebrief }) {
+  const gained = db.finish ? db.grid - db.finish : null;
+  return (
+    <div className="fs-debrief">
+      <span className="fs-dline">
+        Grid P{db.grid} → {db.finish ? `P${db.finish}` : 'DNF'}
+        {gained !== null && <b className={gained > 0 ? 'up' : gained < 0 ? 'down' : ''}> ({gained > 0 ? `+${gained}` : gained < 0 ? `−${-gained}` : '±0'})</b>}
+        {' · '}{db.strategy}
+      </span>
+      {db.moments.map((m, i) => (
+        <span key={i} className={`fs-moment ${m.tone}`}>
+          <span className="fs-mlap">L{m.lap}</span> {m.what}{m.detail && <span className="fs-mdet"> · {m.detail}</span>}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+export default function FinishSheet({ podium, drivers, dnfCount, fastestLap, seed, trackName, mine, buildReport, onNextRace, onExit, exitLabel = 'Menu', fantasy, debrief }: FinishSheetProps) {
   const [open, setOpen] = useState(true);
   const [copied, setCopied] = useState<'idle' | 'ok' | 'fail'>('idle');
   const [report, setReport] = useState<string | null>(null);
@@ -114,16 +136,27 @@ export default function FinishSheet({ podium, drivers, dnfCount, fastestLap, see
             const dnf = d.status === 'dnf';
             const p = placeOf(d.id);
             const pts = dnf ? 0 : F1_POINTS[p - 1] ?? 0;
+            const db = debrief?.mine.find(x => x.driverId === d.id);
             return (
-              <div key={d.id} className={`fs-yrow ${dnf ? 'dnf' : pts === 0 ? 'zero' : ''}`}>
-                <span className="fs-pos">{dnf ? 'DNF' : `P${p}`}</span>
-                {num(d, 22)}
-                <span className="fs-ynm">{d.name}</span>
-                <span className="fs-pts">{pts > 0 ? `+${pts}` : '0'}</span>
+              <div key={d.id} className="fs-ydriver">
+                <div className={`fs-yrow ${dnf ? 'dnf' : pts === 0 ? 'zero' : ''}`}>
+                  <span className="fs-pos">{dnf ? 'DNF' : `P${p}`}</span>
+                  {num(d, 22)}
+                  <span className="fs-ynm">{d.name}</span>
+                  <span className="fs-pts">{pts > 0 ? `+${pts}` : '0'}</span>
+                </div>
+                {db && <DebriefLines db={db} />}
               </div>
             );
           })}
         </div>
+      )}
+
+      {debrief?.winner && winner && (
+        <p className="fs-edge">
+          <span className="fs-k">How it was won</span>{' '}
+          <b>{winner.name}</b> from P{debrief.winner.grid} · {debrief.winner.strategy} · led {debrief.winner.led} of {debrief.winner.laps} laps
+        </p>
       )}
 
       {fantasy && fantasy.length > 0 && (

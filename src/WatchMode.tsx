@@ -23,6 +23,7 @@ import RaceFeed from './components/race/RaceFeed';
 import { buildLapChartData } from './components/race/lapChartData';
 import { buildRaceReportMd } from './components/race/raceReportMd';
 import FinishSheet from './components/race/FinishSheet';
+import { driverDebrief, winnerEdge } from './components/race/debrief';
 import QualiBoard from './components/race/QualiBoard';
 import type { DriverHistoryEntry } from './components/race/types';
 import type { IconId } from './icons/registry';
@@ -1013,6 +1014,13 @@ function WatchMode({
     return [...new Set(stats)];
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [engine, trackInfo]);
+  // The race debrief (#581): read once the flag drops, from the race record.
+  const finishDebrief = useMemo(() => {
+    if (!raceState.raceFinished) return undefined;
+    const input = { drivers, samples: engine.getLapHistory(), events: engine.getFullEvents(), grid: engine.getGridOrder(), finishOrder: raceState.finishOrder };
+    return { mine: driverDebrief(input, myDriverIds ?? []), winner: winnerEdge(input) };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [raceState.raceFinished, engine, myDriverIds, drivers]);
   // One report builder for the lap-chart copy button and the Race Complete
   // bar: the balance-pass handoff (#245).
   const buildReport = () => {
@@ -1223,6 +1231,7 @@ function WatchMode({
             })()}
             seed={engine.getSeed()}
             buildReport={buildReport}
+            debrief={finishDebrief}
             onNextRace={onNextRace}
             onExit={onExit}
             exitLabel={exitLabel ?? (spectator ? 'Back to League' : 'Menu')}

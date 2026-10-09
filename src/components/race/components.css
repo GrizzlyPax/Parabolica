@@ -478,6 +478,20 @@
 .fs-pts { margin-left: auto; font-family: var(--look-data, monospace); color: var(--signal-green); }
 .fs-yrow.dnf .fs-pts, .fs-yrow.dnf .fs-pos { color: var(--signal-red); }
 .fs-fantasy { display: flex; gap: 10px; flex-wrap: wrap; }
+/* Race debrief (#581): plain facts under each of your drivers */
+.fs-ydriver { display: flex; flex-direction: column; gap: 4px; }
+.fs-debrief { display: flex; flex-direction: column; gap: 2px; padding-left: 42px; font-size: 13px; color: var(--pw-text-2); }
+.fs-dline { font-family: var(--look-data, monospace); font-size: 12px; }
+.fs-dline b { font-weight: 400; }
+.fs-dline b.up { color: var(--signal-green); }
+.fs-dline b.down { color: var(--signal-red); }
+.fs-moment { color: var(--pw-text-1); }
+.fs-moment.bad .fs-mlap { color: var(--signal-red); }
+.fs-moment.good .fs-mlap { color: var(--signal-green); }
+.fs-mlap { font-family: var(--look-data, monospace); font-size: 12px; display: inline-block; min-width: 28px; }
+.fs-mdet { color: var(--pw-text-2); font-style: italic; }
+.fs-edge { margin: 0; font-size: 14px; line-height: 1.45; color: var(--pw-text-2); }
+.fs-edge b { color: var(--pw-text-1); }
 .fs-facts { display: flex; gap: 16px; flex-wrap: wrap; font-family: var(--look-data, monospace); font-size: 12px; color: var(--pw-text-2); }
 .fs-facts b { font-family: var(--look-display, serif); font-size: 14px; color: var(--pw-text-1); }
 .fs-btns { display: flex; gap: 8px; }
@@ -551,5 +565,4 @@
 .dp-laps { font-family: var(--look-data, monospace); font-size: 11px; color: var(--pw-text-3, #7c7c84); padding-top: 2px; }
 .dp-on { color: var(--signal-green); }
 .dp-reason { color: var(--pw-text-3, #7c7c84); }
-}
 .fs-yrow.zero .fs-pts { color: var(--pw-text-3); }
