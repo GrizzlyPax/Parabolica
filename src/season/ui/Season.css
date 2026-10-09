@@ -274,10 +274,13 @@ button.rt-g:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset:
 .rt-pick { display: flex; align-items: center; width: 100%; height: 47px; padding: 0 0 0 8px; background: none; border: 0; color: inherit; font: inherit; text-align: left; cursor: pointer; }
 .rt-pick:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset: -2px; }
 .rt-slot.pulse { outline: 2px solid var(--team-primary); outline-offset: -4px; animation: pk-slot 1s ease-in-out infinite; }
-.pk-give { height: 32px; padding: 0 14px; font-size: 15px; }
-.pk-give-big { height: 48px; padding: 0 18px; font-size: 17px; margin-left: auto; }
-@media (max-width: 599px) { .pk-pack { flex-wrap: wrap; } .pk-give-big { width: 100%; margin-left: 0; } }
-@media (prefers-reduced-motion: reduce) { .pk-card.inhand, .pk-card.held, .rt tr.target th.rt-name, .rt-slot.pulse { animation: none; } }
+@keyframes pk-glow { 0%, 100% { box-shadow: inset 4px 0 0 var(--team-primary); } 50% { box-shadow: inset 4px 0 0 var(--team-primary), inset 0 0 0 2px var(--team-primary); } }
+.pk-locker.pulse { animation: pk-glow 1.2s ease-in-out infinite; background: color-mix(in srgb, var(--team-primary) 14%, transparent); padding-left: 10px; cursor: pointer; }
+.pk-locker.pulse:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset: 2px; }
+.pk-step-hint { font-family: var(--look-data); font-size: 11px; letter-spacing: 0.04em; }
+.pk-confirm-btns { display: flex; gap: 10px; margin-top: 6px; }
+@media (max-width: 599px) { .pk-pack { flex-wrap: wrap; } }
+@media (prefers-reduced-motion: reduce) { .pk-card.inhand, .pk-card.held, .rt tr.target th.rt-name, .rt-slot.pulse, .pk-locker.pulse { animation: none; } }
 
 /* Pack reveal (#320): full screen over the Paddock. Neutral until the card turns. */
 .pr { position: fixed; inset: 0; z-index: 1000; /* over everything, the idea box included, while it plays */ overflow: hidden; isolation: isolate; cursor: pointer; background: var(--pw-ground); --pr-m: var(--pw-text-1); }

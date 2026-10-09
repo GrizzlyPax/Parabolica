@@ -77,6 +77,7 @@ export default function Paddock({ facts, onChange, onMenu, onGo, onStandings }: 
   const [readyFor, setReadyFor] = useState<string | null>(hotseat ? null : facts.setup.humans[0]?.teamId ?? null);
   const [revealed, setRevealed] = useState(false);
   const [revealing, setRevealing] = useState(false);
+  const [confirmTrait, setConfirmTrait] = useState<HolderKey | null>(null);
   const [aim, setAim] = useState<HolderKey | null>(null);
   const [chosen, setChosen] = useState<number[] | null>(null);
   const [held, setHeld] = useState<string | null>(null);
@@ -114,18 +115,31 @@ export default function Paddock({ facts, onChange, onMenu, onGo, onStandings }: 
   };
   /** While the card is in hand: rows it can go on pulse; tap one to try it on, tap again (or Give) to place it. */
   const isTarget = (k: HolderKey) => aiming && packFits(holderOf(k));
-  const tryOn = (k: HolderKey) => { if (!isTarget(k)) return; if (aim === k) give(); else setAim(k); };
+  /** Tap a glowing name: gear goes straight on (it can move later); a trait asks first (it's permanent). */
+  const tryOn = (k: HolderKey) => { if (!isTarget(k)) return; if (pack!.card.kind === 'trait') { setAim(k); setConfirmTrait(k); } else give(k); };
+  const canLocker = aiming && pack!.card.kind !== 'trait';
   const targetName = (k: HolderKey) => (k === 'car' ? car.name : k === 'team' ? you.name : pool.drivers.find(x => x.id === Number(k))!.fullName);
   const previewFor = (k: HolderKey) => (aiming && aim === k && packFits(holderOf(k)) ? pack!.card : null);
 
   // Actions
-  const give = () => {
-    if (!pack || !aim) return;
-    const target = holderOf(aim);
+  const give = (k: HolderKey | null = aim) => {
+    if (!pack || !k) return;
+    const target = holderOf(k);
     if (!packFits(target)) return;
     const slot = pack.card.kind === 'trait' ? [] : slotOf(cards, target);
     commit(applyPack(facts, { type: 'pack', round: pack.round, teamId: pack.teamId, tier: pack.tier, cardId: pack.card.id, target, replaces: slot[0]?.id }));
-    setAim(null);
+    setAim(null); setConfirmTrait(null);
+  };
+  /** Keep a gear card for later: it goes on its slot (a pack card always lands on a holder), then to the
+   * locker, and whatever was in the slot goes back. All plain facts, so the season replays exactly. */
+  const toLocker = () => {
+    if (!pack || pack.card.kind === 'trait') return;
+    const target: CardHolder = pack.card.kind === 'equipment' ? { kind: 'driver', id: roster.driverIds[0] } : pack.card.kind === 'upgrade' ? { kind: 'car' } : { kind: 'team' };
+    const occupant = slotOf(cards, target)[0];
+    let next = applyPack(facts, { type: 'pack', round: pack.round, teamId: pack.teamId, tier: pack.tier, cardId: pack.card.id, target, replaces: occupant?.id });
+    next = moveGear(next, { type: 'move', round: state.round, teamId: viewer, cardId: pack.card.id, to: 'locker' });
+    if (occupant) next = moveGear(next, { type: 'move', round: state.round, teamId: viewer, cardId: occupant.id, to: target });
+    commit(next); setAim(null);
   };
   /** Gear into a slot; a full slot sends its card to the locker first (two moves, both facts). */
   const moveTo = (cardId: string, to: CardHolder | 'locker') => {
@@ -200,7 +214,7 @@ export default function Paddock({ facts, onChange, onMenu, onGo, onStandings }: 
   const step = !myTurn ? 0 : pack ? (revealed ? 2 : 1) : 3;
   const steps: { label: string; action?: JSX.Element }[] = [
     { label: 'Open pack', action: step === 1 ? <button type="button" className="rs-btn rs-btn-primary pk-step-btn" onClick={() => setRevealing(true)}>Open</button> : undefined },
-    { label: 'Place card', action: step === 2 ? <button type="button" className="rs-btn rs-btn-primary pk-step-btn" disabled={!aim} onClick={give}>{aim ? 'Give' : 'Tap a row'}</button> : undefined },
+    { label: 'Place card', action: step === 2 ? <span className="pk-step-hint">Tap a glowing name</span> : undefined },
     { label: 'Pick 2', action: undefined },
     { label: 'Lock in', action: step === 3 ? <button type="button" className="rs-btn rs-btn-primary pk-step-btn" disabled={lineup.length !== 2} onClick={lock}>Lock in</button> : undefined },
   ];
@@ -237,16 +251,8 @@ export default function Paddock({ facts, onChange, onMenu, onGo, onStandings }: 
     );
   };
   const nameBody = (k: HolderKey, body: JSX.Element) => (isTarget(k)
-    ? <button type="button" className="rt-pick" onClick={() => tryOn(k)} aria-label={aim === k ? `Give to ${targetName(k)}` : `Try the card on ${targetName(k)}`}>{body}</button>
+    ? <button type="button" className="rt-pick" onClick={() => tryOn(k)} onMouseEnter={() => setAim(k)} onMouseLeave={() => { if (!confirmTrait) setAim(null); }} aria-label={`Give ${pack!.card.name} to ${targetName(k)}`}>{body}</button>
     : body);
-  const aimCell = (k: HolderKey) => aiming && (
-    <td className="rt-act">
-      {isTarget(k) && (aim === k
-        ? <button type="button" className="rs-btn rs-btn-primary pk-give" onClick={give}>Give</button>
-        : <button type="button" className="pk-toggle" onClick={() => setAim(k)}>Try on</button>)}
-    </td>
-  );
-
   const standings = constructorStandings(facts);
 
   return (
@@ -289,9 +295,10 @@ export default function Paddock({ facts, onChange, onMenu, onGo, onStandings }: 
           <div className="pk-pack-text">
             <span className="rs-k pk-pack-k"><GameIcon name="season.pack" size={14} /> Base deck · {TIER_LABEL[pack.tier]} pack</span>
             <b>{revealed ? pack.card.name : 'Sealed'}</b>
-            <span className="rs-hint">{!revealed ? 'Open it to see the card.' : aim ? `On ${targetName(aim)}, the row shows its new grades (▲ ▼). Give it, or tap another row.` : `Tap ${pack.card.target === 'driver' ? 'a driver' : `your ${pack.card.target}`} in the table (the glowing ${pack.card.target === 'driver' ? 'rows' : 'row'}) to try it on.${pack.card.kind !== 'trait' ? ' A full slot sends its card to the locker.' : ' Traits are for good.'}`}</span>
+            <span className="rs-hint">{!revealed ? 'Open it to see the card.' : pack.card.kind === 'trait'
+              ? `Tap a glowing ${pack.card.target === 'driver' ? 'driver' : pack.card.target} to give it. Traits are permanent.`
+              : `Tap a glowing ${pack.card.target === 'driver' ? 'driver' : pack.card.target} to put it on (a full slot sends its card to the locker), or tap the glowing locker to keep it for later.`}</span>
           </div>
-          {revealed && aim && <button type="button" className="rs-btn rs-btn-primary pk-give-big" onClick={give}>Give to {targetName(aim)}</button>}
         </div>
       )}
 
@@ -310,7 +317,6 @@ export default function Paddock({ facts, onChange, onMenu, onGo, onStandings }: 
               <th className="rt-slot">Equip</th>
               <th className="rt-traits">Traits</th>
               <th className="rt-act">Car</th>
-              {aiming && <th className="rt-act">Card</th>}
             </tr>
           </thead>
           <tbody>
@@ -330,7 +336,6 @@ export default function Paddock({ facts, onChange, onMenu, onGo, onStandings }: 
                       ? <button type="button" className={`pk-toggle ${carNo >= 0 ? 'on' : ''}`} onClick={() => toggleCar(id)} aria-pressed={carNo >= 0}>{carNo >= 0 ? `Car ${carNo + 1}` : '—'}</button>
                       : <span className="pk-carno">{carNo >= 0 ? `Car ${carNo + 1}` : '—'}</span>}
                   </td>
-                  {aimCell(k)}
                 </tr>
               );
             })}
@@ -340,7 +345,6 @@ export default function Paddock({ facts, onChange, onMenu, onGo, onStandings }: 
               <th className="rt-slot">Slot</th>
               <th className="rt-traits">Traits</th>
               <th className="rt-act" />
-              {aiming && <th className="rt-act" />}
             </tr>
             <tr className={`${aim === 'car' && aiming ? 'aimed' : ''} ${isTarget('car') && aim !== 'car' ? 'target' : ''}`}>
               <th className="rt-name" scope="row">{nameBody('car', <span className="rt-nm">{car.name}</span>)}</th>
@@ -359,7 +363,6 @@ export default function Paddock({ facts, onChange, onMenu, onGo, onStandings }: 
               {slotCell({ kind: 'car' })}
               <td className="rt-traits"><span className="rt-minis">{[...car.traits, ...cards.car.traits].map(c => mini(c, false))}</span></td>
               <td className="rt-act" />
-              {aimCell('car')}
             </tr>
             <tr className={`${aim === 'team' && aiming ? 'aimed' : ''} ${isTarget('team') && aim !== 'team' ? 'target' : ''}`}>
               <th className="rt-name" scope="row">{nameBody('team', <><TeamLogo team={you} size={22} /><span className="rt-nm">{you.name}</span></>)}</th>
@@ -378,15 +381,14 @@ export default function Paddock({ facts, onChange, onMenu, onGo, onStandings }: 
               {slotCell({ kind: 'team' })}
               <td className="rt-traits"><span className="rt-minis">{[...team.traits, ...cards.team.traits].map(c => mini(c, false))}</span></td>
               <td className="rt-act" />
-              {aimCell('team')}
             </tr>
           </tbody>
         </table>
       </div>
-      <div className={`pk-locker ${held ? 'droppable' : ''}`} {...dropZone('locker')}>
+      <div className={`pk-locker ${held || canLocker ? 'droppable pulse' : ''}`} {...(canLocker ? { onClick: toLocker, onKeyDown: (e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toLocker(); } }, role: 'button', tabIndex: 0, 'aria-label': `Keep ${pack!.card.name} in the locker` } : dropZone('locker'))}>
         <span className="rs-k">Locker · {cards.locker.length}</span>
         <span className="rt-minis">{cards.locker.length ? cards.locker.map(c => mini(c, true)) : <span className="pk-empty" aria-label="Empty locker">—</span>}</span>
-        <span className="rs-hint">{held ? 'Tap a slot, or the locker, to move the card.' : myTurn ? 'Tap a gear card, then tap where it goes. Drag works on desktop.' : ''}</span>
+        <span className="rs-hint">{canLocker ? `Tap here to keep ${pack!.card.name} for later.` : held ? 'Tap a slot, or the locker, to move the card.' : myTurn ? 'Tap a gear card, then tap where it goes. Drag works on desktop.' : ''}</span>
       </div>
 
       <section className="rs-row pk-side">
@@ -424,6 +426,24 @@ export default function Paddock({ facts, onChange, onMenu, onGo, onStandings }: 
 
       {revealing && pack && (
         <PackReveal card={pack.card} tier={pack.tier} onDone={() => { setRevealing(false); setRevealed(true); requestAnimationFrame(() => document.querySelector('.rt tr.target')?.scrollIntoView({ block: 'center', behavior: 'smooth' })); }} />
+      )}
+
+      {confirmTrait && pack && (
+        <div className="pk-sheet" role="dialog" aria-label="Give a trait">
+          <div className="pk-sheet-text">
+            <span className="rs-k">Traits are permanent</span>
+            <b>Give {pack.card.name} to {targetName(confirmTrait)}?</b>
+            <span>It can never be removed or moved.</span>
+            <span className="rt-sum">{readRow(confirmTrait, null).map((r, i) => {
+              const a = readRow(confirmTrait, pack.card)[i];
+              return Math.round(a.total) !== Math.round(r.total) ? <span key={r.stat}>{STAT_LABELS[r.stat]}: {r.grade} → {a.grade}</span> : null;
+            })}</span>
+            <span className="pk-confirm-btns">
+              <button type="button" className="rs-btn rs-btn-primary" onClick={() => give(confirmTrait)}>Give</button>
+              <button type="button" className="rs-btn rs-btn-ghost" onClick={() => { setConfirmTrait(null); setAim(null); }}>Cancel</button>
+            </span>
+          </div>
+        </div>
       )}
 
       {detail && (
