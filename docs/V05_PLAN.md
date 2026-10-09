@@ -32,6 +32,8 @@
 
 **Playtest 1 (Oct 8):** the loop works; the Paddock reads badly (oversized on desktop, no driver stats, one driver at a time). Fixes go in **before** the pack reveal, so #320 isn't built twice: #451, #452, then #453 in M4.
 
+**Status (Oct 9, late):** ✅ **v0.5.1 merged** (#503): Balance Pass One + Speed nudge + names on their own stream. Steward's re-measure: within noise (Speed 25% / Power 18%; favourite wins 58% of titles, was 74%). M4 left: #489, #361 (Run Setup), #453. M5 left: Hub clean-up + two championships (#509) + the Race Control pace-check fix (#507); Steward's Tracks & Weather re-probe (#362).
+
 **Status (Oct 9):** ✅ **M1, M2, M3 done** (a full season with pack reveals). 🏛️ Steward's three balance reads are in ([Balance Report](BALANCE_REPORT_2026-10-09.html)): findings only; **Pax + Steward talk the options, then Steward writes the recommended passes, then Pit writes build issues.** Hub is on M4.
 
 **Status (Oct 8, evening):** ✅ **M1 done.** ✅ **M2 done: a full season is playable** (Menu → Play a Season). ✅ The race-changing bundle (#438, v0.5.0) is merged. **Apex's v0.5 chain is complete**; Fable's next work is v0.6. Now: Hub on M3 (packs); Steward on the balance reads; Radio on weather card names.
@@ -63,7 +65,9 @@
 9. ✅ Paddock redesign (#452, PR #458): roster table + letter grades, picked live with Pax
 10. ✅ Pack opening reveal (#320) → **M3 ✅**
 11. **Car vehicles + driver portraits (#489)**: next (Pax, Oct 9)
-12. **The balance bump, one PR:** Balance Pass One + Speed nudge (#481, nudge posted on #457) **and** names on their own seed stream + Radio's pools (#467). Pax merges; Steward re-measures
+12. ✅ **The balance bump** (#481 + #467 → PR #503, v0.5.1)
+12b. Race Control pace check reads live `simVars` (#507)
+12c. **Two championships, no bonus** (#509): Drivers' + Constructors', finale mock-up first
 13. The rest of favoured stats (#361): Run Setup only (race header done in #500)
 14. The rest of roster tables (#453): Draft, finale, Setup, World Deck → **M4**
 15. Race-view emoji become game-icons (#397)
@@ -91,7 +95,7 @@
 ## Risks
 - **Apex slips → everything slips.** If the season loop stalls, Pit moves Hub to the non-Season tasks first.
 - **Fable limits.** Apex's chain is 6 tasks. If the limit hits, the pack logic can drop to Opus with Apex reviewing; the season loop can't.
-- **Hub is busy:** one chat, 18 items in a row. If it slips, the team creator and pack reveal polish move to a v0.5.x patch, not the core.
+- **Hub is busy:** one chat; see the list above. If it slips, the team creator and pack reveal polish move to a v0.5.x patch, not the core.
 - **Hotseat** touches every screen. Each Season screen checks two humans before merging.
 
 ## Out of v0.5 (on purpose)
@@ -109,6 +113,8 @@ Teams 5–10, default 10 · 10-race default · free lineups · bench keeps gear 
 **Playtest pass 2 (Pax, Oct 9, via Hub; PRs #465 #468 #470 #475 #483 #491):** End season button (asks first, clears the save) · grades in the four F1 colours only · **Paddock = Team / League tabs** (standings live there; League shows every driver with Wins · Podiums · Points and a constructors' chart) · cards as compact square chips; holding a card flashes the grades it would change · number badges square in tables, marbles round in the race · the sealed pack sparkles · race view: no Cards column, your rows tinted, driver panel with OVR grades + history (bottom sheet on phone) · a mobile-first race view later, mock-ups first (#492) · **build-your-own team moves to v0.6** (#346); the balance bump and vehicles + portraits come first
 
 **Race view (Pax, Oct 9, via Hub, PR #500):** a **scoreboard header** (carries the race's priority stats) · on phone the **track is pinned under the header** and the **driver panel opens inside the tower** (the bottom sheet is gone) · **your cars are always big, haloed and labelled** on the track
+
+**Balance bump shipped (Pax, Oct 9):** v0.5.1 (#503), merged by Pit with Pax's OK · Speed nudge = **Speed 0.115 · Power 0.0078 · Grip 0.17** (Speed clearly king: 25% vs 18%) · known gap: the car is 33% of a team vs the 42% target (a separate pass if wanted) · **the champion bonus is axed: two championships, Drivers' and Constructors', like real F1** (#509; the +50 flipped 28% of titles)
 
 **Qualifying (Pax, Oct 9):** both pieces open **v0.6**: Steward designs whether qualifying becomes a driver stat (#496) first, then Hub builds the qualifying show once (#495: drivers go out in turn, times drop onto a board, the grid forms; watch or skip)
 
