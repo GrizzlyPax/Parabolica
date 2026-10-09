@@ -17,7 +17,8 @@ import { BASE_DECK_WEATHER } from './deckWeather';
 import { INTL_FIRST_NAMES, INTL_LAST_NAMES, ABSURD_FIRST_NAMES, ABSURD_LAST_NAMES, NAME_TIER_WEIGHTS, ONE_WORD_CHANCE } from '../generators/names';
 import { LEAGUE_ADJECTIVES, LEAGUE_NOUNS } from '../generators/leagueName';
 import { BACKSTORY_TEMPLATES, BACKSTORY_FILLS, QUIRKS } from '../generators/drivers';
-import { CAR_QUIRKS, CAR_PREFIXES_GENERIC, CAR_SUFFIXES, CAR_ACRONYMS } from '../generators/cars';
+import { CAR_QUIRKS, CAR_PEOPLE_NAMES, CAR_NICKNAMES, CAR_HOUSEHOLD, CAR_HERITAGE_PLACES, generateCarName } from '../generators/cars';
+import { mulberry32 } from '../engine/rng';
 import { IDENTITY_EMOJI } from '../generators/teamIdentity';
 
 export interface GlossaryEffect { label: string; value: string; good: boolean }
@@ -94,7 +95,10 @@ export function buildGlossary(): Glossary {
       { id: 'backstory-fills', title: `Backstory fills (${Object.keys(BACKSTORY_FILLS).length} slots)`, where: 'src/generators/drivers.ts BACKSTORY_FILLS', size: Object.values(BACKSTORY_FILLS).reduce((n, v) => n + v.length, 0), samples: Object.entries(BACKSTORY_FILLS).slice(0, 4).map(([k, v]) => `{${k}}: ${v.slice(0, 3).join(' / ')}`) },
       { id: 'driver-quirks', title: 'Driver quirks', where: 'src/generators/drivers.ts QUIRKS', size: QUIRKS.length, samples: QUIRKS.slice(0, 5) },
       { id: 'car-quirks', title: 'Car quirks', where: 'src/generators/cars.ts CAR_QUIRKS', size: CAR_QUIRKS.length, samples: CAR_QUIRKS.slice(0, 4) },
-      { id: 'car-names', title: 'Car name parts (prefix · suffix · acronym)', where: 'src/generators/cars.ts CAR_PREFIXES_GENERIC / CAR_SUFFIXES / CAR_ACRONYMS', size: CAR_PREFIXES_GENERIC.length + CAR_SUFFIXES.length + CAR_ACRONYMS.length, samples: [...CAR_PREFIXES_GENERIC.slice(0, 3), ...CAR_SUFFIXES.slice(0, 3), ...CAR_ACRONYMS.slice(0, 3)] },
+      { id: 'car-names', title: 'Car names · a sample rack (people 35 · heritage 20 · nicknames 20 · codes 15 · household 10)', where: 'src/generators/cars.ts generateCarName (docs/story/car-names.md)', size: CAR_PEOPLE_NAMES.length + CAR_NICKNAMES.length + CAR_HOUSEHOLD.length + CAR_HERITAGE_PLACES.length, samples: (() => { const r = mulberry32(569); return Array.from({ length: 10 }, () => generateCarName(r)); })() },
+      { id: 'car-names-people', title: "Car names · people's names", where: 'src/generators/cars.ts CAR_PEOPLE_NAMES', size: CAR_PEOPLE_NAMES.length, samples: CAR_PEOPLE_NAMES.slice(0, 8) },
+      { id: 'car-names-nicknames', title: 'Car names · workshop nicknames', where: 'src/generators/cars.ts CAR_NICKNAMES', size: CAR_NICKNAMES.length, samples: CAR_NICKNAMES.slice(0, 6) },
+      { id: 'car-names-household', title: 'Car names · farm and household words', where: 'src/generators/cars.ts CAR_HOUSEHOLD', size: CAR_HOUSEHOLD.length, samples: CAR_HOUSEHOLD.slice(0, 6) },
       { id: 'identity-emoji', title: 'Procedural team emoji', where: 'src/generators/teamIdentity.ts IDENTITY_EMOJI', size: IDENTITY_EMOJI.length, samples: IDENTITY_EMOJI.slice(0, 10) },
     ],
     counts: {
