@@ -96,6 +96,7 @@
 .ss-open { display: flex; flex-wrap: wrap; gap: 4px 10px; }
 .ss-open-card { display: inline-flex; align-items: center; gap: 5px; font-style: italic; font-size: 13px; color: var(--pw-text-2); }
 .ss-num { width: 30px; flex: none; font-family: var(--look-data); font-size: 16px; color: var(--pw-text-1); display: inline-flex; justify-content: center; }
+.ss-pick .avatar, .ss-roster-slot .avatar { width: 26px; justify-content: center; }
 .ss-pick-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
 .ss-pick-name { font-size: 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ss-board, .ss-roster { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); column-gap: 20px; }
@@ -171,6 +172,7 @@
 .rt .rt-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .rt .rt-name .team-logo { margin-right: 8px; }
 .rt-numsq { margin-right: 10px; }
+.rt .rt-name .avatar { width: 26px; justify-content: center; margin-right: 8px; vertical-align: middle; }
 .rt-num {
   display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; margin-right: 10px; border-radius: 50%;
   background: var(--team-primary); color: var(--team-ink); border: 1.5px solid var(--team-ink);

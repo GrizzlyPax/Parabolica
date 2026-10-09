@@ -25,6 +25,8 @@ import { CANON_VARIABLES, type SimVariables } from '../simlab/types';
 import { version as engineVersion } from '../../package.json';
 import { generateSeasonPool, seasonRoster, RACE_LINEUP, type SeasonPool, type SeasonCards, type TeamIdentityOverride, type Lineup } from './genesis';
 import { draftOrder, draftState, draftedRosters, type DraftPick } from './draft';
+import { portraitFor, vehicleFor } from '../generators/avatars';
+import type { IconId } from '../icons/registry';
 import { packOpened, seasonCardsFor, type CardFact } from './pack';
 
 export const DEFAULT_CALENDAR_LENGTH = 10;
@@ -94,6 +96,17 @@ export function newSeason(setup: SeasonSetup): SeasonFacts {
 
 export function poolFor(facts: SeasonFacts): SeasonPool {
   return generateSeasonPool(facts.setup.seed, facts.setup.teamCount, facts.setup.ruleset ?? defaultRuleset());
+}
+
+/** Each drafted driver's portrait and their team's car vehicle (#489), for
+ * the race view. Derived from the seed (icons stream); nothing is saved. */
+export function seasonAvatars(facts: SeasonFacts): Map<number, { portrait: IconId; vehicle: IconId }> {
+  const pool = poolFor(facts);
+  const out = new Map<number, { portrait: IconId; vehicle: IconId }>();
+  for (const r of Object.values(draftState(pool, facts.draftPicks).rosters)) {
+    for (const id of r.driverIds) out.set(id, { portrait: portraitFor(pool.seed, id), vehicle: vehicleFor(pool.seed, r.carId ?? '') });
+  }
+  return out;
 }
 
 export function isHuman(facts: SeasonFacts, teamId: string): boolean {

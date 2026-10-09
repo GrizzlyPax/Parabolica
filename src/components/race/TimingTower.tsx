@@ -43,6 +43,7 @@ function TimingTower({
   fantasy,
   sealed,
   mine,
+  avatars,
   className = '',
 }: TimingTowerProps) {
   const { finishOrder } = raceState;
@@ -256,6 +257,7 @@ function TimingTower({
       carRank: isSealed ? undefined : fieldRanking.car.get(driver.id),
       sealed: isSealed || undefined,
       mine: mine?.has(driver.id) || undefined,
+      avatar: avatars?.get(driver.id),
       fantasyTeam: fantasyBy.get(driver.id),
       battle,
       speedTone,

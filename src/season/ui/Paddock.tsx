@@ -13,6 +13,8 @@
 import { useMemo, useState, type DragEvent } from 'react';
 import { GameIcon, TeamLogo, teamThemeVars } from '../../icons/GameIcon';
 import { RaceNumber } from '../../icons/RaceNumber';
+import { Avatar } from '../../icons/Avatar';
+import { portraitFor, vehicleFor } from '../../generators/avatars';
 import { CardFace } from '../../cards/CardFace';
 import { CardChip } from '../../cards/CardChip';
 import { STAT_LABELS } from '../../cards/deck';
@@ -309,7 +311,7 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo }: 
               const gear = cards.drivers[id].equipment[0];
               return (
                 <tr key={id} className={rowClass(k, carNo < 0 ? 'benched' : '')}>
-                  {nameCell(k, <><RaceNumber n={d.number} color={you.color} ink={you.ink} size={24} shape="square" className="rt-numsq" /><span className="rt-nm">{d.fullName}</span></>)}
+                  {nameCell(k, <><RaceNumber n={d.number} color={you.color} ink={you.ink} size={24} shape="square" className="rt-numsq" /><Avatar icon={portraitFor(pool.seed, d.id)} color={you.color} size={22} /><span className="rt-nm">{d.fullName}</span></>)}
                   {gradeCells(k, d.fullName, DRIVER_STATS, new Set(DRIVER_STATS), carNo < 0)}
                   <td className="rt-slot" {...dropOn(k)}>{gear ? chip(gear, true) : <span className="pk-empty" aria-label="Empty gear slot">—</span>}</td>
                   <td className="rt-traits"><span className="rt-minis">{[...d.traits, ...cards.drivers[id].traits].map(c => chip(c, false))}</span></td>
@@ -335,7 +337,7 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo }: 
               const traits = k === 'car' ? [...car.traits, ...cards.car.traits] : [...team.traits, ...cards.team.traits];
               return (
                 <tr key={k} className={rowClass(k)}>
-                  {nameCell(k, k === 'car' ? <span className="rt-nm">{car.name}</span> : <><TeamLogo team={you} size={22} /><span className="rt-nm">{you.name}</span></>)}
+                  {nameCell(k, k === 'car' ? <><Avatar icon={vehicleFor(pool.seed, car.id)} color={you.color} size={26} /><span className="rt-nm">{car.name}</span></> : <><TeamLogo team={you} size={22} /><span className="rt-nm">{you.name}</span></>)}
                   {gradeCells(k, targetName(k), CT_STATS, new Set(k === 'car' ? CAR_STATS : TEAM_STATS), false)}
                   {Array.from({ length: PAD }, (_, i) => <td key={i} className="rt-cell rt-pad" />)}
                   <td className="rt-slot" {...dropOn(k)}>{gear ? chip(gear, true) : <span className="pk-empty" aria-label="Empty gear slot">—</span>}</td>
@@ -402,7 +404,7 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo }: 
                   return (
                     <tr key={d.driverId} className={humans.includes(t.id) ? 'mine' : ''}>
                       <td className="rt-pos">{i + 1}</td>
-                      <th className="rt-name" scope="row"><RaceNumber n={p.number} color={t.color} ink={t.ink} size={20} shape="square" className="rt-numsq" /><span className="rt-nm">{p.fullName}</span></th>
+                      <th className="rt-name" scope="row"><RaceNumber n={p.number} color={t.color} ink={t.ink} size={20} shape="square" className="rt-numsq" /><Avatar icon={portraitFor(pool.seed, p.id)} color={t.color} size={20} /><span className="rt-nm">{p.fullName}</span></th>
                       <td className="rt-numcol">{d.wins}</td>
                       <td className="rt-numcol">{d.podiums}</td>
                       <td className="rt-numcol">{d.points}</td>

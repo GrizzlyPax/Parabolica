@@ -3,6 +3,8 @@
 // at once. Rivals stay dark: every row reads only a green / yellow / red third
 // and sealed rarity dots; trait names show on your own picks alone.
 import { useEffect, useMemo, useState } from 'react';
+import { Avatar } from '../../icons/Avatar';
+import { portraitFor, vehicleFor } from '../../generators/avatars';
 import { GameIcon, TeamLogo, teamThemeVars } from '../../icons/GameIcon';
 import { CardDot } from '../../cards/CardFace';
 import type { FieldRank } from '../../betting/utils';
@@ -102,6 +104,7 @@ export default function DraftBoard({ facts, onChange, onMenu, onDone, onEndSeaso
       <li key={d.id}>
         <button type="button" className={`ss-pick ${owner ? 'taken' : ''} ${selected === d.id ? 'selected' : ''}`} disabled={!canPick} onClick={() => setSelected(d.id)} aria-pressed={selected === d.id}>
           <span className="ss-num">{d.number}</span>
+          <Avatar icon={portraitFor(pool.seed, d.id)} color={owner ? teams[owner].color : undefined} size={22} />
           <span className="ss-pick-main">
             <span className="ss-pick-name">{d.fullName}</span>
             {own ? <Open traits={d.traits} /> : <Sealed traits={d.traits} />}
@@ -118,7 +121,8 @@ export default function DraftBoard({ facts, onChange, onMenu, onDone, onEndSeaso
     return (
       <li key={c.id}>
         <button type="button" className={`ss-pick ${owner ? 'taken' : ''} ${selected === c.id ? 'selected' : ''}`} disabled={!canPick} onClick={() => setSelected(c.id)} aria-pressed={selected === c.id}>
-          <span className="ss-num"><GameIcon name="card.upgrade" size={14} /></span>
+          <span className="ss-num" />
+          <Avatar icon={vehicleFor(pool.seed, c.id)} color={owner ? teams[owner].color : undefined} size={26} />
           <span className="ss-pick-main">
             <span className="ss-pick-name">{c.name}</span>
             {own ? <Open traits={c.traits} /> : <Sealed traits={c.traits} />}
@@ -152,6 +156,7 @@ export default function DraftBoard({ facts, onChange, onMenu, onDone, onEndSeaso
             return (
               <li key={i} className={`ss-roster-slot ${d ? '' : 'empty'}`}>
                 <span className="ss-num">{d ? d.number : ''}</span>
+                {d && <Avatar icon={portraitFor(pool.seed, d.id)} color={you.color} size={22} />}
                 <span className="ss-pick-main">
                   <span className="ss-pick-name">{d ? d.fullName : `Driver ${i + 1}`}</span>
                   {d && <Open traits={d.traits} />}
@@ -164,7 +169,8 @@ export default function DraftBoard({ facts, onChange, onMenu, onDone, onEndSeaso
             const c = pool.cars.find(x => x.id === mine.carId);
             return (
               <li className={`ss-roster-slot ${c ? '' : 'empty'}`}>
-                <span className="ss-num"><GameIcon name="card.upgrade" size={14} /></span>
+                <span className="ss-num">{c ? null : <GameIcon name="card.upgrade" size={14} />}</span>
+                {c && <Avatar icon={vehicleFor(pool.seed, c.id)} color={you.color} size={26} />}
                 <span className="ss-pick-main">
                   <span className="ss-pick-name">{c ? c.name : 'Car (last round)'}</span>
                   {c && <Open traits={c.traits} />}
