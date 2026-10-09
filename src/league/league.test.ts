@@ -5,8 +5,6 @@ import {
   settleLeague, nextRaceAt, isSeasonOver, prepareScheduledRace,
   FULL_EVENT_RETENTION, LIVE_TICK_MS,
 } from './settle';
-import { buildSeasonReport } from './seasonReport';
-import { traceRace, raceReportForLeague } from './raceTrace';
 import { LeagueSetupConfig, LeagueState } from './types';
 import { saveLeagueState, loadLeagueState, KeyValueStore } from '../storage/persistence';
 import { getSeasonStandings } from '../types/season';
@@ -286,106 +284,6 @@ describe('interventions', () => {
            JSON.stringify(altered.digests[2].finishOrder) !== JSON.stringify(base.digests[2].finishOrder) ||
            altered.digests[2].highlights.length !== base.digests[2].highlights.length
     ).toBe(true);
-  });
-});
-
-describe('season report (the copyable balance artifact)', () => {
-  it('captures standings, attributes, hardware, races, and correlations for the whole grid', () => {
-    const setup = makeSetup();
-    const league = settleLeague(createLeague(42, setup), { now: T0 + 13 * HOUR }).league;
-    const report = buildSeasonReport(league);
-
-    for (const section of [
-      'PARABOLICA SEASON REPORT', 'FINAL STANDINGS', 'DRIVER ATTRIBUTES',
-      'CARS & TEAMS', 'RACES', 'STAT vs OUTCOME',
-    ]) {
-      expect(report).toContain(section);
-    }
-    // every driver appears with their rolled stats
-    for (const d of league.roster) {
-      expect(report).toContain(d.fullName);
-      expect(report).toContain(d.stats.baseSpeed.toFixed(3));
-    }
-    // every settled race appears
-    for (const digest of league.digests) {
-      expect(report).toContain(digest.trackName);
-    }
-    // one row per team in the hardware section, tab-separated
-    const teams = new Set(league.roster.map(d => d.kingdomId));
-    const hardwareRows = report
-      .slice(report.indexOf('CARS & TEAMS'), report.indexOf('RACES'))
-      .split('\n').filter(r => r.includes('\t'));
-    expect(hardwareRows.length).toBe(teams.size + 1); // header + teams
-  });
-
-  it('reflects interventions: the attached tag shows up in attributes and the log', () => {
-    const league = createLeague(42, makeSetup());
-    league.interventionLog.push({
-      type: 'attach-tag',
-      atRaceIndex: 1,
-      targetDriverId: league.roster[0].id,
-      tagId: 'sunday-driver',
-      committedAt: T0 + HOUR,
-    });
-    const settled = settleLeague(league, { now: T0 + 13 * HOUR }).league;
-    const report = buildSeasonReport(settled);
-    expect(report).toContain('INTERVENTIONS');
-    expect(report).toContain('sunday-driver');
-  });
-
-  it('is deterministic for the same settled league', () => {
-    const setup = makeSetup();
-    const a = buildSeasonReport(settleLeague(createLeague(7, setup), { now: T0 + 13 * HOUR }).league);
-    const b = buildSeasonReport(settleLeague(createLeague(7, setup), { now: T0 + 13 * HOUR }).league);
-    expect(a).toBe(b);
-  });
-});
-
-describe('traceRace (#173): the race replay', () => {
-  it('reconstructs a settled race exactly — classification matches the digest', () => {
-    const league = settleLeague(createLeague(42, makeSetup()), { now: T0 + 13 * HOUR }).league;
-    const digest = league.digests[0];
-    const trace = traceRace(league, digest.index)!;
-    expect(trace).not.toBeNull();
-
-    // The replayed classification IS the digest's: determinism working for us.
-    const classified = trace.strategies
-      .filter(s => s.finalPosition !== null)
-      .sort((a, b) => a.finalPosition! - b.finalPosition!)
-      .map(s => s.driverId);
-    expect(classified).toEqual(digest.finishOrder);
-    const dnfs = trace.strategies.filter(s => s.finalPosition === null).map(s => s.driverId).sort();
-    expect(dnfs).toEqual([...digest.dnfDriverIds].sort());
-
-    // Chart data is complete and well-formed.
-    expect(trace.laps[0]).toBe(0); // starting grid
-    expect(trace.series.length).toBe(trace.fieldSize);
-    for (const s of trace.series) expect(s.positions.length).toBe(trace.laps.length);
-    // Every driver has a stint history (at least the starting compound).
-    for (const s of trace.strategies) expect(s.stints.length).toBeGreaterThanOrEqual(1);
-  });
-});
-
-describe('raceReportForLeague (markdown strategy export)', () => {
-  it('produces a complete, digest-consistent report', () => {
-    const league = settleLeague(createLeague(42, makeSetup()), { now: T0 + 13 * HOUR }).league;
-    const digest = league.digests[0];
-    const md = raceReportForLeague(league, digest.index)!;
-    expect(md).not.toBeNull();
-
-    for (const section of ['# Race Report', '## Classification & strategy', '| P | Driver |']) {
-      expect(md).toContain(section);
-    }
-    // Winner appears as P1, in digest order.
-    const winner = league.roster.find(d => d.id === digest.finishOrder[0])!;
-    expect(md).toContain(`| 1 | ${winner.fullName} |`);
-    // Every DNF is reported with its exit lap marker.
-    for (const id of digest.dnfDriverIds) {
-      const d = league.roster.find(r => r.id === id)!;
-      expect(md).toContain(`| DNF | ${d.fullName} |`);
-    }
-    // Deterministic: same league, same report.
-    expect(raceReportForLeague(league, digest.index)).toBe(md);
   });
 });
 

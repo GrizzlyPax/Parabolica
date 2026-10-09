@@ -3,8 +3,9 @@
 // the same screen. Hash routes (/#/world-deck/teams) because the static host
 // doesn't rewrite unknown paths to index.html.
 //
-// Other hashes (the old #league=CODE links, #339) are not routes: parseHash
-// returns null for them and the app leaves them alone.
+// Other hashes (e.g. old #league=CODE links; Commissioner leagues were removed
+// in #339) are not routes: parseHash returns null and the app leaves them alone.
+// Old #/league/… addresses fall through to the menu.
 import { useCallback, useEffect, useState } from 'react';
 
 /** Season Mode screens (docs/SEASON_MODE.md). Each gets /#/season/<screen>;
@@ -19,12 +20,7 @@ export type Route =
   | { name: 'world-deck'; tab?: string }
   | { name: 'race-control'; tab?: string }
   | { name: 'credits' }
-  | { name: 'season'; screen: SeasonScreen }
-  // Commissioner leagues (retiring with #339)
-  | { name: 'league' }
-  | { name: 'league-found' }
-  | { name: 'league-grid' }
-  | { name: 'league-watch' };
+  | { name: 'season'; screen: SeasonScreen };
 
 const SLUG = /^[a-z0-9-]+$/;
 
@@ -43,11 +39,6 @@ export function parseHash(hash: string): Route | null {
     case 'race-control': return { name: 'race-control', tab };
     case 'credits': return { name: 'credits' };
     case 'season': return (SEASON_SCREENS as readonly string[]).includes(sub) ? { name: 'season', screen: sub as SeasonScreen } : { name: 'season', screen: 'setup' };
-    case 'league':
-      if (sub === 'found') return { name: 'league-found' };
-      if (sub === 'grid') return { name: 'league-grid' };
-      if (sub === 'watch') return { name: 'league-watch' };
-      return { name: 'league' };
     default: return { name: 'menu' };
   }
 }
@@ -59,9 +50,6 @@ export function routeHash(route: Route): string {
     case 'world-deck': return route.tab ? `#/world-deck/${route.tab}` : '#/world-deck';
     case 'race-control': return route.tab ? `#/race-control/${route.tab}` : '#/race-control';
     case 'season': return `#/season/${route.screen}`;
-    case 'league-found': return '#/league/found';
-    case 'league-grid': return '#/league/grid';
-    case 'league-watch': return '#/league/watch';
     default: return `#/${route.name}`;
   }
 }

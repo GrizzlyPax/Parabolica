@@ -1,6 +1,6 @@
 # Parabolica docs
 
-Parabolica is an F1-style race sim building toward Commissioner Mode: wall-clock roguelite leagues you watch from any device. Play it at **[playparabolica.com](https://playparabolica.com)**.
+Parabolica is an F1-style race sim: draft a team, race a Season, chase two championships. Play it at **[playparabolica.com](https://playparabolica.com)**.
 
 **New here? Read in this order:** [the latest handoff](HANDOFF_2026-10-08.md) → [`CLAUDE.md`](../CLAUDE.md) → the doc for the area you're touching.
 
@@ -30,11 +30,13 @@ Parabolica is an F1-style race sim building toward Commissioner Mode: wall-clock
 | [PROCEDURAL_IDENTITY](PROCEDURAL_IDENTITY.md) | Generated driver names, league names, team identity |
 
 ## Leagues & online
+*History / north star: Commissioner leagues (founding, the league screen, open by code, gods) were removed from the game in #339; Season Mode replaces them. The engine pieces (`createLeague`, `prepareScheduledRace`, `settle.ts`, `remote.ts`, `server/`) stay, and "live" (wall clock, watch from any device) comes back for Season Mode in v0.6.*
+
 | Doc | What it's for |
 |---|---|
-| [COMMISSIONER_MODE](COMMISSIONER_MODE.md) | The north star: wall-clock roguelite seasons, decrees |
-| [COMMISSIONER_MODE_TECH](COMMISSIONER_MODE_TECH.md) | Technical plan: seeded RNG, persistence, settle loop |
-| [LEAGUE_SERVER](LEAGUE_SERVER.md) | One league, every device: facts, decrees, digests, publish / open by code |
+| [COMMISSIONER_MODE](COMMISSIONER_MODE.md) | History / north star: wall-clock roguelite seasons, decrees |
+| [COMMISSIONER_MODE_TECH](COMMISSIONER_MODE_TECH.md) | History: seeded RNG, persistence, settle loop (the engine half is still live) |
+| [LEAGUE_SERVER](LEAGUE_SERVER.md) | One league, every device: facts, decrees, digests (the server stays for v0.6 live seasons) |
 
 ## Lab & balance
 | Doc | What it's for |
