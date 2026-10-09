@@ -1,0 +1,463 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- Steward balance report, Oct 9 2026. Published copy: https://claude.ai/artifact/MC5fwYaqd6KJD8Gk9q8E94 -->
+<title>Steward's Balance Report</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&family=Special+Elite&display=swap">
+<style>
+  /* Layout: a stewards' report pasted into an almanac. One narrow column of white rules on black;
+     every chart is a plain ruled figure. Ochre = the game today, violet = a fix we tested. */
+  :root {
+    --bg: #0e0d11;
+    --panel: #16141b;
+    --fg: #efece6;
+    --muted: #a39fab;
+    --rule: #37343f;
+    --today: #b07a1e;
+    --fix: #9d6bff;
+    --good: #5fbf7f;
+    --bad: #e2675c;
+    --warn: #d9a63a;
+    --look-display: "Old Standard TT", Georgia, serif;
+    --look-serif: "Old Standard TT", Georgia, serif;
+    --look-data: "Special Elite", "Courier New", monospace;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body { background: var(--bg); color: var(--fg); font-family: var(--look-serif); font-size: 16px; line-height: 1.45; -webkit-font-smoothing: antialiased; }
+  .page { max-width: 760px; margin: 0 auto; padding-inline: 20px; padding-block: 28px 64px; display: grid; gap: 44px; }
+  a { color: var(--fg); text-decoration-color: var(--fix); text-underline-offset: 3px; }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--fix); outline-offset: 2px; }
+
+  .label { font-family: var(--look-data); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .data { font-family: var(--look-data); font-variant-numeric: tabular-nums; }
+  h1, h2, h3 { font-family: var(--look-display); font-weight: 700; text-wrap: balance; margin: 0; }
+  h1 { font-size: clamp(34px, 8vw, 50px); line-height: .95; letter-spacing: -.02em; }
+  h2 { font-size: 26px; line-height: 1.05; }
+  h3 { font-size: 18px; line-height: 1.15; }
+  p { margin: 0; max-width: 64ch; }
+  .flavour { font-style: italic; color: var(--muted); font-size: 16px; }
+  section { display: grid; gap: 18px; border-top: 1px solid var(--fg); padding-top: 14px; }
+  .sechead { display: grid; gap: 6px; }
+
+  /* masthead */
+  .mast { display: grid; gap: 12px; border-bottom: 3px double var(--fg); padding-bottom: 18px; }
+  .mast .row { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 16px; }
+
+  /* the short version */
+  .short { display: grid; gap: 0; }
+  .short li { list-style: none; display: grid; grid-template-columns: 2.2rem 1fr; gap: 10px; padding-block: 12px; border-bottom: 1px solid var(--rule); }
+  .short li:last-child { border-bottom: 0; }
+  .short .n { font-family: var(--look-display); font-size: 28px; line-height: 1; }
+  .short b { font-weight: 700; }
+  .short ol { margin: 0; padding: 0; }
+
+  /* tiles */
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); }
+  .tile { background: var(--bg); padding: 12px 12px 14px; display: grid; gap: 4px; align-content: start; min-width: 0; }
+  .tile .big { font-family: var(--look-display); font-weight: 700; font-size: 32px; line-height: 1; }
+  .tile .big.today { color: var(--fg); }
+  .tile p { font-size: 14px; color: var(--muted); line-height: 1.3; }
+
+  /* figures */
+  figure { margin: 0; display: grid; gap: 10px; border: 1px solid var(--rule); padding: 14px; background: var(--panel); min-width: 0; }
+  figcaption { display: grid; gap: 3px; }
+  figcaption .t { font-family: var(--look-display); font-weight: 700; font-size: 17px; line-height: 1.15; }
+  .note { font-size: 13px; color: var(--muted); font-style: italic; line-height: 1.35; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; }
+  .key { display: inline-flex; align-items: center; gap: 6px; font-family: var(--look-data); font-size: 12px; color: var(--fg); }
+  .sw { width: 12px; height: 12px; display: inline-block; }
+  .sw.today { background: var(--today); } .sw.fix { background: var(--fix); }
+
+  /* horizontal bar chart */
+  .hbars { display: grid; gap: 7px; }
+  .hrow { display: grid; grid-template-columns: 8.2rem 1fr; gap: 10px; align-items: center; }
+  .hrow .name { font-size: 15px; line-height: 1.1; min-width: 0; }
+  .track { position: relative; display: grid; gap: 2px; padding-right: 3.4rem; min-width: 0; }
+  .hrow > .bar { margin-right: 3.4rem; }
+  .bar { height: 14px; display: flex; align-items: center; position: relative; }
+  .bar i { display: block; height: 100%; min-width: 2px; border-radius: 0 3px 3px 0; }
+  .bar.today i { background: var(--today); } .bar.fix i { background: var(--fix); }
+  .bar .v { font-family: var(--look-data); font-size: 12px; color: var(--fg); padding-left: 6px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .bar:hover i { filter: brightness(1.25); }
+  .refline { position: absolute; top: -3px; bottom: -3px; width: 0; left: calc((100% - 3.4rem) * var(--x) / 100); border-left: 1px dashed var(--muted); pointer-events: none; }
+  .axisnote { display: grid; grid-template-columns: 8.2rem 1fr; gap: 10px; }
+
+  /* vertical mini bars (draft slots) */
+  .vbars { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; align-items: end; height: 130px; border-bottom: 1px solid var(--muted); position: relative; }
+  .vcol { display: flex; flex-direction: column; justify-content: flex-end; align-items: stretch; height: 100%; min-width: 0; }
+  .vcol i { display: block; background: var(--today); border-radius: 3px 3px 0 0; min-height: 2px; }
+  .vcol.fix i { background: var(--fix); }
+  .vcol .v { font-family: var(--look-data); font-size: 11px; line-height: 1; text-align: center; margin-bottom: 3px; font-variant-numeric: tabular-nums; }
+  .vcol:hover i { filter: brightness(1.25); }
+  .vaxis { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; font-family: var(--look-data); font-size: 11px; color: var(--muted); text-align: center; }
+  .band { position: absolute; left: 0; right: 0; border-top: 1px dashed var(--muted); pointer-events: none; }
+  .band span { position: absolute; left: 0; top: -14px; font-family: var(--look-data); font-size: 10px; color: var(--muted); }
+
+  .multiples { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
+  .multiples figure { padding: 12px; }
+  .multiples .vbars { height: 96px; }
+
+  /* tables */
+  .tablewrap { overflow-x: auto; border: 1px solid var(--rule); }
+  table { border-collapse: collapse; width: 100%; min-width: 460px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  th { font-family: var(--look-data); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 400; }
+  td { font-size: 15px; }
+  td.num { font-family: var(--look-data); font-size: 13px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  tr:last-child td { border-bottom: 0; }
+  td.hl { color: var(--fix); }
+  td.inband { box-shadow: inset 0 0 0 1px var(--good); }
+
+  /* status chips (icon + word, never colour alone) */
+  .chip { display: inline-flex; align-items: center; gap: 5px; font-family: var(--look-data); font-size: 12px; padding: 2px 7px; border: 1px solid currentColor; white-space: nowrap; }
+  .chip.good { color: var(--good); } .chip.bad { color: var(--bad); } .chip.warn { color: var(--warn); }
+
+  .callout { border-left: 3px solid var(--fix); padding: 4px 0 4px 14px; display: grid; gap: 6px; }
+  .two { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
+  ul.plain { margin: 0; padding-left: 1.1em; display: grid; gap: 6px; max-width: 64ch; }
+  footer { border-top: 3px double var(--fg); padding-top: 14px; display: grid; gap: 10px; font-size: 14px; color: var(--muted); }
+  footer ul { margin: 0; padding-left: 1.1em; display: grid; gap: 4px; }
+
+  @media (max-width: 480px) {
+    .page { padding-inline: 16px; }
+    .hrow, .axisnote { grid-template-columns: 6.6rem 1fr; gap: 8px; }
+    .hrow .name { font-size: 14px; }
+    .vcol .v { font-size: 9px; }
+    .multiples { grid-template-columns: 1fr; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .bar i, .vcol i { transition: filter .15s; }
+  }
+</style>
+</head>
+<body style="margin:0">
+
+<div class="page">
+
+  <header class="mast">
+    <div class="row">
+      <span class="label">Parabolica · v0.5 Spa</span>
+      <span class="label">Steward's report · 9 Oct 2026</span>
+    </div>
+    <h1>The Balance Report</h1>
+    <p class="flavour">What over 100,000 simulated races say about whether a Season is fun. Findings only. We pick fixes together next.</p>
+  </header>
+
+  <section aria-labelledby="short">
+    <div class="sechead"><span class="label">The short version</span><h2 id="short">Three findings, one bright spot</h2></div>
+    <ol class="short">
+      <li><span class="n">1</span><p><b>The stats aren't equal.</b> A +10% card on Speed is worth about <b>265 times</b> the same card on Reliability. Seven of the eleven stats barely move a result, so most pack pulls do nothing you'd notice.</p></li>
+      <li><span class="n">2</span><p><b>Tracks and weather don't change who wins.</b> The driver best suited to a track's favoured stats wins about as often with the favour as without it.</p></li>
+      <li><span class="n">3</span><p><b>The draft picks the champion.</b> The team that drafts the best car wins <b>30%</b> of titles, and the snake order hands that pick to the 10th draft slot every time. The leader usually takes the lead for good <b>by race 2</b>.</p></li>
+      <li><span class="n">+</span><p><b>What works:</b> the packs, the 2-of-3 lineup call and your edge over the AI all land where they should.</p></li>
+    </ol>
+  </section>
+
+  <section aria-labelledby="how">
+    <div class="sechead"><span class="label">How I tested</span><h2 id="how">Same seed, one change, compare</h2></div>
+    <p>Any change to a race re-rolls it: about <b>70% of winners change</b> from any tweak at all, even one that should do nothing. So "the winner changed" proves nothing. Every number here comes from running the same seeded race with and without one change, many times, and comparing the averages. All races use the real Season build: the shared pool, the quick draft and the live race path.</p>
+    <div class="tiles">
+      <div class="tile"><span class="label">Stat test</span><span class="big data">1,600</span><p>races, 4 drivers a race get a bump, 23 runs each</p></div>
+      <div class="tile"><span class="label">Tracks test</span><span class="big data">810</span><p>races, each run 4 ways: favours off, on, ×3, widened</p></div>
+      <div class="tile"><span class="label">Season test</span><span class="big data">200</span><p>full seasons, each played 3 ways: all CPU, plain you, sharp you</p></div>
+      <div class="tile"><span class="label">Fixes tried</span><span class="big data">5</span><p>stat tunes and 3 draft or car ideas, on the same seeds</p></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="f1">
+    <div class="sechead"><span class="label">Finding 1</span><h2 id="f1">Eleven stats, four that matter</h2>
+      <p>Give a driver a +10% card and see how many points a race it adds. Speed is in a league of its own. Power is a distant second. Seven stats sit near zero.</p></div>
+
+    <figure>
+      <figcaption><span class="t">Points a race from one +10% card</span><span class="note">Today's game. Average over 6,400 driver-races per stat; ± about 0.1.</span></figcaption>
+      <div class="hbars" role="img" aria-label="Points per race from a +10% card by stat: Speed 2.65, Power 0.89, Aggression 0.39, Consistency 0.36, Acceleration 0.32, Pit Crew 0.09, Endurance 0.06, Luck 0.04, Grip 0.02, Reliability 0.01, Tyre Management about 0.">
+        <div class="hrow"><span class="name">Speed</span><div class="bar today" title="Speed: +2.65 pts/race"><i style="width:84%"></i><span class="v">+2.65</span></div></div>
+        <div class="hrow"><span class="name">Power</span><div class="bar today" title="Power: +0.89 pts/race"><i style="width:28.2%"></i><span class="v">+0.89</span></div></div>
+        <div class="hrow"><span class="name">Aggression</span><div class="bar today" title="Aggression: +0.39"><i style="width:12.4%"></i><span class="v">+0.39</span></div></div>
+        <div class="hrow"><span class="name">Consistency</span><div class="bar today" title="Consistency: +0.36"><i style="width:11.4%"></i><span class="v">+0.36</span></div></div>
+        <div class="hrow"><span class="name">Acceleration</span><div class="bar today" title="Acceleration: +0.32"><i style="width:10.2%"></i><span class="v">+0.32</span></div></div>
+        <div class="hrow"><span class="name">Pit Crew</span><div class="bar today" title="Pit Crew: +0.09"><i style="width:2.9%"></i><span class="v">+0.09</span></div></div>
+        <div class="hrow"><span class="name">Endurance</span><div class="bar today" title="Endurance: +0.06"><i style="width:1.9%"></i><span class="v">+0.06</span></div></div>
+        <div class="hrow"><span class="name">Luck</span><div class="bar today" title="Luck: +0.04"><i style="width:1.3%"></i><span class="v">+0.04</span></div></div>
+        <div class="hrow"><span class="name">Grip</span><div class="bar today" title="Grip: +0.02"><i style="width:0.6%"></i><span class="v">+0.02</span></div></div>
+        <div class="hrow"><span class="name">Reliability</span><div class="bar today" title="Reliability: +0.01"><i style="width:0.3%"></i><span class="v">+0.01</span></div></div>
+        <div class="hrow"><span class="name">Tyre Mgmt</span><div class="bar today" title="Tyre Management: about 0 (measured −0.09, within noise)"><i style="width:0"></i><span class="v">≈ 0</span></div></div>
+      </div>
+    </figure>
+
+    <h3>Two reasons it's lopsided</h3>
+    <div class="two">
+      <figure>
+        <figcaption><span class="t">1 · A "+10%" card isn't the same size everywhere</span><span class="note">How far one +10% card moves a stat on the Paddock's 0–100 grade scale.</span></figcaption>
+        <div class="hbars" role="img" aria-label="Grade points from a +10% card: Speed, Acceleration, Endurance 33; Consistency, Luck, Aggression 11; car and team stats 7.5.">
+          <div class="hrow"><span class="name">Speed · Accel · Endurance</span><div class="bar today" title="+33 grade points"><i style="width:80%"></i><span class="v">+33</span></div></div>
+          <div class="hrow"><span class="name">Consistency · Luck · Aggression</span><div class="bar today" title="+11 grade points"><i style="width:26.7%"></i><span class="v">+11</span></div></div>
+          <div class="hrow"><span class="name">Car &amp; team stats</span><div class="bar today" title="+7.5 grade points"><i style="width:18.2%"></i><span class="v">+7.5</span></div></div>
+        </div>
+        <p class="note">A card multiplies the raw number, and the raw numbers live on different scales (Speed sits near 1.0, Luck near 0.55, a car near 3 stars).</p>
+      </figure>
+      <figure>
+        <figcaption><span class="t">2 · The engine cares about some stats far more</span><span class="note">Points a race from the same-sized bump on every stat (one standard deviation).</span></figcaption>
+        <div class="tiles" style="grid-template-columns:1fr 1fr">
+          <div class="tile"><span class="label">Strongest · Power</span><span class="big data">3.31</span><p>points a race</p></div>
+          <div class="tile"><span class="label">Weakest · Reliability</span><span class="big data">0.05</span><p>points a race</p></div>
+        </div>
+        <p class="note">A 66× gap. Reliability only acts through rare breakdowns, so it can't matter much without more DNFs. That one needs an engine change; the rest are dials.</p>
+      </figure>
+    </div>
+
+    <figure>
+      <figcaption><span class="t">What a test tune did to the gap</span><span class="note">Points a race per same-sized bump. Today vs a test tune of 17 existing dials (not shipped).</span></figcaption>
+      <div class="legend"><span class="key"><span class="sw today"></span>Today</span><span class="key"><span class="sw fix"></span>Test tune</span></div>
+      <div class="hbars" role="img" aria-label="Per-SD value today vs test tune for each stat.">
+        <div class="hrow"><span class="name">Power</span><div class="track"><div class="bar today" title="Today 3.31"><i style="width:86%"></i><span class="v">3.31</span></div><div class="bar fix" title="Test tune 1.40"><i style="width:36.4%"></i><span class="v">1.40</span></div></div></div>
+        <div class="hrow"><span class="name">Speed</span><div class="track"><div class="bar today" title="Today 2.15"><i style="width:55.8%"></i><span class="v">2.15</span></div><div class="bar fix" title="Test tune 1.48"><i style="width:38.4%"></i><span class="v">1.48</span></div></div></div>
+        <div class="hrow"><span class="name">Aggression</span><div class="track"><div class="bar today" title="Today 1.02"><i style="width:26.5%"></i><span class="v">1.02</span></div><div class="bar fix" title="Test tune 1.26"><i style="width:32.7%"></i><span class="v">1.26</span></div></div></div>
+        <div class="hrow"><span class="name">Grip</span><div class="track"><div class="bar today" title="Today 0.23"><i style="width:6%"></i><span class="v">0.23</span></div><div class="bar fix" title="Test tune 1.14"><i style="width:29.6%"></i><span class="v">1.14</span></div></div></div>
+        <div class="hrow"><span class="name">Tyre Mgmt</span><div class="track"><div class="bar today" title="Today 0.13"><i style="width:3.4%"></i><span class="v">0.13</span></div><div class="bar fix" title="Test tune 1.06"><i style="width:27.5%"></i><span class="v">1.06</span></div></div></div>
+        <div class="hrow"><span class="name">Consistency</span><div class="track"><div class="bar today" title="Today 1.01"><i style="width:26.2%"></i><span class="v">1.01</span></div><div class="bar fix" title="Test tune 0.90"><i style="width:23.4%"></i><span class="v">0.90</span></div></div></div>
+        <div class="hrow"><span class="name">Acceleration</span><div class="track"><div class="bar today" title="Today 0.38"><i style="width:9.9%"></i><span class="v">0.38</span></div><div class="bar fix" title="Test tune 0.78"><i style="width:20.3%"></i><span class="v">0.78</span></div></div></div>
+        <div class="hrow"><span class="name">Endurance</span><div class="track"><div class="bar today" title="Today 0.11"><i style="width:2.9%"></i><span class="v">0.11</span></div><div class="bar fix" title="Test tune 0.77"><i style="width:20%"></i><span class="v">0.77</span></div></div></div>
+        <div class="hrow"><span class="name">Pit Crew</span><div class="track"><div class="bar today" title="Today 0.33"><i style="width:8.6%"></i><span class="v">0.33</span></div><div class="bar fix" title="Test tune 0.65"><i style="width:16.9%"></i><span class="v">0.65</span></div></div></div>
+        <div class="hrow"><span class="name">Luck</span><div class="track"><div class="bar today" title="Today 0.08"><i style="width:2.1%"></i><span class="v">0.08</span></div><div class="bar fix" title="Test tune 0.57"><i style="width:14.8%"></i><span class="v">0.57</span></div></div></div>
+        <div class="hrow"><span class="name">Reliability</span><div class="track"><div class="bar today" title="Today 0.05"><i style="width:1.3%"></i><span class="v">0.05</span></div><div class="bar fix" title="Test tune 0.08"><i style="width:2.1%"></i><span class="v">0.08</span></div></div></div>
+      </div>
+      <p class="note">Strongest ÷ weakest (leaving out Reliability): <span class="data">41×</span> today → <span class="data">2.6×</span> with the tune.</p>
+    </figure>
+
+    <h3>What the tune costs in race feel</h3>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Race check</th><th>Healthy range</th><th>Today</th><th>Test tune</th></tr></thead>
+        <tbody>
+          <tr><td>The better package finishes ahead</td><td class="num">F1 ≈ 0.70</td><td class="num">0.71</td><td class="num">0.62</td></tr>
+          <tr><td>Grid position predicts the finish</td><td class="num">0.40–0.85</td><td class="num">0.70</td><td class="num">0.48</td></tr>
+          <tr><td>Pole-sitter wins</td><td class="num">15–60%</td><td class="num">25%</td><td class="num">14% <span class="chip warn">! edge</span></td></tr>
+          <tr><td>Finishers a lap down</td><td class="num">≤ 40%</td><td class="num">29%</td><td class="num">41% <span class="chip warn">! edge</span></td></tr>
+          <tr><td>Battles a race</td><td class="num">10–100</td><td class="num">45</td><td class="num">21</td></tr>
+          <tr><td>Passes a race</td><td class="num">20–120</td><td class="num">72</td><td class="num">72</td></tr>
+          <tr><td>Did not finish</td><td class="num">8–25%</td><td class="num">15.5%</td><td class="num">14.7%</td></tr>
+          <tr><td>Safety cars a race</td><td class="num">0.3–1.2</td><td class="num">0.66</td><td class="num">0.60</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">When more stats matter, each matters a bit less, so races get a little less predictable and qualifying predicts less. One dial to keep low: Acceleration above about 1.5× makes slow starters 30% slower after every pit stop, and 60% of finishers get lapped.</p>
+  </section>
+
+  <section aria-labelledby="f2">
+    <div class="sechead"><span class="label">Finding 2</span><h2 id="f2">Tracks and weather: same winners</h2>
+      <p>Each race favours some stats (+10% for everyone). If favours worked, the driver best suited to them would win much more often. They barely move.</p></div>
+
+    <figure>
+      <figcaption><span class="t">How often the best-suited driver wins, by track</span><span class="note">810 races, the same seeds with favours off and on. Random would be 5% (dashed line).</span></figcaption>
+      <div class="legend"><span class="key"><span class="sw today"></span>Favours off</span><span class="key"><span class="sw fix"></span>Favours on (+10%)</span></div>
+      <div class="hbars" role="img" aria-label="Best-suited driver win rate by track, favours off vs on: Speed+Power 22 vs 26, Endurance+Tyre Management 10 vs 12, Aggression+Reliability 7 vs 11, Acceleration+Pit Crew 9 vs 10, Consistency+Grip 7 vs 9, Luck+Reliability 3 vs 4.">
+        <div class="hrow"><span class="name">Speed + Power</span><div class="track"><span class="refline" style="--x:12.5"></span><div class="bar today" title="Off 22%"><i style="width:55%"></i><span class="v">22%</span></div><div class="bar fix" title="On 26%"><i style="width:65%"></i><span class="v">26%</span></div></div></div>
+        <div class="hrow"><span class="name">Endurance + Tyre Mgmt</span><div class="track"><span class="refline" style="--x:12.5"></span><div class="bar today" title="Off 10%"><i style="width:25%"></i><span class="v">10%</span></div><div class="bar fix" title="On 12%"><i style="width:30%"></i><span class="v">12%</span></div></div></div>
+        <div class="hrow"><span class="name">Aggression + Reliability</span><div class="track"><span class="refline" style="--x:12.5"></span><div class="bar today" title="Off 7%"><i style="width:17.5%"></i><span class="v">7%</span></div><div class="bar fix" title="On 11%"><i style="width:27.5%"></i><span class="v">11%</span></div></div></div>
+        <div class="hrow"><span class="name">Acceleration + Pit Crew</span><div class="track"><span class="refline" style="--x:12.5"></span><div class="bar today" title="Off 9%"><i style="width:22.5%"></i><span class="v">9%</span></div><div class="bar fix" title="On 10%"><i style="width:25%"></i><span class="v">10%</span></div></div></div>
+        <div class="hrow"><span class="name">Consistency + Grip</span><div class="track"><span class="refline" style="--x:12.5"></span><div class="bar today" title="Off 7%"><i style="width:17.5%"></i><span class="v">7%</span></div><div class="bar fix" title="On 9%"><i style="width:22.5%"></i><span class="v">9%</span></div></div></div>
+        <div class="hrow"><span class="name">Luck + Reliability</span><div class="track"><span class="refline" style="--x:12.5"></span><div class="bar today" title="Off 3%"><i style="width:7.5%"></i><span class="v">3%</span></div><div class="bar fix" title="On 4%"><i style="width:10%"></i><span class="v">4%</span></div></div></div>
+      </div>
+    </figure>
+
+    <div class="tiles">
+      <div class="tile"><span class="label">All tracks · off</span><span class="big data">9.4%</span><p>best-suited driver wins</p></div>
+      <div class="tile"><span class="label">All tracks · on</span><span class="big data">11.7%</span><p>about the noise level (±1)</p></div>
+      <div class="tile"><span class="label">Favour ×3</span><span class="big data">9.4%</span><p>a bigger favour doesn't help</p></div>
+      <div class="tile"><span class="label">Gap widened +50%</span><span class="big data">11.6%</span><p>Speed + Power jumps to 34%</p></div>
+    </div>
+    <p>Only Speed + Power has any bite, because those are the two stats that decide races today (Finding 1). The other tracks favour stats that barely matter, so even a huge favour can't make anyone strong. Rain isn't in the game yet, so Wet strategy is untested.</p>
+  </section>
+
+  <section aria-labelledby="f3">
+    <div class="sechead"><span class="label">Finding 3</span><h2 id="f3">The draft crowns the champion</h2>
+      <p>Over 200 seasons, titles are settled early and the draft slot predicts the winner.</p></div>
+
+    <div class="tiles">
+      <div class="tile"><span class="label">Leader takes over for good</span><span class="big data">Race 2</span><p>median; target race 8+</p></div>
+      <div class="tile"><span class="label">No lead change after race 3</span><span class="big data">66%</span><p>of seasons</p></div>
+      <div class="tile"><span class="label">Champion was 3rd+ at halfway</span><span class="big data">8%</span><p>comebacks are rare; target 20–40%</p></div>
+      <div class="tile"><span class="label">Winning margin</span><span class="big data">110</span><p>points, median (about four wins)</p></div>
+    </div>
+
+    <div class="two">
+      <figure>
+        <figcaption><span class="t">Title rate by draft slot</span><span class="note">Slot 1 picks first in round 1. Fair would be about 10% each.</span></figcaption>
+        <div class="vbars" role="img" aria-label="Title rate by draft slot 1 to 10: 2, 2, 2, 3, 8, 8, 8, 13, 24, 30 percent.">
+          <span class="band" style="bottom:25%"><span>10%</span></span>
+          <div class="vcol" title="Slot 1: 2%"><span class="v">2</span><i style="height:5%"></i></div>
+          <div class="vcol" title="Slot 2: 2%"><span class="v">2</span><i style="height:5%"></i></div>
+          <div class="vcol" title="Slot 3: 2%"><span class="v">2</span><i style="height:5%"></i></div>
+          <div class="vcol" title="Slot 4: 3%"><span class="v">3</span><i style="height:7.5%"></i></div>
+          <div class="vcol" title="Slot 5: 8%"><span class="v">8</span><i style="height:20%"></i></div>
+          <div class="vcol" title="Slot 6: 8%"><span class="v">8</span><i style="height:20%"></i></div>
+          <div class="vcol" title="Slot 7: 8%"><span class="v">8</span><i style="height:20%"></i></div>
+          <div class="vcol" title="Slot 8: 13%"><span class="v">13</span><i style="height:32.5%"></i></div>
+          <div class="vcol" title="Slot 9: 24%"><span class="v">24</span><i style="height:60%"></i></div>
+          <div class="vcol" title="Slot 10: 30%"><span class="v">30</span><i style="height:75%"></i></div>
+        </div>
+        <div class="vaxis"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span></div>
+      </figure>
+      <figure>
+        <figcaption><span class="t">Title rate by car pick</span><span class="note">1 = the team that took the first car. That pick always belongs to slot 10.</span></figcaption>
+        <div class="vbars" role="img" aria-label="Title rate by car pick order 1 to 10: 30, 24, 13, 8, 8, 8, 3, 2, 2, 2 percent.">
+          <span class="band" style="bottom:25%"><span>10%</span></span>
+          <div class="vcol" title="1st car: 30%"><span class="v">30</span><i style="height:75%"></i></div>
+          <div class="vcol" title="2nd car: 24%"><span class="v">24</span><i style="height:60%"></i></div>
+          <div class="vcol" title="3rd car: 13%"><span class="v">13</span><i style="height:32.5%"></i></div>
+          <div class="vcol" title="4th car: 8%"><span class="v">8</span><i style="height:20%"></i></div>
+          <div class="vcol" title="5th car: 8%"><span class="v">8</span><i style="height:20%"></i></div>
+          <div class="vcol" title="6th car: 8%"><span class="v">8</span><i style="height:20%"></i></div>
+          <div class="vcol" title="7th car: 3%"><span class="v">3</span><i style="height:7.5%"></i></div>
+          <div class="vcol" title="8th car: 2%"><span class="v">2</span><i style="height:5%"></i></div>
+          <div class="vcol" title="9th car: 2%"><span class="v">2</span><i style="height:5%"></i></div>
+          <div class="vcol" title="10th car: 2%"><span class="v">2</span><i style="height:5%"></i></div>
+        </div>
+        <div class="vaxis"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span></div>
+      </figure>
+    </div>
+
+    <div class="callout">
+      <p><b>Why:</b> a car counts for both of a team's drivers, Power is the strongest stat, and the best of ten rack cars is usually an outlier. <b>62% of champions drive a 5★ Power car.</b> The snake runs the car round (round 4) in reverse, so slot 10 takes picks 10, 11, 30, 31 and then the first car, in 200 of 200 seeds.</p>
+    </div>
+
+    <h3>What I tried on the draft</h3>
+    <div class="multiples">
+      <figure>
+        <figcaption><span class="t">Today</span><span class="note">Top slot wins 30%</span></figcaption>
+        <div class="vbars" role="img" aria-label="Today: 2 2 2 3 8 8 8 13 24 30">
+          <span class="band" style="bottom:25%"></span>
+          <div class="vcol"><span class="v">2</span><i style="height:5%"></i></div><div class="vcol"><span class="v">2</span><i style="height:5%"></i></div><div class="vcol"><span class="v">2</span><i style="height:5%"></i></div><div class="vcol"><span class="v">3</span><i style="height:7.5%"></i></div><div class="vcol"><span class="v">8</span><i style="height:20%"></i></div><div class="vcol"><span class="v">8</span><i style="height:20%"></i></div><div class="vcol"><span class="v">8</span><i style="height:20%"></i></div><div class="vcol"><span class="v">13</span><i style="height:32.5%"></i></div><div class="vcol"><span class="v">24</span><i style="height:60%"></i></div><div class="vcol"><span class="v">30</span><i style="height:75%"></i></div>
+        </div>
+        <div class="vaxis"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span></div>
+      </figure>
+      <figure>
+        <figcaption><span class="t">Cars drafted first</span><span class="note">The advantage moves to slot 1 (33%)</span></figcaption>
+        <div class="vbars" role="img" aria-label="Cars first: 33 20 15 8 6 7 2 4 4 2">
+          <span class="band" style="bottom:25%"></span>
+          <div class="vcol fix"><span class="v">33</span><i style="height:82.5%"></i></div><div class="vcol fix"><span class="v">20</span><i style="height:50%"></i></div><div class="vcol fix"><span class="v">15</span><i style="height:37.5%"></i></div><div class="vcol fix"><span class="v">8</span><i style="height:20%"></i></div><div class="vcol fix"><span class="v">6</span><i style="height:15%"></i></div><div class="vcol fix"><span class="v">7</span><i style="height:17.5%"></i></div><div class="vcol fix"><span class="v">2</span><i style="height:5%"></i></div><div class="vcol fix"><span class="v">4</span><i style="height:10%"></i></div><div class="vcol fix"><span class="v">4</span><i style="height:10%"></i></div><div class="vcol fix"><span class="v">2</span><i style="height:5%"></i></div>
+        </div>
+        <div class="vaxis"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span></div>
+      </figure>
+      <figure>
+        <figcaption><span class="t">Weakest squad picks first car</span><span class="note">Slot 10 still wins 30%: by the AI's rankings, it <i>is</i> the weakest squad</span></figcaption>
+        <div class="vbars" role="img" aria-label="Weakest squad first: 2 2 9 4 6 5 8 14 20 30">
+          <span class="band" style="bottom:25%"></span>
+          <div class="vcol fix"><span class="v">2</span><i style="height:5%"></i></div><div class="vcol fix"><span class="v">2</span><i style="height:5%"></i></div><div class="vcol fix"><span class="v">9</span><i style="height:22.5%"></i></div><div class="vcol fix"><span class="v">4</span><i style="height:10%"></i></div><div class="vcol fix"><span class="v">6</span><i style="height:15%"></i></div><div class="vcol fix"><span class="v">5</span><i style="height:12.5%"></i></div><div class="vcol fix"><span class="v">8</span><i style="height:20%"></i></div><div class="vcol fix"><span class="v">14</span><i style="height:35%"></i></div><div class="vcol fix"><span class="v">20</span><i style="height:50%"></i></div><div class="vcol fix"><span class="v">30</span><i style="height:75%"></i></div>
+        </div>
+        <div class="vaxis"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span></div>
+      </figure>
+      <figure>
+        <figcaption><span class="t">Half the car spread + stat tune</span><span class="note">Every slot lands at 6–18%</span></figcaption>
+        <div class="vbars" role="img" aria-label="Half car spread with stat tune: 8 10 10 8 9 8 6 8 15 18">
+          <span class="band" style="bottom:25%"></span>
+          <div class="vcol fix"><span class="v">8</span><i style="height:20%"></i></div><div class="vcol fix"><span class="v">10</span><i style="height:25%"></i></div><div class="vcol fix"><span class="v">10</span><i style="height:25%"></i></div><div class="vcol fix"><span class="v">8</span><i style="height:20%"></i></div><div class="vcol fix"><span class="v">9</span><i style="height:22.5%"></i></div><div class="vcol fix"><span class="v">8</span><i style="height:20%"></i></div><div class="vcol fix"><span class="v">6</span><i style="height:15%"></i></div><div class="vcol fix"><span class="v">8</span><i style="height:20%"></i></div><div class="vcol fix"><span class="v">15</span><i style="height:37.5%"></i></div><div class="vcol fix"><span class="v">18</span><i style="height:45%"></i></div>
+        </div>
+        <div class="vaxis"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span></div>
+      </figure>
+    </div>
+    <p class="note">Title rate by draft slot, 200 all-CPU seasons each. Dashed line = 10%. "Half the car spread" = car stars count half as far from 3★ (a 5★ car plays like 4★, a 1★ like 2★).</p>
+
+    <h3>How the whole season shape changes</h3>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Season signal</th><th>Target</th><th>Today</th><th>Stat tune</th><th>+ half car spread</th></tr></thead>
+        <tbody>
+          <tr><td>Leader takes over for good (median)</td><td class="num">race 8+</td><td class="num">R2</td><td class="num">R3</td><td class="num hl">R5</td></tr>
+          <tr><td>Settled by race 6</td><td class="num">≤ 15%</td><td class="num">79%</td><td class="num">72%</td><td class="num hl">62%</td></tr>
+          <tr><td>No lead change after race 3</td><td class="num">rare</td><td class="num">66%</td><td class="num">50%</td><td class="num hl">38%</td></tr>
+          <tr><td>Champion 3rd or worse at halfway</td><td class="num">20–40%</td><td class="num">8%</td><td class="num">16%</td><td class="num hl">16%</td></tr>
+          <tr><td>Winning margin (median)</td><td class="num">—</td><td class="num">110</td><td class="num">80</td><td class="num hl">62</td></tr>
+          <tr><td>5+ different race winners</td><td class="num">most</td><td class="num">50%</td><td class="num">74%</td><td class="num hl">84%</td></tr>
+          <tr><td>One driver wins 6+ of 10</td><td class="num">rare</td><td class="num">23%</td><td class="num">10%</td><td class="num hl">7%</td></tr>
+          <tr><td>Title rate by draft slot</td><td class="num">5–20% each</td><td class="num">2–30%</td><td class="num">4–31%</td><td class="num hl">6–18%</td></tr>
+          <tr><td>First car pick's title share</td><td class="num">—</td><td class="num">30%</td><td class="num">31%</td><td class="num hl">18%</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">Better on every row, but the title still settles by race 5. The next lever would be packs for CPU teams too (they get none today).</p>
+  </section>
+
+  <section aria-labelledby="works">
+    <div class="sechead"><span class="label">The bright spot</span><h2 id="works">What already works</h2></div>
+    <div class="tiles">
+      <div class="tile"><span class="label">Gold or better card</span><span class="big data">84%</span><p>of seasons (target 80%+)</p></div>
+      <div class="tile"><span class="label">An Iridium card</span><span class="big data">34%</span><p>of seasons (target 20–40%)</p></div>
+      <div class="tile"><span class="label">Trait cards</span><span class="big data">2.5</span><p>a season (target 2–3)</p></div>
+      <div class="tile"><span class="label">The lineup call</span><span class="big data">12.8</span><p>points a race between your best and worst 2 of 3</p></div>
+    </div>
+
+    <figure>
+      <figcaption><span class="t">Your title rate, by how you play</span><span class="note">Same 200 seasons. Any one team would win 10% by chance (dashed). The AI drafts for you in this test.</span></figcaption>
+      <div class="hbars" role="img" aria-label="Title rate: sharp play 18%, CPU default 12%, plain play 6%.">
+        <div class="hrow"><span class="name">Sharp play</span><div class="track"><span class="refline" style="--x:33.3"></span><div class="bar today" title="18%"><i style="width:60%"></i><span class="v">18%</span></div></div></div>
+        <div class="hrow"><span class="name">CPU default</span><div class="track"><span class="refline" style="--x:33.3"></span><div class="bar today" title="12%"><i style="width:40%"></i><span class="v">12%</span></div></div></div>
+        <div class="hrow"><span class="name">Plain play</span><div class="track"><span class="refline" style="--x:33.3"></span><div class="bar today" title="6%"><i style="width:20%"></i><span class="v">6%</span></div></div></div>
+      </div>
+      <p class="note">Sharp = best 2 of 3 by stats, smart pack placement. Plain = random 2 of 3, pack card anywhere. Sharp play is worth about 31 points a season over plain: skill pays, but no stomp.</p>
+    </figure>
+
+    <h3>The champion bonus (your 25 / 50 / 75 question)</h3>
+    <p>How often the drivers'-champion bonus changes who wins the title. The healthy range is 5–20%: less and it's decoration, more and the drivers' title becomes the real game. In-range cells are outlined.</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Bonus</th><th>Today</th><th>Stat tune</th><th>+ half car spread</th></tr></thead>
+        <tbody>
+          <tr><td>25 (one win)</td><td class="num inband">10%</td><td class="num inband">13%</td><td class="num inband">17%</td></tr>
+          <tr><td>35</td><td class="num inband">14%</td><td class="num inband">18%</td><td class="num inband">20%</td></tr>
+          <tr><td>40</td><td class="num inband">16%</td><td class="num inband">19%</td><td class="num">24%</td></tr>
+          <tr><td>50 (now)</td><td class="num inband">19%</td><td class="num">23%</td><td class="num">28%</td></tr>
+          <tr><td>75</td><td class="num">23%</td><td class="num">27%</td><td class="num">37%</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">Today the bonus is the only late swing in most seasons. As titles open up, the same bonus flips more of them.</p>
+  </section>
+
+  <section aria-labelledby="fun">
+    <div class="sechead"><span class="label">Fun Check scorecard · today</span><h2 id="fun">Two of six pass</h2>
+      <p>Scored against the six signals in <a href="https://github.com/GrizzlyPax/Parabolica/blob/main/docs/FUN_CHECK.md">FUN_CHECK</a>.</p></div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Signal</th><th>Result</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td>Title alive late</td><td><span class="chip bad">✗ fails</span></td><td>Leader settles by race 2; target race 8+</td></tr>
+          <tr><td>Comebacks</td><td><span class="chip bad">✗ fails</span></td><td>No lead change after race 3 in most seasons; comeback champion 8%</td></tr>
+          <tr><td>Paddock choices matter</td><td><span class="chip good">✓ passes</span></td><td>12.8 points a race on the lineup call</td></tr>
+          <tr><td>Pack moments</td><td><span class="chip warn">! mixed</span></td><td>Pull odds land in range, but cards on 7 of 11 stats barely move a result</td></tr>
+          <tr><td>Fair fight</td><td><span class="chip good">✓ passes</span></td><td>Sharp play 18%, plain 6%, no stomp either way</td></tr>
+          <tr><td>Variety</td><td><span class="chip bad">✗ fails</span></td><td>Draft slot 2–30%; one driver wins 6+ in 23% of seasons</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section aria-labelledby="fx">
+    <div class="sechead"><span class="label">Looking ahead · v0.6</span><h2 id="fx">What this means for effect cards</h2></div>
+    <ul class="plain">
+      <li><b>Effects wait on even stats.</b> "Speed Down 5%" and "Luck Down 5%" mean wildly different things today, so effect sizes only make sense after Finding 1 is fixed.</li>
+      <li><b>In-race effects are flavour by size.</b> A 2-lap effect covers about an eighth of a 15-lap race, so it can't swing results much. Fine, as long as you can see it (tower icon, feed line).</li>
+      <li><b>Carried effects are the ones that change a season.</b> An effect that lasts 2 races is a temporary card, and it makes the lineup call bigger: race the shaken driver, or bench him?</li>
+      <li><b>Card sizes should be set in points, not percent.</b> Once stats are even, each metal should be worth a fixed share: Bronze 1 · Silver 2.5 · Gold 5 · Iridium 7.5, with an Iridium worth about one podium place a race, not a win.</li>
+    </ul>
+  </section>
+
+  <footer>
+    <span class="label">Sources</span>
+    <ul>
+      <li><a href="https://github.com/GrizzlyPax/Parabolica/issues/457#issuecomment-6072166431">Stat parity read</a> · the full table, all 17 dials, repro seeds</li>
+      <li><a href="https://github.com/GrizzlyPax/Parabolica/issues/362#issuecomment-6072166589">Tracks &amp; Weather read</a></li>
+      <li><a href="https://github.com/GrizzlyPax/Parabolica/issues/324#issuecomment-6072166785">Season balance read</a></li>
+      <li><a href="https://github.com/GrizzlyPax/Parabolica/issues/333#issuecomment-6072166949">Effect card design draft</a> · <a href="https://github.com/GrizzlyPax/Parabolica/issues/335#issuecomment-6072168775">ladder plan</a></li>
+    </ul>
+    <p>Engine v0.5.0. Every race runs the live Season build on fixed seeds. The test scripts are throwaway and not in the repo. Nothing in the game has changed.</p>
+  </footer>
+</div>
+</body>
+</html>
