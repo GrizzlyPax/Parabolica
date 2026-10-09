@@ -310,7 +310,28 @@ button.rt-g:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset:
 .pk-turn li.now { background: var(--team-primary); border-color: var(--team-primary); color: var(--team-ink); }
 .pk-turn .rs-btn { height: 40px; margin-left: auto; }
 .pk-priority b { font-style: normal; color: var(--pw-text-1); }
-.pk-sealed { width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; border: 2px solid var(--pw-text-1); color: var(--pw-text-1); }
+/* The sealed pack: it should look like it wants opening (Pax, Oct 9) — a shimmer and three twinkles */
+.pk-sealed {
+  position: relative; overflow: hidden; width: 56px; height: 72px; flex: none; cursor: pointer; padding: 0; border-radius: 0;
+  display: inline-flex; align-items: center; justify-content: center; color: var(--pw-text-1);
+  border: 2px solid var(--pw-text-1);
+  background: repeating-linear-gradient(-45deg, color-mix(in srgb, var(--pw-text-1) 16%, var(--pw-ground)) 0 8px, var(--pw-ground) 8px 15px);
+  animation: pk-bob 2.4s ease-in-out infinite;
+}
+.pk-sealed:hover, .pk-sealed:focus-visible { outline: 2px solid var(--team-primary); outline-offset: 3px; }
+.pk-sealed::after {
+  content: ""; position: absolute; inset: -20% -60%; pointer-events: none;
+  background: linear-gradient(105deg, transparent 40%, color-mix(in srgb, var(--pw-text-1) 55%, transparent) 50%, transparent 60%);
+  animation: pk-shine 2.4s ease-in-out infinite;
+}
+.pk-twinkle { position: absolute; width: 6px; height: 6px; background: var(--pw-text-1); clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%); animation: pk-twinkle 1.8s ease-in-out infinite; pointer-events: none; }
+.pk-twinkle.a { top: 6px; left: 6px; }
+.pk-twinkle.b { top: 14px; right: 6px; animation-delay: 0.6s; width: 8px; height: 8px; }
+.pk-twinkle.c { bottom: 8px; left: 18px; animation-delay: 1.2s; }
+@keyframes pk-shine { 0% { transform: translateX(-60%); } 60%, 100% { transform: translateX(60%); } }
+@keyframes pk-twinkle { 0%, 100% { opacity: 0; transform: scale(0.4); } 50% { opacity: 1; transform: scale(1); } }
+@keyframes pk-bob { 0%, 100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-3px) rotate(2deg); } }
+@media (prefers-reduced-motion: reduce) { .pk-sealed, .pk-sealed::after, .pk-twinkle { animation: none; } }
 .pk-hint { margin: 0; }
 .pk-league { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 18px 28px; align-items: start; }
 .pk-chart { border-top: 1px solid var(--pw-text-1); padding-top: 8px; display: grid; gap: 6px; }

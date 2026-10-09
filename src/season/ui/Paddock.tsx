@@ -273,11 +273,13 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo }: 
       {priorityLine}
       {pack && myTurn && (
         <div className="pk-pack">
-          {revealed ? <CardChip card={pack.card} size={44} held onClick={() => setDetail({ card: pack.card })} /> : <span className="pk-sealed"><GameIcon name="season.pack" size={26} /></span>}
+          {revealed
+            ? <CardChip card={pack.card} size={44} held onClick={() => setDetail({ card: pack.card })} />
+            : <button type="button" className="pk-sealed" onClick={() => setRevealing(true)} aria-label={`Open your ${TIER_LABEL[pack.tier]} pack`}><GameIcon name="season.pack" size={30} /><i className="pk-twinkle a" /><i className="pk-twinkle b" /><i className="pk-twinkle c" /></button>}
           <div className="pk-pack-text">
             <span className="rs-k pk-pack-k">Base deck · {TIER_LABEL[pack.tier]} pack</span>
             <b>{revealed ? pack.card.name : 'Sealed'}</b>
-            <span className="rs-hint">{revealed ? hint : 'Open it to see the card.'}</span>
+            <span className="rs-hint">{revealed ? hint : 'Tap the pack to open it.'}</span>
           </div>
         </div>
       )}
@@ -360,6 +362,8 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo }: 
   const drivers = driverStandings(facts);
   const teamOfDriver = (id: number) => Object.keys(rosters).find(t => rosters[t].driverIds.includes(id))!;
   const humans = facts.setup.humans.map(h => h.teamId);
+  /** Top-three finishes by a team's drivers, all season (a double podium counts twice). */
+  const teamPodiums = (teamId: string) => facts.results.reduce((n, r) => n + r.finishOrder.slice(0, 3).filter(id => rosters[teamId].driverIds.includes(id)).length, 0);
   const leagueTab = (
     <>
       <p className="pk-priority">
@@ -374,13 +378,14 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo }: 
         <div className="pk-tables">
           <div className="rt-scroll">
             <table className="rt rt-compact">
-              <thead><tr><th className="rt-pos">Pos</th><th className="rt-name">Constructors</th><th className="rt-numcol">Wins</th><th className="rt-numcol">Pts</th></tr></thead>
+              <thead><tr><th className="rt-pos">Pos</th><th className="rt-name">Constructors</th><th className="rt-numcol">Wins</th><th className="rt-numcol">Pod</th><th className="rt-numcol">Pts</th></tr></thead>
               <tbody>
                 {standings.map(s => (
                   <tr key={s.teamId} className={humans.includes(s.teamId) ? 'mine' : ''}>
                     <td className="rt-pos">{s.rank}</td>
                     <th className="rt-name" scope="row"><TeamLogo team={teams[s.teamId]} size={18} /><span className="rt-nm">{teams[s.teamId].name}</span></th>
                     <td className="rt-numcol">{s.wins}</td>
+                    <td className="rt-numcol">{teamPodiums(s.teamId)}</td>
                     <td className="rt-numcol">{s.points}</td>
                   </tr>
                 ))}
@@ -389,7 +394,7 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo }: 
           </div>
           <div className="rt-scroll">
             <table className="rt rt-compact">
-              <thead><tr><th className="rt-pos">Pos</th><th className="rt-name">Drivers</th><th className="rt-numcol">Wins</th><th className="rt-numcol">Pts</th></tr></thead>
+              <thead><tr><th className="rt-pos">Pos</th><th className="rt-name">Drivers</th><th className="rt-numcol">Wins</th><th className="rt-numcol">Pod</th><th className="rt-numcol">Pts</th></tr></thead>
               <tbody>
                 {drivers.map((d, i) => {
                   const p = pool.drivers.find(x => x.id === d.driverId)!;
@@ -399,6 +404,7 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo }: 
                       <td className="rt-pos">{i + 1}</td>
                       <th className="rt-name" scope="row"><RaceNumber n={p.number} color={t.color} ink={t.ink} size={20} shape="square" className="rt-numsq" /><span className="rt-nm">{p.fullName}</span></th>
                       <td className="rt-numcol">{d.wins}</td>
+                      <td className="rt-numcol">{d.podiums}</td>
                       <td className="rt-numcol">{d.points}</td>
                     </tr>
                   );
