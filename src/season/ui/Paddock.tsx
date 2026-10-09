@@ -33,6 +33,7 @@ import EndSeason from './EndSeason';
 import PackReveal from './PackReveal';
 import { CAR_STATS, CT_STATS, DRIVER_STATS, GradeCell, PAD, ReadingSheet, STAT_ABBR, TEAM_STATS } from './RosterTable';
 import { SeasonChart } from './SeasonChart';
+import { LeagueTables } from './LeagueTables';
 import { humanLabel, teamsOf } from './teams';
 
 interface Props {
@@ -348,10 +349,7 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo }: 
   );
 
   const drivers = driverStandings(facts);
-  const teamOfDriver = (id: number) => Object.keys(rosters).find(t => rosters[t].driverIds.includes(id))!;
   const humans = facts.setup.humans.map(h => h.teamId);
-  /** Top-three finishes by a team's drivers, all season (a double podium counts twice). */
-  const teamPodiums = (teamId: string) => facts.results.reduce((n, r) => n + r.finishOrder.slice(0, 3).filter(id => rosters[teamId].driverIds.includes(id)).length, 0);
   const leagueTab = (
     <>
       <p className="pk-priority">
@@ -364,42 +362,7 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo }: 
           {facts.results.length ? <SeasonChart standings={standings} teams={teams} mine={humans} /> : <p className="rs-hint">The chart starts after round 1.</p>}
         </div>
         <div className="pk-tables">
-          <div className="rt-scroll">
-            <table className="rt rt-compact">
-              <thead><tr><th className="rt-pos">Pos</th><th className="rt-name">Constructors</th><th className="rt-numcol">Wins</th><th className="rt-numcol">Pod</th><th className="rt-numcol">Pts</th></tr></thead>
-              <tbody>
-                {standings.map(s => (
-                  <tr key={s.teamId} className={humans.includes(s.teamId) ? 'mine' : ''}>
-                    <td className="rt-pos">{s.rank}</td>
-                    <th className="rt-name" scope="row"><TeamLogo team={teams[s.teamId]} size={18} /><span className="rt-nm">{teams[s.teamId].name}</span></th>
-                    <td className="rt-numcol">{s.wins}</td>
-                    <td className="rt-numcol">{teamPodiums(s.teamId)}</td>
-                    <td className="rt-numcol">{s.points}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <div className="rt-scroll">
-            <table className="rt rt-compact">
-              <thead><tr><th className="rt-pos">Pos</th><th className="rt-name">Drivers</th><th className="rt-numcol">Wins</th><th className="rt-numcol">Pod</th><th className="rt-numcol">Pts</th></tr></thead>
-              <tbody>
-                {drivers.map((d, i) => {
-                  const p = pool.drivers.find(x => x.id === d.driverId)!;
-                  const t = teams[teamOfDriver(d.driverId)];
-                  return (
-                    <tr key={d.driverId} className={humans.includes(t.id) ? 'mine' : ''}>
-                      <td className="rt-pos">{i + 1}</td>
-                      <th className="rt-name" scope="row"><RaceNumber n={p.number} color={t.color} ink={t.ink} size={20} shape="square" className="rt-numsq" /><Avatar icon={portraitFor(pool.seed, p.id)} color={t.color} size={20} /><span className="rt-nm">{p.fullName}</span></th>
-                      <td className="rt-numcol">{d.wins}</td>
-                      <td className="rt-numcol">{d.podiums}</td>
-                      <td className="rt-numcol">{d.points}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          <LeagueTables facts={facts} pool={pool} teams={teams} rosters={rosters} lines={standings} drivers={drivers} />
         </div>
       </div>
     </>

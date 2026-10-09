@@ -1,14 +1,20 @@
-// Standings + finale (#321, docs/SEASON_MODE.md §5). Mid-season: both tables,
-// with the drivers'-champion bonus shown as "would go to". When every round
-// has run: the champion in their colour, the final table, and Play again
-// (League Setup with a fresh seed; no carry-over in v0.5).
+// Standings + finale (#321, #453 layout A). Mid-season (the Paddock's League tab
+// is the usual way in): the chart and both tables, with the drivers'-champion
+// bonus shown as "would go to". When every round has run: two crowns
+// (constructors' and drivers' champions), the chart, the final tables, and
+// Play again (League Setup with a fresh seed; no carry-over in v0.5).
 import { useMemo } from 'react';
 import { GameIcon, TeamLogo, teamThemeVars } from '../../icons/GameIcon';
 import { draftState } from '../draft';
-import { driverStandings, poolFor, type SeasonFacts } from '../season';
+import { constructorStandings, driverStandings, poolFor, type SeasonFacts } from '../season';
 import { DRIVERS_CHAMPION_BONUS, seasonTable } from '../scoring';
 import { seasonName } from '../setup';
 import EndSeason from './EndSeason';
+import { LeagueTables } from './LeagueTables';
+import { SeasonChart } from './SeasonChart';
+import { RaceNumber } from '../../icons/RaceNumber';
+import { Avatar } from '../../icons/Avatar';
+import { portraitFor } from '../../generators/avatars';
 import { humanLabel, teamsOf } from './teams';
 
 interface Props {
@@ -25,7 +31,9 @@ export default function Standings({ facts, onMenu, onPaddock, onPlayAgain, onEnd
   const table = useMemo(() => seasonTable(facts), [facts]);
   const drivers = useMemo(() => driverStandings(facts), [facts]);
   const rosters = useMemo(() => draftState(pool, facts.draftPicks).rosters, [pool, facts.draftPicks]);
-  const teamOf = (driverId: number) => Object.keys(rosters).find(id => rosters[id].driverIds.includes(driverId))!;
+  const standings = useMemo(() => constructorStandings(facts), [facts]);
+  const humans = facts.setup.humans.map(h => h.teamId);
+  const podiums = (teamId: string) => facts.results.reduce((n, r) => n + r.finishOrder.slice(0, 3).filter(id => rosters[teamId].driverIds.includes(id)).length, 0);
   const driver = (id: number) => pool.drivers.find(d => d.id === id)!;
 
   const champion = table.final ? teams[table.lines[0].teamId] : null;
@@ -35,7 +43,7 @@ export default function Standings({ facts, onMenu, onPaddock, onPlayAgain, onEnd
   const dc = table.driversChampion;
 
   return (
-    <div className="run-setup season-setup ss-standings" style={teamThemeVars(champion ?? you)}>
+    <div className="run-setup season-setup ss-standings fn" style={teamThemeVars(champion ?? you)}>
       <header className="rs-top">
         <div className="rs-title-block">
           <button type="button" className="rs-back" onClick={onMenu}>← Menu</button>
@@ -45,56 +53,41 @@ export default function Standings({ facts, onMenu, onPaddock, onPlayAgain, onEnd
         <EndSeason onEnded={onEndSeason} />
       </header>
 
-      {champion && (
-        <section className="ss-crown">
-          <span className="ss-crown-k"><GameIcon name="season.champion" size={16} /> Constructors’ champion{champLabel ? ` · ${champLabel}` : ''}</span>
-          <TeamLogo team={champion} size={64} />
-          <span className="ss-crown-name">{champion.name}</span>
-          <span className="ss-crown-pts">{table.lines[0].total} points · {table.lines[0].wins} {table.lines[0].wins === 1 ? 'win' : 'wins'}</span>
+      {champion && dc && (
+        <section className="fn-crowns">
+          <div className="fn-crown">
+            <TeamLogo team={champion} size={72} />
+            <div className="fn-crown-text">
+              <span className="rs-k"><GameIcon name="season.champion" size={14} /> Constructors’ champion{champLabel ? ` · ${champLabel}` : ''}</span>
+              <span className="fn-crown-name">{champion.name}</span>
+              <span className="fn-crown-stats">{table.lines[0].total} pts · {table.lines[0].wins} {table.lines[0].wins === 1 ? 'win' : 'wins'} · {podiums(champion.id)} podiums</span>
+            </div>
+          </div>
+          <div className="fn-crown">
+            <RaceNumber n={driver(dc.driver.driverId).number} color={teams[dc.teamId].color} ink={teams[dc.teamId].ink} size={56} shape="square" />
+            <div className="fn-crown-text">
+              <span className="rs-k">Drivers’ champion · +{DRIVERS_CHAMPION_BONUS} to {teams[dc.teamId].name}</span>
+              <span className="fn-crown-name"><Avatar icon={portraitFor(pool.seed, dc.driver.driverId)} color={teams[dc.teamId].color} size={26} /> {driver(dc.driver.driverId).fullName}</span>
+              <span className="fn-crown-stats">{dc.driver.points} pts · {dc.driver.wins} {dc.driver.wins === 1 ? 'win' : 'wins'} · {dc.driver.podiums} podiums</span>
+            </div>
+          </div>
         </section>
       )}
 
-      <section className="rs-row">
-        <div className="rs-row-head"><span className="rs-k">Constructors</span></div>
-        <ol className="ss-table">
-          {table.lines.map(l => {
-            const label = humanLabel(facts, l.teamId);
-            return (
-              <li key={l.teamId} className={`ss-table-row ${label ? 'human' : ''}`}>
-                <span className="ss-table-rank">{l.rank}</span>
-                <TeamLogo team={teams[l.teamId]} size={20} />
-                <span className="ss-team-name">{teams[l.teamId].name}</span>
-                {label && <span className="ss-badge ss-badge-human" style={teamThemeVars(teams[l.teamId])}>{label}</span>}
-                {l.bonus > 0 && <span className="ss-bonus" title="Drivers’ champion bonus">+{l.bonus}</span>}
-                <span className="ss-table-pts">{l.total}</span>
-              </li>
-            );
-          })}
-        </ol>
-        <p className="rs-hint">
-          Race points from both racers, plus <b>{DRIVERS_CHAMPION_BONUS}</b> for the team of the drivers’ champion
-          {dc ? (table.final ? `: ${driver(dc.driver.driverId).fullName}, ${teams[dc.teamId].name}.` : `. Right now it would go to ${teams[dc.teamId].name}.`) : '.'}
-        </p>
-      </section>
+      {facts.results.length > 0 && (
+        <section className="pk-chart">
+          <div className="rs-k">Constructors’ points, race by race</div>
+          <SeasonChart standings={standings} teams={teams} mine={humans} />
+        </section>
+      )}
 
-      <section className="rs-row">
-        <div className="rs-row-head"><span className="rs-k">Drivers</span></div>
-        <ol className="ss-table">
-          {drivers.filter(d => d.points > 0 || facts.results.length === 0).slice(0, 10).map((d, i) => {
-            const p = driver(d.driverId);
-            const team = teams[teamOf(d.driverId)];
-            return (
-              <li key={d.driverId} className="ss-table-row">
-                <span className="ss-table-rank">{i + 1}</span>
-                <span className="ss-num">{p.number}</span>
-                <span className="ss-team-name">{p.fullName}</span>
-                <TeamLogo team={team} size={16} />
-                <span className="ss-table-pts">{d.points}</span>
-              </li>
-            );
-          })}
-        </ol>
+      <section className="fn-tables">
+        <LeagueTables facts={facts} pool={pool} teams={teams} rosters={rosters} lines={table.lines.map(l => ({ ...l, points: l.total }))} drivers={drivers} showBonus />
       </section>
+      <p className="rs-hint">
+        Race points from both racers, plus <b>{DRIVERS_CHAMPION_BONUS}</b> for the team of the drivers’ champion
+        {dc ? (table.final ? `: ${driver(dc.driver.driverId).fullName}, ${teams[dc.teamId].name}.` : `. Right now it would go to ${teams[dc.teamId].name}.`) : '.'}
+      </p>
 
       <div className="ss-dock">
         {table.final
