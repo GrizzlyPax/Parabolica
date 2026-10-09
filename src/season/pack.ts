@@ -2,10 +2,12 @@
 //
 // Before every race each HUMAN team opens a pack. Its TIER is set by
 // constructor standing before the round (leader Common → last Legendary; round
-// 1 is Uncommon for everyone). The tier sets the odds of the card's METAL
-// (bronze · silver · gold · iridium). A pack deals one gear card (equipment /
-// upgrade / facility) or, 1 in 4, a trait card, never an effect. The human
-// puts it on their own team: a driver (bench included), the car or the team.
+// 1 is Uncommon for everyone). The tier sets the odds of each card's METAL
+// (bronze · silver · gold · iridium). A pack deals THREE cards (#533, Pax's
+// first owner choice); the human keeps one. Each card is a gear card
+// (equipment / upgrade / facility) or, 1 in 4, a trait card, never an effect.
+// The kept card goes on their own team: a driver (bench included), the car or
+// the team; the other two go back.
 //
 // Gear fills slots (one of each in v0.5, slotsFor). A card into a full slot
 // must name what it REPLACES; the old card goes to the team's uncapped locker.
@@ -13,9 +15,12 @@
 // equipment between your drivers, or unequip to the locker. Traits are
 // permanent and uncapped. CPU teams get no pack in v0.5 (hook only).
 //
-// Facts: the deal is derived (seed + standings → the same card, always four
-// rng draws); only the APPLICATION and the MOVES are recorded, in one ordered
-// log, so a swap-then-equip replays in the order it happened.
+// Facts: the deal is derived (seed + standings → the same three cards). The
+// first card comes from the pre-#533 stream (always four rng draws), so older
+// saves still replay; cards two and three come from their own sub-streams. The
+// APPLICATION records which three were dealt and which one was kept, and the
+// MOVES are recorded too, in one ordered log, so a swap-then-equip replays in
+// the order it happened.
 
 import { mulberry32, deriveSeed } from '../engine/rng';
 import { MOTORSPORT_DECK, cardsBy, pickCard, slotsFor, GEAR_KIND, CARDS_BY_ID, type Card, type CardTarget, type Slots } from '../cards';
@@ -35,6 +40,8 @@ export const PACK_ODDS: Record<PackTier, RarityOdds> = {
   legendary: { bronze: 35, silver: 35, gold: 22, iridium: 8 },
 };
 export const TRAIT_CHANCE = 0.25;
+/** Cards a pack deals; the player keeps one (#533). */
+export const PACK_SIZE = 3;
 const TARGETS: CardTarget[] = ['driver', 'car', 'team'];
 
 /** Where a card goes: one of your drivers, your car or your team. */
@@ -45,7 +52,10 @@ export interface PackApplication {
   round: number;
   teamId: string;
   tier: PackTier;
+  /** The card kept. */
   cardId: string;
+  /** The three cards the pack dealt (#533), in deal order. Absent on facts from before #533. */
+  dealt?: string[];
   target: CardHolder;
   /** Gear into a full slot: the card it pushes to the locker. */
   replaces?: string;
@@ -65,7 +75,8 @@ export interface DealtPack {
   round: number;
   teamId: string;
   tier: PackTier;
-  card: Card;
+  /** PACK_SIZE distinct cards, in deal order. */
+  cards: Card[];
 }
 
 /** Hook: who gets a pack. CPU teams don't in v0.5. */
@@ -92,21 +103,33 @@ export function packTierFor(facts: SeasonFacts, round: number, teamId: string): 
   return packTierForRank(rank, facts.setup.teamCount);
 }
 
-/**
- * The pack a team opens this round. Pure: the same seed and standings deal
- * the same card. Always four rng draws (kind, target, metal, pick). Null for
- * a team that gets no pack.
- */
-export function dealPack(facts: SeasonFacts, round: number, teamId: string): DealtPack | null {
-  if (!teamGetsPack(facts, teamId)) return null;
-  const tier = packTierFor(facts, round, teamId);
-  const rng = mulberry32(deriveSeed(facts.setup.seed, 'season', 'pack', round, teamId));
+/** One card off a stream: four rng draws (kind, target, metal, pick). */
+function dealOne(rng: () => number, tier: PackTier): Card {
   const kindRoll = rng();
   const target = TARGETS[Math.floor(rng() * TARGETS.length)];
   const pool = kindRoll < TRAIT_CHANCE ? cardsBy({ kind: 'trait', target }, MOTORSPORT_DECK) : cardsBy({ kind: GEAR_KIND[target] }, MOTORSPORT_DECK);
   const card = pickCard(pool, PACK_ODDS[tier], rng);
   if (!card) throw new Error(`pack: empty pool for ${target}`);
-  return { round, teamId, tier, card };
+  return card;
+}
+
+/**
+ * The pack a team opens this round: PACK_SIZE distinct cards of its tier.
+ * Pure: the same seed and standings deal the same cards. Card one is the
+ * pre-#533 single card (same stream, same four draws); each later card has its
+ * own sub-stream and redraws on a duplicate. Null for a team that gets no pack.
+ */
+export function dealPack(facts: SeasonFacts, round: number, teamId: string): DealtPack | null {
+  if (!teamGetsPack(facts, teamId)) return null;
+  const tier = packTierFor(facts, round, teamId);
+  const cards = [dealOne(mulberry32(deriveSeed(facts.setup.seed, 'season', 'pack', round, teamId)), tier)];
+  for (let i = 1; i < PACK_SIZE; i++) {
+    const rng = mulberry32(deriveSeed(facts.setup.seed, 'season', 'pack', round, teamId, 'card', i));
+    let c = dealOne(rng, tier);
+    for (let tries = 0; cards.some(x => x.id === c.id) && tries < 20; tries++) c = dealOne(rng, tier);
+    cards.push(c);
+  }
+  return { round, teamId, tier, cards };
 }
 
 // ---------------------------------------------------------------------------
@@ -268,7 +291,9 @@ export function validatePackApplication(facts: SeasonFacts, app: PackApplication
   if (!dealt) return `${app.teamId} gets no pack`;
   if (packOpened(facts, app.round, app.teamId)) return 'the pack is already open';
   if (app.tier !== dealt.tier) return `the pack is ${dealt.tier}, not ${app.tier}`;
-  if (app.cardId !== dealt.card.id) return `the pack dealt ${dealt.card.id}, not ${app.cardId}`;
+  const ids = dealt.cards.map(c => c.id);
+  if (!app.dealt || app.dealt.join(',') !== ids.join(',')) return `the pack dealt ${ids.join(', ')}; record all three`;
+  if (!ids.includes(app.cardId)) return `${app.cardId} was not in the pack (${ids.join(', ')})`;
   return tryApply(facts, app);
 }
 

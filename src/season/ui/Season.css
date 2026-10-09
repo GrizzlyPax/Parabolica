@@ -414,3 +414,9 @@ button.rt-g:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset:
 .fn-result { padding: 4px 0 0; }
 .fn-result-line { margin: 0; font-size: 22px; font-family: var(--look-display); }
 .fn-result-line b { color: var(--pw-text-1); }
+
+/* Keep 1 of 3 (#533): the reveal shows the pack's three cards side by side. */
+.pr-card { left: 0; right: 0; width: 690px; max-width: 100vw; margin: -147px auto 0; }
+.pr-three { display: flex; gap: 20px; justify-content: center; }
+@media (max-width: 720px) { .pr-three { zoom: 0.55; } .pr-card { margin-top: -90px; } }
+.pk-three { display: inline-flex; gap: 8px; flex: none; }

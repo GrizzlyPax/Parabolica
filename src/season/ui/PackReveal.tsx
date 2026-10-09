@@ -4,7 +4,10 @@
 // the card arrives face down and flips to its Almanac Plate face. Rays stay
 // white until the card turns, then take its metal. A tap skips to the card.
 //
-// Display only: the card is already dealt by the seed (pendingPack), so a
+// Keep 1 of 3 (#533): the pack holds three cards; they come out together,
+// face down, and flip side by side. "Try them on" takes all three to the table.
+//
+// Display only: the cards are already dealt by the seed (pendingPack), so a
 // refresh just brings the pack back sealed.
 import { useEffect, useRef, useState } from 'react';
 import { GameIcon } from '../../icons/GameIcon';
@@ -13,19 +16,19 @@ import type { Card } from '../../cards/types';
 import type { PackTier } from '../pack';
 
 const TIER_LABEL: Record<PackTier, string> = { common: 'Common', uncommon: 'Uncommon', rare: 'Rare', legendary: 'Legendary' };
-const WHERE: Record<Card['kind'], string> = {
-  equipment: 'Gear for a driver: move it any time.', trait: 'A trait goes on for good.', upgrade: 'Gear for your car: move it any time.',
-  facility: 'Gear for your team: move it any time.', effect: '',
-};
 
 interface Props {
-  card: Card;
+  cards: Card[];
   tier: PackTier;
   /** The reveal is over: back to the table with the card in hand. */
   onDone: () => void;
 }
 
-export default function PackReveal({ card, tier, onDone }: Props) {
+const METAL_RANK = { bronze: 0, silver: 1, gold: 2, iridium: 3 } as const;
+
+export default function PackReveal({ cards, tier, onDone }: Props) {
+  // The rays take the best metal in the pack.
+  const card = cards.reduce((best, c) => ((METAL_RANK[c.rarity ?? 'bronze'] ?? 0) > (METAL_RANK[best.rarity ?? 'bronze'] ?? 0) ? c : best), cards[0]);
   const stage = useRef<HTMLDivElement>(null);
   const pack = useRef<HTMLDivElement>(null);
   const cardBox = useRef<HTMLDivElement>(null);
@@ -117,14 +120,16 @@ export default function PackReveal({ card, tier, onDone }: Props) {
         <div className="pr-plate"><GameIcon name="season.pack" size={34} /><b>{TIER_LABEL[tier].toUpperCase()}</b><span>Base deck</span></div>
       </div>
       <div className={`pr-card ${slowFlip ? 'slow' : ''}`} ref={cardBox}>
-        <CardFace card={card} size="full" faceDown={!faceUp} flippable={false} />
+        <div className="pr-three">
+          {cards.map(c => <CardFace key={c.id} card={c} size="full" className="pr-three-card" faceDown={!faceUp} flippable={false} />)}
+        </div>
         <div className="pr-sheen" ref={sheen} />
       </div>
       <div className="pr-flash" ref={flash} />
       {!done && <span className="pr-skip">Tap to skip</span>}
       <div className="pr-cta">
-        <button type="button" className="rs-btn rs-btn-primary" onClick={e => { e.stopPropagation(); onDone(); }} disabled={!done}>Aim it at a row</button>
-        <span className="rs-hint">{WHERE[card.kind]} Aim it at that row in the table.</span>
+        <button type="button" className="rs-btn rs-btn-primary" onClick={e => { e.stopPropagation(); onDone(); }} disabled={!done}>Try them on</button>
+        <span className="rs-hint">Keep one of three. In the table, tap a card to see where it goes and what it does; the two you don't place go back.</span>
       </div>
     </div>
   );

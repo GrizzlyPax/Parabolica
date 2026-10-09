@@ -82,6 +82,7 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo }: 
   const [revealed, setRevealed] = useState(false);
   const [revealing, setRevealing] = useState(false);
   const [held, setHeld] = useState<string | null>(null); // a gear card picked up (when the pack card isn't in hand)
+  const [pickId, setPickId] = useState<string | null>(null); // which of the pack's three is in hand (#533)
   const [confirmTrait, setConfirmTrait] = useState<HolderKey | null>(null);
   const [chosen, setChosen] = useState<number[] | null>(null);
   const [detail, setDetail] = useState<{ title: string; reading: StatReading } | { card: Card } | null>(null);
@@ -100,7 +101,7 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo }: 
   const myRank = standings.find(s => s.teamId === viewer);
 
   if (turn && hotseat && readyFor !== turn) {
-    return <Handoff team={teams[turn]} label={humanLabel(facts, turn)!} what={`Paddock · round ${state.round + 1}`} onReady={() => { setReadyFor(turn); setChosen(null); setRevealed(false); setHeld(null); setTab('team'); }} />;
+    return <Handoff team={teams[turn]} label={humanLabel(facts, turn)!} what={`Paddock · round ${state.round + 1}`} onReady={() => { setReadyFor(turn); setChosen(null); setRevealed(false); setHeld(null); setPickId(null); setTab('team'); }} />;
   }
 
   const roster = rosters[viewer];
@@ -112,9 +113,14 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo }: 
   const team = pool.teams.find(t => t.id === viewer)!;
   const allGear = [...cards.locker, ...Object.values(cards.drivers).flatMap(d => d.equipment), ...cards.car.upgrade, ...cards.team.facility];
 
-  // The card in hand: the revealed pack card, else a picked-up gear card.
+  // Keep 1 of 3 (#533, Pax picked "try them on"): after the reveal all three
+  // cards are in your hand; tap one to try it on (its rows glow, its grades
+  // flash). Placing it keeps it; the other two go back.
+  const packCard: Card | null = pack ? pack.cards.find(c => c.id === pickId) ?? pack.cards[0] : null;
+  const dealt = pack ? pack.cards.map(c => c.id) : [];
+  // The card in hand: the pack card being tried on, else a picked-up gear card.
   const packInHand = !!pack && revealed;
-  const hand: Card | null = packInHand ? pack!.card : held ? allGear.find(c => c.id === held) ?? null : null;
+  const hand: Card | null = packInHand ? packCard : held ? allGear.find(c => c.id === held) ?? null : null;
   const fitsRow = (k: HolderKey) => {
     if (!hand || !myTurn) return false;
     const h = holderOf(k);
@@ -135,20 +141,20 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo }: 
 
   // Actions
   const givePack = (k: HolderKey) => {
-    if (!pack) return;
+    if (!pack || !packCard) return;
     const target = holderOf(k);
-    const slot = pack.card.kind === 'trait' ? [] : slotOf(cards, target);
-    commit(applyPack(facts, { type: 'pack', round: pack.round, teamId: pack.teamId, tier: pack.tier, cardId: pack.card.id, target, replaces: slot[0]?.id }));
+    const slot = packCard.kind === 'trait' ? [] : slotOf(cards, target);
+    commit(applyPack(facts, { type: 'pack', round: pack.round, teamId: pack.teamId, tier: pack.tier, cardId: packCard.id, dealt, target, replaces: slot[0]?.id }));
     setConfirmTrait(null);
   };
   /** Keep a pack gear card for later: it lands on its slot (a pack card always lands on a holder), moves to
    * the locker, and whatever was in the slot goes back. All plain facts, so the season replays exactly. */
   const packToLocker = () => {
-    if (!pack || pack.card.kind === 'trait') return;
-    const target: CardHolder = pack.card.kind === 'equipment' ? { kind: 'driver', id: roster.driverIds[0] } : pack.card.kind === 'upgrade' ? { kind: 'car' } : { kind: 'team' };
+    if (!pack || !packCard || packCard.kind === 'trait') return;
+    const target: CardHolder = packCard.kind === 'equipment' ? { kind: 'driver', id: roster.driverIds[0] } : packCard.kind === 'upgrade' ? { kind: 'car' } : { kind: 'team' };
     const occupant = slotOf(cards, target)[0];
-    let next = applyPack(facts, { type: 'pack', round: pack.round, teamId: pack.teamId, tier: pack.tier, cardId: pack.card.id, target, replaces: occupant?.id });
-    next = moveGear(next, { type: 'move', round: state.round, teamId: viewer, cardId: pack.card.id, to: 'locker' });
+    let next = applyPack(facts, { type: 'pack', round: pack.round, teamId: pack.teamId, tier: pack.tier, cardId: packCard.id, dealt, target, replaces: occupant?.id });
+    next = moveGear(next, { type: 'move', round: state.round, teamId: viewer, cardId: packCard.id, to: 'locker' });
     if (occupant) next = moveGear(next, { type: 'move', round: state.round, teamId: viewer, cardId: occupant.id, to: target });
     commit(next);
   };
@@ -165,7 +171,7 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo }: 
   };
   const placeOn = (k: HolderKey) => {
     if (!fitsRow(k)) return;
-    if (packInHand) { if (pack!.card.kind === 'trait') setConfirmTrait(k); else givePack(k); return; }
+    if (packInHand) { if (packCard!.kind === 'trait') setConfirmTrait(k); else givePack(k); return; }
     if (hand) moveTo(hand.id, holderOf(k));
   };
   const placeInLocker = () => { if (!lockerFits) return; if (packInHand) packToLocker(); else if (hand) moveTo(hand.id, 'locker'); };
@@ -237,7 +243,7 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo }: 
 
   // The turn, in one line
   const step = !myTurn ? -1 : pack ? (revealed ? 1 : 0) : lineup.length === 2 ? 3 : 2;
-  const STEPS = ['Open pack', 'Place card', 'Pick 2', 'Lock in'];
+  const STEPS = ['Open pack', 'Keep one', 'Pick 2', 'Lock in'];
   const turnLine = state.phase === 'ready-for-go' ? (
     <div className="pk-go"><span>Every team is set for round {state.round + 1}.</span><button type="button" className="rs-btn rs-btn-primary" onClick={onGo}>Go: round {state.round + 1}</button></div>
   ) : myTurn && (
@@ -263,12 +269,12 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo }: 
       {pack && myTurn && (
         <div className="pk-pack">
           {revealed
-            ? <CardChip card={pack.card} size={44} held onClick={() => setDetail({ card: pack.card })} />
+            ? <span className="pk-three" role="group" aria-label="Pick one of three">{pack.cards.map(c => <CardChip key={c.id} card={c} size={44} held={c.id === packCard!.id} onClick={() => (c.id === packCard!.id ? setDetail({ card: c }) : setPickId(c.id))} />)}</span>
             : <button type="button" className="pk-sealed" onClick={() => setRevealing(true)} aria-label={`Open your ${TIER_LABEL[pack.tier]} pack`}><GameIcon name="season.pack" size={30} /><i className="pk-twinkle a" /><i className="pk-twinkle b" /><i className="pk-twinkle c" /></button>}
           <div className="pk-pack-text">
-            <span className="rs-k pk-pack-k">Base deck · {TIER_LABEL[pack.tier]} pack</span>
-            <b>{revealed ? pack.card.name : 'Sealed'}</b>
-            <span className="rs-hint">{revealed ? hint : 'Tap the pack to open it.'}</span>
+            <span className="rs-k pk-pack-k">Base deck · {TIER_LABEL[pack.tier]} pack{revealed ? ' · keep one of three' : ''}</span>
+            <b>{revealed ? packCard!.name : 'Sealed'}</b>
+            <span className="rs-hint">{revealed ? `${hint} Tap another card to try it instead; the two you don't place go back.` : 'Tap the pack to open it. Three cards inside; you keep one.'}</span>
           </div>
         </div>
       )}
@@ -388,17 +394,17 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo }: 
       {tab === 'team' ? teamTab : leagueTab}
 
       {revealing && pack && (
-        <PackReveal card={pack.card} tier={pack.tier} onDone={() => { setRevealing(false); setRevealed(true); requestAnimationFrame(() => document.querySelector('.rt tr.target')?.scrollIntoView({ block: 'center', behavior: 'smooth' })); }} />
+        <PackReveal cards={pack.cards} tier={pack.tier} onDone={() => { setRevealing(false); setRevealed(true); requestAnimationFrame(() => document.querySelector('.rt tr.target')?.scrollIntoView({ block: 'center', behavior: 'smooth' })); }} />
       )}
 
       {confirmTrait && pack && (
         <div className="pk-sheet" role="dialog" aria-label="Give a trait">
           <div className="pk-sheet-text">
             <span className="rs-k">Traits are permanent</span>
-            <b>Give {pack.card.name} to {targetName(confirmTrait)}?</b>
+            <b>Give {packCard!.name} to {targetName(confirmTrait)}?</b>
             <span>It can never be removed or moved.</span>
             <span className="rt-sum">{readRow(confirmTrait, null).map((r, i) => {
-              const a = readRow(confirmTrait, pack.card)[i];
+              const a = readRow(confirmTrait, packCard)[i];
               return Math.round(a.total) !== Math.round(r.total) ? <span key={r.stat}>{STAT_LABELS[r.stat]}: {r.grade} → {a.grade}</span> : null;
             })}</span>
             <span className="pk-confirm-btns">
