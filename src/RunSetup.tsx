@@ -22,6 +22,8 @@ import { buildRoster } from './rules/genesis';
 import { weatherForRace, isNeutralWeather } from './data/weather';
 import { applyFavours } from './cards/apply';
 import { PriorityLine } from './cards/PriorityLine';
+import { WearPill } from './cards/WearPill';
+import { getDeckTrackById } from './data/deckTracks';
 import { CardFace } from './cards/CardFace';
 import { GameIcon } from './icons/GameIcon';
 import { gradeTone, readStat } from './season/grades';
@@ -142,6 +144,7 @@ export default function RunSetup({ onStartRace, onBack }: RunSetupProps) {
               {(!weather || isNeutralWeather(weather)) && <span className="rs-chip rs-chip-dim">Neutral weather</span>}
             </div>
             <PriorityLine label="Priority stats" track={track} weather={weather} />
+            <WearPill tyreWear={getDeckTrackById(track.id)?.tyreWear} />
           </div>
         </div>
         <label className="rs-track-pick">

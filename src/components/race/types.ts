@@ -140,6 +140,8 @@ export interface UniversalHeaderProps {
   conditions?: ConditionChip[];
   /** This race's priority stats (track + weather favours), shown as a chip. */
   priority?: string[];
+  /** The track's tyre-wear dial (#547), shown as a pill beside the priority stats. */
+  tyreWear?: number;
   elapsedTime: number;
   onMenuOpen: () => void;
   /** Show a pulsing LIVE pill (broadcast spectating). */

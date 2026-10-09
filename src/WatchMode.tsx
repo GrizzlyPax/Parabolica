@@ -1180,6 +1180,7 @@ function WatchMode({
         trackFlagEmoji={trackInfo?.emoji}
         conditions={headerConditions}
         priority={headerPriority}
+        tyreWear={trackInfo?.id ? getDeckTrackById(trackInfo.id)?.tyreWear : undefined}
         elapsedTime={raceState.totalTicks}
         onMenuOpen={() => setNavPanelOpen(true)}
         liveBadge={spectator && !raceState.raceFinished}
