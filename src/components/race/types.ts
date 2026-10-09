@@ -35,6 +35,8 @@ export interface RowContext {
   fantasyTeam?: { name: string; color: string };
   /** A rival in Season Mode (#322): no ranks, no effect stack, cards as metal dots. */
   sealed?: boolean;
+  /** Your team's car (Season Mode): the row wears a faded team colour (Pax, Oct 9). */
+  mine?: boolean;
   /** Speed vs the running pack's median this tick: 'hot' ≥ +4%, 'quick' ≥ +1%, 'slow' ≤ −3%, else 'pack'. */
   speedTone?: 'hot' | 'quick' | 'pack' | 'slow';
   /** Speed relative to the pack median, −1…+1 over ±8%. */
@@ -101,6 +103,8 @@ export interface TimingTowerProps {
   fantasy?: FantasyConfig;
   /** Season Mode (#322): drivers whose detail stays dark (rivals). */
   sealed?: ReadonlySet<number>;
+  /** Season Mode: your team's drivers (their rows are tinted). */
+  mine?: ReadonlySet<number>;
   className?: string;
 }
 

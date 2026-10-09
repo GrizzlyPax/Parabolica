@@ -160,7 +160,9 @@ function WatchMode({
   // New view system: track (map + tower), detail (full tower)
   const [activeView, setActiveView] = useState<RaceView>('track');
   // Multi-driver focus - allow up to 10 focused drivers (click to toggle)
-  const [focusedDriverIds, setFocusedDriverIds] = useState<Set<number>>(() => new Set(myDriverIds ?? []));
+  const [focusedDriverIds, setFocusedDriverIds] = useState<Set<number>>(() => new Set());
+  // Your team's rows are tinted instead of opened (Pax, Oct 9).
+  const mineSet = useMemo(() => (myDriverIds ? new Set(myDriverIds) : undefined), [myDriverIds]);
   const [navPanelOpen, setNavPanelOpen] = useState(false);
 
   // Auto-unfocus DNF'd drivers (they can manually re-focus if wanted)
@@ -188,7 +190,10 @@ function WatchMode({
 
   // Helper to toggle a driver's focus state
   const toggleDriverFocus = (driverId: number) => {
+    // On a phone the panel is a bottom sheet: one driver at a time.
+    const phone = typeof matchMedia !== 'undefined' && matchMedia('(max-width: 599px)').matches;
     setFocusedDriverIds(prev => {
+      if (phone) return prev.has(driverId) ? new Set() : new Set([driverId]);
       const next = new Set(prev);
       if (next.has(driverId)) {
         next.delete(driverId);
@@ -1224,6 +1229,7 @@ function WatchMode({
                 )}
                 <TimingTower
                   sealed={sealedDriverIds}
+                  mine={mineSet}
                   drivers={sortedDrivers}
                   columns={TRACK_COLUMNS}
                   raceState={raceState}
@@ -1274,6 +1280,7 @@ function WatchMode({
                 )}
                 <TimingTower
                   sealed={sealedDriverIds}
+                  mine={mineSet}
                   drivers={sortedDrivers}
                   columns={DETAIL_COLUMNS}
                   raceState={raceState}
