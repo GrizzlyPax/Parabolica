@@ -354,7 +354,7 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo }: 
     <>
       <p className="pk-priority">
         <span className="rs-k">After round {facts.results.length} of {total}</span>{' '}
-        {you.name} {myRank ? ord(myRank.rank) : ''} on <b>{myRank?.points ?? 0}</b> · leader {teams[standings[0].teamId].name} on {standings[0].points}. The drivers' champion's team gets +50 at the end.
+        {you.name} {myRank ? ord(myRank.rank) : ''} on <b>{myRank?.points ?? 0}</b> · leader {teams[standings[0].teamId].name} on {standings[0].points}. Two titles: Constructors' (team points) and Drivers'.
       </p>
       <div className="pk-league">
         <div className="pk-chart">

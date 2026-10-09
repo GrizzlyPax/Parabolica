@@ -8,7 +8,7 @@ import type { CompetitorTeam, SeasonPool } from '../genesis';
 import type { SeasonFacts } from '../season';
 import type { DriverSeasonStats } from '../../types/season';
 
-export interface ConstructorLine { teamId: string; rank: number; wins: number; points: number; bonus?: number }
+export interface ConstructorLine { teamId: string; rank: number; wins: number; points: number }
 
 interface Props {
   facts: SeasonFacts;
@@ -17,11 +17,9 @@ interface Props {
   rosters: Record<string, { driverIds: number[] }>;
   lines: ConstructorLine[];
   drivers: DriverSeasonStats[];
-  /** The finale adds the drivers' champion bonus column. */
-  showBonus?: boolean;
 }
 
-export function LeagueTables({ facts, pool, teams, rosters, lines, drivers, showBonus }: Props) {
+export function LeagueTables({ facts, pool, teams, rosters, lines, drivers }: Props) {
   const humans = facts.setup.humans.map(h => h.teamId);
   const teamOfDriver = (id: number) => Object.keys(rosters).find(t => rosters[t].driverIds.includes(id))!;
   /** Top-three finishes by a team's drivers, all season (a double podium counts twice). */
@@ -30,7 +28,7 @@ export function LeagueTables({ facts, pool, teams, rosters, lines, drivers, show
     <>
       <div className="rt-scroll">
         <table className="rt rt-compact">
-          <thead><tr><th className="rt-pos">Pos</th><th className="rt-name">Constructors</th><th className="rt-numcol">Wins</th><th className="rt-numcol">Pod</th>{showBonus && <th className="rt-numcol">Bonus</th>}<th className="rt-numcol">Pts</th></tr></thead>
+          <thead><tr><th className="rt-pos">Pos</th><th className="rt-name">Constructors</th><th className="rt-numcol">Wins</th><th className="rt-numcol">Pod</th><th className="rt-numcol">Pts</th></tr></thead>
           <tbody>
             {lines.map(s => (
               <tr key={s.teamId} className={humans.includes(s.teamId) ? 'mine' : ''}>
@@ -38,7 +36,6 @@ export function LeagueTables({ facts, pool, teams, rosters, lines, drivers, show
                 <th className="rt-name" scope="row"><TeamLogo team={teams[s.teamId]} size={18} /><span className="rt-nm">{teams[s.teamId].name}</span></th>
                 <td className="rt-numcol">{s.wins}</td>
                 <td className="rt-numcol">{teamPodiums(s.teamId)}</td>
-                {showBonus && <td className="rt-numcol">{s.bonus ? `+${s.bonus}` : ''}</td>}
                 <td className="rt-numcol">{s.points}</td>
               </tr>
             ))}

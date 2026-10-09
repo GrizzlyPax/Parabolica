@@ -1,13 +1,13 @@
-// Standings + finale (#321, #453 layout A). Mid-season (the Paddock's League tab
-// is the usual way in): the chart and both tables, with the drivers'-champion
-// bonus shown as "would go to". When every round has run: two crowns
-// (constructors' and drivers' champions), the chart, the final tables, and
-// Play again (League Setup with a fresh seed; no carry-over in v0.5).
+// Standings + finale (#321, #453 layout A, #509). Two championships, no bonus.
+// Mid-season (the Paddock's League tab is the usual way in): the chart and
+// both tables. When every round has run: your Constructors' finish as the
+// headline, two crowns (Constructors' and Drivers' champions), the chart, the
+// final tables, and Play again (League Setup with a fresh seed).
 import { useMemo } from 'react';
 import { GameIcon, TeamLogo, teamThemeVars } from '../../icons/GameIcon';
 import { draftState } from '../draft';
 import { constructorStandings, driverStandings, poolFor, type SeasonFacts } from '../season';
-import { DRIVERS_CHAMPION_BONUS, seasonTable } from '../scoring';
+import { seasonTable } from '../scoring';
 import { seasonName } from '../setup';
 import EndSeason from './EndSeason';
 import { LeagueTables } from './LeagueTables';
@@ -53,6 +53,18 @@ export default function Standings({ facts, onMenu, onPaddock, onPlayAgain, onEnd
         <EndSeason onEnded={onEndSeason} />
       </header>
 
+      {table.final && (
+        <section className="fn-result">
+          {humans.map(id => {
+            const line = table.lines.find(l => l.teamId === id)!;
+            const label = humanLabel(facts, id);
+            const who = humans.length > 1 ? `${label} · ${teams[id].name}` : 'You';
+            const crown = dc?.teamId === id ? ` · ${driver(dc.driver.driverId).fullName} is Drivers’ champion` : '';
+            return <p key={id} className="fn-result-line"><b>{who} finished P{line.rank}</b> in the Constructors’ on {line.points} pts{crown}.</p>;
+          })}
+        </section>
+      )}
+
       {champion && dc && (
         <section className="fn-crowns">
           <div className="fn-crown">
@@ -60,13 +72,13 @@ export default function Standings({ facts, onMenu, onPaddock, onPlayAgain, onEnd
             <div className="fn-crown-text">
               <span className="rs-k"><GameIcon name="season.champion" size={14} /> Constructors’ champion{champLabel ? ` · ${champLabel}` : ''}</span>
               <span className="fn-crown-name">{champion.name}</span>
-              <span className="fn-crown-stats">{table.lines[0].total} pts · {table.lines[0].wins} {table.lines[0].wins === 1 ? 'win' : 'wins'} · {podiums(champion.id)} podiums</span>
+              <span className="fn-crown-stats">{table.lines[0].points} pts · {table.lines[0].wins} {table.lines[0].wins === 1 ? 'win' : 'wins'} · {podiums(champion.id)} podiums</span>
             </div>
           </div>
           <div className="fn-crown">
             <RaceNumber n={driver(dc.driver.driverId).number} color={teams[dc.teamId].color} ink={teams[dc.teamId].ink} size={56} shape="square" />
             <div className="fn-crown-text">
-              <span className="rs-k">Drivers’ champion · +{DRIVERS_CHAMPION_BONUS} to {teams[dc.teamId].name}</span>
+              <span className="rs-k"><GameIcon name="season.champion" size={14} /> Drivers’ champion · {teams[dc.teamId].name}{humanLabel(facts, dc.teamId) ? ` · ${humanLabel(facts, dc.teamId)}` : ''}</span>
               <span className="fn-crown-name"><Avatar icon={portraitFor(pool.seed, dc.driver.driverId)} color={teams[dc.teamId].color} size={26} /> {driver(dc.driver.driverId).fullName}</span>
               <span className="fn-crown-stats">{dc.driver.points} pts · {dc.driver.wins} {dc.driver.wins === 1 ? 'win' : 'wins'} · {dc.driver.podiums} podiums</span>
             </div>
@@ -82,12 +94,9 @@ export default function Standings({ facts, onMenu, onPaddock, onPlayAgain, onEnd
       )}
 
       <section className="fn-tables">
-        <LeagueTables facts={facts} pool={pool} teams={teams} rosters={rosters} lines={table.lines.map(l => ({ ...l, points: l.total }))} drivers={drivers} showBonus />
+        <LeagueTables facts={facts} pool={pool} teams={teams} rosters={rosters} lines={table.lines} drivers={drivers} />
       </section>
-      <p className="rs-hint">
-        Race points from both racers, plus <b>{DRIVERS_CHAMPION_BONUS}</b> for the team of the drivers’ champion
-        {dc ? (table.final ? `: ${driver(dc.driver.driverId).fullName}, ${teams[dc.teamId].name}.` : `. Right now it would go to ${teams[dc.teamId].name}.`) : '.'}
-      </p>
+      <p className="rs-hint">Two championships, like F1: the Constructors’ (both racers’ points) and the Drivers’ (each driver’s own).</p>
 
       <div className="ss-dock">
         {table.final
