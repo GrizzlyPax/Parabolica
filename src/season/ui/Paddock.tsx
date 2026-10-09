@@ -17,6 +17,7 @@ import { Avatar } from '../../icons/Avatar';
 import { portraitFor, vehicleFor } from '../../generators/avatars';
 import { CardFace } from '../../cards/CardFace';
 import { CardChip } from '../../cards/CardChip';
+import { PriorityLine } from '../../cards/PriorityLine';
 import { STAT_LABELS } from '../../cards/deck';
 import { STAT_ICONS } from '../../icons/registry';
 import type { Card, StatKey } from '../../cards/types';
@@ -256,14 +257,7 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo }: 
     </div>
   );
 
-  const priorityLine = (
-    <p className="pk-priority">
-      <span className="rs-k">Next race · priority stats</span>{' '}
-      {trackFav.length > 0 && <><b>{trackFav.map(f => STAT_LABELS[f.stat]).join(' + ')}</b> ({track?.name ?? 'the'} track, +10%)</>}
-      {weather.favours.length > 0 && <>{trackFav.length > 0 && ' and '}<b>{weather.favours.map(f => STAT_LABELS[f.stat]).join(' + ')}</b> ({weather.name} weather, +{Math.round(weather.favours[0].pct)}%)</>}
-      , for everyone.
-    </p>
-  );
+  const priorityLine = <PriorityLine label="Next race · priority stats" track={{ name: track?.name ?? 'the', favours: trackFav }} weather={weather} />;
 
   const hint = !hand ? null : packInHand
     ? (hand.kind === 'trait' ? `Tap a glowing ${hand.target === 'driver' ? 'driver' : hand.target} to give it. The flashing grades show what it does. Traits are permanent.` : `Tap a glowing ${hand.target === 'driver' ? 'driver' : hand.target} to put it on, or the glowing locker to keep it. The flashing grades show what it does.`)

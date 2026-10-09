@@ -231,8 +231,6 @@ button.rt-g:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset:
 .rt-sum-total { border-top: 1px solid var(--pw-border-strong); padding-top: 4px; }
 
 /* Paddock (#452) */
-.pk-priority { margin: 0; font-style: italic; color: var(--pw-text-2); }
-.pk-priority .rs-k { font-style: normal; color: var(--pw-text-1); }
 .pk-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid var(--pw-border-strong); }
 .pk-step { display: flex; flex-direction: column; gap: 4px; padding: 8px 10px; border-left: 1px solid var(--pw-border-strong); min-width: 0; }
 .pk-step:first-child { border-left: 0; }
@@ -311,7 +309,6 @@ button.rt-g:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset:
 .pk-turn li.done { text-decoration: line-through; }
 .pk-turn li.now { background: var(--team-primary); border-color: var(--team-primary); color: var(--team-ink); }
 .pk-turn .rs-btn { height: 40px; margin-left: auto; }
-.pk-priority b { font-style: normal; color: var(--pw-text-1); }
 /* The sealed pack: it should look like it wants opening (Pax, Oct 9) — a shimmer and three twinkles */
 .pk-sealed {
   position: relative; overflow: hidden; width: 56px; height: 72px; flex: none; cursor: pointer; padding: 0; border-radius: 0;
