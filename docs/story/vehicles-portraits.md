@@ -63,8 +63,8 @@
 **Cut (Pax):** [`helmet`](https://game-icons.net/1x1/sbed/helmet.html), illegible and not a racing helmet. Also passed: `helmet-head-shot` (reads as an explosion), `american-football-helmet` (another sport), `top-hat` (already Mister Marbles in the UI).
 
 ## Rules for the builder (#489)
-1. **Roll at genesis**, one weighted draw per driver (portrait) and per car (vehicle), from the tables above. Store the icon id with the driver / car so it never changes mid-season.
-2. **Seed stream:** use the flavour stream from [#467](https://github.com/GrizzlyPax/Parabolica/issues/467) (names' own stream), not the stats stream, so adding icons never changes stats or the fingerprint.
+1. **Roll at genesis**, one weighted draw per driver (portrait) and per car (vehicle), from the tables above. Store nothing new in saves: the icon re-derives from the seed, so it never changes mid-season (Pit, Oct 9, per #489).
+2. **Seed stream:** the icons' own stream (e.g. `deriveSeed(seed, 'icons')`, per #489), never the stats stream, so adding icons never changes stats or the fingerprint.
 3. **Colour:** the owning team's primary, `currentColor`, no tile or badge. Undrafted = white. Rivals follow the info rule (their colour on their own marks).
 4. **Size:** at least **20px**. Vehicles are wide silhouettes, so `f1-car` gets thin below 20px; car rows can go to 24–26px.
 5. **Credits:** vendor all icons (including the held-back ones only when a themed deck uses them) through the icon registry, so World Deck → Credits lists their authors.
