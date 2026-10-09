@@ -1,6 +1,7 @@
 // Race Control — the lab. Everything here runs races the way the live game
 // does (src/racecontrol/runner.ts), is seeded so it can be replicated outside
 // the browser (`npm run lab`), and exports what it shows.
+import RunSetup, { type RunSetupProps } from '../RunSetup';
 import { Fragment, useEffect, useState } from 'react';
 import './RaceControl.css';
 import { PhysicsTab } from './PhysicsTab';
@@ -10,19 +11,20 @@ import { formatMetric, metricOutOfBand } from './physics';
 import { ALL_KNOBS, formatValue, canonValue } from './knobs';
 import { DeckTab } from './DeckTab';
 
-type TabId = 'physics' | 'deck' | 'notebook' | 'method';
+type TabId = 'physics' | 'run' | 'deck' | 'notebook' | 'method';
 const TABS: { id: TabId; label: string; hint: string }[] = [
   { id: 'physics', label: 'Physics calibration', hint: 'what the race rules produce, measured; change a knob and re-measure' },
+  { id: 'run', label: 'Run setup', hint: 'one race with your seed, track, rule cards and a lab preset, watched live' },
   { id: 'deck', label: 'Deck', hint: 'the card deck, before the sim uses it' },
   { id: 'notebook', label: 'Notebook', hint: 'saved presets and every run you measured' },
   { id: 'method', label: 'Method', hint: 'why these numbers can be trusted' },
 ];
 
-const TAB_IDS: TabId[] = ['physics', 'deck', 'notebook', 'method'];
+const TAB_IDS: TabId[] = ['physics', 'run', 'deck', 'notebook', 'method'];
 const tabFromSlug = (slug?: string): TabId => TAB_IDS.find(t => t === slug) ?? 'physics';
 
 /** `tab` / `onTabChange` keep the open tab in the URL (#186): /#/race-control/<tab>. */
-export default function RaceControl({ onBack, tab: tabSlug, onTabChange }: { onBack: () => void; tab?: string; onTabChange?: (tab: string) => void }) {
+export default function RaceControl({ onBack, onStartRace, tab: tabSlug, onTabChange }: { onBack: () => void; onStartRace?: RunSetupProps['onStartRace']; tab?: string; onTabChange?: (tab: string) => void }) {
   const [localTab, setLocalTab] = useState<TabId>(() => tabFromSlug(tabSlug));
   const tab = onTabChange ? tabFromSlug(tabSlug) : localTab;
   const setTab = (t: TabId) => (onTabChange ? onTabChange(t) : setLocalTab(t));
@@ -54,6 +56,7 @@ export default function RaceControl({ onBack, tab: tabSlug, onTabChange }: { onB
         ))}
       </nav>
       {tab === 'physics' && <PhysicsTab lab={lab} />}
+      {tab === 'run' && onStartRace && <RunSetup onStartRace={onStartRace} />}
       {tab === 'deck' && <DeckTab />}
       {tab === 'notebook' && <NotebookTab notebook={notebook} setNotebook={setNotebook} working={working} onLoad={p => { loadPreset(p); }} onDeletePreset={deletePreset} onDeleteRun={deleteRun} />}
       {tab === 'method' && <MethodTab />}

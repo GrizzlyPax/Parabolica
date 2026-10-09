@@ -9,7 +9,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { Driver } from '../../RaceEngine';
 import { RaceNumber } from '../../icons/RaceNumber';
-import { GameIcon } from '../../icons/GameIcon';
+import { GameIcon, TeamLogo, type TeamLike } from '../../icons/GameIcon';
 import { inkFor } from '../../icons/ink';
 import './QualiBoard.css';
 
@@ -25,7 +25,11 @@ interface Props {
   onDone: () => void;
   /** Who is on a hot lap and how far round (0..1), for the track map (#555); empty when nobody is. */
   onLap?: (live: QualiLive[]) => void;
+  /** Quick Race (#607): tap a team to follow; tap again to let go. */
+  follow?: QualiFollow;
 }
+
+export interface QualiFollow { teams: (TeamLike & { id: string })[]; selected: string | null; onPick: (teamId: string) => void }
 
 export interface QualiLive { id: number; progress: number }
 
@@ -55,7 +59,7 @@ export function fmtLap(sec: number): string {
   return `${m}:${(sec - m * 60).toFixed(3).padStart(6, '0')}`;
 }
 
-export default function QualiBoard({ laps, drivers, nominalTicks, mine, onDone, onLap }: Props) {
+export default function QualiBoard({ laps, drivers, nominalTicks, mine, onDone, onLap, follow }: Props) {
   // Session time in ms at 1×; the speed scales how fast it runs.
   const [t, setT] = useState(0);
   const [speed, setSpeed] = useState<Speed>(1);
@@ -109,6 +113,20 @@ export default function QualiBoard({ laps, drivers, nominalTicks, mine, onDone, 
         <span className="qb-k"><GameIcon name="race.fastest_lap" size={14} /> Qualifying</span>
         <span className="qb-count">{done ? 'Grid set' : `${set} of ${total} laps set · one hot lap each`}</span>
       </div>
+
+      {follow && (
+        <div className="qb-follow" role="group" aria-label="Follow a team">
+          <span className="qb-k">{follow.selected ? 'Following' : 'Follow a team'}</span>
+          <div className="qb-follow-row">
+            {follow.teams.map(t => (
+              <button key={t.id} type="button" className={`qb-follow-team ${follow.selected === t.id ? 'on' : ''}`} onClick={() => follow.onPick(t.id)} aria-pressed={follow.selected === t.id} title={t.name}>
+                <TeamLogo team={t} size={26} />
+                {follow.selected === t.id && <span className="qb-follow-nm">{t.name}</span>}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {onTrack.length > 0 ? (
         <div className="qb-on">
