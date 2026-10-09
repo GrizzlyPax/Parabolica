@@ -26,6 +26,8 @@ interface TrackMapProps {
   drivers: Driver[];
   focusedDriverIds?: number[]; // Support multiple focused drivers
   highlightedDriverIds?: number[]; // Always-visible drivers (e.g. the current podium): bigger marker + team emoji
+  /** Your team's cars (Season Mode, Pax Oct 9): always big, numbered and labelled, drawn on top. */
+  mineDriverIds?: number[];
   unsafetyCarActive?: boolean; // Show Safety Carl when true
   unsafetyCarPosition?: number; // Position on track (0-1 percentage)
   /** Live fights: the defender gets a pulsing ring, the attacker a sword. */
@@ -76,6 +78,7 @@ function TrackMap({
   drivers,
   focusedDriverIds = [],
   highlightedDriverIds = [],
+  mineDriverIds,
   unsafetyCarActive = false,
   unsafetyCarPosition = 0,
   className = '',
@@ -84,6 +87,9 @@ function TrackMap({
   // Store track path element in state to ensure useMemo re-runs when it's attached
   // Using state instead of refs ensures React knows about the element
   const [trackPathEl, setTrackPathEl] = useState<SVGPathElement | null>(null);
+  // Your cars get the focused treatment all race (big, numbered, labelled, on top).
+  const mineKey = (mineDriverIds ?? []).join(',');
+  const bigIds = useMemo(() => [...focusedDriverIds, ...(mineDriverIds ?? [])], [focusedDriverIds.join(','), mineKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Callback ref for track path - stores element in state
   const trackPathRef = useCallback((el: SVGPathElement | null) => {
@@ -110,7 +116,7 @@ function TrackMap({
       const lapProgress = normalizedPosition / trackLength;
       const point = getPointAlongPath(trackPathEl, lapProgress);
 
-      const isFocused = focusedDriverIds.includes(driver.id);
+      const isFocused = bigIds.includes(driver.id);
       const isHighlighted = visibleDriverIds.has(driver.id);
 
       return {
@@ -134,7 +140,7 @@ function TrackMap({
         driver,
         x: point.x,
         y: point.y,
-        isFocused: focusedDriverIds.includes(driver.id),
+        isFocused: bigIds.includes(driver.id),
         isHighlighted: visibleDriverIds.has(driver.id),
         isDNF: true,
         isPitting: false,
@@ -173,7 +179,7 @@ function TrackMap({
         driver,
         x: point.x,
         y: point.y,
-        isFocused: focusedDriverIds.includes(driver.id),
+        isFocused: bigIds.includes(driver.id),
         isHighlighted: visibleDriverIds.has(driver.id),
         isDNF: false,
         isPitting: true,
@@ -197,7 +203,7 @@ function TrackMap({
     ];
 
     return allPositions;
-  }, [drivers, trackLength, focusedDriverIds, visibleDriverIds, trackPathEl, pitLanePath]);
+  }, [drivers, trackLength, bigIds, visibleDriverIds, trackPathEl, pitLanePath]);
 
   // Calculate start/finish line position
   const startFinish = useMemo(() => {
@@ -361,6 +367,11 @@ function TrackMap({
               className={`driver-marker ${isFocused ? 'focused' : ''} ${isHighlighted ? 'highlighted' : ''} ${isDNF ? 'dnf' : ''} ${isPitting ? 'pitting' : ''}`}
               transform={`translate(${x}, ${y})`}
             >
+              {/* Your car: a soft halo in the team colour, always (Pax, Oct 9) */}
+              {mineDriverIds?.includes(driver.id) && !isDNF && (
+                <circle cx={0} cy={0} r={radius + 8} fill={driver.color} opacity={0.22} className="marker-mine-halo" />
+              )}
+
               {/* Glow for focused driver */}
               {isFocused && (
                 <circle

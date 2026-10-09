@@ -1,4 +1,6 @@
 import { fantasyStandings, fantasyHex, type FantasyConfig } from './fantasy/types';
+import { getDeckTrackById } from './data/deckTracks';
+import { STAT_LABELS } from './cards/deck';
 import { isNeutralWeather } from './data/weather';
 import { favourText } from './cards/favourText';
 import RaceEngine, { Driver, RaceConfig, RaceState, TrackInfo, RaceEvent, EffectStackEntry } from './RaceEngine';
@@ -995,6 +997,13 @@ function WatchMode({
     return chips;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [engine, trackInfo]);
+  // This race's priority stats (#361): the track's favours plus the weather's.
+  const headerPriority = useMemo(() => {
+    const deck = trackInfo?.id ? getDeckTrackById(trackInfo.id) : undefined;
+    const stats = [...(deck?.favours ?? []), ...(engine.getWeather()?.favours ?? [])].map(f => STAT_LABELS[f.stat]);
+    return [...new Set(stats)];
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [engine, trackInfo]);
   // One report builder for the lap-chart copy button and the Race Complete
   // bar: the balance-pass handoff (#245).
   const buildReport = () => {
@@ -1166,6 +1175,7 @@ function WatchMode({
         trackEmoji={trackInfo?.funEmoji || '🏁'}
         trackFlagEmoji={trackInfo?.emoji}
         conditions={headerConditions}
+        priority={headerPriority}
         elapsedTime={raceState.totalTicks}
         onMenuOpen={() => setNavPanelOpen(true)}
         liveBadge={spectator && !raceState.raceFinished}
@@ -1259,6 +1269,7 @@ function WatchMode({
                   drivers={drivers}
                   focusedDriverIds={Array.from(focusedDriverIds)}
                   highlightedDriverIds={podiumIds}
+                  mineDriverIds={myDriverIds as number[] | undefined}
                   unsafetyCarActive={raceState.unsafetyCarActive}
                   unsafetyCarPosition={raceState.unsafetyCarPosition}
                   battles={battles}
