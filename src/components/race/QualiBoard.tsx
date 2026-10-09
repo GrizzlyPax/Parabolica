@@ -1,8 +1,9 @@
 // The qualifying show (#495, Pax: "merge A and C"): before the lights, the race
 // view runs a qualifying session in place of the timing tower. Drivers go out
 // one after another; the on-track strip shows who is on their hot lap and its
-// sectors; each time drops onto the board and the grid forms. Watch, 2×, or
-// skip. Display only: the laps are the engine's own qualifying scores
+// sectors; each time drops onto the board and the grid forms. Watch (1× is
+// real time, like the race view), 2×, 10×, or skip. The next car goes out once
+// the car ahead clears sector 1, so hot laps overlap (#601). Display only: the laps are the engine's own qualifying scores
 // (engine.qualifyingLaps(), the side stream runQualifying reads), so the board
 // ends on exactly the grid the race starts from.
 import { useEffect, useMemo, useState } from 'react';
@@ -22,13 +23,29 @@ interface Props {
   nominalTicks: number;
   mine?: ReadonlySet<number>;
   onDone: () => void;
-  /** Who is on their hot lap and how far round (0..1), for the track map (#555); null between sessions. */
-  onLap?: (live: { id: number; progress: number } | null) => void;
+  /** Who is on a hot lap and how far round (0..1), for the track map (#555); empty when nobody is. */
+  onLap?: (live: QualiLive[]) => void;
 }
 
-/** One hot lap on screen, in ms at 1×. */
-export const QUALI_LAP_MS = 1400;
+export interface QualiLive { id: number; progress: number }
+
 const GRID_HOLD_MS = 2200;
+/** The race view's steps (#599): the button shows the speed you are watching at. */
+const SPEEDS = [1, 2, 10] as const;
+type Speed = typeof SPEEDS[number];
+
+/** When each car goes out and comes back, in ms of session time at 1×: a lap
+ * takes its own lap time (ticks are 100 ms, the race view's 1×), and the next
+ * car is released as the one ahead clears sector 1 (#600, #601). */
+export function qualiSchedule(laps: QualiLap[], nominalTicks: number): { out: number; lapMs: number }[] {
+  let release = 0;
+  return laps.map(l => {
+    const lapMs = qualiSeconds(l.score, nominalTicks) * 1000;
+    const slot = { out: release, lapMs };
+    release += lapMs / 3;
+    return slot;
+  });
+}
 
 /** Score → lap time in seconds (ticks are 100 ms). */
 export const qualiSeconds = (score: number, nominalTicks: number) => nominalTicks / score / 10;
@@ -39,50 +56,47 @@ export function fmtLap(sec: number): string {
 }
 
 export default function QualiBoard({ laps, drivers, nominalTicks, mine, onDone, onLap }: Props) {
-  // Laps on the board, and how far (0..1) the current hot lap has got. One
-  // state so a tick updates both at once (StrictMode-safe).
-  const [clock, setClock] = useState({ set: 0, progress: 0 });
-  const { set, progress } = clock;
-  const [speed, setSpeed] = useState<1 | 2>(1);
+  // Session time in ms at 1×; the speed scales how fast it runs.
+  const [t, setT] = useState(0);
+  const [speed, setSpeed] = useState<Speed>(1);
   const byId = useMemo(() => new Map(drivers.map(d => [d.id, d])), [drivers]);
+  const schedule = useMemo(() => qualiSchedule(laps, nominalTicks), [laps, nominalTicks]);
+  const end = schedule.reduce((m, s) => Math.max(m, s.out + s.lapMs), 0);
   const total = laps.length;
-  const done = set >= total;
+  const done = t >= end;
 
-  // The clock: one lap at a time, then hold on the grid and go.
   useEffect(() => {
     const step = 50;
-    const t = setInterval(() => {
-      setClock(c => {
-        if (c.set >= total) return c;
-        const next = c.progress + (step * speed) / QUALI_LAP_MS;
-        return next >= 1 ? { set: c.set + 1, progress: 0 } : { set: c.set, progress: next };
-      });
-    }, step);
-    return () => clearInterval(t);
-  }, [speed, total]);
+    const id = setInterval(() => setT(x => (x >= end ? x : Math.min(end, x + step * speed))), step);
+    return () => clearInterval(id);
+  }, [speed, end]);
   useEffect(() => {
     if (!done) return;
-    const t = setTimeout(onDone, GRID_HOLD_MS / speed);
-    return () => clearTimeout(t);
+    const id = setTimeout(onDone, GRID_HOLD_MS / speed);
+    return () => clearTimeout(id);
   }, [done, speed, onDone]);
 
-  // Tell the track map where the car on its hot lap is (#555, display only).
-  useEffect(() => {
-    onLap?.(set < total ? { id: laps[set].id, progress } : null);
-  }, [set, progress, total]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Cars on a hot lap now, oldest first, and the laps already in.
+  const onTrack = laps
+    .map((l, i) => ({ l, progress: (t - schedule[i].out) / schedule[i].lapMs }))
+    .filter(x => x.progress >= 0 && x.progress < 1);
+  const finished = laps.map((l, i) => ({ l, at: schedule[i].out + schedule[i].lapMs })).filter(x => x.at <= t);
+  const set = finished.length;
 
-  const board = useMemo(() => [...laps.slice(0, set)].sort((a, b) => b.score - a.score), [laps, set]);
+  // Tell the track map where the cars on a hot lap are (#555, display only).
+  const liveKey = onTrack.map(x => `${x.l.id}:${x.progress.toFixed(3)}`).join(',');
+  useEffect(() => {
+    onLap?.(onTrack.map(x => ({ id: x.l.id, progress: x.progress })));
+  }, [liveKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const board = useMemo(() => finished.map(x => x.l).sort((a, b) => b.score - a.score), [set]); // eslint-disable-line react-hooks/exhaustive-deps
   const pole = board[0];
-  const latest = set > 0 ? laps[set - 1] : null;
-  const current = done ? null : laps[set];
-  const cur = current ? byId.get(current.id) : null;
-  const curSec = current ? qualiSeconds(current.score, nominalTicks) : 0;
-  const sectorTone = (i: number) => {
-    if (!current) return '';
+  const latest = set > 0 ? [...finished].sort((a, b) => b.at - a.at)[0].l : null;
+  const sectorTone = (lap: QualiLap, progress: number, i: number) => {
     const reached = progress >= (i + 1) / 3;
     if (!reached) return progress > i / 3 ? 'live' : '';
-    if (current.ruined && i >= 1) return 'ruined';
-    return pole && current.score > pole.score ? 'best' : 'ok';
+    if (lap.ruined && i >= 1) return 'ruined';
+    return pole && lap.score > pole.score ? 'best' : 'ok';
   };
 
   const num = (d: Driver | undefined, size = 22) => d
@@ -96,24 +110,31 @@ export default function QualiBoard({ laps, drivers, nominalTicks, mine, onDone, 
         <span className="qb-count">{done ? 'Grid set' : `${set} of ${total} laps set · one hot lap each`}</span>
       </div>
 
-      {cur ? (
-        <div className={`qb-track ${mine?.has(cur.id) ? 'mine' : ''}`}>
-          <div className="qb-track-row">
-            <span className="qb-k">On track</span>
-            {num(cur)}
-            <b className="qb-track-nm">{cur.name}</b>
-            <span className="qb-track-time">{fmtLap(curSec * progress)}</span>
-          </div>
-          <div className="qb-sectors" aria-hidden="true">{[0, 1, 2].map(i => <span key={i} className={sectorTone(i)} />)}</div>
+      {onTrack.length > 0 ? (
+        <div className="qb-on">
+          {onTrack.map(({ l, progress }) => {
+            const cur = byId.get(l.id);
+            return (
+              <div key={l.id} className={`qb-track ${mine?.has(l.id) ? 'mine' : ''}`}>
+                <div className="qb-track-row">
+                  <span className="qb-k">On track</span>
+                  {num(cur)}
+                  <b className="qb-track-nm">{cur?.name}</b>
+                  <span className="qb-track-time">{fmtLap(qualiSeconds(l.score, nominalTicks) * progress)}</span>
+                </div>
+                <div className="qb-sectors" aria-hidden="true">{[0, 1, 2].map(i => <span key={i} className={sectorTone(l, progress, i)} />)}</div>
+              </div>
+            );
+          })}
         </div>
-      ) : (
+      ) : done ? (
         <div className="qb-track qb-grid-set">
           <span className="qb-k">Pole</span>
           {num(pole && byId.get(pole.id))}
           <b className="qb-track-nm">{pole && byId.get(pole.id)?.name}</b>
           <span className="qb-track-time">{pole && fmtLap(qualiSeconds(pole.score, nominalTicks))}</span>
         </div>
-      )}
+      ) : null}
 
       <div className="qb-scroll">
         <table className="qb-table">
@@ -139,7 +160,7 @@ export default function QualiBoard({ laps, drivers, nominalTicks, mine, onDone, 
       </div>
 
       <div className="qb-dock">
-        {!done && <button type="button" className="qb-btn" onClick={() => setSpeed(s => (s === 1 ? 2 : 1))} aria-pressed={speed === 2}>{speed === 2 ? '1×' : '2×'}</button>}
+        {!done && <button type="button" className="qb-btn" onClick={() => setSpeed(s => SPEEDS[(SPEEDS.indexOf(s) + 1) % SPEEDS.length])} aria-label={`Speed ${speed}×, tap to change`}>{speed}×</button>}
         <button type="button" className="qb-btn qb-btn-primary" onClick={onDone}>{done ? 'Lights' : 'Skip to grid'}</button>
       </div>
     </section>
