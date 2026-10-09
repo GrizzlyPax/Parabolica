@@ -69,7 +69,7 @@ describe('the deal', () => {
     const a = scripted(5, 8, [2]), b = scripted(5, 8, [2]);
     const human = a.setup.humans[0].teamId;
     expect(dealPack(a, 0, human)).toEqual(dealPack(b, 0, human));
-    expect(dealPack(a, 0, human)!.card.kind).not.toBe('effect');
+    expect(dealPack(a, 0, human)!.cards[0].kind).not.toBe('effect');
     const cpu = poolFor(a).teams.find(t => t.id !== human)!.id;
     expect(dealPack(a, 0, cpu)).toBeNull();
     expect(dealPack(scripted(6, 8, [2]), 0, scripted(6, 8, [2]).setup.humans[0].teamId)).not.toEqual(dealPack(a, 0, human));
@@ -83,9 +83,9 @@ describe('the deal', () => {
       for (const t of poolFor(facts).teams) {
         const p = dealPack(facts, 0, t.id)!;
         n++;
-        if (p.card.kind === 'trait') traits++;
-        metals[p.card.rarity!] = (metals[p.card.rarity!] ?? 0) + 1;
-        expect(['trait', 'equipment', 'upgrade', 'facility']).toContain(p.card.kind);
+        if (p.cards[0].kind === 'trait') traits++;
+        metals[p.cards[0].rarity!] = (metals[p.cards[0].rarity!] ?? 0) + 1;
+        expect(['trait', 'equipment', 'upgrade', 'facility']).toContain(p.cards[0].kind);
       }
     }
     expect(traits / n).toBeGreaterThan(TRAIT_CHANCE - 0.04);
@@ -105,13 +105,13 @@ describe('applying a pack', () => {
     for (let seed = 100; seed < 2000; seed++) {
       const facts = scripted(seed, 5, [1]);
       const p = dealPack(facts, 0, facts.setup.humans[0].teamId)!;
-      if (p.card.kind === kind && (!target || p.card.target === target)) return facts;
+      if (p.cards[0].kind === kind && (!target || p.cards[0].target === target)) return facts;
     }
     throw new Error(`no seed deals ${kind}`);
   }
   const app = (facts: SeasonFacts, over: Partial<PackApplication> = {}): PackApplication => {
     const p = pendingPack(facts)!;
-    return { type: 'pack', round: p.round, teamId: p.teamId, tier: p.tier, cardId: p.card.id, target: { kind: 'team' }, ...over };
+    return { type: 'pack', round: p.round, teamId: p.teamId, tier: p.tier, cardId: p.cards[0].id, dealt: p.cards.map(c => c.id), target: { kind: 'team' }, ...over };
   };
 
   it('equipment goes on one of your drivers (bench included); the wrong holder, card or team is refused', () => {
@@ -124,13 +124,13 @@ describe('applying a pack', () => {
     expect(validatePackApplication(facts, app(facts, { target: { kind: 'driver', id: 999 } }))).toMatch(/not on this team/);
     const other = poolFor(facts).teams.find(t => t.id !== human)!.id;
     expect(validatePackApplication(facts, app(facts, { target: { kind: 'driver', id: roster[other].driverIds[0] } }))).toMatch(/not on this team/);
-    expect(validatePackApplication(facts, app(facts, { cardId: 'eq-iridium-speed+acceleration+aggression' }))).toMatch(/dealt/);
+    expect(validatePackApplication(facts, app(facts, { cardId: 'eq-iridium-speed+acceleration+aggression' }))).toMatch(/not in the pack/);
     expect(validatePackApplication(facts, app(facts, { tier: 'legendary' }))).toMatch(/the pack is/);
     expect(validatePackApplication(facts, app(facts, { teamId: other }))).toMatch(/clock/);
     expect(validatePackApplication(facts, app(facts, { replaces: 'eq-bronze-speed', target: { kind: 'driver', id: roster[human].driverIds[2] } }))).toMatch(/nothing to replace/);
     const bench = roster[human].driverIds[2];
     const next = applyPack(facts, app(facts, { target: { kind: 'driver', id: bench } }));
-    expect(teamCardState(next, human).drivers[bench].equipment.map(c => c.id)).toEqual([pack.card.id]);
+    expect(teamCardState(next, human).drivers[bench].equipment.map(c => c.id)).toEqual([pack.cards[0].id]);
     expect(validatePackApplication(next, app(facts, { target: { kind: 'driver', id: bench } }))).toMatch(/already open/);
     expect(pendingPack(next)).toBeNull();
   });
@@ -150,7 +150,7 @@ describe('applying a pack', () => {
     const next = applyPack(facts, app(facts, { target: { kind: 'team' } }));
     const after = leagueForRound(next, 0).roster.filter(d => d.kingdomId === human);
     expect(after).toHaveLength(2);
-    for (const stat of pack.card.stats) {
+    for (const stat of pack.cards[0].stats) {
       const key = stat.stat as 'tireManagement' | 'pitCrew';
       for (let i = 0; i < 2; i++) expect(after[i].teamStats![key]).toBeCloseTo(before[i].teamStats![key] * (1 + stat.pct / 100), 10);
     }
@@ -167,10 +167,10 @@ describe('slots and the locker', () => {
       const facts = scripted(seed, 5, [1]);
       const human = facts.setup.humans[0].teamId;
       const first = dealPack(facts, 0, human)!;
-      if (first.card.kind !== 'upgrade') continue;
+      if (first.cards[0].kind !== 'upgrade') continue;
       const played = playRound(facts); // the helper puts the first upgrade in the car's slot
       const second = dealPack(played, 1, human)!;
-      if (second.card.kind === 'upgrade' && second.card.id !== first.card.id) return { facts: played, human };
+      if (second.cards[0].kind === 'upgrade' && second.cards[0].id !== first.cards[0].id) return { facts: played, human };
     }
     throw new Error('no seed');
   }
@@ -179,13 +179,13 @@ describe('slots and the locker', () => {
     const { facts, human } = twoUpgrades();
     const pack = pendingPack(facts)!;
     const inSlot = teamCardState(facts, human).car.upgrade[0];
-    const base: PackApplication = { type: 'pack', round: 1, teamId: human, tier: pack.tier, cardId: pack.card.id, target: { kind: 'car' } };
+    const base: PackApplication = { type: 'pack', round: 1, teamId: human, tier: pack.tier, cardId: pack.cards[0].id, dealt: pack.cards.map(c => c.id), target: { kind: 'car' } };
     expect(validatePackApplication(facts, base)).toMatch(/full/);
     const notInSlot = inSlot.id === 'up-bronze-grip' ? 'up-bronze-power' : 'up-bronze-grip';
     expect(validatePackApplication(facts, { ...base, replaces: notInSlot })).toMatch(/not there/);
     let f = applyPack(facts, { ...base, replaces: inSlot.id });
     let s = teamCardState(f, human);
-    expect(s.car.upgrade.map(c => c.id)).toEqual([pack.card.id]);
+    expect(s.car.upgrade.map(c => c.id)).toEqual([pack.cards[0].id]);
     expect(s.locker.map(c => c.id)).toEqual([inSlot.id]);
     // The race uses the new one, not the old one.
     const withNew = leagueForRound(f, 1).roster.find(d => d.kingdomId === human)!.carStats;
@@ -196,21 +196,21 @@ describe('slots and the locker', () => {
     expect(validateGearMove(f, { type: 'move', round: 1, teamId: human, cardId: inSlot.id, to: 'locker' })).toMatch(/already in the locker/);
     expect(validateGearMove(f, { type: 'move', round: 1, teamId: human, cardId: inSlot.id, to: { kind: 'team' } })).toMatch(/does not fit/);
     expect(validateGearMove(f, { type: 'move', round: 1, teamId: human, cardId: 'tr-car-bronze-grip', to: 'locker' })).toMatch(/traits never move/);
-    f = moveGear(f, { type: 'move', round: 1, teamId: human, cardId: pack.card.id, to: 'locker' });
+    f = moveGear(f, { type: 'move', round: 1, teamId: human, cardId: pack.cards[0].id, to: 'locker' });
     s = teamCardState(f, human);
     expect(s.car.upgrade).toEqual([]);
-    expect(s.locker.map(c => c.id)).toEqual([inSlot.id, pack.card.id]);
+    expect(s.locker.map(c => c.id)).toEqual([inSlot.id, pack.cards[0].id]);
     f = moveGear(f, { type: 'move', round: 1, teamId: human, cardId: inSlot.id, to: { kind: 'car' } });
     s = teamCardState(f, human);
     expect(s.car.upgrade.map(c => c.id)).toEqual([inSlot.id]);
-    expect(s.locker.map(c => c.id)).toEqual([pack.card.id]);
+    expect(s.locker.map(c => c.id)).toEqual([pack.cards[0].id]);
     // The locker is uncapped; nothing is ever lost.
     const all = [...s.car.upgrade, ...s.locker].map(c => c.id).sort();
-    expect(all).toEqual([inSlot.id, pack.card.id].sort());
+    expect(all).toEqual([inSlot.id, pack.cards[0].id].sort());
     // Only on your turn, in the current round.
-    expect(validateGearMove(f, { type: 'move', round: 0, teamId: human, cardId: pack.card.id, to: { kind: 'car' } })).toMatch(/round/);
+    expect(validateGearMove(f, { type: 'move', round: 0, teamId: human, cardId: pack.cards[0].id, to: { kind: 'car' } })).toMatch(/round/);
     const other = poolFor(f).teams.find(t => t.id !== human)!.id;
-    expect(validateGearMove(f, { type: 'move', round: 1, teamId: other, cardId: pack.card.id, to: { kind: 'car' } })).toMatch(/clock/);
+    expect(validateGearMove(f, { type: 'move', round: 1, teamId: other, cardId: pack.cards[0].id, to: { kind: 'car' } })).toMatch(/clock/);
   });
 
   it('equipment moves between your drivers, bench included', () => {
@@ -218,14 +218,14 @@ describe('slots and the locker', () => {
       const facts = scripted(seed, 5, [0]);
       const human = facts.setup.humans[0].teamId;
       const p = dealPack(facts, 0, human)!;
-      if (p.card.kind !== 'equipment') continue;
+      if (p.cards[0].kind !== 'equipment') continue;
       const ids = draftState(poolFor(facts), facts.draftPicks).rosters[human].driverIds;
-      let f = applyPack(facts, { type: 'pack', round: 0, teamId: human, tier: p.tier, cardId: p.card.id, target: { kind: 'driver', id: ids[0] } });
-      f = moveGear(f, { type: 'move', round: 0, teamId: human, cardId: p.card.id, to: { kind: 'driver', id: ids[2] } });
+      let f = applyPack(facts, { type: 'pack', round: 0, teamId: human, tier: p.tier, cardId: p.cards[0].id, dealt: p.cards.map(c => c.id), target: { kind: 'driver', id: ids[0] } });
+      f = moveGear(f, { type: 'move', round: 0, teamId: human, cardId: p.cards[0].id, to: { kind: 'driver', id: ids[2] } });
       const s = teamCardState(f, human);
       expect(s.drivers[ids[0]].equipment).toEqual([]);
-      expect(s.drivers[ids[2]].equipment.map(c => c.id)).toEqual([p.card.id]);
-      expect(validateGearMove(f, { type: 'move', round: 0, teamId: human, cardId: p.card.id, to: { kind: 'driver', id: ids[2] } })).toMatch(/already there/);
+      expect(s.drivers[ids[2]].equipment.map(c => c.id)).toEqual([p.cards[0].id]);
+      expect(validateGearMove(f, { type: 'move', round: 0, teamId: human, cardId: p.cards[0].id, to: { kind: 'driver', id: ids[2] } })).toMatch(/already there/);
       // The bench keeps its gear; it only counts when they race.
       f = setLineup(f, { round: 0, teamId: human, driverIds: [ids[0], ids[1]] });
       const grid = leagueForRound(f, 0).roster.filter(d => d.kingdomId === human).map(d => d.id);
@@ -260,5 +260,62 @@ describe('the whole season', () => {
     const bare = { ...a, cardFacts: [] };
     expect(leagueForRound(bare, 2).roster.map(d => d.stats)).not.toEqual(leagueForRound(a, 2).roster.map(d => d.stats));
     expect(CARDS_BY_ID.size).toBe(94);
+  });
+});
+
+describe('keep 1 of 3 (#533)', () => {
+  it('a pack deals three distinct cards of its tier; card one is the pre-#533 card', () => {
+    for (const seed of [1, 2, 3, 4, 5]) {
+      const facts = scripted(seed, 8);
+      const human = facts.setup.humans[0].teamId;
+      const p = dealPack(facts, 0, human)!;
+      expect(p.cards).toHaveLength(3);
+      expect(new Set(p.cards.map(c => c.id)).size).toBe(3);
+      for (const c of p.cards) expect(c.kind).not.toBe('effect');
+      expect(dealPack(facts, 0, human)).toEqual(p); // seeded
+    }
+  });
+
+  it('you keep any one of the three; the fact records all three and which was kept', () => {
+    const facts = scripted(11, 8);
+    const human = facts.setup.humans[0].teamId;
+    const roster = draftState(poolFor(facts), facts.draftPicks).rosters[human];
+    const p = pendingPack(facts)!;
+    const holderFor = (c: { kind: string; target: string }) => (c.target === 'driver' ? { kind: 'driver' as const, id: roster.driverIds[0] } : { kind: c.target as 'car' | 'team' });
+    const dealt = p.cards.map(c => c.id);
+    for (const kept of p.cards) {
+      const fact: PackApplication = { type: 'pack', round: 0, teamId: human, tier: p.tier, cardId: kept.id, dealt, target: holderFor(kept) };
+      const next = applyPack(facts, fact);
+      expect(next.cardFacts.at(-1)).toEqual(fact);
+      expect(pendingPack(next)).toBeNull();
+    }
+    const fact: PackApplication = { type: 'pack', round: 0, teamId: human, tier: p.tier, cardId: p.cards[1].id, dealt, target: holderFor(p.cards[1]) };
+    expect(validatePackApplication(facts, { ...fact, dealt: undefined })).toMatch(/record all three/);
+    expect(validatePackApplication(facts, { ...fact, dealt: [...dealt].reverse() })).toMatch(/record all three/);
+  });
+
+  it('a saved season with a kept card replays exactly', () => {
+    let facts = scripted(12, 8);
+    const human = facts.setup.humans[0].teamId;
+    const roster = draftState(poolFor(facts), facts.draftPicks).rosters[human];
+    const p = pendingPack(facts)!;
+    const kept = p.cards[2];
+    const target = kept.target === 'driver' ? { kind: 'driver' as const, id: roster.driverIds[0] } : { kind: kept.target };
+    facts = applyPack(facts, { type: 'pack', round: 0, teamId: human, tier: p.tier, cardId: kept.id, dealt: p.cards.map(c => c.id), target });
+    const store = memoryStore();
+    saveSeason(facts, store);
+    const loaded = loadSeason(store)!;
+    expect(loaded).toEqual(facts);
+    expect(teamCardState(loaded, human)).toEqual(teamCardState(facts, human));
+  });
+
+  it('a pre-#533 fact (one card, no dealt list) still replays', () => {
+    const facts = scripted(13, 8);
+    const human = facts.setup.humans[0].teamId;
+    const roster = draftState(poolFor(facts), facts.draftPicks).rosters[human];
+    const old = dealPack(facts, 0, human)!.cards[0];
+    const target = old.target === 'driver' ? { kind: 'driver' as const, id: roster.driverIds[0] } : { kind: old.target };
+    const legacy = { ...facts, cardFacts: [{ type: 'pack' as const, round: 0, teamId: human, tier: 'uncommon' as const, cardId: old.id, target }] };
+    expect(() => teamCardState(legacy, human)).not.toThrow();
   });
 });
