@@ -9,13 +9,14 @@
 - **Acceleration doubles as qualifying pace**, with fewer ruined laps; and you can **watch qualifying**.
 - **Real-F1 pit rule** (1 stop, change compound) with **tyre life as a share of the race**, hidden tyre luck, and **a wear dial per track**.
 - **Gear and traits look different** at a glance.
+- **Tags retire** (pulled up from v0.7, Pax, Oct 10): cards become the only system.
 
 ## Milestones
 | # | Milestone | Pax can… |
 |---|---|---|
 | **1** | **Choices** (no fingerprint move) | Keep 1 of 3 from a pack, tell gear from traits, watch qualifying fill a timing board |
 | **2** | **The bump** (one fingerprint bump, Pax merges) | Race on grade-point cards, a grid that rewards Acceleration, sane pit stops that differ by track |
-| **3** | **Ship** | Steward's re-probe says the build is in band; track favours checked |
+| **3** | **Ship** | Steward's re-probe says the build is in band; track favours checked; no tags left on any screen |
 
 ## The lanes
 **🛞 Hub — milestone 1, in order:**
@@ -33,6 +34,9 @@
 - Real-F1 pit rule + tyre life as a share of the race (#534)
 - Tyre luck ±10% per set, own seeded stream (#535)
 - Per-track wear dial (#536), after Steward's values
+- **Retire tags (#334)**: map first; aim for no fingerprint move; if results must move, fold into the bump PR
+
+**🛞 Hub — milestone 3:** retire tags from the screens (#541), after #334
 
 Milestone 1 and 2 run in parallel: Hub's work moves no fingerprint.
 
@@ -42,11 +46,13 @@ Milestone 1 and 2 run in parallel: Hub's work moves no fingerprint.
 - **Mock-ups first, one page per decision.** Pax picks; then build.
 - **Handoffs in a ```text block** so Pax can copy them on mobile.
 
-## Not in v0.6 (waiting on Pax's call: v0.7 or later)
-Live seasons (#340, #288, #523) · Wet weather (#360, #358) · pit-stop damage (#479) · CPU packs (#478, parked: "not there yet") · build your own team (#346) · driver card (#476) · Quick Race in the Season look (#520) · retire tags (#334) · next owner levers (#538: tyre plan, push-or-bank qualifying, risk-or-safe gear).
+## Moved to v0.7 Suzuka (Pax, Oct 10)
+Live seasons (#340, #288, #523) · Wet weather (#360, #358) · pit-stop damage (#479) · CPU packs (#478) · build your own team (#346) · driver card (#476) · Quick Race in the Season look (#520) · next owner levers (#538: tyre plan, push-or-bank qualifying, risk-or-safe gear).
 
 ## Decision log (Pax, 10/9, [Owner Choices Report](https://claude.ai/artifact/SwjizYrejSE8Nvp52A3DWd))
 First owner choice = **pick 1 of 3 from a pack**; other levers wait for a balance check · CPU packs not yet · **cards add grade points: Bronze +5 (1 stat) · Silver +10 (1) · Gold +10 (2) · Iridium +15 (3)** · **qualifying: Acceleration doubles as one-lap pace, ~+1% per step (~2 grid places)**; ruined laps 1 in 5 → ~1 in 12 · **pit rule: real F1**, 1 stop minimum, compound must change · **tyre life is a share of the race**: soft 1/3 · medium ~1/2 · hard 3/5 · end window ~last 13% · **tyre luck ±10% per new set, hidden** · **one wear dial per track** · reports are named "MM/DD <Subject> Report"
 
 **Oct 10 (Pax, via Hub, PR #532):** iridium a notch deeper (`--rarity-iridium` #9479ee, sheen #63bfb1) · iridium traits carry one sheen across the whole card face
-**Open for Pax:** car and team cards count for both drivers (double value): keep or halve?
+
+
+**Oct 10 (Pax, [Monza Roadmap](https://claude.ai/artifact/3MxTvzbH62QcwuQd4YgWhS)):** **car and team cards keep helping both drivers** (worth twice a driver card; those slots become the prized picks) · **everything outside owner choices moves to v0.7** · **retire tags pulls up into v0.6** (#334 engine/data/lab, #541 screens) · v0.6 scope locked
