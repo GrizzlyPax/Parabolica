@@ -46,10 +46,10 @@ for the future NPC-crowd system (BetLab was removed Oct 2026; git history has it
 - GitHub: GrizzlyPax/Parabolica
 
 ## How we work
-- **Read first:** `docs/V05_PLAN.md` (v0.5 Spa, **shipped Oct 9**: the record and the full decision log; the v0.6 plan comes next), then the newest `docs/HANDOFF_*.md` (how the pieces fit, traps).
+- **Read first:** `docs/V06_PLAN.md` (the current release: v0.6 Monza, owner choices), then the newest `docs/HANDOFF_*.md` (how the pieces fit, traps). v0.5's record and full decision log: `docs/V05_PLAN.md`.
 - **Skills (`.claude/skills/`)** hold the procedures: `write-issue` (issue shape, triage, `ready`), `ship-pr` (build → test → PR → merge rules), `republish-preview`, `balance-read`, `season-report`.
 - **GitHub is the task system. Every thread, every crew member.** No Asana, no TODO docs; the issue is the task.
-  - **Milestones = sequence.** The current release is split into milestones worked in order: `v0.5 · 1 Core` → `2 Playable` → `3 The box` → `4 Identity` → `5 Ship`. Then `v0.6 Monza`, `v0.7 Suzuka`. No due dates.
+  - **Milestones = sequence.** The current release is split into milestones worked in order: `v0.6 · 1 Choices` → `2 The bump` → `3 Ship` (v0.5 Spa shipped Oct 9). `v0.6 Monza` holds v0.6 work not yet placed; then `v0.7 Suzuka`. No due dates.
   - **Crew = a label:** `crew: apex` · `crew: hub` · `crew: radio` · `crew: steward` · `crew: pit` · `crew: pax` (needs Pax's call). Only current-release issues carry crew labels.
   - **Not in a release:** label `queued` (committed) or `icebox` (maybe / needs Pax).
   - **Order inside a milestone:** each issue's "Depends on" line. Pick the first open issue in the earliest milestone with your crew label whose dependencies are closed.
@@ -89,6 +89,7 @@ Every current-release issue has a `crew:` label saying who (and which model) sho
   Check what Pit already handled before listing it.
 
 ## Docs
+- `docs/V06_PLAN.md` - **The v0.6 Monza plan (current):** owner choices; milestones, lanes, the one bump, decision log
 - `docs/V05_PLAN.md` - The v0.5 Spa plan (shipped Oct 9, v0.5.1): milestones, crew lanes, build order, risks, decision log
 - `docs/README.md` - Index of every doc, grouped by area (update it when a doc is added, renamed or retired)
 - `docs/ARCHITECTURE_REVIEW.md` - Refactor roadmap (seeded RNG, persistence, engine split)
