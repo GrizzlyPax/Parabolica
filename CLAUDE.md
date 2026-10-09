@@ -46,7 +46,7 @@ for the future NPC-crowd system (BetLab was removed Oct 2026; git history has it
 - GitHub: GrizzlyPax/Parabolica
 
 ## How we work
-- **Read first:** `docs/V05_PLAN.md` (the current release plan), then the newest `docs/HANDOFF_*.md` (how the pieces fit, traps).
+- **Read first:** `docs/V05_PLAN.md` (v0.5 Spa, **shipped Oct 9**: the record and the full decision log; the v0.6 plan comes next), then the newest `docs/HANDOFF_*.md` (how the pieces fit, traps).
 - **Skills (`.claude/skills/`)** hold the procedures: `write-issue` (issue shape, triage, `ready`), `ship-pr` (build → test → PR → merge rules), `republish-preview`, `balance-read`, `season-report`.
 - **GitHub is the task system. Every thread, every crew member.** No Asana, no TODO docs; the issue is the task.
   - **Milestones = sequence.** The current release is split into milestones worked in order: `v0.5 · 1 Core` → `2 Playable` → `3 The box` → `4 Identity` → `5 Ship`. Then `v0.6 Monza`, `v0.7 Suzuka`. No due dates.
@@ -88,7 +88,7 @@ Every current-release issue has a `crew:` label saying who (and which model) sho
   Check what Pit already handled before listing it.
 
 ## Docs
-- `docs/V05_PLAN.md` - The v0.5 Spa plan: milestones, crew lanes, build order, risks, decision log
+- `docs/V05_PLAN.md` - The v0.5 Spa plan (shipped Oct 9, v0.5.1): milestones, crew lanes, build order, risks, decision log
 - `docs/README.md` - Index of every doc, grouped by area (update it when a doc is added, renamed or retired)
 - `docs/ARCHITECTURE_REVIEW.md` - Refactor roadmap (seeded RNG, persistence, engine split)
 - `docs/GAME_DESIGN_PASS.md` - Live-race design roadmap (drama beats, bet settlement, persistence)

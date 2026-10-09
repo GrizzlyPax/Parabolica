@@ -1,5 +1,13 @@
 # v0.5 Spa — the plan
 
+> **✅ SHIPPED, Oct 9, 2026 (engine v0.5.1, live on playparabolica.com).** All five milestones closed. Pax called it with Steward's Tracks & Weather re-probe (#362) moved to v0.6.
+>
+> **What you can play:** Menu → **Play a Season**: pick a team → snake draft (roster tables, grades) → Paddock (Team / League tabs, open a sparkling pack, place cards, pick Car 1 / Car 2) → watch or skip the race (scoreboard header, your cars haloed, finish sheet with a podium) → two championships at the finale. Hotseat on one phone. 28 deck teams, vehicles + portraits, new name pools, Balance Pass One with Speed as king.
+>
+> **Carried into v0.6:** effect cards (#332, #333), Tracks & Weather re-probe (#362) and Wet (#360), CPU packs (#478), qualifying (#495, #496), build your own team (#346), driver card (#476), Quick Race in the Season look (#520), live seasons (#340), retire tags (#334), card ladder (#335), pit-stop damage (#479).
+>
+> This doc stays as the record: milestones, lanes, risks and the full decision log below.
+
 *Master plan for the current release. Owner: 🎤 Pit. The work lives in GitHub: [milestones](https://github.com/GrizzlyPax/Parabolica/milestones) `v0.5 · 1 Core` → `5 Ship`, one issue per task, a `crew:` label for the owner, and a Paste line at the top of each issue.*
 
 ## What v0.5 is
