@@ -391,11 +391,10 @@ export const TRACK_COLUMNS: ColumnConfig[] = [
   COLUMN_SPEED,
   COLUMN_LAST_LAP,
   COLUMN_TIRE_AGE,
-  COLUMN_TAGS,
 ];
 
 // Detail View: the rich broadcast data screen (F1 timing).
-// P | Marble | Driver | Team | Int | Leader | Last | Best | Tyre | Pit | Tags | !
+// P | Marble | Driver | Team | Int | Leader | Last | Best | Tyre | Pit (cards live in the driver panel, Pax Oct 9)
 export const DETAIL_COLUMNS: ColumnConfig[] = [
   COLUMN_POSITION,
   COLUMN_TEAM_MARBLE,
@@ -410,7 +409,6 @@ export const DETAIL_COLUMNS: ColumnConfig[] = [
   COLUMN_TIRE_AGE,
   COLUMN_TIRES,
   COLUMN_PITS,
-  COLUMN_TAGS,
 ];
 
 // Generate grid-template-columns CSS from column config

@@ -545,3 +545,32 @@
 .tag-chip.named.rarity-silver, .tag-chip.named.rarity-silver.active, .tag-chip.named.rarity-silver.dormant { border-color: color-mix(in srgb, var(--rarity-silver) 70%, transparent); background: color-mix(in srgb, var(--rarity-silver) 14%, transparent); box-shadow: none; }
 .tag-chip.named.rarity-gold, .tag-chip.named.rarity-gold.active, .tag-chip.named.rarity-gold.dormant { border-color: color-mix(in srgb, var(--rarity-gold) 70%, transparent); background: color-mix(in srgb, var(--rarity-gold) 14%, transparent); box-shadow: none; }
 .tag-chip.named.rarity-iridium, .tag-chip.named.rarity-iridium.active, .tag-chip.named.rarity-iridium.dormant { border-color: color-mix(in srgb, var(--rarity-iridium) 70%, transparent); background: color-mix(in srgb, var(--rarity-iridium) 14%, transparent); box-shadow: none; }
+
+/* Driver panel (Pax, Oct 9): who · OVR grades · cards · history. Phone: a bottom sheet. */
+.timing-row.mine { background: color-mix(in srgb, var(--team-color) 16%, transparent); box-shadow: inset 4px 0 0 var(--team-color); }
+.timing-row.mine:hover { background: color-mix(in srgb, var(--team-color) 24%, transparent); }
+.dp { display: grid; gap: 12px; padding: 12px 14px 14px; background: var(--pw-surface, #151517); box-shadow: inset 4px 0 0 var(--team-color); }
+.dp-who { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 12px; }
+.dp-who b { font-family: var(--look-display, serif); font-size: 20px; }
+.dp-who > span { font-style: italic; color: var(--pw-text-2, #b4b4ba); }
+.dp-close { margin-left: auto; background: none; border: 0; cursor: pointer; color: var(--pw-text-2, #b4b4ba); font-family: var(--look-data, monospace); font-size: 12px; }
+.dp-ovr { display: flex; width: max-content; max-width: 100%; border: 1px solid var(--pw-border-strong, #4a4a50); }
+.dp-ovr > div { display: grid; justify-items: center; gap: 2px; padding: 6px 14px; min-width: 76px; border-left: 1px solid var(--pw-border-strong, #4a4a50); }
+.dp-ovr > div:first-child { border-left: 0; }
+.dp-g { font-family: var(--look-data, monospace); font-size: 22px; }
+.dp-g.g-s { color: var(--signal-purple); } .dp-g.g-a, .dp-g.g-b { color: var(--signal-green); } .dp-g.g-c { color: var(--signal-yellow); } .dp-g.g-d, .dp-g.g-f { color: var(--signal-red); }
+.dp-sealed { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; }
+.dp-read { display: inline-flex; align-items: center; gap: 6px; font-family: var(--look-data, monospace); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; }
+.dp-read::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.dp-read.front { color: var(--signal-green); } .dp-read.middle { color: var(--signal-yellow); } .dp-read.back { color: var(--signal-red); }
+.dp-note { font-style: italic; color: var(--pw-text-2, #b4b4ba); font-size: 14px; }
+.dp-block { display: grid; gap: 6px; }
+.dp-cards { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.dp-hist { display: grid; border-top: 1px solid var(--pw-hairline, #2a2a2e); }
+.dp-hist > div { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 8px; padding: 5px 0; border-bottom: 1px solid var(--pw-hairline, #2a2a2e); font-size: 14px; }
+.dp-laps { font-family: var(--look-data, monospace); font-size: 11px; color: var(--pw-text-3, #7c7c84); padding-top: 2px; }
+.dp-on { color: var(--signal-green); }
+.dp-reason { color: var(--pw-text-3, #7c7c84); }
+@media (max-width: 599px) {
+  .timing-row-expanded.dp.sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 950; /* over the idea box (900) */ max-height: 62vh; overflow: auto; border-top: 2px solid var(--team-color); padding-bottom: calc(14px + env(safe-area-inset-bottom)); }
+}

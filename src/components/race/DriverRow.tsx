@@ -2,19 +2,35 @@
 // Renders columns dynamically based on configuration
 // Expands when focused to show driver details
 import type { DriverRowProps } from './types';
-import { ordinal, type FieldRank } from '../../betting/utils';
-import { effectPills } from './TagChips';
-import { CardDot, CardFace } from '../../cards/CardFace';
+import type { Driver } from '../../RaceEngine';
+import { createPortal } from 'react-dom';
+import { CardDot } from '../../cards/CardFace';
+import { CardChip } from '../../cards/CardChip';
+import { grade, gradeTone, rating } from '../../season/grades';
+import type { StatKey } from '../../cards/types';
 
-/** "3rd of 22" as a chip coloured by where that sits in the field. */
-function RankChip({ r, what, unit }: { r?: FieldRank; what: string; unit: string }) {
-  if (!r) return null;
-  return (
-    <span className={`rank-chip tone-${r.tone}`} title={`${what}: ${ordinal(r.rank)} of ${r.of} ${unit} on this grid`}>
-      {ordinal(r.rank)}<span className="rank-of"> of {r.of}</span>
-    </span>
-  );
+const DRIVER_STATS: StatKey[] = ['baseSpeed', 'consistency', 'luck', 'acceleration', 'endurance', 'aggression'];
+const CAR_STATS: StatKey[] = ['power', 'grip', 'reliability'];
+const TEAM_STATS: StatKey[] = ['tireManagement', 'pitCrew'];
+
+/** OVR on the Paddock's 0–100 scale. The race's stats already carry their cards. */
+function ovr(block: Record<string, number> | undefined, stats: StatKey[]): number | null {
+  if (!block) return null;
+  const vals = stats.filter(s => typeof block[s] === 'number').map(s => rating(s, block[s]));
+  return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
 }
+function ovrTiles(d: Driver): [string, number][] {
+  const rows: [string, number | null][] = [
+    ['Driver', ovr(d.stats as unknown as Record<string, number>, DRIVER_STATS)],
+    ['Car', ovr(d.carStats as unknown as Record<string, number> | undefined, CAR_STATS)],
+    ['Team', ovr(d.teamStats as unknown as Record<string, number> | undefined, TEAM_STATS)],
+  ];
+  return rows.filter((r): r is [string, number] => r[1] !== null);
+}
+/** Phones get the panel as a bottom sheet, drawn on the page body so no transformed ancestor can trap it. */
+const isPhone = () => typeof matchMedia !== 'undefined' && matchMedia('(max-width: 599px)').matches;
+const sheetOrInline = (el: JSX.Element) => (isPhone() && typeof document !== 'undefined' ? createPortal(el, document.body) : el);
+const READ = { best: 'front', high: 'front', mid: 'middle', low: 'back' } as const;
 
 function DriverRow({ driver, columns, context, gridTemplate, isFocused, expandable = true, onClick }: DriverRowProps) {
   const { isFinished, isDNF, isPitting } = context;
@@ -29,7 +45,7 @@ function DriverRow({ driver, columns, context, gridTemplate, isFocused, expandab
   return (
     <div className={`timing-row-container ${isFocused ? 'expanded' : ''}`}>
       <div
-        className={`timing-row ${isFinished ? 'finished' : ''} ${isDNF ? 'dnf' : ''} ${isPitting ? 'pitting' : ''} ${isFocused ? 'focused' : ''} ${context.fantasyTeam ? 'fantasy' : ''}`}
+        className={`timing-row ${isFinished ? 'finished' : ''} ${isDNF ? 'dnf' : ''} ${isPitting ? 'pitting' : ''} ${isFocused ? 'focused' : ''} ${context.fantasyTeam ? 'fantasy' : ''} ${context.mine ? 'mine' : ''}`}
         style={rowStyle}
         onClick={onClick}
         role="button"
@@ -52,72 +68,53 @@ function DriverRow({ driver, columns, context, gridTemplate, isFocused, expandab
         ))}
       </div>
 
-      {/* Expanded details section - shown when focused AND expandable */}
-      {/* Full name + skill ratings + current tire */}
-      {isFocused && expandable && (
-        <div className="timing-row-expanded" style={{ '--team-color': driver.color } as React.CSSProperties}>
-          <div className="expanded-content">
-            {/* The Detail view already has a full-name column; don't say it twice (#451). */}
-            {!columns.some(c => c.id === 'driverFullName') && <span className="expanded-full-name">{driver.name}</span>}
-            {context.fantasyTeam && <span className="expanded-fact"><span className="expanded-k">Fantasy</span> <span className="fantasy-badge" style={{ '--fantasy-color': context.fantasyTeam.color } as React.CSSProperties}>{context.fantasyTeam.name}</span></span>}
-            {context.sealed ? (
-              <span className="expanded-fact"><span className="expanded-k">Rival</span> stats and cards stay sealed</span>
-            ) : (
-              <>
-                <span className="expanded-fact"><span className="expanded-k">Driver</span> <RankChip r={context.driverRank} what="Driver skill" unit="drivers" /></span>
-                <span className="expanded-fact"><span className="expanded-k">Car</span> <RankChip r={context.carRank} what="Car package (shared with the teammate)" unit="cars" /></span>
-              </>
-            )}
-            {driver.tireState && (
-              <span className="expanded-fact"><span className="expanded-k">Tyre</span>
-                <span className="expanded-tire" data-compound={driver.tireState.compound}>{driver.tireState.compound.charAt(0).toUpperCase()}</span>
-                {' '}{Math.round(driver.tireState.wear)}% worn · {driver.tireState.lapsOnTires} laps
-              </span>
-            )}
+      {/* The driver panel (Pax, Oct 9): who, OVR grades, cards, history. Nothing the tower already shows.
+          Desktop: under the row. Phone: a bottom sheet (components.css). */}
+      {isFocused && expandable && sheetOrInline(
+        <div className={`timing-row-expanded dp ${context.mine ? 'mine' : ''} ${isPhone() ? 'sheet' : ''}`} style={{ '--team-color': driver.color } as React.CSSProperties}>
+          <div className="dp-who">
+            <b>{driver.name}</b>
+            <span>{driver.number !== undefined ? `#${driver.number} · ` : ''}{driver.teamName}</span>
+            {context.fantasyTeam && <span className="fantasy-badge" style={{ '--fantasy-color': context.fantasyTeam.color } as React.CSSProperties}>{context.fantasyTeam.name}</span>}
+            <button type="button" className="dp-close" onClick={e => { e.stopPropagation(); onClick?.(); }}>Close</button>
           </div>
-          {/* Cards: yours face up (mini, metal visible); a rival's as metal dots only (#451) */}
+          {context.sealed ? (
+            <div className="dp-sealed">
+              {context.driverRank && <span className={`dp-read ${READ[context.driverRank.tone]}`}>{READ[context.driverRank.tone]} of the field</span>}
+              <span className="dp-note">Rival: grades sealed</span>
+            </div>
+          ) : (
+            <div className="dp-ovr">
+              {ovrTiles(driver).map(([k, v]) => {
+                const g = grade(v);
+                return <div key={k}><span className="expanded-k">{k}</span><span className={`dp-g g-${gradeTone(g)}`}>{g}</span></div>;
+              })}
+            </div>
+          )}
           {(driver.cards ?? []).length > 0 && (
-            <div className="expanded-cards">
-              <span className="expanded-k">Cards</span>
-              {context.sealed
-                ? (driver.cards ?? []).map(c => <CardDot key={c.id} card={c} />)
-                : (driver.cards ?? []).map(c => <span key={c.id} className="expanded-card"><CardFace card={c} size="mini" flippable={false} /><span className="expanded-card-name">{c.name}</span></span>)}
+            <div className="dp-block">
+              <span className="expanded-k">Cards · {(driver.cards ?? []).length}</span>
+              <span className="dp-cards">
+                {context.sealed
+                  ? (driver.cards ?? []).map(c => <CardDot key={c.id} card={c} />)
+                  : (driver.cards ?? []).map(c => <CardChip key={c.id} card={c} size={24} />)}
+              </span>
             </div>
           )}
-          {/* The effect stack: everything acting on this driver, with the reason (#243) */}
-          <div className="effect-stack">
-            {!context.sealed && (context.effectStack ?? []).length === 0 && (
-              <div className="effect-row inactive"><span className="effect-name">Nothing acting on this car right now</span></div>
-            )}
-            {(context.effectStack ?? []).map(e => {
-              const pills = e.active ? effectPills(e) : [];
-              return (
-                <div key={`${e.source}-${e.id}`} className={`effect-row ${e.active ? 'active' : 'inactive'} src-${e.source}`}>
-                  <span className="effect-emoji">{e.emoji}</span>
-                  <span className="effect-name">{e.name}</span>
-                  <span className="effect-reason">{e.reason}</span>
-                  <span className="effect-pills">
-                    {pills.map(p => <span key={p.label} className={`effect-pill ${p.good ? 'good' : 'bad'}`}><b>{p.value}</b> {p.label}</span>)}
-                    {e.active && pills.length === 0 && <span className="effect-pill neutral">no effect on the numbers</span>}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-          {/* History: what has happened to this car, with laps (#243) */}
-          {(context.history ?? []).length > 0 && (
-            <div className="driver-history">
+          {((context.history ?? []).length > 0 || (!context.sealed && (context.effectStack ?? []).some(e => e.active))) && (
+            <div className="dp-block">
               <span className="expanded-k">History</span>
-              {(context.history ?? []).map(h => (
-                <span key={h.key} className={`history-chip kind-${h.kind}`} title={`${h.name} on lap${h.laps.length === 1 ? '' : 's'} ${h.laps.join(', ')}`}>
-                  <span className="history-emoji">{h.emoji}</span>
-                  <span className="history-name">{h.name}</span>
-                  <span className="history-laps">{h.laps.map(l => `L${l}`).join(' ')}</span>
-                </span>
-              ))}
+              <div className="dp-hist">
+                {(context.history ?? []).map(h => (
+                  <div key={h.key} className={`kind-${h.kind}`}><span className="dp-laps">{h.laps.map(l => `L${l}`).join(' ')}</span><span>{h.name}</span></div>
+                ))}
+                {!context.sealed && (context.effectStack ?? []).filter(e => e.active).map(e => (
+                  <div key={`${e.source}-${e.id}`}><span className="dp-laps">now</span><span><span className="dp-on">Active:</span> {e.name}{e.reason ? <span className="dp-reason"> · {e.reason}</span> : null}</span></div>
+                ))}
+              </div>
             </div>
           )}
-        </div>
+        </div>,
       )}
     </div>
   );

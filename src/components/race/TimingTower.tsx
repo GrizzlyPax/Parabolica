@@ -42,6 +42,7 @@ function TimingTower({
   fastestLapOverall,
   fantasy,
   sealed,
+  mine,
   className = '',
 }: TimingTowerProps) {
   const { finishOrder } = raceState;
@@ -250,9 +251,11 @@ function TimingTower({
       displayPosition,
       positionDelta,
       gridSlot,
-      driverRank: isSealed ? undefined : fieldRanking.driver.get(driver.id),
+      // A rival keeps only the read (Front / Middle / Back) from its rank; the panel shows no numbers.
+      driverRank: fieldRanking.driver.get(driver.id),
       carRank: isSealed ? undefined : fieldRanking.car.get(driver.id),
       sealed: isSealed || undefined,
+      mine: mine?.has(driver.id) || undefined,
       fantasyTeam: fantasyBy.get(driver.id),
       battle,
       speedTone,
