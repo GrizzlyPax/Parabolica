@@ -8,7 +8,7 @@ import {
 import { snakeOrder } from '../fantasy/types';
 
 describe('draft order and slots', () => {
-  it('is a seeded shuffle of the teams, snaked over 4 rounds, cars last', () => {
+  it('is a seeded shuffle of the teams, snaked over 3 rounds (2 drivers, #585), cars last', () => {
     const pool = generateSeasonPool(11, 10);
     const order = draftOrder(pool);
     expect([...order].sort()).toEqual(pool.teams.map(t => t.id).sort());
@@ -17,11 +17,11 @@ describe('draft order and slots', () => {
     const slots = draftSlots(pool);
     expect(slots).toHaveLength(10 * DRAFT_ROUNDS);
     expect(slots.map(s => s.teamId)).toEqual(snakeOrder(10, DRAFT_ROUNDS).map(i => order[i]));
-    expect(slots.slice(0, 30).every(s => s.kind === 'driver')).toBe(true);
-    expect(slots.slice(30).every(s => s.kind === 'car')).toBe(true);
-    // The snake carries into round 4: last in round 3 picks a car first.
-    expect(slots[30].teamId).toBe(slots[29].teamId);
-    expect(slots[39].teamId).toBe(order[0]);
+    expect(slots.slice(0, 20).every(s => s.kind === 'driver')).toBe(true);
+    expect(slots.slice(20).every(s => s.kind === 'car')).toBe(true);
+    // Two driver rounds (#585), then cars; the snake carries on: last in round 2 picks a car first.
+    expect(slots[20].teamId).toBe(slots[19].teamId);
+    expect(slots[29].teamId).toBe(order[9]);
   });
 });
 
@@ -100,13 +100,13 @@ describe('validation', () => {
   it('the car round only takes cars, one per team', () => {
     const pool = generateSeasonPool(6, 5);
     let picks: DraftPick[] = [];
-    for (let i = 0; i < 15; i++) picks = applyPick(pool, picks, aiPick(pool, picks));
-    const slot = draftSlots(pool)[15];
+    for (let i = 0; i < 10; i++) picks = applyPick(pool, picks, aiPick(pool, picks));
+    const slot = draftSlots(pool)[10];
     expect(slot.kind).toBe('car');
-    expect(validatePick(pool, picks, { pickNo: 15, teamId: slot.teamId, kind: 'driver', id: pool.drivers[0].id })).toMatch(/car pick/);
-    picks = applyPick(pool, picks, { pickNo: 15, teamId: slot.teamId, kind: 'car', id: 'car-2' });
-    const next = draftSlots(pool)[16];
-    expect(validatePick(pool, picks, { pickNo: 16, teamId: next.teamId, kind: 'car', id: 'car-2' })).toMatch(/already taken/);
+    expect(validatePick(pool, picks, { pickNo: 10, teamId: slot.teamId, kind: 'driver', id: pool.drivers[0].id })).toMatch(/car pick/);
+    picks = applyPick(pool, picks, { pickNo: 10, teamId: slot.teamId, kind: 'car', id: 'car-2' });
+    const next = draftSlots(pool)[11];
+    expect(validatePick(pool, picks, { pickNo: 11, teamId: next.teamId, kind: 'car', id: 'car-2' })).toMatch(/already taken/);
   });
 });
 

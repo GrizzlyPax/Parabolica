@@ -1,7 +1,8 @@
 // Season Mode draft (#314, docs/SEASON_MODE.md §3): one snake draft hands the
-// shared pool out. Rounds 1–3 drivers, round 4 cars (the snake carries on, so
-// whoever picked last in round 3 picks a car first; Pax, Oct 8). Every team
-// ends with 3 drivers + 1 car.
+// shared pool out. Rounds 1–2 drivers, round 3 cars (the snake carries on, so
+// whoever picked last in the last driver round picks a car first; Pax, Oct 8).
+// Every team ends with 2 drivers + 1 car (#585: no bench). The draft itself goes
+// when the run's rookie pick lands (#594).
 //
 // Facts, not state: the draft IS the ordered pick list. `draftState` derives
 // whose turn it is, what's left and every roster from (pool, picks), so a

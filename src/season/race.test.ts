@@ -17,7 +17,7 @@ describe('Season race: Skip shows the race that gets recorded', () => {
     for (let r = 0; r < 2; r++) {
       const human = seasonState(facts).whoseTurn!;
       const roster = draftState(poolFor(facts), facts.draftPicks).rosters[human];
-      facts = openPack(setLineup(facts, { round: r, teamId: human, driverIds: [roster.driverIds[2], roster.driverIds[0]] }));
+      facts = openPack(setLineup(facts, { round: r, teamId: human, driverIds: [roster.driverIds[1], roster.driverIds[0]] }));
       const state = seasonState(facts);
       expect(state.phase).toBe('ready-for-go');
       const engine = RaceEngine.createForWorker();
@@ -28,8 +28,8 @@ describe('Season race: Skip shows the race that gets recorded', () => {
       const settled = facts.results[r];
       expect(engine.getRaceState().finishOrder).toEqual(settled.finishOrder);
       expect(engine.getRaceState().totalTicks).toBe(settled.totalTicks);
-      // The benched driver sat out.
-      expect([...settled.finishOrder, ...settled.dnfDriverIds]).not.toContain(roster.driverIds[1]);
+      // Both drivers race (#585: no bench).
+      for (const id of roster.driverIds) expect([...settled.finishOrder, ...settled.dnfDriverIds]).toContain(id);
     }
   });
 });

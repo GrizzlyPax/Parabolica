@@ -172,7 +172,6 @@ button.rt-g:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset:
 .rt .rt-act { width: 84px; text-align: center; border-left: 1px solid var(--pw-hairline); }
 .rt-minis { display: inline-flex; gap: 4px; padding: 0 8px; vertical-align: middle; }
 .rt tr.aimed th.rt-name { box-shadow: inset 3px 0 0 var(--team-primary); }
-.rt tr.benched .rt-nm { color: var(--pw-text-3); }
 .rt-slot.droppable, .pk-locker.droppable { background: color-mix(in srgb, var(--team-primary) 12%, transparent); cursor: pointer; }
 .rt-legend { display: flex; flex-wrap: wrap; gap: 6px 18px; padding: 8px 0; font-family: var(--look-data); font-size: 11px; color: var(--pw-text-2); }
 .rt-legend > span { display: inline-flex; align-items: center; gap: 6px; }
@@ -205,11 +204,6 @@ button.rt-g:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset:
 .pk-card { background: none; border: 0; padding: 0; cursor: pointer; display: inline-flex; }
 .pk-card.held { outline: 2px solid var(--pw-text-1); outline-offset: 2px; }
 .pk-empty { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: 1px dashed var(--pw-border-strong); color: var(--pw-text-3); font-family: var(--look-data); }
-.pk-toggle {
-  height: 30px; min-width: 64px; padding: 0 8px; border-radius: 0; cursor: pointer; background: transparent;
-  border: 1px solid var(--pw-border-strong); color: var(--pw-text-2); font-family: var(--look-data); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase;
-}
-.pk-toggle.on { background: var(--team-primary); border-color: var(--team-primary); color: var(--team-ink); }
 .pk-carno { font-family: var(--look-data); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--pw-text-2); }
 .ss-paddock.pk { max-width: 1180px; }
 .pk-locker { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 10px 0; border-bottom: 1px solid var(--pw-hairline); }

@@ -36,7 +36,7 @@ function playRound(facts: SeasonFacts): SeasonFacts {
     const state = seasonState(facts);
     if (state.phase !== 'paddock') break;
     const roster = draftState(poolFor(facts), facts.draftPicks).rosters[state.whoseTurn!];
-    facts = setLineup(facts, { round: state.round, teamId: state.whoseTurn!, driverIds: [roster.driverIds[1], roster.driverIds[2]] });
+    facts = setLineup(facts, { round: state.round, teamId: state.whoseTurn!, driverIds: [roster.driverIds[1], roster.driverIds[0]] });
     facts = openPack(facts);
   }
   expect(seasonState(facts).phase).toBe('ready-for-go');
@@ -83,7 +83,7 @@ describe('phases', () => {
     expect(() => setLineup(facts, { round: 1, teamId: human, driverIds: [roster[human].driverIds[0], roster[human].driverIds[1]] })).toThrow(/round/);
     expect(() => setLineup(facts, { round: 0, teamId: human, driverIds: [roster[human].driverIds[0], roster[other].driverIds[1]] })).toThrow(/on/);
     expect(() => setLineup(facts, { round: 0, teamId: human, driverIds: [roster[human].driverIds[0], roster[human].driverIds[0]] })).toThrow(/different/);
-    facts = setLineup(facts, { round: 0, teamId: human, driverIds: [roster[human].driverIds[2], roster[human].driverIds[0]] });
+    facts = setLineup(facts, { round: 0, teamId: human, driverIds: [roster[human].driverIds[1], roster[human].driverIds[0]] });
     // The lineup is set, but the pack is still to open (#316): the turn goes on.
     expect(seasonState(facts).whoseTurn).toBe(human);
     expect(() => setLineup(facts, { round: 0, teamId: human, driverIds: [roster[human].driverIds[0], roster[human].driverIds[1]] })).toThrow(/already/);
@@ -93,7 +93,7 @@ describe('phases', () => {
     facts = settleRound(facts);
     expect(seasonState(facts)).toMatchObject({ round: 1, phase: 'paddock', whoseTurn: human });
     // Their last lineup carries over as the default until they set a new one.
-    expect(lineupFor(facts, 1, human)).toEqual([roster[human].driverIds[2], roster[human].driverIds[0]]);
+    expect(lineupFor(facts, 1, human)).toEqual([roster[human].driverIds[1], roster[human].driverIds[0]]);
     // CPUs race their first two drafted drivers.
     expect(lineupFor(facts, 1, other)).toEqual([roster[other].driverIds[0], roster[other].driverIds[1]]);
   });
@@ -107,7 +107,7 @@ describe('phases', () => {
     expect(order[0]).toBe(b);
     expect(whoseTurn(facts)).toBe(b);
     const roster = draftState(poolFor(facts), facts.draftPicks).rosters;
-    let f = openPack(setLineup(facts, { round: 0, teamId: b, driverIds: [roster[b].driverIds[0], roster[b].driverIds[2]] }));
+    let f = openPack(setLineup(facts, { round: 0, teamId: b, driverIds: [roster[b].driverIds[0], roster[b].driverIds[1]] }));
     expect(whoseTurn(f)).toBe(a);
     f = openPack(setLineup(f, { round: 0, teamId: a, driverIds: [roster[a].driverIds[0], roster[a].driverIds[1]] }));
     expect(seasonState(f).phase).toBe('ready-for-go');
@@ -136,7 +136,7 @@ describe('a scripted 3-round season', () => {
     expect(total).toBe(3 * [25, 18, 15, 12, 10, 8, 6, 4, 2, 1].reduce((x, y) => x + y, 0) - dnfPointsLost(a));
     expect(standings.map(s => s.rank)).toEqual(standings.map((_, i) => i + 1));
     expect(standings.every((s, i) => i === 0 || s.points <= standings[i - 1].points)).toBe(true);
-    expect(driverStandings(a)).toHaveLength(30);
+    expect(driverStandings(a)).toHaveLength(20);
   });
 
   it('Paddock order is reverse standings, ties to the team further back in the draft order', () => {

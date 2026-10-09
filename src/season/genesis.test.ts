@@ -19,12 +19,12 @@ function naiveDraft(pool: SeasonPool): { rosters: TeamRoster[]; lineups: Lineup[
 }
 
 describe('generateSeasonPool', () => {
-  it.each([5, 10])('a %i-team pool has teams×3 drivers, a car and a team per slot', (n) => {
+  it.each([5, 10])('a %i-team pool has teams×2 drivers, a car and a team per slot', (n) => {
     const pool = generateSeasonPool(7, n);
-    expect(pool.drivers).toHaveLength(n * 3);
+    expect(pool.drivers).toHaveLength(n * 2);
     expect(pool.cars).toHaveLength(n);
     expect(pool.teams).toHaveLength(n);
-    expect(new Set(pool.drivers.map(d => d.id)).size).toBe(n * 3);
+    expect(new Set(pool.drivers.map(d => d.id)).size).toBe(n * 2);
     expect(new Set(pool.cars.map(c => c.id)).size).toBe(n);
     expect(new Set(pool.teams.map(t => t.id)).size).toBe(n);
     // A rack car is car stats only; the team holds the operational stats.
@@ -73,7 +73,7 @@ describe('generateSeasonPool', () => {
     const a = generateSeasonPool(5, 10), b = generateSeasonPool(5, 10);
     const nums = a.drivers.map(d => d.number);
     expect(nums).toEqual(b.drivers.map(d => d.number));
-    expect(new Set(nums).size).toBe(30);
+    expect(new Set(nums).size).toBe(20);
     for (const n of nums) { expect(n).toBeGreaterThanOrEqual(2); expect(n).toBeLessThanOrEqual(99); }
   });
 });

@@ -287,7 +287,8 @@ export function settleRound(facts: SeasonFacts, simVars: SimVariables = facts.se
 // Save / restore: facts only, one slot (Pax, Oct 8)
 
 export const SEASON_KEY = 'parabolica.season.v1';
-export const SEASON_SCHEMA_VERSION = 1;
+/** 2 since #585 (two drivers, no bench): older 3-driver seasons are archived, not migrated. */
+export const SEASON_SCHEMA_VERSION = 2;
 
 export interface SeasonStore {
   getItem(key: string): string | null;
