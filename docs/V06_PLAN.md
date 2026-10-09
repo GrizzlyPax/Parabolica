@@ -82,4 +82,6 @@ From Steward's [Pack Types](https://claude.ai/artifact/7sXEiVCHRUtMnAHETKqpUj) a
 - **CPU packs held back** (#478, icebox): packs are the player's edge on purpose, "you versus that machine"; rivals with cards would hide why you lose.
 - **Static cards first**; dynamic cards (traffic, late race, qualifying-only) come later, tied to **Paddock events** (e.g. "pick a deck" vs an interview, #369).
 - Weird, specific rule-changer cards wanted. Card names (#370) wait for the final deck.
+- **The big shift (Pax, Oct 10): a single-player roguelite.** Win a league to move up a ladder of leagues; lose and restart the run, keeping some permanent unlocks; Balatro-style difficulty scaling; builds where drivers get stranger over a run. Replaces the old "always on in the background" idea. Steward designs the run structure (#589).
+- **Descopes:** single-player only, hotseat removed until online multiplayer (#588) · two drivers per team, no bench (#585).
 
