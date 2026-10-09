@@ -31,7 +31,7 @@ Driver: Speed · Consistency · Luck · Acceleration · Endurance · Aggression.
 
 ## How cards arrive
 - **Genesis:** traits only (what a driver, car or team is born with), on the existing roll shape (1 in 6 per slot, metal odds 60/30/9/1 (bronze/silver/gold/iridium)). **Zero gear at season start**, with one empty slot of each kind.
-- **Card packs** (every race, Paddock): a pack **tier** by standing, **Common → Uncommon → Rare → Legendary** (worse standing = better pack; no colour). The tier sets the odds of the card's metal. Deals a **gear card** or, **about 1 in 4, a trait card**. Never effects.
+- **Card packs** (every race, Paddock): a pack **tier** by standing, **Common → Uncommon → Rare → Legendary** (worse standing = better pack; no colour). The tier sets the odds of the card's metal. **Deals three cards; you keep one** (v0.6, #533): each a **gear card** or, **about 1 in 4, a trait card**. Never effects.
 - **The sim:** effect cards (v0.6).
 - **Slots:** 1 equipment, 1 upgrade and 1 facility slot (fixed in v0.5; slot traits return in v0.6). A new gear card into a full slot = **swap**; the old card goes to the team's **uncapped locker**, and gear moves freely between locker, drivers and slots in any Paddock.
 

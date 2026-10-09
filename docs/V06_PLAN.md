@@ -56,3 +56,5 @@ First owner choice = **pick 1 of 3 from a pack**; other levers wait for a balanc
 
 
 **Oct 10 (Pax, [Monza Roadmap](https://claude.ai/artifact/3MxTvzbH62QcwuQd4YgWhS)):** **car and team cards keep helping both drivers** (worth twice a driver card; those slots become the prized picks) · **everything outside owner choices moves to v0.7** · **retire tags pulls up into v0.6** (#334 engine/data/lab, #541 screens) · v0.6 scope locked
+
+**Oct 10 (Pax, via Hub, #533 / PR #543):** keep 1 of 3 works by **"try them on"**: the reveal flips all three, all three come into your hand on the Paddock table, rows glow and grades flash, you place one and the other two go back · turn steps read Open pack · Keep one · Pick 2 · Lock in · ✅ **milestone 1 (Choices) done**
