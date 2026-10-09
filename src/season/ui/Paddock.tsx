@@ -9,7 +9,7 @@
 // hand, every row it can go on glows and every stat it would change flashes its
 // new grade; tap a glowing row to put it there (a trait asks first: it's
 // permanent), or the glowing locker to keep gear for later. Drag works too.
-// Locking the lineup ends the turn. Hotseat: a hand-off between humans.
+// Two drivers, both race (#585): no lineup choice; Lock in ends the turn.
 import { useMemo, useState, type DragEvent } from 'react';
 import { GameIcon, TeamLogo, teamThemeVars } from '../../icons/GameIcon';
 import { RaceNumber } from '../../icons/RaceNumber';
@@ -74,7 +74,6 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo }: 
   // A gear card picked up: which copy (#556: two of the same card are two chips) and where it sits.
   const [held, setHeld] = useState<{ id: string; from: CardHolder | 'locker'; n: number } | null>(null);
   const [equipSheet, setEquipSheet] = useState<{ card: Card; from: CardHolder } | null>(null);
-  const [chosen, setChosen] = useState<number[] | null>(null);
   const [detail, setDetail] = useState<{ title: string; reading: StatReading } | { card: Card } | null>(null);
 
   const commit = (next: SeasonFacts) => { saveSeason(next); onChange(next); };
@@ -94,7 +93,7 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo }: 
   const cards = teamCardState(facts, viewer);
   const pack = turn ? pendingPack(facts) : null;
   const myTurn = !!turn && state.phase === 'paddock';
-  const lineup = chosen ?? lineupFor(facts, state.round, viewer);
+  const lineup = lineupFor(facts, state.round, viewer);
   const car = pool.cars.find(c => c.id === roster.carId)!;
   const team = pool.teams.find(t => t.id === viewer)!;
   const allGear = [...cards.locker, ...Object.values(cards.drivers).flatMap(d => d.equipment), ...cards.car.upgrade, ...cards.team.facility];
@@ -142,7 +141,7 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo }: 
   };
   /** Where a picked trait can go: its own target type only. */
   const traitTargets = (c: Card): { key: HolderKey; label: string }[] => c.target === 'driver'
-    ? roster.driverIds.map(id => ({ key: String(id) as HolderKey, label: pool.drivers.find(x => x.id === id)!.fullName + (lineup.includes(id) ? '' : ' (bench)') }))
+    ? roster.driverIds.map(id => ({ key: String(id) as HolderKey, label: pool.drivers.find(x => x.id === id)!.fullName }))
     : c.target === 'car' ? [{ key: 'car' as HolderKey, label: car.name }] : [{ key: 'team' as HolderKey, label: you.name }];
   /** Gear into a slot; a full slot sends its card to the locker first (two moves, both facts). */
   const moveTo = (cardId: string, to: CardHolder | 'locker', from?: CardHolder | 'locker') => {
@@ -174,15 +173,9 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo }: 
     }
     setDetail({ card: c });
   };
-  const toggleCar = (id: number) => setChosen(() => {
-    const cur = [...lineup];
-    if (cur.includes(id)) return cur.filter(x => x !== id);
-    return cur.length >= 2 ? [cur[1], id] : [...cur, id];
-  });
   const lock = () => {
     if (pack || lineup.length !== 2) return;
     commit(setLineup(facts, { round: state.round, teamId: viewer, driverIds: [lineup[0], lineup[1]] }));
-    setChosen(null);
   };
   const dropOn = (k: HolderKey | 'locker') => ({
     onDragOver: (e: DragEvent) => { if (k === 'locker' ? lockerFits : fitsRow(k)) e.preventDefault(); },
@@ -236,8 +229,8 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo }: 
   const rowClass = (k: HolderKey, extra = '') => `${fitsRow(k) ? 'target' : ''} ${extra}`.trim();
 
   // The turn, in one line
-  const step = !myTurn ? -1 : pack ? 0 : lineup.length === 2 ? 2 : 1;
-  const STEPS = ['Open pack', 'Pick 2', 'Lock in'];
+  const step = !myTurn ? -1 : pack ? 0 : 1;
+  const STEPS = ['Open pack', 'Lock in'];
   const turnLine = state.phase === 'ready-for-go' ? (
     <div className="pk-go"><span>Every team is set for round {state.round + 1}.</span><button type="button" className="rs-btn rs-btn-primary" onClick={onGo}>Go: round {state.round + 1}</button></div>
   ) : myTurn && (
@@ -308,16 +301,12 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo }: 
               const carNo = lineup.indexOf(id);
               const gear = cards.drivers[id].equipment[0];
               return (
-                <tr key={id} className={rowClass(k, carNo < 0 ? 'benched' : '')}>
+                <tr key={id} className={rowClass(k)}>
                   {nameCell(k, <><RaceNumber n={d.number} color={you.color} ink={you.ink} size={24} shape="square" className="rt-numsq" /><Avatar icon={portraitFor(pool.seed, d.id)} color={you.color} size={22} /><span className="rt-nm">{d.fullName}</span></>)}
-                  {gradeCells(k, d.fullName, DRIVER_STATS, new Set(DRIVER_STATS), carNo < 0)}
+                  {gradeCells(k, d.fullName, DRIVER_STATS, new Set(DRIVER_STATS), false)}
                   <td className="rt-slot" {...dropOn(k)}>{gear ? chip(gear, true, holderOf(k)) : <span className="pk-empty" aria-label="Empty gear slot">—</span>}</td>
                   <td className="rt-traits"><span className="rt-minis">{[...d.traits, ...cards.drivers[id].traits].map(c => chip(c, false))}</span></td>
-                  <td className="rt-act">
-                    {myTurn
-                      ? <button type="button" className={`pk-toggle ${carNo >= 0 ? 'on' : ''}`} onClick={() => toggleCar(id)} aria-pressed={carNo >= 0}>{carNo >= 0 ? `Car ${carNo + 1}` : '—'}</button>
-                      : <span className="pk-carno">{carNo >= 0 ? `Car ${carNo + 1}` : '—'}</span>}
-                  </td>
+                  <td className="rt-act"><span className="pk-carno">Car {carNo + 1}</span></td>
                 </tr>
               );
             })}

@@ -127,8 +127,8 @@ describe('applying a pack', () => {
     expect(validatePackApplication(facts, app(facts, { cardId: 'eq-iridium-speed+acceleration+aggression' }))).toMatch(/not in the pack/);
     expect(validatePackApplication(facts, app(facts, { tier: 'legendary' }))).toMatch(/the pack is/);
     expect(validatePackApplication(facts, app(facts, { teamId: other }))).toMatch(/clock/);
-    expect(validatePackApplication(facts, app(facts, { replaces: 'eq-bronze-speed', target: { kind: 'driver', id: roster[human].driverIds[2] } }))).toMatch(/nothing to replace/);
-    const bench = roster[human].driverIds[2];
+    expect(validatePackApplication(facts, app(facts, { replaces: 'eq-bronze-speed', target: { kind: 'driver', id: roster[human].driverIds[1] } }))).toMatch(/nothing to replace/);
+    const bench = roster[human].driverIds[1];
     const next = applyPack(facts, app(facts, { target: { kind: 'driver', id: bench } }));
     expect(teamCardState(next, human).drivers[bench].equipment.map(c => c.id)).toEqual([pack.cards[0].id]);
     expect(validatePackApplication(next, app(facts, { target: { kind: 'driver', id: bench } }))).toMatch(/already open/);
@@ -214,7 +214,7 @@ describe('slots and the locker', () => {
     expect(validateGearMove(f, { type: 'move', round: 1, teamId: other, cardId: pack.cards[0].id, to: { kind: 'car' } })).toMatch(/clock/);
   });
 
-  it('equipment moves between your drivers, bench included', () => {
+  it('equipment moves between your two drivers (#585: no bench)', () => {
     for (let seed = 500; seed < 4000; seed++) {
       const facts = scripted(seed, 5, [0]);
       const human = facts.setup.humans[0].teamId;
@@ -222,15 +222,14 @@ describe('slots and the locker', () => {
       if (p.cards[0].kind !== 'equipment') continue;
       const ids = draftState(poolFor(facts), facts.draftPicks).rosters[human].driverIds;
       let f = applyPack(facts, { type: 'pack', round: 0, teamId: human, tier: p.tier, cardId: p.cards[0].id, dealt: p.cards.map(c => c.id), target: { kind: 'driver', id: ids[0] } });
-      f = moveGear(f, { type: 'move', round: 0, teamId: human, cardId: p.cards[0].id, to: { kind: 'driver', id: ids[2] } });
+      f = moveGear(f, { type: 'move', round: 0, teamId: human, cardId: p.cards[0].id, to: { kind: 'driver', id: ids[1] } });
       const s = teamCardState(f, human);
       expect(s.drivers[ids[0]].equipment).toEqual([]);
-      expect(s.drivers[ids[2]].equipment.map(c => c.id)).toEqual([p.cards[0].id]);
-      expect(validateGearMove(f, { type: 'move', round: 0, teamId: human, cardId: p.cards[0].id, to: { kind: 'driver', id: ids[2] } })).toMatch(/already there/);
-      // The bench keeps its gear; it only counts when they race.
-      f = setLineup(f, { round: 0, teamId: human, driverIds: [ids[0], ids[1]] });
+      expect(s.drivers[ids[1]].equipment.map(c => c.id)).toEqual([p.cards[0].id]);
+      expect(validateGearMove(f, { type: 'move', round: 0, teamId: human, cardId: p.cards[0].id, to: { kind: 'driver', id: ids[1] } })).toMatch(/already there/);
+      // Both drivers race (#585): the gear races with them.
       const grid = leagueForRound(f, 0).roster.filter(d => d.kingdomId === human).map(d => d.id);
-      expect(grid).not.toContain(ids[2]);
+      expect(grid.sort()).toEqual([...ids].sort());
       return;
     }
     throw new Error('no seed');

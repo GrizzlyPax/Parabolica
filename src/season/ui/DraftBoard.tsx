@@ -16,7 +16,7 @@ import type { Card } from '../../cards/types';
 import { advanceCpu, applyPick, draftState, quickDraft, type DraftPick, type PickKind } from '../draft';
 import { poolFor, saveSeason, type SeasonFacts } from '../season';
 import { teamsOf } from './teams';
-import type { PoolDriver, RackCar } from '../genesis';
+import { SQUAD_SIZE, type PoolDriver, type RackCar } from '../genesis';
 import { seasonName } from '../setup';
 import EndSeason from './EndSeason';
 
@@ -90,7 +90,7 @@ export default function DraftBoard({ facts, onChange, onMenu, onDone, onEndSeaso
     setConfirmQuick(false);
   };
 
-  const total = pool.teams.length * 4;
+  const total = pool.teams.length * (SQUAD_SIZE + 1);
   // One pool row: tap the name to select. Rivals and the open pool read only
   // Front / Middle / Back and sealed dots (Pax, Oct 9); your picks name their cards.
   const poolRow = (kind: PickKind, id: number | string, name: JSX.Element, traits: Card[], rank?: FieldRank) => {
@@ -155,7 +155,7 @@ export default function DraftBoard({ facts, onChange, onMenu, onDone, onEndSeaso
               </tr>
             </thead>
             <tbody>
-              {[0, 1, 2].map(i => {
+              {Array.from({ length: SQUAD_SIZE }, (_, i) => i).map(i => {
                 const d = pool.drivers.find(x => x.id === mine.driverIds[i]);
                 if (!d) return (
                   <tr key={i} className="dr-empty">
@@ -206,7 +206,7 @@ export default function DraftBoard({ facts, onChange, onMenu, onDone, onEndSeaso
 
       {state.done ? (
         <section className="rs-row ss-holding">
-          <p className="rs-hint">The draft is done. Every team has three drivers and a car.</p>
+          <p className="rs-hint">The draft is done. Every team has two drivers and a car.</p>
           <button type="button" className="rs-btn rs-btn-primary rs-start" onClick={onDone}>To the Paddock</button>
         </section>
       ) : (

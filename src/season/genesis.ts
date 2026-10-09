@@ -27,8 +27,8 @@ import type { RosterDriver } from '../RaceEngine';
 export const MIN_TEAMS = 5;
 export const MAX_TEAMS = 10;
 export const DEFAULT_TEAMS = 10;
-/** Drivers each team drafts; two race, one sits out. */
-export const SQUAD_SIZE = 3;
+/** Drivers each team drafts: two, and both race (#585, Pax Oct 10: no bench). */
+export const SQUAD_SIZE = 2;
 export const RACE_LINEUP = 2;
 
 export interface PoolDriver extends GeneratedPoolDriver {

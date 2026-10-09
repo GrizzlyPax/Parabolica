@@ -46,7 +46,7 @@ function MainMenu({ onSingleRace, onSeason, season, onCompendium, onGlossary, on
             <div className="mm-hero-line">
               {season && !season.finished
                 ? 'Your season is saved. Pick up where you left off.'
-                : 'Draft three drivers and a car, race the calendar, win the constructors’.'}
+                : 'Draft two drivers and a car, race the calendar, win the constructors’.'}
             </div>
             {season && !season.finished && (
               <div className="mm-ribbon" aria-label={`Season progress: ${season.round} of ${season.total}`}>
