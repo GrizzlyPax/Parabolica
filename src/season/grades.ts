@@ -30,7 +30,7 @@ export function grade(value: number): Grade {
   return GRADES[Math.min(GRADES.length - 1, Math.max(0, Math.floor(value / (100 / GRADES.length))))];
 }
 
-/** Colour family of a grade (Pax: S purple, A green, C yellow, F red; B and D plain). */
+/** Colour family of a grade (Pax, Oct 9: the full ramp, S purple · A green · B light green · C yellow · D orange · F red). */
 export function gradeTone(g: Grade): 's' | 'a' | 'b' | 'c' | 'd' | 'f' {
   return g === 'S' ? 's' : (g[0].toLowerCase() as 'a' | 'b' | 'c' | 'd' | 'f');
 }

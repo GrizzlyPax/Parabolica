@@ -22,6 +22,7 @@ import { constructorStandings, lineupFor, poolFor, saveSeason, seasonState, setL
 import { overall, readStat, type StatReading } from '../grades';
 import { seasonName } from '../setup';
 import Handoff from './Handoff';
+import EndSeason from './EndSeason';
 import PackReveal from './PackReveal';
 import { GradeCell, ReadingSheet } from './RosterTable';
 import { humanLabel, teamsOf } from './teams';
@@ -30,6 +31,7 @@ interface Props {
   facts: SeasonFacts;
   onChange: (facts: SeasonFacts) => void;
   onMenu: () => void;
+  onEndSeason: () => void;
   onGo: () => void;
   onStandings: () => void;
 }
@@ -67,7 +69,7 @@ function withCard(own: Card[], gear: Card[], extra: Card | null): Card[] {
   return extra.kind === 'trait' ? [...own, ...gear, extra] : [...own, extra];
 }
 
-export default function Paddock({ facts, onChange, onMenu, onGo, onStandings }: Props) {
+export default function Paddock({ facts, onChange, onMenu, onGo, onStandings, onEndSeason }: Props) {
   const pool = useMemo(() => poolFor(facts), [facts.setup]); // eslint-disable-line react-hooks/exhaustive-deps
   const teams = useMemo(() => teamsOf(facts), [facts.setup]); // eslint-disable-line react-hooks/exhaustive-deps
   const rosters = useMemo(() => draftState(pool, facts.draftPicks).rosters, [pool, facts.draftPicks]);
@@ -263,6 +265,7 @@ export default function Paddock({ facts, onChange, onMenu, onGo, onStandings }: 
           <h1 className="rs-title">Paddock</h1>
           <span className="rs-sub">{seasonName(facts.setup)} · round {state.round + 1} of {total}</span>
         </div>
+        <EndSeason onEnded={onEndSeason} />
       </header>
 
       {priority.size > 0 && (

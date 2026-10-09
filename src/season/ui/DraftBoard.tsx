@@ -13,11 +13,13 @@ import { teamsOf } from './teams';
 import type { PoolDriver, RackCar } from '../genesis';
 import { seasonName } from '../setup';
 import Handoff from './Handoff';
+import EndSeason from './EndSeason';
 
 interface Props {
   facts: SeasonFacts;
   onChange: (facts: SeasonFacts) => void;
   onMenu: () => void;
+  onEndSeason: () => void;
   onDone: () => void;
 }
 
@@ -42,7 +44,7 @@ function Open({ traits }: { traits: Card[] }) {
   return traits.length ? <span className="ss-open">{traits.map(c => <span key={c.id} className="ss-open-card"><CardDot card={c} />{c.name}</span>)}</span> : null;
 }
 
-export default function DraftBoard({ facts, onChange, onMenu, onDone }: Props) {
+export default function DraftBoard({ facts, onChange, onMenu, onDone, onEndSeason }: Props) {
   const pool = useMemo(() => poolFor(facts), [facts.setup]); // eslint-disable-line react-hooks/exhaustive-deps
   const teams = useMemo(() => teamsOf(facts), [facts.setup]); // eslint-disable-line react-hooks/exhaustive-deps
   const humanIds = useMemo(() => facts.setup.humans.map(h => h.teamId), [facts.setup]);
@@ -136,6 +138,7 @@ export default function DraftBoard({ facts, onChange, onMenu, onDone }: Props) {
           <h1 className="rs-title">Draft</h1>
           <span className="rs-sub">{seasonName(facts.setup)} · {state.done ? 'every team is full' : `pick ${facts.draftPicks.length + 1} of ${total} · ${slot!.kind === 'driver' ? `round ${slot!.round}, drivers` : 'last round, cars'}`}</span>
         </div>
+        <EndSeason onEnded={onEndSeason} />
       </header>
 
       <section className="rs-row">
