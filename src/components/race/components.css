@@ -546,7 +546,7 @@
 .tag-chip.named.rarity-gold, .tag-chip.named.rarity-gold.active, .tag-chip.named.rarity-gold.dormant { border-color: color-mix(in srgb, var(--rarity-gold) 70%, transparent); background: color-mix(in srgb, var(--rarity-gold) 14%, transparent); box-shadow: none; }
 .tag-chip.named.rarity-iridium, .tag-chip.named.rarity-iridium.active, .tag-chip.named.rarity-iridium.dormant { border-color: color-mix(in srgb, var(--rarity-iridium) 70%, transparent); background: color-mix(in srgb, var(--rarity-iridium) 14%, transparent); box-shadow: none; }
 
-/* Driver panel (Pax, Oct 9): who · OVR grades · cards · history. Phone: a bottom sheet. */
+/* Driver panel (Pax, Oct 9): who · OVR grades · cards · history. Opens inside the tower. */
 .timing-row.mine { background: color-mix(in srgb, var(--team-color) 16%, transparent); box-shadow: inset 4px 0 0 var(--team-color); }
 .timing-row.mine:hover { background: color-mix(in srgb, var(--team-color) 24%, transparent); }
 .dp { display: grid; gap: 12px; padding: 12px 14px 14px; background: var(--pw-surface, #151517); box-shadow: inset 4px 0 0 var(--team-color); }
@@ -571,6 +571,4 @@
 .dp-laps { font-family: var(--look-data, monospace); font-size: 11px; color: var(--pw-text-3, #7c7c84); padding-top: 2px; }
 .dp-on { color: var(--signal-green); }
 .dp-reason { color: var(--pw-text-3, #7c7c84); }
-@media (max-width: 599px) {
-  .timing-row-expanded.dp.sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 950; /* over the idea box (900) */ max-height: 62vh; overflow: auto; border-top: 2px solid var(--team-color); padding-bottom: calc(14px + env(safe-area-inset-bottom)); }
 }

@@ -3047,3 +3047,18 @@
   cursor: pointer;
 }
 .bf-copy-report-btn:hover { color: var(--pw-text-1); border-color: var(--pw-border-strong); }
+
+/* Phones (stacked layout): the track pins under the header and the tower scrolls
+   below it, so a driver's panel (inside the tower) never covers the track (Pax, Oct 9). */
+@media (max-width: 799px) {
+  /* clip (not hide): hiding x-overflow makes .watch-mode a scroll box and breaks sticky */
+  .watch-mode { overflow-x: clip; overflow-y: visible; }
+  /* The header stays on screen: fixed, with the page padded by its measured height. */
+  .watch-mode .uh { position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: var(--pw-ground); }
+  .watch-mode { padding-top: var(--uh-height, 84px); }
+  .broadcast-frame.frame-track .bf-map {
+    order: -1; position: sticky; top: var(--uh-height, 84px); z-index: 10;
+    background: var(--pw-ground); padding: 6px 12px; border-bottom: 1px solid var(--pw-hairline);
+  }
+  .broadcast-frame.frame-track .bf-map .track-map { max-height: 30vh; }
+}

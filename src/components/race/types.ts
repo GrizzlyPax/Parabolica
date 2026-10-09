@@ -138,6 +138,8 @@ export interface UniversalHeaderProps {
   trackFlagEmoji?: string; // Flag emoji for the track location
   /** Ambient conditions for this race (weather, track character). */
   conditions?: ConditionChip[];
+  /** This race's priority stats (track + weather favours), shown as a chip. */
+  priority?: string[];
   elapsedTime: number;
   onMenuOpen: () => void;
   /** Show a pulsing LIVE pill (broadcast spectating). */

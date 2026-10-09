@@ -3,7 +3,6 @@
 // Expands when focused to show driver details
 import type { DriverRowProps } from './types';
 import type { Driver } from '../../RaceEngine';
-import { createPortal } from 'react-dom';
 import { CardDot } from '../../cards/CardFace';
 import { CardChip } from '../../cards/CardChip';
 import { grade, gradeTone, rating } from '../../season/grades';
@@ -27,9 +26,6 @@ function ovrTiles(d: Driver): [string, number][] {
   ];
   return rows.filter((r): r is [string, number] => r[1] !== null);
 }
-/** Phones get the panel as a bottom sheet, drawn on the page body so no transformed ancestor can trap it. */
-const isPhone = () => typeof matchMedia !== 'undefined' && matchMedia('(max-width: 599px)').matches;
-const sheetOrInline = (el: JSX.Element) => (isPhone() && typeof document !== 'undefined' ? createPortal(el, document.body) : el);
 const READ = { best: 'front', high: 'front', mid: 'middle', low: 'back' } as const;
 
 function DriverRow({ driver, columns, context, gridTemplate, isFocused, expandable = true, onClick }: DriverRowProps) {
@@ -69,9 +65,9 @@ function DriverRow({ driver, columns, context, gridTemplate, isFocused, expandab
       </div>
 
       {/* The driver panel (Pax, Oct 9): who, OVR grades, cards, history. Nothing the tower already shows.
-          Desktop: under the row. Phone: a bottom sheet (components.css). */}
-      {isFocused && expandable && sheetOrInline(
-        <div className={`timing-row-expanded dp ${context.mine ? 'mine' : ''} ${isPhone() ? 'sheet' : ''}`} style={{ '--team-color': driver.color } as React.CSSProperties}>
+          It opens under the row, inside the tower, so it never covers the track (Pax, Oct 9). */}
+      {isFocused && expandable && (
+        <div className={`timing-row-expanded dp ${context.mine ? 'mine' : ''}`} style={{ '--team-color': driver.color } as React.CSSProperties}>
           <div className="dp-who">
             <b>{driver.name}</b>
             <span>{driver.number !== undefined ? `#${driver.number} · ` : ''}{driver.teamName}</span>
@@ -114,7 +110,7 @@ function DriverRow({ driver, columns, context, gridTemplate, isFocused, expandab
               </div>
             </div>
           )}
-        </div>,
+        </div>
       )}
     </div>
   );
