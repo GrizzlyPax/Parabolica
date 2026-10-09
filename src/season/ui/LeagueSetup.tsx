@@ -149,32 +149,41 @@ export default function LeagueSetup({ onBack, onStarted }: Props) {
           </div>
         )}
         <p className="rs-hint">{humanCount > 1 ? `P${picker + 1}: tap a team to make it yours. Tap it again to let it go.` : 'Tap a team to make it yours.'}</p>
-        <ol className="ss-teams">
-          {pool.teams.map(t => {
-            const owner = owners.indexOf(t.id);
-            const mine = owner === picker;
-            // An automatic seat (no pick yet) gives way; a picked team is held.
-            const heldByOther = owner >= 0 && !mine && picks[owner] != null;
-            return (
-              <li key={t.id}>
-                <button
-                  type="button"
-                  className={`ss-team ss-team-pick ${mine ? 'mine' : ''}`}
-                  onClick={() => tap(t.id)}
-                  disabled={heldByOther}
-                  aria-pressed={mine}
-                  aria-label={`${t.name}${owner >= 0 ? `, ${label(owner)}` : ', CPU'}`}
-                >
-                  <TeamLogo team={t} size={28} />
-                  <span className="ss-team-name">{t.name}</span>
-                  {owner >= 0
-                    ? <span className="ss-badge ss-badge-human" style={teamThemeVars(t)}>{label(owner)}{picks[owner] == null ? ' · auto' : ''}</span>
-                    : <span className="ss-badge"><GameIcon name="season.cpu" size={12} /> CPU</span>}
-                </button>
-              </li>
-            );
-          })}
-        </ol>
+        <div className="rt-scroll">
+          <table className="rt rt-compact ss-teams-table">
+            <thead><tr><th className="rt-name">Team</th><th className="ss-seat">Seat</th></tr></thead>
+            <tbody>
+              {pool.teams.map(t => {
+                const owner = owners.indexOf(t.id);
+                const mine = owner === picker;
+                // An automatic seat (no pick yet) gives way; a picked team is held.
+                const heldByOther = owner >= 0 && !mine && picks[owner] != null;
+                return (
+                  <tr key={t.id} className={`${mine ? 'mine' : ''} ${heldByOther ? 'held' : ''}`.trim()}>
+                    <th className="rt-name" scope="row">
+                      <button
+                        type="button"
+                        className="rt-pick"
+                        onClick={() => tap(t.id)}
+                        disabled={heldByOther}
+                        aria-pressed={mine}
+                        aria-label={`${t.name}${owner >= 0 ? `, ${label(owner)}` : ', CPU'}`}
+                      >
+                        <TeamLogo team={t} size={22} />
+                        <span className="rt-nm">{t.name}</span>
+                      </button>
+                    </th>
+                    <td className="ss-seat">
+                      {owner >= 0
+                        ? <span className="ss-badge ss-badge-human" style={teamThemeVars(t)}>{label(owner)}{picks[owner] == null ? ' · auto' : ''}</span>
+                        : <span className="ss-badge"><GameIcon name="season.cpu" size={12} /> CPU</span>}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
         <p className="rs-hint">Naming your own team comes with the team creator.</p>
       </section>
 

@@ -22,6 +22,7 @@ import { MOTORSPORT_DECK, cardsBy, STAT_LABELS, type Card } from './cards';
 import { CardFace } from './cards/CardFace';
 import './RunSetup.css';
 import './Glossary.css';
+import './season/ui/Season.css';
 
 interface GlossaryProps {
   onBack: () => void;
@@ -413,15 +414,20 @@ export default function Glossary({ onBack, tab: tabSlug, onTabChange }: Glossary
         if (!rows.length) return null;
         return (
           <Section key={grp.id} {...sec(`teams:${grp.id}`)} title={grp.title} count={grp.rows.length} hint={grp.hint}>
-            <div className="gl-list">
-              {rows.map(t => (
-                <Row key={t.id} id={`team:${t.id}`} open={isOpen(`team:${t.id}`)} onToggle={toggle}
-                  lead={<span className="gl-plain gl-team"><TeamLogo team={t} size={20} /> {t.name}</span>}
-                  pills={<span className="gl-readout">{t.description}</span>}>
-                  <p className="gl-desc">{t.description}</p>
-                  <div className="gl-facts"><Fact k="Colour">{t.color}</Fact><Fact k="Ink">{t.ink}</Fact><Fact k="Icon">{t.iconId}</Fact><Fact k="Id">{t.id}</Fact></div>
-                </Row>
-              ))}
+            <div className="rt-scroll">
+              <table className="rt rt-compact gl-teams">
+                <thead><tr><th className="rt-name">Team</th><th className="gl-tcol">Colour</th><th className="gl-tline">The line</th><th className="gl-tid">Icon · id</th></tr></thead>
+                <tbody>
+                  {rows.map(t => (
+                    <tr key={t.id}>
+                      <th className="rt-name" scope="row"><TeamLogo team={t} size={22} /><span className="rt-nm">{t.name}</span></th>
+                      <td className="gl-tcol"><span className="gl-swatch" style={{ background: t.color }} />{t.color}</td>
+                      <td className="gl-tline">{t.description}</td>
+                      <td className="gl-tid">{t.iconId}<br />{t.id}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </Section>
         );

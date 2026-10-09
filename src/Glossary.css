@@ -105,3 +105,17 @@
 .gl-card { display: inline-flex; align-items: center; gap: 8px; }
 /* World Deck → Cards: the deck as a binder of card faces (#418) */
 .gl-binder { display: grid; grid-template-columns: repeat(auto-fill, 108px); gap: 12px 8px; padding: 6px 0 4px; }
+
+/* World Deck -> Teams as a roster table (#453). */
+.gl-teams .rt-name { padding-left: 8px; }
+.gl-teams .gl-tcol { width: 120px; padding: 0 10px; font-family: var(--look-data); font-size: 12px; color: var(--pw-text-2); border-left: 1px solid var(--pw-hairline); white-space: nowrap; }
+.gl-swatch { display: inline-block; width: 14px; height: 14px; margin-right: 8px; vertical-align: middle; border: 1px solid var(--pw-border-strong); }
+.gl-teams .gl-tline { min-width: 280px; padding: 8px 12px; font-style: italic; color: var(--pw-text-2); border-left: 1px solid var(--pw-hairline); white-space: normal; height: auto; }
+.gl-teams .gl-tid { width: 170px; padding: 6px 10px; font-family: var(--look-data); font-size: 11px; color: var(--pw-text-3); border-left: 1px solid var(--pw-hairline); }
+@media (max-width: 599px) {
+  .gl-teams .gl-tcol, .gl-teams .gl-tid { display: none; }
+  .gl-teams .rt-name { min-width: 140px; max-width: 150px; }
+  .gl-teams .gl-tline { min-width: 0; font-size: 14px; }
+  .rt.gl-teams { width: 100%; min-width: 0; table-layout: auto; }
+  .rt.gl-teams td.gl-tline { height: auto; padding: 8px 10px; }
+}
