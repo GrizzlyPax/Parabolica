@@ -1,6 +1,7 @@
 // Column definitions for TimingTower
 // Each column has an id, header, width, alignment, and render function
 
+import { RaceNumber } from '../../icons/RaceNumber';
 import TeamStripe from './TeamStripe';
 import LapTime from './LapTime';
 import PositionDelta from './PositionDelta';
@@ -64,32 +65,19 @@ export const COLUMN_TEAM_MARBLE: ColumnConfig = {
   header: '',
   width: '26px',
   align: 'center',
-  render: (driver: Driver) => (
-    <span
-      className="team-marble"
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: '22px',
-        height: '22px',
-        borderRadius: '50%',
-        background: driver.color,
-        color: driver.ink || '#fff',
-        border: `2px solid ${driver.ink || '#fff'}`,
-        fontSize: driver.number !== undefined ? '10px' : '12px',
-        fontFamily: driver.number !== undefined ? 'var(--look-data, monospace)' : undefined,
-        fontWeight: 600,
-        lineHeight: 1,
-        // Centre the digits themselves, not the font's line box: Special
-        // Elite's descender space otherwise lifts the number (#451).
-        textBox: 'trim-both cap alphabetic',
-        boxShadow: `0 0 6px ${driver.color}60`,
-      } as React.CSSProperties}
-    >
-      {driver.number ?? driver.emoji}
-    </span>
-  ),
+  render: (driver: Driver) => (driver.number !== undefined
+    ? <RaceNumber n={driver.number} color={driver.color} ink={driver.ink || '#fff'} size={22} className="team-marble" style={{ filter: `drop-shadow(0 0 4px ${driver.color}60)` }} />
+    : (
+      <span
+        className="team-marble"
+        style={{
+          display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '22px', height: '22px', borderRadius: '50%',
+          background: driver.color, color: driver.ink || '#fff', border: `2px solid ${driver.ink || '#fff'}`, fontSize: '12px', lineHeight: 1,
+        }}
+      >
+        {driver.emoji}
+      </span>
+    )),
 };
 
 // Driver code column (3-letter code in team color)

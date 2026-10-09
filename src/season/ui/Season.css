@@ -170,6 +170,7 @@
 .rt tbody th.rt-name > * { vertical-align: middle; }
 .rt .rt-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .rt .rt-name .team-logo { margin-right: 8px; }
+.rt-numsq { margin-right: 10px; }
 .rt-num {
   display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; margin-right: 10px; border-radius: 50%;
   background: var(--team-primary); color: var(--team-ink); border: 1.5px solid var(--team-ink);
