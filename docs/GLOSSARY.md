@@ -176,11 +176,11 @@ Measured: each tag alone on one driver over 200 seeded races vs the same races u
 
 | Rule card | Scope | Weight | Does |
 |---|---|---|---|
-| 🌬️ **Grip Weather** `rain` | race | wild | This race favours Aggression and Grip. |
-| 🌤️ **Steady Weather** `fog` | race | mild | This race favours Consistency and Pit Crew. |
-| ☀️ **Neutral Skies** `clear-skies` | race | mild | No weather favours this race. |
-| 🌬️ **Always Grip Weather** `always-raining` | season | wild | Every race favours Aggression and Grip. |
-| 🌪️ **Wild Weather** `wild-weather` | season | wild | Neutral skies become rare; every dry weather is as likely. |
+| 🌬️ **Crosswind** `rain` | race | wild | This race favours Aggression and Grip. |
+| 🌤️ **Overcast** `fog` | race | mild | This race favours Consistency and Pit Crew. |
+| ☀️ **Calm** `clear-skies` | race | mild | No weather favours this race. |
+| 🌬️ **Windswept** `always-raining` | season | wild | Every race favours Aggression and Grip. |
+| 🌪️ **Changeable** `wild-weather` | season | wild | Neutral skies become rare; every dry weather is as likely. |
 | 🍲 **Tag Soup** `tag-soup` | both | wild | Most drivers are born with tags; up to 6 each. |
 | 🧼 **No Tags** `no-tags` | both | mild | Nobody is born with a tag. |
 | 💥 **Demolition Derby** `demolition-derby` | both | cursed | Crashes 2.5× more likely. |
