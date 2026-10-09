@@ -43,7 +43,17 @@
 
 **v0.5 odds:** Neutral 60% · each dry weather **8%** (Wet's share spread across them). Wet returns in v0.6.
 
-**Weather rule cards, remapped in v0.5** (ids kept so presets and the ledger still load; names are placeholders for Radio): `rain` → **Grip Weather** (Aggression + Grip) · `fog` → **Steady Weather** (Consistency + Pit Crew) · `clear-skies` → **Neutral Skies** · `always-raining` → **Always Grip Weather** · `wild-weather` → Neutral 10% / each dry 18%.
+**Weather rule cards, remapped in v0.5** (ids kept so presets and the ledger still load). **Names: Pax, Oct 9 ([#436](https://github.com/GrizzlyPax/Parabolica/issues/436)): one word, tight, simple.** Blurbs and readouts stay as they are; they still fit.
+
+| Id (unchanged) | Was | **Name** | Scope | What it does (readout, unchanged) |
+|---|---|---|---|---|
+| `rain` | Grip Weather | **Crosswind** | race | This race favours Aggression and Grip. |
+| `fog` | Steady Weather | **Overcast** | race | This race favours Consistency and Pit Crew. |
+| `clear-skies` | Neutral Skies | **Calm** | race | No weather favours this race. |
+| `always-raining` | Always Grip Weather | **Windswept** | season | Every race favours Aggression and Grip. |
+| `wild-weather` | Wild Weather | **Changeable** | season | Neutral skies become rare; every dry weather is as likely. |
+
+For the builder: change the five `name` strings in `src/data/ruleCards.ts` only (ids, blurbs, readouts and patches stay), then `npm run glossary`.
 
 **Status (Oct 8):** the dry half is built in the v0.5 bundle PR (version 0.5.0, merged by Pax). Retired with it: the 31 tracks, track events, the 17 condition tags, the 3 track characters, the 5 inflictions (parked in `docs/story/2026-10-08-horror-deck-parked.md`).
 
