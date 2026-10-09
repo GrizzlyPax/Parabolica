@@ -24,6 +24,7 @@ import { buildLapChartData } from './components/race/lapChartData';
 import { buildRaceReportMd } from './components/race/raceReportMd';
 import RaceCompleteBar from './components/race/RaceCompleteBar';
 import type { DriverHistoryEntry } from './components/race/types';
+import type { IconId } from './icons/registry';
 import { version as appVersion } from '../package.json';
 import { voiceNotification, type FeedItem } from './feed/commentary';
 import './WatchMode.css';
@@ -64,6 +65,8 @@ interface WatchModeProps {
   sealedDriverIds?: ReadonlySet<number>;
   /** Season Mode (#451): your drivers, lit (focused) from the first lap. */
   myDriverIds?: readonly number[];
+  /** Season Mode (#489): each driver's portrait + car vehicle. */
+  avatars?: ReadonlyMap<number, { portrait: IconId; vehicle: IconId }>;
   /** The way out, when it isn't the menu or the league ("Paddock"). */
   exitLabel?: string;
   // Race controls
@@ -117,6 +120,7 @@ function WatchMode({
   spectator = false,
   sealedDriverIds,
   myDriverIds,
+  avatars,
   exitLabel,
   // Race controls
   isRunning = false,
@@ -1240,6 +1244,7 @@ function WatchMode({
                 <TimingTower
                   sealed={sealedDriverIds}
                   mine={mineSet}
+                  avatars={avatars}
                   drivers={sortedDrivers}
                   columns={TRACK_COLUMNS}
                   raceState={raceState}
@@ -1292,6 +1297,7 @@ function WatchMode({
                 <TimingTower
                   sealed={sealedDriverIds}
                   mine={mineSet}
+                  avatars={avatars}
                   drivers={sortedDrivers}
                   columns={DETAIL_COLUMNS}
                   raceState={raceState}

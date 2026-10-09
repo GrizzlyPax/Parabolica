@@ -12,7 +12,7 @@ import RaceStartCountdown from './RaceStartCountdown';
 import WatchMode from './WatchMode';
 import RaceControl from './racecontrol/RaceControl';
 import SeasonScreen, { seasonScreenFor } from './season/ui/SeasonScreen';
-import { leagueForRound, loadSeason, saveSeason, seasonState, settleRound } from './season/season';
+import { leagueForRound, loadSeason, seasonAvatars, saveSeason, seasonState, settleRound } from './season/season';
 import { teamsOf } from './season/ui/teams';
 import { teamThemeVars, type TeamLike } from './icons/GameIcon';
 import { seasonName } from './season/setup';
@@ -259,7 +259,7 @@ function App() {
   // the same race to its finish. The round is recorded by settleRound (the
   // headless run of the same seeded race), so watching changes nothing.
   const onSeasonRace = route.name === 'season' && route.screen === 'race';
-  const [seasonRace, setSeasonRace] = useState<{ round: number; sealed: Set<number>; mine: number[]; you: TeamLike } | null>(null);
+  const [seasonRace, setSeasonRace] = useState<{ round: number; sealed: Set<number>; mine: number[]; you: TeamLike; avatars: ReturnType<typeof seasonAvatars> } | null>(null);
   const settlingSeason = useRef(false);
   useEffect(() => {
     if (!onSeasonRace) {
@@ -293,6 +293,7 @@ function App() {
       sealed: new Set(leagueNow.roster.filter(d => !humans.has(d.kingdomId ?? '')).map(d => d.id)),
       mine: leagueNow.roster.filter(d => humans.has(d.kingdomId ?? '')).map(d => d.id),
       you: teamsOf(facts)[facts.setup.humans[0].teamId],
+      avatars: seasonAvatars(facts),
     });
   }, [onSeasonRace]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -447,6 +448,7 @@ function App() {
           raceEvents={raceEvents}
           sealedDriverIds={seasonRace.sealed}
           myDriverIds={seasonRace.mine}
+          avatars={seasonRace.avatars}
           onExit={() => leaveSeasonRace(raceState.raceFinished)}
           exitLabel="Paddock"
           isRunning={isRunning}

@@ -1,6 +1,7 @@
 // Single row in the timing tower
 // Renders columns dynamically based on configuration
 // Expands when focused to show driver details
+import { Avatar } from '../../icons/Avatar';
 import type { DriverRowProps } from './types';
 import type { Driver } from '../../RaceEngine';
 import { CardDot } from '../../cards/CardFace';
@@ -69,6 +70,7 @@ function DriverRow({ driver, columns, context, gridTemplate, isFocused, expandab
       {isFocused && expandable && (
         <div className={`timing-row-expanded dp ${context.mine ? 'mine' : ''}`} style={{ '--team-color': driver.color } as React.CSSProperties}>
           <div className="dp-who">
+            {context.avatar && <span className="dp-av"><Avatar icon={context.avatar.portrait} color={driver.color} size={24} /><Avatar icon={context.avatar.vehicle} color={driver.color} size={26} /></span>}
             <b>{driver.name}</b>
             <span>{driver.number !== undefined ? `#${driver.number} · ` : ''}{driver.teamName}</span>
             {context.fantasyTeam && <span className="fantasy-badge" style={{ '--fantasy-color': context.fantasyTeam.color } as React.CSSProperties}>{context.fantasyTeam.name}</span>}

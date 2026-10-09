@@ -552,6 +552,7 @@
 .dp { display: grid; gap: 12px; padding: 12px 14px 14px; background: var(--pw-surface, #151517); box-shadow: inset 4px 0 0 var(--team-color); }
 .dp-who { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 12px; }
 .dp-who b { font-family: var(--look-display, serif); font-size: 20px; }
+.dp-av { display: inline-flex; gap: 8px; align-self: center; }
 .dp-who > span { font-style: italic; color: var(--pw-text-2, #b4b4ba); }
 .dp-close { margin-left: auto; background: none; border: 0; cursor: pointer; color: var(--pw-text-2, #b4b4ba); font-family: var(--look-data, monospace); font-size: 12px; }
 .dp-ovr { display: flex; width: max-content; max-width: 100%; border: 1px solid var(--pw-border-strong, #4a4a50); }

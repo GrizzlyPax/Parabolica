@@ -1,3 +1,4 @@
+import type { IconId } from '../../icons/registry';
 // Shared types for race components
 import type { FieldRank } from '../../betting/utils';
 import type { FantasyConfig } from '../../fantasy/types';
@@ -37,6 +38,8 @@ export interface RowContext {
   sealed?: boolean;
   /** Your team's car (Season Mode): the row wears a faded team colour (Pax, Oct 9). */
   mine?: boolean;
+  /** Season Mode (#489): this driver's portrait and their car's vehicle. */
+  avatar?: { portrait: IconId; vehicle: IconId };
   /** Speed vs the running pack's median this tick: 'hot' ≥ +4%, 'quick' ≥ +1%, 'slow' ≤ −3%, else 'pack'. */
   speedTone?: 'hot' | 'quick' | 'pack' | 'slow';
   /** Speed relative to the pack median, −1…+1 over ±8%. */
@@ -105,6 +108,8 @@ export interface TimingTowerProps {
   sealed?: ReadonlySet<number>;
   /** Season Mode: your team's drivers (their rows are tinted). */
   mine?: ReadonlySet<number>;
+  /** Season Mode (#489): portraits + vehicles by driver id. */
+  avatars?: ReadonlyMap<number, { portrait: IconId; vehicle: IconId }>;
   className?: string;
 }
 
