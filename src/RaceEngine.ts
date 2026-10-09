@@ -1563,6 +1563,33 @@ class RaceEngine {
   }
 
   /**
+   * Each driver's qualifying lap, in roster order, without touching the race:
+   * the same side stream runQualifying reads, so the qualifying show (#495)
+   * can play the session out before the lights and match the grid exactly.
+   * `ruined` is the qualiFlubChance roll. Display only.
+   */
+  qualifyingLaps(): { id: number; score: number; ruined: boolean }[] {
+    const g = this.getGridVars();
+    return this.drivers.map(d => {
+      const r = mulberry32(deriveSeed(this.strategySeed, 'quali', d.id));
+      const z = (r() + r() + r() - 1.5) * 2; // ~N(0,1)
+      const sd = g.qualiNoise * (1.2 - d.stats.consistency);
+      const ruined = r() < g.qualiFlubChance;
+      const flub = ruined ? 0.95 : 1;
+      const grip = (this.getCarStatVars().gripBase + (d.carStats?.grip ?? 3) * this.getCarStatVars().gripPerStar);
+      const score = this.packagePace(d) * (1 + z * sd) * flub * (0.98 + 0.02 * grip);
+      return { id: d.id, score, ruined };
+    });
+  }
+
+  /** A nominal lap in ticks at score 1.0 (the mid base speed), for turning
+   * qualifying scores into lap times on screen. Display only. */
+  nominalLapTicks(): number {
+    const v = this.getDriverSpeedVars();
+    return this.config.lapLength / ((v.baseSpeedMin + v.baseSpeedMax) / 2);
+  }
+
+  /**
    * Qualifying: one hot lap per driver, scored from the package plus a noise
    * roll the driver's consistency shrinks, with a small chance of a ruined
    * lap. Draws from a side seed stream (deriveSeed(seed,'quali',id)) so the
@@ -1571,15 +1598,7 @@ class RaceEngine {
    */
   private runQualifying(): void {
     const g = this.getGridVars();
-    const scored = this.drivers.map(d => {
-      const r = mulberry32(deriveSeed(this.strategySeed, 'quali', d.id));
-      const z = (r() + r() + r() - 1.5) * 2; // ~N(0,1)
-      const sd = g.qualiNoise * (1.2 - d.stats.consistency);
-      const flub = r() < g.qualiFlubChance ? 0.95 : 1;
-      const grip = (this.getCarStatVars().gripBase + (d.carStats?.grip ?? 3) * this.getCarStatVars().gripPerStar);
-      const score = this.packagePace(d) * (1 + z * sd) * flub * (0.98 + 0.02 * grip);
-      return { id: d.id, score };
-    });
+    const scored = this.qualifyingLaps().map(({ id, score }) => ({ id, score }));
     scored.sort((a, b) => b.score - a.score);
     this.gridOrder = scored.map(x => x.id);
     this.qualiScores = new Map(scored.map(x => [x.id, x.score]));

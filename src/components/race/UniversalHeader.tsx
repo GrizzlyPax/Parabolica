@@ -8,6 +8,7 @@ import type { UniversalHeaderProps, SessionState, RaceSpeed } from './types';
 import './UniversalHeader.css';
 
 const SESSION_STATES: Record<SessionState, { tone: string; label: string }> = {
+  'qualifying': { tone: 'white', label: 'Qualifying' },
   'racing': { tone: 'green', label: 'Racing' },
   'safety-car': { tone: 'yellow', label: 'Safety car' },
   'final-lap': { tone: 'white', label: 'Final lap' },

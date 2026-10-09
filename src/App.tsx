@@ -106,13 +106,17 @@ function App() {
   // Fantasy teams for the quick race on screen.
   const [activeFantasy, setActiveFantasy] = useState<FantasyConfig | null>(null);
 
+  // Qualifying plays out before the countdown (#495).
+  const [quickQuali, setQuickQuali] = useState(false);
   const handleStartRace = (roster: RosterDriver[], ruleset: Ruleset, seed: number, fantasy?: FantasyConfig) => {
     setQuickRun({ seed, ruleset, raceIndex: 0, roster });
     setActiveFantasy(fantasy ?? null);
     setTrackInfo(engine.getTrackInfo());
     setScreen('race');
-    setShowCountdown(true);
+    setShowCountdown(false);
+    setQuickQuali(true);
   };
+  const endQuickQuali = useCallback(() => { setQuickQuali(false); setShowCountdown(true); }, []);
 
   const handleCountdownComplete = useCallback(() => {
     setShowCountdown(false);
@@ -139,7 +143,7 @@ function App() {
   // the same race to its finish. The round is recorded by settleRound (the
   // headless run of the same seeded race), so watching changes nothing.
   const onSeasonRace = route.name === 'season' && route.screen === 'race';
-  const [seasonRace, setSeasonRace] = useState<{ round: number; sealed: Set<number>; mine: number[]; you: TeamLike; avatars: ReturnType<typeof seasonAvatars> } | null>(null);
+  const [seasonRace, setSeasonRace] = useState<{ round: number; sealed: Set<number>; mine: number[]; you: TeamLike; avatars: ReturnType<typeof seasonAvatars>; quali: boolean } | null>(null);
   const settlingSeason = useRef(false);
   useEffect(() => {
     if (!onSeasonRace) {
@@ -165,7 +169,7 @@ function App() {
     setRaceSpeed(1);
     engine.updateConfig({ tickInterval: 100 });
     engine.reset();
-    engine.start();
+    // Qualifying plays out first (#495); the race starts when it ends.
     settlingSeason.current = false;
     const humans = new Set(facts.setup.humans.map(h => h.teamId));
     setSeasonRace({
@@ -174,8 +178,14 @@ function App() {
       mine: leagueNow.roster.filter(d => humans.has(d.kingdomId ?? '')).map(d => d.id),
       you: teamsOf(facts)[facts.setup.humans[0].teamId],
       avatars: seasonAvatars(facts),
+      quali: true,
     });
   }, [onSeasonRace]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const endSeasonQuali = useCallback(() => {
+    setSeasonRace(r => (r ? { ...r, quali: false } : r));
+    engine.start();
+  }, [engine]);
 
   /** Finished: record the round, then the Paddock (or the final standings). Left mid-race: back to the Paddock, round not run. */
   const leaveSeasonRace = (finished: boolean) => {
@@ -264,7 +274,8 @@ function App() {
     } else {
       applyTrackToEngine(generateTrack());
     }
-    setShowCountdown(true);
+    setShowCountdown(false);
+    setQuickQuali(true);
   };
 
   // Season Mode: the menu's main Play button picks up the saved season.
@@ -305,6 +316,7 @@ function App() {
           sealedDriverIds={seasonRace.sealed}
           myDriverIds={seasonRace.mine}
           avatars={seasonRace.avatars}
+          onQualifyingDone={seasonRace.quali ? endSeasonQuali : undefined}
           onExit={() => leaveSeasonRace(raceState.raceFinished)}
           exitLabel="Paddock"
           isRunning={isRunning}
@@ -313,7 +325,7 @@ function App() {
           onStop={handleStop}
           onSpeedChange={setRaceSpeed}
         />
-        {!raceState.raceFinished && (
+        {!raceState.raceFinished && !seasonRace.quali && (
           <button type="button" className="season-skip" onClick={() => engine.fastForward(Infinity)}>Skip to result</button>
         )}
       </div>
@@ -362,6 +374,7 @@ function App() {
         raceState={raceState}
         trackInfo={trackInfo}
         onNextRace={handleNextRace}
+        onQualifyingDone={quickQuali ? endQuickQuali : undefined}
         raceEvents={raceEvents}
         fantasy={activeFantasy ?? undefined}
         onExit={handleExitRace}

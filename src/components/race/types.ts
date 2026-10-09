@@ -76,7 +76,7 @@ export type LapTimeClass = '' | 'fastest' | 'improved' | 'slower';
 export type RaceView = 'track' | 'detail' | 'lap';
 
 // Session state for universal header
-export type SessionState = 'racing' | 'safety-car' | 'final-lap' | 'finished';
+export type SessionState = 'qualifying' | 'racing' | 'safety-car' | 'final-lap' | 'finished';
 
 // Props for TimingTower
 export interface TimingTowerProps {

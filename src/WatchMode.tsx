@@ -23,6 +23,7 @@ import RaceFeed from './components/race/RaceFeed';
 import { buildLapChartData } from './components/race/lapChartData';
 import { buildRaceReportMd } from './components/race/raceReportMd';
 import FinishSheet from './components/race/FinishSheet';
+import QualiBoard from './components/race/QualiBoard';
 import type { DriverHistoryEntry } from './components/race/types';
 import type { IconId } from './icons/registry';
 import { version as appVersion } from '../package.json';
@@ -52,6 +53,8 @@ interface WatchModeProps {
   raceState: RaceState;
   trackInfo: TrackInfo | null;
   onNextRace?: () => void;
+  /** Qualifying show (#495): set while the session plays before the lights; called when it ends. */
+  onQualifyingDone?: () => void;
   /** Cards + resolved rules, for the report's Rules line (#241). */
   rulesLines?: string[];
   powerActivation?: PowerActivation | null;
@@ -114,6 +117,7 @@ function WatchMode({
   raceState,
   trackInfo,
   onNextRace,
+  onQualifyingDone,
   rulesLines,
   powerActivation,
   raceEvents,
@@ -1157,7 +1161,11 @@ function WatchMode({
   }, [pittingDrivers]);
 
   // Calculate session state for UniversalHeader
+  const qualifying = !!onQualifyingDone && raceState.totalTicks === 0;
+  // The engine's own qualifying laps, read once per session (display only).
+  const qualiLaps = useMemo(() => (qualifying ? engine.qualifyingLaps() : []), [qualifying, drivers.length]); // eslint-disable-line react-hooks/exhaustive-deps
   const getSessionState = (): SessionState => {
+    if (qualifying) return 'qualifying';
     if (raceState.raceFinished) return 'finished';
     if (raceState.unsafetyCarActive) return 'safety-car';
     // Check if leader is on final lap
@@ -1188,10 +1196,10 @@ function WatchMode({
         isRunning={isRunning}
         raceFinished={raceState.raceFinished}
         raceSpeed={raceSpeed}
-        onStart={spectator ? undefined : onStart}
-        onStop={spectator ? undefined : onStop}
-        onReset={spectator ? undefined : onReset}
-        onSpeedChange={spectator ? undefined : onSpeedChange}
+        onStart={spectator || qualifying ? undefined : onStart}
+        onStop={spectator || qualifying ? undefined : onStop}
+        onReset={spectator || qualifying ? undefined : onReset}
+        onSpeedChange={spectator || qualifying ? undefined : onSpeedChange}
       />
 
       {/* Navigation Panel - slide-in from left */}
@@ -1244,6 +1252,7 @@ function WatchMode({
                     Clear Focus ({focusedDriverIds.size})
                   </button>
                 )}
+                {qualifying ? <QualiBoard laps={qualiLaps} drivers={drivers} nominalTicks={engine.nominalLapTicks()} mine={mineSet} onDone={onQualifyingDone!} /> : (
                 <TimingTower
                   sealed={sealedDriverIds}
                   mine={mineSet}
@@ -1267,6 +1276,7 @@ function WatchMode({
                   fantasy={fantasy}
                   className="timing-tower-track"
                 />
+                )}
               </section>
 
               <section className="bf-map">
@@ -1297,6 +1307,7 @@ function WatchMode({
                     Clear Focus ({focusedDriverIds.size})
                   </button>
                 )}
+                {qualifying ? <QualiBoard laps={qualiLaps} drivers={drivers} nominalTicks={engine.nominalLapTicks()} mine={mineSet} onDone={onQualifyingDone!} /> : (
                 <TimingTower
                   sealed={sealedDriverIds}
                   mine={mineSet}
@@ -1321,6 +1332,7 @@ function WatchMode({
                   fantasy={fantasy}
                   className="timing-tower-detail"
                 />
+                )}
               </section>
 
               <section className="bf-feed">
