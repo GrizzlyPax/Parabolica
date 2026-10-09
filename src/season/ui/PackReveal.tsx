@@ -14,8 +14,8 @@ import type { PackTier } from '../pack';
 
 const TIER_LABEL: Record<PackTier, string> = { common: 'Common', uncommon: 'Uncommon', rare: 'Rare', legendary: 'Legendary' };
 const WHERE: Record<Card['kind'], string> = {
-  equipment: 'Equipment goes on a driver.', trait: 'A trait goes on for good.', upgrade: 'An upgrade goes on your car.',
-  facility: 'A facility goes on your team.', effect: '',
+  equipment: 'Gear for a driver: move it any time.', trait: 'A trait goes on for good.', upgrade: 'Gear for your car: move it any time.',
+  facility: 'Gear for your team: move it any time.', effect: '',
 };
 
 interface Props {

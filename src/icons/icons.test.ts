@@ -48,7 +48,7 @@ describe('icon registry (#350, #351)', () => {
       const l = LINK.exec(line);
       if (m && l) fromDoc[m[1]] = { id: l[2], author: l[1] };
     }
-    expect(Object.keys(fromDoc).length).toBe(60);
+    expect(Object.keys(fromDoc).length).toBe(61);
     expect(Object.fromEntries(Object.entries(fromDoc).map(([k, v]) => [k, v.id]))).toEqual(MEANINGS);
     for (const [meaning, { id, author }] of Object.entries(fromDoc)) {
       const entry = resolveIcon(meaning);

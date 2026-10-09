@@ -249,6 +249,7 @@ Hand-tuned icons for headline teams · animated icon states (pack reveal) · the
 | `stat.tyre_management` | Tyre management | Card chips, card sheet | — | [`car-wheel`](https://game-icons.net/1x1/delapouite/car-wheel.html) |
 | `stat.pit_crew` | Pit crew | Card chips, card sheet | — | [`toolbox`](https://game-icons.net/1x1/delapouite/toolbox.html) |
 | **Card types (new)** | | | | |
+| `card.gear` | Gear, any kind (the card's type tag, #526) | Card type tag | — | [`cog`](https://game-icons.net/1x1/lorc/cog.html) |
 | `card.equipment` | Equipment (driver gear) | Card frame, locker, pack reveal | — | [`gloves`](https://game-icons.net/1x1/delapouite/gloves.html) |
 | `card.upgrade` | Upgrade (car gear) | Card frame, locker, pack reveal | — | [`gear-hammer`](https://game-icons.net/1x1/lorc/gear-hammer.html) |
 | `card.facility` | Facility (team gear) | Card frame, locker, pack reveal | — | [`mechanic-garage`](https://game-icons.net/1x1/delapouite/mechanic-garage.html) |
