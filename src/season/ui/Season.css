@@ -420,3 +420,15 @@ button.rt-g:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset:
 .pr-three { display: flex; gap: 20px; justify-content: center; }
 @media (max-width: 720px) { .pr-three { zoom: 0.55; } .pr-card { margin-top: -90px; } }
 .pk-three { display: inline-flex; gap: 8px; flex: none; }
+
+/* Pick on the reveal (#552): tap a card to lift it; the others dim. */
+.pr-pick { padding: 0; border: 0; background: none; cursor: pointer; transition: transform 0.18s ease, opacity 0.18s ease; }
+.pr-pick:disabled { cursor: default; }
+.pr-pick.on { transform: translateY(-14px); outline: 3px solid var(--pw-text-1); outline-offset: 6px; }
+.pr-pick.off { opacity: 0.4; }
+.pr-pick:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset: 6px; }
+.pr-ask { display: flex; flex-direction: column; gap: 8px; align-items: center; text-align: center; }
+.pr-ask-btns { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+@media (prefers-reduced-motion: reduce) { .pr-pick { transition: none; } }
+.pr-card { height: auto; overflow: visible; }
+.pr-three { padding: 20px 10px 10px; }

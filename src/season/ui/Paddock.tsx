@@ -79,11 +79,8 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo }: 
   const turn = state.whoseTurn;
   const [tab, setTab] = useState<'team' | 'league'>('team');
   const [readyFor, setReadyFor] = useState<string | null>(hotseat ? null : facts.setup.humans[0]?.teamId ?? null);
-  const [revealed, setRevealed] = useState(false);
   const [revealing, setRevealing] = useState(false);
   const [held, setHeld] = useState<string | null>(null); // a gear card picked up (when the pack card isn't in hand)
-  const [pickId, setPickId] = useState<string | null>(null); // which of the pack's three is in hand (#533)
-  const [confirmTrait, setConfirmTrait] = useState<HolderKey | null>(null);
   const [chosen, setChosen] = useState<number[] | null>(null);
   const [detail, setDetail] = useState<{ title: string; reading: StatReading } | { card: Card } | null>(null);
 
@@ -101,7 +98,7 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo }: 
   const myRank = standings.find(s => s.teamId === viewer);
 
   if (turn && hotseat && readyFor !== turn) {
-    return <Handoff team={teams[turn]} label={humanLabel(facts, turn)!} what={`Paddock · round ${state.round + 1}`} onReady={() => { setReadyFor(turn); setChosen(null); setRevealed(false); setHeld(null); setPickId(null); setTab('team'); }} />;
+    return <Handoff team={teams[turn]} label={humanLabel(facts, turn)!} what={`Paddock · round ${state.round + 1}`} onReady={() => { setReadyFor(turn); setChosen(null); setHeld(null); setTab('team'); }} />;
   }
 
   const roster = rosters[viewer];
@@ -113,22 +110,17 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo }: 
   const team = pool.teams.find(t => t.id === viewer)!;
   const allGear = [...cards.locker, ...Object.values(cards.drivers).flatMap(d => d.equipment), ...cards.car.upgrade, ...cards.team.facility];
 
-  // Keep 1 of 3 (#533, Pax picked "try them on"): after the reveal all three
-  // cards are in your hand; tap one to try it on (its rows glow, its grades
-  // flash). Placing it keeps it; the other two go back.
-  const packCard: Card | null = pack ? pack.cards.find(c => c.id === pickId) ?? pack.cards[0] : null;
+  // Keep 1 of 3 on the reveal (#552, Pax Oct 10): the pick happens there, so
+  // the table only ever holds a picked-up gear card.
   const dealt = pack ? pack.cards.map(c => c.id) : [];
-  // The card in hand: the pack card being tried on, else a picked-up gear card.
-  const packInHand = !!pack && revealed;
-  const hand: Card | null = packInHand ? packCard : held ? allGear.find(c => c.id === held) ?? null : null;
+  const hand: Card | null = held ? allGear.find(c => c.id === held) ?? null : null;
   const fitsRow = (k: HolderKey) => {
     if (!hand || !myTurn) return false;
     const h = holderOf(k);
-    if (packInHand) return hand.kind === 'trait' ? h.kind === hand.target : GEAR_FOR[h.kind] === hand.kind;
     const at = placeOf(cards, hand.id);
     return GEAR_FOR[h.kind] === hand.kind && !(at && at !== 'locker' && keyOf(at) === k);
   };
-  const lockerFits = !!hand && myTurn && hand.kind !== 'trait' && (packInHand || placeOf(cards, hand.id) !== 'locker');
+  const lockerFits = !!hand && myTurn && hand.kind !== 'trait' && placeOf(cards, hand.id) !== 'locker';
 
   const readRow = (k: HolderKey, extra: Card | null) => {
     if (k === 'car') return CAR_STATS.map(s => readStat(s, car.stats[s as keyof typeof car.stats], withCard([...car.traits, ...cards.car.traits], cards.car.upgrade, extra)));
@@ -140,24 +132,29 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo }: 
   const targetName = (k: HolderKey) => (k === 'car' ? car.name : k === 'team' ? you.name : pool.drivers.find(x => x.id === Number(k))!.fullName);
 
   // Actions
-  const givePack = (k: HolderKey) => {
-    if (!pack || !packCard) return;
-    const target = holderOf(k);
-    const slot = packCard.kind === 'trait' ? [] : slotOf(cards, target);
-    commit(applyPack(facts, { type: 'pack', round: pack.round, teamId: pack.teamId, tier: pack.tier, cardId: packCard.id, dealt, target, replaces: slot[0]?.id }));
-    setConfirmTrait(null);
+  /** A picked trait goes on for good, onto the target the reveal asked for. */
+  const givePack = (kept: Card, k: HolderKey) => {
+    if (!pack) return;
+    commit(applyPack(facts, { type: 'pack', round: pack.round, teamId: pack.teamId, tier: pack.tier, cardId: kept.id, dealt, target: holderOf(k) }));
+    setRevealing(false);
   };
-  /** Keep a pack gear card for later: it lands on its slot (a pack card always lands on a holder), moves to
-   * the locker, and whatever was in the slot goes back. All plain facts, so the season replays exactly. */
-  const packToLocker = () => {
-    if (!pack || !packCard || packCard.kind === 'trait') return;
-    const target: CardHolder = packCard.kind === 'equipment' ? { kind: 'driver', id: roster.driverIds[0] } : packCard.kind === 'upgrade' ? { kind: 'car' } : { kind: 'team' };
+  /** A picked gear card goes to the locker (Pax: "ghost your locker"): it lands on its slot (a pack card
+   * always lands on a holder), moves to the locker, and whatever was in the slot goes back. All plain
+   * facts, so the season replays exactly. */
+  const packToLocker = (kept: Card) => {
+    if (!pack || kept.kind === 'trait') return;
+    const target: CardHolder = kept.kind === 'equipment' ? { kind: 'driver', id: roster.driverIds[0] } : kept.kind === 'upgrade' ? { kind: 'car' } : { kind: 'team' };
     const occupant = slotOf(cards, target)[0];
-    let next = applyPack(facts, { type: 'pack', round: pack.round, teamId: pack.teamId, tier: pack.tier, cardId: packCard.id, dealt, target, replaces: occupant?.id });
-    next = moveGear(next, { type: 'move', round: state.round, teamId: viewer, cardId: packCard.id, to: 'locker' });
+    let next = applyPack(facts, { type: 'pack', round: pack.round, teamId: pack.teamId, tier: pack.tier, cardId: kept.id, dealt, target, replaces: occupant?.id });
+    next = moveGear(next, { type: 'move', round: state.round, teamId: viewer, cardId: kept.id, to: 'locker' });
     if (occupant) next = moveGear(next, { type: 'move', round: state.round, teamId: viewer, cardId: occupant.id, to: target });
     commit(next);
+    setRevealing(false);
   };
+  /** Where a picked trait can go: its own target type only. */
+  const traitTargets = (c: Card): { key: HolderKey; label: string }[] => c.target === 'driver'
+    ? roster.driverIds.map(id => ({ key: String(id) as HolderKey, label: pool.drivers.find(x => x.id === id)!.fullName + (lineup.includes(id) ? '' : ' (bench)') }))
+    : c.target === 'car' ? [{ key: 'car' as HolderKey, label: car.name }] : [{ key: 'team' as HolderKey, label: you.name }];
   /** Gear into a slot; a full slot sends its card to the locker first (two moves, both facts). */
   const moveTo = (cardId: string, to: CardHolder | 'locker') => {
     setHeld(null);
@@ -171,13 +168,12 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo }: 
   };
   const placeOn = (k: HolderKey) => {
     if (!fitsRow(k)) return;
-    if (packInHand) { if (packCard!.kind === 'trait') setConfirmTrait(k); else givePack(k); return; }
     if (hand) moveTo(hand.id, holderOf(k));
   };
-  const placeInLocker = () => { if (!lockerFits) return; if (packInHand) packToLocker(); else if (hand) moveTo(hand.id, 'locker'); };
+  const placeInLocker = () => { if (!lockerFits) return; if (hand) moveTo(hand.id, 'locker'); };
   const tapChip = (c: Card) => {
     const isGear = c.kind !== 'trait' && !!placeOf(cards, c.id);
-    if (isGear && myTurn && !packInHand) { setHeld(h => (h === c.id ? null : c.id)); return; }
+    if (isGear && myTurn) { setHeld(h => (h === c.id ? null : c.id)); return; }
     setDetail({ card: c });
   };
   const toggleCar = (id: number) => setChosen(() => {
@@ -199,9 +195,9 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo }: 
     <CardChip
       key={c.id}
       card={c}
-      held={!packInHand && held === c.id}
+      held={held === c.id}
       onClick={() => tapChip(c)}
-      draggable={gear && myTurn && !packInHand}
+      draggable={gear && myTurn}
       onDragStart={e => { e.dataTransfer.setData('text/plain', c.id); setHeld(c.id); }}
     />
   );
@@ -242,8 +238,8 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo }: 
   const rowClass = (k: HolderKey, extra = '') => `${fitsRow(k) ? 'target' : ''} ${extra}`.trim();
 
   // The turn, in one line
-  const step = !myTurn ? -1 : pack ? (revealed ? 1 : 0) : lineup.length === 2 ? 3 : 2;
-  const STEPS = ['Open pack', 'Keep one', 'Pick 2', 'Lock in'];
+  const step = !myTurn ? -1 : pack ? 0 : lineup.length === 2 ? 2 : 1;
+  const STEPS = ['Open pack', 'Pick 2', 'Lock in'];
   const turnLine = state.phase === 'ready-for-go' ? (
     <div className="pk-go"><span>Every team is set for round {state.round + 1}.</span><button type="button" className="rs-btn rs-btn-primary" onClick={onGo}>Go: round {state.round + 1}</button></div>
   ) : myTurn && (
@@ -252,15 +248,13 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo }: 
         {STEPS.map((s, i) => <li key={s} className={i < step ? 'done' : i === step ? 'now' : ''}>{i + 1} · {s}</li>)}
       </ol>
       {step === 0 && <button type="button" className="rs-btn rs-btn-primary" onClick={() => setRevealing(true)}>Open pack</button>}
-      {step >= 2 && <button type="button" className="rs-btn rs-btn-primary" disabled={lineup.length !== 2} onClick={lock}>Lock in</button>}
+      {step >= 1 && <button type="button" className="rs-btn rs-btn-primary" disabled={lineup.length !== 2} onClick={lock}>Lock in</button>}
     </div>
   );
 
   const priorityLine = <PriorityLine label="Next race · priority stats" track={{ name: track?.name ?? 'the', favours: trackFav }} weather={weather} />;
 
-  const hint = !hand ? null : packInHand
-    ? (hand.kind === 'trait' ? `Tap a glowing ${hand.target === 'driver' ? 'driver' : hand.target} to give it. The flashing grades show what it does. Traits are permanent.` : `Tap a glowing ${hand.target === 'driver' ? 'driver' : hand.target} to put it on, or the glowing locker to keep it. The flashing grades show what it does.`)
-    : `Moving ${hand.name}: tap a glowing row or the locker. Tap the card again to put it down.`;
+  const hint = !hand ? null : `Moving ${hand.name}: tap a glowing row or the locker. Tap the card again to put it down.`;
 
   const teamTab = (
     <>
@@ -268,17 +262,15 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo }: 
       {priorityLine}
       {pack && myTurn && (
         <div className="pk-pack">
-          {revealed
-            ? <span className="pk-three" role="group" aria-label="Pick one of three">{pack.cards.map(c => <CardChip key={c.id} card={c} size={44} held={c.id === packCard!.id} onClick={() => (c.id === packCard!.id ? setDetail({ card: c }) : setPickId(c.id))} />)}</span>
-            : <button type="button" className="pk-sealed" onClick={() => setRevealing(true)} aria-label={`Open your ${TIER_LABEL[pack.tier]} pack`}><GameIcon name="season.pack" size={30} /><i className="pk-twinkle a" /><i className="pk-twinkle b" /><i className="pk-twinkle c" /></button>}
+          <button type="button" className="pk-sealed" onClick={() => setRevealing(true)} aria-label={`Open your ${TIER_LABEL[pack.tier]} pack`}><GameIcon name="season.pack" size={30} /><i className="pk-twinkle a" /><i className="pk-twinkle b" /><i className="pk-twinkle c" /></button>
           <div className="pk-pack-text">
-            <span className="rs-k pk-pack-k">Base deck · {TIER_LABEL[pack.tier]} pack{revealed ? ' · keep one of three' : ''}</span>
-            <b>{revealed ? packCard!.name : 'Sealed'}</b>
-            <span className="rs-hint">{revealed ? `${hint} Tap another card to try it instead; the two you don't place go back.` : 'Tap the pack to open it. Three cards inside; you keep one.'}</span>
+            <span className="rs-k pk-pack-k">Base deck · {TIER_LABEL[pack.tier]} pack</span>
+            <b>Sealed</b>
+            <span className="rs-hint">Tap the pack to open it. Three cards inside; you keep one.</span>
           </div>
         </div>
       )}
-      {!packInHand && hand && <p className="rs-hint pk-hint">{hint}</p>}
+      {hand && <p className="rs-hint pk-hint">{hint}</p>}
       <div className="rt-legend">
         {priority.size > 0 && <span><span className="rt-prio-key">{ABBR[[...priority][0]]}</span> next race priority</span>}
         <span><i className="rt-notch-key" /> cards change this stat · tap a grade for the sum</span>
@@ -394,25 +386,13 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo }: 
       {tab === 'team' ? teamTab : leagueTab}
 
       {revealing && pack && (
-        <PackReveal cards={pack.cards} tier={pack.tier} onDone={() => { setRevealing(false); setRevealed(true); requestAnimationFrame(() => document.querySelector('.rt tr.target')?.scrollIntoView({ block: 'center', behavior: 'smooth' })); }} />
-      )}
-
-      {confirmTrait && pack && (
-        <div className="pk-sheet" role="dialog" aria-label="Give a trait">
-          <div className="pk-sheet-text">
-            <span className="rs-k">Traits are permanent</span>
-            <b>Give {packCard!.name} to {targetName(confirmTrait)}?</b>
-            <span>It can never be removed or moved.</span>
-            <span className="rt-sum">{readRow(confirmTrait, null).map((r, i) => {
-              const a = readRow(confirmTrait, packCard)[i];
-              return Math.round(a.total) !== Math.round(r.total) ? <span key={r.stat}>{STAT_LABELS[r.stat]}: {r.grade} → {a.grade}</span> : null;
-            })}</span>
-            <span className="pk-confirm-btns">
-              <button type="button" className="rs-btn rs-btn-primary" onClick={() => givePack(confirmTrait)}>Give</button>
-              <button type="button" className="rs-btn rs-btn-ghost" onClick={() => setConfirmTrait(null)}>Cancel</button>
-            </span>
-          </div>
-        </div>
+        <PackReveal
+          cards={pack.cards}
+          tier={pack.tier}
+          traitTargets={traitTargets}
+          onKeep={(kept, k) => (kept.kind === 'trait' ? k && givePack(kept, k) : packToLocker(kept))}
+          onClose={() => setRevealing(false)}
+        />
       )}
 
       {detail && (
