@@ -186,11 +186,11 @@ button.rt-g { cursor: pointer; }
 button.rt-g:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset: -2px; }
 .rt-g.strong { font-size: 20px; }
 .rt-g.tone-s { color: var(--signal-purple); }
-/* The full grade ramp (Pax, Oct 9): S purple · A green · B light green · C yellow · D orange · F red */
-.rt-g.tone-a { color: var(--signal-green); }
-.rt-g.tone-b { color: color-mix(in srgb, var(--signal-green) 55%, var(--signal-yellow)); }
+/* Grade colours (Pax, Oct 9): only the four F1 colours, full saturation, everywhere.
+   S purple · A and B green · C yellow · D and F red. */
+.rt-g.tone-a, .rt-g.tone-b { color: var(--signal-green); }
 .rt-g.tone-c { color: var(--signal-yellow); }
-.rt-g.tone-d { color: color-mix(in srgb, var(--signal-red) 50%, var(--signal-yellow)); }
+.rt-g.tone-d { color: var(--signal-red); }
 .rt-g.tone-f { color: var(--signal-red); }
 .rt-g.dim { opacity: 0.45; }
 .rt-notch { position: absolute; top: 0; left: 0; width: 0; height: 0; border-top: 8px solid var(--team-primary); border-right: 8px solid transparent; }
