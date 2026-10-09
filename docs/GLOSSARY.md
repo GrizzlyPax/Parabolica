@@ -1,6 +1,6 @@
 # Parabolica World Deck
 
-*Everything in the sim and the world, generated from the data modules by `npm run glossary` — do not edit by hand; edit the source files named in each section and re-run. Engine v0.6.1. How to add content: docs/WORLD_DECK.md.*
+*Everything in the sim and the world, generated from the data modules by `npm run glossary` — do not edit by hand; edit the source files named in each section and re-run. Engine v0.6.2. How to add content: docs/WORLD_DECK.md.*
 
 28 teams · 6 tracks · 94 cards (36 traits · 36 gear · 22 effects) · 5 in-race effects · 12 rule cards · 6 weathers
 
@@ -239,5 +239,8 @@ A card adds grade points to its stats at race build (src/cards/apply.ts): bronze
 | **Backstory fills (21 slots)** | 115 | `src/generators/drivers.ts BACKSTORY_FILLS` | {place}: the parking lot / aisle 7 / the storage unit · {age}: several Tuesdays / an undisclosed amount of time / 47 minutes · {location}: a place that no longer exists / somewhere overhead / the back of a receipt · {vehicle}: a shopping cart / a office chair / a moving walkway |
 | **Driver quirks** | 25 | `src/generators/drivers.ts QUIRKS` | Only races during approved hours · Their car makes a sound no one can describe · Technically two drivers in an agreement · Receives instructions from somewhere · Has never been photographed from the left |
 | **Car quirks** | 24 | `src/generators/cars.ts CAR_QUIRKS` | The engine hums at a frequency only dogs can hear. · Assembled entirely on a Tuesday. Nobody knows why that matters. · The previous owner was a time traveler. Probably. · Handles corners like it knows something you don't. |
-| **Car name parts (prefix · suffix · acronym)** | 71 | `src/generators/cars.ts CAR_PREFIXES_GENERIC / CAR_SUFFIXES / CAR_ACRONYMS` | Apex · Vector · Pulse · GT · RS · LM · XR · GT · RS |
+| **Car names · a sample rack (people 35 · heritage 20 · nicknames 20 · codes 15 · household 10)** | 100 | `src/generators/cars.ts generateCarName (docs/story/car-names.md)` | Competition 22 · The Mule · The Wedge · The Lump · Tin Lizzie · Sylvia · Moorland 1100 · Mavis III · Washboard · Series '75 |
+| **Car names · people's names** | 40 | `src/generators/cars.ts CAR_PEOPLE_NAMES` | Bessie · Margaret · Doris · Mabel · Agnes · Edna · Peggy · Rosie |
+| **Car names · workshop nicknames** | 28 | `src/generators/cars.ts CAR_NICKNAMES` | The Brick · Old Faithful · The Bathtub · The Toaster · The Biscuit Tin · The Wardrobe |
+| **Car names · farm and household words** | 20 | `src/generators/cars.ts CAR_HOUSEHOLD` | Teapot · Wheelbarrow · Hayrick · Colander · Doorstop · Mangle |
 | **Procedural team emoji** | 48 | `src/generators/teamIdentity.ts IDENTITY_EMOJI` | 🦆 · 🔥 · 🦂 · 🐙 · 🦅 · 🐊 · 🦊 · 🐺 · 🦉 · 🦇 |

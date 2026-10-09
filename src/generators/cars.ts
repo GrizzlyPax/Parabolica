@@ -1,7 +1,7 @@
 // Car and team generation for Parabolica teams
 // Each team has one car shared by both drivers, plus team-level stats
 
-import { Rng, pick } from '../engine/rng';
+import { Rng, pick, mulberry32, deriveSeed } from '../engine/rng';
 
 export interface CarStats {
   power: number;        // 1-5 stars - Multiplies with driver speed on straights
@@ -17,7 +17,7 @@ export interface TeamStats {
 
 export interface GeneratedCar {
   kingdomId: string;
-  name: string;         // e.g., "Apex GT-7"
+  name: string;         // e.g., "Old Margaret", "Type 56"
   stats: CarStats;
   teamStats: TeamStats; // Team-level operational stats
   quirk: string;        // Flavor text about the car
@@ -99,57 +99,98 @@ export function starToMultiplier(stars: number, statType: 'power' | 'grip' | 're
   return 1;
 }
 
-// Car name components for random generation
-export const CAR_PREFIXES_GENERIC = [
-  'Apex', 'Vector', 'Pulse', 'Nova', 'Vortex', 'Phantom', 'Specter', 'Zenith',
-  'Flux', 'Cipher', 'Echo', 'Drift', 'Surge', 'Bolt', 'Razor', 'Stratos',
-  'Nebula', 'Prism', 'Vertex', 'Torque', 'Thrust', 'Blitz', 'Fury', 'Storm',
-  'Onyx', 'Cobalt', 'Crimson', 'Obsidian', 'Titan', 'Raptor', 'Falcon', 'Viper'
+// === Car names (#569, Radio + Pax, docs/story/car-names.md) ===
+// Named the way real teams name cars, in five styles. One draw picks the
+// style by the mix, then a format by its weights, then fills the tokens.
+// Names (and quirks) ride their own flavour stream: one draw from the stats
+// stream seeds it, so the pools can change without moving a single stat.
+
+export const CAR_PEOPLE_NAMES = [
+  'Bessie', 'Margaret', 'Doris', 'Mabel', 'Agnes', 'Edna', 'Peggy', 'Rosie', 'Dot', 'Gladys',
+  'Ivy', 'Hilda', 'Betty', 'Lottie', 'Winnie', 'Nell', 'Elsie', 'Maud', 'Vera', 'Sylvia',
+  'Pearl', 'Florrie', 'Connie', 'Marjorie', 'Beryl', 'Hattie', 'Ida', 'Mavis', 'Queenie', 'Nancy',
+  'Gus', 'Stanley', 'Albert', 'Barnaby', 'Reggie', 'Clive', 'Norman', 'Wilf', 'Dennis', 'Percy',
+];
+export const CAR_PEOPLE_PREFIXES = ['Old', 'Big', 'Little', 'Lady', 'Auntie', 'Miss', 'Dear Old', 'Sweet'];
+export const CAR_ROMAN = ['II', 'III', 'IV', 'V', 'VI', 'VII'];
+export const CAR_HERITAGE_WORDS = ['Type', 'Model', 'Series', 'Mark', 'Special', 'Sprint', 'Tourer', 'Grand Prix', 'Competition', 'Club'];
+/** Soft canon: the world's place names (docs/story/team-identity.md). Keep in step if places are renamed. */
+export const CAR_HERITAGE_PLACES = ['Corriva', 'Saint Orrin', 'Lumen', 'Ambergate', 'Calder', 'Kestrel', 'Moorland', 'Harbour', 'Quarry', 'Old Hill', 'Tessaly', 'Caldera'];
+export const CAR_DISPLACEMENTS = [1100, 1300, 1500, 1750, 2000, 2500, 3000];
+export const CAR_CODE_LETTERS = ['A', 'B', 'C', 'D', 'F', 'H', 'K', 'M', 'P', 'R', 'S', 'T', 'V', 'W'];
+export const CAR_CODE_PAIRS = ['SR', 'TR', 'GP', 'RS', 'LM', 'MR', 'DB', 'JW', 'HB', 'CK'];
+export const CAR_NICKNAMES = [
+  'The Brick', 'Old Faithful', 'The Bathtub', 'The Toaster', 'The Biscuit Tin', 'The Wardrobe', 'The Mule',
+  'The Spare', 'Number Two', 'The Wedge', 'The Kettle', 'Sunday Best', 'Tin Lizzie', 'Green Bean',
+  'The Bus', 'The Pram', 'Lead Sled', 'The Lump', 'The Shoebox', 'Big Red', 'The Plank', 'The Banger',
+  'The Old Girl', 'The Beast', 'The Rocket', 'Sixpence', 'The Trolley', 'The Lunchbox',
+];
+export const CAR_HOUSEHOLD = [
+  'Teapot', 'Wheelbarrow', 'Hayrick', 'Colander', 'Doorstop', 'Mangle', 'Butter Churn', 'Scarecrow',
+  'Haybale', 'Milk Churn', 'Toast Rack', 'Coal Scuttle', 'Bread Bin', 'Washboard', 'Pitchfork',
+  'Sheepdog', 'Egg Cup', 'Mustard Pot', 'Hot Water Bottle', 'Tea Cosy',
 ];
 
-export const CAR_SUFFIXES = [
-  'GT', 'RS', 'LM', 'EVO', 'Pro', 'Sport', 'Turbo', 'X', 'S', 'R',
-  'Elite', 'Prime', 'Max', 'Ultra', 'Plus', 'Zero', 'One', 'Alpha', 'Omega'
+type Fmt = readonly [weight: number, make: (rng: Rng) => string];
+
+/** Pick by weight. */
+function weighted<T>(items: readonly (readonly [number, T])[], rng: Rng): T {
+  const total = items.reduce((n, [w]) => n + w, 0);
+  let r = rng() * total;
+  for (const [w, x] of items) { if ((r -= w) < 0) return x; }
+  return items[items.length - 1][1];
+}
+
+const int = (lo: number, hi: number, rng: Rng) => lo + Math.floor(rng() * (hi - lo + 1));
+
+const PEOPLE: Fmt[] = [
+  [60, r => pick(CAR_PEOPLE_NAMES, r)],
+  [30, r => `${pick(CAR_PEOPLE_PREFIXES, r)} ${pick(CAR_PEOPLE_NAMES, r)}`],
+  [10, r => `${pick(CAR_PEOPLE_NAMES, r)} ${pick(CAR_ROMAN, r)}`],
+];
+const HERITAGE: Fmt[] = [
+  [35, r => `${pick(CAR_HERITAGE_WORDS, r)} ${int(2, 98, r)}`],
+  [20, r => `${pick(CAR_HERITAGE_PLACES, r)} Special`],
+  [15, r => `Mk ${pick(CAR_ROMAN, r)}`],
+  [15, r => `${pick(CAR_HERITAGE_WORDS, r)} '${int(50, 98, r)}`],
+  [15, r => `${pick(CAR_HERITAGE_PLACES, r)} ${pick(CAR_DISPLACEMENTS, r)}`],
+];
+const CODES: Fmt[] = [
+  [50, r => `${pick(CAR_CODE_LETTERS, r)}${int(2, 98, r)}`],
+  [30, r => `${pick(CAR_CODE_PAIRS, r)}-${int(1, 9, r)}`],
+  [20, r => `${pick(CAR_CODE_LETTERS, r)}${int(1, 9, r)}${pick(CAR_CODE_LETTERS, r)}`],
 ];
 
-export const CAR_ACRONYMS = [
-  'XR', 'GT', 'RS', 'LM', 'GP', 'SS', 'ZX', 'RX', 'VX', 'MR', 'SR', 'TR',
-  'FX', 'NX', 'QX', 'DX', 'HX', 'KX', 'PX', 'WX'
+/** The mix (out of 100): people 35 · heritage 20 · nicknames 20 · codes 15 · farm + household 10. */
+export const CAR_NAME_STYLES: readonly (readonly [number, Fmt[]])[] = [
+  [35, PEOPLE],
+  [20, HERITAGE],
+  [20, [[1, r => pick(CAR_NICKNAMES, r)]]],
+  [15, CODES],
+  [10, [[1, r => pick(CAR_HOUSEHOLD, r)]]],
 ];
 
-/**
- * Generate a random car name with varied formats
- */
-function generateCarName(rng: Rng): string {
-  const format = Math.floor(rng() * 6);
-  const prefix = pick(CAR_PREFIXES_GENERIC, rng);
-  const suffix = pick(CAR_SUFFIXES, rng);
-  const acronym = pick(CAR_ACRONYMS, rng);
-  const number = Math.floor(rng() * 900) + 100; // 100-999
-  const smallNum = Math.floor(rng() * 90) + 10; // 10-99
+/** One car name: style by the mix, format by its weights, then the tokens. */
+export function generateCarName(rng: Rng): string {
+  return weighted(weighted(CAR_NAME_STYLES, rng), rng)(rng);
+}
 
-  switch (format) {
-    case 0: // "Apex GT-7"
-      return `${prefix} ${suffix}-${Math.floor(rng() * 9) + 1}`;
-    case 1: // "XR-470"
-      return `${acronym}-${number}`;
-    case 2: // "Vortex 88"
-      return `${prefix} ${smallNum}`;
-    case 3: // "Phantom RS"
-      return `${prefix} ${suffix}`;
-    case 4: // "GT Stratos"
-      return `${acronym} ${prefix}`;
-    case 5: // "Zenith XR-22"
-    default:
-      return `${prefix} ${acronym}-${smallNum}`;
-  }
+/** One draw from the stats stream seeds the car's flavour stream (name,
+ * quirk). A name already in `taken` (this rack) is redrawn on the flavour
+ * stream, so the stats never move. */
+function carFlavour(rng: Rng, taken?: Set<string>): { name: string; quirk: string } {
+  const flavour = mulberry32(deriveSeed(Math.floor(rng() * 0x100000000), 'car-flavour'));
+  let name = generateCarName(flavour);
+  for (let i = 0; taken?.has(name) && i < 50; i++) name = generateCarName(flavour);
+  taken?.add(name);
+  return { name, quirk: pick(CAR_QUIRKS, flavour) };
 }
 
 /**
  * Generate a car for a specific team
  */
-export function generateCarForKingdom(kingdomId: string, rng: Rng = Math.random): GeneratedCar {
-  const name = generateCarName(rng);
+export function generateCarForKingdom(kingdomId: string, rng: Rng = Math.random, taken?: Set<string>): GeneratedCar {
+  const { name, quirk } = carFlavour(rng, taken);
 
   // Generate random chariot stats
   const stats: CarStats = {
@@ -163,9 +204,6 @@ export function generateCarForKingdom(kingdomId: string, rng: Rng = Math.random)
     tireManagement: generateStarRating(rng),
     pitCrew: generateStarRating(rng),
   };
-
-  // Pick a random quirk
-  const quirk = pick(CAR_QUIRKS, rng);
 
   // Car/team tags are rolled from the ruleset (rules/genesis.ts), not here.
   return {
@@ -186,14 +224,13 @@ export interface RackCar {
   quirk: string;
 }
 
-export function generateRackCar(id: string, rng: Rng = Math.random): RackCar {
-  const name = generateCarName(rng);
+export function generateRackCar(id: string, rng: Rng = Math.random, taken?: Set<string>): RackCar {
+  const { name, quirk } = carFlavour(rng, taken);
   const stats: CarStats = {
     power: generateStarRating(rng),
     grip: generateStarRating(rng),
     reliability: generateStarRating(rng),
   };
-  const quirk = pick(CAR_QUIRKS, rng);
   return { id, name, stats, quirk };
 }
 
@@ -210,9 +247,10 @@ export function generateTeamStats(rng: Rng = Math.random): TeamStats {
  */
 export function generateCarsForKingdoms(kingdomIds: string[], rng: Rng = Math.random): Map<string, GeneratedCar> {
   const cars = new Map<string, GeneratedCar>();
+  const taken = new Set<string>();
 
   for (const kingdomId of kingdomIds) {
-    cars.set(kingdomId, generateCarForKingdom(kingdomId, rng));
+    cars.set(kingdomId, generateCarForKingdom(kingdomId, rng, taken));
   }
 
   return cars;

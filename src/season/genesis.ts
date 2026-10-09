@@ -113,9 +113,10 @@ export function generateSeasonPool(seed: number, teamCount: number = DEFAULT_TEA
 
   const carRng = mulberry32(deriveSeed(seed, 'season', 'cars'));
   const cars: RackCar[] = [];
+  const carNames = new Set<string>();
   for (let i = 0; i < teamCount; i++) {
     const id = `car-${i}`;
-    cars.push({ ...generateRackCar(id, carRng), traits: traitsFor('car', seed, id, rs) });
+    cars.push({ ...generateRackCar(id, carRng, carNames), traits: traitsFor('car', seed, id, rs) });
   }
 
   const statsRng = mulberry32(deriveSeed(seed, 'season', 'team-stats'));

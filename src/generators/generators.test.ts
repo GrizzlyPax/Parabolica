@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { mulberry32, deriveSeed } from '../engine/rng';
 import { generateRoster, generateRosterFromTeams } from './drivers';
-import { generateCarsForKingdoms } from './cars';
+import { generateCarsForKingdoms, generateRackCar, generateCarName, generateStarRating } from './cars';
+import { generateSeasonPool } from '../season/genesis';
 import { getRandomTracks, generateSeason } from './tracks';
 import { TEAMS } from '../data/teams';
 
@@ -53,5 +54,36 @@ describe('seeded generation reproducibility', () => {
 
     expect(universe(leagueSeed)).toEqual(universe(leagueSeed));
     expect(universe(leagueSeed)).not.toEqual(universe(leagueSeed + 1));
+  });
+});
+
+describe('car names ride their own stream (#569)', () => {
+  it('a car\'s stats come from the stats stream alone: one draw seeds the name, then the stats', () => {
+    for (const seed of [1, 7, 42, 569]) {
+      const car = generateRackCar('car-0', mulberry32(seed));
+      const rng = mulberry32(seed);
+      rng(); // the flavour seed
+      expect(car.stats).toEqual({ power: generateStarRating(rng), grip: generateStarRating(rng), reliability: generateStarRating(rng) });
+    }
+  });
+
+  it('a name already on the rack is redrawn without moving the stats', () => {
+    const fresh = generateRackCar('car-0', mulberry32(3));
+    const redrawn = generateRackCar('car-0', mulberry32(3), new Set([fresh.name]));
+    expect(redrawn.name).not.toBe(fresh.name);
+    expect(redrawn.stats).toEqual(fresh.stats);
+  });
+
+  it('a season rack has no repeats and no sci-fi codes', () => {
+    for (const seed of [1, 2, 3, 4, 5]) {
+      const names = generateSeasonPool(seed, 10).cars.map(c => c.name);
+      expect(new Set(names).size).toBe(names.length);
+    }
+    const r = mulberry32(9);
+    for (let i = 0; i < 2000; i++) {
+      const n = generateCarName(r);
+      expect(n).not.toMatch(/[XQZ]X|XR|EVO/);
+      expect(n.length).toBeLessThanOrEqual(19); // "Saint Orrin Special" is the longest
+    }
   });
 });
