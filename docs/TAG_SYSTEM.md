@@ -1,5 +1,7 @@
 # The Tag System — Design Framework
 
+> **History (v0.6, #334 / #541):** tags were retired; cards are the only system now (docs/CARDS.md). This doc is kept as design history.
+
 *June 2026. The working framework for Commissioner Mode's core engine.
 GDD pillar 6: "the additive tag engine IS the fun" (the Mewgenics instinct).
 This doc is the starting point for the design session — §6 is the interview.*

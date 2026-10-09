@@ -24,9 +24,8 @@ export interface Idea {
   sent?: boolean;
 }
 
-export type IdeaKind = 'tag' | 'team' | 'track' | 'card' | 'rule' | 'commentary' | 'bug' | 'other';
+export type IdeaKind = 'team' | 'track' | 'card' | 'rule' | 'commentary' | 'bug' | 'other';
 const KINDS: { id: IdeaKind; label: string; labels: string[] }[] = [
-  { id: 'tag', label: 'Tag', labels: ['idea', 'world-deck'] },
   { id: 'team', label: 'Team', labels: ['idea', 'world-deck'] },
   { id: 'track', label: 'Track', labels: ['idea', 'world-deck'] },
   { id: 'card', label: 'Rule card', labels: ['idea', 'world-deck'] },
@@ -121,7 +120,7 @@ export default function IdeaBox({ context }: { context: IdeaContext }) {
             className="idea-text"
             value={text}
             onChange={e => setText(e.target.value)}
-            placeholder="A few sentences is plenty. “A car tag that's faster when it's raining but the pit crew hates it.” — the seed and track come along."
+            placeholder="A few sentences is plenty. “A car card that's faster when it's raining but the pit crew hates it.” — the seed and track come along."
             rows={4}
             autoFocus
           />
