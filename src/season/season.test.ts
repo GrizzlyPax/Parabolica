@@ -166,7 +166,7 @@ describe('a scripted 3-round season', () => {
 
   it('save → load → the same season continues identically', () => {
     const store = memoryStore();
-    const played = playRound(playRound(scripted(11, 8, [1, 6])));
+    const played = playRound(playRound(scripted(11, 8, [1])));
     expect(saveSeason(played, store, 123)).toBe(true);
     const loaded = loadSeason(store)!;
     expect(loaded).toEqual(played);
@@ -178,6 +178,9 @@ describe('a scripted 3-round season', () => {
     saveSeason(scripted(99, 5), store);
     expect(loadSeason(store)!.setup.seed).toBe(99);
     clearSeason(store);
+    expect(loadSeason(store)).toBeNull();
+    // Single-player since #588: a hotseat save (two humans) is archived, not loaded.
+    saveSeason(scripted(12, 8, [1, 6]), store);
     expect(loadSeason(store)).toBeNull();
     store.setItem(SEASON_KEY, JSON.stringify({ schemaVersion: 0, data: played }));
     expect(loadSeason(store)).toBeNull();

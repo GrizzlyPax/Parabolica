@@ -320,6 +320,8 @@ export function loadSeason(store: SeasonStore | null = defaultStore()): SeasonFa
     const f = envelope.data;
     if (!f?.setup || !Array.isArray(f.draftPicks) || !Array.isArray(f.lineups) || !Array.isArray(f.results)) return null;
     if (!Array.isArray(f.cardFacts)) return null;
+    // Single-player since #588: a hotseat season (several humans) is archived, not loaded.
+    if (f.setup.humans.length > 1) return null;
     return f;
   } catch { return null; }
 }

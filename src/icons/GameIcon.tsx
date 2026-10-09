@@ -83,7 +83,7 @@ export function TeamLogo({ team, size = 24, title }: { team?: TeamLike; size?: n
 }
 
 /** CSS variables that theme a subtree in a team's colour. Put the result on
- * a screen's root `style` (in Season Mode: your team; hotseat: whoever's
+ * a screen's root `style` (in Season Mode: your team; formerly hotseat: whoever's
  * turn it is). Null = neutral (the :root defaults in App.css). */
 export function teamThemeVars(team: TeamLike | null | undefined): CSSProperties {
   if (!team) return {};

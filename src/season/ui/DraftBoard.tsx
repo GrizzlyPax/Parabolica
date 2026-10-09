@@ -18,7 +18,6 @@ import { poolFor, saveSeason, type SeasonFacts } from '../season';
 import { teamsOf } from './teams';
 import type { PoolDriver, RackCar } from '../genesis';
 import { seasonName } from '../setup';
-import Handoff from './Handoff';
 import EndSeason from './EndSeason';
 
 interface Props {
@@ -54,12 +53,10 @@ export default function DraftBoard({ facts, onChange, onMenu, onDone, onEndSeaso
   const pool = useMemo(() => poolFor(facts), [facts.setup]); // eslint-disable-line react-hooks/exhaustive-deps
   const teams = useMemo(() => teamsOf(facts), [facts.setup]); // eslint-disable-line react-hooks/exhaustive-deps
   const humanIds = useMemo(() => facts.setup.humans.map(h => h.teamId), [facts.setup]);
-  const hotseat = humanIds.length > 1;
   const state = useMemo(() => draftState(pool, facts.draftPicks), [pool, facts.draftPicks]);
   const slot = state.onTheClock;
   const [tab, setTab] = useState<PickKind>(slot?.kind ?? 'driver');
   const [selected, setSelected] = useState<number | string | null>(null);
-  const [readyFor, setReadyFor] = useState<string | null>(hotseat ? null : humanIds[0]);
   const [confirmQuick, setConfirmQuick] = useState(false);
 
   // CPU picks resolve at once whenever it isn't a human's pick.
@@ -77,15 +74,9 @@ export default function DraftBoard({ facts, onChange, onMenu, onDone, onEndSeaso
   }
 
   const picker = slot && humanIds.includes(slot.teamId) ? slot.teamId : null;
-  // Whose roster shows: the human on the clock, else the last human to pick, else P1.
-  const lastHuman = [...facts.draftPicks].reverse().find(p => humanIds.includes(p.teamId))?.teamId;
-  const viewer = picker ?? (hotseat ? lastHuman : null) ?? humanIds[0];
+  // Single-player (#588): you are the only human; your roster always shows.
+  const viewer = humanIds[0];
   const you = teams[viewer];
-  const label = (teamId: string) => (hotseat ? `P${humanIds.indexOf(teamId) + 1}` : 'You');
-
-  if (picker && readyFor !== picker) {
-    return <Handoff team={teams[picker]} label={label(picker)} what="Draft" onReady={() => setReadyFor(picker)} />;
-  }
 
   const takenBy = new Map<string, string>(facts.draftPicks.map(p => [`${p.kind}:${p.id}`, p.teamId]));
   const mine = state.rosters[viewer];
@@ -113,7 +104,7 @@ export default function DraftBoard({ facts, onChange, onMenu, onDone, onEndSeaso
         </th>
         <td className="dr-read">{owner ? null : <Third rank={rank} />}</td>
         <td className="dr-cards">{own ? <Open traits={traits} /> : <Sealed traits={traits} />}</td>
-        <td className="dr-by">{owner && <><TeamLogo team={teams[owner]} size={16} /><span>{own ? `${teams[owner].name} · ${label(owner)}` : teams[owner].name}</span></>}</td>
+        <td className="dr-by">{owner && <><TeamLogo team={teams[owner]} size={16} /><span>{own ? `${teams[owner].name} · You` : teams[owner].name}</span></>}</td>
       </tr>
     );
   };
@@ -149,7 +140,7 @@ export default function DraftBoard({ facts, onChange, onMenu, onDone, onEndSeaso
 
       <section className="rs-row">
         <div className="rs-row-head">
-          <span className="rs-k">{hotseat ? `${label(viewer)} · ${you.name}` : 'Your team'}</span>
+          <span className="rs-k">Your team</span>
           <span className="ss-roster-logo"><TeamLogo team={you} size={20} /></span>
         </div>
         <p className="rs-hint">Your picks show grades. Rivals and the pool stay sealed until the season starts.</p>
@@ -241,7 +232,7 @@ export default function DraftBoard({ facts, onChange, onMenu, onDone, onEndSeaso
         <div className="ss-dock">
           {picker ? (
             <button type="button" className="rs-btn rs-btn-primary ss-dock-btn" disabled={!chosen} onClick={pick}>
-              {chosen ? `Draft ${'number' in chosen ? `${chosen.number} ${chosen.shortName}` : chosen.name}` : `${label(picker)}: tap a ${slot!.kind}`}
+              {chosen ? `Draft ${'number' in chosen ? `${chosen.number} ${chosen.shortName}` : chosen.name}` : `Tap a ${slot!.kind}`}
             </button>
           ) : (
             <span className="rs-hint">CPU picking…</span>

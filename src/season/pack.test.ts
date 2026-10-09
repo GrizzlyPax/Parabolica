@@ -239,17 +239,17 @@ describe('slots and the locker', () => {
 
 describe('the whole season', () => {
   it('with packs every round, replays identically and survives save → load', () => {
-    const play = (seed: number) => { let f = scripted(seed, 10, [0, 5]); while (seasonState(f).phase !== 'finished') f = playRound(f); return f; };
+    const play = (seed: number) => { let f = scripted(seed, 10, [0]); while (seasonState(f).phase !== 'finished') f = playRound(f); return f; };
     const a = play(77), b = play(77);
     expect(a).toEqual(b);
-    expect(a.cardFacts.filter(f => f.type === 'pack')).toHaveLength(2 * CALENDAR.length);
+    expect(a.cardFacts.filter(f => f.type === 'pack')).toHaveLength(CALENDAR.length);
     for (const h of a.setup.humans) {
       const s = teamCardState(a, h.teamId);
       const held = Object.values(s.drivers).flatMap(d => [...d.traits, ...d.equipment]).length + s.car.traits.length + s.car.upgrade.length + s.team.traits.length + s.team.facility.length + s.locker.length;
       expect(held).toBe(CALENDAR.length);
     }
     const store = memoryStore();
-    const mid = playRound(scripted(77, 10, [0, 5]));
+    const mid = playRound(scripted(77, 10, [0]));
     saveSeason(mid, store);
     const loaded = loadSeason(store)!;
     expect(loaded).toEqual(mid);

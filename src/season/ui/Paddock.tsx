@@ -29,13 +29,12 @@ import { draftState } from '../draft';
 import { applyPack, moveGear, pendingPack, teamCardState, type CardHolder, type TeamCardState } from '../pack';
 import { constructorStandings, driverStandings, lineupFor, poolFor, saveSeason, seasonState, setLineup, type SeasonFacts } from '../season';
 import { overall, readStat, type StatReading } from '../grades';
-import Handoff from './Handoff';
 import EndSeason from './EndSeason';
 import PackPick from './PackPick';
 import { CAR_STATS, CT_STATS, DRIVER_STATS, GradeCell, PAD, ReadingSheet, STAT_ABBR, TEAM_STATS } from './RosterTable';
 import { SeasonChart } from './SeasonChart';
 import { LeagueTables } from './LeagueTables';
-import { humanLabel, teamsOf } from './teams';
+import { teamsOf } from './teams';
 
 interface Props {
   facts: SeasonFacts;
@@ -69,10 +68,8 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo }: 
   const teams = useMemo(() => teamsOf(facts), [facts.setup]); // eslint-disable-line react-hooks/exhaustive-deps
   const rosters = useMemo(() => draftState(pool, facts.draftPicks).rosters, [pool, facts.draftPicks]);
   const state = seasonState(facts);
-  const hotseat = facts.setup.humans.length > 1;
   const turn = state.whoseTurn;
   const [tab, setTab] = useState<'team' | 'league'>('team');
-  const [readyFor, setReadyFor] = useState<string | null>(hotseat ? null : facts.setup.humans[0]?.teamId ?? null);
   const [revealing, setRevealing] = useState(false);
   // A gear card picked up: which copy (#556: two of the same card are two chips) and where it sits.
   const [held, setHeld] = useState<{ id: string; from: CardHolder | 'locker'; n: number } | null>(null);
@@ -92,10 +89,6 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo }: 
   const you = teams[viewer];
   const standings = constructorStandings(facts);
   const myRank = standings.find(s => s.teamId === viewer);
-
-  if (turn && hotseat && readyFor !== turn) {
-    return <Handoff team={teams[turn]} label={humanLabel(facts, turn)!} what={`Paddock · round ${state.round + 1}`} onReady={() => { setReadyFor(turn); setChosen(null); setHeld(null); setTab('team'); }} />;
-  }
 
   const roster = rosters[viewer];
   const cards = teamCardState(facts, viewer);
