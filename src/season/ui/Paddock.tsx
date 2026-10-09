@@ -266,7 +266,7 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo }: 
       {priorityLine}
       {pack && myTurn && (
         <div className="pk-pack">
-          <button type="button" className="pk-sealed" onClick={() => setRevealing(true)} aria-label={`Open your ${TIER_LABEL[pack.tier]} pack`}><GameIcon name="season.pack" size={30} /><i className="pk-twinkle a" /><i className="pk-twinkle b" /><i className="pk-twinkle c" /></button>
+          <button type="button" className={`pk-sealed tier-${pack.tier}`} onClick={() => setRevealing(true)} aria-label={`Open your ${TIER_LABEL[pack.tier]} pack`}><GameIcon name="season.pack" size={30} /><i className="pk-twinkle a" /><i className="pk-twinkle b" /><i className="pk-twinkle c" /></button>
           <div className="pk-pack-text">
             <span className="rs-k pk-pack-k">Base deck · {TIER_LABEL[pack.tier]} pack</span>
             <b>Sealed</b>

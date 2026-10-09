@@ -127,7 +127,7 @@ export default function PackReveal({ cards, tier, traitTargets, onKeep, onClose 
       <div className="pr-dim" style={{ opacity: dim }} />
       <div className="pr-rays" ref={rays} />
       <div className="pr-hud"><span className="rs-k">Base deck</span><b>{TIER_LABEL[tier]} pack</b></div>
-      <div className="pr-pack" ref={pack}>
+      <div className={`pr-pack tier-${tier}`} ref={pack}>
         <div className="pr-plate"><GameIcon name="season.pack" size={34} /><b>{TIER_LABEL[tier].toUpperCase()}</b><span>Base deck</span></div>
       </div>
       <div className={`pr-card ${slowFlip ? 'slow' : ''}`} ref={cardBox}>

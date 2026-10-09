@@ -432,3 +432,16 @@ button.rt-g:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset:
 @media (prefers-reduced-motion: reduce) { .pr-pick { transition: none; } }
 .pr-card { height: auto; overflow: visible; }
 .pr-three { padding: 20px 10px 10px; }
+
+/* Pack backs by tier (#558, Pax Oct 10; reverses Oct 8's "packs have no colour"):
+   Common red · Uncommon yellow · Rare green · Legendary purple, the four F1
+   colours. Metals (bronze → iridium) stay on the cards themselves. */
+.pk-sealed.tier-common, .pr-pack.tier-common { --tier: var(--signal-red); }
+.pk-sealed.tier-uncommon, .pr-pack.tier-uncommon { --tier: var(--signal-yellow); }
+.pk-sealed.tier-rare, .pr-pack.tier-rare { --tier: var(--signal-green); }
+.pk-sealed.tier-legendary, .pr-pack.tier-legendary { --tier: var(--signal-purple); }
+.pk-sealed[class*="tier-"] { border-color: var(--tier); color: var(--tier); background: repeating-linear-gradient(-45deg, color-mix(in srgb, var(--tier) 30%, var(--pw-ground)) 0 8px, var(--pw-ground) 8px 15px); }
+.pr-pack[class*="tier-"] { border-color: var(--tier); }
+.pr-pack[class*="tier-"]::before { border-color: var(--tier); background: repeating-linear-gradient(-45deg, color-mix(in srgb, var(--tier) 42%, transparent) 0 14px, transparent 14px 26px); }
+.pr-pack[class*="tier-"] .pr-plate { border-color: var(--tier); }
+.pr-pack[class*="tier-"] .pr-plate b { color: var(--tier); }
