@@ -59,3 +59,14 @@
 .cf-trait .cf-rule { border-style: dashed; }
 .cf-type .game-icon { color: var(--m); flex: none; }
 .card-face.cf-mini.cf-trait .cf-side.cf-front { border-style: dashed; }
+
+/* Traits are inverted (Pax, Oct 10): mostly the metal with black ink, so a
+   trait reads at a glance at any size; gear stays black with metal accents. */
+.cf-trait .cf-front { background: var(--m); }
+.cf-trait .cf-rule { color: var(--pw-ground); border-color: var(--pw-ground); }
+.cf-trait .cf-banner { background: var(--m); border-color: var(--pw-ground); }
+.cf-trait .cf-art { color: var(--pw-ground); border-color: color-mix(in srgb, var(--pw-ground) 45%, transparent); background: color-mix(in srgb, var(--pw-ground) 12%, var(--m)); }
+.metal-iridium.cf-trait .cf-art, .metal-iridium.cf-trait .cf-miniface { background: linear-gradient(135deg, var(--rarity-iridium) 0%, var(--rarity-silver) 50%, var(--rarity-iridium-sheen) 100%); }
+.cf-trait .cf-type { background: var(--pw-ground); border-color: var(--pw-ground); }
+.cf-trait .cf-no { color: color-mix(in srgb, var(--pw-ground) 70%, transparent); }
+.cf-trait .cf-miniface { background: var(--m); color: var(--pw-ground); }

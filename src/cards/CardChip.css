@@ -15,3 +15,6 @@ button.card-chip:focus-visible { outline: 2px solid var(--pw-text-1); outline-of
 @keyframes card-chip-wiggle { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(-7deg); } 50% { transform: rotate(6deg); } 75% { transform: rotate(-3deg); } }
 .card-chip.held { outline: 2px solid var(--pw-text-1); outline-offset: 2px; animation: card-chip-wiggle 1.4s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .card-chip.held { animation: none; } }
+/* Traits inverted (Pax, Oct 10): metal fill, black icon. */
+.card-chip.trait { background: var(--m); color: var(--pw-ground); border-color: color-mix(in srgb, var(--pw-ground) 55%, var(--m)); }
+.card-chip.trait.metal-iridium { background: linear-gradient(135deg, var(--rarity-iridium), var(--rarity-iridium-sheen)); }
