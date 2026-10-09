@@ -202,13 +202,13 @@ export const BASE_DECK_TEAMS: Team[] = [
 
 ### Logo picker: 20 icons
 - **20 game-icons** (Pax: 60 was too many), grouped loosely by theme. Shown in the picker as the icon in `ink` on the chosen colour, square tile, no badge.
-- **None repeats a base-deck team logo or a UI icon** from the [icon map](../ICONS.md), so a player's logo never looks like a CPU team or a button.
+- **None repeats a base-deck team logo or a UI icon** from the [icon map](../ICONS.md), so a player's logo never looks like a CPU team or a button. (`speed-boat` replaced `f1-car` on Oct 9, when `f1-car` became the car icon; see [vehicles-portraits](vehicles-portraits.md).)
 - Picked for reading clearly at 16px on a colour tile.
 
 | Theme | Icons |
 |---|---|
 | **Beasts** | [`fox-head`](https://game-icons.net/1x1/lorc/fox-head.html) · [`wolf-head`](https://game-icons.net/1x1/lorc/wolf-head.html) · [`lion`](https://game-icons.net/1x1/lorc/lion.html) · [`owl`](https://game-icons.net/1x1/lorc/owl.html) · [`octopus`](https://game-icons.net/1x1/lorc/octopus.html) |
-| **Machines** | [`f1-car`](https://game-icons.net/1x1/skoll/f1-car.html) · [`spark-plug`](https://game-icons.net/1x1/delapouite/spark-plug.html) · [`rocket`](https://game-icons.net/1x1/lorc/rocket.html) · [`cog`](https://game-icons.net/1x1/badges/cog.html) |
+| **Machines** | [`speed-boat`](https://game-icons.net/1x1/delapouite/speed-boat.html) · [`spark-plug`](https://game-icons.net/1x1/delapouite/spark-plug.html) · [`rocket`](https://game-icons.net/1x1/lorc/rocket.html) · [`cog`](https://game-icons.net/1x1/badges/cog.html) |
 | **Marks** | [`seven-pointed-star`](https://game-icons.net/1x1/delapouite/seven-pointed-star.html) · [`key`](https://game-icons.net/1x1/lorc/key.html) · [`fleur-de-lys`](https://game-icons.net/1x1/delapouite/fleur-de-lys.html) · [`lightning-helix`](https://game-icons.net/1x1/lorc/lightning-helix.html) |
 | **Flags & signals** | [`pirate-flag`](https://game-icons.net/1x1/delapouite/pirate-flag.html) · [`traffic-cone`](https://game-icons.net/1x1/delapouite/traffic-cone.html) · [`megaphone`](https://game-icons.net/1x1/delapouite/megaphone.html) |
 | **Weird** | [`ghost`](https://game-icons.net/1x1/lorc/ghost.html) · [`alien-stare`](https://game-icons.net/1x1/lorc/alien-stare.html) · [`tentacle-heart`](https://game-icons.net/1x1/lorc/tentacle-heart.html) · [`plastic-duck`](https://game-icons.net/1x1/delapouite/plastic-duck.html) |
