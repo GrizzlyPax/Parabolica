@@ -1,5 +1,5 @@
-// Run Setup — the one page before a Quick Race (#241 first slice; #242 is the
-// full design pass). The whole universe for this race on one screen:
+// Run Setup: the lab's one-race page, in Race Control (#241; moved out of
+// Quick Race in #605, which now starts a race with no setup). The whole universe for this race on one screen:
 //
 //   seed · reroll · track · cards (race scope) · the rules underneath · the grid
 //
@@ -30,7 +30,7 @@ import { gradeTone, readStat } from './season/grades';
 import type { StatKey } from './cards/types';
 import './RunSetup.css';
 
-interface RunSetupProps {
+export interface RunSetupProps {
   onStartRace: (roster: RosterDriver[], ruleset: Ruleset, seed: number, fantasy?: FantasyConfig) => void;
   onBack?: () => void;
 }
@@ -123,7 +123,7 @@ export default function RunSetup({ onStartRace, onBack }: RunSetupProps) {
       <header className="rs-top">
         <div className="rs-title-block">
           {onBack && <button type="button" className="rs-back" onClick={onBack}>← Menu</button>}
-          <h1 className="rs-title">Quick Race</h1>
+          <h1 className="rs-title">Run setup</h1>
           <span className="rs-sub">One race, one universe. Edit anything, then go.</span>
         </div>
         <div className="rs-seed">

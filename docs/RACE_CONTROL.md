@@ -38,7 +38,7 @@ Tags retired in #334 (the map is on the issue). A card is arithmetic on a stat a
 
 Physics edits one set of **working changes** (knob values). Name the set in the strip → **Save as preset**. Presets and every finished measurement (seed, races, preset, full result) live in this browser's **Notebook** tab (`src/racecontrol/notebook.ts`, localStorage `parabolica.lab.notebook`, last 60 runs); download it as JSON to keep or share, copy any run as markdown.
 
-**Race under a preset:** Quick Race → Run Setup → *Lab preset*. `applyLabPreset(ruleset, preset)` (`src/rules/ruleset.ts`) patches `simVars` with the knob edits. The rules readout names the preset.
+**Race under a preset:** Race Control → Run setup → *Lab preset* (Run setup moved here from Quick Race in #605; Quick Race now starts a one-race Season with no setup). Quick Race and Season build their fields with the Season pool (`generateSeasonPool` → `leagueForRound`), while the lab measures `createLeague` fields: both go through `prepareScheduledRace`, but the fields differ in shape (11 deck teams vs the Season pool). `applyLabPreset(ruleset, preset)` (`src/rules/ruleset.ts`) patches `simVars` with the knob edits. The rules readout names the preset.
 
 ## The shared ledger (any device, readable by agents)
 

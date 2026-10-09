@@ -38,3 +38,11 @@
 .qb-btn { flex: 1; height: 44px; border: 1px solid var(--pw-border-strong); background: transparent; color: var(--pw-text-1); font-family: var(--look-display, serif); font-weight: 700; font-size: 15px; cursor: pointer; }
 .qb-btn:first-child:not(:only-child) { flex: 0 0 72px; }
 .qb-btn-primary { background: var(--team-primary); color: var(--team-ink); border-color: var(--team-primary); }
+
+/* Quick Race (#607): follow a team, picked while qualifying runs */
+.qb-follow { display: flex; flex-direction: column; gap: 6px; }
+.qb-follow-row { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+.qb-follow-team { display: inline-flex; align-items: center; gap: 6px; flex: none; padding: 3px; border: 1px solid var(--pw-border); background: transparent; color: var(--pw-text-1); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.qb-follow-team.on { border-color: var(--team-primary); padding-right: 8px; }
+.qb-follow-team:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset: 1px; }
+.qb-follow-nm { white-space: nowrap; }

@@ -24,7 +24,7 @@ import { buildLapChartData } from './components/race/lapChartData';
 import { buildRaceReportMd } from './components/race/raceReportMd';
 import FinishSheet from './components/race/FinishSheet';
 import { driverDebrief, winnerEdge } from './components/race/debrief';
-import QualiBoard, { type QualiLive } from './components/race/QualiBoard';
+import QualiBoard, { type QualiLive, type QualiFollow } from './components/race/QualiBoard';
 import type { DriverHistoryEntry } from './components/race/types';
 import type { IconId } from './icons/registry';
 import { version as appVersion } from '../package.json';
@@ -56,6 +56,8 @@ interface WatchModeProps {
   onNextRace?: () => void;
   /** Qualifying show (#495): set while the session plays before the lights; called when it ends. */
   onQualifyingDone?: () => void;
+  /** Quick Race (#607): pick a team to follow while qualifying runs. */
+  follow?: QualiFollow;
   /** Cards + resolved rules, for the report's Rules line (#241). */
   rulesLines?: string[];
   powerActivation?: PowerActivation | null;
@@ -119,6 +121,7 @@ function WatchMode({
   trackInfo,
   onNextRace,
   onQualifyingDone,
+  follow,
   rulesLines,
   powerActivation,
   raceEvents,
@@ -1253,7 +1256,7 @@ function WatchMode({
                     Clear Focus ({focusedDriverIds.size})
                   </button>
                 )}
-                {qualifying ? <QualiBoard laps={qualiLaps} drivers={drivers} nominalTicks={engine.nominalLapTicks()} mine={mineSet} onDone={onQualifyingDone!} onLap={setQualiLive} /> : (
+                {qualifying ? <QualiBoard laps={qualiLaps} drivers={drivers} nominalTicks={engine.nominalLapTicks()} mine={mineSet} onDone={onQualifyingDone!} onLap={setQualiLive} follow={follow} /> : (
                 <TimingTower
                   sealed={sealedDriverIds}
                   mine={mineSet}
@@ -1309,7 +1312,7 @@ function WatchMode({
                     Clear Focus ({focusedDriverIds.size})
                   </button>
                 )}
-                {qualifying ? <QualiBoard laps={qualiLaps} drivers={drivers} nominalTicks={engine.nominalLapTicks()} mine={mineSet} onDone={onQualifyingDone!} onLap={setQualiLive} /> : (
+                {qualifying ? <QualiBoard laps={qualiLaps} drivers={drivers} nominalTicks={engine.nominalLapTicks()} mine={mineSet} onDone={onQualifyingDone!} onLap={setQualiLive} follow={follow} /> : (
                 <TimingTower
                   sealed={sealedDriverIds}
                   mine={mineSet}

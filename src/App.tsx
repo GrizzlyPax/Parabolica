@@ -1,6 +1,5 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import RaceEngine, { Driver, RaceConfig, RaceState, TrackInfo, RaceEvent, RosterDriver } from './RaceEngine';
-import RunSetup from './RunSetup';
 import Glossary from './Glossary';
 import IdeaBox from './IdeaBox';
 import { Ruleset, describeRuleset } from './rules/ruleset';
@@ -20,22 +19,23 @@ import { applyFavours } from './cards/apply';
 import type { FantasyConfig } from './fantasy/types';
 import { prepareScheduledRace } from './league/settle';
 import { CANON_VARIABLES } from './simlab/types';
-import { mulberry32, deriveSeed } from './engine/rng';
+import { mulberry32, deriveSeed, randomSeed } from './engine/rng';
+import { quickRace, type QuickRace } from './season/quickRace';
 import { generateTrack, getTrackById, Track } from './generators/tracks';
 import { useRoute, type Route } from './router';
 import './App.css';
 
-type AppScreen = 'main-menu' | 'season' | 'setup' | 'race' | 'compendium' | 'glossary' | 'credits';
+type AppScreen = 'main-menu' | 'season' | 'quick' | 'race' | 'compendium' | 'glossary' | 'credits';
 type RaceSpeed = 0.5 | 1 | 2 | 10;
 
 // Each screen has an address (#186, src/router.ts); the URL is the source of
 // truth for which screen shows, so refresh and the back button work.
 const SCREEN_OF: Record<Route['name'], AppScreen> = {
-  'menu': 'main-menu', 'quick-race': 'setup', 'race': 'race', 'world-deck': 'glossary', 'race-control': 'compendium',
+  'menu': 'main-menu', 'quick-race': 'quick', 'race': 'race', 'world-deck': 'glossary', 'race-control': 'compendium',
   'credits': 'credits', 'season': 'season',
 };
 const ROUTE_OF: Record<AppScreen, Route> = {
-  'main-menu': { name: 'menu' }, 'season': { name: 'season', screen: 'setup' }, 'setup': { name: 'quick-race' }, 'race': { name: 'race' }, 'glossary': { name: 'world-deck' },
+  'main-menu': { name: 'menu' }, 'season': { name: 'season', screen: 'setup' }, 'quick': { name: 'quick-race' }, 'race': { name: 'race' }, 'glossary': { name: 'world-deck' },
   'compendium': { name: 'race-control' }, 'credits': { name: 'credits' },
 };
 
@@ -91,16 +91,41 @@ function App() {
   }, [raceSpeed, engine]); // Don't include config - it causes infinite loop
 
   const handleSingleRace = () => {
-    setScreen('setup');
+    setScreen('quick');
   };
 
   const handleCompendium = () => {
     setScreen('compendium');
   };
 
-  // === Quick Race ===
+  // === Quick Race (#605, #606, #607) ===
+  // One tap: a one-race Season league (random field, track and weather from a
+  // fresh seed) on the Season pipeline. Qualifying plays, then the lights. You
+  // can pick a team to follow while qualifying runs. Nothing is saved.
+  const [quick, setQuick] = useState<{ q: QuickRace; follow: string | null; quali: boolean; avatars: ReturnType<typeof seasonAvatars> } | null>(null);
+  const startQuickRace = useCallback(() => {
+    const q = quickRace(randomSeed());
+    engine.stop();
+    prepareScheduledRace(engine, q.league, 0, q.track, CANON_VARIABLES);
+    setTrackInfo(engine.getTrackInfo());
+    setRaceSpeed(1);
+    engine.updateConfig({ tickInterval: 100 });
+    engine.reset();
+    setShowCountdown(false);
+    setQuickRun(null);
+    setQuick({ q, follow: null, quali: true, avatars: seasonAvatars(q.facts) });
+  }, [engine]);
+  const quickTeams = useMemo(() => (quick ? teamsOf(quick.q.facts) : {}), [quick?.q]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (screen !== 'quick') return;
+    startQuickRace();
+    setScreen('race', { replace: true });
+  }, [screen, startQuickRace, setScreen]);
+  const endQuickRaceQuali = useCallback(() => { setQuick(x => (x ? { ...x, quali: false } : x)); setShowCountdown(true); }, []);
 
-  // The quick run in progress: one seed + the hand of cards; race N derives
+  // === Lab race (Race Control → Run setup) ===
+
+  // The lab run in progress: one seed + the hand of cards; race N derives
   // its own seed, track and weather from it (so Next Race stays replayable).
   const [quickRun, setQuickRun] = useState<{ seed: number; ruleset: Ruleset; raceIndex: number; roster: RosterDriver[] } | null>(null);
   // Fantasy teams for the quick race on screen.
@@ -109,6 +134,7 @@ function App() {
   // Qualifying plays out before the countdown (#495).
   const [quickQuali, setQuickQuali] = useState(false);
   const handleStartRace = (roster: RosterDriver[], ruleset: Ruleset, seed: number, fantasy?: FantasyConfig) => {
+    setQuick(null);
     setQuickRun({ seed, ruleset, raceIndex: 0, roster });
     setActiveFantasy(fantasy ?? null);
     setTrackInfo(engine.getTrackInfo());
@@ -126,7 +152,7 @@ function App() {
   // In-app back buttons use history (#186): back where you came from, or the
   // parent screen when the page was opened from a link.
   const handleBackToMainMenu = () => back({ name: 'menu' });
-  const handleExitRace = () => back({ name: 'quick-race' });
+  const handleExitRace = () => (quick ? back({ name: 'menu' }) : back({ name: 'race-control', tab: 'run' }));
 
   // Leaving a race by any route (exit button, browser back, a typed URL) stops
   // the shared engine.
@@ -135,7 +161,10 @@ function App() {
     const was = prevScreen.current;
     prevScreen.current = screen;
     if (was === screen) return;
-    if (was === 'race') { engine.stop(); engine.reset(); setShowCountdown(false); }
+    if (was === 'race') {
+      engine.stop(); engine.reset(); setShowCountdown(false);
+      if (quick) { engine.clearSeed(); engine.setSimVars(null); engine.setWeather(null); setQuick(null); }
+    }
   }, [screen, engine]);
 
   // === Season Mode race (#322) ===
@@ -206,8 +235,8 @@ function App() {
   // Refresh lands on a screen whose state can't be rebuilt (a race in
   // progress): fall back to its start page.
   useEffect(() => {
-    if (screen === 'race' && !quickRun) setScreen('setup', { replace: true });
-  }, [screen, quickRun, setScreen]);
+    if (screen === 'race' && !quickRun && !quick) setScreen('main-menu', { replace: true });
+  }, [screen, quickRun, quick, setScreen]);
 
   const handleStart = () => {
     if (!isRunning && raceState && raceState.totalTicks === 0) {
@@ -347,15 +376,39 @@ function App() {
   }
 
   if (screen === 'compendium') {
-    return <RaceControl onBack={handleBackToMainMenu} tab={route.name === 'race-control' ? route.tab : undefined} onTabChange={tab => navigate({ name: 'race-control', tab }, { replace: true })} />;
-  }
-
-  // Show setup screen
-  if (screen === 'setup') {
-    return <RunSetup onStartRace={handleStartRace} onBack={handleBackToMainMenu} />;
+    return <RaceControl onBack={handleBackToMainMenu} onStartRace={handleStartRace} tab={route.name === 'race-control' ? route.tab : undefined} onTabChange={tab => navigate({ name: 'race-control', tab }, { replace: true })} />;
   }
 
   if (!config || !raceState) return null;
+
+  if (quick) {
+    const follow = quick.follow ? quickTeams[quick.follow] : undefined;
+    const mine = quick.follow ? quick.q.league.roster.filter(d => d.kingdomId === quick.follow).map(d => d.id) : undefined;
+    return (
+      <div className="watch-container quick-race" style={follow ? teamThemeVars(follow) : undefined}>
+        {showCountdown && <RaceStartCountdown onCountdownComplete={handleCountdownComplete} trackName={trackInfo?.name} trackEmoji={trackInfo?.funEmoji} />}
+        <WatchMode
+          drivers={drivers}
+          config={config}
+          raceState={raceState}
+          trackInfo={trackInfo}
+          raceEvents={raceEvents}
+          myDriverIds={mine}
+          avatars={quick.avatars}
+          onQualifyingDone={quick.quali ? endQuickRaceQuali : undefined}
+          follow={quick.quali ? { teams: Object.values(quickTeams), selected: quick.follow, onPick: id => setQuick(x => (x ? { ...x, follow: x.follow === id ? null : id } : x)) } : undefined}
+          onNextRace={startQuickRace}
+          onExit={handleExitRace}
+          exitLabel="Menu"
+          isRunning={isRunning}
+          raceSpeed={raceSpeed}
+          onStart={handleStart}
+          onStop={handleStop}
+          onSpeedChange={setRaceSpeed}
+        />
+      </div>
+    );
+  }
 
   // Watch mode - simple animated view
   return (

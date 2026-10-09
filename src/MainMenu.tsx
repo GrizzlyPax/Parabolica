@@ -63,7 +63,7 @@ function MainMenu({ onSingleRace, onSeason, season, onCompendium, onGlossary, on
             <span className="mm-row-icon"><GameIcon name="ui.play" size={20} /></span>
             <span className="mm-row-text">
               <span className="mm-row-title">Quick Race</span>
-              <span className="mm-row-sub">One race. Pick your cards, edit the grid, go.</span>
+              <span className="mm-row-sub">One random race, right now. Follow a team if you like.</span>
             </span>
             <span className="mm-row-chev">›</span>
           </button>
