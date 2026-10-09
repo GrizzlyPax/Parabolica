@@ -445,3 +445,6 @@ button.rt-g:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset:
 .pr-pack[class*="tier-"]::before { border-color: var(--tier); background: repeating-linear-gradient(-45deg, color-mix(in srgb, var(--tier) 42%, transparent) 0 14px, transparent 14px 26px); }
 .pr-pack[class*="tier-"] .pr-plate { border-color: var(--tier); }
 .pr-pack[class*="tier-"] .pr-plate b { color: var(--tier); }
+
+/* Priority stats + the tyre-wear pill (#547) */
+.pk-priority-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }

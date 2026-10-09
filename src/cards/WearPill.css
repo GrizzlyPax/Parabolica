@@ -1,0 +1,5 @@
+/* Tyre-wear pill (#547): gentle green, normal neutral, hungry red. */
+.wear-pill { display: inline-flex; align-items: center; gap: 5px; padding: 2px 7px; border: 1px solid var(--pw-border-strong); font-family: var(--look-data); font-size: 11px; letter-spacing: 0.04em; color: var(--pw-text-2); white-space: nowrap; vertical-align: middle; }
+.wear-pill b { font-weight: 400; color: var(--pw-text-1); }
+.wear-pill.wear-low { border-color: var(--signal-green); color: var(--signal-green); }
+.wear-pill.wear-high { border-color: var(--signal-red); color: var(--signal-red); }

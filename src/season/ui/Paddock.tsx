@@ -18,6 +18,7 @@ import { portraitFor, vehicleFor } from '../../generators/avatars';
 import { CardFace } from '../../cards/CardFace';
 import { CardChip } from '../../cards/CardChip';
 import { PriorityLine } from '../../cards/PriorityLine';
+import { WearPill } from '../../cards/WearPill';
 import { STAT_LABELS } from '../../cards/deck';
 import { STAT_ICONS } from '../../icons/registry';
 import type { Card, StatKey } from '../../cards/types';
@@ -256,7 +257,12 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo }: 
     </div>
   );
 
-  const priorityLine = <PriorityLine label="Next race · priority stats" track={{ name: track?.name ?? 'the', favours: trackFav }} weather={weather} />;
+  const priorityLine = (
+    <div className="pk-priority-row">
+      <PriorityLine label="Next race · priority stats" track={{ name: track?.name ?? 'the', favours: trackFav }} weather={weather} />
+      <WearPill tyreWear={getDeckTrackById(trackId)?.tyreWear} />
+    </div>
+  );
 
   const hint = !hand ? null : `Moving ${hand.name}: tap a glowing row or the locker. Tap the card again to put it down.`;
 

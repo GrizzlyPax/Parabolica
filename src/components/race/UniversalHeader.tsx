@@ -4,6 +4,7 @@
 import { useEffect, useRef } from 'react';
 import { ticksToTime } from '../../utils/raceTime';
 import { GameIcon } from '../../icons/GameIcon';
+import { WearPill } from '../../cards/WearPill';
 import type { UniversalHeaderProps, SessionState, RaceSpeed } from './types';
 import './UniversalHeader.css';
 
@@ -24,6 +25,7 @@ function UniversalHeader({
   trackName,
   conditions,
   priority,
+  tyreWear,
   elapsedTime,
   onMenuOpen,
   liveBadge = false,
@@ -83,6 +85,7 @@ function UniversalHeader({
       </div>
       <div className="uh-sub">
         <span className="uh-track">{trackName}{weather ? <span className="uh-weather"> · {weather}</span> : null}</span>
+        <WearPill tyreWear={tyreWear} />
         {priority && priority.length > 0 && <span className="uh-prio" title="Everyone gets +10 grade on these stats here">Priority: {priority.join(' · ')}</span>}
       </div>
     </header>
