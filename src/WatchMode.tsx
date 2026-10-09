@@ -22,7 +22,7 @@ import {
 import RaceFeed from './components/race/RaceFeed';
 import { buildLapChartData } from './components/race/lapChartData';
 import { buildRaceReportMd } from './components/race/raceReportMd';
-import RaceCompleteBar from './components/race/RaceCompleteBar';
+import FinishSheet from './components/race/FinishSheet';
 import type { DriverHistoryEntry } from './components/race/types';
 import type { IconId } from './icons/registry';
 import { version as appVersion } from '../package.json';
@@ -1210,8 +1210,11 @@ function WatchMode({
           vertical layout. */}
       <div className={`watch-content view-${activeView}`}>
         {raceState.raceFinished && sortedFinished.length >= 1 && (
-          <RaceCompleteBar
+          <FinishSheet
             podium={sortedFinished}
+            drivers={drivers}
+            mine={myDriverIds}
+            trackName={trackInfo?.name}
             dnfCount={drivers.filter(d => d.status === 'dnf').length}
             fastestLap={(() => {
               let best: { driver: Driver; ticks: number } | null = null;
@@ -1227,7 +1230,6 @@ function WatchMode({
               const digest = { finishOrder: raceState.finishOrder, dnfDriverIds: drivers.filter(d => d.status === 'dnf').map(d => d.id) };
               return fantasyStandings(fantasy, [digest]).map(l => ({
                 name: l.team.name, color: fantasyHex(l.team.color), points: l.points,
-                drivers: l.drivers.map(d => { const dr = drivers.find(x => x.id === d.driverId); return { name: dr?.shortName ?? `#${d.driverId}`, color: dr?.color ?? '#fff', points: d.points }; }),
               }));
             })() : undefined}
           />
