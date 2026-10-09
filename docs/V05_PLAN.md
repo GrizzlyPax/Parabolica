@@ -19,7 +19,7 @@
 
 **Rule 3: one Hub chat, one queue.** Hub works the list below top to bottom, one PR per issue. (The two-Hub split was dropped on Oct 8: Pax runs one Hub thread.)
 
-**Rule 4: one fingerprint bump.** The two content changes that move race results (Quick Race on trait cards + the 28 teams) land together in one PR that Pax merges. Nothing else should move the golden fingerprint. *(Used by #438. **Open (Oct 9):** a balance tune from Steward's report would be a second bump; Pax decides after the recommendations draft.)*
+**Rule 4: one fingerprint bump.** The two content changes that move race results (Quick Race on trait cards + the 28 teams) land together in one PR that Pax merges. Nothing else should move the golden fingerprint. *(Used by #438. **Pax, Oct 9: a second and last v0.5 bump** = one PR with Balance Pass One + the Speed nudge (#481) and names on their own seed stream (#467). Pax merges.)*
 
 ## Milestones
 | # | Milestone | Pax can… |
@@ -68,7 +68,7 @@
 14. Race-view emoji become game-icons (#397)
 15. Hide the Reset button in Season races (#449)
 15b. Weather rule cards: rename to Pax's one-word names (#473), strings only
-15c. Names on their own seed stream + Radio's new pools (#467): **fingerprint bump, Pax merges** (bundle with the balance tune)
+15c. **The balance bump, one PR:** Balance Pass One + Speed nudge (#481) **and** names on their own seed stream + Radio's pools (#467). Waits on Steward's nudge value; Pax merges; Steward re-measures
 16. Remove Commissioner leagues, gods and league routes (#339) → **M5**
 
 **🎤 Pit:** keep this doc and the milestones current
@@ -100,7 +100,7 @@ Teams 5–10, default 10 · 10-race default · free lineups · bench keeps gear 
 
 **Names + weather (Pax, Oct 9, via Radio, #466 / #436; docs/story/name-pools.md):** names stay grounded (mostly real; the joke is a few odd ones) · new **hybrid** tier (one absurd half on a real name); mix real 78 · hybrid 12 · absurd 8 · glitch 2 · mononyms retire as a list (any name ~1% one-word) · real names add 16 traditions (→ 273 / 270) · absurd words: almanac + farm and household objects (→ 84 / 74), no cuts · league names add understated + countryside (→ 110 / 86) · a modest top-up, not a doubling · **backstories + quirks parked** (no Season screen shows them) · weather rule cards: **Crosswind · Overcast · Calm · Windswept · Changeable** · on mobile, steer with 3–4 big multiple-choice picks, not boards of toggles
 
-**Raw-stat balance (Pax + Steward, Oct 9; [Balance Dials](BALANCE_DIALS_2026-10-09.html), [Balance Pass One](BALANCE_PASS_ONE_2026-10-09.html)):** raw stats first; card and trait sizes later · **Speed + Power decide ~45%** of a race; a clear king stat is fine (today Power is an emperor at 61%) · team strength **car / drivers / crew = 42 / 39 / 20** · **Reliability works through mechanical DNFs, not pace** (damage that forces a pit stop → v0.6, #479) · narrower car generation OK · **the paper favourite should win 30–45% of titles** · Pass One tunes 23 existing dials and lands 5 of 7 targets; the title gap (58%) closes with CPU packs between races (v0.6, #478) · **desktop matters, not just phone**
+**Raw-stat balance (Pax + Steward, Oct 9; [Balance Dials](BALANCE_DIALS_2026-10-09.html), [Balance Pass One](BALANCE_PASS_ONE_2026-10-09.html)):** raw stats first; card and trait sizes later · **Speed + Power decide ~45%** of a race; a clear king stat is fine (today Power is an emperor at 61%) · team strength **car / drivers / crew = 42 / 39 / 20** · **Reliability works through mechanical DNFs, not pace** (damage that forces a pit stop → v0.6, #479) · narrower car generation OK · **the paper favourite should win 30–45% of titles** · Pass One tunes 23 existing dials and lands 5 of 7 targets; the title gap (58%) closes with CPU packs between races (v0.6, #478) · **ship Pass One in v0.5, one bump with the names (#481 + #467)** · **CPU packs stay in v0.6** · **nudge Speed so it's clearly king**, in the same bump · **desktop matters, not just phone**
 
 **Paddock layout session (Pax, Oct 8, #452):** stats are **letter grades F → A+, S** past the best possible roll (S purple · A green · C yellow · F red; B, D plain) · an **OVR** column · the **0–100 scale is dynamic** (0 = worst possible roll, 100 = best, read from the generator's ranges; must stay true after any re-tune; car/team stars use it too) · **13 even grade bands** (a 50 reads C+) · **roster table = house style for every data screen** (#453) · no field rank on the Paddock (belongs on a league-wide view) · **Car 1 / Car 2** instead of Races / Bench · the next race's favoured stats are a white column header + a plain-words line, not folded into totals · pack step inline (aim at a row, ▲/▼ preview); a step strip; drag on desktop, tap-then-tap on phone
 
