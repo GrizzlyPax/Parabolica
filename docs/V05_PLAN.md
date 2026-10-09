@@ -64,7 +64,8 @@
 10. ✅ Pack opening reveal (#320) → **M3 ✅**
 11. Favoured stats on Run Setup, Paddock, race header (#361)
 12. Roster tables everywhere: Draft, Standings, Setup, World Deck (#453)
-13. Team creator: build your own (#346) → **M4**
+13. Team creator: build your own (#346)
+13b. Car vehicles + driver portraits (#489), after Radio's picks (#488) → **M4**
 14. Race-view emoji become game-icons (#397)
 15. Hide the Reset button in Season races (#449)
 15b. Weather rule cards: rename to Pax's one-word names (#473), strings only
@@ -89,7 +90,7 @@
 ## Risks
 - **Apex slips → everything slips.** If the season loop stalls, Pit moves Hub to the non-Season tasks first.
 - **Fable limits.** Apex's chain is 6 tasks. If the limit hits, the pack logic can drop to Opus with Apex reviewing; the season loop can't.
-- **Hub is busy:** one chat, 18 items in a row. If it slips, the team creator and pack reveal polish move to a v0.5.x patch, not the core.
+- **Hub is busy:** one chat, 19 items in a row. If it slips, the team creator and pack reveal polish move to a v0.5.x patch, not the core.
 - **Hotseat** touches every screen. Each Season screen checks two humans before merging.
 
 ## Out of v0.5 (on purpose)
