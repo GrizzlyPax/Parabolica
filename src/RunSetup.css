@@ -146,3 +146,10 @@
 :is(.run-setup, .league-screen) .effect-pill.bad { border-color: color-mix(in srgb, var(--signal-red) 40%, transparent); color: var(--pw-text-2); }
 :is(.run-setup, .league-screen) .effect-pill.bad b { color: var(--signal-red); }
 :is(.run-setup, .league-screen) .rarity-word { font-family: var(--look-data); font-size: 12px; font-weight: 400; letter-spacing: 0.06em; text-transform: uppercase; }
+
+/* Car stats as grades, like the Paddock (#546): S purple · A/B green · C yellow · D/F red. */
+.rs-grade { font-family: var(--look-data); font-size: 13px; color: var(--pw-text-1); }
+.rs-grade.tone-s { color: var(--signal-purple); }
+.rs-grade.tone-a, .rs-grade.tone-b { color: var(--signal-green); }
+.rs-grade.tone-c { color: var(--signal-yellow); }
+.rs-grade.tone-d, .rs-grade.tone-f { color: var(--signal-red); }
