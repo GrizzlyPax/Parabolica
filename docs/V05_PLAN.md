@@ -32,6 +32,8 @@
 
 **Playtest 1 (Oct 8):** the loop works; the Paddock reads badly (oversized on desktop, no driver stats, one driver at a time). Fixes go in **before** the pack reveal, so #320 isn't built twice: #451, #452, then #453 in M4.
 
+**Status (Oct 9, night):** ✅ **All Hub work for v0.5 is merged** (#509 two titles, #507 lab pace check, #473 weather names, #449, #397 race-view icons, #339 old leagues removed) plus the new **finish sheet** (#521). Preview v78. **Only Steward's Tracks & Weather re-probe (#362) is open in M5.**
+
 **Status (Oct 9, late):** ✅ **v0.5.1 merged** (#503): Balance Pass One + Speed nudge + names on their own stream. Steward's re-measure: within noise (Speed 25% / Power 18%; favourite wins 58% of titles, was 74%). ✅ **M4 done** (#489 vehicles + portraits, #361, #453). M5 left: Hub clean-up + two championships (#509) + the Race Control pace-check fix (#507); Steward's Tracks & Weather re-probe (#362).
 
 **Status (Oct 9):** ✅ **M1, M2, M3 done** (a full season with pack reveals). 🏛️ Steward's three balance reads are in ([Balance Report](BALANCE_REPORT_2026-10-09.html)): findings only; **Pax + Steward talk the options, then Steward writes the recommended passes, then Pit writes build issues.** Hub is on M4.
@@ -66,14 +68,15 @@
 10. ✅ Pack opening reveal (#320) → **M3 ✅**
 11. ✅ Car vehicles + driver portraits (#489)
 12. ✅ **The balance bump** (#481 + #467 → PR #503, v0.5.1)
-12b. Race Control pace check reads live `simVars` (#507)
-12c. **Two championships, no bonus** (#509): Drivers' + Constructors', finale mock-up first
+12b. ✅ Race Control pace check scores the full package (#507)
+12c. ✅ Two championships, no bonus (#509)
 13. ✅ Favoured stats (#361)
 14. ✅ Roster tables everywhere (#453) → **M4 ✅**
-15. Race-view emoji become game-icons (#397)
-16. Hide the Reset button in Season races (#449)
-17. Weather rule cards: rename to Pax's one-word names (#473), strings only
-18. Remove Commissioner leagues, gods and league routes (#339) → **M5**
+15. ✅ Race-view emoji become game-icons (#397)
+16. ✅ Hide the Reset button in Season races (#449)
+17. ✅ Weather rule cards renamed (#473)
+18. ✅ Commissioner leagues, gods and league routes removed (#339)
+19. ✅ Race finish sheet with a real podium (#521, Pax picked A)
 
 *Moved to v0.6 (Pax, Oct 9): team creator, build your own (#346).*
 
@@ -117,6 +120,8 @@ Teams 5–10, default 10 · 10-race default · free lineups · bench keeps gear 
 **Balance bump shipped (Pax, Oct 9):** v0.5.1 (#503), merged by Pit with Pax's OK · Speed nudge = **Speed 0.115 · Power 0.0078 · Grip 0.17** (Speed clearly king: 25% vs 18%) · known gap: the car is 33% of a team vs the 42% target (a separate pass if wanted) · **the champion bonus is axed: two championships, Drivers' and Constructors', like real F1** (#509; the +50 flipped 28% of titles)
 
 **Hub, Oct 9 (#489, #361, #453):** vehicles + portraits shipped (white until drafted, then team colour) · Run Setup and the Paddock say "Priority stats … (+10%), for everyone" · roster tables in League Setup, World Deck, the Draft (your picks graded, the pool shows the read + sealed dots) and the finale · **Draft A and Finale A are Hub's picks** ([mock-ups](https://claude.ai/artifact/V5866a3hGPkgdo2nGyZsVD)); Pax can switch either to B
+
+**M5 (Oct 9):** finish sheet = option A ([Race Finish Options](https://claude.ai/artifact/CFXysCjJoUCrncy2qoKmK8)): a sheet slides up at the flag with a 2‑1‑3 podium, your drivers' points and **To the Paddock** (Quick Race: Next race / Menu) · the finale headline is your Constructors' finish · an old saved league is left in storage, unread · Race Control's pace check weights all 11 stats equally (Steward may set impact weights, #362) · Quick Race gets the Season look in v0.6 (#520)
 
 **Qualifying (Pax, Oct 9):** both pieces open **v0.6**: Steward designs whether qualifying becomes a driver stat (#496) first, then Hub builds the qualifying show once (#495: drivers go out in turn, times drop onto a board, the grid forms; watch or skip)
 
