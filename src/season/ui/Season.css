@@ -87,7 +87,6 @@
 .ss-dots { display: inline-flex; gap: 4px; }
 .ss-open { display: flex; flex-wrap: wrap; gap: 4px 10px; }
 .ss-open-card { display: inline-flex; align-items: center; gap: 5px; font-style: italic; font-size: 13px; color: var(--pw-text-2); }
-.ss-num { width: 30px; flex: none; font-family: var(--look-data); font-size: 16px; color: var(--pw-text-1); display: inline-flex; justify-content: center; }
 .ss-roster-logo { margin-left: auto; display: inline-flex; }
 .ss-tabs { display: flex; gap: 0; }
 .ss-tab {
@@ -120,11 +119,6 @@
   background: var(--pw-ground); color: var(--pw-text-1); border: 1px solid var(--pw-text-1);
   font-family: var(--look-data); font-size: 13px;
 }
-.ss-table { list-style: none; margin: 0; padding: 0; }
-.ss-table-row { display: flex; align-items: center; gap: 10px; min-height: 40px; border-top: 1px solid var(--pw-hairline); }
-.ss-table-rank { width: 22px; font-family: var(--look-data); font-size: 13px; color: var(--pw-text-2); }
-.ss-table-pts { font-family: var(--look-data); font-size: 15px; min-width: 32px; text-align: right; }
-.ss-table-row.human .ss-team-name { color: var(--pw-text-1); }
 
 /* The thumb dock: the one action, bottom of the screen */
 .ss-dock {
@@ -363,15 +357,6 @@ button.rt-g:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset:
 
 /* Standings + finale (#321) */
 .ss-standings { padding-bottom: 96px; }
-.ss-crown {
-  display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 28px 16px;
-  background: var(--team-primary); color: var(--team-ink); text-align: center;
-}
-.ss-crown-k { display: inline-flex; align-items: center; gap: 6px; font-family: var(--look-data); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; }
-.ss-crown .team-logo { outline: 2px solid var(--team-ink); }
-.ss-crown-name { font-family: var(--look-display); font-weight: 700; font-size: 34px; line-height: 1.05; }
-.ss-crown-pts { font-family: var(--look-data); font-size: 14px; }
-.ss-bonus { font-family: var(--look-data); font-size: 11px; color: var(--pw-text-2); border: 1px solid var(--pw-border-strong); padding: 1px 5px; }
 
 /* Season race (#322): Skip to result, always one tap away */
 .season-skip {
@@ -410,3 +395,19 @@ button.rt-g:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset:
 .dr-pool tr.selected th { box-shadow: inset 3px 0 0 var(--team-primary); }
 .ss-draft.season-setup { max-width: 960px; }
 .ss-draft .ss-dock-btn { max-width: 928px; }
+
+/* The finale (#453, layout A): two crowns, the chart, the tables. */
+.ss-standings.fn { max-width: 1180px; }
+.fn-crowns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 40px; padding: 8px 0 20px; border-bottom: 1px solid var(--pw-hairline); }
+.fn-crown { display: flex; align-items: center; gap: 18px; min-width: 0; }
+.fn-crown + .fn-crown { border-left: 1px solid var(--pw-hairline); padding-left: 40px; }
+.fn-crown-text { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.fn-crown-name { display: inline-flex; align-items: center; gap: 10px; font-family: var(--look-display); font-weight: 700; font-size: 32px; line-height: 1.05; }
+.fn-crown-stats { font-family: var(--look-data); font-size: 14px; color: var(--pw-text-2); }
+.fn-tables { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 28px; align-items: start; }
+@media (max-width: 760px) {
+  .fn-crowns, .fn-tables { grid-template-columns: 1fr; }
+  .fn-crown + .fn-crown { border-left: 0; padding-left: 0; border-top: 1px solid var(--pw-hairline); padding-top: 16px; }
+  .fn-crown-name { font-size: 26px; }
+}
+.fn > .pk-chart { max-width: 760px; }
