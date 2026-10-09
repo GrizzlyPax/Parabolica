@@ -147,6 +147,8 @@ staggers the start: P1 on the line, each slot `grid.slotSpacing` (0.5%) of
 a lap back. `engine.getGridOrder()`; the lap-0 snapshot is the grid.
 Measured: grid vs package Spearman 0.70.
 
+**The qualifying show (#495, display only).** `engine.qualifyingLaps()` reads the same side stream before the start (roster order, with each lap's `ruined` roll), and `nominalLapTicks()` turns a score into a lap time (`nominal / score / 10` seconds). The race view plays the session out (`components/race/QualiBoard.tsx`) and ends on exactly `getGridOrder()`; nothing in the race moves.
+
 **Overtaking (`resolveOvertake`).** Drivers move front-to-back each tick.
 A chaser that would come within `followGap` (0.6% of a lap) of the racing
 car directly ahead *on the same lap* is held there until a per-tick pass

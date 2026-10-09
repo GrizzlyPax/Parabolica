@@ -703,3 +703,26 @@ describe('overtaking is an event (#246 pass 3)', () => {
     expect(topHalf / n).toBeGreaterThan(0.6);
   });
 });
+
+describe('qualifying show (#495)', () => {
+  it('qualifyingLaps() before the start sorts into exactly the grid the race uses, and moves nothing', () => {
+    const track = ALL_TRACKS[0];
+    const build = () => {
+      const engine = RaceEngine.createForWorker(CANON_VARIABLES, 77);
+      engine.loadGeneratedRoster(buildRoster(generateRoster(mulberry32(77)), generateCarsForKingdoms(TEAMS.slice(0, 11).map(t => t.id), mulberry32(78)), 77, defaultRuleset()));
+      engine.updateConfig({ totalLaps: track.laps, lapLength: track.length });
+      return engine;
+    };
+    const watched = build();
+    const laps = watched.qualifyingLaps();
+    expect(laps.length).toBeGreaterThan(10);
+    expect(watched.nominalLapTicks()).toBeGreaterThan(0);
+    const preview = [...laps].sort((a, b) => b.score - a.score).map(l => l.id);
+    const a = watched.runHeadless();
+    expect(watched.getGridOrder()).toEqual(preview);
+    // Reading the laps first doesn't change the race.
+    const b = build().runHeadless();
+    expect(a.raceState.finishOrder).toEqual(b.raceState.finishOrder);
+    expect(a.raceState.totalTicks).toBe(b.raceState.totalTicks);
+  });
+});
