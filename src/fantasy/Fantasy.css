@@ -73,7 +73,7 @@
 .fantasy-badge { display: inline-block; font-family: var(--look-data); font-size: 9.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fantasy-color); border: 1px solid var(--fantasy-color); border-radius: 0; padding: 0 5px; margin-left: 6px; vertical-align: middle; line-height: 1.5; }
 
 /* Race complete bar: fantasy points this race */
-.race-complete-fantasy { display: inline-flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; font-size: 13px; }
+.fs-fantasy { display: inline-flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; font-size: 13px; }
 .rc-fantasy-team { display: inline-flex; align-items: center; gap: 2px; color: var(--pw-text-1); }
 .rc-fantasy-team .fantasy-badge { margin-left: 0; }
 
