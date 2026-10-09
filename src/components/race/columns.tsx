@@ -9,7 +9,6 @@ import TireHistory from './TireHistory';
 import type { ColumnConfig, RowContext } from './types';
 import { Driver } from '../../RaceEngine';
 import { EffectChips } from './EffectChips';
-import { CardDot, CardFace } from '../../cards/CardFace';
 import { CANON_VARIABLES } from '../../simlab/types';
 import { GameIcon } from '../../icons/GameIcon';
 
@@ -323,28 +322,6 @@ export const COLUMN_TIRES: ColumnConfig = {
           );
         })}
       </div>
-    );
-  },
-};
-
-// Cards on the car (genesis traits, gear) and the things that happened to it
-// mid-race (track events, damage, a spin, cooked tyres, a pit-stop mood).
-export const COLUMN_TAGS: ColumnConfig = {
-  id: 'tags',
-  header: 'Cards',
-  width: '118px',
-  align: 'center',
-  render: (driver: Driver, ctx: RowContext) => {
-    // One column for everything on the car: its cards, then the transient
-    // effects (track events, in-race effects, inflictions, damage).
-    const hits = (ctx.effectStack ?? []).filter(e => e.source === 'track_event' || e.source === 'effect' || e.source === 'infliction' || e.source === 'damage');
-    const cards = driver.cards ?? [];
-    if (cards.length === 0 && hits.length === 0) return <span className="muted-cell">—</span>;
-    return (
-      <span className="tag-chips">
-        {cards.map(c => (ctx.sealed ? <CardDot key={c.id} card={c} /> : <CardFace key={c.id} card={c} size="mini" flippable={false} />))}
-        {hits.length > 0 && <EffectChips entries={hits} />}
-      </span>
     );
   },
 };
