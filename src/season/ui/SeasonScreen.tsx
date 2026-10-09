@@ -114,7 +114,7 @@ function SeasonHolding({ screen, navigate, onMenu }: Props) {
           <div className="ss-team">
             <TeamLogo team={you} size={28} />
             <span className="ss-team-name">{you.name}</span>
-            <span className="ss-badge ss-badge-human">{facts.setup.humans.length > 1 ? 'P1' : 'You'}</span>
+            <span className="ss-badge ss-badge-human">You</span>
           </div>
         )}
         <p className="rs-hint">{NEXT[screen as Exclude<Screen, 'setup'>]} is being built next. Your season is saved; it picks up here when it lands.</p>

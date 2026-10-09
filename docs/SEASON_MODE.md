@@ -5,7 +5,7 @@
 ## TL;DR
 - **Season Mode replaces Commissioner leagues entirely** (Pax, Oct 8): founding, the wall-clock league screens and open-by-code are removed in v0.5. **Live seasons** (wall clock, any device) return for Season Mode in v0.6. Quick Race and Race Control stay.
 - It's a **Team-Mode auto-battler**: League Setup → snake **draft** (all teams, AI simmed) → **[Paddock turn → Race] × calendar** → champion.
-- **Local and session-based:** you advance it yourself, no wall clock. Several humans = **hotseat**.
+- **Local and session-based:** you advance it yourself, no wall clock. **Single-player** (#588, Oct 10): one human against the CPU teams; hotseat was removed until real online multiplayer.
 - **Deterministic throughout:** every Paddock action is a fact locked before the race.
 
 ## Flow
@@ -23,7 +23,7 @@ One page with defaults, so a solo player can hit Start immediately.
 | League name | generated | Editable; flavour only |
 | Universe seed | random | Enter or reroll; generates the driver + car pool and track character |
 | Teams | 10 | **5–10** (Pax). **Drivers = teams × 3, cars = teams** |
-| Player-controlled | 1 | Each human names and colours their team. >1 = local hotseat |
+| Player-controlled | 1 | You (single-player since #588; hotseat removed) |
 | CPU teams | auto | = teams − humans; deck teams (e.g. For Rory) with a CPU badge; dumb AI |
 | Calendar | random, 10 races (from the 6 stat-combo tracks, so tracks repeat) | Random from the pool or hand-picked; reuses existing tracks |
 
@@ -58,11 +58,11 @@ Instead of 2 drivers pre-assigned to each named team, the seed summons a **share
 - **The in-race UI hides rivals' detailed stats**, matching the draft opacity.
 
 ## 6. Look & feel
-- **The game wears your team's colour:** the UI is black + white, and your team's primary is the only accent (see docs/ICONS.md → colour system). It doubles as the hotseat "whose turn is it" cue.
+- **The game wears your team's colour:** the UI is black + white, and your team's primary is the only accent (see docs/ICONS.md → colour system). (It used to double as the hotseat turn cue; hotseat is gone since #588.)
 - **The card pack reveal is an over-the-top pack-opening moment** that escalates with the pack tier: a Common pack is a quick pop, a Legendary pack a full build-up.
 
 ## Decided (Pax, Oct 8, round 2)
-- **Hotseat ships in v0.5** (basic): several humans, a hand-off screen in each team's colour between turns.
+- ~~Hotseat ships in v0.5~~: removed in #588 (Oct 10). Season Mode is single-player; hotseat saves are archived (they don't load).
 - **One save slot:** a new season overwrites the old one (asks first).
 - ~~Drivers'-champion bonus = 50 points~~ retired (#509): it flipped the title in 28% of seasons after v0.5.1.
 - **After the finale:** "Play again" = League Setup with a fresh seed and draft. No carry-over in v0.5.
@@ -88,4 +88,4 @@ Effect cards from the sim (v0.6) · Patron Mode · CPU Paddock actions · free a
 - **Grid size:** 5–10 teams, default 10.
 
 ## Done when
-League Setup → draft against simmed AI → a session of Paddock + race cycles across the calendar → standings to a champion. Solo first; hotseat if humans > 1. Deterministic and replayable throughout.
+League Setup → draft against simmed AI → a session of Paddock + race cycles across the calendar → standings to a champion. Single-player (#588). Deterministic and replayable throughout.

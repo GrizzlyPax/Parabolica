@@ -41,13 +41,6 @@
   border: 1px solid var(--pw-border-strong); color: var(--pw-text-2);
   font-family: var(--look-data); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase;
 }
-.ss-pickers { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 8px; }
-.ss-picker {
-  height: 36px; padding: 0 12px; border-radius: 0; cursor: pointer;
-  background: transparent; color: var(--pw-text-1); border: 1px solid var(--pw-border-strong);
-  font-family: var(--look-data); font-size: 13px; letter-spacing: 0.06em;
-}
-.ss-picker.on { background: var(--team-primary); color: var(--team-ink); border-color: var(--team-primary); }
 .ss-badge-human { border-color: var(--team-primary); background: var(--team-primary); color: var(--team-ink); }
 
 /* Calendar */
@@ -66,16 +59,6 @@
 .ss-holding { display: flex; flex-direction: column; gap: 12px; }
 .ss-holding-actions { display: flex; flex-wrap: wrap; gap: 10px; }
 
-/* Hotseat hand-off: the next player's colour, edge to edge */
-.ss-handoff {
-  min-height: 100vh; width: 100%; border: 0; border-radius: 0; cursor: pointer;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 24px;
-  background: var(--team-primary); color: var(--team-ink); font-family: var(--look-serif);
-}
-.ss-handoff-k { font-family: var(--look-data); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; }
-.ss-handoff-name { font-family: var(--look-display); font-weight: 700; font-size: 34px; line-height: 1.05; text-align: center; }
-.ss-handoff-tap { font-style: italic; font-size: 16px; }
-.ss-handoff .team-logo { outline: 2px solid var(--team-ink); }
 
 /* Draft board */
 .ss-draft { padding-bottom: 96px; }

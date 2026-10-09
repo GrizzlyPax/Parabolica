@@ -57,8 +57,7 @@ export default function Standings({ facts, onMenu, onPaddock, onPlayAgain, onEnd
         <section className="fn-result">
           {humans.map(id => {
             const line = table.lines.find(l => l.teamId === id)!;
-            const label = humanLabel(facts, id);
-            const who = humans.length > 1 ? `${label} · ${teams[id].name}` : 'You';
+            const who = 'You';
             const crown = dc?.teamId === id ? ` · ${driver(dc.driver.driverId).fullName} is Drivers’ champion` : '';
             return <p key={id} className="fn-result-line"><b>{who} finished P{line.rank}</b> in the Constructors’ on {line.points} pts{crown}.</p>;
           })}

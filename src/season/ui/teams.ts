@@ -11,9 +11,7 @@ export function teamsOf(facts: SeasonFacts): Record<string, CompetitorTeam> {
   }));
 }
 
-/** "You" solo; "P1", "P2" … in hotseat; null for a CPU team. */
+/** "You" for your team (Season Mode is single-player since #588); null for a CPU team. */
 export function humanLabel(facts: SeasonFacts, teamId: string): string | null {
-  const i = facts.setup.humans.findIndex(h => h.teamId === teamId);
-  if (i < 0) return null;
-  return facts.setup.humans.length > 1 ? `P${i + 1}` : 'You';
+  return facts.setup.humans.some(h => h.teamId === teamId) ? 'You' : null;
 }

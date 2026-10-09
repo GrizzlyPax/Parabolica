@@ -1,6 +1,6 @@
 // Constructors' points, race by race (Pax, Oct 9: "line charts showing how
 // teams are doing, really highlighting our team"). Your team (every human in
-// hotseat) is a thick line in its colour; the leader is light; the rest are dim.
+// formerly hotseat) is a thick line in its colour; the leader is light; the rest are dim.
 import type { ConstructorStanding } from '../season';
 
 interface Team { id: string; name: string; color: string }
