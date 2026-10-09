@@ -1,5 +1,11 @@
 # v0.6 Monza — the plan
 
+> **✅ SHIPPED, Oct 10, 2026 (engine v0.6.1, live on playparabolica.com).** All three milestones closed (20 issues).
+>
+> **What you can play:** pick a pack's card in a strip at the top of the Paddock (gear to the locker, tier-coloured packs), cards that add grade points (the same on every stat; car and team cards help both drivers), gear and traits that look different, a qualifying show with marbles lapping the track (Acceleration now buys grid spots), real-F1 pit stops with tyre life as a share of the race, hidden tyre luck, a wear dial per track (shown as a pill), a cleaner race view (new speed graphic, every tower column at every width), and no tags anywhere.
+>
+> **Carried into v0.7 Suzuka:** louder, asymmetric cards with 4 archetypes, gear mileage, the new pack offer and curses (#565, #559, design below) · car names (#569, after Radio's #568) · team creator (#346) · driver card (#476) · Quick Race in the Season look (#520) · track favours (#362) · live seasons (#340) · rain (#360) · effects (#332, #333).
+
 *Master plan for the current release. Owner: 🎤 Pit. The work lives in GitHub: milestones `v0.6 · 1 Choices` → `2 The bump` → `3 Ship`, one issue per task, a `crew:` label for the owner, and a Paste line at the top of each issue. The v0.5 record and its full decision log: [V05_PLAN](V05_PLAN.md).*
 
 ## What v0.6 is

@@ -7,7 +7,7 @@ Parabolica is an F1-style race sim: draft a team, race a Season, chase two champ
 ## Start here
 | Doc | What it's for |
 |---|---|
-| [V06_PLAN](V06_PLAN.md) | **The v0.6 Monza plan (current):** owner choices; milestones, lanes, decision log |
+| [V06_PLAN](V06_PLAN.md) | **The v0.6 Monza plan (✅ shipped Oct 10, v0.6.1):** owner choices; decision log; v0.7 direction |
 | [V05_PLAN](V05_PLAN.md) | **The v0.5 Spa plan (✅ shipped Oct 9, v0.5.1):** milestones, lanes, order, risks, decision log |
 | [HANDOFF_2026-10-08](HANDOFF_2026-10-08.md) | Oct 8: GitHub-only planning, the crew, the Almanac look, icons, metals, numbers, what's next |
 | [HANDOFF_2026-10-07](HANDOFF_2026-10-07.md) | What shipped Oct 5–7, how the pieces fit, traps, open work |
