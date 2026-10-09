@@ -5,6 +5,7 @@ import type { WeatherState } from '../../data/weather';
 import { isNeutralWeather } from '../../data/weather';
 import type { CardStat } from '../../cards/types';
 import { favourText } from '../../cards/favourText';
+import { GameIcon } from '../../icons/GameIcon';
 
 interface ConditionsPanelProps {
   weather: WeatherState | null;
@@ -21,14 +22,14 @@ function ConditionsPanel({ weather, trackFavours }: ConditionsPanelProps) {
   const items: { key: string; emoji: string; name: string; sub: string }[] = [];
 
   if (trackFavours.length) {
-    items.push({ key: 'track', emoji: '🏁', name: 'Track favours', sub: favourText(trackFavours) });
+    items.push({ key: 'track', emoji: 'race.finish', name: 'Track favours', sub: favourText(trackFavours) });
   }
   if (weather && !isNeutralWeather(weather)) {
     const detail = [intensityLabel(weather.intensity), favourText(weather.favours)].filter(Boolean).join(' · ');
     items.push({ key: `w-${weather.id}`, emoji: weather.emoji, name: weather.name, sub: detail });
   }
   if (items.length === 0) {
-    items.push({ key: 'neutral', emoji: '☀️', name: 'Neutral', sub: 'no favours' });
+    items.push({ key: 'neutral', emoji: 'sun', name: 'Neutral', sub: 'no favours' });
   }
 
   return (
@@ -37,7 +38,7 @@ function ConditionsPanel({ weather, trackFavours }: ConditionsPanelProps) {
       <div className="conditions-panel-items">
         {items.map(it => (
           <span key={it.key} className="conditions-panel-item">
-            <span className="conditions-panel-emoji">{it.emoji}</span>
+            <span className="conditions-panel-emoji"><GameIcon name={it.emoji} fallback={it.emoji} size={18} /></span>
             <span className="conditions-panel-text">
               <span className="conditions-panel-name">{it.name}</span>
               {it.sub && <span className="conditions-panel-sub">{it.sub}</span>}

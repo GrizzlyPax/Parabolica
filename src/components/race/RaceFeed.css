@@ -71,6 +71,9 @@
   font-size: 1.15rem;
   line-height: 1.4;
   flex-shrink: 0;
+  display: inline-flex;
+  padding-top: 2px;
+  color: var(--story-accent, var(--pw-text-2));
 }
 
 .story-body {

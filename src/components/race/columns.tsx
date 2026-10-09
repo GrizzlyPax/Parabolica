@@ -11,6 +11,7 @@ import { Driver } from '../../RaceEngine';
 import TagChips, { EffectChips } from './TagChips';
 import { CardDot, CardFace } from '../../cards/CardFace';
 import { CANON_VARIABLES } from '../../simlab/types';
+import { GameIcon } from '../../icons/GameIcon';
 
 // Suffixes to ignore when extracting surname
 const NAME_SUFFIXES = new Set(['JR', 'JR.', 'SR', 'SR.', 'II', 'III', 'IV', 'V']);
@@ -208,7 +209,7 @@ export const COLUMN_GAP_AHEAD: ColumnConfig = {
     const title = fighting ? `Stuck behind the car ahead for ${Math.round((ctx.battle?.ticks ?? 0) / 10)}s` : ctx.battle?.role === 'defending' ? 'Under attack from behind' : undefined;
     return (
       <span className={`gap-value gap-ahead ${fighting ? 'gap-fight' : close ? 'gap-battle' : ''}`} title={title}>
-        {fighting && <span className="gap-swords" aria-label="attacking">⚔</span>}{ctx.intervalGap}
+        {fighting && <span className="gap-swords" aria-label="attacking"><GameIcon name="race.battle" size={11} /></span>}{ctx.intervalGap}
       </span>
     );
   },
@@ -362,7 +363,7 @@ export const COLUMN_STATUS: ColumnConfig = {
   align: 'center',
   render: (_driver: Driver, ctx: RowContext) => {
     const hits = (ctx.effectStack ?? []).filter(e => e.source === 'track_event' || e.source === 'infliction' || e.source === 'damage');
-    if (hits.length === 0 && ctx.statusEmoji) return <span className="status-icon">{ctx.statusEmoji}</span>;
+    if (hits.length === 0 && ctx.statusEmoji) return <span className="status-icon"><GameIcon name={ctx.statusEmoji} fallback={ctx.statusEmoji} size={14} /></span>;
     return <EffectChips entries={hits} />;
   },
 };

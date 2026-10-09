@@ -4,6 +4,7 @@
 //            with pit-lane traffic shown on a sub-line.
 // The F1 broadcast bottom element; seeds the #19 timeline view.
 import type { Driver } from '../../RaceEngine';
+import { GameIcon } from '../../icons/GameIcon';
 
 interface TrackStripProps {
   drivers: Driver[];
@@ -42,12 +43,12 @@ function TrackStrip({ drivers, totalLaps, lapLength, mode, label, focusedDriverI
       <span className="track-strip-label">{label}</span>
       <div className="track-strip-track">
         <div className="track-strip-line">
-          <span className="track-strip-flag track-strip-finish">🏁</span>
+          <span className="track-strip-flag track-strip-finish"><GameIcon name="race.finish" size={14} /></span>
           {onTrack.map(dot)}
         </div>
         {mode === 'lap' && (
           <div className="track-strip-pitline">
-            <span className="track-strip-pit-label">🔧</span>
+            <span className="track-strip-pit-label"><GameIcon name="race.pit_stop" size={12} /></span>
             {inPits.map(dot)}
           </div>
         )}

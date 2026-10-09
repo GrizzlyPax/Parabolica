@@ -3,6 +3,7 @@
 // and map usable, and copies a balance-grade markdown report in one click.
 import { useState } from 'react';
 import type { Driver } from '../../RaceEngine';
+import { GameIcon } from '../../icons/GameIcon';
 
 interface RaceCompleteBarProps {
   podium: Driver[];           // finish order, at least the top 3
@@ -55,7 +56,7 @@ export default function RaceCompleteBar({ podium, dnfCount, fastestLap, seed, bu
   return (
     <div className="race-complete">
       <div className="race-complete-bar">
-        <span className="race-complete-flag" aria-hidden="true">🏁</span>
+        <span className="race-complete-flag" aria-hidden="true"><GameIcon name="race.finish" size={18} /></span>
         <span className="race-complete-title">Race complete</span>
         <ol className="race-complete-podium" aria-label="Podium">
           {podium.slice(0, 3).map((d, i) => (
@@ -82,7 +83,7 @@ export default function RaceCompleteBar({ podium, dnfCount, fastestLap, seed, bu
         )}
         <span className="race-complete-actions">
           <button type="button" className="rc-btn rc-btn-copy" onClick={doCopy}>
-            {copied === 'ok' ? '✓ Copied' : copied === 'fail' ? 'Select below' : 'Copy report'}
+            {copied === 'ok' ? <><GameIcon name="ui.done" size={12} /> Copied</> : copied === 'fail' ? 'Select below' : 'Copy report'}
           </button>
           <button type="button" className="rc-btn rc-btn-ghost" onClick={() => { if (!report) setReport(buildReport()); setShowReport(v => !v); }}>
             {showReport ? 'Hide' : 'View'}

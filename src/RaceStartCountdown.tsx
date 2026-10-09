@@ -1,5 +1,6 @@
 import { useState, useRef, useLayoutEffect, useEffect } from 'react';
 import './RaceStartCountdown.css';
+import { GameIcon } from './icons/GameIcon';
 
 interface RaceStartCountdownProps {
   onCountdownComplete: () => void;
@@ -91,7 +92,7 @@ function RaceStartCountdown({ onCountdownComplete, trackName, trackEmoji }: Race
       <div className="countdown-content">
         {phase === 'intro' && (
           <div className="intro-phase">
-            <span className="track-emoji-large">{trackEmoji || '🏁'}</span>
+            <span className="track-emoji-large">{trackEmoji || <GameIcon name="race.finish" size={48} />}</span>
             <h1 className="track-name-large">{trackName || 'Grand Prix'}</h1>
             <p className="formation-text">Formation Lap Complete</p>
           </div>

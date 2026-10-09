@@ -28,6 +28,7 @@ import type { IconId } from './icons/registry';
 import { version as appVersion } from '../package.json';
 import { voiceNotification, type FeedItem } from './feed/commentary';
 import './WatchMode.css';
+import { GameIcon } from './icons/GameIcon';
 
 // Suffixes to ignore when extracting surname
 const NAME_SUFFIXES = new Set(['JR', 'JR.', 'SR', 'SR.', 'II', 'III', 'IV', 'V']);
@@ -388,7 +389,7 @@ function WatchMode({
           'crash',
           isPileup ? 'PILEUP!' : 'CRASH!',
           driverNames,
-          '💥',
+          'race.crash',
           newlyCrashed.map(d => ({ id: d.id, name: d.name, emoji: d.emoji }))
         );
       }
@@ -405,7 +406,7 @@ function WatchMode({
           'crash',  // Still uses crash notification type for styling
           'BLOWOUT!',
           `${driver.emoji} ${driver.name} - tire failure!`,
-          '💨',  // Different emoji for blowout
+          'race.tire_failure',
           [{ id: driver.id, name: driver.name, emoji: driver.emoji }]
         );
       });
@@ -423,7 +424,7 @@ function WatchMode({
           'crash',  // Uses crash notification type for styling
           'MECHANICAL!',
           `${driver.emoji} ${driver.name} - engine failure!`,
-          '⚙️',
+          'race.mechanical',
           [{ id: driver.id, name: driver.name, emoji: driver.emoji }]
         );
       });
@@ -442,7 +443,7 @@ function WatchMode({
           'slow_pit_stop',
           'Slow Stop',
           `${driver.name}`,
-          '🛞',
+          'race.pit_stop',
           [{ id: driver.id, name: driver.name, emoji: driver.emoji }],
           12000,
           driver.color
@@ -463,7 +464,7 @@ function WatchMode({
           'quick_pit_stop',
           'Fast Stop',
           `${driver.name}`,
-          '🛞',
+          'race.pit_stop',
           [{ id: driver.id, name: driver.name, emoji: driver.emoji }],
           12000,
           driver.color
@@ -559,7 +560,7 @@ function WatchMode({
         'track_event',  // Use track_event type for styling
         isDeployment ? 'THE VOID OPENS' : 'THE VOID CLOSES',
         latestEvent.description,
-        '🕳️',
+        'race.safety_car',
         undefined,
         isDeployment ? 15000 : 8000  // Longer duration for deployment
       );
@@ -588,7 +589,7 @@ function WatchMode({
       // Add to status effects (persists for timing tower display)
       const statusToAdd: StatusEffect[] = newEffects.map(e => ({
         driverId: e.driverId,
-        emoji: e.emoji || '⚡',
+        emoji: e.type === 'driver_error' ? 'race.spin' : e.emoji || 'race.card_trigger',
         expiresAtTick: raceState.totalTicks + 500,
       }));
       setStatusEffects(prev => [...prev, ...statusToAdd]);
@@ -627,9 +628,9 @@ function WatchMode({
 
       addNotification(
         'tag_activation',
-        `${event.emoji || '🏷️'} ${driverName}`,
+        event.emoji ? `${event.emoji} ${driverName}` : driverName,
         event.description,
-        event.emoji || '🏷️',
+        event.emoji || 'race.card_trigger',
         driver ? [{ id: driver.id, name: driver.name, emoji: driver.emoji }] : undefined,
         10000 // 10 seconds duration
       );
@@ -810,7 +811,7 @@ function WatchMode({
           'lead_change',
           'LEAD CHANGE',
           `${leader.emoji} ${leader.name} takes the lead!`,
-          '🔄',
+          'race.lead_change',
           [{ id: leader.id, name: leader.name, emoji: leader.emoji }],
           12000,
           leader.color
@@ -849,7 +850,7 @@ function WatchMode({
         'milestone',
         'HALFWAY',
         `${leader.emoji} ${leader.name} leads at the halfway point`,
-        '🔔'
+        'race.halfway'
       );
     }
 
@@ -860,7 +861,7 @@ function WatchMode({
         'milestone',
         'FINAL LAP',
         'White flag! Last lap of the race',
-        '🏳️'
+        'race.final_lap'
       );
     }
 
@@ -877,7 +878,7 @@ function WatchMode({
             'fastest_lap',
             'FASTEST LAP',
             `${fastest.driver.emoji} ${fastest.driver.name} sets the pace!`,
-            '⚡',
+            'race.fastest_lap',
             [{ id: fastest.driver.id, name: fastest.driver.name, emoji: fastest.driver.emoji }],
             12000,
             fastest.driver.color
@@ -897,7 +898,7 @@ function WatchMode({
           'finish',
           'CHECKERED FLAG',
           `${winner.emoji} ${winner.name} wins the race!`,
-          '🏁',
+          'race.finish',
           [{ id: winner.id, name: winner.name, emoji: winner.emoji }],
           20000, // Keep winner notification longer
           winner.color
@@ -1083,7 +1084,7 @@ function WatchMode({
     for (const d of drivers) {
       const per = map.get(d.id);
       const list = per ? Array.from(per.values()) : [];
-      if (scLaps.length) list.push({ key: 'sc', emoji: '🚨', name: 'Safety car', laps: scLaps, kind: 'event' });
+      if (scLaps.length) list.push({ key: 'sc', emoji: 'race.safety_car', name: 'Safety car', laps: scLaps, kind: 'event' });
       if (list.length) out.set(d.id, list);
     }
     return out;
@@ -1176,7 +1177,7 @@ function WatchMode({
         totalLaps={totalLaps}
         sessionState={getSessionState()}
         trackName={trackInfo?.name || 'Grand Prix'}
-        trackEmoji={trackInfo?.funEmoji || '🏁'}
+        trackEmoji={trackInfo?.funEmoji || ''}
         trackFlagEmoji={trackInfo?.emoji}
         conditions={headerConditions}
         priority={headerPriority}
@@ -1221,7 +1222,7 @@ function WatchMode({
             buildReport={buildReport}
             onNextRace={onNextRace}
             onExit={onExit}
-            exitLabel={exitLabel ?? (spectator ? '⚜️ Back to League' : 'Menu')}
+            exitLabel={exitLabel ?? (spectator ? 'Back to League' : 'Menu')}
             fantasy={fantasy ? (() => {
               const digest = { finishOrder: raceState.finishOrder, dnfDriverIds: drivers.filter(d => d.status === 'dnf').map(d => d.id) };
               return fantasyStandings(fantasy, [digest]).map(l => ({
@@ -1352,7 +1353,7 @@ function WatchMode({
           {activeView === 'lap' && (
             <section className="bf-lapchart">
               <div className="bf-lapchart-head">
-                <span className="bf-lapchart-title">📈 Race Lap Chart</span>
+                <span className="bf-lapchart-title"><GameIcon name="view.lapchart" size={14} /> Race Lap Chart</span>
                 <span className="bf-lapchart-actions">
                   <button
                     className="bf-copy-report-btn"
@@ -1372,7 +1373,7 @@ function WatchMode({
                       setTimeout(() => setReportCopied(false), 2000);
                     }}
                   >
-                    {reportCopied ? '✅ Copied' : '📋 Copy report'}
+                    {reportCopied ? <><GameIcon name="ui.done" size={12} /> Copied</> : <><GameIcon name="ui.copy" size={12} /> Copy report</>}
                   </button>
                   <span className="bf-lapchart-lap">Lap {currentLapForHeader} / {totalLaps}</span>
                 </span>

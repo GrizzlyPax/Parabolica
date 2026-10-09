@@ -1,37 +1,37 @@
-// Emoji sweep (#352, docs/ICONS.md): UI code outside the race view draws
-// game-icons, never emoji. Content emoji still come from data fields
-// (tracks, weather, old teams, gods) until their replacements land, so this
-// scans component source for emoji *literals* only. The race view joins the
-// list in #397.
+// Emoji sweep (#352, #397, docs/ICONS.md): UI code draws game-icons, never
+// emoji, race view included. Content emoji still come from data fields
+// (tracks, weather, old teams, tags, engine event strings) until their
+// replacements land, so this scans source for emoji *literals* only.
 import { describe, expect, it } from 'vitest';
 import { readdirSync, readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 
 const SRC = join(__dirname, '..');
 
-// The race view keeps its emoji until #397 (after Apex's race colours, #381).
-const RACE_VIEW = [/^components\/race\//, /^WatchMode\.tsx$/, /^RaceStartCountdown\.tsx$/];
+// The feed's persona voices are UI too (the Booth, Mister Marbles, the Track).
+const EXTRA = ['feed/commentary.ts'];
 
 const EMOJI = /\p{Extended_Pictographic}/u;
 
 function uiFiles(): string[] {
   return (readdirSync(SRC, { recursive: true }) as string[])
     .map(f => f.split('\\').join('/'))
-    .filter(f => f.endsWith('.tsx') && !f.includes('.test.'))
-    .filter(f => !RACE_VIEW.some(re => re.test(f)));
+    .filter(f => (f.endsWith('.tsx') || EXTRA.includes(f)) && !f.includes('.test.'));
 }
 
 function withoutComments(code: string): string {
   return code.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1');
 }
 
-describe('Emoji sweep: UI outside the race view uses game-icons', () => {
+describe('Emoji sweep: the UI uses game-icons (race view included, #397)', () => {
   const files = uiFiles();
 
   it('finds the UI files', () => {
     expect(files).toContain('MainMenu.tsx');
     expect(files).toContain('league/ui/LeagueScreen.tsx');
-    expect(files.some(f => f.startsWith('components/race/'))).toBe(false);
+    expect(files).toContain('WatchMode.tsx');
+    expect(files).toContain('components/race/TrackMap.tsx');
+    expect(files).toContain('feed/commentary.ts');
   });
 
   for (const file of files) {
