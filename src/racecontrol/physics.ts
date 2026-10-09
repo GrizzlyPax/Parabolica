@@ -6,8 +6,9 @@
 // stops, passes, DNFs, safety cars. Change a variable, run the same batch,
 // compare. Metrics mirror scripts/mechanics-probe.mjs (#246).
 import { labSpec, runLabRace, raceFingerprint, batchFingerprint, type LabRaceResult } from './runner';
-import RaceEngine, { type Driver } from '../RaceEngine';
-import type { SimVariables } from '../simlab/types';
+import RaceEngine from '../RaceEngine';
+import { CANON_VARIABLES, type SimVariables } from '../simlab/types';
+import { livePace, packageScore } from './pace';
 
 export const PHYSICS_CARDS = ['no-tags'];
 export const PHYSICS_RACES = 100;
@@ -35,35 +36,37 @@ export interface PhysicsReport {
 
 export interface PhysicsProgress { done: number; total: number; track: string }
 
-const pace = (d: Driver) => (1 + (d.stats.baseSpeed - 1) * 0.12) * (0.942 + (d.carStats?.power ?? 3) * 0.014);
 const rank = (v: number[]) => { const idx = v.map((x, i) => [x, i] as const).sort((p, q) => q[0] - p[0]); const r = new Array<number>(v.length); idx.forEach(([, i], k) => { r[i] = k + 1; }); return r; };
 const spearman = (a: number[], b: number[]) => { const n = a.length; const ra = rank(a), rb = rank(b); let s = 0; for (let i = 0; i < n; i++) s += (ra[i] - rb[i]) ** 2; return 1 - 6 * s / (n * (n * n - 1)); };
 const mean = (v: number[]) => v.length ? v.reduce((a, b) => a + b, 0) / v.length : 0;
 
 interface Acc {
-  rho: number[]; gridRho: number[]; poleWins: number[]; top3PackageWins: number[]; stops: number[]; lapped: number[]; margin: number[];
+  rho: number[]; speedPowerRho: number[]; gridRho: number[]; poleWins: number[]; top3PackageWins: number[]; stops: number[]; lapped: number[]; margin: number[];
   starters: number; dnf: number; crashes: number; mech: number; blowouts: number; penalties: number; finishers: number;
   quick: number; slow: number; pitStops: number; passes: number; battles: number; sc: number; closeCalls: number; ticks: number[]; leaders: number[];
   firstStopFrac: number[]; stopLapSd: number[];
 }
 
 function emptyAcc(): Acc {
-  return { rho: [], gridRho: [], poleWins: [], top3PackageWins: [], stops: [], lapped: [], margin: [], starters: 0, dnf: 0, crashes: 0, mech: 0, blowouts: 0, penalties: 0, finishers: 0, quick: 0, slow: 0, pitStops: 0, passes: 0, battles: 0, sc: 0, closeCalls: 0, ticks: [], leaders: [], firstStopFrac: [], stopLapSd: [] };
+  return { rho: [], speedPowerRho: [], gridRho: [], poleWins: [], top3PackageWins: [], stops: [], lapped: [], margin: [], starters: 0, dnf: 0, crashes: 0, mech: 0, blowouts: 0, penalties: 0, finishers: 0, quick: 0, slow: 0, pitStops: 0, passes: 0, battles: 0, sc: 0, closeCalls: 0, ticks: [], leaders: [], firstStopFrac: [], stopLapSd: [] };
 }
 
-function accumulate(acc: Acc, r: LabRaceResult, hist: { order: number[] }[]) {
+function accumulate(acc: Acc, r: LabRaceResult, hist: { order: number[] }[], simVars: SimVariables) {
   const { drivers, raceState, events, track } = r;
   const finish = raceState.finishOrder;
   const byId = new Map(drivers.map(d => [d.id, d]));
   const classified = finish.filter(id => byId.get(id)?.status !== 'dnf');
   const finPos = classified.map((_, i) => classified.length - i);
-  if (classified.length > 5) acc.rho.push(spearman(classified.map(id => pace(byId.get(id)!)), finPos));
+  if (classified.length > 5) {
+    acc.rho.push(spearman(classified.map(id => packageScore(byId.get(id)!)), finPos));
+    acc.speedPowerRho.push(spearman(classified.map(id => livePace(byId.get(id)!, simVars)), finPos));
+  }
   const gridIds = r.gridOrder;
   if (gridIds.length && finish.length) {
     acc.poleWins.push(gridIds[0] === finish[0] ? 1 : 0);
     acc.gridRho.push(spearman(classified.map(id => classified.length - gridIds.indexOf(id)), finPos));
   }
-  const byPace = [...drivers].sort((a, b) => pace(b) - pace(a)).map(d => d.id);
+  const byPace = [...drivers].sort((a, b) => packageScore(b) - packageScore(a)).map(d => d.id);
   if (finish.length) acc.top3PackageWins.push(byPace.indexOf(finish[0]) < 3 ? 1 : 0);
   for (const d of drivers) {
     acc.starters++;
@@ -95,10 +98,11 @@ function accumulate(acc: Acc, r: LabRaceResult, hist: { order: number[] }[]) {
 function report(acc: Acc, races: number): PhysicsMetric[] {
   const n = Math.max(1, races);
   return [
-    { id: 'paceRho', label: 'Pace decides the result', value: mean(acc.rho), format: 'corr', hint: 'Spearman between package pace and finishing order among finishers. 1 = pure stats, 0 = lottery. F1 sits around 0.7.', band: [0.45, 0.85] },
+    { id: 'paceRho', label: 'Pace decides the result', value: mean(acc.rho), format: 'corr', hint: 'Spearman between the full package (all 11 stats, the Paddock OVR) and finishing order among finishers. 1 = pure stats, 0 = lottery. F1 sits around 0.7.', band: [0.45, 0.85] },
+    { id: 'speedPowerRho', label: 'Speed × Power alone', value: mean(acc.speedPowerRho), format: 'corr', hint: 'The same, scored on the engine pace term only (Speed × car Power, live variables). Low once other stats matter; no band.' },
     { id: 'gridRho', label: 'Grid decides the result', value: mean(acc.gridRho), format: 'corr', hint: 'Spearman between grid slot and finish. Should be a bit below pace: qualifying matters, but races are won on Sunday.', band: [0.4, 0.85] },
     { id: 'poleWins', label: 'Pole wins', value: mean(acc.poleWins), format: 'pct', hint: 'How often the pole-sitter wins. F1: roughly 40–50%.', band: [0.15, 0.6] },
-    { id: 'top3Wins', label: 'Top-3 package wins', value: mean(acc.top3PackageWins), format: 'pct', hint: 'The winner had one of the three fastest driver+car packages.', band: [0.4, 0.9] },
+    { id: 'top3Wins', label: 'Top-3 package wins', value: mean(acc.top3PackageWins), format: 'pct', hint: 'The winner had one of the three best full packages (Paddock OVR).', band: [0.4, 0.9] },
     { id: 'passes', label: 'Passes per race', value: acc.passes / n, format: 'int', hint: 'On-track position changes that were real overtakes (not pit shuffles). F1: 30–80 depending on the track.', band: [20, 120] },
     { id: 'battles', label: 'Battles per race', value: acc.battles / n, format: 'int', hint: 'Stretches where a car was held up behind another and fought.', band: [10, 100] },
     { id: 'leaders', label: 'Distinct leaders', value: mean(acc.leaders), format: 'num1', hint: 'Different cars that led at least one lap.', band: [1.5, 6] },
@@ -137,7 +141,7 @@ export function* physicsSteps(options: PhysicsOptions): Generator<PhysicsProgres
   for (let i = 0; i < races; i++) {
     const r = runLabRace(labSpec(options.batchSeed, i, cards, 'all'), { engine, variables: options.variables });
     fps.push(raceFingerprint(r));
-    accumulate(acc, r, engine.getLapHistory());
+    accumulate(acc, r, engine.getLapHistory(), options.variables ?? r.league.setup.ruleset?.simVars ?? CANON_VARIABLES);
     const go = yield { done: i + 1, total: races, track: r.track.name };
     if (go === false) break;
   }
