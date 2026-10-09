@@ -170,26 +170,25 @@ export const COLUMN_GRID_DELTA: ColumnConfig = {
   },
 };
 
-/** Units/tick → km/h: a tick is 100 ms and a lap unit is a metre, so ×10 m/s ×3.6. */
-export function kmh(unitsPerTick: number): number { return Math.round(unitsPerTick * 36); }
 
-// Live speed, coloured against the pack (#246: no more "ticks")
+// Pace bar (#557, Pax picked A): who's quicker, steady. The driver's last lap
+// against the pack's median last lap; green to the right is quicker, red to the
+// left slower; ±6% fills the bar. No number, so it reads at a glance, and it
+// only moves once a lap. (Replaces the km/h column, which bounced every corner.)
 export const COLUMN_SPEED: ColumnConfig = {
   id: 'speed',
-  header: 'km/h',
-  width: '54px',
-  align: 'right',
+  header: 'Pace',
+  width: '76px',
+  align: 'center',
   render: (driver: Driver, ctx: RowContext) => {
-    if (driver.status !== 'racing' || driver.speedSmooth <= 0) return <span className="muted-cell">—</span>;
-    const titles = { hot: 'Flying — well above the pack', quick: 'Quicker than the pack', pack: 'Pack pace', slow: 'Slower than the pack' };
-    const rel = ctx.speedRel ?? 0;
+    if (ctx.paceRel === undefined || driver.status === 'dnf') return <span className="muted-cell">—</span>;
+    const rel = ctx.paceRel;
+    const pct = ctx.pacePct ?? 0;
+    const title = Math.abs(pct) < 0.2 ? 'Pack pace over the last lap' : `${Math.abs(pct).toFixed(1)}% ${pct > 0 ? 'quicker' : 'slower'} than the pack over the last lap`;
     return (
-      <span className={`speed-cell tone-${ctx.speedTone ?? 'pack'}`} title={ctx.speedTone ? titles[ctx.speedTone] : undefined}>
-        <span className="speed-value">{kmh(driver.speedSmooth)}</span>
-        <span className="speed-tach" aria-hidden="true">
-          <span className="speed-tach-mid" />
-          <span className={`speed-tach-fill ${rel >= 0 ? 'pos' : 'neg'}`} style={rel >= 0 ? { left: '50%', width: `${rel * 50}%` } : { right: '50%', width: `${-rel * 50}%` }} />
-        </span>
+      <span className="pace-bar" title={title} aria-label={title}>
+        <span className="pace-mid" />
+        <span className={`pace-fill ${rel >= 0 ? 'quick' : 'slow'}`} style={rel >= 0 ? { left: '50%', width: `${rel * 50}%` } : { right: '50%', width: `${-rel * 50}%` }} />
       </span>
     );
   },
