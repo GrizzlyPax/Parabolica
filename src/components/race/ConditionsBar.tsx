@@ -2,6 +2,7 @@
 // A calm, permanent home for the weather + track-character layers on the data
 // screen, rather than only transient header chips.
 import type { ConditionChip } from './types';
+import { GameIcon } from '../../icons/GameIcon';
 
 interface ConditionsBarProps {
   conditions: ConditionChip[];
@@ -14,7 +15,7 @@ function ConditionsBar({ conditions }: ConditionsBarProps) {
       <div className="conditions-bar-items">
         {conditions.length === 0 ? (
           <span className="conditions-bar-item">
-            <span className="conditions-bar-emoji">☀️</span>
+            <span className="conditions-bar-emoji"><GameIcon name="sun" size={16} /></span>
             <span className="conditions-bar-name">Clear</span>
           </span>
         ) : (

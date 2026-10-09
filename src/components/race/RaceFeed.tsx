@@ -1,5 +1,6 @@
 import { FeedItem } from '../../feed/commentary';
 import './RaceFeed.css';
+import { GameIcon } from '../../icons/GameIcon';
 
 interface RaceFeedProps {
   items: FeedItem[];
@@ -14,7 +15,7 @@ function RaceFeed({ items, className = '' }: RaceFeedProps) {
   return (
     <div className={`story-feed ${className}`}>
       <div className="story-feed-header">
-        <span className="story-feed-label">📡 Race Feed</span>
+        <span className="story-feed-label"><GameIcon name="ui.feed" size={14} /> Race Feed</span>
         <span className="story-feed-count">{items.length}</span>
       </div>
       <div className="story-feed-list">
@@ -29,7 +30,7 @@ function RaceFeed({ items, className = '' }: RaceFeedProps) {
               className={`story-item story-${item.persona} ${item.emphasis === 'big' ? 'story-big' : ''}`}
               style={item.color ? ({ '--story-accent': item.color } as React.CSSProperties) : undefined}
             >
-              <span className="story-avatar">{item.personaEmoji}</span>
+              <span className="story-avatar"><GameIcon name={item.personaEmoji} fallback={item.personaEmoji} size={18} /></span>
               <div className="story-body">
                 <div className="story-meta">
                   <span className="story-persona">{item.personaName}</span>

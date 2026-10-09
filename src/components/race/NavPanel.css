@@ -115,7 +115,10 @@
 .nav-option-icon {
   font-size: 1.5rem;
   flex-shrink: 0;
+  display: inline-flex;
+  color: var(--pw-text-2);
 }
+.nav-option.active .nav-option-icon { color: var(--pw-text-1); }
 
 .nav-option-text {
   flex: 1;

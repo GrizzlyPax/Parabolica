@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import type { NavPanelProps, RaceView } from './types';
 import './NavPanel.css';
+import { GameIcon } from '../../icons/GameIcon';
 
 // View options configuration
 const VIEW_OPTIONS: Array<{
@@ -13,19 +14,19 @@ const VIEW_OPTIONS: Array<{
 }> = [
   {
     id: 'track',
-    icon: '🏁',
+    icon: 'view.track',
     label: 'Track View',
     description: 'Map + condensed timing tower',
   },
   {
     id: 'detail',
-    icon: '📊',
+    icon: 'view.detail',
     label: 'Detail View',
     description: 'Full timing tower with all data',
   },
   {
     id: 'lap',
-    icon: '📈',
+    icon: 'view.lapchart',
     label: 'Lap Chart',
     description: 'Position trace through the race',
   },
@@ -102,7 +103,7 @@ function NavPanel({ isOpen, activeView, onViewChange, onClose, onExit, exitLabel
             onClick={onClose}
             aria-label="Close navigation"
           >
-            ✕
+            <GameIcon name="ui.close" size={16} />
           </button>
         </div>
 
@@ -113,20 +114,20 @@ function NavPanel({ isOpen, activeView, onViewChange, onClose, onExit, exitLabel
               className={`nav-option ${activeView === option.id ? 'active' : ''}`}
               onClick={() => handleViewSelect(option.id)}
             >
-              <span className="nav-option-icon">{option.icon}</span>
+              <span className="nav-option-icon"><GameIcon name={option.icon} size={20} /></span>
               <div className="nav-option-text">
                 <span className="nav-option-label">{option.label}</span>
                 <span className="nav-option-desc">{option.description}</span>
               </div>
               {activeView === option.id && (
-                <span className="nav-option-check">✓</span>
+                <span className="nav-option-check"><GameIcon name="ui.done" size={16} /></span>
               )}
             </button>
           ))}
 
           {onExit && (
             <button className="nav-option nav-option-exit" onClick={onExit}>
-              <span className="nav-option-icon">{exitLabel === 'League' ? '⚜️' : '🏠'}</span>
+              <span className="nav-option-icon"><GameIcon name="ui.home" size={20} /></span>
               <div className="nav-option-text">
                 <span className="nav-option-label">{exitLabel}</span>
                 <span className="nav-option-desc">{exitDescription}</span>

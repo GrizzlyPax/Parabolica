@@ -16,6 +16,7 @@ export interface FeedItem {
   lap: number;
   persona: FeedPersona;
   personaName: string;
+  /** An icon meaning ('voice.booth') or, for The Track, the track's own emoji. */
   personaEmoji: string;
   text: string;
   emphasis: 'normal' | 'big';
@@ -218,9 +219,9 @@ export function reactToBetSwing(info: BetSwingInfo, seed: number): string {
 // ---------------------------------------------------------------------------
 
 const PERSONA_META: Record<FeedPersona, { name: string; emoji: string }> = {
-  booth: { name: 'The Booth', emoji: '🎙️' },
-  marbles: { name: 'Mister Marbles', emoji: '🎩' },
-  track: { name: 'The Track', emoji: '🏟️' },
+  booth: { name: 'The Booth', emoji: 'voice.booth' },
+  marbles: { name: 'Mister Marbles', emoji: 'voice.marbles' },
+  track: { name: 'The Track', emoji: 'voice.track' },
 };
 
 const BIG_MOMENTS: Set<string> = new Set(['crash', 'lead_change', 'finish']);

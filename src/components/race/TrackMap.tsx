@@ -4,6 +4,7 @@ import { NUMBER_DY } from '../../icons/RaceNumber';
 import { useMemo, useCallback, useState } from 'react';
 import type { Driver } from '../../RaceEngine';
 import './TrackMap.css';
+import { GameIcon } from '../../icons/GameIcon';
 
 // Default track path (oval) if no layout provided
 const DEFAULT_TRACK_PATH = 'M 150 60 L 450 60 Q 550 60, 550 150 Q 550 240, 450 240 L 150 240 Q 50 240, 50 150 Q 50 60, 150 60 Z';
@@ -321,16 +322,7 @@ function TrackMap({
               className="safety-carl-circle"
             />
             {/* Emoji inside */}
-            <text
-              x={0}
-              y={1}
-              textAnchor="middle"
-              dominantBaseline="central"
-              className="safety-carl-emoji"
-              style={{ fontSize: '14px' }}
-            >
-              🧍‍♂️
-            </text>
+            <g transform="translate(-8 -8)" className="safety-carl-emoji"><GameIcon name="race.safety_car" size={16} /></g>
             {/* SC label above */}
             <text
               x={0}
@@ -405,7 +397,7 @@ function TrackMap({
                 <circle cx={0} cy={0} r={radius + 4} fill="none" stroke="var(--pw-yellow)" strokeWidth={2} className="marker-battle-ring" />
               )}
               {battles?.some(b => b.chaserId === driver.id) && !isDNF && (
-                <text x={radius + 3} y={-radius + 2} className="marker-swords" fontSize="10">⚔</text>
+                <g transform={`translate(${radius + 1} ${-radius - 8})`} className="marker-swords"><GameIcon name="race.battle" size={10} /></g>
               )}
 
               {/* Main marker circle */}
@@ -454,16 +446,9 @@ function TrackMap({
 
               {/* DNF indicator */}
               {isDNF && (isFocused || isHighlighted) && (
-                <text
-                  x={0}
-                  y={0}
-                  textAnchor="middle"
-                  dominantBaseline="central"
-                  className="marker-dnf"
-                  style={{ fontSize: '7px' }}
-                >
-                  {driver.dnfInfo?.reason === 'tire_failure' ? '💨' : driver.dnfInfo?.reason === 'mechanical' ? '⚙️' : '💥'}
-                </text>
+                <g transform="translate(-4 -4)" className="marker-dnf">
+                  <GameIcon name={driver.dnfInfo?.reason === 'tire_failure' ? 'race.tire_failure' : driver.dnfInfo?.reason === 'mechanical' ? 'race.mechanical' : 'race.crash'} size={8} />
+                </g>
               )}
 
             </g>
