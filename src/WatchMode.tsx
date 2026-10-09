@@ -1152,6 +1152,8 @@ function WatchMode({
   // Calculate session state for UniversalHeader
   const qualifying = !!onQualifyingDone && raceState.totalTicks === 0;
   // The engine's own qualifying laps, read once per session (display only).
+  // The car on its hot lap, for the track map (#555): only that marble runs, at its lap's pace.
+  const [qualiLive, setQualiLive] = useState<{ id: number; progress: number } | null>(null);
   const qualiLaps = useMemo(() => (qualifying ? engine.qualifyingLaps() : []), [qualifying, drivers.length]); // eslint-disable-line react-hooks/exhaustive-deps
   const getSessionState = (): SessionState => {
     if (qualifying) return 'qualifying';
@@ -1241,7 +1243,7 @@ function WatchMode({
                     Clear Focus ({focusedDriverIds.size})
                   </button>
                 )}
-                {qualifying ? <QualiBoard laps={qualiLaps} drivers={drivers} nominalTicks={engine.nominalLapTicks()} mine={mineSet} onDone={onQualifyingDone!} /> : (
+                {qualifying ? <QualiBoard laps={qualiLaps} drivers={drivers} nominalTicks={engine.nominalLapTicks()} mine={mineSet} onDone={onQualifyingDone!} onLap={setQualiLive} /> : (
                 <TimingTower
                   sealed={sealedDriverIds}
                   mine={mineSet}
@@ -1272,8 +1274,10 @@ function WatchMode({
                   trackPath={trackPath}
                   pitLanePath={pitLanePath}
                   trackLength={trackLength}
-                  drivers={drivers}
-                  focusedDriverIds={Array.from(focusedDriverIds)}
+                  drivers={qualifying
+                    ? drivers.filter(d => d.id === qualiLive?.id).map(d => ({ ...d, status: 'racing' as const, position: (qualiLive!.progress) * trackLength }))
+                    : drivers}
+                  focusedDriverIds={qualifying && qualiLive ? [qualiLive.id] : Array.from(focusedDriverIds)}
                   highlightedDriverIds={podiumIds}
                   mineDriverIds={myDriverIds as number[] | undefined}
                   unsafetyCarActive={raceState.unsafetyCarActive}
@@ -1295,7 +1299,7 @@ function WatchMode({
                     Clear Focus ({focusedDriverIds.size})
                   </button>
                 )}
-                {qualifying ? <QualiBoard laps={qualiLaps} drivers={drivers} nominalTicks={engine.nominalLapTicks()} mine={mineSet} onDone={onQualifyingDone!} /> : (
+                {qualifying ? <QualiBoard laps={qualiLaps} drivers={drivers} nominalTicks={engine.nominalLapTicks()} mine={mineSet} onDone={onQualifyingDone!} onLap={setQualiLive} /> : (
                 <TimingTower
                   sealed={sealedDriverIds}
                   mine={mineSet}

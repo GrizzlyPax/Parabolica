@@ -22,6 +22,8 @@ interface Props {
   nominalTicks: number;
   mine?: ReadonlySet<number>;
   onDone: () => void;
+  /** Who is on their hot lap and how far round (0..1), for the track map (#555); null between sessions. */
+  onLap?: (live: { id: number; progress: number } | null) => void;
 }
 
 /** One hot lap on screen, in ms at 1×. */
@@ -36,7 +38,7 @@ export function fmtLap(sec: number): string {
   return `${m}:${(sec - m * 60).toFixed(3).padStart(6, '0')}`;
 }
 
-export default function QualiBoard({ laps, drivers, nominalTicks, mine, onDone }: Props) {
+export default function QualiBoard({ laps, drivers, nominalTicks, mine, onDone, onLap }: Props) {
   // Laps on the board, and how far (0..1) the current hot lap has got. One
   // state so a tick updates both at once (StrictMode-safe).
   const [clock, setClock] = useState({ set: 0, progress: 0 });
@@ -63,6 +65,11 @@ export default function QualiBoard({ laps, drivers, nominalTicks, mine, onDone }
     const t = setTimeout(onDone, GRID_HOLD_MS / speed);
     return () => clearTimeout(t);
   }, [done, speed, onDone]);
+
+  // Tell the track map where the car on its hot lap is (#555, display only).
+  useEffect(() => {
+    onLap?.(set < total ? { id: laps[set].id, progress } : null);
+  }, [set, progress, total]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const board = useMemo(() => [...laps.slice(0, set)].sort((a, b) => b.score - a.score), [laps, set]);
   const pole = board[0];
