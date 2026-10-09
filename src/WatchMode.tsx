@@ -24,7 +24,7 @@ import { buildLapChartData } from './components/race/lapChartData';
 import { buildRaceReportMd } from './components/race/raceReportMd';
 import FinishSheet from './components/race/FinishSheet';
 import { driverDebrief, winnerEdge } from './components/race/debrief';
-import QualiBoard from './components/race/QualiBoard';
+import QualiBoard, { type QualiLive } from './components/race/QualiBoard';
 import type { DriverHistoryEntry } from './components/race/types';
 import type { IconId } from './icons/registry';
 import { version as appVersion } from '../package.json';
@@ -1161,7 +1161,7 @@ function WatchMode({
   const qualifying = !!onQualifyingDone && raceState.totalTicks === 0;
   // The engine's own qualifying laps, read once per session (display only).
   // The car on its hot lap, for the track map (#555): only that marble runs, at its lap's pace.
-  const [qualiLive, setQualiLive] = useState<{ id: number; progress: number } | null>(null);
+  const [qualiLive, setQualiLive] = useState<QualiLive[]>([]);
   const qualiLaps = useMemo(() => (qualifying ? engine.qualifyingLaps() : []), [qualifying, drivers.length]); // eslint-disable-line react-hooks/exhaustive-deps
   const getSessionState = (): SessionState => {
     if (qualifying) return 'qualifying';
@@ -1285,9 +1285,9 @@ function WatchMode({
                   pitLanePath={pitLanePath}
                   trackLength={trackLength}
                   drivers={qualifying
-                    ? drivers.filter(d => d.id === qualiLive?.id).map(d => ({ ...d, status: 'racing' as const, position: (qualiLive!.progress) * trackLength }))
+                    ? qualiLive.flatMap(q => drivers.filter(d => d.id === q.id).map(d => ({ ...d, status: 'racing' as const, position: q.progress * trackLength })))
                     : drivers}
-                  focusedDriverIds={qualifying && qualiLive ? [qualiLive.id] : Array.from(focusedDriverIds)}
+                  focusedDriverIds={qualifying ? qualiLive.map(q => q.id) : Array.from(focusedDriverIds)}
                   highlightedDriverIds={podiumIds}
                   mineDriverIds={myDriverIds as number[] | undefined}
                   unsafetyCarActive={raceState.unsafetyCarActive}
