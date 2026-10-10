@@ -6,7 +6,7 @@
 - **A race program:** red, white and blue first, **gold as the highlight**; bunting, motorsport marks, an Official Program number; a **navy ground with cream (paper) panels**.
 - **The sash is the title:** cream satin, a thin border, the words in Playball, a gold wheel at each end, no crown.
 - **One theme per step,** not one global theme: **Locals** black and white · **State** that state's colours as accents only (the ground stays dark) · **Nationals** Americana (the menus wear it too). Ids are left for **Globals** and **Galacticals** (Americana until their own looks land). The step id is `nationals`, never `theNationals`.
-- **Phone first:** one 16px gutter (`--ace-gutter`); icons keep `currentColor`.
+- **Desktop first (Pax, Oct 10):** "for a racing game, the bigger the better." Design at 1440 × 900 and check 1280; pages use the full width (`.ace-page.wide` or wider), not a phone column. The phone is a smaller version of the desktop layout: it must not break (one 16px gutter, `--ace-gutter`), but it is not the priority. Icons keep `currentColor`.
 - **Nothing here touches the sim:** the golden fingerprint stays put.
 
 ## Where it lives (`src/look/`)
