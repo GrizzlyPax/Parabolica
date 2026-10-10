@@ -17,6 +17,7 @@ export function cardColor(card: Card): string | undefined {
 
 /** "+6 Speed · +6 Consistency" (levels, #623), or "Speed ▲" for an effect. */
 export function cardReadout(card: Card): string {
+  if (card.rule) return card.rule;
   if (card.kind === 'effect') return `${STAT_LABELS[card.stats[0].stat]} ${card.direction === 'up' ? '▲' : '▼'}`;
   return card.stats.map(s => `${levelDelta(s.pct)} ${STAT_LABELS[s.stat]}`).join(' · ');
 }
