@@ -1,10 +1,11 @@
-// The run's home screen (#628, Pax picked A: the ladder,
-// https://claude.ai/artifact/WtpDV8xJG7PbYk4WAZrDKv). Four leagues stacked,
-// Top flight at the top. The league in play is open: its races (the last is
-// the boss race), you against your nemesis, how you go up. Won leagues keep
-// one line; leagues ahead wait, dimmed. Unlocks sit underneath.
+// The run's home screen, in the race program's look (#705; the ladder design
+// #628). The rungs stack top first as cream panels; the one in play is open:
+// its races (the last chequered), you against the rival, your drivers, how
+// you go up. The screen wears the step's theme (Locals · State · Nationals;
+// `stepForLeague` maps v0.7's four leagues onto them until #696). Won and
+// lost rungs keep one line; the ones ahead wait, dimmed.
 import { useMemo, useState } from 'react';
-import { GameIcon, TeamLogo, teamThemeVars } from '../../icons/GameIcon';
+import { TeamLogo } from '../../icons/GameIcon';
 import { currentLeague, loadRun, LEAGUE_LADDER } from '../../run/run';
 import { loadMeta } from '../../run/meta';
 import { promoteCurrentRun } from '../../run/current';
@@ -15,7 +16,8 @@ import { portraitFor } from '../../generators/avatars';
 import { Avatar } from '../../icons/Avatar';
 import DriverCard from './DriverCard';
 import { driverCardOf } from '../driverCard';
-import '../../RunSetup.css';
+import { AceButton, Bunting, Chequer, Pennant, ProgramLine, Roundel, Sash, StateBar, StepTheme, Wheel } from '../../look/Look';
+import { STEPS, programNumber, stateLook, stepForLeague } from '../../look/step';
 import './Season.css';
 
 interface Props {
@@ -27,8 +29,8 @@ interface Props {
 
 function Squares({ done, total }: { done: number; total: number }) {
   return (
-    <span className="rl-races" aria-label={`${done} of ${total} races run; the last is the boss race`}>
-      {Array.from({ length: total }, (_, i) => <i key={i} className={`${i < done ? 'done' : ''} ${i === total - 1 ? 'boss' : ''}`} />)}
+    <span className="ace-sq" aria-label={`${done} of ${total} races run; the last is the boss race`}>
+      {Array.from({ length: total }, (_, i) => <i key={i} className={`${i < done ? 'd' : ''} ${i === total - 1 ? 'last' : ''}`.trim()} />)}
     </span>
   );
 }
@@ -36,51 +38,40 @@ function Squares({ done, total }: { done: number; total: number }) {
 type YourDriver = { id: number; name: string; portrait: ReturnType<typeof portraitFor>; color: string };
 
 function Rung({ r, drivers, onDriver }: { r: RungView; drivers?: YourDriver[]; onDriver?: (id: number) => void }) {
+  const tag = r.status === 'won' ? 'Won' : r.status === 'lost' ? 'Lost' : r.status === 'ahead' ? 'Locked'
+    : !r.races ? 'Pick your rookies' : r.races.done < r.races.total ? `Race ${r.races.done + 1} of ${r.races.total}` : 'Done';
   const head = (
-    <div className="rl-head">
-      <span className="rl-no">{r.index + 1}</span>
-      <b className="rl-name">{r.name}</b>
-      <span className={`rl-tag ${r.status}`}>
-        {r.status === 'won' ? <><GameIcon name="race.lead_change" size={13} /> Won</>
-          : r.status === 'lost' ? 'Lost'
-          : r.status === 'ahead' ? 'Locked'
-          : !r.races ? 'Pick your rookies'
-          : r.races.done < r.races.total ? `Race ${r.races.done + 1} of ${r.races.total} next` : 'Done'}
-      </span>
+    <div className="ace-rung-head">
+      {r.status === 'ahead' ? <Wheel r={8} /> : <Roundel n={r.index + 1} />}
+      <b>{r.name}</b>
+      <span className={`ace-tag ${r.status === 'won' ? 'won' : ''}`.trim()}>{tag}</span>
     </div>
   );
   if (r.status !== 'current') {
-    return <li className={`rl-rung ${r.status}`}>{head}{r.memory && <span className="rl-memory">{r.memory}</span>}</li>;
+    return <li className={`ace-panel ${r.status === 'ahead' ? 'dim' : ''}`.trim()}>{head}{r.memory && <p className="ace-note">{r.memory}</p>}</li>;
   }
+  const fresh = !r.races?.done;
+  const line = (st: NonNullable<RungView['you']>) => (fresh ? 'no races yet' : `${ordinal(st.place)} · ${st.points} pts`);
   return (
-    <li className="rl-rung current">
+    <li className="ace-panel now">
       {head}
       {r.races && <Squares {...r.races} />}
-      {r.you && r.rival && (() => {
-        const fresh = !r.races?.done;
-        const line = (st: NonNullable<RungView['you']>) => (fresh ? 'no races yet' : `${ordinal(st.place)} · ${st.points} pts`);
-        return (
-        <div className="rl-vs">
-          <TeamLogo team={r.you.team} size={32} />
-          <div className="rl-side"><b>You</b><small>{line(r.you)}</small></div>
-          <span className="rl-v">vs</span>
-          <div className="rl-side rl-right"><b>{r.rival.team.name}</b><small>{r.rival.nemesis ? (fresh ? 'your nemesis' : `${line(r.rival)} · your nemesis`) : line(r.rival)}</small></div>
-          <TeamLogo team={r.rival.team} size={32} />
+      {r.you && r.rival && (
+        <div className="ace-row2">
+          <span><TeamLogo team={r.you.team} size={18} /> You · <b>{line(r.you)}</b></span>
+          <span className="dim">{r.rival.team.name} · {line(r.rival)}{r.rival.nemesis ? ' · nemesis' : ''}</span>
         </div>
-        );
-      })()}
+      )}
       {drivers && drivers.length > 0 && (
-        <div className="rl-drivers">
+        <div className="ace-chips">
           {drivers.map(d => (
-            <button key={d.id} type="button" className="rl-driver" onClick={() => onDriver?.(d.id)} aria-label={`${d.name}: driver card`}>
-              <Avatar icon={d.portrait} color={d.color} size={20} /><span>{d.name}</span>
+            <button key={d.id} type="button" className="ace-chip" onClick={() => onDriver?.(d.id)} aria-label={`${d.name}: driver card`}>
+              <Avatar icon={d.portrait} color={d.color} size={18} /><span>{d.name}</span>
             </button>
           ))}
         </div>
       )}
-      <p className="rl-note">
-        {r.index < LEAGUE_LADDER.length - 1 ? 'Win the league to move up.' : 'Win the league to win the run.'} The last race is the boss race{r.rival?.nemesis ? ' against your nemesis' : ''}.
-      </p>
+      <p className="ace-note">{r.index < LEAGUE_LADDER.length - 1 ? 'Win the table, go up.' : 'Win the table, win the run.'} The last race is the boss race{r.rival?.nemesis ? ' against your nemesis' : ''}.</p>
     </li>
   );
 }
@@ -91,14 +82,12 @@ export default function RunLadder({ onMenu, onNewRun, onPlay }: Props) {
   const [cardOf, setCardOf] = useState<number | null>(null);
   if (!run || !view) {
     return (
-      <div className="run-setup season-setup">
-        <header className="rs-top"><div className="rs-title-block">
-          <button type="button" className="rs-back" onClick={onMenu}>← Menu</button>
-          <h1 className="rs-title">No run</h1>
-          <span className="rs-sub">There’s no run saved on this device.</span>
-        </div></header>
-        <div className="ss-holding-actions"><button type="button" className="rs-btn rs-btn-primary" onClick={onNewRun}>New run</button></div>
-      </div>
+      <StepTheme step="nationals" className="ace-page">
+        <Bunting />
+        <h1 className="ace-h1">No run</h1>
+        <p className="ace-sub">There’s no run saved on this device.</p>
+        <div className="ace-dock"><AceButton tone="ghost" onClick={onMenu}>Menu</AceButton><AceButton onClick={onNewRun}>New run</AceButton></div>
+      </StepTheme>
     );
   }
   const league = view.rungs[view.leagueIndex];
@@ -112,26 +101,31 @@ export default function RunLadder({ onMenu, onNewRun, onPlay }: Props) {
   const yourDrivers: YourDriver[] = (youId ? draftState(pool, inPlay.draftPicks).rosters[youId]?.driverIds ?? [] : [])
     .map(id => pool.drivers.find(d => d.id === id)!).filter(Boolean)
     .map(d => ({ id: d.id, name: d.fullName, portrait: portraitFor(pool.seed, d.id), color: view.you.color }));
+  // The step's theme (#705): v0.7's leagues onto Locals · State · Nationals; the State stub is Ohio until #695 / #696.
+  const step = stepForLeague(view.leagueIndex, LEAGUE_LADDER.length);
+  const stepName = STEPS.find(s => s.id === step)!.name;
   return (
-    <div className="run-setup season-setup rl" style={teamThemeVars(view.you)}>
-      <header className="rs-top">
-        <div className="rs-title-block">
-          <button type="button" className="rs-back" onClick={onMenu}>← Menu</button>
-          <h1 className="rs-title">The run</h1>
-          <span className="rs-sub rl-team"><TeamLogo team={view.you} size={20} /> {view.you.name}</span>
-        </div>
-      </header>
+    <StepTheme step={step} state={stateLook('OH')} className="ace-page rl">
+      <Bunting />
+      <ProgramLine right={`No. ${programNumber(run.setup.seed)} · 10¢`} />
+      <StateBar pennant={<Pennant name={(view.you.name ?? 'You').split(' ')[0]} width={60} />}>{stepName} · going for <b>{league.name}</b></StateBar>
+      <div className="rl-head-row">
+        <button type="button" className="ace-link" onClick={onMenu}>Menu</button>
+        <span className="ace-where"><TeamLogo team={view.you} size={18} /> {view.you.name}</span>
+      </div>
+      <h1 className="ace-h1">The road to Ace America</h1>
+      <Chequer />
 
-      {view.phase === 'league-won' && <p className="rl-banner">You won the {league.name}. {next} is next.</p>}
-      {view.phase === 'run-won' && <p className="rl-banner">You won the run. Top of the ladder.</p>}
-      {view.phase === 'run-lost' && <p className="rl-banner lost">The run is over.</p>}
+      {view.phase === 'run-won' && <div className="ace-sash-wrap"><Sash text="Ace America" /></div>}
+      {view.phase === 'league-won' && <div className="ace-panel"><b>You won the {league.name}.</b> {next} is next.</div>}
+      {view.phase === 'run-lost' && <div className="ace-panel"><b>The run is over.</b> Nothing else is coming this season.</div>}
 
-      <ol className="rl-ladder" aria-label="The league ladder, top first">
+      <ol className="rl-ladder" aria-label="The ladder, top first">
         {[...view.rungs].reverse().map(r => <Rung key={r.index} r={r} drivers={r.status === 'current' ? yourDrivers : undefined} onDriver={setCardOf} />)}
       </ol>
 
       <section className="rl-unlocks">
-        <span className="rs-k">Unlocks</span>
+        <span className="ace-k">Unlocks</span>
         <div className="rl-unl-row">
           {view.unlocks.map(u => (
             <span key={u.id} className={`rl-unl ${u.got ? 'got' : ''}`} title={u.blurb}>{u.name}<small>{u.got ? 'Unlocked' : 'Locked'}</small></span>
@@ -140,15 +134,15 @@ export default function RunLadder({ onMenu, onNewRun, onPlay }: Props) {
       </section>
 
       {cardOf !== null && (() => { const data = driverCardOf(inPlay, cardOf); return data && <DriverCard data={data} onClose={() => setCardOf(null)} />; })()}
-      <div className="ss-dock">
+      <div className="ace-dock">
         {view.phase === 'start'
-          ? <button type="button" className="rs-btn rs-btn-primary ss-dock-btn" onClick={() => onPlay('draft')}>Pick your rookies</button>
+          ? <AceButton onClick={() => onPlay('draft')}>Pick your rookies</AceButton>
           : view.phase === 'league'
-          ? <button type="button" className="rs-btn rs-btn-primary ss-dock-btn" onClick={() => onPlay(leaguePhase === 'finished' ? 'standings' : 'paddock')}>To the Paddock</button>
+          ? <AceButton onClick={() => onPlay(leaguePhase === 'finished' ? 'standings' : 'paddock')}>To the Paddock</AceButton>
           : view.phase === 'league-won'
-            ? <button type="button" className="rs-btn rs-btn-primary ss-dock-btn" onClick={up}>Up to {next} →</button>
-            : <button type="button" className="rs-btn rs-btn-primary ss-dock-btn" onClick={onNewRun}>New run</button>}
+            ? <AceButton onClick={up}>Up to {next}</AceButton>
+            : <AceButton onClick={onNewRun}>New run</AceButton>}
       </div>
-    </div>
+    </StepTheme>
   );
 }

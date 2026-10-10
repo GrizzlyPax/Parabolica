@@ -512,3 +512,14 @@ button.rt-g:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset:
 .rl-driver { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border: 1px solid var(--pw-border-strong); background: transparent; color: var(--pw-text-1); font: inherit; font-size: 13px; cursor: pointer; }
 .rl-driver:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset: 2px; }
 .rp-setup-blurb { color: var(--pw-text-2); font-size: 11px; font-style: italic; }
+
+/* The ladder in the race program's look (#705): the bits look.css doesn't own. */
+.rl .rl-head-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.rl .rl-head-row .ace-where { display: inline-flex; align-items: center; gap: 6px; text-transform: none; letter-spacing: 0; font-family: var(--ace-body); font-size: 14px; }
+.rl .rl-ladder { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; max-width: none; }
+.rl .rl-unlocks { gap: 6px; }
+.rl .rl-unl { border-color: var(--ace-hair); color: var(--ace-muted); font-family: var(--ace-cond); font-weight: 400; letter-spacing: .06em; text-transform: uppercase; font-size: 11px; }
+.rl .rl-unl.got { border-color: var(--ace-gold); color: var(--ace-fg); }
+.rl .ace-row2 { align-items: baseline; }
+.rl .ace-row2 > span:first-child { display: inline-flex; align-items: center; gap: 6px; flex: none; white-space: nowrap; }
+.rl .ace-row2 > span.dim { text-align: right; min-width: 0; }

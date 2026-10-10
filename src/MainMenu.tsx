@@ -1,4 +1,8 @@
-import { GameIcon } from './icons/GameIcon';
+// The main menu as the program's cover (#705; the locked look): bunting, the
+// Official Program line, the sash as the title, the racer, a chequer, then the
+// contents rows. Wears Americana (the menus' theme). The game's name on the
+// sash stays Parabolica until the rename (#701).
+import { AceButton, Bunting, Chequer, ProgramLine, Racer, Sash, StepTheme } from './look/Look';
 import './MainMenu.css';
 import { version } from '../package.json';
 
@@ -21,78 +25,43 @@ interface MainMenuProps {
   onCredits: () => void;
 }
 
+/** The cover's Official Program number: the version's digits after the major ("0.7.4" → 74). */
+export function programNo(v: string): string {
+  return v.split('.').slice(1).join('') || '1';
+}
+
 function MainMenu({ onSingleRace, onSeason, season, onCompendium, onGlossary, onCredits }: MainMenuProps) {
+  const live = season && !season.finished ? season : null;
   return (
-    <div className="main-menu">
-      <div className="main-menu-content">
-        <header className="mm-header">
-          <svg className="mm-curve" width="360" height="120" viewBox="0 0 360 120" fill="none" aria-hidden="true">
-            <path d="M0 108 C 150 108 270 100 318 52 C 338 32 344 16 346 0" className="mm-curve-track" strokeWidth="10" strokeLinecap="round" />
-            <path d="M0 108 C 150 108 270 100 318 52 C 338 32 344 16 346 0" className="mm-curve-line" strokeWidth="1" strokeDasharray="2 6" />
-            <circle className="mm-curve-apex" cx="318" cy="52" r="5" />
-          </svg>
-          <h1 className="mm-title">Parabolica<span className="mm-tm">TM</span></h1>
-          <p className="mm-sub">Racing, where everything is fine.</p>
-        </header>
+    <StepTheme step="nationals" className="ace-page mm">
+      <Bunting />
+      <ProgramLine right={`No. ${programNo(version)} · 10¢`} />
+      <header className="mm-cover">
+        <Sash text="Parabolica" title="Parabolica" className="mm-sash" fontSize={23} />
+        <Racer number={16} width={210} />
+        <Chequer tall />
+        <span className="ace-where">{live ? `${live.name} · race ${live.round + 1} of ${live.total}` : 'Race day'}</span>
+      </header>
 
-        <section className="mm-section">
-          <div className="mm-k">Season</div>
-          <button type="button" className="mm-hero" onClick={onSeason}>
-            <div className="mm-hero-top">
-              <span className="mm-eyebrow">Season Mode</span>
-              {season && !season.finished && <span className="mm-pill tone-live"><span className="mm-dot" />ROUND {season.round + 1} OF {season.total}</span>}
-            </div>
-            <div className="mm-hero-name">{season && !season.finished ? season.name : 'Play a Season'}</div>
-            <div className="mm-hero-line">
-              {season && !season.finished
-                ? 'Your season is saved. Pick up where you left off.'
-                : 'Draft two drivers and a car, race the calendar, win the constructors’.'}
-            </div>
-            {season && !season.finished && (
-              <div className="mm-ribbon" aria-label={`Season progress: ${season.round} of ${season.total}`}>
-                {Array.from({ length: season.total }, (_, i) => <span key={i} className={`mm-ribbon-cell ${i < season.round ? 'run' : ''}`} />)}
-              </div>
-            )}
-            <div className="mm-hero-foot"><span className="mm-cta">{season && !season.finished ? 'Continue' : 'Play a Season'}</span></div>
-          </button>
-        </section>
+      <nav className="ace-menu mm-menu" aria-label="Main menu">
+        <button type="button" className="ace-mi on" onClick={onSeason}>
+          <span>{live ? 'Continue' : 'New season'}</span>
+          <small>{live ? `${live.name} · race ${live.round + 1}` : 'Pick two rookies and a car setup, then climb'}</small>
+        </button>
+        <button type="button" className="ace-mi" onClick={onSingleRace}><span>Quick race</span><small>One random race, right now</small></button>
+        <button type="button" className="ace-mi" onClick={onGlossary}><span>The World Deck</span><small>Every card, team, track and weather</small></button>
+        <button type="button" className="ace-mi" onClick={onCompendium}><span>Race Control</span><small>The lab, seeded and replicable</small></button>
+      </nav>
 
-        <section className="mm-section">
-          <div className="mm-k">Play</div>
-          <button type="button" className="mm-row" onClick={onSingleRace}>
-            <span className="mm-row-icon"><GameIcon name="ui.play" size={20} /></span>
-            <span className="mm-row-text">
-              <span className="mm-row-title">Quick Race</span>
-              <span className="mm-row-sub">One random race, right now. Follow a team if you like.</span>
-            </span>
-            <span className="mm-row-chev">›</span>
-          </button>
-
-          <button type="button" className="mm-row" onClick={onGlossary}>
-            <span className="mm-row-icon"><GameIcon name="card.rule" size={20} /></span>
-            <span className="mm-row-text">
-              <span className="mm-row-title">World Deck</span>
-              <span className="mm-row-sub">Every card, team, track and weather in the world, read from the data.</span>
-            </span>
-            <span className="mm-row-chev">›</span>
-          </button>
-
-          <button type="button" className="mm-row" onClick={onCompendium}>
-            <span className="mm-row-icon"><GameIcon name="view.detail" size={20} /></span>
-            <span className="mm-row-text">
-              <span className="mm-row-title">Race Control</span>
-              <span className="mm-row-sub">The lab: seeded batches, physics calibration, the deck. Every number replicable.</span>
-            </span>
-            <span className="mm-row-chev">›</span>
-          </button>
-        </section>
-
-        <footer className="mm-footer">
+      <footer className="mm-foot">
+        <span className="ace-note">Somebody is always watching. Race well.</span>
+        <span className="mm-foot-line">
           <span>v{version} · {new Date(__BUILD_TIME__).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</span>
-          <span className="mm-footer-links"><button type="button" className="mm-footer-link" onClick={onCredits}>Credits</button> · playparabolica.com</span>
-        </footer>
-      </div>
-    </div>
+          <AceButton tone="ghost" onClick={onCredits} className="mm-credits">Credits</AceButton>
+          <span>playparabolica.com</span>
+        </span>
+      </footer>
+    </StepTheme>
   );
 }
 

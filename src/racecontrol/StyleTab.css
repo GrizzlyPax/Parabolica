@@ -1,0 +1,24 @@
+/* Race Control → Style (#705): the components, three themes side by side. Tokens only. */
+.st { display: flex; flex-direction: column; gap: 22px; }
+.st-intro { display: flex; flex-direction: column; gap: 10px; max-width: 80ch; }
+.st-intro code { font-family: var(--look-data); font-size: 12px; border: 1px solid var(--pw-border-strong); padding: 0 5px; }
+.st-pick { display: inline-flex; align-items: center; gap: 10px; font-family: var(--look-data); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--pw-text-2); }
+.st-pick select { background: var(--pw-ground); color: var(--pw-text-1); border: 1px solid var(--pw-text-1); border-radius: 0; padding: 6px 10px; font: inherit; font-size: 14px; }
+.st-row { display: flex; flex-direction: column; gap: 10px; border-top: 1px solid var(--pw-text-1); padding-top: 10px; }
+.st-row-head { display: flex; flex-direction: column; gap: 4px; max-width: 80ch; }
+.st-row-head .ace-h2 { color: var(--pw-text-1); font-family: var(--look-display); font-weight: 700; }
+.st-row-head .ace-sub { color: var(--pw-text-2); font-size: 14px; }
+.st-cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.st-col { min-width: 0; }
+.st-pane { background: var(--ace-ground); color: var(--ace-fg); font-family: var(--ace-body); padding: 14px var(--ace-gutter) 16px; display: flex; flex-direction: column; gap: 10px; min-height: 100%; border: 1px solid var(--ace-hair); overflow: hidden; }
+.st-pane-k { font-family: var(--ace-cond); font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--ace-muted); }
+.st-stack { display: flex; flex-direction: column; gap: 10px; }
+.st-stack.st-flush { gap: 8px; }
+.st-stack.st-center, .st-inline.st-center { align-items: center; }
+.st-inline { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.st-type { display: flex; flex-direction: column; gap: 6px; }
+.st-tokens { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 10px; }
+.st-token { display: inline-flex; align-items: center; gap: 6px; font-family: var(--ace-mono); font-size: 10px; color: var(--ace-fg); min-width: 0; }
+.st-token i { width: 18px; height: 18px; border: 1px solid var(--ace-paper); flex: none; }
+.st-token code { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 899px) { .st-cols { grid-template-columns: 1fr; } }

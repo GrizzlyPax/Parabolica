@@ -1,0 +1,198 @@
+/* Ace America, the race program (#705): the COMPONENTS. Tokens only (see
+   tokens.css; icons/theme.test.ts fails on a hex here). Every piece shows on
+   Race Control → Style in every step theme; Hub copies from there. */
+
+/* The page: a navy ground, phone first, one 16px gutter, room for the dock. */
+.ace-page {
+  min-height: 100vh; background: var(--ace-ground); color: var(--ace-fg); font-family: var(--ace-body);
+  padding: 0 var(--ace-gutter) calc(88px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 12px;
+  max-width: 720px; margin: 0 auto;
+}
+.ace-page.wide { max-width: 1280px; }
+.ace-page a { color: inherit; }
+
+/* Bunting: full width, sits on the top edge (the Bunting component draws it). */
+.ace-bunting { display: block; width: calc(100% + var(--ace-gutter) * 2); margin: 0 calc(var(--ace-gutter) * -1); height: 26px; }
+
+/* The program line: "OFFICIAL PROGRAM · No. 51 · 10¢" */
+.ace-prog { display: flex; justify-content: space-between; gap: 12px; font-family: var(--ace-cond); font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: var(--ace-muted); }
+
+/* Type */
+.ace-h1 { margin: 0; font-family: var(--ace-disp); font-weight: 400; font-size: 24px; line-height: 1.05; text-transform: uppercase; color: var(--ace-fg); }
+.ace-h2 { margin: 0; font-family: var(--ace-disp); font-weight: 400; font-size: 18px; line-height: 1.1; color: var(--ace-fg); }
+.ace-sub { margin: 0; font-size: 13px; line-height: 1.4; color: var(--ace-muted); }
+.ace-k { font-family: var(--ace-cond); font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--ace-muted); }
+.ace-where { font-family: var(--ace-cond); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--ace-muted); }
+.ace-note { margin: 0; font-size: 12px; font-style: italic; color: var(--ace-muted); }
+.ace-script { font-family: var(--ace-script); font-weight: 400; }
+.ace-cond { font-family: var(--ace-cond); }
+.ace-mono { font-family: var(--ace-mono); }
+/* The big slab logotype with the red drop (the cover) */
+.ace-logo { font-family: var(--ace-disp); font-weight: 400; font-size: 50px; line-height: .9; color: var(--ace-paper); text-shadow: 3px 3px 0 var(--ace-accent); }
+.ace-logo.red { color: var(--ace-accent); text-shadow: 3px 3px 0 var(--ace-navy-2); }
+
+/* Rules */
+.ace-chq { width: 100%; height: 6px; background: repeating-conic-gradient(var(--ace-paper) 0 25%, var(--ace-ink) 0 50%) 0 0 / 10px 10px; border-top: 1px solid var(--ace-ink); border-bottom: 1px solid var(--ace-ink); }
+.ace-chq.tall { height: 12px; }
+.ace-rule-gold { border: 0; border-top: 2px solid var(--ace-gold); margin: 0; }
+.ace-rule-double { border: 0; border-top: 3px double var(--ace-ink); margin: 0; }
+.ace-rule-dotted { flex: 1; border-bottom: 2px dotted var(--ace-muted); transform: translateY(-4px); }
+
+/* Panels: cream paper on the navy ground */
+.ace-panel { background: var(--ace-paper); color: var(--ace-ink); border: 1px solid var(--ace-ink); padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; --ace-fg: var(--ace-ink); --ace-muted: var(--ace-ink-2); --ace-hair: var(--ace-rule); }
+.ace-panel .ace-h1, .ace-panel .ace-h2 { color: var(--ace-ink); }
+.ace-panel .ace-k, .ace-panel .ace-sub, .ace-panel .ace-note, .ace-panel .ace-prog, .ace-panel .ace-where { color: var(--ace-ink-2); }
+.ace-panel.dim { opacity: .55; }
+.ace-panel.now { outline: 3px solid var(--ace-accent); outline-offset: -3px; }
+.ace-panel.flat { border: 0; }
+/* The program's lined paper (an art slot, a photo) */
+.ace-lined { background: repeating-linear-gradient(0deg, var(--ace-paper-2) 0 2px, var(--ace-paper) 2px 6px); }
+
+/* Buttons: condensed caps, the accent block with a hard shadow */
+.ace-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 18px; width: auto;
+  font-family: var(--ace-cond); font-weight: 400; font-size: 16px; letter-spacing: .14em; text-transform: uppercase; text-align: center; text-decoration: none;
+  background: var(--ace-btn); color: var(--ace-btn-ink); border: 0; border-bottom: 4px solid var(--ace-btn-shadow); border-radius: 0; cursor: pointer;
+}
+.ace-btn:hover { filter: brightness(1.06); }
+.ace-btn:active { transform: translateY(2px); border-bottom-width: 2px; }
+.ace-btn:focus-visible { outline: 2px solid var(--ace-gold); outline-offset: 2px; }
+.ace-btn:disabled { opacity: .45; cursor: default; filter: none; }
+.ace-btn.block { width: 100%; }
+.ace-btn.ghost { background: transparent; color: var(--ace-fg); border: 1px solid currentColor; border-bottom-width: 1px; }
+.ace-btn.paper { background: var(--ace-paper); color: var(--ace-ink); border-bottom-color: var(--ace-rule); }
+.ace-btn.gold { background: var(--ace-gold); color: var(--ace-ink); border-bottom-color: var(--ace-brick); }
+.ace-link { background: none; border: 0; padding: 0; cursor: pointer; color: inherit; font: inherit; font-family: var(--ace-cond); font-size: 13px; letter-spacing: .08em; text-transform: uppercase; text-decoration: underline; text-decoration-color: var(--ace-gold); text-underline-offset: 4px; }
+
+/* The thumb dock: the one action at the bottom */
+.ace-dock { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; display: flex; justify-content: center; gap: 8px; padding: 12px 76px calc(12px + env(safe-area-inset-bottom)) var(--ace-gutter); background: var(--ace-ground); border-top: 2px solid var(--ace-gold); }
+.ace-dock .ace-btn { flex: 1; max-width: 688px; min-height: 52px; font-size: 17px; }
+
+/* Tabs: a row of condensed caps; the open one is a paper tab */
+.ace-tabs { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 2px solid var(--ace-gold); }
+.ace-tab { background: none; color: var(--ace-muted); border: 1px solid transparent; border-bottom: 0; border-radius: 0; padding: 8px 12px; font-family: var(--ace-cond); font-size: 13px; letter-spacing: .1em; text-transform: uppercase; cursor: pointer; }
+.ace-tab:hover { color: var(--ace-fg); }
+.ace-tab.on { background: var(--ace-paper); color: var(--ace-ink); border-color: var(--ace-gold); }
+
+/* The state bar: the step and the title you're going for, in the accent */
+.ace-statebar { display: flex; align-items: center; gap: 10px; width: calc(100% + var(--ace-gutter) * 2); margin: 0 calc(var(--ace-gutter) * -1); padding: 10px var(--ace-gutter); background: var(--ace-accent); color: var(--ace-accent-ink); font-family: var(--ace-cond); font-size: 14px; letter-spacing: .06em; }
+.ace-statebar b { font-family: var(--ace-disp); font-weight: 400; letter-spacing: 0; }
+.ace-statebar svg { flex: none; }
+
+/* The sash: it IS the title. Sized by width; the SVG scales. */
+.ace-sash { display: block; width: 270px; max-width: 100%; height: auto; filter: drop-shadow(0 3px 0 var(--ace-shadow)); }
+.ace-sash.wide { width: 100%; }
+.ace-sash.small { width: 180px; }
+.ace-sash-wrap { display: flex; justify-content: center; }
+
+/* The title ribbon under a driver: Playball, a swallow-tail, one look per step */
+.ace-ribbon { display: inline-block; font-family: var(--ace-script); font-size: 15px; line-height: 1.5; padding: 0 12px; border: 1.5px solid; clip-path: polygon(0 0, 100% 0, 94% 50%, 100% 100%, 0 100%, 6% 50%); white-space: nowrap; }
+.ace-ribbon.locals { background: var(--ace-white); color: var(--ace-ink); border-color: var(--ace-ink); }
+.ace-ribbon.state { background: var(--ace-state-primary, var(--ace-red)); color: var(--ace-state-ink, var(--ace-paper)); border-color: var(--ace-state-secondary, var(--ace-navy-2)); }
+.ace-ribbon.nationals { background: var(--ace-navy-2); color: var(--ace-paper); border-color: var(--ace-gold); }
+.ace-ribbons { display: flex; gap: 4px; justify-content: center; flex-wrap: wrap; }
+
+/* Roundel: a racing number in a paper disc */
+.ace-roundel { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--ace-paper); color: var(--ace-ink); border: 2px solid var(--ace-ink); font-family: var(--ace-disp); font-size: 11px; line-height: 1; flex: none; }
+.ace-roundel.big { width: 34px; height: 34px; font-size: 14px; }
+
+/* Levels: the typewriter box in the program's colours */
+.ace-lv { display: inline-block; min-width: 28px; font-family: var(--ace-mono); font-weight: 400; text-align: center; border: 1.5px solid currentColor; font-size: 12px; padding: 1px 4px; line-height: 1.3; }
+.ace-lv.g { color: var(--ace-green); } .ace-lv.y { color: var(--ace-yellow); } .ace-lv.r { color: var(--ace-red-lv); }
+
+/* Sheets: a paper table in a few columns (the Paddock's quick read) */
+.ace-sheet { background: var(--ace-paper); color: var(--ace-ink); padding: 6px 8px; }
+.ace-th, .ace-tr { display: grid; grid-template-columns: 28px minmax(0, 1fr) repeat(4, 32px); gap: 6px; align-items: center; font-size: 13px; }
+.ace-th { font-family: var(--ace-cond); font-size: 10px; color: var(--ace-ink-2); letter-spacing: .1em; text-transform: uppercase; border-bottom: 2px solid var(--ace-ink); padding-bottom: 4px; }
+.ace-tr { padding: 6px 0; border-bottom: 1px solid var(--ace-rule); }
+.ace-tr b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; }
+.ace-pts { text-align: right; font-family: var(--ace-cond); color: var(--ace-accent); letter-spacing: .04em; }
+.ace-pts.out { color: var(--ace-ink-2); }
+
+/* The house data table (.rt, Season.css) on paper: re-point its tokens inside a panel */
+.ace-panel .rt-scroll, .ace-paper-table { --pw-ground: var(--ace-paper); --pw-text-1: var(--ace-ink); --pw-text-2: var(--ace-ink-2); --pw-text-3: var(--ace-ink-2); --pw-hairline: var(--ace-rule); --pw-border-strong: var(--ace-ink); --team-primary: var(--ace-accent); --signal-green: var(--ace-green); --signal-yellow: var(--ace-yellow); --signal-red: var(--ace-red-lv); --look-display: var(--ace-disp); --look-serif: var(--ace-body); --look-data: var(--ace-mono); }
+.ace-panel .rt tbody .rt-name { font-weight: 400; }
+
+/* Menus: contents-page rows */
+.ace-menu { display: flex; flex-direction: column; gap: 6px; }
+.ace-mi { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; width: 100%; padding: 11px 12px; background: transparent; border: 1px solid var(--ace-hair); border-radius: 0; color: var(--ace-fg); font-family: var(--ace-cond); font-size: 15px; letter-spacing: .06em; text-transform: uppercase; text-align: left; cursor: pointer; }
+.ace-mi small { font-family: var(--ace-body); text-transform: none; letter-spacing: 0; font-size: 12px; color: var(--ace-muted); text-align: right; }
+.ace-mi.on { background: var(--ace-accent); border-color: var(--ace-accent); color: var(--ace-accent-ink); }
+.ace-mi.on small { color: var(--ace-accent-ink); opacity: .8; }
+.ace-mi:hover { border-color: var(--ace-gold); }
+.ace-mi:focus-visible { outline: 2px solid var(--ace-gold); outline-offset: 2px; }
+.ace-toc { display: flex; flex-direction: column; gap: 10px; }
+.ace-toc div { display: flex; align-items: baseline; gap: 6px; font-size: 15px; }
+.ace-toc b { font-family: var(--ace-cond); font-weight: 400; }
+
+/* The ladder's rungs: paper, the open one outlined in the accent */
+.ace-rung-head { display: flex; align-items: center; gap: 8px; }
+.ace-rung-head b { font-family: var(--ace-disp); font-weight: 400; font-size: 16px; }
+.ace-tag { margin-left: auto; font-family: var(--ace-cond); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--ace-ink-2); }
+.ace-tag.won { color: var(--ace-accent); }
+.ace-sq { display: flex; gap: 5px; }
+.ace-sq i { width: 16px; height: 16px; border: 2px solid var(--ace-ink); }
+.ace-sq i.d { background: var(--ace-navy-2); }
+.ace-sq i.last { background: repeating-conic-gradient(var(--ace-paper) 0 25%, var(--ace-ink) 0 50%) 0 0 / 6px 6px; }
+.ace-row2 { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; }
+.ace-row2 .dim { color: var(--ace-ink-2); }
+.ace-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.ace-chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 8px; border: 1px solid var(--ace-ink); background: var(--ace-paper); color: var(--ace-ink); font: inherit; font-size: 13px; cursor: pointer; }
+.ace-chip:focus-visible { outline: 2px solid var(--ace-accent); outline-offset: 2px; }
+
+/* Bulletin: a one-line strip with an accent edge (a Parcel has come) */
+.ace-strip { display: flex; gap: 10px; align-items: center; background: var(--ace-paper); color: var(--ace-ink); padding: 8px; font-size: 13px; border-left: 6px solid var(--ace-accent); }
+.ace-strip small { color: var(--ace-ink-2); }
+
+/* The card: paper, a double frame, a band, the art slot, the ribbons, stamps */
+.ace-card { background: var(--ace-paper); color: var(--ace-ink); border: 4px solid var(--ace-paper); outline: 2px solid var(--ace-ink); outline-offset: -8px; padding: 12px; display: flex; flex-direction: column; gap: 6px; width: 100%; max-width: 300px; }
+.ace-card-band { display: flex; justify-content: space-between; align-items: center; background: var(--ace-navy-2); color: var(--ace-paper); font-family: var(--ace-cond); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; padding: 4px 6px; }
+.ace-card-art { position: relative; height: 130px; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1.5px solid var(--ace-ink); }
+.ace-card-art.slot { flex-direction: column; gap: 2px; border: 2px dashed var(--ace-ink-2); background: repeating-linear-gradient(45deg, var(--ace-paper-2) 0 8px, var(--ace-paper) 8px 16px); font-family: var(--ace-cond); letter-spacing: .2em; text-transform: uppercase; color: var(--ace-ink-2); }
+.ace-card-art.slot small { font-family: var(--ace-body); font-style: italic; letter-spacing: 0; text-transform: none; font-size: 11px; }
+.ace-card-art img, .ace-card-art svg { max-width: 100%; max-height: 100%; }
+.ace-card-name { font-family: var(--ace-disp); font-weight: 400; font-size: 20px; line-height: 1.05; text-align: center; text-transform: uppercase; }
+.ace-card-sub { font-size: 11px; text-align: center; color: var(--ace-ink-2); }
+.ace-card-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; text-align: center; font-family: var(--ace-cond); font-size: 10px; letter-spacing: .08em; }
+.ace-card-stats span { display: flex; flex-direction: column; gap: 2px; align-items: center; }
+.ace-card.car { max-width: none; flex-direction: row; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 10px; outline-offset: -6px; font-size: 11px; }
+.ace-card.car b { font-family: var(--ace-disp); font-weight: 400; }
+
+/* Stamps: inked squares, a little askew, in the accent or the navy */
+.ace-stamps { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
+.ace-stamp { width: 62px; height: 62px; display: grid; place-items: center; text-align: center; font-family: var(--ace-mono); font-size: 9px; line-height: 1.1; text-transform: uppercase; color: var(--ace-accent); border: 2px solid var(--ace-accent); border-radius: 4px; padding: 6px; background: radial-gradient(circle, transparent 60%, color-mix(in srgb, var(--ace-accent) 8%, transparent)); transform: rotate(-6deg); }
+.ace-stamp.s1 { transform: rotate(5deg); color: var(--ace-navy-2); border-color: var(--ace-navy-2); }
+.ace-stamp.s2 { transform: rotate(-2deg); }
+.ace-stamp.s3 { transform: rotate(3deg); color: var(--ace-ink); border-color: var(--ace-ink); }
+.ace-stamp.empty { color: var(--ace-ink-2); border-style: dashed; background: none; }
+.ace-stamp.gold { color: var(--ace-brick); border-color: var(--ace-gold); }
+.ace-stamps.small .ace-stamp { width: 50px; height: 50px; font-size: 8px; }
+.ace-stamps.big .ace-stamp { width: 78px; height: 78px; font-size: 10px; background-color: var(--ace-paper); }
+
+/* A Parcel: brown paper, string, a typed label, a postmark */
+.ace-parcel { position: relative; height: 150px; margin: 8px 10px 4px; background: var(--ace-brown); box-shadow: 0 10px 0 var(--ace-shadow); }
+.ace-parcel.gift { background: var(--ace-navy-2); }
+.ace-parcel .string { position: absolute; background: var(--ace-paper); }
+.ace-parcel.gift .string { background: var(--ace-gold); }
+.ace-parcel .string.v { left: 47%; top: 0; bottom: 0; width: 5px; }
+.ace-parcel .string.h { top: 46%; left: 0; right: 0; height: 5px; }
+.ace-parcel .label { position: absolute; left: 10px; top: 10px; background: var(--ace-paper); color: var(--ace-ink); padding: 6px 8px; font-size: 10px; line-height: 1.3; font-family: var(--ace-mono); transform: rotate(-3deg); }
+.ace-parcel .label b { color: var(--ace-accent); letter-spacing: .12em; }
+.ace-parcel .post { position: absolute; right: 12px; bottom: 12px; }
+.ace-parcel-mini { width: 40px; height: 30px; background: var(--ace-brown); position: relative; flex: none; }
+.ace-parcel-mini::before, .ace-parcel-mini::after { content: ''; position: absolute; background: var(--ace-paper); }
+.ace-parcel-mini::before { left: 46%; top: 0; bottom: 0; width: 3px; }
+.ace-parcel-mini::after { top: 44%; left: 0; right: 0; height: 3px; }
+
+/* The placeholder car and the pennant */
+.ace-racer { display: block; max-width: 100%; height: auto; }
+.ace-pennant { display: inline-block; vertical-align: middle; }
+
+/* Swatches (the style page and the garage's colours) */
+.ace-sw { display: flex; gap: 6px; flex-wrap: wrap; }
+.ace-sw i { width: 28px; height: 28px; border: 2px solid var(--ace-paper); }
+
+@media (min-width: 720px) {
+  .ace-h1 { font-size: 30px; }
+  .ace-logo { font-size: 64px; }
+}
