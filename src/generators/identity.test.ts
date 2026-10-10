@@ -1,8 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import { mulberry32 } from '../engine/rng';
-import { generateDriverName, NAME_TIER_WEIGHTS, NameTier, ABSURD_FIRST_NAMES, ABSURD_LAST_NAMES, INTL_FIRST_NAMES, INTL_LAST_NAMES, ONE_WORD_CHANCE } from './names';
+import { generateDriverName, NAME_TIER_WEIGHTS, NameTier, ABSURD_FIRST_NAMES, ABSURD_LAST_NAMES, INTL_FIRST_NAMES, INTL_LAST_NAMES, US_FIRST_NAMES, US_LAST_NAMES, US_SHARE, ONE_WORD_CHANCE } from './names';
 import { generateLeagueName, leagueNameForSeed, LEAGUE_ADJECTIVES, LEAGUE_NOUNS } from './leagueName';
 import { generateTeamIdentities, teamIdentitiesForSeed } from './teamIdentity';
+
+const REAL_FIRST = [...US_FIRST_NAMES, ...INTL_FIRST_NAMES];
+const REAL_LAST = [...US_LAST_NAMES, ...INTL_LAST_NAMES];
 
 describe('driver names (#191)', () => {
   it('is deterministic from the seed', () => {
@@ -49,12 +52,32 @@ describe('driver names (#191)', () => {
     for (let i = 0; i < 20000; i++) {
       const n = generateDriverName(rng);
       if (n.tier !== 'hybrid' || n.oneWord) continue;
-      if (ABSURD_FIRST_NAMES.includes(n.firstName) && INTL_LAST_NAMES.includes(n.lastName)) absurdFirst++;
-      else if (INTL_FIRST_NAMES.includes(n.firstName) && ABSURD_LAST_NAMES.includes(n.lastName)) absurdLast++;
+      if (ABSURD_FIRST_NAMES.includes(n.firstName) && REAL_LAST.includes(n.lastName)) absurdFirst++;
+      else if (REAL_FIRST.includes(n.firstName) && ABSURD_LAST_NAMES.includes(n.lastName)) absurdLast++;
       else throw new Error(`not a hybrid: ${n.fullName}`);
     }
     expect(absurdFirst / (absurdFirst + absurdLast)).toBeGreaterThan(0.45);
     expect(absurdFirst / (absurdFirst + absurdLast)).toBeLessThan(0.55);
+  });
+
+  it('each real half is American about 80% of the time, rolled separately (#615)', () => {
+    const rng = mulberry32(615);
+    const onlyUs = (pool: string[], other: string[]) => (x: string) => pool.includes(x) && !other.includes(x);
+    const usFirst = onlyUs(US_FIRST_NAMES, INTL_FIRST_NAMES), intlFirst = onlyUs(INTL_FIRST_NAMES, US_FIRST_NAMES);
+    const usLast = onlyUs(US_LAST_NAMES, INTL_LAST_NAMES), intlLast = onlyUs(INTL_LAST_NAMES, US_LAST_NAMES);
+    let f = 0, fUs = 0, l = 0, lUs = 0, both = 0, mixed = 0;
+    for (let i = 0; i < 30000; i++) {
+      const n = generateDriverName(rng);
+      if (n.tier !== 'international' || n.oneWord) continue;
+      if (usFirst(n.firstName) || intlFirst(n.firstName)) { f++; if (usFirst(n.firstName)) fUs++; }
+      if (usLast(n.lastName) || intlLast(n.lastName)) { l++; if (usLast(n.lastName)) lUs++; }
+      if (usFirst(n.firstName) && usLast(n.lastName)) both++;
+      if (usFirst(n.firstName) !== usLast(n.lastName) && (usFirst(n.firstName) || intlFirst(n.firstName)) && (usLast(n.lastName) || intlLast(n.lastName))) mixed++;
+    }
+    expect(Math.abs(fUs / f - US_SHARE)).toBeLessThan(0.02);
+    expect(Math.abs(lUs / l - US_SHARE)).toBeLessThan(0.02);
+    // Separate rolls: mixed-source names show up (~32% of real names), not just matched pairs.
+    expect(mixed).toBeGreaterThan(both / 4);
   });
 
   it('no name ever produces an "undefined" short name (the mononym bug guard)', () => {

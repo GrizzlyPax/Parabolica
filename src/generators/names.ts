@@ -1,8 +1,8 @@
-// Driver name generation (#191): tiered, international, deterministic.
+// Driver name generation (#191): tiered, mostly American (#615), deterministic.
 //
 // The pool is built in tiers so the funny names land — "Nugget Marshall" is a
 // gift precisely because it sits in a grid of believable international names.
-//   T1  international common names — the dominant base
+//   T1  real names — the dominant base, each half 80% American / 20% international
 //   T2  absurdist names — the memorable minority (Blaseball-inspired)
 //   hybrid  one absurd half on a real name ("Hollyhock Abenov", "Aditya Undefined")
 //   T4  corrupted names — a glitch in the universe, genuinely rare
@@ -11,14 +11,42 @@
 // so these pools can grow without moving a single stat.
 import { Rng, pick } from '../engine/rng';
 
-// === TIER 1 — international common names (the believable base) ===
-// Drawn from common given/family names across many name traditions. Flat,
-// independent draws — a slightly-mixed global grid is the goal, not
-// region-locked pairing. Sized so repeats are rare across a 22-driver grid.
-export const INTL_FIRST_NAMES = [
-  // English / Anglophone
+// === TIER 1 — real names (the believable base) ===
+// Mostly American (Pax, Oct 10, #615; docs/story/name-pools.md → Update,
+// Oct 10): each half of a real name picks its own source, the US pool 80% of
+// the time, else the international pool. So mostly "Tyler Brooks", sometimes
+// America's own mix ("Diego Parker"), now and then fully international.
+export const US_SHARE = 0.8;
+
+export const US_FIRST_NAMES = [
+  'Tyler', 'Megan', 'Brandon', 'Ashley', 'Jake', 'Kayla', 'Cody', 'Dustin', 'Chase', 'Hunter',
+  'Brittany', 'Kevin', 'Jessica', 'Ryan', 'Amanda', 'Derek', 'Travis', 'Kyle', 'Shane', 'Bobby',
+  'Ricky', 'Dale', 'Darrell', 'Tony', 'Danny', 'Mike', 'Chris', 'Matt', 'Josh', 'Justin',
+  'Brad', 'Lauren', 'Taylor', 'Madison', 'Morgan', 'Casey', 'Jordan', 'Riley', 'Avery', 'Logan',
+  'Mason', 'Caleb', 'Wyatt', 'Colton', 'Brooke', 'Hailey', 'Savannah', 'Jenna', 'Kelsey', 'Rachel',
+  'Molly', 'Katie', 'Erin', 'Marcus', 'Darius', 'Andre', 'Terrence', 'Jamal', 'Keisha', 'Tasha',
+  'Luis', 'Miguel', 'Rosa', 'Nick', 'Joey', 'Becky', 'Tammy', 'Wade', 'Clint', 'Rusty',
+  'Buck', 'Earl', 'Jimmy', 'Dwayne', 'Stacy', 'Crystal', 'Amber', 'Heather', 'Nicole', 'Brian',
+  'Scott', 'Jeff', 'Greg', 'Todd', 'Lisa', 'Kim', 'Tina', 'Donna',
+  // the English names that used to sit in the international pool
   'James', 'Mary', 'William', 'Sarah', 'Thomas', 'Emily', 'George', 'Grace',
   'Henry', 'Alice', 'Edward', 'Charlotte', 'Oliver', 'Amelia', 'Arthur', 'Florence',
+];
+
+export const US_LAST_NAMES = [
+  'Johnson', 'Williams', 'Brown', 'Jones', 'Miller', 'Davis', 'Wilson', 'Anderson', 'Thomas', 'Taylor',
+  'Moore', 'Jackson', 'Martin', 'Thompson', 'White', 'Harris', 'Clark', 'Lewis', 'Robinson', 'Young',
+  'Allen', 'King', 'Wright', 'Scott', 'Hill', 'Green', 'Adams', 'Baker', 'Nelson', 'Carter',
+  'Mitchell', 'Roberts', 'Turner', 'Phillips', 'Campbell', 'Parker', 'Evans', 'Edwards', 'Collins', 'Stewart',
+  'Morris', 'Murphy', 'Cook', 'Rogers', 'Morgan', 'Cooper', 'Peterson', 'Bailey', 'Kelly', 'Howard',
+  'Cox', 'Ward', 'Richardson', 'Watson', 'Wood', 'Gray', 'James', 'Sullivan', 'McCoy', 'O\'Brien',
+  'Dawson', 'Hayes', 'Brooks', 'Walker', 'Coleman', 'Foster', 'Bennett', 'Barnes', 'Reed', 'Ford',
+  'Lane', 'Holt', 'Webb', 'Shaw', 'Wells', 'Hughes', 'Smith', 'Price', 'Russell', 'Griffin',
+  'Wallace', 'Fisher', 'Henderson', 'Simmons', 'Jenkins', 'Perry', 'Powell', 'Long', 'Patterson',
+];
+
+// The international pool: common given/family names across many traditions.
+export const INTL_FIRST_NAMES = [
   // Spanish / Latin American
   'Mateo', 'Sofía', 'Santiago', 'Valentina', 'Diego', 'Camila', 'Alejandro', 'Lucía',
   'Javier', 'Isabella', 'Carlos', 'Daniela', 'Andrés', 'Gabriela', 'Rafael', 'Mariana',
@@ -86,9 +114,6 @@ export const INTL_FIRST_NAMES = [
 ];
 
 export const INTL_LAST_NAMES = [
-  // English / Anglophone
-  'Smith', 'Walker', 'Hughes', 'Foster', 'Bennett', 'Coleman', 'Hayes', 'Wells',
-  'Barnes', 'Brooks', 'Reed', 'Shaw', 'Webb', 'Holt', 'Ford', 'Lane',
   // Spanish / Latin American
   'García', 'Martínez', 'Rodríguez', 'López', 'González', 'Hernández', 'Ramírez', 'Torres',
   'Flores', 'Ramos', 'Castillo', 'Vargas', 'Ortega', 'Mendoza', 'Guerrero', 'Delgado',
@@ -195,10 +220,11 @@ export const ABSURD_LAST_NAMES = [
 
 // Tier weights (approximate — see tests). T1 must dominate.
 // Radio's mix (docs/story/name-pools.md, #467): grounded, with a twist.
+// Oct 10 (#615): fewer silly-plus-silly; the hybrid's real half follows 80/20.
 export const NAME_TIER_WEIGHTS = {
-  international: 0.78,
-  hybrid: 0.12,
-  absurd: 0.08,
+  international: 0.80,
+  hybrid: 0.16,
+  absurd: 0.02,
   corrupted: 0.02,
 } as const;
 
@@ -300,6 +326,14 @@ function makeShortName(firstName: string, lastName: string, corrupted: boolean):
   return firstName.length > 8 ? firstName.slice(0, 8) : `${firstName} ${lastName[0]}.`;
 }
 
+/** A real first or last name: one draw picks the source (US 80% / international
+ * 20%), one draw picks the name. Always two draws, whichever pool wins, so the
+ * odds never shift the stream (the #467 rule). */
+function realHalf(us: readonly string[], intl: readonly string[], rng: Rng): string {
+  const fromUs = rng() < US_SHARE;
+  return pick(fromUs ? us : intl, rng);
+}
+
 /** Generate a driver name. Same call shape as before (rng in, name out) so
  * the generator pipeline is unchanged; now tiered + international. */
 export function generateDriverName(rng: Rng = Math.random): DriverName {
@@ -307,8 +341,8 @@ export function generateDriverName(rng: Rng = Math.random): DriverName {
 
   if (tier === 'corrupted') {
     // Corrupt an otherwise-normal international name — a glitch in a real grid.
-    const baseFirst = pick(INTL_FIRST_NAMES, rng);
-    const baseLast = pick(INTL_LAST_NAMES, rng);
+    const baseFirst = realHalf(US_FIRST_NAMES, INTL_FIRST_NAMES, rng);
+    const baseLast = realHalf(US_LAST_NAMES, INTL_LAST_NAMES, rng);
     const firstName = corrupt(baseFirst, rng);
     const lastName = corrupt(baseLast, rng);
     const fullName = `${firstName} ${lastName}`;
@@ -321,8 +355,10 @@ export function generateDriverName(rng: Rng = Math.random): DriverName {
   // Hybrid: one absurd half on a real name, 50/50 which half.
   const absurdFirst = tier === 'absurd' || (tier === 'hybrid' && rng() < 0.5);
   const absurdLast = tier === 'absurd' || (tier === 'hybrid' && !absurdFirst);
-  const first = pick(absurdFirst ? ABSURD_FIRST_NAMES : INTL_FIRST_NAMES, rng);
-  const last = pick(absurdLast ? ABSURD_LAST_NAMES : INTL_LAST_NAMES, rng);
+  // A real half rolls its source first; an absurd half spends that roll too,
+  // so every name takes the same draws.
+  const first = absurdFirst ? (rng(), pick(ABSURD_FIRST_NAMES, rng)) : realHalf(US_FIRST_NAMES, INTL_FIRST_NAMES, rng);
+  const last = absurdLast ? (rng(), pick(ABSURD_LAST_NAMES, rng)) : realHalf(US_LAST_NAMES, INTL_LAST_NAMES, rng);
 
   // The one-word rule: always two draws, so the odds never shift the stream.
   const oneWord = rng() < ONE_WORD_CHANCE;

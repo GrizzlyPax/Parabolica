@@ -14,7 +14,7 @@ import { CURRENT_TEAMS, HISTORIC_TEAMS } from './teams';
 import { BASE_DECK_TEAMS, TEAM_KINDS } from './deckTeams';
 import { BASE_DECK_TRACKS } from './deckTracks';
 import { BASE_DECK_WEATHER } from './deckWeather';
-import { INTL_FIRST_NAMES, INTL_LAST_NAMES, ABSURD_FIRST_NAMES, ABSURD_LAST_NAMES, NAME_TIER_WEIGHTS, ONE_WORD_CHANCE } from '../generators/names';
+import { US_FIRST_NAMES, US_LAST_NAMES, US_SHARE, INTL_FIRST_NAMES, INTL_LAST_NAMES, ABSURD_FIRST_NAMES, ABSURD_LAST_NAMES, NAME_TIER_WEIGHTS, ONE_WORD_CHANCE } from '../generators/names';
 import { LEAGUE_ADJECTIVES, LEAGUE_NOUNS } from '../generators/leagueName';
 import { BACKSTORY_TEMPLATES, BACKSTORY_FILLS, QUIRKS } from '../generators/drivers';
 import { CAR_QUIRKS, CAR_PEOPLE_NAMES, CAR_NICKNAMES, CAR_HOUSEHOLD, CAR_HERITAGE_PLACES, generateCarName } from '../generators/cars';
@@ -85,7 +85,9 @@ export function buildGlossary(): Glossary {
     weather: WEATHER_TYPES, tracks: CURRENT_TRACKS,
     historicTracks: HISTORIC_TRACKS, deckTeams: BASE_DECK_TEAMS, deckTracks: BASE_DECK_TRACKS, deckWeather: BASE_DECK_WEATHER, teams: CURRENT_TEAMS, historicTeams: HISTORIC_TEAMS,
     pools: [
-      { id: 'names-intl-first', title: `Driver first names · international (${Math.round(NAME_TIER_WEIGHTS.international * 100)}% of drivers)`, where: 'src/generators/names.ts INTL_FIRST_NAMES', size: INTL_FIRST_NAMES.length, samples: INTL_FIRST_NAMES.slice(0, 8) },
+      { id: 'names-us-first', title: `Driver first names · American (${Math.round(NAME_TIER_WEIGHTS.international * 100)}% of drivers have a real name; each half is American ${Math.round(US_SHARE * 100)}% of the time)`, where: 'src/generators/names.ts US_FIRST_NAMES', size: US_FIRST_NAMES.length, samples: US_FIRST_NAMES.slice(0, 8) },
+      { id: 'names-us-last', title: 'Driver last names · American', where: 'src/generators/names.ts US_LAST_NAMES', size: US_LAST_NAMES.length, samples: US_LAST_NAMES.slice(0, 8) },
+      { id: 'names-intl-first', title: `Driver first names · international (the other ${Math.round((1 - US_SHARE) * 100)}% of each real half)`, where: 'src/generators/names.ts INTL_FIRST_NAMES', size: INTL_FIRST_NAMES.length, samples: INTL_FIRST_NAMES.slice(0, 8) },
       { id: 'names-intl-last', title: 'Driver last names · international', where: 'src/generators/names.ts INTL_LAST_NAMES', size: INTL_LAST_NAMES.length, samples: INTL_LAST_NAMES.slice(0, 8) },
       { id: 'names-absurd-first', title: `Driver first names · absurd (${Math.round(NAME_TIER_WEIGHTS.absurd * 100)}% both halves, ${Math.round(NAME_TIER_WEIGHTS.hybrid * 100)}% one half on a real name; ${Math.round(ONE_WORD_CHANCE * 100)}% of all names show as one word)`, where: 'src/generators/names.ts ABSURD_FIRST_NAMES', size: ABSURD_FIRST_NAMES.length, samples: ABSURD_FIRST_NAMES.slice(0, 8) },
       { id: 'names-absurd-last', title: 'Driver last names · absurd', where: 'src/generators/names.ts ABSURD_LAST_NAMES', size: ABSURD_LAST_NAMES.length, samples: ABSURD_LAST_NAMES.slice(0, 8) },
