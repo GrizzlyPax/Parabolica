@@ -41,6 +41,8 @@ Already live from v0.7's first two waves (engine v0.6.3): single-player Season, 
 
 - **Oct 10 (Apex, #646; Pax to confirm):** a rank reached in a league's last race is taken in the next league's first Paddock · held wild cards are never dealt again · Home Hero's track is drawn on the rank-up stream · Grudge Match fires only in a run's boss race · Mentor's 25% is of the teammate's earned XP. Pit merged #651 (411 tests + tsc green; a docs-only RUN.md conflict resolved keeping both sections); Hub's ladder (#628) and nemesis voice (#635) are live; preview v93.
 
+- **Oct 10 (Hub, preview v94):** ✅ the league ladder (#628) is the run's home (`#/season/run`; League Setup is now "New run" with the team creator on top) · ✅ the nemesis talks (#635) · ✅ stat levels 1–20 replace grades (#623; `grades.ts` exports `level` / `levelTone` / `levelDelta`) · Spotter's "just pick some guys" (#656) and "weak, near-equal rookies" (#657) fold into the rookie pick design (#594).
+
 **📻 Radio — milestone 2:** ✅ the nemesis's voice (#624) · **🛞 Hub** builds it (#635) after #626
 
 **🏛️ Steward — milestone 3:** re-probe a full run on the build (#629)
