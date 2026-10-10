@@ -1,9 +1,11 @@
 // The run's home screen, in the race program's look (#705; the ladder design
 // #628). The rungs stack top first as cream panels; the one in play is open:
 // its races (the last chequered), you against the rival, your drivers, how
-// you go up. The screen wears the step's theme (Locals · State · Nationals;
-// `stepForLeague` maps v0.7's four leagues onto them until #696). Won and
-// lost rungs keep one line; the ones ahead wait, dimmed.
+// you go up. The screen wears the step's theme and LABELS the rungs by step
+// (Locals · State · Nationals, plain, never "the Nationals"): `stepForLeague`
+// maps v0.7's four leagues onto them, display only, until #696 rebuilds the
+// run into three steps. Won and lost rungs keep one line; the ones ahead
+// wait, dimmed.
 import { useMemo, useState } from 'react';
 import { TeamLogo } from '../../icons/GameIcon';
 import { currentLeague, loadRun, LEAGUE_LADDER } from '../../run/run';
@@ -37,13 +39,16 @@ function Squares({ done, total }: { done: number; total: number }) {
 
 type YourDriver = { id: number; name: string; portrait: ReturnType<typeof portraitFor>; color: string };
 
+/** The rung's label: its step's name (display only until #696). */
+const stepLabel = (index: number) => STEPS.find(s => s.id === stepForLeague(index, LEAGUE_LADDER.length))!.name;
+
 function Rung({ r, drivers, onDriver }: { r: RungView; drivers?: YourDriver[]; onDriver?: (id: number) => void }) {
   const tag = r.status === 'won' ? 'Won' : r.status === 'lost' ? 'Lost' : r.status === 'ahead' ? 'Locked'
     : !r.races ? 'Pick your rookies' : r.races.done < r.races.total ? `Race ${r.races.done + 1} of ${r.races.total}` : 'Done';
   const head = (
     <div className="ace-rung-head">
       {r.status === 'ahead' ? <Wheel r={8} /> : <Roundel n={r.index + 1} />}
-      <b>{r.name}</b>
+      <b>{stepLabel(r.index)}</b>
       <span className={`ace-tag ${r.status === 'won' ? 'won' : ''}`.trim()}>{tag}</span>
     </div>
   );
@@ -91,7 +96,7 @@ export default function RunLadder({ onMenu, onNewRun, onPlay }: Props) {
     );
   }
   const league = view.rungs[view.leagueIndex];
-  const next = LEAGUE_LADDER[view.leagueIndex + 1]?.name;
+  const next = view.leagueIndex + 1 < LEAGUE_LADDER.length ? stepLabel(view.leagueIndex + 1) : undefined;
   const leaguePhase = seasonState(currentLeague(run)).phase;
   const up = () => { if (promoteCurrentRun()) setRun(loadRun()); };
   // Your two drivers on the open rung; a tap opens their driver card (#476).
@@ -103,12 +108,13 @@ export default function RunLadder({ onMenu, onNewRun, onPlay }: Props) {
     .map(d => ({ id: d.id, name: d.fullName, portrait: portraitFor(pool.seed, d.id), color: view.you.color }));
   // The step's theme (#705): v0.7's leagues onto Locals · State · Nationals; the State stub is Ohio until #695 / #696.
   const step = stepForLeague(view.leagueIndex, LEAGUE_LADDER.length);
-  const stepName = STEPS.find(s => s.id === step)!.name;
+  const stepName = stepLabel(view.leagueIndex);
+  const bar = view.phase === 'start' ? 'pick your rookies' : league.races ? (league.races.done < league.races.total ? `race ${league.races.done + 1} of ${league.races.total}` : 'done') : '';
   return (
     <StepTheme step={step} state={stateLook('OH')} className="ace-page rl">
       <Bunting />
       <ProgramLine right={`No. ${programNumber(run.setup.seed)} · 10¢`} />
-      <StateBar pennant={<Pennant name={(view.you.name ?? 'You').split(' ')[0]} width={60} />}>{stepName} · going for <b>{league.name}</b></StateBar>
+      <StateBar pennant={<Pennant name={(view.you.name ?? 'You').split(' ')[0]} width={60} />}><b>{stepName}</b>{bar && <> · {bar}</>}</StateBar>
       <div className="rl-head-row">
         <button type="button" className="ace-link" onClick={onMenu}>Menu</button>
         <span className="ace-where"><TeamLogo team={view.you} size={18} /> {view.you.name}</span>
@@ -117,7 +123,7 @@ export default function RunLadder({ onMenu, onNewRun, onPlay }: Props) {
       <Chequer />
 
       {view.phase === 'run-won' && <div className="ace-sash-wrap"><Sash text="Ace America" /></div>}
-      {view.phase === 'league-won' && <div className="ace-panel"><b>You won the {league.name}.</b> {next} is next.</div>}
+      {view.phase === 'league-won' && <div className="ace-panel"><b>You won {stepName}.</b> {next} is next.</div>}
       {view.phase === 'run-lost' && <div className="ace-panel"><b>The run is over.</b> Nothing else is coming this season.</div>}
 
       <ol className="rl-ladder" aria-label="The ladder, top first">
