@@ -2,7 +2,7 @@
 
 *Pax's document. Agents read it before any flavour pass and propose edits as PRs, never silently. Working notes and history: [docs/story/](story/README.md); the hub this grew from: [ace-america](story/ace-america.md). Shapes for writing content: `docs/WORLD_DECK.md`. Page: [The Bible](https://claude.ai/artifact/B7wAwE5xzC47Qq1SiMvUDq).*
 
-**Status:** Ace America, drafted by 📻 Radio from Pax's calls (Oct 10, [#692](https://github.com/GrizzlyPax/Parabolica/issues/692)). **Canon once Pax says so.** Everything older (the Booth, Mister Marbles, the gods, tags, the 28 deck teams) is retired; `docs/story/` keeps it as history.
+**Status: canon** (Pax, Oct 10: *"This rules. I like it as canon."*). Drafted by 📻 Radio from Pax's calls ([#692](https://github.com/GrizzlyPax/Parabolica/issues/692)). Everything older (the Booth, Mister Marbles, the gods, tags, the 28 deck teams) is retired; `docs/story/` keeps it as history.
 
 ## The theme in a paragraph
 It's 1928, more or less, on an Earth a little brighter than ours. In 1908 something up above watched us race cars from New York to Paris and fell in love: nobody else in the galaxy had ever built a car. They're polite and unseen. They took war, famine and the economy off our plate, and asked only that we race. So now every quarrel on Earth is settled on a circuit, every town has a garage, and America, where it all started, loves it most of all. You're a team principal with a small local garage. Win your town and you're **Ace Toledo**; win your state and you're **Ace Ohio**; win Nationals and you're **Ace America**. The whole country listens on the radio. Somewhere up there, so does everyone else.

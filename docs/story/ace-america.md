@@ -1,6 +1,6 @@
 # Ace America: the world (story hub)
 
-*📻 Radio with Pax, Oct 10 2026. **Our shared understanding.** Direction, not canon, until Pax moves it into the [bible](../STORY_BIBLE.md) (#692). Pages:
+*📻 Radio with Pax, Oct 10 2026. **The working hub.** The canon now lives in the [bible](../STORY_BIBLE.md) (Pax called it canon on Oct 10, #692); this hub keeps the detail, the history and what's still later. Pages:
 - [Ace America](https://claude.ai/artifact/2Hy78ZXA4cLEdYGyYQWcQ6): the world; its look is the old, pre-lock one
 - [The race program](https://claude.ai/artifact/DX3c8cStUC8sbBFkPxdoc3): the locked look (#698)
 - [Locking Ace America](https://claude.ai/artifact/FxLCDtFAJimD6Z5pzHdP4p): the last open calls
