@@ -95,6 +95,7 @@ Every current-release issue has a `crew:` label saying who (and which model) sho
 
 ## Docs
 - `docs/V07_PLAN.md` - **The v0.7 Suzuka plan (current):** the roguelite run; milestones, lanes, rules
+- `docs/V08_PLAN.md` - The v0.8 Indianapolis plan (next): Ace America, the rebrand and the City → State → Nationals run; phases, rules
 - `docs/V06_PLAN.md` - The v0.6 Monza plan (shipped Oct 10, v0.6.1): owner choices; milestones, lanes, decision log, v0.7 direction
 - `docs/V05_PLAN.md` - The v0.5 Spa plan (shipped Oct 9, v0.5.1): milestones, crew lanes, build order, risks, decision log
 - `docs/README.md` - Index of every doc, grouped by area (update it when a doc is added, renamed or retired)

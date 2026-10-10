@@ -7,6 +7,7 @@ Parabolica is an F1-style race sim: draft a team, race a Season, chase two champ
 ## Start here
 | Doc | What it's for |
 |---|---|
+| [V08_PLAN](V08_PLAN.md) | **The v0.8 Indianapolis plan (next):** Ace America, the rebrand and the America run; phases |
 | [V07_PLAN](V07_PLAN.md) | **The v0.7 Suzuka plan (current):** the roguelite run; milestones, lanes |
 | [V06_PLAN](V06_PLAN.md) | **The v0.6 Monza plan (✅ shipped Oct 10, v0.6.1):** owner choices; decision log; v0.7 direction |
 | [V05_PLAN](V05_PLAN.md) | **The v0.5 Spa plan (✅ shipped Oct 9, v0.5.1):** milestones, lanes, order, risks, decision log |
