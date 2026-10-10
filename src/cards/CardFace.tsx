@@ -9,6 +9,7 @@
 // icon) drawn at full size and scaled the same way. Tap flips your card to
 // its back and again to flip it back: a fidget, not a reveal.
 import { useState, type CSSProperties, type KeyboardEvent } from 'react';
+import { levelDelta } from '../season/grades';
 import { GameIcon } from '../icons/GameIcon';
 import { STAT_ICONS } from '../icons/registry';
 import { KIND_LABELS } from './CardMarks';
@@ -54,7 +55,7 @@ function Face({ card, mini }: { card: Card; mini: boolean }) {
       <div className="cf-desc">
         {card.kind === 'effect'
           ? <div>{STAT_LABELS[card.stats[0].stat]} <b>{card.direction === 'up' ? '▲ up' : '▼ down'}</b></div>
-          : card.stats.map(s => <div key={s.stat}><b>+{s.pct}</b> {STAT_LABELS[s.stat]}</div>)}
+          : card.stats.map(s => <div key={s.stat}><b>{levelDelta(s.pct)}</b> {STAT_LABELS[s.stat]}</div>)}
       </div>
       <div className="cf-no">{cardNumber(card)}</div>
     </div>

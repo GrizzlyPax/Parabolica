@@ -2,6 +2,7 @@
 // per stat, tinted by the card's metal (docs/ICONS.md → The look). Effects
 // have no metal and show ▲/▼ instead of a percentage.
 import { GameIcon } from '../icons/GameIcon';
+import { levelDelta } from '../season/grades';
 import { CARD_KIND_ICONS, STAT_ICONS } from '../icons/registry';
 import { STAT_LABELS } from './deck';
 import type { Card, CardKind } from './types';
@@ -14,10 +15,10 @@ export function cardColor(card: Card): string | undefined {
   return card.rarity ? `var(--rarity-${card.rarity})` : undefined;
 }
 
-/** "+10 Speed · +10 Consistency" (grade points), or "Speed ▲" for an effect. */
+/** "+6 Speed · +6 Consistency" (levels, #623), or "Speed ▲" for an effect. */
 export function cardReadout(card: Card): string {
   if (card.kind === 'effect') return `${STAT_LABELS[card.stats[0].stat]} ${card.direction === 'up' ? '▲' : '▼'}`;
-  return card.stats.map(s => `+${s.pct} ${STAT_LABELS[s.stat]}`).join(' · ');
+  return card.stats.map(s => `${levelDelta(s.pct)} ${STAT_LABELS[s.stat]}`).join(' · ');
 }
 
 export function CardMarks({ card, size = 16 }: { card: Card; size?: number }) {

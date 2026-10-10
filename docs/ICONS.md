@@ -138,13 +138,13 @@ Every size is **the same card scaled down**, never a re-drawn variant: stripes, 
 
 Picked live in the Paddock layout session ([#452](https://github.com/GrizzlyPax/Parabolica/issues/452)) and called the strongest work yet. **Every data screen is a roster table** (Madden-style): one table, rows are drivers (plus car and team), fixed grade cells, an **OVR** column. Built from `src/season/ui/RosterTable.tsx` (`GradeCell`, `ReadingSheet`, `.rt` styles); rollout in [#453](https://github.com/GrizzlyPax/Parabolica/issues/453).
 
-- **Grades:** F → A+ in 13 even bands on a 0–100 scale, plus **S** past the best possible roll. A 50 reads C+.
-- **Grade colours (Pax, Oct 9, #468): only the four F1 colours, full saturation, everywhere:** S purple · A and B green · C yellow · D and F red. No orange, no light green.
+- **Stat levels (#623, Pax Oct 10; they replaced the F → A+ letter grades):** level = ceil(points / 5), min 1, on the 0–100 points scale, so natural rolls read **1–20** and cards push past 20. A 55 reads Lv 11. Card text is in levels too: at the run's 3× Bronze **+3**, Silver **+6**, Gold **+6 / +6**, Iridium **+9** to three stats, a curse **−6**. One vocabulary: stats have **levels**, drivers have **ranks** (Rookie · Pro · Ace · Legend; rivals wear their tier's rank, the nemesis one ahead, the Top-flight nemesis the crest), leagues are **tiers**.
+- **Level colours (the four F1 colours, full saturation, everywhere):** red 1–6 · yellow 7–11 · green 12–20 · **purple 21+** (past the best possible roll). No orange, no light green.
 - **The scale is dynamic:** 0 = worst possible roll, 100 = best, read from the generators' ranges (`src/season/grades.ts`), so it stays true after any re-tune. Car and team 1–5 stars use the same scale.
-- **Who sees what:** your own team shows grades everywhere; rivals show the read (Front / Middle / Back) + metal dots.
+- **Who sees what:** your own team shows levels everywhere; rivals show the read (Front / Middle / Back) + metal dots.
 - **One table, not two:** car and team rows sit in the same table so columns line up.
 - **The Paddock is two tabs, Team / League** (#475): standings live in the League tab (every driver; Wins · Podiums · Points; a race-by-race constructors' chart with your team highlighted). The old Standings page serves only the finale.
-- **Cards in tables are compact square chips** (`src/cards/CardChip.tsx`: traits dashed, gear solid); the full card opens on tap. Holding a card makes every stat it would change flash its new grade; tap the glowing row to place it.
+- **Cards in tables are compact square chips** (`src/cards/CardChip.tsx`: traits dashed, gear solid); the full card opens on tap. Holding a card makes every stat it would change flash its new level; tap the glowing row to place it.
 - **Racing numbers:** square badges in tables, round marbles in the race view. Always use `RaceNumber` (`src/icons/RaceNumber.tsx`) or `dy={NUMBER_DY}` in SVG; Special Elite sets digits high, so CSS centring is off.
 - **Your team's rows** carry a faded team-colour tint (race view tower, #491).
 
