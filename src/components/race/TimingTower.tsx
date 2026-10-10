@@ -42,6 +42,7 @@ function TimingTower({
   fantasy,
   sealed,
   mine,
+  nemesis,
   avatars,
   className = '',
 }: TimingTowerProps) {
@@ -243,6 +244,7 @@ function TimingTower({
       carRank: isSealed ? undefined : fieldRanking.car.get(driver.id),
       sealed: isSealed || undefined,
       mine: mine?.has(driver.id) || undefined,
+      nemesis: nemesis?.has(driver.id) || undefined,
       avatar: avatars?.get(driver.id),
       fantasyTeam: fantasyBy.get(driver.id),
       battle,

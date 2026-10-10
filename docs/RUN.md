@@ -55,6 +55,13 @@ All in `src/season/pack.ts`, data at the top:
 - **The ladder** (`#/season/run`, `season/ui/RunLadder.tsx`; Pax picked A) is the run's home: four leagues stacked, Top flight on top. The league in play is open (race squares, the last one gold for the boss race; you vs your nemesis, or the nearest team in the Juniors; how you go up); won leagues keep one line ("X were runners-up and came up with you"); leagues ahead are dimmed; the unlocks strip lists `UNLOCKS` (none granted until #596). Its button goes to the draft or the Paddock, **Up to <next> →** when the league is won, **New run** when the run is over. The view is pure: `run/ladderView.ts`.
 - Menu → Season opens a saved run on its ladder. The draft and the Paddock go **← The run**; the finale's **Up to <next> →** promotes and lands on the ladder.
 
+## The nemesis talks (#635)
+- `season/nemesis.ts`, flavour only (every roll on its own `'nemesis-voice'` stream; nothing saved, no sim change). Lines are verbatim from `docs/story/nemesis.md` (a test mirrors the doc).
+- **Who:** the flagged nemesis (`CompetitorTeam.nemesis`) from the Regional up; in the Juniors, a **voice-only rival** picked on the voice stream (no level bump; it says the "first meeting" lines). The ladder (#628) shows the same team.
+- **Personalities** per nemesis driver (`personalityOf(seed, driverId)`, equal odds, doubles allowed). Nemesis drivers are fresh each league (#626 carries the look only), so each league's pair rolls anew.
+- **One line per Paddock visit** (`nemesisLine(facts)`): the moment from the doc's table, the speaker by the doc's rule, a seeded pick never repeating the last round's; both drivers before the boss race; two Show-offs speak as "we". Spanish lines carry the English underneath.
+- **NEMESIS tag:** the Paddock line, the constructors' table, the tower (team name in the detail view, the driver panel, a red stripe on the row in the track view).
+
 ## Hooks left on purpose
 - **Boss race (#593):** `LeagueContext.bossRound` (the last round).
 - **Rookie pick (#594):** `RunSetup.start` ('draft' today); the draft is the run's start until then.

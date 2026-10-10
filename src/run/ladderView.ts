@@ -2,11 +2,12 @@
 // what the run's home screen shows out. Four rungs, bottom to top; the league
 // in play is open (races run, you against the nemesis, how you go up); won
 // leagues keep one line of memory; leagues ahead wait.
-import { constructorStandings, poolFor, seasonState, type SeasonFacts } from '../season/season';
+import { constructorStandings, seasonState, type SeasonFacts } from '../season/season';
 import { teamsOf } from '../season/ui/teams';
 import type { TeamLike } from '../icons/GameIcon';
 import { LEAGUE_LADDER, runState, runnerUp, seasonFactsFor, type RunFacts, type RunPhase } from './run';
 import { UNLOCKS, type MetaFacts, type UnlockId } from './meta';
+import { nemesisTeam } from '../season/nemesis';
 
 export interface Standing { team: TeamLike & { id: string }; place: number; points: number }
 
@@ -45,8 +46,8 @@ function rungFor(run: RunFacts, i: number, status: RungView['status']): RungView
   const facts = seasonFactsFor(run, i);
   const youId = facts.setup.humans[0]?.teamId ?? '';
   const you = standingOf(facts, youId);
-  const nemesisId = poolFor(facts).teams.find(t => t.nemesis)?.id;
-  // No nemesis in the first league: the team nearest you (the leader, or second if you lead).
+  // The nemesis: the carried-up runner-up, or the Juniors' voice-only rival (#635).
+  const nemesisId = nemesisTeam(facts)?.id;
   const table = constructorStandings(facts);
   const nearestId = table.find(s => s.teamId !== youId)?.teamId;
   const rivalId = nemesisId ?? nearestId;

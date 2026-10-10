@@ -440,3 +440,11 @@ button.rt-g:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset:
 .rl-unl { flex: none; width: 132px; border: 1px dashed var(--pw-border-strong); padding: 6px 8px; font-size: 12px; font-weight: 700; color: var(--pw-text-3); display: flex; flex-direction: column; gap: 2px; }
 .rl-unl small { font-weight: 400; font-style: italic; }
 .rl-unl.got { border-style: solid; border-color: var(--rarity-gold); color: var(--pw-text-1); }
+
+/* The nemesis talks (#635): one line per Paddock visit */
+.nem-line { display: flex; gap: 12px; align-items: flex-start; padding: 10px 12px; border: 1px solid var(--pw-border-strong); border-left: 3px solid var(--signal-red); }
+.nem-says { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.nem-say { display: flex; flex-direction: column; gap: 2px; }
+.nem-text { margin: 0; font-size: 17px; font-style: italic; color: var(--pw-text-1); line-height: 1.35; }
+.nem-en { margin: 0; font-size: 12px; color: var(--pw-text-2); }
+.nem-who { font-family: var(--look-data, monospace); font-size: 11px; color: var(--pw-text-2); }

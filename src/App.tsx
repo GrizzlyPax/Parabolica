@@ -14,6 +14,7 @@ import SeasonScreen, { seasonScreenFor } from './season/ui/SeasonScreen';
 import { leagueForRound, seasonAvatars, seasonState, settleRound } from './season/season';
 import { loadCurrentLeague as loadSeason, saveCurrentLeague as saveSeason } from './run/current';
 import { teamsOf } from './season/ui/teams';
+import { nemesisTeam } from './season/nemesis';
 import { teamThemeVars, type TeamLike } from './icons/GameIcon';
 import { seasonName } from './season/setup';
 import { applyFavours } from './cards/apply';
@@ -173,7 +174,7 @@ function App() {
   // the same race to its finish. The round is recorded by settleRound (the
   // headless run of the same seeded race), so watching changes nothing.
   const onSeasonRace = route.name === 'season' && route.screen === 'race';
-  const [seasonRace, setSeasonRace] = useState<{ round: number; sealed: Set<number>; mine: number[]; you: TeamLike; avatars: ReturnType<typeof seasonAvatars>; quali: boolean } | null>(null);
+  const [seasonRace, setSeasonRace] = useState<{ round: number; sealed: Set<number>; mine: number[]; nemesis: number[]; you: TeamLike; avatars: ReturnType<typeof seasonAvatars>; quali: boolean } | null>(null);
   const settlingSeason = useRef(false);
   useEffect(() => {
     if (!onSeasonRace) {
@@ -206,6 +207,7 @@ function App() {
       round: state.round,
       sealed: new Set(leagueNow.roster.filter(d => !humans.has(d.kingdomId ?? '')).map(d => d.id)),
       mine: leagueNow.roster.filter(d => humans.has(d.kingdomId ?? '')).map(d => d.id),
+      nemesis: (() => { const n = nemesisTeam(facts)?.id; return n ? leagueNow.roster.filter(d => d.kingdomId === n).map(d => d.id) : []; })(),
       you: teamsOf(facts)[facts.setup.humans[0].teamId],
       avatars: seasonAvatars(facts),
       quali: true,
@@ -347,6 +349,7 @@ function App() {
           raceEvents={raceEvents}
           sealedDriverIds={seasonRace.sealed}
           myDriverIds={seasonRace.mine}
+          nemesisDriverIds={seasonRace.nemesis}
           avatars={seasonRace.avatars}
           onQualifyingDone={seasonRace.quali ? endSeasonQuali : undefined}
           onExit={() => leaveSeasonRace(raceState.raceFinished)}

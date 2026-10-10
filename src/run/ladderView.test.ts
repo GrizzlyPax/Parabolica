@@ -43,8 +43,8 @@ describe('league ladder view (#628)', () => {
     expect(v.rungs.map(r => [r.name, r.status])).toEqual([['Juniors', 'current'], ['Regional', 'ahead'], ['National', 'ahead'], ['Top flight', 'ahead']]);
     expect(v.rungs[0].races).toEqual({ done: 0, total: RACES });
     expect(v.rungs[0].you?.team.name).toBe('Kitty Hut');
-    // No nemesis in the first league: the rival is the nearest other team.
-    expect(v.rungs[0].rival?.nemesis).toBe(false);
+    // The Juniors' rival is the voice-only nemesis (#635).
+    expect(v.rungs[0].rival?.nemesis).toBe(true);
     expect(v.unlocks).toHaveLength(5);
     expect(v.unlocks.filter(u => u.got).map(u => u.id)).toEqual(['next-difficulty']);
   });

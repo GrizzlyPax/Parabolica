@@ -17,3 +17,6 @@
   flex-shrink: 0;
   line-height: 1;
 }
+
+/* The NEMESIS tag (#635): next to the rival team's name, Team Rocket energy. */
+.nem-tag { display: inline-block; margin-left: 6px; padding: 1px 4px; font-family: var(--look-data, monospace); font-size: 9px; font-weight: 400; letter-spacing: 0.1em; line-height: 1.3; vertical-align: middle; color: var(--signal-red); border: 1px solid var(--signal-red); white-space: nowrap; }
