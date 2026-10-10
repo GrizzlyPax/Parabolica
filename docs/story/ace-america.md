@@ -22,6 +22,8 @@ How we got here: [five-worlds](five-worlds.md); World B, the National Pastime, w
 - **Polite, not ominous:** "We've handled war, famine and the economy. Please, just race. We love it."
 - **Earth is a spectacle** for the galaxy (Dungeon Crawler Carl).
 - **Mostly our background lore;** players get it in pieces over time.
+- **In the slice (Pax, Oct 10): very rarely,** through gifts in Parcels and the Interval broadcast. **Exposure grows as you climb:** at Locals the Watchers aren't really watching.
+- **The Interval feels otherworldly:** a global radio message, noticeably not American fans, a tiny bit discordant with the rest of the game. Barely.
 - **Later, maybe:** factions. **Purists** keep Earth vintage; **Modernisers** want to update it ("we'll just give you penicillin"). That explains the anachronisms, like modern open-wheel cars in 1928.
 
 **The Accord** (draft): the Watchers' terms, signed by every nation in 1909.
@@ -47,21 +49,14 @@ How we got here: [five-worlds](five-worlds.md); World B, the National Pastime, w
 ## The game: Ace America (the slice)
 **You.**
 - **You're a team principal,** hired to run a local team.
-- **A new run:**
-  1. Name yourself.
-  2. Pick one of **about five starting garages**, rolled one per region, each scrapping for some city's title.
+- **A new run** (Pax, Oct 10, #692):
+  1. Pick your start: **any of the 52** (50 states, DC, Puerto Rico) **on a map**.
+  2. **Name your garage.**
   3. Pick your **colour**.
-- **A garage is just a name.** Everyone starts weak; it's a roguelite.
+- **Other garages are generic:** a mix of family names and places ("Kowalski & Sons", "Riverside Motor Works", "The Corner Pump").
+- **Everyone starts weak;** it's a roguelite.
 
-**Six regions** (plain names):
-- the West Coast
-- the Southwest (Texas, Oklahoma)
-- the Plains
-- the Midwest
-- the Southeast
-- the Northeast
-
-The Mountain states are still to be placed (#692). Cities are flavour, drawn from a big pool of real American towns.
+**No regions** (Pax, Oct 10): you pick any state on a map. Regions were only a way to roll garages, and they don't matter. Cities are flavour, drawn from a big pool of real American towns.
 
 **Three steps: Locals → State → Nationals.** Always plain "Nationals", never "the Nationals".
 
@@ -72,6 +67,7 @@ The Mountain states are still to be placed (#692). Cities are flavour, drawn fro
 | **Nationals** | every state's Ace | **Ace America** | Americana |
 
 - **Win the table, win the title.** No boss race.
+- **Media and venues grow with the step** (Pax, Oct 10): Locals race on dirt with the fairground PA; State has proper circuits and the state station; Nationals have grandstands and the national network.
 - **Difficulty is geography:** the State field follows population. Each garage card shows **the honest number**, e.g. *"Ace Vermont · 5 cities compete"*. Roughly **5 / 10 / 20 at State = easy / medium / hard.** Big cities field more garages too.
 - **Nationals:** all 50 states start, **100 cars on track.** In race one, anyone who doesn't finish is out. Then come Hunger Games-style cuts, the bottom finishers out each time, down to the **top 10 states (20 cars)** for a normal closing series. The winner is **Ace America**, and the slice ends there.
 - **Win your state once, never again** (Miss America). A constant rotation and no dynasties, which is also why every run starts fresh.
@@ -134,17 +130,16 @@ The Mountain states are still to be placed (#692). Cities are flavour, drawn fro
   - Globals on the Parabolica, then Galacticals
   - the parked Horror deck ("what the Watchers watched before us")
 
-## Still open (#692)
-Steers are on [Locking Ace America](https://claude.ai/artifact/FxLCDtFAJimD6Z5pzHdP4p).
-- **Who calls the races?** One national voice; voices that grow as you climb (Radio's pick); or mostly the newspaper. Then #700 writes the caller and the Interval.
-- **How the Watchers show up in the slice:** not at all; rarely, through a gift Parcel and an Interval after a title (Radio's pick); or at every step.
-- **The Mountain states' region:** all West; all Plains; split, with CO, WY and MT to the Plains and NV, UT and ID to the West (Radio's pick); or a seventh region.
-- **Garage names:** family names, places, or a mix (Radio's pick).
-- **Later:** bloc names and flags, Globals and Galacticals, factions, a quick trademark check on "Ace America".
+## Decided for the bible (#692, Pax, Oct 10)
+- **Who calls the races:** voices that grow as you climb. The media matches the level, and so do the venues.
+- **The Watchers in the slice:** very rarely, through gifts and the Interval. The broadcast feels otherworldly and slightly discordant. It shows up more as you climb; at Locals they aren't watching.
+- **The Mountain states:** moot. There are **no regions**; you pick any of the 52 on a map.
+- **Garages:** you name yours; the others are a generic mix of families and places.
+- **Still later:** bloc names and flags, Globals and Galacticals, factions, and a quick trademark check on "Ace America".
 
 ## What this changes (v0.8, as Pit scopes it)
 See [V08_PLAN](../V08_PLAN.md).
-- **The run:** four leagues become **three steps** (Locals → State → Nationals). A new start (name, garage, colour) replaces the draft-based start. Nationals become a 50-state elimination.
+- **The run:** four leagues become **three steps** (Locals → State → Nationals). A new start (a state on a map, your garage's name, a colour) replaces the draft-based start. Nationals become a 50-state elimination.
 - **Teams:** the **28 base-deck teams are scrapped** (Pax: "I don't care about any of them"). Teams are local garages whose identity is their title.
 - **Nemesis and boss races are parked** (the nemesis voice, #624/#635, waits for multi-season play).
 - **Ranks:** "Ace" is the title word, so the driver rank Ace gets renamed.
