@@ -11,29 +11,7 @@ import { Driver } from '../../RaceEngine';
 import { EffectChips } from './EffectChips';
 import { CANON_VARIABLES } from '../../simlab/types';
 import { GameIcon } from '../../icons/GameIcon';
-
-// Suffixes to ignore when extracting surname
-const NAME_SUFFIXES = new Set(['JR', 'JR.', 'SR', 'SR.', 'II', 'III', 'IV', 'V']);
-
-// Helper to get 3-letter driver code from surname (like F1: VER, HAM, NOR)
-function getDriverCode(driver: Driver): string {
-  // Always extract from full name (driver.name is "FirstName LastName")
-  const parts = driver.name.split(' ').filter(p => p.length > 0);
-  const filteredParts = parts.filter(p => !NAME_SUFFIXES.has(p.toUpperCase()));
-
-  // Get surname (last filtered part)
-  const surname = filteredParts[filteredParts.length - 1] || parts[parts.length - 1] || '';
-
-  // If surname is too short, pad from previous word
-  if (surname.length < 3 && filteredParts.length > 1) {
-    const prev = filteredParts[filteredParts.length - 2];
-    const combined = prev.slice(-1) + surname;
-    return combined.slice(0, 3).toUpperCase().replace(/[^A-Z]/g, '');
-  }
-
-  // Clean and return first 3 chars of surname
-  return surname.slice(0, 3).toUpperCase().replace(/[^A-Z]/g, '');
-}
+import { driverCode } from './driverCode';
 
 // Position column (P)
 export const COLUMN_POSITION: ColumnConfig = {
@@ -88,7 +66,7 @@ export const COLUMN_DRIVER_CODE: ColumnConfig = {
   align: 'left',
   render: (driver: Driver, ctx: RowContext) => (
     <span className={`driver-code ${ctx.isFocused ? 'focused' : ''}`}>
-      {getDriverCode(driver)}
+      {driverCode(driver.name)}
     </span>
   ),
 };

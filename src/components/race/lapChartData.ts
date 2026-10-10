@@ -3,6 +3,7 @@
 // so both render the identical chart from the identical data shape.
 import type { Driver } from '../../RaceEngine';
 import type { LapChartSeries } from './LapChart';
+import { driverCode } from './driverCode';
 
 export interface LapSample { lap: number; order: number[]; sc: boolean }
 
@@ -10,14 +11,6 @@ export interface LapChartData {
   series: LapChartSeries[];
   laps: number[];
   scSampleIdx: Set<number>;
-}
-
-const NAME_SUFFIXES = new Set(['JR', 'JR.', 'SR', 'SR.', 'II', 'III', 'IV', 'V']);
-
-function surnameCode(name: string): string {
-  const parts = name.split(' ').filter(p => p.length > 0);
-  const filtered = parts.filter(p => !NAME_SUFFIXES.has(p.toUpperCase()));
-  return (filtered[filtered.length - 1] || parts[parts.length - 1] || '').slice(0, 3).toUpperCase();
 }
 
 export function buildLapChartData(samples: LapSample[], drivers: Driver[]): LapChartData {
@@ -41,7 +34,7 @@ export function buildLapChartData(samples: LapSample[], drivers: Driver[]): LapC
       ink: d.ink,
       number: d.number,
       dashed: d.driverSlot === 2,
-      code: surnameCode(d.name),
+      code: driverCode(d.name),
       emoji: d.emoji,
       positions,
       pitLaps: (d.pitStops ?? []).map(p => p.lap),
