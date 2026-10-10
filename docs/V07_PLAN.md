@@ -36,6 +36,9 @@ Already live from v0.7's first two waves (engine v0.6.3): single-player Season, 
 
 - **Oct 10:** Pit merged #633 → #637 (rebased #637 onto main after the squash) once 388 tests + tsc passed; preview v91. A league is won by finishing **P1 in the Constructors'**; league 0 is exactly today's Season; rival shifts apply at race build (never to your team; stars floored at 0.5★), so the draft board shows true rolls.
 
+- **Oct 10, levels and XP (Pax, via Steward, [Levels and XP Report](https://claude.ai/artifact/WokZK6U7XXFRR9sAW7uLK4)):** **stat levels 1–20** (5 grade points a level; past 20 shows purple, replacing S; red 1–6 · yellow 7–11 · green 12–20 · purple 21+; display only) · card text in levels: Bronze +3 · Silver +6 · Gold +6/+6 · Iridium +9 ×3 · curse −6 · **one vocabulary: stats have levels, drivers have ranks (Rookie, Pro, Ace, Legend), leagues are tiers** · rival ranks are labels by tier (the nemesis one rank ahead) · **XP = championship points only** (Pro 100 · Ace 220 · Legend 400); the number two is the sidekick by design · **a rank-up deals 3, pick 1:** a stat jump, a trait from your main archetype (Brawler, Glass Cannon, Qualifier, Tyre Saver) or a wild card, sized Pro = Silver, Ace = Gold, Legend = Iridium or a signature · builds: #623 (Hub), #646 (Apex), #647 (packs lean, after #565).
+- **Apex's stack built (Oct 10):** #642 timed effects · #644 cards + packs (3×, gear mileage, the pack offer, curses) · #645 the lab on the Season pool (versions 0.7.0 → 0.7.1); waiting on Pit's merge. Apex's calls for Pax: genesis traits stay 1×, only dealt cards are 3× (gear 6×); curses −30 points (= −6 levels); carried gear keeps its mileage; the run honours League Setup's race count (default 6).
+
 **📻 Radio — milestone 2:** ✅ the nemesis's voice (#624) · **🛞 Hub** builds it (#635) after #626
 
 **🏛️ Steward — milestone 3:** re-probe a full run on the build (#629)
