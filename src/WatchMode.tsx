@@ -1,8 +1,7 @@
 import { fantasyStandings, fantasyHex, type FantasyConfig } from './fantasy/types';
 import { getDeckTrackById } from './data/deckTracks';
-import { STAT_LABELS } from './cards/deck';
 import { isNeutralWeather } from './data/weather';
-import { favourText } from './cards/favourText';
+import { favourText, favourParts } from './cards/favourText';
 import RaceEngine, { Driver, RaceConfig, RaceState, TrackInfo, RaceEvent, EffectStackEntry } from './RaceEngine';
 import { useMemo, useRef, useEffect, useState } from 'react';
 import {
@@ -1017,8 +1016,8 @@ function WatchMode({
   // This race's priority stats (#361): the track's favours plus the weather's.
   const headerPriority = useMemo(() => {
     const deck = trackInfo?.id ? getDeckTrackById(trackInfo.id) : undefined;
-    const stats = [...(deck?.favours ?? []), ...(engine.getWeather()?.favours ?? [])].map(f => STAT_LABELS[f.stat]);
-    return [...new Set(stats)];
+    // In levels (#666): "+2 Speed · +3 Power" (track and weather summed per stat).
+    return favourParts([...(deck?.favours ?? []), ...(engine.getWeather()?.favours ?? [])]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [engine, trackInfo]);
   // The race debrief (#581): read once the flag drops, from the race record.
