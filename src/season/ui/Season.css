@@ -448,3 +448,29 @@ button.rt-g:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset:
 .nem-text { margin: 0; font-size: 17px; font-style: italic; color: var(--pw-text-1); line-height: 1.35; }
 .nem-en { margin: 0; font-size: 12px; color: var(--pw-text-2); }
 .nem-who { font-family: var(--look-data, monospace); font-size: 11px; color: var(--pw-text-2); }
+
+/* The rookie pick (#661): 6 rookies, pick 2, a car setup, Start */
+.rp { display: flex; flex-direction: column; gap: 4px; }
+.rp-count { margin-left: auto; font-family: var(--look-data, monospace); font-size: 11px; color: var(--pw-text-2); }
+.rp-rookies { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(150px, calc(50% - 4px)), 1fr)); gap: 8px; }
+.rp-rookie { display: flex; flex-direction: column; gap: 6px; text-align: left; padding: 10px; border: 1px solid var(--pw-border); background: transparent; color: var(--pw-text-1); font: inherit; cursor: pointer; min-width: 0; }
+.rp-rookie.on { border-color: var(--team-primary); box-shadow: inset 0 0 0 1px var(--team-primary); background: color-mix(in srgb, var(--team-primary) 12%, transparent); }
+.rp-rookie:disabled { opacity: 0.45; cursor: default; }
+.rp-rookie:focus-visible, .rp-setup:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset: 2px; }
+.rp-arch { font-family: var(--look-data, monospace); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--pw-text-2); }
+.rp-name { font-size: 17px; line-height: 1.1; }
+.rp-stats { display: flex; flex-direction: column; gap: 3px; font-size: 13px; }
+.rp-stat { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+.rp-others { color: var(--pw-text-2); font-family: var(--look-data, monospace); font-size: 12px; }
+.rp-lv { display: inline-flex; min-width: 1.9em; justify-content: center; font-family: var(--look-data, monospace); font-size: 13px; padding: 0 4px; border: 1px solid currentColor; font-variant-numeric: tabular-nums; }
+.rp-flav { font-size: 13px; font-style: italic; color: var(--pw-text-2); }
+.rp-setups { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.rp-setup { display: flex; flex-direction: column; gap: 4px; text-align: left; padding: 8px; min-width: 0; border: 1px solid var(--pw-border); background: transparent; color: var(--pw-text-1); font: inherit; font-size: 13px; cursor: pointer; }
+.rp-setup.on { border-color: var(--team-primary); box-shadow: inset 0 0 0 1px var(--team-primary); }
+.rp-dock { gap: 8px; }
+.rp-dock .rs-btn-ghost { white-space: nowrap; }
+@media (max-width: 420px) { .rp-rookie { padding: 8px; } .rp-name { font-size: 15px; } .rp-stats { font-size: 12px; } .rp-setup { font-size: 12px; } }
+.rp-lv.tone-s { color: var(--signal-purple); }
+.rp-lv.tone-a { color: var(--signal-green); }
+.rp-lv.tone-c { color: var(--signal-yellow); }
+.rp-lv.tone-d { color: var(--signal-red); }
