@@ -23,13 +23,14 @@ import { driverPointsInRace } from '../fantasy/types';
 import { Ruleset, defaultRuleset } from '../rules/ruleset';
 import { CANON_VARIABLES, type SimVariables } from '../simlab/types';
 import { version as engineVersion } from '../../package.json';
-import { generateSeasonPool, seasonRoster, RACE_LINEUP, type SeasonPool, type SeasonCards, type TeamIdentityOverride, type Lineup } from './genesis';
+import { generateSeasonPool, seasonRoster, RACE_LINEUP, type SeasonPool, type SeasonCards, type TeamIdentityOverride, type Lineup, type CarriedTeam, type LeagueContext } from './genesis';
 import { draftOrder, draftState, draftedRosters, type DraftPick } from './draft';
 import { portraitFor, vehicleFor } from '../generators/avatars';
 import type { IconId } from '../icons/registry';
 import { packOpened, seasonCardsFor, type CardFact } from './pack';
 
-export const DEFAULT_CALENDAR_LENGTH = 10;
+/** 6 since the run (#597, v0.7): a league is 4 × 6; League Setup can still change it. */
+export const DEFAULT_CALENDAR_LENGTH = 6;
 
 export interface SeasonHuman {
   teamId: string;
@@ -47,6 +48,10 @@ export interface SeasonSetup {
   /** Track ids in running order; one round each. */
   calendar: string[];
   ruleset?: Ruleset;
+  /** A run's league (#597): which rung, and the team carried up into it.
+   * Derived by src/run/run.ts, never saved; absent = a stand-alone season. */
+  league?: LeagueContext;
+  carry?: CarriedTeam;
 }
 
 export interface SeasonLineup {
@@ -95,7 +100,8 @@ export function newSeason(setup: SeasonSetup): SeasonFacts {
 }
 
 export function poolFor(facts: SeasonFacts): SeasonPool {
-  return generateSeasonPool(facts.setup.seed, facts.setup.teamCount, facts.setup.ruleset ?? defaultRuleset());
+  const { seed, teamCount, ruleset, carry, league } = facts.setup;
+  return generateSeasonPool(seed, teamCount, ruleset ?? defaultRuleset(), { carry, league });
 }
 
 /** Each drafted driver's portrait and their team's car vehicle (#489), for
@@ -103,8 +109,14 @@ export function poolFor(facts: SeasonFacts): SeasonPool {
 export function seasonAvatars(facts: SeasonFacts): Map<number, { portrait: IconId; vehicle: IconId }> {
   const pool = poolFor(facts);
   const out = new Map<number, { portrait: IconId; vehicle: IconId }>();
+  const carId = (id: string | null) => pool.cars.find(c => c.id === id);
   for (const r of Object.values(draftState(pool, facts.draftPicks).rosters)) {
-    for (const id of r.driverIds) out.set(id, { portrait: portraitFor(pool.seed, id), vehicle: vehicleFor(pool.seed, r.carId ?? '') });
+    const car = carId(r.carId);
+    for (const id of r.driverIds) {
+      // A driver carried up a run keeps the face they were born with (#597).
+      const d = pool.drivers.find(x => x.id === id);
+      out.set(id, { portrait: portraitFor(d?.avatarSeed ?? pool.seed, id), vehicle: vehicleFor(car?.avatarSeed ?? pool.seed, r.carId ?? '') });
+    }
   }
   return out;
 }

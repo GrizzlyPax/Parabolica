@@ -5,7 +5,8 @@ import { useMemo, useState } from 'react';
 import { GameIcon, TeamLogo, teamThemeVars } from '../../icons/GameIcon';
 import { getTrackById } from '../../generators/tracks';
 import { MAX_TEAMS, MIN_TEAMS, generateSeasonPool } from '../genesis';
-import { loadSeason, newSeason, saveSeason, seasonState, type SeasonFacts } from '../season';
+import { seasonState, type SeasonFacts } from '../season';
+import { loadCurrentLeague as loadSeason, startRun } from '../../run/current';
 import { MAX_RACES, MIN_RACES, clampRaces, clampTeams, defaultSetup, humansFor, keepPicks, nextTrack, resolvePicks, tapTeam, type TeamPick, randomSeasonSeed, seasonCalendar, seasonName } from '../setup';
 import '../../RunSetup.css';
 import './Season.css';
@@ -68,9 +69,8 @@ export default function LeagueSetup({ onBack, onStarted }: Props) {
 
   const start = () => {
     if (saved && !confirming) { setConfirming(true); return; }
-    const facts = newSeason({ seed, teamCount, humans, calendar });
-    saveSeason(facts);
-    onStarted(facts);
+    // A new run (#597): this is its first league; the others derive from it.
+    onStarted(startRun({ seed, teamCount, humans, calendar }));
   };
 
   const savedState = saved && seasonState(saved);
