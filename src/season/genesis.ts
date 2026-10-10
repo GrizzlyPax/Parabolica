@@ -20,7 +20,7 @@ import { generateRackCar, generateTeamStats, type CarStats, type TeamStats } fro
 import { rollRacingNumbers } from '../generators/racingNumbers';
 import { teamIdentitiesForSeed } from '../generators/teamIdentity';
 import { BASE_DECK_TEAMS } from '../data/deckTeams';
-import { MOTORSPORT_DECK, cardsBy, pickCard, applyCards, type Card, type CardTarget } from '../cards';
+import { MOTORSPORT_DECK, cardsBy, pickCard, applyCards, applyPercents, DRIVER_STATS, CAR_STATS, TEAM_STATS, type Card, type CardTarget, type StatKey } from '../cards';
 import { Ruleset, defaultRuleset } from '../rules/ruleset';
 import type { RosterDriver } from '../RaceEngine';
 
@@ -66,7 +66,12 @@ export interface CompetitorTeam {
   /** Tyre management + pit crew belong to the team (Pax, Oct 8). */
   teamStats: TeamStats;
   traits: Card[];
+  /** The nemesis (#626): last league's runner-up, promoted with you. */
+  nemesis?: boolean;
 }
+
+/** A team's look, carried up without its people: the nemesis (#626). */
+export type TeamIdentity = Pick<CompetitorTeam, 'name' | 'color' | 'ink' | 'emoji' | 'iconId' | 'deckTeamId'>;
 
 export interface SeasonPool {
   seed: number;
@@ -96,6 +101,9 @@ export interface CarriedTeam {
   car: RackCar;
   team: CompetitorTeam;
   cards: CarriedCards;
+  /** The league's runner-up comes up too, as the nemesis (#626): the look
+   * only; its drivers, car and stats are rolled fresh at the new level. */
+  nemesis?: TeamIdentity;
 }
 
 /** Which league of a run this season is (#597). Rival levels (#626) and the
@@ -134,10 +142,10 @@ function traitsFor(target: CardTarget, seed: number, id: string | number, rs: Ru
 /** CPU identities: a seeded, no-repeat draw from the World Deck teams. The
  * procedural generator only fills in if the deck runs short. Humans overwrite
  * name and colour later, as facts. */
-function teamIdentities(seed: number, count: number): Omit<CompetitorTeam, 'id' | 'teamStats' | 'traits'>[] {
+function teamIdentities(seed: number, count: number, exclude: Set<string> = new Set()): TeamIdentity[] {
   const rng = mulberry32(deriveSeed(seed, 'season', 'teams'));
-  type Identity = Omit<CompetitorTeam, 'id' | 'teamStats' | 'traits'>;
-  const picked: Identity[] = shuffle(BASE_DECK_TEAMS, rng).slice(0, count).map(t => ({
+  type Identity = TeamIdentity;
+  const picked: Identity[] = shuffle(BASE_DECK_TEAMS, rng).filter(t => !exclude.has(t.id)).slice(0, count).map(t => ({
     name: t.name, color: t.color, ink: t.ink, emoji: t.emoji, iconId: t.iconId, deckTeamId: t.id,
   }));
   if (picked.length < count) {
@@ -186,9 +194,14 @@ export function generateSeasonPool(seed: number, teamCount: number = DEFAULT_TEA
 
   const statsRng = mulberry32(deriveSeed(seed, 'season', 'team-stats'));
   const teams: CompetitorTeam[] = carry ? [carry.team] : [];
-  teamIdentities(seed, fresh).forEach((identity, i) => {
+  // The nemesis (#626) wears last league's runner-up's look on the first fresh
+  // slot; the deck never deals that look twice. Its stats are the level's.
+  const nemesis = carry?.nemesis;
+  const exclude = new Set<string>([carry?.team.deckTeamId, nemesis?.deckTeamId].filter((x): x is string => !!x));
+  teamIdentities(seed, fresh, exclude).forEach((identity, i) => {
     const id = `team-${base + i}`;
-    teams.push({ id, ...identity, teamStats: generateTeamStats(statsRng), traits: traitsFor('team', seed, id, rs) });
+    const look = i === 0 && nemesis ? nemesis : identity;
+    teams.push({ id, ...look, teamStats: generateTeamStats(statsRng), traits: traitsFor('team', seed, id, rs), ...(i === 0 && nemesis ? { nemesis: true } : {}) });
   });
 
   return { seed, teamCount, drivers, cars, teams };
@@ -230,7 +243,25 @@ export interface TeamIdentityOverride {
 export interface SeasonRosterOptions {
   cards?: SeasonCards;
   identities?: Record<string, TeamIdentityOverride>;
+  /** Rival levels (#626): grade points added to EVERY stat of a team's
+   * drivers, car and team at race build, after cards. Keyed by team id;
+   * teams not named (the player) race their rolled stats. */
+  shifts?: Record<string, number>;
 }
+
+const ALL_STATS: StatKey[] = [...DRIVER_STATS, ...CAR_STATS, ...TEAM_STATS];
+/** A star stat never drops below this, however deep the Juniors sit. */
+export const STAR_FLOOR = 0.5;
+
+/** Every stat of a block up or down by `points` grade (the card math), stars floored. */
+export function shiftStats<T extends { driver?: DriverStatsLike; car?: CarStats; team?: TeamStats }>(block: T, points: number): T {
+  if (!points) return block;
+  const pcts = Object.fromEntries(ALL_STATS.map(k => [k, points])) as Partial<Record<StatKey, number>>;
+  const out = applyPercents(block, pcts) as T;
+  const floor = <S extends object | undefined>(s: S): S => s ? (Object.fromEntries(Object.entries(s).map(([k, v]) => [k, Math.max(STAR_FLOOR, v as number)])) as S) : s;
+  return { ...out, car: floor(out.car), team: floor(out.team) };
+}
+type DriverStatsLike = RosterDriver['stats'];
 
 /** Everything that applies to one racing driver this round, in a fixed order:
  * driver traits, car traits, team traits, then dealt cards. */
@@ -267,7 +298,7 @@ export function seasonRoster(pool: SeasonPool, rosters: TeamRoster[], lineups: L
       const driver = pool.drivers.find(d => d.id === driverId);
       if (!driver) throw new Error(`seasonRoster: unknown driver ${driverId}`);
       const cards = cardsForDriver(pool, team.id, driverId, car.id, opts.cards);
-      const adjusted = applyCards({ driver: driver.stats, car: car.stats, team: team.teamStats }, cards);
+      const adjusted = shiftStats(applyCards({ driver: driver.stats, car: car.stats, team: team.teamStats }, cards), opts.shifts?.[team.id] ?? 0);
       out.push({
         id: driver.id,
         firstName: driver.firstName,

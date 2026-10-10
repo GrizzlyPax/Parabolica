@@ -17,7 +17,7 @@
 import { deriveSeed } from '../engine/rng';
 import type { Ruleset } from '../rules/ruleset';
 import type { RaceDigest } from '../league/types';
-import { DEFAULT_TEAMS, type CarriedTeam, type LeagueContext } from '../season/genesis';
+import { DEFAULT_TEAMS, type CarriedTeam, type LeagueContext, type TeamIdentity } from '../season/genesis';
 import { draftState, quickDraft } from '../season/draft';
 import { carriedCards, teamCardState } from '../season/pack';
 import { constructorStandings, poolFor, seasonState, settleRound, type SeasonFacts, type SeasonHuman, type SeasonSetup, type SeasonStore } from '../season/season';
@@ -26,12 +26,18 @@ import { seasonCalendar } from '../season/setup';
 export const LEAGUES_PER_RUN = 4;
 export const RACES_PER_LEAGUE = 6;
 
-/** The ladder, bottom to top. `level` is the rivals' level (#626 sets what it means). */
-export const LEAGUE_LADDER: readonly { name: string; level: number }[] = [
-  { name: 'Juniors', level: 1 },
-  { name: 'Regional', level: 2 },
-  { name: 'National', level: 3 },
-  { name: 'Top flight', level: 4 },
+/**
+ * The ladder, bottom to top, with the rival levels (#626; Steward's fit,
+ * Pax Oct 10, [Rival Levels Report]): `field` is the grade points added to
+ * every stat of every rival at race build; the nemesis (last league's
+ * runner-up, promoted with you) gets `nemesis` on top. One table, so Steward
+ * can re-fit it after #592 / #593 / #594. A normal run is won about 1 in 3.
+ */
+export const LEAGUE_LADDER: readonly { name: string; level: number; field: number; nemesis: number }[] = [
+  { name: 'Juniors', level: 1, field: -25, nemesis: 12 },
+  { name: 'Regional', level: 2, field: -5, nemesis: 12 },
+  { name: 'National', level: 3, field: 10, nemesis: 14 },
+  { name: 'Top flight', level: 4, field: 22, nemesis: 12 },
 ];
 
 /** How a run starts: today's draft, until the rookie pick (#594) lands. */
@@ -104,7 +110,7 @@ export function leagueSeed(run: RunFacts, index: number): number {
 
 export function leagueContext(index: number, races: number): LeagueContext {
   const rung = LEAGUE_LADDER[Math.min(index, LEAGUE_LADDER.length - 1)];
-  return { index, name: rung.name, fieldShift: 0, nemesisShift: 0, bossRound: races - 1 };
+  return { index, name: rung.name, fieldShift: rung.field, nemesisShift: rung.nemesis, bossRound: races - 1 };
 }
 
 // Derived setups are pure in (run, index); memoised per run object since the
@@ -188,7 +194,18 @@ export function carriedTeam(prev: SeasonFacts): CarriedTeam {
   const car = pool.cars.find(c => c.id === roster.carId);
   const team = pool.teams.find(t => t.id === teamId);
   if (!car || !team) throw new Error(`run: ${teamId} has no car or team to carry`);
-  return { teamId, drivers, car: { ...strip(car), avatarSeed: car.avatarSeed ?? pool.seed }, team, cards: carriedCards(teamCardState(prev, teamId)) };
+  return { teamId, drivers, car: { ...strip(car), avatarSeed: car.avatarSeed ?? pool.seed }, team, cards: carriedCards(teamCardState(prev, teamId)), nemesis: runnerUp(prev) };
+}
+
+/** The nemesis for the league above (#626): the league's runner-up (P2 in
+ * the Constructors'), as a look only. Undefined before the league is over. */
+export function runnerUp(prev: SeasonFacts): TeamIdentity | undefined {
+  if (seasonState(prev).phase !== 'finished') return undefined;
+  const second = constructorStandings(prev)[1];
+  const t = second && poolFor(prev).teams.find(x => x.id === second.teamId);
+  if (!t) return undefined;
+  const { name, color, ink, emoji, iconId, deckTeamId } = t;
+  return { name, color, ink, emoji, iconId, deckTeamId };
 }
 
 /**

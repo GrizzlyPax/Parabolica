@@ -9,7 +9,10 @@ import {
 import { emptyMeta, recordRun, loadMeta, saveMeta, META_KEY, grant } from './meta';
 import { loadCurrentLeague, saveCurrentLeague, startRun, promoteCurrentRun, currentRunState } from './current';
 import { generateSeasonPool, LEAGUE_ID_STRIDE } from '../season/genesis';
-import { seasonState, setLineup, settleRound, poolFor, constructorStandings, type SeasonFacts, type SeasonStore } from '../season/season';
+import { seasonState, setLineup, settleRound, poolFor, constructorStandings, leagueForRound, rivalShifts, type SeasonFacts, type SeasonStore } from '../season/season';
+import { LEAGUE_LADDER, runnerUp } from './run';
+import { STAR_FLOOR, shiftStats } from '../season/genesis';
+import { applyCards } from '../cards';
 import { draftState, quickDraft, aiPick } from '../season/draft';
 import { teamCardState, carriedCards } from '../season/pack';
 import { openPack } from '../season/testHelpers';
@@ -172,6 +175,62 @@ describe('the ladder', () => {
   it('the top league won is the run won', () => {
     expect(LEAGUES_PER_RUN).toBe(4);
     expect(LEAGUE_ID_STRIDE).toBe(100);
+  });
+});
+
+describe('rival levels + the nemesis (#626)', () => {
+  it('every rival stat is shifted by the league\'s field at race build; the player is not; stars are floored', () => {
+    const run = runFor(7);
+    const league = currentLeague(run);
+    const you = run.setup.team.teamId;
+    const ctx = league.setup.league!;
+    expect(ctx.fieldShift).toBe(LEAGUE_LADDER[0].field);
+    expect(ctx.fieldShift).toBe(-25);
+    const shifts = rivalShifts(league);
+    expect(shifts[you]).toBeUndefined();
+    expect(Object.keys(shifts)).toHaveLength(TEAMS - 1);
+    expect(Object.values(shifts).every(v => v === -25)).toBe(true);
+    const pool = poolFor(league);
+    const grid = leagueForRound(league, 0).roster;
+    for (const d of grid) {
+      const raw = pool.drivers.find(x => x.id === d.id)!;
+      const car = pool.cars.find(c => c.id === draftState(pool, league.draftPicks).rosters[d.kingdomId!].carId)!;
+      const team = pool.teams.find(t => t.id === d.kingdomId)!;
+      const carded = applyCards({ driver: raw.stats, car: car.stats, team: team.teamStats }, d.cards ?? []);
+      const expected = d.kingdomId === you ? carded : shiftStats(carded, -25);
+      expect(d.stats).toEqual(expected.driver);
+      expect(d.carStats).toEqual(expected.car);
+      expect(d.teamStats).toEqual(expected.team);
+      if (d.kingdomId !== you) {
+        // −25 grade = −0.075 on a speed stat, −1★ on a star (floored)
+        expect(d.stats.baseSpeed).toBeCloseTo(carded.driver!.baseSpeed - 0.075, 10);
+        expect(d.carStats!.power).toBeCloseTo(Math.max(STAR_FLOOR, carded.car!.power - 1), 10);
+      }
+    }
+    // Quick Race and a stand-alone season have no league: nothing shifts.
+    expect(rivalShifts({ ...league, setup: { ...league.setup, league: undefined } })).toEqual({});
+  });
+
+  it('the nemesis is last league\'s runner-up, promoted with you: same look, fresh people, field + nemesis points', () => {
+    const won = wonRun();
+    const prev = currentLeague(won);
+    const second = runnerUp(prev)!;
+    expect(second.name).toBe(poolFor(prev).teams.find(t => t.id === constructorStandings(prev)[1].teamId)!.name);
+    const next = promote(won);
+    const league = currentLeague(next);
+    const pool = poolFor(league);
+    const nemesis = pool.teams.filter(t => t.nemesis);
+    expect(nemesis).toHaveLength(1);
+    expect(nemesis[0]).toMatchObject({ name: second.name, color: second.color, deckTeamId: second.deckTeamId });
+    expect(nemesis[0].id).not.toBe(won.setup.team.teamId);
+    // The look is dealt once: no other team wears it.
+    expect(pool.teams.filter(t => t.deckTeamId && t.deckTeamId === second.deckTeamId)).toHaveLength(1);
+    const shifts = rivalShifts(league);
+    expect(shifts[nemesis[0].id]).toBe(LEAGUE_LADDER[1].field + LEAGUE_LADDER[1].nemesis);
+    for (const t of pool.teams) if (!t.nemesis && t.id !== won.setup.team.teamId) expect(shifts[t.id]).toBe(LEAGUE_LADDER[1].field);
+    // No nemesis before the league is over.
+    expect(runnerUp(seasonFactsFor(runFor(7), 0))).toBeUndefined();
+    expect(seasonFactsFor(runFor(7), 0).setup.carry).toBeUndefined();
   });
 });
 

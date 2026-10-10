@@ -129,6 +129,21 @@ export function identitiesFor(facts: SeasonFacts): Record<string, TeamIdentityOv
   return Object.fromEntries(facts.setup.humans.map(h => [h.teamId, { name: h.name, color: h.color, ink: h.ink, iconId: h.iconId }]));
 }
 
+/** Rival levels (#626): grade points on every stat of each CPU team at race
+ * build: the league's field shift, plus the nemesis's extra. The player's
+ * team is never shifted. Empty outside a run. */
+export function rivalShifts(facts: SeasonFacts): Record<string, number> {
+  const ctx = facts.setup.league;
+  if (!ctx || (!ctx.fieldShift && !ctx.nemesisShift)) return {};
+  const humans = new Set(facts.setup.humans.map(h => h.teamId));
+  const out: Record<string, number> = {};
+  for (const t of poolFor(facts).teams) {
+    if (humans.has(t.id)) continue;
+    out[t.id] = ctx.fieldShift + (t.nemesis ? ctx.nemesisShift : 0);
+  }
+  return out;
+}
+
 /** Cards dealt during the season (packs, #316), resolved for a round. Genesis
  * traits live on the pool and are added by seasonRoster. */
 export function cardsForRound(facts: SeasonFacts, round: number): SeasonCards {
@@ -260,7 +275,7 @@ export function leagueForRound(facts: SeasonFacts, round: number): LeagueState {
   const { setup } = facts;
   const pool = poolFor(facts);
   const rosters = draftedRosters(pool, facts.draftPicks);
-  const roster = seasonRoster(pool, rosters, lineupsFor(facts, round), { cards: cardsForRound(facts, round), identities: identitiesFor(facts) });
+  const roster = seasonRoster(pool, rosters, lineupsFor(facts, round), { cards: cardsForRound(facts, round), identities: identitiesFor(facts), shifts: rivalShifts(facts) });
   return {
     engineVersion,
     leagueSeed: setup.seed,
