@@ -21,7 +21,7 @@ Already live from v0.7's first two waves (engine v0.6.3): single-player Season, 
 3. ✅ Timed effects engine (#332, PR #642)
 4. ✅ Cards + packs for the run: 3×, gear mileage, the pack offer, curses (#627, PR #644; v0.7.1)
 5. ✅ The lab races the Season pool (#612, PR #645)
-6. Later: XP and level-ups from race facts, once #592 is designed
+6. ✅ Driver XP, ranks and the rank-up pick (#646, PR #651; v0.7.2) · next: packs lean to your plan (#647, after #565), the rookie pick (after #594), boss twists (after #593), Legend signatures (#653)
 
 **🏛️ Steward — milestone 1 design, in order:**
 1. Driver XP + level-ups (#592) **and** stat levels replacing letter grades (#623), one page: what a "level" means
@@ -38,6 +38,8 @@ Already live from v0.7's first two waves (engine v0.6.3): single-player Season, 
 
 - **Oct 10, levels and XP (Pax, via Steward, [Levels and XP Report](https://claude.ai/artifact/WokZK6U7XXFRR9sAW7uLK4)):** **stat levels 1–20** (5 grade points a level; past 20 shows purple, replacing S; red 1–6 · yellow 7–11 · green 12–20 · purple 21+; display only) · card text in levels: Bronze +3 · Silver +6 · Gold +6/+6 · Iridium +9 ×3 · curse −6 · **one vocabulary: stats have levels, drivers have ranks (Rookie, Pro, Ace, Legend), leagues are tiers** · rival ranks are labels by tier (the nemesis one rank ahead) · **XP = championship points only** (Pro 100 · Ace 220 · Legend 400); the number two is the sidekick by design · **a rank-up deals 3, pick 1:** a stat jump, a trait from your main archetype (Brawler, Glass Cannon, Qualifier, Tyre Saver) or a wild card, sized Pro = Silver, Ace = Gold, Legend = Iridium or a signature · builds: #623 (Hub), #646 (Apex), #647 (packs lean, after #565).
 - **Apex's stack built (Oct 10):** #642 timed effects · #644 cards + packs (3×, gear mileage, the pack offer, curses) · #645 the lab on the Season pool (versions 0.7.0 → 0.7.1); merged by Pit Oct 10 (397 tests + tsc green on main; each rebased onto main in turn; preview v92). Apex's calls for Pax: genesis traits stay 1×, only dealt cards are 3× (gear 6×); curses −30 points (= −6 levels); carried gear keeps its mileage; the run honours League Setup's race count (default 6).
+
+- **Oct 10 (Apex, #646; Pax to confirm):** a rank reached in a league's last race is taken in the next league's first Paddock · held wild cards are never dealt again · Home Hero's track is drawn on the rank-up stream · Grudge Match fires only in a run's boss race · Mentor's 25% is of the teammate's earned XP. Pit merged #651 (411 tests + tsc green; a docs-only RUN.md conflict resolved keeping both sections); Hub's ladder (#628) and nemesis voice (#635) are live; preview v93.
 
 **📻 Radio — milestone 2:** ✅ the nemesis's voice (#624) · **🛞 Hub** builds it (#635) after #626
 
