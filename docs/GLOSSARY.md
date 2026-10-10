@@ -2,7 +2,7 @@
 
 *Everything in the sim and the world, generated from the data modules by `npm run glossary` — do not edit by hand; edit the source files named in each section and re-run. Engine v0.7.2. How to add content: docs/WORLD_DECK.md.*
 
-28 teams · 6 tracks · 94 cards (36 traits · 36 gear · 22 effects) · 5 in-race effects · 12 rule cards · 6 weathers
+28 teams · 6 tracks · 94 cards (36 traits · 36 gear · 22 effects) · 5 in-race effects · 13 rule cards · 6 weathers
 
 ## Base-deck teams
 
@@ -215,6 +215,7 @@ A card adds grade points to its stats at race build (src/cards/apply.ts): bronze
 | ☀️ **Calm** `clear-skies` | race | mild | No weather favours this race. |
 | 🌬️ **Windswept** `always-raining` | season | wild | Every race favours Aggression and Grip. |
 | 🌪️ **Changeable** `wild-weather` | season | wild | Neutral skies become rare; every dry weather is as likely. |
+| 🔩 **Spec Cars** `spec-cars` | race | mild | Every car is 3 stars (power, grip, reliability) before cards. |
 | 🍲 **Trait Soup** `trait-soup` | both | wild | Most slots (driver, car, team) are born with a trait card. |
 | 🧼 **No Traits** `no-traits` | both | mild | Nobody is born with a trait card. |
 | 💥 **Demolition Derby** `demolition-derby` | both | cursed | Crashes 2.5× more likely. |

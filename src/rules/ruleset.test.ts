@@ -143,3 +143,17 @@ describe('retired rule-card ids (#579)', () => {
     expect(run.result.cards).toEqual(['no-traits']);
   });
 });
+
+describe('Spec Cars (#582)', () => {
+  it('every car is 3 stars before cards; without the card, cars are as rolled', () => {
+    const ids = TEAMS.slice(0, 6).map(t => t.id);
+    const roster = generateRosterFromTeams(ids, mulberry32(3));
+    const cars = generateCarsForKingdoms(ids, mulberry32(4));
+    const spec = buildRoster(roster, cars, 5, resolveRuleset(['spec-cars', 'no-traits'], RULE_CARDS_BY_ID));
+    for (const d of spec) expect([d.carStats?.power, d.carStats?.grip, d.carStats?.reliability]).toEqual([3, 3, 3]);
+    const plain = buildRoster(roster, cars, 5, resolveRuleset(['no-traits'], RULE_CARDS_BY_ID));
+    expect(new Set(plain.map(d => `${d.carStats?.power}${d.carStats?.grip}${d.carStats?.reliability}`)).size).toBeGreaterThan(1);
+    expect(resolveRuleset([], RULE_CARDS_BY_ID).cars).toBeUndefined();
+    expect(describeRuleset(resolveRuleset(['spec-cars'], RULE_CARDS_BY_ID))).toContain('Spec cars: every car 3★ (power, grip, reliability) before cards');
+  });
+});

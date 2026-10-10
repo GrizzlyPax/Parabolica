@@ -38,6 +38,9 @@ export interface Ruleset {
   /** A Race Control preset applied on top: knob values. simVars already
    * carry them; this is the label. */
   lab?: { name: string; knobEdits: Record<string, number> };
+  /** Spec Cars (#582): every car rolls this many stars (power, grip,
+   * reliability) before cards. Absent = cars as rolled. */
+  cars?: { spec: number };
 }
 
 /** A card's patch: the small vocabulary cards speak. All optional. */
@@ -54,6 +57,8 @@ export interface RuleCardPatch {
   simVars?: DeepPartial<SimVariables>;
   /** Multiply a numeric path by a factor (e.g. crashes.baseCrashChance × 2). */
   scale?: Array<[path: string, factor: number]>;
+  /** Every car this many stars (#582 Spec Cars). */
+  specCars?: number;
 }
 
 export type DeepPartial<T> = { [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K] };
@@ -136,6 +141,7 @@ export function applyRuleCard(rs: Ruleset, card: RuleCard): Ruleset {
   if (p.quickRaceWeather !== undefined) next.weather.quickRace = p.quickRaceWeather;
   if (p.simVars) next.simVars = deepMerge(next.simVars, p.simVars);
   if (p.scale) for (const [path, factor] of p.scale) scalePath(next.simVars, path, factor);
+  if (p.specCars !== undefined) next.cars = { spec: p.specCars };
   return next;
 }
 
@@ -250,6 +256,7 @@ export function describeRuleset(rs: Ruleset): string[] {
     lines.push(p.minStops === 0 && !p.requireCompoundChange && !p.requireAllCompounds ? 'Pit rule: none — anything goes'
       : `Pit rule: ${p.minStops} stop${p.minStops === 1 ? '' : 's'}${p.requireCompoundChange ? ', change compound' : ''}${p.requireAllCompounds ? ', all 3 compounds' : ''}`);
   }
+  if (rs.cars) lines.push(`Spec cars: every car ${rs.cars.spec}★ (power, grip, reliability) before cards`);
   if (rs.weather.quickRace !== d.weather.quickRace) lines.push(`Quick Race weather: ${rs.weather.quickRace ? 'on' : 'off'}`);
   for (const [path, a, b] of diffNumbers(rs.simVars, d.simVars)) {
     const ratio = b === 0 ? null : a / b;
