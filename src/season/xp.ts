@@ -4,8 +4,8 @@
 // moments, no catch-up: the number two is the sidekick by design). Ranks:
 // Rookie → Pro 100 → Ace 220 → Legend 400. A rank-up deals THREE cards and
 // the player picks one, in the Paddock before the next race: a STAT JUMP, a
-// TRAIT (from the archetype they hold most of once #565's tags exist; any
-// driver trait until then) or a WILD CARD. Size follows the metal ladder at
+// TRAIT (from the driver's own archetype, #660; read off the stats the
+// archetype nudges until #565's tags land) or a WILD CARD. Size follows the metal ladder at
 // the player's 3×: Pro = Silver (+6 levels to one stat), Ace = Gold (+6 to
 // two), Legend = Iridium (+9 to three). A stat LEVEL is 5 grade points
 // (#623), so +6 levels = +30 grade: exactly a Silver card at 3×.
@@ -25,7 +25,8 @@
 // are a later issue.
 
 import { mulberry32, deriveSeed, shuffle } from '../engine/rng';
-import { cardsBy, CARDS_BY_ID, DRIVER_STATS, MOTORSPORT_DECK, type Card, type DriverStatKey } from '../cards';
+import { CARDS_BY_ID, DRIVER_STATS, type Card, type DriverStatKey } from '../cards';
+import { archetypeTraits } from './rookies';
 import type { Rarity } from '../cards/rarity';
 import { driverPointsInRace } from '../fantasy/types';
 import { draftState } from './draft';
@@ -188,15 +189,16 @@ export function dealRankUp(facts: SeasonFacts, driverId: number, rank: 1 | 2 | 3
   const metal = RANKS[rank].metal!;
   const stats = shuffle(DRIVER_STATS, rng).slice(0, JUMP[rank].stats);
   const jump = rankUpCard(`jump-${rank}-${[...stats].sort().join('+')}`);
-  // Any driver trait of the metal until archetype tags land (#565 / #647).
-  const traits = cardsBy({ kind: 'trait', target: 'driver', rarity: metal }, MOTORSPORT_DECK);
+  // A trait of the metal from the driver's own archetype (#660); any, without one.
+  const pool0 = poolFor(facts);
+  const traits = archetypeTraits(pool0.drivers.find(d => d.id === driverId)?.archetype, metal);
   const trait = playerCard(traits[Math.floor(rng() * traits.length)]);
   const held = new Set(rankUpsOf(facts, driverId).map(p => wildOf(p.cardId)?.wild));
   const pool = WILD_IDS.filter(w => !held.has(w));
   const wild = pool.length ? pool[Math.floor(rng() * pool.length)] : WILD_IDS[Math.floor(rng() * WILD_IDS.length)];
   const track = calendarTrackIds()[Math.floor(rng() * calendarTrackIds().length)];
   const wildCard = rankUpCard(wild === 'home-hero' ? `wild-home-hero:${track}` : `wild-${wild}`);
-  const teamId = Object.entries(draftState(poolFor(facts), facts.draftPicks).rosters).find(([, r]) => r.driverIds.includes(driverId))?.[0] ?? '';
+  const teamId = Object.entries(draftState(pool0, facts.draftPicks).rosters).find(([, r]) => r.driverIds.includes(driverId))?.[0] ?? '';
   return { round, teamId, driverId, rank, rankName: RANKS[rank].name, cards: [jump, trait, wildCard] };
 }
 

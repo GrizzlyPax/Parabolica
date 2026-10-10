@@ -5,10 +5,9 @@
 //
 // Personalities belong to the nemesis team's seats, not its drivers (#665).
 //
-// Who the nemesis is: from the Regional up, the team flagged
-// CompetitorTeam.nemesis (last league's runner-up, #626). The Juniors has no
-// last league, so a rival is picked for its voice only (no level bump; the
-// sim doesn't know) and says the "first meeting" lines.
+// Who the nemesis is: the team flagged CompetitorTeam.nemesis: last league's
+// runner-up from the Regional up (#626), and in the Juniors a real rival at
+// its own level (#660) who says the "first meeting" lines.
 import { deriveSeed, mulberry32 } from '../engine/rng';
 import { draftState } from './draft';
 import { constructorStandings, poolFor, seasonState, type SeasonFacts } from './season';
@@ -125,16 +124,10 @@ export function runKeyOf(names: readonly string[]): string {
 /** The look a team carries up (#626): the deck team, else its name. */
 const lookOf = (t: CompetitorTeam) => t.deckTeamId ?? t.name;
 
-/** The nemesis team in this league: the flagged one, or (Juniors) a rival picked for its voice. Null outside a run. */
+/** The nemesis team in this league: the flagged one. Null outside a run. */
 export function nemesisTeam(facts: SeasonFacts): CompetitorTeam | null {
   if (!facts.setup.league) return null;
-  const pool = poolFor(facts);
-  const flagged = pool.teams.find(t => t.nemesis);
-  if (flagged) return flagged;
-  if (facts.setup.league.index !== 0) return null;
-  const you = new Set(facts.setup.humans.map(h => h.teamId));
-  const cpu = pool.teams.filter(t => !you.has(t.id));
-  return cpu.length ? cpu[Math.floor(voice(facts.setup.seed, 'juniors-rival')() * cpu.length)] : null;
+  return poolFor(facts).teams.find(t => t.nemesis) ?? null;
 }
 
 export interface Spoken { lines: (Line & { who: string })[]; moment: Moment; teamId: string }

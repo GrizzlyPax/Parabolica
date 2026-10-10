@@ -4,11 +4,12 @@ import { describe, it, expect } from 'vitest';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import RookiePick from './RookiePick';
-import { ARCHETYPES, CAR_SETUPS, ROOKIE_GRADE, rookieCard, setupView, type Archetype, type RookieOffer } from '../rookieView';
+import { SETUPS, rookieCard, setupView, type Archetype, type RookieOffer } from '../rookieView';
+import { ARCHETYPE_INFO, ROOKIE_GRADE } from '../rookies';
 
 const flat = (a: Archetype, id: number): RookieOffer => {
   const points: RookieOffer['points'] = { baseSpeed: 25, consistency: 25, luck: 25, acceleration: 25, endurance: 25, aggression: 25 };
-  for (const [s, p] of Object.entries(ARCHETYPES[a].nudge)) points[s as keyof typeof points] = ROOKIE_GRADE + p!;
+  for (const [s, p] of Object.entries(ARCHETYPE_INFO[a].nudge)) points[s as keyof typeof points] = ROOKIE_GRADE + p!;
   return { id, name: `Rookie ${id}`, archetype: a, points, flavour: 'Has never once lifted.' };
 };
 const OFFER: RookieOffer[] = (['qualifier', 'brawler', 'tyre-saver', 'glass-cannon', 'qualifier', 'brawler'] as Archetype[]).map(flat);
@@ -24,7 +25,7 @@ describe('rookie pick (#661)', () => {
   });
 
   it('car setups: Power 7, Grip 9, Reliability 9 on a level-5 car', () => {
-    expect(CAR_SETUPS.map(s => setupView(s))).toEqual([
+    expect(SETUPS.map(s => setupView(s.id))).toEqual([
       { stat: 'power', level: 7, others: 5 }, { stat: 'grip', level: 9, others: 5 }, { stat: 'reliability', level: 9, others: 5 },
     ]);
   });

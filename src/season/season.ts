@@ -40,6 +40,8 @@ export interface SeasonHuman {
   color: string;
   ink?: string;
   iconId?: string;
+  /** The World Deck team this look came from, if any (#660: the pool deals it to no rival). */
+  deckTeamId?: string;
 }
 
 /** Fixed at League Setup. */
@@ -107,7 +109,8 @@ export function newSeason(setup: SeasonSetup): SeasonFacts {
 
 export function poolFor(facts: SeasonFacts): SeasonPool {
   const { seed, teamCount, ruleset, carry, league } = facts.setup;
-  return generateSeasonPool(seed, teamCount, ruleset ?? defaultRuleset(), { carry, league });
+  // A run's field is rookies (#660); a stand-alone season rolls genesis.
+  return generateSeasonPool(seed, teamCount, ruleset ?? defaultRuleset(), { carry, league, rookies: league !== undefined });
 }
 
 /** Each drafted driver's portrait and their team's car vehicle (#489), for

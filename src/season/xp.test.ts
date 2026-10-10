@@ -14,8 +14,8 @@ import { openPack, takeRankUps } from './testHelpers';
 import { driverPointsInRace } from '../fantasy/types';
 import { CARDS_BY_ID, DRIVER_STATS } from '../cards';
 import { PLAYER_CARD_SCALE } from './pack';
-import { newRun, currentLeague, withCurrentLeague, promote, runState, seasonFactsFor, type RunFacts } from '../run/run';
-import { generateSeasonPool } from './genesis';
+import { currentLeague, withCurrentLeague, promote, runState, seasonFactsFor, type RunFacts } from '../run/run';
+import { rookieRun } from '../run/testHelpers';
 
 function drafted(seed: number, races = 3): SeasonFacts {
   const d = defaultSetup(seed);
@@ -151,11 +151,9 @@ describe('XP and ranks', () => {
 describe('carrying up a run', () => {
   it('XP and every pick ride up with the team; the next league counts on from there', () => {
     const seed = 41;
-    const pool = generateSeasonPool(seed, 5);
-    const t = pool.teams[0];
-    let run: RunFacts = newRun({ seed, teamCount: 5, races: 2, team: { teamId: t.id, name: 'You', color: '#123456', ink: '#FFFFFF' } });
+    let run: RunFacts = rookieRun(seed, 5, 2);
     let league = currentLeague(run);
-    league = { ...league, draftPicks: quickDraft(poolFor(league)) };
+    const pool = poolFor(league);
     const [a, b] = mine(league);
     const others = pool.drivers.map(d => d.id).filter(id => id !== a && id !== b);
     const digest = (i: number) => ({ index: i, trackId: league.setup.calendar[i], trackName: 't', trackEmoji: '', finishOrder: [a, b, ...others], dnfDriverIds: [], fastestLapDriverId: null, totalTicks: 1000, highlights: [] });

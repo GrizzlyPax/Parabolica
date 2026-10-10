@@ -4,22 +4,23 @@
 
 ## The shape
 - A **run** is a ladder of **4 leagues × 6 races** (`LEAGUES_PER_RUN`, `RACES_PER_LEAGUE`; League Setup's race count is honoured for all four). Rungs: Juniors · Regional · National · Top flight (`LEAGUE_LADDER`, each with a rival level for #626).
-- A **league is a Season** (`SeasonFacts`): the same draft, Paddock, packs, races and standings. **Win it (P1 in the Constructors')** and you go up with your whole team; anything else ends the run.
+- A **league is a Season** (`SeasonFacts`): the same Paddock, packs, races and standings (the draft is gone: a run starts on the rookie pick, #660, below). **Win it (P1 in the Constructors')** and you go up with your whole team; anything else ends the run.
 - **League 0 is today's Season**: same seed, same pool, same calendar. The run core changed no race result.
 
 ## Facts, not state (`src/run/run.ts`)
 ```
 RunFacts = { setup: RunSetup; leagues: LeagueFacts[] }
-RunSetup = { seed, teamCount, team (the player's identity), races, ruleset?, start: 'draft', stake? }
-LeagueFacts = SeasonFacts without its setup: { draftPicks, lineups, cardFacts, results }
+RunSetup = { seed, teamCount, team (the player's identity; teamId is always PLAYER_TEAM_ID 'you'), races, ruleset?, start: 'rookie', stake? }
+RunFacts.rookies = { rerolled, pick?: { driverIds, setup } }   (the rookie start, #660)
+LeagueFacts = SeasonFacts without its setup: { draftPicks, lineups, cardFacts, effectFacts, rankUps, results }
 ```
 Each league's `SeasonSetup` is **derived**, never saved (`seasonFactsFor(run, i)`, memoised per run object):
 - seed: league 0 = the run seed; league i = `deriveSeed(seed, 'run', 'league', i)`;
 - calendar: `seasonCalendar(leagueSeed, races)`;
 - `league: LeagueContext` = { index, name, fieldShift, nemesisShift, bossRound } (hooks for #626 and #593; shifts are 0 today);
-- `carry: CarriedTeam` = the player's team at the end of the league below (`carriedTeam(prev)`): drivers, car and team with their **ids, stats, traits, numbers and faces** (`avatarSeed`), plus every card they hold as ids by holder (`CarriedCards`: traits, gear in slots, the locker).
+- `carry: CarriedTeam` = league 0: the rookie pick as a team (`rookieTeam(run)`, #660); above: the player's team at the end of the league below (`carriedTeam(prev)`): drivers, car and team with their **ids, stats, traits, numbers and faces** (`avatarSeed`), plus every card they hold as ids by holder (`CarriedCards`: traits, gear in slots, the locker).
 
-The pool generator (`generateSeasonPool(seed, teams, rs, { carry, league })`) puts the carried team first, **reserves** its drivers and car for it (`reservedFor`), and fills the other slots with fresh rivals whose ids start at `league.index × LEAGUE_ID_STRIDE` (100), so nothing collides and a carried driver keeps one id for the whole run (XP, #592, can key on it). Racing numbers skip the carried ones. The draft honours reservations: a team with reserved entities must take them, nobody else can, the CPU never sees them. `promote(run)` adds the next league with the whole draft settled, so it opens in the Paddock. `teamCardState` starts from the carried cards, then folds the new league's card facts.
+The pool generator (`generateSeasonPool(seed, teams, rs, { carry, league })`) puts the carried team first, **reserves** its drivers and car for it (`reservedFor`), and fills the other slots with fresh rivals whose ids start at `league.index × LEAGUE_ID_STRIDE` (100), so nothing collides and a carried driver keeps one id for the whole run (XP, #592, can key on it). Racing numbers skip the carried ones. `draftPicks` stay the roster facts, but no one drafts: the CPU draft (`quickDraft`, reservations honoured: the carried team takes its own, nobody else can) fills every league behind the scenes, in `pickRookies` for league 0 and `promote` above, so each league opens in the Paddock. `teamCardState` starts from the carried cards, then folds the new league's card facts.
 
 `runState(run)` → `{ leagueIndex, phase: 'league' | 'league-won' | 'run-won' | 'run-lost', league, ladder, won }`.
 `replayRun(run)` re-settles every league from its facts; the test pins it equal to the recorded digests.
@@ -30,9 +31,9 @@ The pool generator (`generateSeasonPool(seed, teams, rs, { carry, league })`) pu
 - **The screens** keep working on a `SeasonFacts`: `loadCurrentLeague` / `saveCurrentLeague` (write back into the run; a finished run is recorded in the meta), `startRun` (League Setup → league 0), `promoteCurrentRun`, `currentRunState`, `clearRun`. The finale (Standings) offers **"Up to Regional →"** when the league is won, says the run is over when not.
 
 ## Rival levels + the nemesis (#626)
-- **One table:** `LEAGUE_LADDER` in `src/run/run.ts`: Juniors −25 / +12 · Regional −5 / +12 · National +10 / +14 · Top flight +22 / +12 (Steward's fit, Pax Oct 10; re-fit after #592 / #593 / #594). `field` is grade points added to **every stat** (driver, car, team) of every rival **at race build** (`seasonRoster` → `shiftStats`, the card math), after cards; the player's team is never shifted. Stars are floored at `STAR_FLOOR` (0.5★), so a Juniors 1★ car still runs. Stand-alone seasons and Quick Race (no `LeagueContext`) shift nothing.
-- **The nemesis** is the league's runner-up (P2 in the Constructors'), carried up as a **look only** (`CarriedTeam.nemesis`, `runnerUp(prev)`): it wears the first fresh slot in the next pool (`CompetitorTeam.nemesis = true`, the deck never deals that look twice), rolls fresh drivers, car and stats, and gets `nemesis` points on top of the field shift. Rivals keep genesis traits only: no packs, no mid-league levelling (as before).
-- Shifting at race build (not in the pool) keeps the draft board honest and the pool unchanged; the pool's grades are the rolls, the race is the level. `rivalShifts(facts)` gives the UI the per-team points (Hub: stat levels, #623).
+- **One table:** `LEAGUE_LADDER` in `src/run/run.ts`: Juniors **0 / +6** · Regional **+7 / +12** · National **+22 / +14** · Top flight **+37 / +12** (Steward's re-fit for the rookie start, Pax Oct 10, #660: runs won ~32%; was −25/+12 · −5/+12 · +10/+14 · +22/+12). `field` is grade points added to **every stat** (driver, car, team) of every rival **at race build** (`seasonRoster` → `shiftStats`, the card math), after cards; the player's team is never shifted. Stars are floored at `STAR_FLOOR` (0.5★), so a Juniors 1★ car still runs. Stand-alone seasons and Quick Race (no `LeagueContext`) shift nothing.
+- **The nemesis** is the first fresh slot of every run league (`CompetitorTeam.nemesis = true`) and gets `nemesis` points on top of the field shift. In the **Juniors it is real** (#660): a rookie team wearing its own deck look, +6. From the Regional up it is the league's runner-up (P2 in the Constructors'), carried up as a **look only** (`CarriedTeam.nemesis`, `runnerUp(prev)`; the deck never deals that look twice) with fresh drivers, car and stats. Rivals keep genesis traits only: no packs, no mid-league levelling (as before).
+- Shifting at race build (not in the pool) keeps the Paddock's rival reads honest and the pool unchanged; the pool's grades are the rolls, the race is the level. `rivalShifts(facts)` gives the UI the per-team points (Hub: stat levels, #623).
 
 ## Timed effects (#332)
 - **An effect** (`src/season/effects.ts`, `EffectFact`): a target (one driver, the car or the team: car and team reach both drivers), grade points per stat (negative = a curse), a **timer** in **races** (`{ races: n }`) or **laps** (`{ laps: n, fromLap? }`), a source (`gear` · `curse` · `event`) and an id. Dealt with `addEffect(facts, e)` into `SeasonFacts.effectFacts`; the dealer (a pack, a curse, an event) owns the clock rules.
@@ -52,8 +53,8 @@ All in `src/season/pack.ts`, data at the top:
 
 ## Screens (#628)
 - **The run's first step** is League Setup ("New run"): your team (the creator, #346) on top, then the league, teams and calendar. **Start the run** lands on the ladder.
-- **The ladder** (`#/season/run`, `season/ui/RunLadder.tsx`; Pax picked A) is the run's home: four leagues stacked, Top flight on top. The league in play is open (race squares, the last one gold for the boss race; you vs your nemesis, or the nearest team in the Juniors; how you go up); won leagues keep one line ("X were runners-up and came up with you"); leagues ahead are dimmed; the unlocks strip lists `UNLOCKS` (none granted until #596). Its button goes to the draft or the Paddock, **Up to <next> →** when the league is won, **New run** when the run is over. The view is pure: `run/ladderView.ts`.
-- Menu → Season opens a saved run on its ladder. The draft and the Paddock go **← The run**; the finale's **Up to <next> →** promotes and lands on the ladder.
+- **The ladder** (`#/season/run`, `season/ui/RunLadder.tsx`; Pax picked A) is the run's home: four leagues stacked, Top flight on top. The league in play is open (race squares, the last one gold for the boss race; you vs your nemesis; how you go up); won leagues keep one line ("X were runners-up and came up with you"); leagues ahead are dimmed; the unlocks strip lists `UNLOCKS` (none granted until #596). Its button goes to the rookie pick (#660) or the Paddock, **Up to <next> →** when the league is won, **New run** when the run is over. The view is pure: `run/ladderView.ts`.
+- Menu → Season opens a saved run on its ladder. The rookie pick and the Paddock go **← The run**; the finale's **Up to <next> →** promotes and lands on the ladder.
 
 ## The nemesis talks (#635)
 - `season/nemesis.ts`, flavour only (every roll on its own `'nemesis-voice'` stream; nothing saved, no sim change). Lines are verbatim from `docs/story/nemesis.md` (a test mirrors the doc).
@@ -70,9 +71,19 @@ All in `src/season/pack.ts`, data at the top:
 - **Carry:** `CarriedTeam.xp` (XP at the end of the league) and `.rankUps` (every pick) ride up; `driverXp` counts on from the carried XP.
 - **Paddock:** the rank-up strip ("Rank-up · Kim Wood is now Pro · keep one", three cards, Take) shows above the pack offer; `driverRanks(facts)` gives XP / rank / next for Hub's tables (#623).
 
+## The rookie start (#660)
+`src/season/rookies.ts` (rolls, archetypes, setups) and `src/run/run.ts` (the facts). Design: #594, the Rookie Pick Report (Pax, Oct 10).
+- **The draft is gone.** A run starts in phase `'start'` (`runState`): the ladder's button says **Pick your rookies** and opens `season/ui/RookieStart.tsx` (at the old `#/season/draft` address; Hub's #661 designs it). **Pick 2 of 6 rookies, one free re-roll, 1 of 3 car setups, Start** → league 0 opens in the Paddock, the ladder shows you vs the Juniors nemesis.
+- **A rookie** (`rookieDriver`): every stat at `ROOKIE_GRADE` 25 points (level 5) ± a wobble **per stat** (`OFFER_WOBBLE` 5 for the player's offer, `CPU_WOBBLE` 10 for the CPU) + the archetype's nudge (`ARCHETYPE_INFO`, grade points): Qualifier Accel +10 / Consistency +15 · Brawler Aggression +10 / Luck +15 · Tyre Saver Endurance +20 / Consistency +15 · Glass Cannon Speed +15 / Aggression +10 / Consistency −10. **No genesis traits** on rookies, cars or teams in a run: the only cards are the ones the run deals. `PoolDriver.archetype` carries it.
+- **The offer** (`rookieOffer(seed, roll)`, stream `(seed, 'run', 'rookies', 'offer', roll)`): six rookies, **at least one of each archetype** (the four, two random extras, shuffled), racing numbers rolled on the same stream, ids `ROOKIE_ID_BASE` 900 + roll × 6 + i (above every league's stride, so the pair keeps its ids all run), faces on the run seed. Roll 0 is the first deal, 1 the re-roll (`RunFacts.rookies.rerolled`); the first deal is gone once re-rolled.
+- **The pick is a fact** (`RunFacts.rookies.pick`, `pickRookies` / `validateRookiePick`): two different ids of the standing offer and a `CarSetupId`. It builds the carried team (`rookieTeam`): the pair, a **2★ car** named on `('run', 'rookies', 'car')` wearing the setup as a permanent **car trait card** (`setupCard`: Straight-line power +10 · Twisty grip +20 · Bulletproof reliability +20; one silver-looking card, so the Paddock's sums and the sim agree), the player's own look (`PLAYER_TEAM_ID`, the creator's name / colour / icon; a deck team's `deckTeamId` is dealt to no rival) at **2★ team stats**, no cards. Then the CPU draft settles league 0.
+- **CPU rookies** (`generateSeasonPool(…, { rookies: true })`, set by `poolFor` whenever the setup has a `league`): every fresh driver (random archetype, ±10), car (±10 around 2★) and team (±10 around 2★) in every league, on `('season', 'rookies' | 'rookie-cars' | 'rookie-teams')`; the field shift goes on top at race build as before. Stand-alone seasons, Quick Race and the lab roll genesis: **the golden fingerprint did not move.**
+- **The rank-up trait follows the archetype** (`archetypeTraits`, used by `dealRankUp`): a driver trait of the rank's metal whose stats are all ones the archetype nudges up (silver always has them); gold / iridium combos fall to any overlapping card; no archetype (a stand-alone season) → any. #647's tags replace this read.
+- **Saves:** `RUN_SCHEMA_VERSION` 2; a drafted run (schema 1) is archived, not loaded. Facade: `rerollCurrentRookies`, `pickCurrentRookies` (`run/current.ts`).
+
 ## Hooks left on purpose
 - **Boss race (#593):** `LeagueContext.bossRound` (the last round).
-- **Rookie pick (#594):** `RunSetup.start` ('draft' today); the draft is the run's start until then.
+- **Rookie pick:** built (#660, below); `RunSetup.start` is `'rookie'` only.
 - **XP (#592):** a fact log on `RunFacts`, keyed by the stable driver id.
 - **Stakes (#596):** `RunSetup.stake`, `UnlockId 'next-difficulty'`.
 - **Timers (#332):** gear and curses carry with the cards; their timers are the next PR.

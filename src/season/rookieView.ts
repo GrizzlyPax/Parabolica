@@ -1,39 +1,22 @@
 // The rookie pick's view (#661; Steward's 10/10 Rookie Pick Report, design
-// #594, build #660). Pure: rookies and car setups in, what the screen shows
-// out, in stat levels (#623). The sim side (the offer, the re-roll, the
-// picks as facts) is Apex's #660; this only reads grade points.
+// #594, Apex's rookie start #660). Pure: rookies and car setups in, what the
+// screen shows out, in stat levels (#623). The spec's numbers live in
+// rookies.ts (Apex); this only reads them.
 import type { StatKey } from '../cards/types';
-import { level } from './grades';
+import { level, rating } from './grades';
+import { ARCHETYPE_INFO, CAR_SETUPS, CAR_SETUP_IDS, ROOKIE_GRADE, type Archetype, type CarSetupId } from './rookies';
+import type { PoolDriver } from '../generators/drivers';
 
-export type Archetype = 'qualifier' | 'brawler' | 'tyre-saver' | 'glass-cannon';
+export type { Archetype, CarSetupId };
 
-/** The archetypes and their nudges in grade points (decided, #660). */
-export const ARCHETYPES: Record<Archetype, { name: string; nudge: Partial<Record<StatKey, number>> }> = {
-  qualifier: { name: 'Qualifier', nudge: { acceleration: 10, consistency: 15 } },
-  brawler: { name: 'Brawler', nudge: { aggression: 10, luck: 15 } },
-  'tyre-saver': { name: 'Tyre Saver', nudge: { endurance: 20, consistency: 15 } },
-  'glass-cannon': { name: 'Glass Cannon', nudge: { baseSpeed: 15, aggression: 10, consistency: -10 } },
-};
-
-/** The rookie's base: every stat at grade 25 (level 5). */
-export const ROOKIE_GRADE = 25;
-
-/** The three car setups (decided, #660): grade points on a level-5 car. */
-export const CAR_SETUPS = [
-  { id: 'straight-line', name: 'Straight-line', stat: 'power', points: 10 },
-  { id: 'twisty', name: 'Twisty', stat: 'grip', points: 20 },
-  { id: 'bulletproof', name: 'Bulletproof', stat: 'reliability', points: 20 },
-] as const satisfies readonly { id: string; name: string; stat: StatKey; points: number }[];
-export type CarSetupId = (typeof CAR_SETUPS)[number]['id'];
-
-/** One rookie as the offer hands it to the screen: grade points per driver stat. */
+/** One rookie as the screen reads it: grade points per driver stat. */
 export interface RookieOffer {
   id: number;
   name: string;
   archetype: Archetype;
   /** Grade points (0–100 scale) per driver stat, wobble and nudge included. */
   points: Partial<Record<StatKey, number>>;
-  /** Flavour line: sample text until Radio names them. */
+  /** Flavour line: the archetype's line until Radio names rookies. */
   flavour?: string;
 }
 
@@ -49,21 +32,33 @@ export interface RookieCardView {
 
 const DRIVER: StatKey[] = ['baseSpeed', 'consistency', 'luck', 'acceleration', 'endurance', 'aggression'];
 
+/** A rookie from the run's offer (#660), as grade points. */
+export function offerOf(d: PoolDriver & { archetype?: Archetype }): RookieOffer {
+  const archetype = d.archetype ?? 'qualifier';
+  return {
+    id: d.id, name: d.fullName, archetype,
+    points: Object.fromEntries(DRIVER.map(s => [s, rating(s, d.stats[s as keyof typeof d.stats])])),
+    flavour: ARCHETYPE_INFO[archetype].blurb,
+  };
+}
+
 export function rookieCard(r: RookieOffer): RookieCardView {
-  const nudged = Object.keys(ARCHETYPES[r.archetype].nudge) as StatKey[];
+  const nudged = Object.keys(ARCHETYPE_INFO[r.archetype].nudge) as StatKey[];
   const lv = (s: StatKey) => level(r.points[s] ?? ROOKIE_GRADE);
   const rest = DRIVER.filter(s => !nudged.includes(s)).map(lv);
   return {
     id: r.id,
     name: r.name,
-    archetype: ARCHETYPES[r.archetype].name,
+    archetype: ARCHETYPE_INFO[r.archetype].name,
     lean: nudged.map(stat => ({ stat, level: lv(stat) })),
     others: rest.length ? { min: Math.min(...rest), max: Math.max(...rest) } : null,
     flavour: r.flavour,
   };
 }
 
-/** A setup as levels: its stat, and the rest of a level-5 car. */
-export function setupView(s: (typeof CAR_SETUPS)[number]): { stat: StatKey; level: number; others: number } {
+/** The setups in order, as levels on a level-5 car. */
+export const SETUPS = CAR_SETUP_IDS.map(id => ({ id, ...CAR_SETUPS[id] }));
+export function setupView(id: CarSetupId): { stat: StatKey; level: number; others: number } {
+  const s = CAR_SETUPS[id];
   return { stat: s.stat, level: level(ROOKIE_GRADE + s.points), others: level(ROOKIE_GRADE) };
 }

@@ -46,7 +46,7 @@ function rungFor(run: RunFacts, i: number, status: RungView['status']): RungView
   const facts = seasonFactsFor(run, i);
   const youId = facts.setup.humans[0]?.teamId ?? '';
   const you = standingOf(facts, youId);
-  // The nemesis: the carried-up runner-up, or the Juniors' voice-only rival (#635).
+  // The nemesis: the Juniors' own (#660), then the carried-up runner-up (#626).
   const nemesisId = nemesisTeam(facts)?.id;
   const table = constructorStandings(facts);
   const nearestId = table.find(s => s.teamId !== youId)?.teamId;
@@ -73,7 +73,8 @@ export function ladderView(run: RunFacts, meta: MetaFacts): LadderView {
     phase: state.phase,
     leagueIndex: state.leagueIndex,
     you: run.setup.team,
-    rungs: state.ladder.map(r => (r.status === 'ahead' ? { index: r.index, name: r.name, status: r.status } : rungFor(run, r.index, r.status))),
+    // Before the rookie pick (#660) the Juniors are open but empty: no team yet.
+    rungs: state.ladder.map(r => (r.status === 'ahead' || state.phase === 'start' ? { index: r.index, name: r.name, status: r.status } : rungFor(run, r.index, r.status))),
     unlocks: (Object.keys(UNLOCKS) as UnlockId[]).map(id => ({ id, ...UNLOCKS[id], got: meta.unlocks.includes(id) })),
   };
 }

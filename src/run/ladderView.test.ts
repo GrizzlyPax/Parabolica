@@ -4,20 +4,13 @@ import { describe, it, expect } from 'vitest';
 import { newRun, currentLeague, withCurrentLeague, runState, promote, runnerUp, type RunFacts } from './run';
 import { emptyMeta, grant } from './meta';
 import { ladderView } from './ladderView';
-import { generateSeasonPool } from '../season/genesis';
 import { seasonState, setLineup, settleRound, poolFor } from '../season/season';
-import { draftState, quickDraft } from '../season/draft';
+import { draftState } from '../season/draft';
 import { openPack } from '../season/testHelpers';
+import { rookieRun, TEST_TEAM } from './testHelpers';
 
 const TEAMS = 5, RACES = 2;
-
-function runFor(seed: number): RunFacts {
-  const t = generateSeasonPool(seed, TEAMS).teams[0];
-  let run = newRun({ seed, teamCount: TEAMS, races: RACES, team: { teamId: t.id, name: 'Kitty Hut', color: '#006EBE', ink: '#FFFFFF', iconId: 'fox-head' } });
-  const league = currentLeague(run);
-  run = withCurrentLeague(run, { ...league, draftPicks: quickDraft(poolFor(league)) });
-  return run;
-}
+const runFor = (seed: number): RunFacts => rookieRun(seed, TEAMS, RACES);
 function playLeague(run: RunFacts): RunFacts {
   let facts = currentLeague(run);
   while (seasonState(facts).phase !== 'finished') {
@@ -43,8 +36,12 @@ describe('league ladder view (#628)', () => {
     expect(v.rungs.map(r => [r.name, r.status])).toEqual([['Juniors', 'current'], ['Regional', 'ahead'], ['National', 'ahead'], ['Top flight', 'ahead']]);
     expect(v.rungs[0].races).toEqual({ done: 0, total: RACES });
     expect(v.rungs[0].you?.team.name).toBe('Kitty Hut');
-    // The Juniors' rival is the voice-only nemesis (#635).
+    // The Juniors' rival is their real nemesis (#660).
     expect(v.rungs[0].rival?.nemesis).toBe(true);
+    // Before the rookie pick the Juniors are open but empty.
+    const fresh = ladderView(newRun({ seed: 7, teamCount: TEAMS, races: RACES, team: TEST_TEAM }), emptyMeta());
+    expect(fresh.phase).toBe('start');
+    expect(fresh.rungs[0]).toEqual({ index: 0, name: 'Juniors', status: 'current' });
     expect(v.unlocks).toHaveLength(5);
     expect(v.unlocks.filter(u => u.got).map(u => u.id)).toEqual(['next-difficulty']);
   });

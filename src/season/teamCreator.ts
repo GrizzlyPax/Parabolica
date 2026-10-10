@@ -27,5 +27,6 @@ export interface BuiltTeam { name: string; colour: string; logo: IconId }
 export function wearBuiltTeam(human: SeasonHuman, built: BuiltTeam): SeasonHuman {
   const colour = TEAM_COLOURS.find(c => c.hex === built.colour) ?? TEAM_COLOURS[0];
   const name = built.name.trim().replace(/\s+/g, ' ').slice(0, TEAM_NAME_MAX) || DEFAULT_TEAM_NAME;
-  return { ...human, name, color: colour.hex, ink: inkFor(colour.hex), iconId: built.logo };
+  // Your own look: the deck team you started from goes back to the pool (#660).
+  return { ...human, name, color: colour.hex, ink: inkFor(colour.hex), iconId: built.logo, deckTeamId: undefined };
 }
