@@ -11,6 +11,7 @@
 // permanent), or the glowing locker to keep gear for later. Drag works too.
 // Two drivers, both race (#585): no lineup choice; Lock in ends the turn.
 import { useMemo, useState, type DragEvent } from 'react';
+import { levelDelta } from '../grades';
 import { GameIcon, TeamLogo, teamThemeVars } from '../../icons/GameIcon';
 import { RaceNumber } from '../../icons/RaceNumber';
 import { Avatar } from '../../icons/Avatar';
@@ -311,7 +312,7 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, ba
         <section className="pp pp-curse" aria-label="Curse pack">
           <div className="pp-head"><span className="rs-k">Curse pack · nothing to choose</span><button type="button" className="rs-link" onClick={() => setRevealing(false)}>Later</button></div>
           <div className="pp-keep">
-            <b>{curse.emoji} {curse.name}: {curse.stats.map(s => `${s.pct} ${STAT_LABELS[s.stat]}`).join(', ')} on {curse.target.kind === 'car' ? car.name : you.name}, both drivers, for {CURSE_LIFE_TEXT}.</b>
+            <b>{curse.emoji} {curse.name}: {curse.stats.map(s => `${levelDelta(s.pct)} ${STAT_LABELS[s.stat]}`).join(', ')} on {curse.target.kind === 'car' ? car.name : you.name}, both drivers, for {CURSE_LIFE_TEXT}.</b>
             <button type="button" className="rs-btn rs-btn-primary" onClick={takeCurse}>Take the curse</button>
             <span className="rs-hint">Bad luck. It lifts on its own; benching can't dodge it.</span>
           </div>
@@ -343,7 +344,7 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, ba
       {hand && <p className="rs-hint pk-hint">{hint}</p>}
       <div className="rt-legend">
         {priority.size > 0 && <span><span className="rt-prio-key">{ABBR[[...priority][0]]}</span> next race priority</span>}
-        <span><i className="rt-notch-key" /> cards change this stat · tap a grade for the sum</span>
+        <span><i className="rt-notch-key" /> cards change this stat · tap a level for the sum</span>
         <span>Tap a card for the full card{myTurn ? '; tap gear to move it' : ''}</span>
       </div>
       <div className="rt-scroll">

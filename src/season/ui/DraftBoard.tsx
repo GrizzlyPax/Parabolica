@@ -146,7 +146,7 @@ export default function DraftBoard({ facts, onChange, onMenu, onDone, onEndSeaso
           <span className="rs-k">Your team</span>
           <span className="ss-roster-logo"><TeamLogo team={you} size={20} /></span>
         </div>
-        <p className="rs-hint">Your picks show grades. Rivals and the pool stay sealed until the season starts.</p>
+        <p className="rs-hint">Your picks show levels. Rivals and the pool stay sealed until the season starts.</p>
         <div className="rt-scroll">
           <table className="rt dr-mine">
             <thead>

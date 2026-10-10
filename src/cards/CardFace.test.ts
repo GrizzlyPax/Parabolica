@@ -15,7 +15,7 @@ describe('CardFace', () => {
     // #526: the type tag is the kind's icon (cog = gear), the word only in its title.
     expect(out).toContain('aria-label="Gear"');
     expect(out).not.toMatch(/>Equipment</);
-    expect(out).toContain('<b>+10</b> Speed');
+    expect(out).toContain('<b>+2</b> Speed'); // #623: levels (10 grade points = +2)
     expect(out).toContain('Speed');
     expect(out).toContain('Consistency');
     expect(out).toContain('013');

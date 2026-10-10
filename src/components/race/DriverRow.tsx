@@ -6,7 +6,7 @@ import type { DriverRowProps } from './types';
 import type { Driver } from '../../RaceEngine';
 import { CardDot } from '../../cards/CardFace';
 import { CardChip } from '../../cards/CardChip';
-import { grade, gradeTone, rating } from '../../season/grades';
+import { level, levelTone, rating } from '../../season/grades';
 import type { StatKey } from '../../cards/types';
 
 const DRIVER_STATS: StatKey[] = ['baseSpeed', 'consistency', 'luck', 'acceleration', 'endurance', 'aggression'];
@@ -79,13 +79,13 @@ function DriverRow({ driver, columns, context, gridTemplate, isFocused, expandab
           {context.sealed ? (
             <div className="dp-sealed">
               {context.driverRank && <span className={`dp-read ${READ[context.driverRank.tone]}`}>{READ[context.driverRank.tone]} of the field</span>}
-              <span className="dp-note">Rival: grades sealed</span>
+              <span className="dp-note">Rival: levels sealed</span>
             </div>
           ) : (
             <div className="dp-ovr">
               {ovrTiles(driver).map(([k, v]) => {
-                const g = grade(v);
-                return <div key={k}><span className="expanded-k">{k}</span><span className={`dp-g g-${gradeTone(g)}`}>{g}</span></div>;
+                const g = level(v);
+                return <div key={k}><span className="expanded-k">{k}</span><span className={`dp-g g-${levelTone(g)}`}>{g}</span></div>;
               })}
             </div>
           )}

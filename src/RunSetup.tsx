@@ -26,7 +26,7 @@ import { WearPill } from './cards/WearPill';
 import { getDeckTrackById } from './data/deckTracks';
 import { CardFace } from './cards/CardFace';
 import { GameIcon } from './icons/GameIcon';
-import { gradeTone, readStat } from './season/grades';
+import { levelTone, readStat } from './season/grades';
 import type { StatKey } from './cards/types';
 import './RunSetup.css';
 
@@ -42,11 +42,11 @@ const streams = (seed: number) => ({
   cars: mulberry32(deriveSeed(seed, 'genesis', 'cars')),
 });
 
-/** A car stat as a grade in the four F1 colours, like the Paddock (#546). */
+/** A car stat as a level in the four F1 colours, like the Paddock (#546, #623). */
 function CarGrade({ stat, n }: { stat: StatKey; n: number | undefined }) {
   if (n === undefined) return <span className="rs-grade">—</span>;
-  const g = readStat(stat, n, []).grade;
-  return <span className={`rs-grade tone-${gradeTone(g)}`}>{g}</span>;
+  const g = readStat(stat, n, []).level;
+  return <span className={`rs-grade tone-${levelTone(g)}`}>{g}</span>;
 }
 
 export default function RunSetup({ onStartRace, onBack }: RunSetupProps) {

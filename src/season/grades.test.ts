@@ -1,15 +1,19 @@
-// #452: grades read the generator's own ranges, cards add on the same math
-// as the sim, and the bands cover 0–100 evenly.
+// #623: stat levels. Points read the generator's own ranges (0–100), cards add
+// on the same math as the sim, level = ceil(points / 5) with the four bands.
 import { describe, it, expect } from 'vitest';
 import { DRIVER_STAT_ROLLS } from '../generators/drivers';
 import { STAR_RATING } from '../generators/cars';
 import { applyCards } from '../cards/apply';
 import { CARDS_BY_ID } from '../cards/deck';
-import { GRADES, grade, gradeTone, overall, rating, readStat } from './grades';
+import { METAL_LADDER } from '../cards';
+import { PLAYER_CARD_SCALE, CURSE_POINTS } from './pack';
+import { level, levelDelta, levelTone, overall, rating, readStat } from './grades';
+import { rivalRank } from './ranks';
+import { newSeason } from './season';
 
 const card = (id: string) => CARDS_BY_ID.get(id)!;
 
-describe('grades', () => {
+describe('stat levels', () => {
   it('0 is the worst possible roll and 100 the best, from the generator ranges', () => {
     for (const [stat, { min, span }] of Object.entries(DRIVER_STAT_ROLLS)) {
       expect(rating(stat as never, min)).toBeCloseTo(0);
@@ -20,14 +24,28 @@ describe('grades', () => {
     expect(rating('grip', 3)).toBe(50);
   });
 
-  it('thirteen even bands, F to A+, and S past 100', () => {
-    expect(grade(0)).toBe('F');
-    expect(grade(100)).toBe('A+');
-    expect(grade(100.01)).toBe('S');
-    expect(grade(50)).toBe('C+'); // the middle of 13 letters (F … A+)
-    const seen = new Set(Array.from({ length: 1001 }, (_, i) => grade(i / 10)));
-    expect([...seen]).toEqual([...GRADES]);
-    expect([gradeTone('S'), gradeTone('A−'), gradeTone('B+'), gradeTone('C'), gradeTone('D−'), gradeTone('F')]).toEqual(['s', 'a', 'b', 'c', 'd', 'f']);
+  it('level = ceil(points / 5), min 1; natural rolls 1–20; past 20 with cards', () => {
+    expect(level(0)).toBe(1);
+    expect(level(5)).toBe(1);
+    expect(level(5.01)).toBe(2);
+    expect(level(55)).toBe(11); // the edge case on the issue: yellow (it read B− green)
+    expect(level(100)).toBe(20);
+    expect(level(130)).toBe(26);
+    const natural = new Set(Array.from({ length: 1001 }, (_, i) => level(i / 10)));
+    expect(Math.min(...natural)).toBe(1);
+    expect(Math.max(...natural)).toBe(20);
+  });
+
+  it('four bands: red 1–6 · yellow 7–11 · green 12–20 · purple 21+', () => {
+    expect([1, 6, 7, 11, 12, 20, 21].map(levelTone)).toEqual(['d', 'd', 'c', 'c', 'a', 'a', 's']);
+    expect(levelTone(level(55))).toBe('c');
+  });
+
+  it('card text in levels at the run\'s 3×: Bronze +3 · Silver +6 · Gold +6/+6 · Iridium +9 ×3 · curse −6', () => {
+    const lv = (r: keyof typeof METAL_LADDER) => levelDelta(METAL_LADDER[r].pct * PLAYER_CARD_SCALE);
+    expect([lv('bronze'), lv('silver'), lv('gold'), lv('iridium')]).toEqual(['+3', '+6', '+6', '+9']);
+    expect([METAL_LADDER.gold.stats, METAL_LADDER.iridium.stats]).toEqual([2, 3]);
+    expect(levelDelta(CURSE_POINTS * PLAYER_CARD_SCALE)).toBe('−6');
   });
 
   it('card points add up to exactly what applyCards gives the sim', () => {
@@ -38,7 +56,17 @@ describe('grades', () => {
     expect(r.total).toBeCloseTo(rating('baseSpeed', simmed), 9);
     expect(r.parts.map(p => p.pct)).toEqual([10, 10]);
     expect(r.parts.map(p => p.points)).toEqual([10, 10]); // #335: a card's pct IS its grade points
-    expect(r.baseGrade).toBe(grade(r.base));
+    expect(r.baseLevel).toBe(level(r.base));
+    expect(r.level).toBe(level(r.total));
     expect(overall([r, readStat('luck', 0.55, [])]).total).toBeCloseTo((r.total + rating('luck', 0.55)) / 2);
+  });
+
+  it('rival ranks by tier: Rookies → Pros → Aces → Legends; none outside a run or for you', () => {
+    const facts = newSeason({ seed: 1, teamCount: 5, humans: [{ teamId: 'team-0', name: 'You', color: '#006EBE' }], calendar: ['speed-power'] });
+    expect(rivalRank(facts, 'team-1')).toBeNull();
+    const at = (index: number) => ({ ...facts, setup: { ...facts.setup, league: { index, name: '', fieldShift: 0, nemesisShift: 0, bossRound: 0 } } });
+    expect(rivalRank(at(1), 'team-0')).toBeNull();
+    expect(rivalRank(at(2), 'team-3')?.rank).toMatch(/^(Ace|Legend)$/);
+    expect(rivalRank(at(3), 'team-3')?.rank).toBe('Legend');
   });
 });

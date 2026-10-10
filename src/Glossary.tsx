@@ -5,6 +5,8 @@
 // click, and an Add tab: a drafting space whose drafts live in this browser
 // and export as code or as a prompt for an agent.
 import { useEffect, useMemo, useState, ReactNode } from 'react';
+import { levelDelta } from './season/grades';
+import { PLAYER_CARD_SCALE } from './season/pack';
 import { buildGlossary, describeInRaceEffect, effectsOf } from './data/glossary';
 import { RARITIES } from './cards/rarity';
 import { defaultRuleset, describeChance } from './rules/ruleset';
@@ -92,6 +94,8 @@ const NOT_YET_TRACK = 'Every race and season calendar draws from these.';
 function FavourIcons({ favours }: { favours: CardStat[] }) {
   return <span className="card-marks">{favours.map(f => <GameIcon key={f.stat} name={STAT_ICONS[f.stat]} size={16} title={STAT_LABELS[f.stat]} />)}</span>;
 }
+/** A deck card as the run deals it to you (#623: card text in levels at 3×). */
+const asDealt = (c: Card): Card => (c.kind === 'effect' ? c : { ...c, stats: c.stats.map(x => ({ ...x, pct: x.pct * PLAYER_CARD_SCALE })) });
 const favourText = (favours: CardStat[]) => favours.map(f => `+${f.pct} ${STAT_LABELS[f.stat]}`).join(' · ');
 const DECK_GROUPS: { id: string; title: string; hint: string; rows: Card[] }[] = [
   { id: 'equipment', title: 'Equipment', hint: `Driver gear: one slot, swappable (Season Mode packs). ${IN_SIM}`, rows: cardsBy({ kind: 'equipment' }) },
@@ -294,7 +298,7 @@ export default function Glossary({ onBack, tab: tabSlug, onTabChange }: Glossary
         if (!rows.length) return null;
         return (
           <Section key={grp.id} {...sec(`deck:${grp.id}`)} title={grp.title} count={grp.rows.length} hint={grp.hint}>
-            <div className="gl-binder">{rows.map(c => <CardFace key={c.id} card={c} />)}</div>
+            <div className="gl-binder">{rows.map(c => <CardFace key={c.id} card={asDealt(c)} />)}</div>
           </Section>
         );
       })}
@@ -305,7 +309,7 @@ export default function Glossary({ onBack, tab: tabSlug, onTabChange }: Glossary
             <li><b>Does the slot hit?</b> {describeChance(rs.traits.genesisChance)}.</li>
             <li><b>Which metal?</b> {RARITIES.map((r, i) => <span key={r}>{i > 0 && ' · '}{rs.traits.rarityOdds[r]}% <span className={`rarity-word rarity-${r}`}>{r}</span></span>)}. Fixed odds — more cards in a metal just means more variety, not more of that metal.</li>
             <li><b>Which card?</b> An even pick among that metal's trait cards for the slot.</li>
-            <li><b>What it adds:</b> {RARITIES.map((r, i) => <span key={r}>{i > 0 && ' · '}<span className={`rarity-word rarity-${r}`}>{r}</span> {METAL_LADDER[r].stats} stat{METAL_LADDER[r].stats > 1 ? 's' : ''} × +{METAL_LADDER[r].pct}</span>)} grade points, at race build.</li>
+            <li><b>What it adds:</b> {RARITIES.map((r, i) => <span key={r}>{i > 0 && ' · '}<span className={`rarity-word rarity-${r}`}>{r}</span> {METAL_LADDER[r].stats} stat{METAL_LADDER[r].stats > 1 ? 's' : ''} × {levelDelta(METAL_LADDER[r].pct * PLAYER_CARD_SCALE)}</span>)} levels on your cards in a run (the deck's grade points × {PLAYER_CARD_SCALE}; 5 points a level), at race build.</li>
           </ol>
         </Section>
       )}

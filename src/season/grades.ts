@@ -1,47 +1,58 @@
-// Stat grades (#452, Pax Oct 8): every stat on one 0–100 scale, read as a
-// letter. 0 = the worst roll the generator can give, 100 = the best, taken
-// from the generator's own ranges (DRIVER_STAT_ROLLS, STAR_RATING), so a
-// re-tune keeps the scale honest. Cards add grade points on top (#335), so a
-// carded stat can pass 100: that is grade S.
+// Stat levels (#623, Pax Oct 10; Steward's Levels and XP Report): every stat
+// on one 0–100 points scale, read as a LEVEL. 0 = the worst roll the
+// generator can give, 100 = the best, taken from the generator's own ranges
+// (DRIVER_STAT_ROLLS, STAR_RATING), so a re-tune keeps the scale honest.
 //
-// Thirteen even bands (F … A+): natural rolls are uniform, so each letter is
-// as common as the next. Pure; display only, never feeds the sim.
+// Level = ceil(points / 5), min 1: natural rolls land on 1–20; cards push
+// past 20 (purple). Colour bands, the four F1 colours: red 1–6 · yellow 7–11
+// · green 12–20 · purple 21+. One vocabulary: stats have levels; drivers have
+// ranks (ranks.ts); leagues are tiers. Pure; display only, never feeds the sim.
 import { statRange } from '../cards/apply';
 import type { Card, StatKey } from '../cards/types';
 
 export { statRange };
 
-export const GRADES = ['F', 'D−', 'D', 'D+', 'C−', 'C', 'C+', 'B−', 'B', 'B+', 'A−', 'A', 'A+'] as const;
-export type Grade = (typeof GRADES)[number] | 'S';
+/** Grade points per level. */
+export const POINTS_PER_LEVEL = 5;
+/** The top natural level (100 points). */
+export const MAX_NATURAL_LEVEL = 20;
 
-/** A raw stat value on the 0–100 scale (unrounded). */
+/** A raw stat value on the 0–100 points scale (unrounded). */
 export function rating(stat: StatKey, raw: number): number {
   const { min, span } = statRange(stat);
   return ((raw - min) / span) * 100;
 }
 
-export function grade(value: number): Grade {
-  if (value > 100) return 'S';
-  return GRADES[Math.min(GRADES.length - 1, Math.max(0, Math.floor(value / (100 / GRADES.length))))];
+/** Points → level: ceil(points / 5), min 1. */
+export function level(points: number): number {
+  return Math.max(1, Math.ceil(points / POINTS_PER_LEVEL - 1e-9));
 }
 
-/** Colour family of a grade. Pax, Oct 9: only the four F1 colours (S purple · A and B green · C yellow · D and F red). */
-export function gradeTone(g: Grade): 's' | 'a' | 'b' | 'c' | 'd' | 'f' {
-  return g === 'S' ? 's' : (g[0].toLowerCase() as 'a' | 'b' | 'c' | 'd' | 'f');
+/** Points as a level change, for card text: +3, −6 (one decimal when it isn't whole). */
+export function levelDelta(points: number): string {
+  const v = Math.round((points / POINTS_PER_LEVEL) * 10) / 10;
+  return `${v >= 0 ? '+' : '−'}${Math.abs(v)}`;
+}
+
+/** Colour band of a level, as the tone classes the screens already style:
+ * 's' purple 21+ · 'a' green 12–20 · 'c' yellow 7–11 · 'd' red 1–6. */
+export type LevelTone = 's' | 'a' | 'c' | 'd';
+export function levelTone(lv: number): LevelTone {
+  return lv > MAX_NATURAL_LEVEL ? 's' : lv >= 12 ? 'a' : lv >= 7 ? 'c' : 'd';
 }
 
 export interface StatPart { card: Card; pct: number; points: number }
 
 export interface StatReading {
   stat: StatKey;
-  /** The rolled value, 0–100. */
+  /** The rolled value, 0–100 points. */
   base: number;
   /** Each card's contribution, in points on the same scale. */
   parts: StatPart[];
   /** base + parts. */
   total: number;
-  grade: Grade;
-  baseGrade: Grade;
+  level: number;
+  baseLevel: number;
 }
 
 /** One stat with its cards: the same math as applyCards (a card's pct IS its
@@ -53,11 +64,11 @@ export function readStat(stat: StatKey, raw: number, cards: readonly Card[]): St
     .filter(c => c.kind !== 'effect')
     .flatMap(c => c.stats.filter(s => s.stat === stat).map(s => ({ card: c, pct: s.pct, points: s.pct })));
   const total = base + parts.reduce((a, p) => a + p.points, 0);
-  return { stat, base, parts, total, grade: grade(total), baseGrade: grade(base) };
+  return { stat, base, parts, total, level: level(total), baseLevel: level(base) };
 }
 
-/** The overall grade: the mean of the readings' totals. */
-export function overall(readings: readonly StatReading[]): { total: number; grade: Grade } {
+/** The overall level: the mean of the readings' totals. */
+export function overall(readings: readonly StatReading[]): { total: number; level: number } {
   const total = readings.reduce((a, r) => a + r.total, 0) / Math.max(1, readings.length);
-  return { total, grade: grade(total) };
+  return { total, level: level(total) };
 }
