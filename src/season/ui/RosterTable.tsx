@@ -63,7 +63,7 @@ export function GradeCell({ value, notch, move = 0, dim, strong, onOpen, flashTo
   );
 }
 
-/** The sum behind a grade: base roll + each card = total. */
+/** The sum behind a level: base roll + each card = total. */
 export function ReadingSheet({ title, reading, icon }: { title: string; reading: StatReading; icon?: string }) {
   const r = Math.round;
   return (

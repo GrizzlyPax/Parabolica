@@ -42,7 +42,7 @@ const streams = (seed: number) => ({
   cars: mulberry32(deriveSeed(seed, 'genesis', 'cars')),
 });
 
-/** A car stat as a grade in the four F1 colours, like the Paddock (#546). */
+/** A car stat as a level in the four F1 colours, like the Paddock (#546, #623). */
 function CarGrade({ stat, n }: { stat: StatKey; n: number | undefined }) {
   if (n === undefined) return <span className="rs-grade">—</span>;
   const g = readStat(stat, n, []).level;

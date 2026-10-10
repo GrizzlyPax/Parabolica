@@ -325,7 +325,7 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, ba
       {hand && <p className="rs-hint pk-hint">{hint}</p>}
       <div className="rt-legend">
         {priority.size > 0 && <span><span className="rt-prio-key">{ABBR[[...priority][0]]}</span> next race priority</span>}
-        <span><i className="rt-notch-key" /> cards change this stat · tap a grade for the sum</span>
+        <span><i className="rt-notch-key" /> cards change this stat · tap a level for the sum</span>
         <span>Tap a card for the full card{myTurn ? '; tap gear to move it' : ''}</span>
       </div>
       <div className="rt-scroll">

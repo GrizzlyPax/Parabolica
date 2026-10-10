@@ -79,7 +79,7 @@ function DriverRow({ driver, columns, context, gridTemplate, isFocused, expandab
           {context.sealed ? (
             <div className="dp-sealed">
               {context.driverRank && <span className={`dp-read ${READ[context.driverRank.tone]}`}>{READ[context.driverRank.tone]} of the field</span>}
-              <span className="dp-note">Rival: grades sealed</span>
+              <span className="dp-note">Rival: levels sealed</span>
             </div>
           ) : (
             <div className="dp-ovr">
