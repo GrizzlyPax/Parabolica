@@ -10,9 +10,8 @@
 // traits: the cards you hold are the ones the run deals (Apex's call, #660).
 //
 // The archetype is also the driver's rank-up path (#646): the trait a
-// rank-up deals comes from their own archetype. Until the deck carries
-// archetype tags (#565 / #647) that is read off the stats the archetype
-// nudges.
+// rank-up deals comes from their own archetype, read off the run deck's
+// tags (#647).
 //
 // Pure. Every roll takes the rng it is given; the streams are the callers'
 // (the pool's 'rookies' streams, the run's 'run', 'rookies' streams).
@@ -21,12 +20,12 @@ import { deriveSeed, mulberry32, shuffle, type Rng } from '../engine/rng';
 import { generatePoolDriver } from '../generators/drivers';
 import { generateRackCar, type CarStats, type TeamStats } from '../generators/cars';
 import { rollRacingNumbers } from '../generators/racingNumbers';
-import { cardsBy, DRIVER_STATS, MOTORSPORT_DECK, STAT_LABELS, statRange, type Card, type CardStat, type CarStatKey, type DriverStatKey, type StatKey } from '../cards';
-import type { Rarity } from '../cards/rarity';
+import { DRIVER_STATS, RUN_DECK, STAT_LABELS, statRange, type Archetype, type Card, type CardStat, type CarStatKey, type DriverStatKey, type StatKey } from '../cards';
+import { RARITIES, type Rarity } from '../cards/rarity';
 import type { DriverStats } from '../RaceEngine';
 import type { PoolDriver, RackCar } from './genesis';
 
-export type Archetype = 'qualifier' | 'brawler' | 'tyre-saver' | 'glass-cannon';
+export type { Archetype };
 export const ARCHETYPES: readonly Archetype[] = ['qualifier', 'brawler', 'tyre-saver', 'glass-cannon'];
 
 /** Each archetype's nudge, in grade points (5 = one level), and a line for the screen. */
@@ -124,19 +123,21 @@ export function rookiePlayerCar(seed: number, id: string, setup: CarSetupId): Ra
 export const rookiePlayerTeamStats = (): TeamStats => ({ tireManagement: gradeToRaw('tireManagement', ROOKIE_GRADE), pitCrew: gradeToRaw('pitCrew', ROOKIE_GRADE) });
 
 /**
- * The driver traits a rank-up may deal (#646): of the metal, and from the
- * driver's own archetype: every stat the card moves is one the archetype
- * nudges up; failing that, any of them; failing that (no archetype: a
- * stand-alone season), any driver trait of the metal.
+ * The driver traits a rank-up may deal (#646 / #647): run-deck driver traits
+ * tagged with the driver's own archetype or Any-team, of the rank's metal;
+ * when the deck has none at that metal, the nearest metal's (commoner
+ * first, like pickCard). `exclude` drops ids already held. No archetype (a
+ * stand-alone season): every driver trait of the metal.
  */
-export function archetypeTraits(archetype: Archetype | undefined, metal: Rarity): Card[] {
-  const all = cardsBy({ kind: 'trait', target: 'driver', rarity: metal }, MOTORSPORT_DECK);
-  if (!archetype) return all;
-  const own = new Set(Object.entries(ARCHETYPE_INFO[archetype].nudge).filter(([, v]) => v > 0).map(([k]) => k));
-  const exact = all.filter(c => c.stats.length > 0 && c.stats.every(s => own.has(s.stat)));
-  if (exact.length) return exact;
-  const some = all.filter(c => c.stats.some(s => own.has(s.stat)));
-  return some.length ? some : all;
+export function archetypeTraits(archetype: Archetype | undefined, metal: Rarity, exclude: ReadonlySet<string> = new Set()): Card[] {
+  const traits = RUN_DECK.filter(c => c.kind === 'trait' && c.target === 'driver' && !exclude.has(c.id) && (!archetype || c.tag === archetype || c.tag === 'any'));
+  const want = RARITIES.indexOf(metal);
+  const order = [...RARITIES.slice(0, want + 1).reverse(), ...RARITIES.slice(want + 1)];
+  for (const r of order) {
+    const bucket = traits.filter(c => c.rarity === r);
+    if (bucket.length) return bucket;
+  }
+  return traits;
 }
 
 /** "Acceleration +2 · Consistency +3" for a screen. */

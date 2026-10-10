@@ -13,9 +13,11 @@
 // A team carried up a run (#597) brings its live effects, with the races
 // already used subtracted, so "2 races left" is still 2 races left.
 
-import type { Card, CardStat, StatKey } from '../cards/types';
-import { statRange, favourPercents } from '../cards/apply';
-import type { LapEffect, EffectInfo, DriverStats, CarStats, TeamStats } from '../RaceEngine';
+import type { Card, CardStat } from '../cards/types';
+import { rawDeltas } from '../cards/apply';
+import type { LapEffect, EffectInfo } from '../RaceEngine';
+
+export { rawDeltas };
 import type { CardHolder } from './pack';
 import { draftState } from './draft';
 import { poolFor, type SeasonFacts } from './season';
@@ -73,21 +75,6 @@ export function describeLeft(e: ActiveEffect): string {
 export function effectInfo(e: ActiveEffect): EffectInfo {
   return { id: e.id, name: e.name, emoji: e.emoji, source: e.source, left: describeLeft(e) };
 }
-
-/** Grade points → raw units for the engine's lap effects. */
-export function rawDeltas(stats: CardStat[]): Pick<LapEffect, 'driver' | 'car' | 'team'> {
-  const out: { driver: Partial<DriverStats>; car: Partial<CarStats>; team: Partial<TeamStats> } = { driver: {}, car: {}, team: {} };
-  for (const [k, pct] of Object.entries(favourPercents(stats))) {
-    const key = k as StatKey;
-    const delta = ((pct ?? 0) * statRange(key).span) / 100;
-    if (key in DRIVER_KEYS) out.driver[key as keyof DriverStats] = delta;
-    else if (key in CAR_KEYS) out.car[key as keyof CarStats] = delta;
-    else out.team[key as keyof TeamStats] = delta;
-  }
-  return out;
-}
-const DRIVER_KEYS = { baseSpeed: 1, consistency: 1, luck: 1, acceleration: 1, endurance: 1, aggression: 1 };
-const CAR_KEYS = { power: 1, grip: 1, reliability: 1 };
 
 /** Whether an effect reaches a driver: its own, or the car's / the team's (both drivers). */
 export function reaches(e: EffectFact, driverId: number): boolean {

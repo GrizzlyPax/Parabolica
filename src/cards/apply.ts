@@ -24,11 +24,12 @@ export interface StatBlock {
   team?: TeamStats;
 }
 
-/** Σ pct per stat over the cards that count (gear and traits; effects are v0.6). */
+/** Σ pct per stat over the cards that count at race build: gear and traits
+ * (effects are v0.6; a half-race window card, #647, runs on the lap timer instead). */
 export function cardPercents(cards: readonly Card[]): Partial<Record<StatKey, number>> {
   const out: Partial<Record<StatKey, number>> = {};
   for (const c of cards) {
-    if (c.kind === 'effect') continue;
+    if (c.kind === 'effect' || c.window) continue;
     for (const { stat, pct } of c.stats) out[stat] = (out[stat] ?? 0) + pct;
   }
   return out;
@@ -74,4 +75,17 @@ export function applyFavours<T extends { stats: DriverStats; carStats?: CarStats
     const a = applyPercents({ driver: d.stats, car: d.carStats, team: d.teamStats }, pcts);
     return { ...d, stats: a.driver!, carStats: a.car, teamStats: a.team };
   });
+}
+
+/** Grade points → raw units for the engine's lap effects (#332; window cards, #647). */
+export function rawDeltas(stats: readonly CardStat[]): { driver: Partial<DriverStats>; car: Partial<CarStats>; team: Partial<TeamStats> } {
+  const out: { driver: Partial<DriverStats>; car: Partial<CarStats>; team: Partial<TeamStats> } = { driver: {}, car: {}, team: {} };
+  for (const [k, pct] of Object.entries(favourPercents(stats))) {
+    const key = k as StatKey;
+    const delta = ((pct ?? 0) * statRange(key).span) / 100;
+    if (key in DRIVER_STAT_ROLLS) out.driver[key as keyof DriverStats] = delta;
+    else if (key === 'power' || key === 'grip' || key === 'reliability') out.car[key] = delta;
+    else out.team[key as keyof TeamStats] = delta;
+  }
+  return out;
 }

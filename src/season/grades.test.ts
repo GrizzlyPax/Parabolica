@@ -6,7 +6,8 @@ import { STAR_RATING } from '../generators/cars';
 import { applyCards } from '../cards/apply';
 import { CARDS_BY_ID } from '../cards/deck';
 import { METAL_LADDER } from '../cards';
-import { PLAYER_CARD_SCALE, CURSE_POINTS } from './pack';
+import { RUN_CURSES } from '../cards';
+import { PLAYER_CARD_SCALE } from './pack';
 import { level, levelDelta, levelTone, overall, rating, readStat } from './grades';
 import { rivalRank } from './ranks';
 import { newSeason } from './season';
@@ -45,7 +46,7 @@ describe('stat levels', () => {
     const lv = (r: keyof typeof METAL_LADDER) => levelDelta(METAL_LADDER[r].pct * PLAYER_CARD_SCALE);
     expect([lv('bronze'), lv('silver'), lv('gold'), lv('iridium')]).toEqual(['+3', '+6', '+6', '+9']);
     expect([METAL_LADDER.gold.stats, METAL_LADDER.iridium.stats]).toEqual([2, 3]);
-    expect(levelDelta(CURSE_POINTS * PLAYER_CARD_SCALE)).toBe('−6');
+    expect(levelDelta(RUN_CURSES[0].stats[0].pct)).toBe('−12');
   });
 
   it('card points add up to exactly what applyCards gives the sim', () => {

@@ -21,6 +21,7 @@ import { rollRacingNumbers } from '../generators/racingNumbers';
 import { teamIdentitiesForSeed } from '../generators/teamIdentity';
 import { BASE_DECK_TEAMS } from '../data/deckTeams';
 import { MOTORSPORT_DECK, cardsBy, pickCard, applyCards, applyPercents, favourPercents, DRIVER_STATS, CAR_STATS, TEAM_STATS, type Card, type CardStat, type CardTarget, type StatKey } from '../cards';
+import { rawDeltas } from '../cards/apply';
 import { Ruleset, defaultRuleset } from '../rules/ruleset';
 import type { RosterDriver, LapEffect, EffectInfo } from '../RaceEngine';
 import { ARCHETYPES, CPU_WOBBLE, rookieCar, rookieDriver, rookieTeamStats, type Archetype } from './rookies';
@@ -274,6 +275,27 @@ export interface SeasonRosterOptions {
    * (applied after cards, before the rival shift), lap effects the engine
    * runs, and what to show. */
   effects?: { points: Record<number, CardStat[]>; laps: Record<number, LapEffect[]>; infos: Record<number, EffectInfo[]> };
+  /** The race's lap count: a half-race window card (#647) becomes a lap effect over that half. Absent = window cards sit out. */
+  laps?: number;
+}
+
+/** A window card's lap window: the first half rounds up, the second takes the rest. */
+export function windowLaps(window: 'first' | 'second', laps: number): { fromLap: number; laps: number } {
+  const half = Math.ceil(laps / 2);
+  return window === 'first' ? { fromLap: 0, laps: half } : { fromLap: half, laps: laps - half };
+}
+
+/** Window cards (#647) as lap effects for the engine, plus what to show. */
+export function windowEffects(cards: readonly Card[], laps: number | undefined): { laps: LapEffect[]; infos: EffectInfo[] } {
+  const out = { laps: [] as LapEffect[], infos: [] as EffectInfo[] };
+  if (!laps) return out;
+  for (const c of cards) {
+    if (!c.window) continue;
+    const w = windowLaps(c.window, laps);
+    out.laps.push({ id: c.id, name: c.name, emoji: '', ...w, ...rawDeltas(c.stats) });
+    out.infos.push({ id: c.id, name: c.name, emoji: '', source: 'gear', left: `${c.window} half` });
+  }
+  return out;
 }
 
 const ALL_STATS: StatKey[] = [...DRIVER_STATS, ...CAR_STATS, ...TEAM_STATS];
@@ -329,6 +351,10 @@ export function seasonRoster(pool: SeasonPool, rosters: TeamRoster[], lineups: L
       const points = opts.effects?.points[driverId];
       const timed = points?.length ? applyPercents(carded, favourPercents(points)) : carded;
       const adjusted = shiftStats(timed, opts.shifts?.[team.id] ?? 0);
+      // Half-race window cards (#647) run on the lap timer, after the timed effects.
+      const windows = windowEffects(cards, opts.laps);
+      const lapEffects = [...(opts.effects?.laps[driverId] ?? []), ...windows.laps];
+      const infos = [...(opts.effects?.infos[driverId] ?? []), ...windows.infos];
       out.push({
         id: driver.id,
         firstName: driver.firstName,
@@ -350,8 +376,8 @@ export function seasonRoster(pool: SeasonPool, rosters: TeamRoster[], lineups: L
         number: driver.number,
         // Display only: already baked into the stats above. The race view shows them (#451).
         cards,
-        effects: opts.effects?.infos[driverId],
-        lapEffects: opts.effects?.laps[driverId],
+        effects: infos.length ? infos : undefined,
+        lapEffects: lapEffects.length ? lapEffects : undefined,
       });
     });
   }

@@ -10,13 +10,15 @@
 // Each card is a gear card (equipment / upgrade / facility) or, 1 in 4, a
 // trait card, never an effect. The kept card goes on their own team.
 //
-// Cards are 3× louder for the player (PLAYER_CARD_SCALE): a dealt card's
-// grade points are the deck's × 3, traits and gear alike, so the Paddock and
-// the sim read the same number. Rivals never open packs (#478) and keep
-// their genesis traits at 1×. GEAR HAS MILEAGE: double strength (× 2 on top,
-// so × 6) and gone after GEAR_LIFE races, wherever it sits; traits are for
-// good. A CURSE is an effect (#332): all bad, −10 grade (× 3) on one car or
-// team stat, both drivers, CURSE_LIFE races; the offer forces it.
+// Packs deal the 60-card RUN DECK (#647, cards/runDeck.ts), written as the
+// player reads it (a Bronze is +3 levels = 15 grade points), no lean, so the
+// Paddock and the sim read the same number. Rivals never open packs (#478)
+// and keep their genesis traits at 1×. GEAR HAS MILEAGE: double strength
+// (× GEAR_STRENGTH) and gone after GEAR_LIFE races, wherever it sits; traits
+// are for good. A CURSE is an effect (#332): one of the eight named curses,
+// all bad, on the car or the team, both drivers, CURSE_LIFE races (one); the
+// offer forces it. (The grid deck's cards are × PLAYER_CARD_SCALE for the
+// player when they turn up: old saves.)
 //
 // Gear fills slots (one of each, slotsFor). A card into a full slot must
 // name what it REPLACES; the old card goes to the team's uncapped locker. In
@@ -26,11 +28,11 @@
 // packs and cards). The APPLICATION records the pack picked, which three were
 // dealt and which was kept; a CURSE application records the curse taken;
 // MOVES are recorded too, in one ordered log, so a swap-then-equip replays in
-// the order it happened. "Packs lean to your plan" waits on the deck list
-// (#565).
+// the order it happened. No pack lean (Pax, Oct 10): later, a way to see or
+// steer what a pack leans to.
 
 import { mulberry32, deriveSeed, shuffle } from '../engine/rng';
-import { MOTORSPORT_DECK, cardsBy, pickCard, slotsFor, GEAR_KIND, CARDS_BY_ID, CAR_STATS, TEAM_STATS, type Card, type CardTarget, type Slots } from '../cards';
+import { RUN_DECK, RUN_CURSES, cardById, cardsBy, pickCard, slotsFor, GEAR_KIND, type Card, type CardTarget, type Slots } from '../cards';
 import type { RarityOdds } from '../cards/rarity';
 import type { CarriedCards, SeasonCards } from './genesis';
 import { draftState } from './draft';
@@ -51,16 +53,15 @@ export const PACK_ODDS: Record<PackTier, RarityOdds> = {
 export const TRAIT_CHANCE = 0.25;
 /** Cards a pack deals; the player keeps one (#533). */
 export const PACK_SIZE = 3;
-/** Every card the player is dealt is this many times the deck's grade points (#627, Pax: 3×). */
+/** A grid-deck card (deck.ts) the player holds is this many times its grade points (#627, Pax: 3×). The run deck (#647) is written as held. */
 export const PLAYER_CARD_SCALE = 3;
 /** Gear mileage (#627): gear is this many times stronger again, and gone after GEAR_LIFE races. */
 export const GEAR_STRENGTH = 2;
 export const GEAR_LIFE = 3;
 /** The offer (#627): pick 1 of 2 packs · one pack · a forced Curse pack. Draft odds (Steward re-probes). */
 export const OFFER_ODDS = { choice: 60, single: 30, curse: 10 };
-/** A curse (#627): one car or team stat, this many deck grade points (× PLAYER_CARD_SCALE), for CURSE_LIFE races. */
-export const CURSE_POINTS = -10;
-export const CURSE_LIFE = 3;
+/** A curse (#647): one of RUN_CURSES, for this many races (Pax: "3 races is steep"). */
+export const CURSE_LIFE = 1;
 const TARGETS: CardTarget[] = ['driver', 'car', 'team'];
 
 /** Where a pack's card goes: a pack is named by its place, never its metal. */
@@ -152,9 +153,9 @@ export function packTierFor(facts: SeasonFacts, round: number, teamId: string): 
 
 const isGear = (c: Card) => c.kind === 'equipment' || c.kind === 'upgrade' || c.kind === 'facility';
 
-/** A card as the player holds it (#627): the deck's grade points × 3, and × 2 again for gear. */
+/** A card as the player holds it: a run-deck card as written, × 2 for gear (#627); a grid-deck card × 3, and × 2 again for gear. */
 export function playerCard(c: Card): Card {
-  const k = PLAYER_CARD_SCALE * (isGear(c) ? GEAR_STRENGTH : 1);
+  const k = (c.deck === 'run' ? 1 : PLAYER_CARD_SCALE) * (isGear(c) ? GEAR_STRENGTH : 1);
   return k === 1 ? c : { ...c, stats: c.stats.map(s => ({ ...s, pct: s.pct * k })) };
 }
 
@@ -174,24 +175,20 @@ export function packOffer(facts: SeasonFacts, round: number, teamId: string): Pa
   return { round, teamId, tier, kind: 'curse', packs: [], curse: dealCurse(facts, round, teamId) };
 }
 
-const CURSE_NAMES: Record<string, string> = { power: 'Flat engine', grip: 'Greasy tyres', reliability: 'Gremlins', tireManagement: 'Tyre blindness', pitCrew: 'Butterfingers' };
-
-/** The curse behind a Curse pack (#627): car or team, one stat, all bad, CURSE_LIFE races. */
+/** The curse behind a Curse pack (#647): one of the eight named curses, uniform on its own stream, CURSE_LIFE races. */
 export function dealCurse(facts: SeasonFacts, round: number, teamId: string): EffectFact {
   const rng = mulberry32(deriveSeed(facts.setup.seed, 'season', 'curse', round, teamId));
-  const onCar = rng() < 0.5;
-  const stats = onCar ? CAR_STATS : TEAM_STATS;
-  const stat = stats[Math.floor(rng() * stats.length)];
+  const c = RUN_CURSES[Math.floor(rng() * RUN_CURSES.length)];
   return {
-    type: 'effect', round, teamId, id: `curse-${round}`, name: CURSE_NAMES[stat] ?? 'Curse', emoji: '🪦', source: 'curse',
-    target: { kind: onCar ? 'car' : 'team' }, stats: [{ stat, pct: CURSE_POINTS * PLAYER_CARD_SCALE }], timer: { races: CURSE_LIFE },
+    type: 'effect', round, teamId, id: `curse-${round}`, name: c.name, emoji: '🪦', source: 'curse',
+    target: { kind: c.target }, stats: c.stats.map(s => ({ ...s })), timer: { races: CURSE_LIFE },
   };
 }
 
-/** One card off a stream for a place: three rng draws (kind, metal, pick). */
+/** One card off a stream for a place, from the run deck: three rng draws (kind, metal, pick). */
 function dealOne(rng: () => number, tier: PackTier, place: PackKind): Card {
   const kindRoll = rng();
-  const pool = kindRoll < TRAIT_CHANCE ? cardsBy({ kind: 'trait', target: place }, MOTORSPORT_DECK) : cardsBy({ kind: GEAR_KIND[place] }, MOTORSPORT_DECK);
+  const pool = kindRoll < TRAIT_CHANCE ? cardsBy({ kind: 'trait', target: place }, RUN_DECK) : cardsBy({ kind: GEAR_KIND[place] }, RUN_DECK);
   const card = pickCard(pool, PACK_ODDS[tier], rng);
   if (!card) throw new Error(`pack: empty pool for ${place}`);
   return playerCard(card);
@@ -230,9 +227,9 @@ export interface TeamCardState {
   mileage: Record<string, number>;
 }
 
-/** A card by id, as the player holds it. */
+/** A card by id (either deck), as the player holds it. */
 function card(id: string): Card {
-  const c = CARDS_BY_ID.get(id);
+  const c = cardById(id);
   if (!c) throw new Error(`pack: no card ${id}`);
   return playerCard(c);
 }

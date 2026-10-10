@@ -12,8 +12,7 @@ import { draftState, quickDraft } from './draft';
 import { defaultSetup } from './setup';
 import { openPack, takeRankUps } from './testHelpers';
 import { driverPointsInRace } from '../fantasy/types';
-import { CARDS_BY_ID, DRIVER_STATS } from '../cards';
-import { PLAYER_CARD_SCALE } from './pack';
+import { RUN_CARDS_BY_ID, DRIVER_STATS } from '../cards';
 import { currentLeague, withCurrentLeague, promote, runState, seasonFactsFor, type RunFacts } from '../run/run';
 import { rookieRun } from '../run/testHelpers';
 
@@ -69,7 +68,8 @@ describe('XP and ranks', () => {
     expect(jump.stats).toHaveLength(JUMP[1].stats);
     expect(jump.stats[0].pct).toBe(JUMP[1].levels * LEVEL_POINTS); // +6 levels = +30 grade = a Silver at 3×
     expect(trait.kind).toBe('trait'); expect(trait.target).toBe('driver'); expect(trait.rarity).toBe('silver');
-    expect(trait.stats[0].pct).toBe(CARDS_BY_ID.get(trait.id)!.stats[0].pct * PLAYER_CARD_SCALE);
+    expect(trait.deck).toBe('run');
+    expect(trait.stats[0].pct).toBe(RUN_CARDS_BY_ID.get(trait.id)!.stats[0].pct); // a run-deck trait is as written
     expect(wildOf(wild.id)).toBeTruthy();
     expect(dealRankUp(f, a, 1, round)).toEqual(deal); // seeded
     // Validation.
