@@ -49,7 +49,7 @@ for the future NPC-crowd system (BetLab was removed Oct 2026; git history has it
 - GitHub: GrizzlyPax/Parabolica
 
 ## How we work
-- **Read first:** `docs/V08_PLAN.md` (the current release: v0.8 Indianapolis, Ace America), then `docs/story/ace-america.md` (the world), then `docs/V07_PLAN.md` (the roguelite run it builds on), then the newest `docs/HANDOFF_*.md` (how the pieces fit, traps). v0.6's record and the run's design decisions: `docs/V06_PLAN.md`; v0.5's: `docs/V05_PLAN.md`.
+- **Read first:** `docs/V08_PLAN.md` (the current release: v0.8 Indianapolis, Ace America), then `docs/STORY_BIBLE.md` (the world, **canon**: Ace America) and `docs/story/ace-america.md` (working notes), then `docs/V07_PLAN.md` (the roguelite run it builds on), then the newest `docs/HANDOFF_*.md` (how the pieces fit, traps). v0.6's record and the run's design decisions: `docs/V06_PLAN.md`; v0.5's: `docs/V05_PLAN.md`.
 - **Skills (`.claude/skills/`)** hold the procedures: `write-issue` (issue shape, triage, `ready`), `ship-pr` (build → test → PR → merge rules), `republish-preview`, `balance-read`, `season-report`.
 - **GitHub is the task system. Every thread, every crew member.** No Asana, no TODO docs; the issue is the task.
   - **Milestones = sequence.** Each release splits into numbered milestones worked in order (v0.6 was `1 Choices` → `2 The bump` → `3 Ship`). v0.5 Spa shipped Oct 9, v0.6 Monza Oct 10; v0.7 Suzuka shipped Oct 10 (v0.7.4, trimmed); v0.8 is `1 Lock + the look` → `2 Foundations` → `3 Screens + words` → `4 Ship`, and `v0.8 Indianapolis · Ace America` holds v0.8 work not yet placed (`v0.7 Suzuka` still holds older unplaced work). No due dates.
@@ -113,7 +113,7 @@ Every current-release issue has a `crew:` label saying who (and which model) sho
 - `docs/TRACKS_WEATHER.md` - 6 stat-combo tracks + Neutral and 5 dry weathers (live in v0.5); lap-by-lap Wet with a wet tyre (v0.6)
 - `docs/CONDITIONS_LAYER.md` - History: track tags + weather (retired in v0.6; see TRACKS_WEATHER)
 - `docs/STORY_WORKSTREAM.md` - Handoff for ANY agent/collaborator: orientation, where things are, fixed vs flexible, flavour pass vs theme change, the loop, prompts
-- `docs/STORY_BIBLE.md` - Pax's theme/voice bible; agents read it before any flavour pass (story workstream)
+- `docs/STORY_BIBLE.md` - **Canon:** Ace America (since #712). Pax's theme/voice bible; agents read it before any flavour pass; change it only by PR with Pax's say-so
 - `docs/story/` - Story brainstorms and working notes (NOT canon until moved into the bible); index in `docs/story/README.md`
 - `docs/WORLD_DECK.md` - Content framework: how to add teams, tracks, names, tags, cards, weather, gods, commentary (shapes, rules, voice, backlog, agent prompt)
 - `docs/GLOSSARY.md` - GENERATED World Deck: every team, track, card, rule, weather and flavour pool (`npm run glossary`; `src/data/worldDeck.test.ts` checks content)
