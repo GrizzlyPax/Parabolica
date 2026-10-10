@@ -38,6 +38,12 @@ export const RULE_CARDS: RuleCard[] = [
     readout: 'Neutral skies become rare; every dry weather is as likely.',
     patch: { weather: { neutral: 10, ...Object.fromEntries(DRY.map(d => [d, 18])) } } },
 
+  // ---- Cars ----
+  { id: 'spec-cars', name: 'Spec Cars', emoji: '🔩', scope: 'race', weight: 'mild',
+    blurb: 'Same car for everyone. Drivers and cards decide it.',
+    readout: 'Every car is 3 stars (power, grip, reliability) before cards.',
+    patch: { specCars: 3 } },
+
   // ---- Traits (renamed from the tag era in #579; old ids load via RULE_CARD_ALIASES) ----
   { id: 'trait-soup', name: 'Trait Soup', emoji: '🍲', scope: 'both', weight: 'wild',
     blurb: 'Everyone arrives with baggage.',

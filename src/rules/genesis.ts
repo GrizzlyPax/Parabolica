@@ -63,7 +63,9 @@ export function buildRoster(roster: GeneratedDriver[], cars: Map<string, Generat
   return roster.map((driver, i) => {
     const car = cars.get(driver.kingdomId);
     const cards = traits.get(driver.id) ?? [];
-    const adjusted = applyCards({ driver: driver.stats, car: car?.stats, team: car?.teamStats }, cards);
+    // Spec Cars (#582): every car the same stars, then cards as usual.
+    const carStats = car && rs.cars ? { ...car.stats, power: rs.cars.spec, grip: rs.cars.spec, reliability: rs.cars.spec } : car?.stats;
+    const adjusted = applyCards({ driver: driver.stats, car: carStats, team: car?.teamStats }, cards);
     return {
       ...driver,
       stats: adjusted.driver!,
