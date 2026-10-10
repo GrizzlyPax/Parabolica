@@ -29,8 +29,12 @@ The pool generator (`generateSeasonPool(seed, teams, rs, { carry, league })`) pu
 - **Meta:** `parabolica.meta.v1`: `{ unlocks: UnlockId[], runs: RunRecord[] }`. Loading reads only the data's own schema version, never the engine version, so a version bump keeps every unlock (tested). `UNLOCKS` registers the first five (#589); **`unlocksEarned(run)` grants nothing until Steward's #596**. `recordRun` writes a finished run once (by seed).
 - **The screens** keep working on a `SeasonFacts`: `loadCurrentLeague` / `saveCurrentLeague` (write back into the run; a finished run is recorded in the meta), `startRun` (League Setup → league 0), `promoteCurrentRun`, `currentRunState`, `clearRun`. The finale (Standings) offers **"Up to Regional →"** when the league is won, says the run is over when not.
 
+## Rival levels + the nemesis (#626)
+- **One table:** `LEAGUE_LADDER` in `src/run/run.ts`: Juniors −25 / +12 · Regional −5 / +12 · National +10 / +14 · Top flight +22 / +12 (Steward's fit, Pax Oct 10; re-fit after #592 / #593 / #594). `field` is grade points added to **every stat** (driver, car, team) of every rival **at race build** (`seasonRoster` → `shiftStats`, the card math), after cards; the player's team is never shifted. Stars are floored at `STAR_FLOOR` (0.5★), so a Juniors 1★ car still runs. Stand-alone seasons and Quick Race (no `LeagueContext`) shift nothing.
+- **The nemesis** is the league's runner-up (P2 in the Constructors'), carried up as a **look only** (`CarriedTeam.nemesis`, `runnerUp(prev)`): it wears the first fresh slot in the next pool (`CompetitorTeam.nemesis = true`, the deck never deals that look twice), rolls fresh drivers, car and stats, and gets `nemesis` points on top of the field shift. Rivals keep genesis traits only: no packs, no mid-league levelling (as before).
+- Shifting at race build (not in the pool) keeps the draft board honest and the pool unchanged; the pool's grades are the rolls, the race is the level. `rivalShifts(facts)` gives the UI the per-team points (Hub: stat levels, #623).
+
 ## Hooks left on purpose
-- **Rival levels (#626):** `LeagueContext.fieldShift` / `nemesisShift`; `LEAGUE_LADDER[i].level`.
 - **Boss race (#593):** `LeagueContext.bossRound` (the last round).
 - **Rookie pick (#594):** `RunSetup.start` ('draft' today); the draft is the run's start until then.
 - **XP (#592):** a fact log on `RunFacts`, keyed by the stable driver id.
