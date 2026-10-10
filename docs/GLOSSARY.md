@@ -1,6 +1,6 @@
 # Parabolica World Deck
 
-*Everything in the sim and the world, generated from the data modules by `npm run glossary` — do not edit by hand; edit the source files named in each section and re-run. Engine v0.6.2. How to add content: docs/WORLD_DECK.md.*
+*Everything in the sim and the world, generated from the data modules by `npm run glossary` — do not edit by hand; edit the source files named in each section and re-run. Engine v0.6.3. How to add content: docs/WORLD_DECK.md.*
 
 28 teams · 6 tracks · 94 cards (36 traits · 36 gear · 22 effects) · 5 in-race effects · 12 rule cards · 6 weathers
 
@@ -229,9 +229,11 @@ A card adds grade points to its stats at race build (src/cards/apply.ts): bronze
 
 | Pool | Size | Where | Samples |
 |---|---|---|---|
-| **Driver first names · international (78% of drivers)** | 273 | `src/generators/names.ts INTL_FIRST_NAMES` | James · Mary · William · Sarah · Thomas · Emily · George · Grace |
-| **Driver last names · international** | 270 | `src/generators/names.ts INTL_LAST_NAMES` | Smith · Walker · Hughes · Foster · Bennett · Coleman · Hayes · Wells |
-| **Driver first names · absurd (8% both halves, 12% one half on a real name; 1% of all names show as one word)** | 84 | `src/generators/names.ts ABSURD_FIRST_NAMES` | Brisket · Sandwich · Crouton · Noodle · Pretzel · Waffle · Dumpling · Peanut |
+| **Driver first names · American (80% of drivers have a real name; each half is American 80% of the time)** | 104 | `src/generators/names.ts US_FIRST_NAMES` | Tyler · Megan · Brandon · Ashley · Jake · Kayla · Cody · Dustin |
+| **Driver last names · American** | 89 | `src/generators/names.ts US_LAST_NAMES` | Johnson · Williams · Brown · Jones · Miller · Davis · Wilson · Anderson |
+| **Driver first names · international (the other 20% of each real half)** | 257 | `src/generators/names.ts INTL_FIRST_NAMES` | Mateo · Sofía · Santiago · Valentina · Diego · Camila · Alejandro · Lucía |
+| **Driver last names · international** | 254 | `src/generators/names.ts INTL_LAST_NAMES` | García · Martínez · Rodríguez · López · González · Hernández · Ramírez · Torres |
+| **Driver first names · absurd (2% both halves, 16% one half on a real name; 1% of all names show as one word)** | 84 | `src/generators/names.ts ABSURD_FIRST_NAMES` | Brisket · Sandwich · Crouton · Noodle · Pretzel · Waffle · Dumpling · Peanut |
 | **Driver last names · absurd** | 74 | `src/generators/names.ts ABSURD_LAST_NAMES` | Marshall · Lamppost · Sidewalk · Elevator · Hallway · Cubicle · Vestibule · Mezzanine |
 | **League names · adjectives ("The ___ Circuit")** | 110 | `src/generators/leagueName.ts LEAGUE_ADJECTIVES` | Molten · Hollow · Furious · Gilded · Fractured · Relentless · Gleaming · Radiant |
 | **League names · nouns** | 86 | `src/generators/leagueName.ts LEAGUE_NOUNS` | Circuit · Grand Prix · Compact · Order · Assembly · Commission · Collective · Championship |
