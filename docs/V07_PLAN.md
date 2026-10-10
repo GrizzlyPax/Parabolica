@@ -16,8 +16,8 @@ Already live from v0.7's first two waves (engine v0.6.3): single-player Season, 
 
 ## The lanes
 **🏎️ Apex — milestone 1, in order (one PR each; Pit tests and merges):**
-1. Run core: the league ladder, promotion, run + meta saves (#597)
-2. Rival levels + the nemesis (#626)
+1. ✅ Run core: the league ladder, promotion, run + meta saves (#597, PR #633)
+2. ✅ Rival levels + the nemesis (#626, PR #637; engine v0.7.0)
 3. Timed effects engine: any stat up or down for N races or laps (#332)
 4. Cards + packs for the run: 3× ladder, gear mileage, the pack offer, curses (#627)
 5. The lab races the Season pool (#612), any time
@@ -33,6 +33,8 @@ Already live from v0.7's first two waves (engine v0.6.3): single-player Season, 
 2. Build your own team as the run's start (#346)
 3. The league ladder screen (#628), after #597
 4. Then screens as designs land: stat levels (#623), level-up pick (#592), rookie pick (#594), run debrief (#595)
+
+- **Oct 10:** Pit merged #633 → #637 (rebased #637 onto main after the squash) once 388 tests + tsc passed; preview v91. A league is won by finishing **P1 in the Constructors'**; league 0 is exactly today's Season; rival shifts apply at race build (never to your team; stars floored at 0.5★), so the draft board shows true rolls.
 
 **📻 Radio — milestone 2:** ✅ the nemesis's voice (#624) · **🛞 Hub** builds it (#635) after #626
 
