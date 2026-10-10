@@ -97,9 +97,11 @@ export const clampTeams = (n: number) => Math.min(MAX_TEAMS, Math.max(MIN_TEAMS,
 export const clampRaces = (n: number) => Math.min(MAX_RACES, Math.max(MIN_RACES, Math.round(n)));
 
 /** The league's name comes from its seed ("The Molten Circuit"), so it
- * needs no field of its own and rerolls with the seed. */
-export function seasonName(setup: Pick<SeasonSetup, 'seed'>): string {
-  return leagueNameForSeed(setup.seed);
+ * needs no field of its own and rerolls with the seed. In a run (#597) the
+ * rung comes first: "Juniors · The Molten Circuit". */
+export function seasonName(setup: Pick<SeasonSetup, 'seed' | 'league'>): string {
+  const name = leagueNameForSeed(setup.seed);
+  return setup.league ? `${setup.league.name} · ${name}` : name;
 }
 
 /** Every default from one seed: the one-tap season. */

@@ -5,7 +5,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { TeamLogo, teamThemeVars } from '../../icons/GameIcon';
 import type { Route, SeasonScreen as Screen } from '../../router';
-import { loadSeason, seasonState, type SeasonFacts } from '../season';
+import { seasonState, type SeasonFacts } from '../season';
+import { loadCurrentLeague as loadSeason, promoteCurrentRun } from '../../run/current';
 import { seasonName } from '../setup';
 import LeagueSetup from './LeagueSetup';
 import DraftBoard from './DraftBoard';
@@ -64,7 +65,8 @@ function SavedSeason({ screen, navigate, onMenu }: Props) {
     return <Paddock facts={facts} onChange={setFacts} onMenu={onMenu} onEndSeason={onEndSeason} onGo={() => navigate({ name: 'season', screen: 'race' })} onStandings={() => navigate({ name: 'season', screen: 'standings' })} />;
   }
   if (facts && screen === 'standings') {
-    return <Standings facts={facts} onMenu={onMenu} onEndSeason={onEndSeason} onPaddock={() => navigate({ name: 'season', screen: 'paddock' })} onPlayAgain={() => navigate({ name: 'season', screen: 'setup' }, { replace: true })} />;
+    return <Standings facts={facts} onMenu={onMenu} onEndSeason={onEndSeason} onPaddock={() => navigate({ name: 'season', screen: 'paddock' })} onPlayAgain={() => navigate({ name: 'season', screen: 'setup' }, { replace: true })}
+      onPromote={() => { if (promoteCurrentRun()) navigate({ name: 'season', screen: 'paddock' }, { replace: true }); }} />;
   }
   return <SeasonHolding screen={screen} navigate={navigate} onMenu={onMenu} />;
 }

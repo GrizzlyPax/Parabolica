@@ -25,7 +25,7 @@
 import { mulberry32, deriveSeed } from '../engine/rng';
 import { MOTORSPORT_DECK, cardsBy, pickCard, slotsFor, GEAR_KIND, CARDS_BY_ID, type Card, type CardTarget, type Slots } from '../cards';
 import type { RarityOdds } from '../cards/rarity';
-import type { SeasonCards } from './genesis';
+import type { CarriedCards, SeasonCards } from './genesis';
 import { draftState } from './draft';
 import { constructorStandings, isHuman, poolFor, seasonState, type SeasonFacts } from './season';
 
@@ -176,19 +176,42 @@ function take(from: Card[], id: string): Card {
   return from.splice(i, 1)[0];
 }
 
+const ids = (xs: Card[]) => xs.map(c => c.id);
+const cards = (xs: string[]) => xs.map(card);
+
+/** A team's cards as ids by holder: what carries up a run (#597). */
+export function carriedCards(state: TeamCardState): CarriedCards {
+  return {
+    drivers: Object.fromEntries(Object.entries(state.drivers).map(([id, d]) => [id, { traits: ids(d.traits), equipment: ids(d.equipment) }])),
+    car: { traits: ids(state.car.traits), upgrade: ids(state.car.upgrade) },
+    team: { traits: ids(state.team.traits), facility: ids(state.team.facility) },
+    locker: ids(state.locker),
+  };
+}
+
+function allTraits(state: TeamCardState): Card[] {
+  return [...state.team.traits, ...state.car.traits, ...Object.values(state.drivers).flatMap(d => d.traits)];
+}
+
 /** Fold the team's card log through `round` (inclusive) onto its drafted
- * entities. Throws on a fact that can't apply, so a bad log never half-applies. */
+ * entities, starting from the cards it carried into this league (#597).
+ * Throws on a fact that can't apply, so a bad log never half-applies. */
 export function teamCardState(facts: SeasonFacts, teamId: string, round: number = Infinity): TeamCardState {
   const pool = poolFor(facts);
   const roster = draftState(pool, facts.draftPicks).rosters[teamId];
   if (!roster) throw new Error(`pack: unknown team ${teamId}`);
+  const carried = facts.setup.carry?.teamId === teamId ? facts.setup.carry.cards : null;
   const state: TeamCardState = {
-    drivers: Object.fromEntries(roster.driverIds.map(id => [id, { traits: [], equipment: [] }])),
-    car: { traits: [], upgrade: [] },
-    team: { traits: [], facility: [] },
-    locker: [],
+    drivers: Object.fromEntries(roster.driverIds.map(id => {
+      const c = carried?.drivers[id];
+      return [id, { traits: cards(c?.traits ?? []), equipment: cards(c?.equipment ?? []) }];
+    })),
+    car: { traits: cards(carried?.car.traits ?? []), upgrade: cards(carried?.car.upgrade ?? []) },
+    team: { traits: cards(carried?.team.traits ?? []), facility: cards(carried?.team.facility ?? []) },
+    locker: cards(carried?.locker ?? []),
     slots: slotsFor([]),
   };
+  state.slots = slotsFor(allTraits(state));
   for (const f of facts.cardFacts) {
     if (f.teamId !== teamId || f.round > round) continue;
     const c = card(f.cardId);
@@ -205,7 +228,7 @@ export function teamCardState(facts: SeasonFacts, teamId: string, round: number 
           if (f.target.kind !== 'team') throw new Error('pack: a team trait goes on the team');
           state.team.traits.push(c);
         }
-        state.slots = slotsFor([...state.team.traits, ...state.car.traits, ...Object.values(state.drivers).flatMap(d => d.traits)]);
+        state.slots = slotsFor(allTraits(state));
       } else {
         if (!fits(c, f.target)) throw new Error(`pack: ${c.kind} does not fit a ${f.target.kind}`);
         const slot = gearSlot(state, f.target);

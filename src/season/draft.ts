@@ -87,14 +87,30 @@ export function validatePick(pool: SeasonPool, picks: DraftPick[], pick: DraftPi
   if (pick.teamId !== slot.teamId) return `${pick.teamId} is not on the clock (${slot.teamId} is)`;
   if (pick.kind !== slot.kind) return `pick ${slot.pickNo} is a ${slot.kind} pick`;
   if (picks.some(p => p.kind === pick.kind && p.id === pick.id)) return `${pick.kind} ${pick.id} is already taken`;
+  // A team carried up a run (#597) must take its own reserved drivers and car; nobody else may.
+  const owed = reservedFor(pool, picks, pick.teamId, pick.kind);
+  if (owed.length && !owed.includes(pick.id)) return `${pick.teamId} must pick its own ${pick.kind} (${owed.join(', ')})`;
   if (pick.kind === 'driver') {
-    if (!pool.drivers.some(d => d.id === pick.id)) return `no driver ${pick.id} in the pool`;
+    const d = pool.drivers.find(x => x.id === pick.id);
+    if (!d) return `no driver ${pick.id} in the pool`;
+    if (d.reservedFor && d.reservedFor !== pick.teamId) return `driver ${pick.id} is ${d.reservedFor}'s`;
     if (picks.filter(p => p.teamId === pick.teamId && p.kind === 'driver').length >= SQUAD_SIZE) return `${pick.teamId} already has ${SQUAD_SIZE} drivers`;
   } else {
-    if (!pool.cars.some(c => c.id === pick.id)) return `no car ${pick.id} in the rack`;
+    const c = pool.cars.find(x => x.id === pick.id);
+    if (!c) return `no car ${pick.id} in the rack`;
+    if (c.reservedFor && c.reservedFor !== pick.teamId) return `car ${pick.id} is ${c.reservedFor}'s`;
     if (picks.some(p => p.teamId === pick.teamId && p.kind === 'car')) return `${pick.teamId} already has a car`;
   }
   return null;
+}
+
+/** The ids reserved for a team (its carried drivers or car) it has not picked yet. */
+export function reservedFor(pool: SeasonPool, picks: DraftPick[], teamId: string, kind: PickKind): (number | string)[] {
+  const taken = new Set(picks.filter(p => p.kind === kind).map(p => p.id));
+  const own: (number | string)[] = kind === 'driver'
+    ? pool.drivers.filter(d => d.reservedFor === teamId).map(d => d.id)
+    : pool.cars.filter(c => c.reservedFor === teamId).map(c => c.id);
+  return own.filter(id => !taken.has(id));
 }
 
 /** The picks with one more appended. Throws on an illegal pick. Pure. */
@@ -115,12 +131,14 @@ export function draftState(pool: SeasonPool, picks: DraftPick[]): DraftState {
     if (p.kind === 'driver') rosters[p.teamId].driverIds.push(p.id as number);
     else rosters[p.teamId].carId = p.id as string;
   }
+  // What the team on the clock may take: nothing reserved for someone else.
+  const clock = slots[picks.length]?.teamId;
   return {
     picks,
     onTheClock: slots[picks.length] ?? null,
     done: picks.length === slots.length,
-    availableDrivers: pool.drivers.filter(d => !takenDrivers.has(d.id)),
-    availableCars: pool.cars.filter(c => !takenCars.has(c.id)),
+    availableDrivers: pool.drivers.filter(d => !takenDrivers.has(d.id) && (!d.reservedFor || d.reservedFor === clock)),
+    availableCars: pool.cars.filter(c => !takenCars.has(c.id) && (!c.reservedFor || c.reservedFor === clock)),
     rosters,
     ranks: poolRanks(pool),
   };
@@ -138,6 +156,9 @@ export function aiPick(pool: SeasonPool, picks: DraftPick[]): DraftPick {
   const rng = mulberry32(deriveSeed(pool.seed, 'season', 'ai-pick', slot.pickNo));
   const staticRoll = rng();
   const which = rng();
+  // A carried team (#597) takes its own drivers and car, in pool order.
+  const owed = reservedFor(pool, picks, slot.teamId, slot.kind);
+  if (owed.length) return { pickNo: slot.pickNo, teamId: slot.teamId, kind: slot.kind, id: owed[0] };
   const ranked: (number | string)[] = slot.kind === 'driver'
     ? [...state.availableDrivers].sort((a, b) => state.ranks.driver.get(a.id)!.rank - state.ranks.driver.get(b.id)!.rank).map(d => d.id)
     : [...state.availableCars].sort((a, b) => state.ranks.car.get(a.id)!.rank - state.ranks.car.get(b.id)!.rank).map(c => c.id);

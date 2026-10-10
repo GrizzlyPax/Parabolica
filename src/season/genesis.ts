@@ -36,6 +36,10 @@ export interface PoolDriver extends GeneratedPoolDriver {
   number: number;
   /** Born with (genesis roll). Permanent. */
   traits: Card[];
+  /** Carried up a run (#597): only this team may draft them. */
+  reservedFor?: string;
+  /** The seed their portrait was rolled on (the league they were born in); absent = this pool's. */
+  avatarSeed?: number;
 }
 
 export interface RackCar {
@@ -44,6 +48,9 @@ export interface RackCar {
   stats: CarStats;
   quirk: string;
   traits: Card[];
+  /** Carried up a run (#597): only this team may draft it. */
+  reservedFor?: string;
+  avatarSeed?: number;
 }
 
 export interface CompetitorTeam {
@@ -67,6 +74,47 @@ export interface SeasonPool {
   drivers: PoolDriver[];
   cars: RackCar[];
   teams: CompetitorTeam[];
+}
+
+/** Card ids a team holds, by holder: the shape a team's cards carry up a run. */
+export interface CarriedCards {
+  drivers: Record<number, { traits: string[]; equipment: string[] }>;
+  car: { traits: string[]; upgrade: string[] };
+  team: { traits: string[]; facility: string[] };
+  locker: string[];
+}
+
+/**
+ * The player's whole team, promoted into the next league of a run (#597):
+ * drivers, car and team keep their ids, stats, traits and numbers; the cards
+ * log starts from these. The pool places them first and reserves them for
+ * `teamId`; generated rivals fill the other slots.
+ */
+export interface CarriedTeam {
+  teamId: string;
+  drivers: PoolDriver[];
+  car: RackCar;
+  team: CompetitorTeam;
+  cards: CarriedCards;
+}
+
+/** Which league of a run this season is (#597). Rival levels (#626) and the
+ * boss race (#593) read it; absent = a stand-alone season. */
+export interface LeagueContext {
+  /** 0-based league on the ladder. */
+  index: number;
+  name: string;
+  /** Grade points added to every stat a rival rolls (#626; 0 until it lands). */
+  fieldShift: number;
+  /** …and the nemesis's extra (#626). */
+  nemesisShift: number;
+  /** The round that is the boss race (#593): the last one. */
+  bossRound: number;
+}
+
+export interface SeasonPoolOptions {
+  carry?: CarriedTeam;
+  league?: LeagueContext;
 }
 
 /** One slot: does it hit? → which metal? → which card? Always three rng()
@@ -99,30 +147,48 @@ function teamIdentities(seed: number, count: number): Omit<CompetitorTeam, 'id' 
   return picked;
 }
 
-/** The whole universe for a season. Pure. */
-export function generateSeasonPool(seed: number, teamCount: number = DEFAULT_TEAMS, rs: Ruleset = defaultRuleset()): SeasonPool {
+/** Generated ids in league L of a run start at L × this, so a team carried up
+ * keeps its own ids and never collides with the new field (#597). */
+export const LEAGUE_ID_STRIDE = 100;
+
+/**
+ * The whole universe for a season. Pure. With `carry` (a run's later league,
+ * #597) the carried team comes first, reserved for its owner, and the
+ * generator fills the remaining slots with fresh rivals whose ids start at
+ * `league.index × LEAGUE_ID_STRIDE`. A stand-alone season (no options) is
+ * exactly what it was.
+ */
+export function generateSeasonPool(seed: number, teamCount: number = DEFAULT_TEAMS, rs: Ruleset = defaultRuleset(), opts: SeasonPoolOptions = {}): SeasonPool {
   if (!Number.isInteger(teamCount) || teamCount < MIN_TEAMS || teamCount > MAX_TEAMS) {
     throw new Error(`generateSeasonPool: teamCount must be ${MIN_TEAMS}–${MAX_TEAMS}, got ${teamCount}`);
   }
+  const carry = opts.carry;
+  const base = (opts.league?.index ?? 0) * LEAGUE_ID_STRIDE;
+  const fresh = teamCount - (carry ? 1 : 0);
+  const taken = new Set(carry?.drivers.map(d => d.number) ?? []);
+
   const driverRng = mulberry32(deriveSeed(seed, 'season', 'drivers'));
-  const numbers = rollRacingNumbers(teamCount * SQUAD_SIZE, mulberry32(deriveSeed(seed, 'season', 'numbers')));
-  const drivers: PoolDriver[] = [];
-  for (let i = 0; i < teamCount * SQUAD_SIZE; i++) {
-    drivers.push({ ...generatePoolDriver(i, driverRng), number: numbers[i], traits: traitsFor('driver', seed, i, rs) });
+  // Roll a full grid of numbers and skip the carried team's: unique on the grid.
+  const numbers = rollRacingNumbers(teamCount * SQUAD_SIZE, mulberry32(deriveSeed(seed, 'season', 'numbers'))).filter(n => !taken.has(n));
+  const drivers: PoolDriver[] = carry ? carry.drivers.map(d => ({ ...d, reservedFor: carry.teamId })) : [];
+  for (let i = 0; i < fresh * SQUAD_SIZE; i++) {
+    const id = base + i;
+    drivers.push({ ...generatePoolDriver(id, driverRng), number: numbers[i], traits: traitsFor('driver', seed, id, rs) });
   }
 
   const carRng = mulberry32(deriveSeed(seed, 'season', 'cars'));
-  const cars: RackCar[] = [];
-  const carNames = new Set<string>();
-  for (let i = 0; i < teamCount; i++) {
-    const id = `car-${i}`;
+  const cars: RackCar[] = carry ? [{ ...carry.car, reservedFor: carry.teamId }] : [];
+  const carNames = new Set<string>(carry ? [carry.car.name] : []);
+  for (let i = 0; i < fresh; i++) {
+    const id = `car-${base + i}`;
     cars.push({ ...generateRackCar(id, carRng, carNames), traits: traitsFor('car', seed, id, rs) });
   }
 
   const statsRng = mulberry32(deriveSeed(seed, 'season', 'team-stats'));
-  const teams: CompetitorTeam[] = teamIdentities(seed, teamCount).map((identity, i) => {
-    const id = `team-${i}`;
-    return { id, ...identity, teamStats: generateTeamStats(statsRng), traits: traitsFor('team', seed, id, rs) };
+  const teams: CompetitorTeam[] = carry ? [carry.team] : [];
+  teamIdentities(seed, fresh).forEach((identity, i) => {
+    const id = `team-${base + i}`;
+    teams.push({ id, ...identity, teamStats: generateTeamStats(statsRng), traits: traitsFor('team', seed, id, rs) });
   });
 
   return { seed, teamCount, drivers, cars, teams };
