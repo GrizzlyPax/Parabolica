@@ -98,19 +98,6 @@ function TimingTower({
     return [...finished, ...racing, ...dnf];
   }, [drivers, finishOrder, totalSectorCrossings, gridOrder]);
 
-  // Pack speed: median smoothed speed of the cars still racing.
-  const packSpeed = useMemo(() => {
-    const v = drivers.filter(d => d.status === 'racing' && d.speedSmooth > 0).map(d => d.speedSmooth).sort((a, b) => a - b);
-    return v.length ? v[Math.floor(v.length / 2)] : 0;
-  }, [drivers]);
-
-  // Pack pace (#557): the median of everyone's last completed lap. Steady:
-  // it moves once a lap, not every corner.
-  const packLap = useMemo(() => {
-    const v = drivers.filter(d => d.status !== 'dnf' && d.lapTimes.length > 0).map(d => d.lapTimes[d.lapTimes.length - 1]).sort((a, b) => a - b);
-    return v.length ? v[Math.floor(v.length / 2)] : 0;
-  }, [drivers]);
-
   // Generate row context for each driver
   // How each driver and car stacks up against this grid. Keyed on the stats
   // themselves (a new universe can reuse the same driver ids), so it only
@@ -139,21 +126,6 @@ function TimingTower({
 
     // Position delta
     const positionDelta = positionDeltas?.get(driver.id);
-    let speedTone: RowContext['speedTone'];
-    let speedRel: number | undefined;
-    if (packSpeed > 0 && driver.status === 'racing' && driver.speedSmooth > 0) {
-      const r = driver.speedSmooth / packSpeed - 1;
-      speedTone = r >= 0.04 ? 'hot' : r >= 0.01 ? 'quick' : r <= -0.03 ? 'slow' : 'pack';
-      speedRel = Math.max(-1, Math.min(1, r / 0.08));
-    }
-    // Pace bar (#557): last lap against the pack, ±6% fills the bar.
-    let paceRel: number | undefined;
-    let pacePct: number | undefined;
-    if (packLap > 0 && driver.status !== 'dnf' && driver.lapTimes.length > 0) {
-      const r = (packLap - driver.lapTimes[driver.lapTimes.length - 1]) / packLap;
-      pacePct = r * 100;
-      paceRel = Math.max(-1, Math.min(1, r / 0.06));
-    }
     const gridIdx = gridOrder ? gridOrder.indexOf(driver.id) : -1;
     const gridSlot = gridIdx >= 0 ? gridIdx + 1 : undefined;
     let battle: RowContext['battle'];
@@ -274,10 +246,6 @@ function TimingTower({
       avatar: avatars?.get(driver.id),
       fantasyTeam: fantasyBy.get(driver.id),
       battle,
-      speedTone,
-      speedRel,
-      paceRel,
-      pacePct,
       intervalGap,
       leaderGap,
       lastLapTime,

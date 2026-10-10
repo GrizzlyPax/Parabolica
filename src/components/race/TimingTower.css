@@ -616,18 +616,17 @@
 
 /* === Phones (#243 mobile pass): the tower must fit 360–430px wide ===
    Tighter gaps, no LEADER column (INT carries the story). Tracks, in order:
-   P · grid ▲ · marble · code · Int · Pace · Last · Tyre (#562: the old
-   Cards column's track is gone). */
+   P · grid ▲ · marble · code · Int · Last · Tyre (#562: the old Cards
+   column's track is gone; #616: so is Pace). */
 @media (max-width: 799px) {
   .timing-row { padding: 0 8px !important; gap: 6px !important; }
   .timing-tower-header { padding-left: 8px !important; padding-right: 8px !important; gap: 6px !important; }
   .timing-tower.timing-tower-track .col-gapLeader { display: none; }
   .timing-tower.timing-tower-track .timing-row,
   .timing-tower.timing-tower-track .timing-tower-header {
-    grid-template-columns: 28px 24px 24px 44px 54px 50px 52px 46px !important;
+    grid-template-columns: 28px 24px 24px 44px 54px 52px 46px !important;
   }
   .timing-tower.timing-tower-track .col-gridDelta .grid-delta { font-size: 0.6rem; }
-  .timing-tower.timing-tower-track .pace-bar { width: 44px; }
 }
 
 /* Grid column: start slot + places gained/lost */
@@ -643,13 +642,3 @@
 @keyframes swords-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
 .grid-delta.flat { color: var(--pw-text-3); }
 
-/* Live speed, toned against the pack: purple flying, green quick, dim pack, red slow */
-/* mini tach: centre tick = pack pace, fills right when quicker, left when slower */
-
-/* Pace bar (#557): last lap vs the pack; quicker fills right in green, slower left in red. */
-.pace-bar { position: relative; display: inline-block; width: 60px; height: 9px; background: var(--pw-border); vertical-align: middle; }
-.pace-mid { position: absolute; left: 50%; top: -2px; bottom: -2px; width: 1px; background: var(--pw-text-3); }
-.pace-fill { position: absolute; top: 0; bottom: 0; transition: width 0.6s ease, left 0.6s ease, right 0.6s ease; }
-.pace-fill.quick { background: var(--signal-green); }
-.pace-fill.slow { background: var(--signal-red); }
-@media (prefers-reduced-motion: reduce) { .pace-fill { transition: none; } }
