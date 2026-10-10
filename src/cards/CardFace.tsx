@@ -41,8 +41,8 @@ const metalClass = (card: Card) => `metal-${card.rarity ?? 'none'}`;
  * trait's frame is dashed like its chip. */
 export const kindIcon = (card: Card) => (card.kind === 'trait' ? 'card.trait' : card.kind === 'effect' ? 'card.effect' : 'card.gear');
 const kindClass = (card: Card) => (card.kind === 'trait' ? 'cf-trait' : card.kind === 'effect' ? 'cf-effect' : 'cf-gear');
-/** Placeholder art: the first stat's icon (the flavour pass gives each card its own). */
-const artIcon = (card: Card) => STAT_ICONS[card.stats[0].stat];
+/** Placeholder art: the first stat's icon (the flavour pass gives each card its own); a card with no stat (a wild card, #646) wears the trait mark. */
+const artIcon = (card: Card) => (card.stats[0] ? STAT_ICONS[card.stats[0].stat] : 'card.trait');
 
 function Face({ card, mini }: { card: Card; mini: boolean }) {
   if (mini) return <div className="cf-miniface"><GameIcon name={artIcon(card)} size={120} /></div>;

@@ -28,6 +28,8 @@ import { weatherForRace } from '../../data/weather';
 import { draftState } from '../draft';
 import { applyPack, applyCurse, dealPack, moveGear, pendingOffer, teamCardState, PACK_KIND_LABEL, type CardHolder, type PackKind, type TeamCardState } from '../pack';
 import { effectCards, describeLeft, activeEffects } from '../effects';
+import { pendingRankUps, dealRankUp, applyRankUp } from '../xp';
+import RankUpPick from './RankUpPick';
 import { constructorStandings, driverStandings, lineupFor, poolFor, seasonState, setLineup, type SeasonFacts } from '../season';
 import { saveCurrentLeague as saveSeason } from '../../run/current';
 import { overall, readStat, type StatReading } from '../grades';
@@ -99,6 +101,13 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo }: 
   const pack = offer && offer.kind !== 'curse' ? dealPack(facts, offer.round, offer.teamId, picked && offer.packs.includes(picked) ? picked : offer.packs[0]) : null;
   const curse = offer?.kind === 'curse' ? offer.curse! : null;
   const myTurn = !!turn && state.phase === 'paddock';
+  // Rank-ups owed this turn (#646): one at a time, the first driver first.
+  const rankUp = myTurn ? pendingRankUps(facts, state.round, viewer)[0] ?? null : null;
+  const rankDeal = rankUp ? dealRankUp(facts, rankUp.driverId, rankUp.rank, state.round) : null;
+  const takeRankUp = (cardId: string) => {
+    if (!rankDeal) return;
+    commit(applyRankUp(facts, { type: 'rank-up', round: rankDeal.round, teamId: viewer, driverId: rankDeal.driverId, rank: rankDeal.rank, dealt: rankDeal.cards.map(c => c.id), cardId }));
+  };
   const lineup = lineupFor(facts, state.round, viewer);
   const car = pool.cars.find(c => c.id === roster.carId)!;
   const team = pool.teams.find(t => t.id === viewer)!;
@@ -244,7 +253,7 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo }: 
   const rowClass = (k: HolderKey, extra = '') => `${fitsRow(k) ? 'target' : ''} ${extra}`.trim();
 
   // The turn, in one line
-  const step = !myTurn ? -1 : offer ? 0 : 1;
+  const step = !myTurn ? -1 : offer || rankUp ? 0 : 1;
   const STEPS = ['Open pack', 'Lock in'];
   const turnLine = state.phase === 'ready-for-go' ? (
     <div className="pk-go"><span>Every team is set for round {state.round + 1}.</span><button type="button" className="rs-btn rs-btn-primary" onClick={onGo}>Go: round {state.round + 1}</button></div>
@@ -273,6 +282,16 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo }: 
     <>
       {turnLine}
       {priorityLine}
+      {rankDeal && (
+        <RankUpPick
+          key={`${rankDeal.driverId}:${rankDeal.rank}`}
+          driverName={pool.drivers.find(d => d.id === rankDeal.driverId)?.fullName ?? ''}
+          rankName={rankDeal.rankName}
+          cards={rankDeal.cards}
+          onPick={takeRankUp}
+          onDetail={c => setDetail({ card: c })}
+        />
+      )}
       {offer && myTurn && (revealing && pack ? (
         <PackPick
           key={`${pack.round}:${pack.teamId}:${pack.kind}`}

@@ -29,6 +29,7 @@ import { portraitFor, vehicleFor } from '../generators/avatars';
 import type { IconId } from '../icons/registry';
 import { packOpened, seasonCardsFor, gearInfos, type CardFact } from './pack';
 import { roundEffects, type EffectFact } from './effects';
+import { rankUpsTaken, rankUpCardsFor, type RankUpPick } from './xp';
 
 /** 6 since the run (#597, v0.7): a league is 4 × 6; League Setup can still change it. */
 export const DEFAULT_CALENDAR_LENGTH = 6;
@@ -70,6 +71,8 @@ export interface SeasonFacts {
   cardFacts: CardFact[];
   /** Timed effects dealt this league (#332), in order. Absent on older facts = none. */
   effectFacts?: EffectFact[];
+  /** Rank-ups taken this league (#646), in order. Absent on older facts = none. */
+  rankUps?: RankUpPick[];
   /** Race digests, one per settled round, in order. Event logs are not kept. */
   results: RaceDigest[];
 }
@@ -99,7 +102,7 @@ export interface SeasonState {
 }
 
 export function newSeason(setup: SeasonSetup): SeasonFacts {
-  return { setup, draftPicks: [], lineups: [], cardFacts: [], effectFacts: [], results: [] };
+  return { setup, draftPicks: [], lineups: [], cardFacts: [], effectFacts: [], rankUps: [], results: [] };
 }
 
 export function poolFor(facts: SeasonFacts): SeasonPool {
@@ -147,10 +150,16 @@ export function rivalShifts(facts: SeasonFacts): Record<string, number> {
   return out;
 }
 
-/** Cards dealt during the season (packs, #316), resolved for a round. Genesis
- * traits live on the pool and are added by seasonRoster. */
+/** Cards dealt during the season (packs #316, rank-ups #646), resolved for a
+ * round. Genesis traits live on the pool and are added by seasonRoster. */
 export function cardsForRound(facts: SeasonFacts, round: number): SeasonCards {
-  return seasonCardsFor(facts, round);
+  const cards = seasonCardsFor(facts, round);
+  const ranks = rankUpCardsFor(facts, round);
+  for (const [id, extra] of Object.entries(ranks)) {
+    const driverId = Number(id);
+    cards.driver = { ...cards.driver, [driverId]: [...(cards.driver?.[driverId] ?? []), ...extra] };
+  }
+  return cards;
 }
 
 // ---------------------------------------------------------------------------
@@ -202,10 +211,11 @@ export function lineupFor(facts: SeasonFacts, round: number, teamId: string): [n
   return [roster.driverIds[0], roster.driverIds[1]];
 }
 
-/** Has this team finished its Paddock turn for the round? Two decisions:
- * who races, and the pack (when the team gets one), in either order. */
+/** Has this team finished its Paddock turn for the round? Three decisions:
+ * who races, the pack (when the team gets one) and any rank-up owed (#646),
+ * in any order. */
 export function turnDone(facts: SeasonFacts, round: number, teamId: string): boolean {
-  return facts.lineups.some(l => l.round === round && l.teamId === teamId) && packOpened(facts, round, teamId);
+  return facts.lineups.some(l => l.round === round && l.teamId === teamId) && packOpened(facts, round, teamId) && rankUpsTaken(facts, round, teamId);
 }
 
 /** The CPU hook: no decisions in v0.5. The default lineup races. */

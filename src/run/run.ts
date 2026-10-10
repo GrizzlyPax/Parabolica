@@ -21,6 +21,7 @@ import { DEFAULT_TEAMS, type CarriedTeam, type LeagueContext, type TeamIdentity 
 import { draftState, quickDraft } from '../season/draft';
 import { carriedCards, teamCardState } from '../season/pack';
 import { carriedEffects } from '../season/effects';
+import { driverXp, rankUpsOf } from '../season/xp';
 import { constructorStandings, poolFor, seasonState, settleRound, type SeasonFacts, type SeasonHuman, type SeasonSetup, type SeasonStore } from '../season/season';
 import { seasonCalendar } from '../season/setup';
 
@@ -94,7 +95,7 @@ export interface RunState {
 }
 
 export function emptyLeague(): LeagueFacts {
-  return { draftPicks: [], lineups: [], cardFacts: [], effectFacts: [], results: [] };
+  return { draftPicks: [], lineups: [], cardFacts: [], effectFacts: [], rankUps: [], results: [] };
 }
 
 export function newRun(setup: Omit<RunSetup, 'start' | 'races' | 'teamCount'> & Partial<Pick<RunSetup, 'start' | 'races' | 'teamCount'>>): RunFacts {
@@ -199,6 +200,9 @@ export function carriedTeam(prev: SeasonFacts): CarriedTeam {
     teamId, drivers, car: { ...strip(car), avatarSeed: car.avatarSeed ?? pool.seed }, team,
     // Cards as they stand after the last race, gear re-dated so its races left hold.
     cards: carriedCards(teamCardState(prev, teamId, prev.setup.calendar.length), prev.setup.calendar.length), nemesis: runnerUp(prev), effects: carriedEffects(prev, teamId),
+    // XP and every rank-up pick ride up the run (#646).
+    xp: Object.fromEntries(roster.driverIds.map(id => [id, driverXp(prev, id)])),
+    rankUps: rankUpsOf(prev),
   };
 }
 
@@ -273,7 +277,7 @@ export function loadRun(store: SeasonStore | null = defaultStore()): RunFacts | 
     const r = envelope.data;
     if (!r?.setup || typeof r.setup.seed !== 'number' || !r.setup.team || !Array.isArray(r.leagues)) return null;
     if (r.leagues.length < 1 || r.leagues.length > LEAGUES_PER_RUN || !r.leagues.every(isLeague)) return null;
-    return { ...r, leagues: r.leagues.map(l => ({ ...l, effectFacts: l.effectFacts ?? [] })) };
+    return { ...r, leagues: r.leagues.map(l => ({ ...l, effectFacts: l.effectFacts ?? [], rankUps: l.rankUps ?? [] })) };
   } catch { return null; }
 }
 
