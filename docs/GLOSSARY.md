@@ -82,6 +82,65 @@
 | **Endurance + Power** `endurance-power` | 8% | +10 Endurance · +10 Power |
 | **Aggression + Grip** `aggression-grip` | 8% | +10 Aggression · +10 Grip |
 
+## States
+
+*Source: `src/data/states.ts` (#695). Ace America's 52 places: 50 states, DC and Puerto Rico. A look is the accents the UI takes while you race for that state (primary = the state bar, buttons and sash edge; ink from `inkFor`); the rest fill in from #708.*
+
+| Place | Primary · secondary · accent | Ink | Wheel-flag |
+|---|---|---|---|
+| **Alabama** `al` | — | — | — |
+| **Alaska** `ak` | — | — | — |
+| **Arizona** `az` | #CE5C17 · #002868 · #FED700 | #0b0b0c | Arizona's red and gold sunburst over blue, a copper wheel in place of the copper star |
+| **Arkansas** `ar` | — | — | — |
+| **California** `ca` | — | — | — |
+| **Colorado** `co` | — | — | — |
+| **Connecticut** `ct` | — | — | — |
+| **Delaware** `de` | — | — | — |
+| **Florida** `fl` | — | — | — |
+| **Georgia** `ga` | — | — | — |
+| **Hawaii** `hi` | — | — | — |
+| **Idaho** `id` | — | — | — |
+| **Illinois** `il` | — | — | — |
+| **Indiana** `in` | — | — | — |
+| **Iowa** `ia` | — | — | — |
+| **Kansas** `ks` | — | — | — |
+| **Kentucky** `ky` | — | — | — |
+| **Louisiana** `la` | — | — | — |
+| **Maine** `me` | — | — | — |
+| **Maryland** `md` | — | — | — |
+| **Massachusetts** `ma` | — | — | — |
+| **Michigan** `mi` | — | — | — |
+| **Minnesota** `mn` | — | — | — |
+| **Mississippi** `ms` | — | — | — |
+| **Missouri** `mo` | — | — | — |
+| **Montana** `mt` | — | — | — |
+| **Nebraska** `ne` | — | — | — |
+| **Nevada** `nv` | — | — | — |
+| **New Hampshire** `nh` | — | — | — |
+| **New Jersey** `nj` | — | — | — |
+| **New Mexico** `nm` | — | — | — |
+| **New York** `ny` | — | — | — |
+| **North Carolina** `nc` | — | — | — |
+| **North Dakota** `nd` | — | — | — |
+| **Ohio** `oh` | #B8312F · #1D2B4F · #C99A3A | #ffffff | Ohio's burgee: red and white stripes on the swallowtail, the wheel in place of the white O on the blue triangle |
+| **Oklahoma** `ok` | — | — | — |
+| **Oregon** `or` | — | — | — |
+| **Pennsylvania** `pa` | — | — | — |
+| **Rhode Island** `ri` | — | — | — |
+| **South Carolina** `sc` | — | — | — |
+| **South Dakota** `sd` | — | — | — |
+| **Tennessee** `tn` | — | — | — |
+| **Texas** `tx` | — | — | — |
+| **Utah** `ut` | — | — | — |
+| **Vermont** `vt` | #1B4D3E · #0F241C · #C99A3A | #ffffff | Vermont's green field and mountains, a cream wheel at the centre, a gold band with VERMONT along the foot |
+| **Virginia** `va` | — | — | — |
+| **Washington** `wa` | — | — | — |
+| **West Virginia** `wv` | — | — | — |
+| **Wisconsin** `wi` | — | — | — |
+| **Wyoming** `wy` | — | — | — |
+| **District of Columbia** `dc` (district) | — | — | — |
+| **Puerto Rico** `pr` (territory) | — | — | — |
+
 
 ## How genesis traits are rolled
 
