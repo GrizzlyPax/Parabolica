@@ -3,7 +3,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { NEMESIS_LINES, DOUBLE_ACT_LINES, PERSONALITIES, PERSONALITY_NAMES, personalityOf, nemesisLine, nemesisTeam, type Moment } from './nemesis';
+import { NEMESIS_LINES, DOUBLE_ACT_LINES, PERSONALITIES, PERSONALITY_NAMES, personalityOf, runKeyOf, nemesisLine, nemesisTeam, type Moment } from './nemesis';
 import { newRun, currentLeague, withCurrentLeague, runState, promote, type RunFacts } from '../run/run';
 import { generateSeasonPool } from './genesis';
 import { seasonState, setLineup, settleRound, poolFor, newSeason } from './season';
@@ -46,10 +46,25 @@ describe('nemesis lines (#635)', () => {
     expect(JSON.stringify(NEMESIS_LINES)).not.toContain('Harbour Streets');
   });
 
-  it('personalities roll per driver: deterministic, all five turn up, doubles allowed', () => {
-    const seen = new Set(Array.from({ length: 200 }, (_, i) => personalityOf(42, i)));
+  it('personalities belong to the nemesis seat, keyed to the run and the look (#665): all five turn up, doubles allowed', () => {
+    const seen = new Set(Array.from({ length: 200 }, (_, i) => personalityOf('run-a', `look-${i}`, i % 2)));
     expect(seen.size).toBe(5);
-    expect(personalityOf(42, 7)).toBe(personalityOf(42, 7));
+    expect(personalityOf('run-a', 'kanzaki', 0)).toBe(personalityOf('run-a', 'kanzaki', 0));
+    // Different runs roll their own.
+    const differs = Array.from({ length: 40 }, (_, i) => personalityOf(`run-${i}`, 'kanzaki', 0));
+    expect(new Set(differs).size).toBeGreaterThan(1);
+  });
+
+  it('the run key holds across a promotion: your drivers carry up with their names', () => {
+    let won: RunFacts | null = null;
+    for (let s = 11; s < 300 && !won; s++) { const r = playRounds(runFor(s)); if (runState(r).phase === 'league-won') won = r; }
+    const keyOf = (f: ReturnType<typeof currentLeague>) => {
+      const you = f.setup.humans[0].teamId;
+      const ids = draftState(poolFor(f), f.draftPicks).rosters[you].driverIds;
+      const names = new Map(poolFor(f).drivers.map(d => [d.id, d.fullName]));
+      return runKeyOf(ids.map(id => names.get(id)!));
+    };
+    expect(keyOf(currentLeague(promote(won!)))).toBe(keyOf(currentLeague(won!)));
   });
 
   it('Juniors: a voice-only rival says a first-meeting line; outside a run nobody talks', () => {

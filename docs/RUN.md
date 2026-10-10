@@ -58,7 +58,7 @@ All in `src/season/pack.ts`, data at the top:
 ## The nemesis talks (#635)
 - `season/nemesis.ts`, flavour only (every roll on its own `'nemesis-voice'` stream; nothing saved, no sim change). Lines are verbatim from `docs/story/nemesis.md` (a test mirrors the doc).
 - **Who:** the flagged nemesis (`CompetitorTeam.nemesis`) from the Regional up; in the Juniors, a **voice-only rival** picked on the voice stream (no level bump; it says the "first meeting" lines). The ladder (#628) shows the same team.
-- **Personalities** per nemesis driver (`personalityOf(seed, driverId)`, equal odds, doubles allowed). Nemesis drivers are fresh each league (#626 carries the look only), so each league's pair rolls anew.
+- **Personalities** belong to the nemesis **seats** (#665): `personalityOf(runKey, look, seat)`, keyed to the run (your carried drivers' names), the team's look and seat 0/1; equal odds, doubles allowed. The nemesis rolls fresh drivers each league, but the same Brat and Old Hand come back.
 - **One line per Paddock visit** (`nemesisLine(facts)`): the moment from the doc's table, the speaker by the doc's rule, a seeded pick never repeating the last round's; both drivers before the boss race; two Show-offs speak as "we". Spanish lines carry the English underneath.
 - **NEMESIS tag:** the Paddock line, the constructors' table, the tower (team name in the detail view, the driver panel, a red stripe on the row in the track view).
 
