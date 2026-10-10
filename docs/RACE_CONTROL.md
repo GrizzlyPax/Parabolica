@@ -7,14 +7,14 @@ Race Control is the in-game lab (main menu → Race Control, no longer locked). 
 `src/racecontrol/runner.ts` is the only way the lab builds a race:
 
 ```
-labSpec(batchSeed, i, cardIds, trackMode)   → { seed, teamIds, trackId, cardIds }
-runLabRace(spec, { variables?, override? })  → createLeague(seed, …) + prepareScheduledRace(engine, league, 0, track, simVars)
+labSpec(batchSeed, i, cardIds, trackMode)   → { seed, trackId, cardIds }
+runLabRace(spec, { variables? })            → oneRaceSeason(seed, trackId, ruleset) + prepareScheduledRace(engine, league, 0, track, simVars)
                                                engine.runHeadless(league.schedule[0].seed)
 ```
 
-`createLeague` and `prepareScheduledRace` are the two calls the live broadcast (`App.handleWatchLive`) and the wall-clock settle (`settle.ts`) use. So a lab race has a genesis roster (11 teams × 2, cars per driver, team shared, genesis tags rolled under the card hand), a current track, seeded weather (`weatherForRace`), the track's intrinsic tags, and the ruleset's simVars. Nothing in the lab touches `Math.random`.
+Since #612 the lab's field is the **Season pool**: `oneRaceSeason` (`src/season/quickRace.ts`) generates the pool for the seed (10 teams × 2 drivers, a rack of cars, genesis traits under the card hand), lets the CPU draft it, and shapes round 0 with `leagueForRound`; `prepareScheduledRace` is what the Season race view and the settle use. Quick Race is the same call with a seed-picked track. So the lab measures the field players race, with seeded weather (`weatherForRace`) and the ruleset's simVars. Nothing in the lab touches `Math.random`. (Before #612 the lab raced 11 World Deck teams through `createLeague`; fingerprints from then are a different field. The ad-hoc probes in `scripts/` still build their own leagues.)
 
-Race *i* of a batch derives from `deriveSeed(batchSeed, 'lab', i)` — universe seed, team shuffle, track pick — so one race can be rebuilt on its own.
+Race *i* of a batch derives from `deriveSeed(batchSeed, 'lab', i)` — universe seed, track pick — so one race can be rebuilt on its own.
 
 ## Running where workers are blocked
 
