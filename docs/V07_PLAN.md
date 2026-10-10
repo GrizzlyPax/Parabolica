@@ -34,7 +34,7 @@ Already live from v0.7's first two waves (engine v0.6.3): single-player Season, 
 3. The league ladder screen (#628), after #597
 4. Then screens as designs land: stat levels (#623), level-up pick (#592), rookie pick (#594), run debrief (#595)
 
-**📻 Radio — milestone 2:** the nemesis: banter, returns, the boss race (#624)
+**📻 Radio — milestone 2:** ✅ the nemesis's voice (#624) · **🛞 Hub** builds it (#635) after #626
 
 **🏛️ Steward — milestone 3:** re-probe a full run on the build (#629)
 
@@ -47,3 +47,4 @@ Already live from v0.7's first two waves (engine v0.6.3): single-player Season, 
 ## Decision log
 The run's decisions (Oct 9–10: run shape, rival levels + nemesis, cards and packs, single-player, two drivers) are logged in [V06_PLAN → v0.7 direction](V06_PLAN.md). New ones go here.
 - **Oct 10:** Apex builds the run core (#597, #626, #332, #627, #612); Hub builds the screens on top; v0.7 split into Run core → Run screens → Ship.
+- **Oct 10, the nemesis's voice (Pax, via Radio, #624, [docs/story/nemesis.md](story/nemesis.md)):** a Pokémon-style rival (snot-nosed, a little attitude, gloves on) · it talks **in the Paddock, one line per visit** (race feed maybe later, team radio eventually) · a **NEMESIS tag** on the rival team in standings, the tower and the Paddock · each of its two drivers rolls **one of five personalities** (the Brat, the Show-off, the Old Hand, a Spanish speaker, a "Hmph." brooder) · when the nemesis ends your run, the debrief opens with a **newspaper headline** ("The Paddock Almanac · Run over") · build: #635 (Hub, after #626).
