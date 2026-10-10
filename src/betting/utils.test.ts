@@ -150,19 +150,19 @@ describe('field rank', () => {
 });
 
 describe('rosterRanks on a real generated grid', () => {
-  it('every driver 1–22 once; cars 1–11 once, shared by teammates', async () => {
+  it('every driver 1–20 once; cars 1–10 once, shared by teammates (the Season pool field, #612)', async () => {
     const { labSpec, runLabRace } = await import('../racecontrol/runner');
     for (const seed of [1, 2026, 77777]) {
       const { roster } = runLabRace(labSpec(seed, 0, ['no-tags']));
       const drivers = roster.map(d => ({ id: d.id, stats: d.stats, carStats: d.carStats, teamStats: d.teamStats, kingdomId: d.kingdomId }));
       const { driver, car } = rosterRanks(drivers);
-      expect([...driver.values()].map(r => r.rank).sort((a, b) => a - b)).toEqual(Array.from({ length: 22 }, (_, i) => i + 1));
+      expect([...driver.values()].map(r => r.rank).sort((a, b) => a - b)).toEqual(Array.from({ length: 20 }, (_, i) => i + 1));
       const byTeam = new Map<string, number[]>();
       for (const d of drivers) byTeam.set(d.kingdomId!, [...(byTeam.get(d.kingdomId!) ?? []), car.get(d.id)!.rank]);
-      expect(byTeam.size).toBe(11);
+      expect(byTeam.size).toBe(10);
       for (const ranks of byTeam.values()) expect(new Set(ranks).size).toBe(1);
-      expect([...byTeam.values()].map(r => r[0]).sort((a, b) => a - b)).toEqual(Array.from({ length: 11 }, (_, i) => i + 1));
-      expect([...car.values()].every(r => r.of === 11)).toBe(true);
+      expect([...byTeam.values()].map(r => r[0]).sort((a, b) => a - b)).toEqual(Array.from({ length: 10 }, (_, i) => i + 1));
+      expect([...car.values()].every(r => r.of === 10)).toBe(true);
     }
   });
 });

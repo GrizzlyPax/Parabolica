@@ -1,42 +1,43 @@
 // Race Control runner: the ONE way the lab builds a race.
 //
-// Parity rule: a lab race is a league race. We build a one-race league with
-// `createLeague` and prepare the engine with `prepareScheduledRace` — the same
-// two calls the live broadcast and the wall-clock settle use — so whatever the
-// lab measures is what the game plays. Nothing here touches Math.random: a
-// batch is fully described by (batchSeed, race index, cards), and the same
-// spec gives the same race in the browser worker, in `npm run lab`, and in a
-// vitest.
+// Parity rule: a lab race is the race players race. Since #612 the lab
+// builds its field the way Season Mode and Quick Race do: the Season pool
+// (10 teams × 2 drivers, a rack of cars, CPU-drafted), `leagueForRound` and
+// `prepareScheduledRace` — the same path the live broadcast and the settle
+// use — so whatever the lab measures is what the game plays. Nothing here
+// touches Math.random: a batch is fully described by (batchSeed, race index,
+// cards), and the same spec gives the same race in the browser worker, in
+// `npm run lab`, and in a vitest. (Before #612 the lab raced 11 World Deck
+// teams through createLeague; those fingerprints are a different field.)
 //
 // Seed streams (all from deriveSeed(batchSeed, 'lab', i)):
-//   universe seed  → createLeague(seed, …)   (roster, cars, genesis traits)
-//   teams          → shuffle(TEAMS).slice(0, 11)
+//   universe seed  → oneRaceSeason(seed, …)   (the pool, the draft, genesis traits)
 //   track          → CURRENT_TRACKS pick   (or i % n when every track is wanted)
-// The race itself then runs on league.schedule[0].seed = deriveSeed(seed,'race',0),
-// weather on deriveSeed(seed,'weather',0) — exactly as a league does.
+// The race itself then runs on league.schedule[0].seed = deriveSeed(seed,'season','race',0),
+// weather on deriveSeed(seed,'weather',0) — exactly as a Season round does.
 import RaceEngine from '../RaceEngine';
 import type { Driver, RaceEvent, RaceState, RosterDriver } from '../RaceEngine';
-import { createLeague, rosterStateAt } from '../league/league';
 import type { LeagueState } from '../league/types';
 import { prepareScheduledRace } from '../league/settle';
 import { CURRENT_TRACKS, type Track } from '../generators/tracks';
-import { TEAMS } from '../data/teams';
 import { resolveRuleset, type Ruleset } from '../rules/ruleset';
 import { RULE_CARDS_BY_ID } from '../data/ruleCards';
-import { deriveSeed, mulberry32, shuffle } from '../engine/rng';
+import { deriveSeed, mulberry32 } from '../engine/rng';
 import { weatherForRace, type WeatherState } from '../data/weather';
+import { oneRaceSeason } from '../season/quickRace';
+import { DEFAULT_TEAMS } from '../season/genesis';
 import type { SimVariables } from '../simlab/types';
 
-export const GRID_TEAMS = 11;
+/** Teams on a lab grid: the Season pool's. */
+export const GRID_TEAMS = DEFAULT_TEAMS;
 
 /** Everything needed to rebuild one lab race, anywhere. */
 export interface LabRaceSpec {
   /** The batch this race belongs to and its index in it — the replication key. */
   batchSeed: number;
   index: number;
-  /** Derived universe seed (the league seed). */
+  /** Derived universe seed (the Season seed). */
   seed: number;
-  teamIds: string[];
   trackId: string;
   /** Card hand the race plays under (resolved with resolveRuleset). */
   cardIds: string[];
@@ -48,12 +49,11 @@ export type TrackMode = 'random' | 'all';
 export function labSpec(batchSeed: number, index: number, cardIds: string[], trackMode: TrackMode = 'random'): LabRaceSpec {
   const rng = mulberry32(deriveSeed(batchSeed, 'lab', index));
   const seed = Math.floor(rng() * 2 ** 31);
-  const teamIds = shuffle(TEAMS, rng).slice(0, GRID_TEAMS).map(t => t.id);
   const pick = rng();
   const track = trackMode === 'all'
     ? CURRENT_TRACKS[index % CURRENT_TRACKS.length]
     : CURRENT_TRACKS[Math.floor(pick * CURRENT_TRACKS.length)];
-  return { batchSeed, index, seed, teamIds, trackId: track.id, cardIds };
+  return { batchSeed, index, seed, trackId: track.id, cardIds };
 }
 
 export interface LabRaceResult {
@@ -78,17 +78,12 @@ export function labRuleset(cardIds: string[]): Ruleset {
  */
 export function runLabRace(spec: LabRaceSpec, options: { variables?: SimVariables; engine?: RaceEngine } = {}): LabRaceResult {
   const ruleset = labRuleset(spec.cardIds);
-  const track = CURRENT_TRACKS.find(t => t.id === spec.trackId);
-  if (!track) throw new Error(`Unknown track ${spec.trackId}`);
-  const league = createLeague(spec.seed, {
-    name: 'lab', godId: 'lab', teamIds: spec.teamIds, trackIds: [track.id],
-    raceIntervalMs: 1, createdAt: 0, ruleset,
-  });
+  const { league, track } = oneRaceSeason(spec.seed, spec.trackId, ruleset);
   const engine = options.engine ?? RaceEngine.createForWorker();
   prepareScheduledRace(engine, league, 0, track, options.variables ?? ruleset.simVars);
   engine.updateConfig({ maxStoredEvents: Number.MAX_SAFE_INTEGER });
 
-  const roster = rosterStateAt(league, 0);
+  const roster = league.roster;
   const { drivers, raceState, events } = engine.runHeadless(league.schedule[0].seed);
   return {
     spec, league, track, roster,

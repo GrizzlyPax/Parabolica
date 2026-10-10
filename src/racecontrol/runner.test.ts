@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { labSpec, runLabRace, raceFingerprint, batchFingerprint } from './runner';
+import { labSpec, runLabRace, raceFingerprint, batchFingerprint, labRuleset } from './runner';
+import { oneRaceSeason } from '../season/quickRace';
 import { CURRENT_TRACKS } from '../generators/tracks';
 
 describe('Race Control runner', () => {
@@ -18,6 +19,16 @@ describe('Race Control runner', () => {
     const all = Array.from({ length: CURRENT_TRACKS.length }, (_, i) => labSpec(1, i, [], 'all').trackId);
     expect(new Set(all).size).toBe(CURRENT_TRACKS.length);
     for (const s of [a, b]) expect(CURRENT_TRACKS.some(t => t.id === s.trackId)).toBe(true);
+  });
+
+  it('the field is the Season pool (#612): 10 teams × 2, the same grid Quick Race builds for the seed and track', () => {
+    const spec = labSpec(2026, 2, []);
+    const r = runLabRace(spec);
+    expect(r.roster).toHaveLength(20);
+    expect(new Set(r.roster.map(d => d.kingdomId)).size).toBe(10);
+    const same = oneRaceSeason(spec.seed, spec.trackId, labRuleset([]));
+    expect(same.league.roster).toEqual(r.roster);
+    expect(r.league.schedule[0].seed).toBe(same.league.schedule[0].seed);
   });
 
   it('the No Traits card clears every genesis card; the default hand deals some', () => {
