@@ -72,6 +72,8 @@ interface WatchModeProps {
   sealedDriverIds?: ReadonlySet<number>;
   /** Season Mode (#451): your drivers, lit (focused) from the first lap. */
   myDriverIds?: readonly number[];
+  /** A run (#635): the nemesis team's drivers, tagged NEMESIS in the tower. */
+  nemesisDriverIds?: readonly number[];
   /** Season Mode (#489): each driver's portrait + car vehicle. */
   avatars?: ReadonlyMap<number, { portrait: IconId; vehicle: IconId }>;
   /** The way out, when it isn't the menu or the league ("Paddock"). */
@@ -129,6 +131,7 @@ function WatchMode({
   spectator = false,
   sealedDriverIds,
   myDriverIds,
+  nemesisDriverIds,
   avatars,
   exitLabel,
   // Race controls
@@ -178,6 +181,7 @@ function WatchMode({
   const [focusedDriverIds, setFocusedDriverIds] = useState<Set<number>>(() => new Set());
   // Your team's rows are tinted instead of opened (Pax, Oct 9).
   const mineSet = useMemo(() => (myDriverIds ? new Set(myDriverIds) : undefined), [myDriverIds]);
+  const nemesisSet = useMemo(() => (nemesisDriverIds ? new Set(nemesisDriverIds) : undefined), [nemesisDriverIds]);
   const [navPanelOpen, setNavPanelOpen] = useState(false);
 
   // Auto-unfocus DNF'd drivers (they can manually re-focus if wanted)
@@ -1260,6 +1264,7 @@ function WatchMode({
                 <TimingTower
                   sealed={sealedDriverIds}
                   mine={mineSet}
+                  nemesis={nemesisSet}
                   avatars={avatars}
                   drivers={sortedDrivers}
                   columns={TRACK_COLUMNS}
@@ -1316,6 +1321,7 @@ function WatchMode({
                 <TimingTower
                   sealed={sealedDriverIds}
                   mine={mineSet}
+                  nemesis={nemesisSet}
                   avatars={avatars}
                   drivers={sortedDrivers}
                   columns={DETAIL_COLUMNS}

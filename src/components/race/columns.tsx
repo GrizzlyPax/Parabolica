@@ -93,9 +93,10 @@ export const COLUMN_TEAM_NAME: ColumnConfig = {
   header: 'Team',
   width: 'minmax(96px, 1fr)',
   align: 'left',
-  render: (driver: Driver) => (
+  render: (driver: Driver, ctx: RowContext) => (
     <span className="team-name">
       {driver.teamName || ''}
+      {ctx.nemesis && <span className="nem-tag">NEMESIS</span>}
     </span>
   ),
 };

@@ -1,6 +1,7 @@
 // The league's two tables (#453): constructors and every driver, Wins · Pod ·
 // Pts. Shared by the Paddock's League tab and the finale.
 import { TeamLogo } from '../../icons/GameIcon';
+import { nemesisTeam } from '../nemesis';
 import { RaceNumber } from '../../icons/RaceNumber';
 import { Avatar } from '../../icons/Avatar';
 import { portraitFor } from '../../generators/avatars';
@@ -21,6 +22,7 @@ interface Props {
 
 export function LeagueTables({ facts, pool, teams, rosters, lines, drivers }: Props) {
   const humans = facts.setup.humans.map(h => h.teamId);
+  const nemesisId = nemesisTeam(facts)?.id;
   const teamOfDriver = (id: number) => Object.keys(rosters).find(t => rosters[t].driverIds.includes(id))!;
   /** Top-three finishes by a team's drivers, all season (a double podium counts twice). */
   const teamPodiums = (teamId: string) => facts.results.reduce((n, r) => n + r.finishOrder.slice(0, 3).filter(id => rosters[teamId].driverIds.includes(id)).length, 0);
@@ -33,7 +35,7 @@ export function LeagueTables({ facts, pool, teams, rosters, lines, drivers }: Pr
             {lines.map(s => (
               <tr key={s.teamId} className={humans.includes(s.teamId) ? 'mine' : ''}>
                 <td className="rt-pos">{s.rank}</td>
-                <th className="rt-name" scope="row"><TeamLogo team={teams[s.teamId]} size={18} /><span className="rt-nm">{teams[s.teamId].name}</span></th>
+                <th className="rt-name" scope="row"><TeamLogo team={teams[s.teamId]} size={18} /><span className="rt-nm">{teams[s.teamId].name}</span>{s.teamId === nemesisId && <span className="nem-tag">NEMESIS</span>}</th>
                 <td className="rt-numcol">{s.wins}</td>
                 <td className="rt-numcol">{teamPodiums(s.teamId)}</td>
                 <td className="rt-numcol">{s.points}</td>

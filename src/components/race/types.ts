@@ -38,6 +38,8 @@ export interface RowContext {
   sealed?: boolean;
   /** Your team's car (Season Mode): the row wears a faded team colour (Pax, Oct 9). */
   mine?: boolean;
+  /** The nemesis team's driver (#635): tagged NEMESIS. */
+  nemesis?: boolean;
   /** Season Mode (#489): this driver's portrait and their car's vehicle. */
   avatar?: { portrait: IconId; vehicle: IconId };
   /** Qualifying board (#617): this driver's lap, gap to pole, and how it went. */
@@ -101,6 +103,8 @@ export interface TimingTowerProps {
   sealed?: ReadonlySet<number>;
   /** Season Mode: your team's drivers (their rows are tinted). */
   mine?: ReadonlySet<number>;
+  /** The nemesis team's drivers (#635). */
+  nemesis?: ReadonlySet<number>;
   /** Season Mode (#489): portraits + vehicles by driver id. */
   avatars?: ReadonlyMap<number, { portrait: IconId; vehicle: IconId }>;
   className?: string;

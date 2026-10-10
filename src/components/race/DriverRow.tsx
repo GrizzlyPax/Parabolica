@@ -42,7 +42,7 @@ function DriverRow({ driver, columns, context, gridTemplate, isFocused, expandab
   return (
     <div className={`timing-row-container ${isFocused ? 'expanded' : ''}`}>
       <div
-        className={`timing-row ${isFinished ? 'finished' : ''} ${isDNF ? 'dnf' : ''} ${isPitting ? 'pitting' : ''} ${isFocused ? 'focused' : ''} ${context.fantasyTeam ? 'fantasy' : ''} ${context.mine ? 'mine' : ''}`}
+        className={`timing-row ${isFinished ? 'finished' : ''} ${isDNF ? 'dnf' : ''} ${isPitting ? 'pitting' : ''} ${isFocused ? 'focused' : ''} ${context.fantasyTeam ? 'fantasy' : ''} ${context.mine ? 'mine' : ''} ${context.nemesis ? 'nemesis' : ''}`}
         style={rowStyle}
         onClick={onClick}
         role="button"
@@ -72,7 +72,7 @@ function DriverRow({ driver, columns, context, gridTemplate, isFocused, expandab
           <div className="dp-who">
             {context.avatar && <span className="dp-av"><Avatar icon={context.avatar.portrait} color={driver.color} size={24} /><Avatar icon={context.avatar.vehicle} color={driver.color} size={26} /></span>}
             <b>{driver.name}</b>
-            <span>{driver.number !== undefined ? `#${driver.number} · ` : ''}{driver.teamName}</span>
+            <span>{driver.number !== undefined ? `#${driver.number} · ` : ''}{driver.teamName}{context.nemesis && <span className="nem-tag">NEMESIS</span>}</span>
             {context.fantasyTeam && <span className="fantasy-badge" style={{ '--fantasy-color': context.fantasyTeam.color } as React.CSSProperties}>{context.fantasyTeam.name}</span>}
             <button type="button" className="dp-close" onClick={e => { e.stopPropagation(); onClick?.(); }}>Close</button>
           </div>

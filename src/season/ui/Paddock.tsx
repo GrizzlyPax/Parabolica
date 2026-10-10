@@ -37,6 +37,7 @@ import { CAR_STATS, CT_STATS, DRIVER_STATS, GradeCell, PAD, ReadingSheet, STAT_A
 import { SeasonChart } from './SeasonChart';
 import { LeagueTables } from './LeagueTables';
 import { teamsOf } from './teams';
+import { nemesisLine } from '../nemesis';
 
 interface Props {
   facts: SeasonFacts;
@@ -70,6 +71,8 @@ function withCard(own: Card[], gear: Card[], extra: Card | null): Card[] {
 export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, backLabel = '← Menu' }: Props) {
   const pool = useMemo(() => poolFor(facts), [facts.setup]); // eslint-disable-line react-hooks/exhaustive-deps
   const teams = useMemo(() => teamsOf(facts), [facts.setup]); // eslint-disable-line react-hooks/exhaustive-deps
+  // The nemesis talks (#635): one line per Paddock visit (the round's moment).
+  const spoken = useMemo(() => nemesisLine(facts), [facts.setup, facts.results.length, facts.draftPicks.length]); // eslint-disable-line react-hooks/exhaustive-deps
   const rosters = useMemo(() => draftState(pool, facts.draftPicks).rosters, [pool, facts.draftPicks]);
   const state = seasonState(facts);
   const turn = state.whoseTurn;
@@ -421,6 +424,20 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, ba
         </div>
         <EndSeason onEnded={onEndSeason} />
       </header>
+      {spoken && (
+        <section className="nem-line" aria-label="Your nemesis">
+          <TeamLogo team={teams[spoken.teamId]} size={36} />
+          <div className="nem-says">
+            {spoken.lines.map((line, i) => (
+              <div key={i} className="nem-say">
+                <p className="nem-text">“{line.text}”</p>
+                {line.en && <p className="nem-en">{line.en}</p>}
+                <span className="nem-who">{line.who}<span className="nem-tag">NEMESIS</span></span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
       <div className="pk-tabs" role="tablist">
         <button type="button" role="tab" aria-selected={tab === 'team'} onClick={() => setTab('team')}>Team</button>
         <button type="button" role="tab" aria-selected={tab === 'league'} onClick={() => setTab('league')}>League</button>

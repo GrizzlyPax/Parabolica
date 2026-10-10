@@ -542,6 +542,8 @@
 /* Driver panel (Pax, Oct 9): who · OVR grades · cards · history. Opens inside the tower. */
 .timing-row.mine { background: color-mix(in srgb, var(--team-color) 16%, transparent); box-shadow: inset 4px 0 0 var(--team-color); }
 .timing-row.mine:hover { background: color-mix(in srgb, var(--team-color) 24%, transparent); }
+/* The nemesis (#635): a red stripe on the right edge. */
+.timing-row.nemesis { box-shadow: inset -3px 0 0 var(--signal-red); }
 .dp { display: grid; gap: 12px; padding: 12px 14px 14px; background: var(--pw-surface, #151517); box-shadow: inset 4px 0 0 var(--team-color); }
 .dp-who { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 12px; }
 .dp-who b { font-family: var(--look-display, serif); font-size: 20px; }
