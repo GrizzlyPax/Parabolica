@@ -1,6 +1,8 @@
 // "Priority stats" in plain words (#361): what the track and the weather
-// favour, +N% for everyone. One sentence, shared by the Paddock and Run Setup.
+// favour, in levels for everyone (#666: "+2 Speed"). One sentence, shared by
+// the Paddock and Run Setup.
 import { STAT_LABELS } from './deck';
+import { favourText } from './favourText';
 import type { CardStat } from './types';
 import './PriorityLine.css';
 
@@ -11,7 +13,7 @@ export function PriorityLine({ label, track, weather, className }: { label: stri
   // the name only shows when it says something the stats don't.
   const part = (s: Source, kind: string) => {
     const stats = s.favours.map(f => STAT_LABELS[f.stat]).join(' + ');
-    return <><b>{stats}</b> ({s.name && s.name !== stats ? `${s.name} ` : ''}{kind}, +{Math.round(s.favours[0].pct)}%)</>;
+    return <><b>{favourText(s.favours)}</b> ({s.name && s.name !== stats ? `${s.name} ` : ''}{kind})</>;
   };
   const hasTrack = track.favours.length > 0;
   const hasWeather = !!weather && weather.favours.length > 0;
