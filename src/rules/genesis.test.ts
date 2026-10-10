@@ -11,7 +11,7 @@ import { TEAMS } from '../data/teams';
 import { mulberry32, deriveSeed } from '../engine/rng';
 
 const GRID = TEAMS.slice(0, 11).map(t => t.id);
-const NO_CARDS = resolveRuleset(['no-tags'], RULE_CARDS_BY_ID);
+const NO_CARDS = resolveRuleset(['no-traits'], RULE_CARDS_BY_ID);
 
 function universe(seed: number) {
   return {
@@ -75,7 +75,7 @@ describe('genesis on cards', () => {
     const u = universe(5);
     const none = buildRoster(u.drivers, u.cars, 5, NO_CARDS);
     expect(none.every(d => d.cards!.length === 0)).toBe(true);
-    const soup = buildRoster(u.drivers, u.cars, 5, resolveRuleset(['tag-soup'], RULE_CARDS_BY_ID));
+    const soup = buildRoster(u.drivers, u.cars, 5, resolveRuleset(['trait-soup'], RULE_CARDS_BY_ID));
     expect(soup.reduce((s, d) => s + d.cards!.length, 0)).toBeGreaterThan(none.length);
   });
 

@@ -14,7 +14,7 @@ import { mulberry32, shuffle } from '../src/engine/rng.ts';
 const RACES = Number(process.argv[2] ?? 200);
 const NO_TAGS = (process.argv[3] ?? '1') === '1';
 const meta = mulberry32(246);
-const ruleset = resolveRuleset(NO_TAGS ? ['no-tags'] : [], RULE_CARDS_BY_ID);
+const ruleset = resolveRuleset(NO_TAGS ? ['no-traits'] : [], RULE_CARDS_BY_ID);
 
 // "The package": all 11 stats on the grade scale (shared with Race Control, #507).
 import { packageScore as pace } from '../src/racecontrol/pace.ts';

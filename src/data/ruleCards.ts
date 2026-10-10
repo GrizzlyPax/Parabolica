@@ -38,12 +38,12 @@ export const RULE_CARDS: RuleCard[] = [
     readout: 'Neutral skies become rare; every dry weather is as likely.',
     patch: { weather: { neutral: 10, ...Object.fromEntries(DRY.map(d => [d, 18])) } } },
 
-  // ---- Traits (ids kept from the tag era so saved hands still resolve) ----
-  { id: 'tag-soup', name: 'Trait Soup', emoji: '🍲', scope: 'both', weight: 'wild',
+  // ---- Traits (renamed from the tag era in #579; old ids load via RULE_CARD_ALIASES) ----
+  { id: 'trait-soup', name: 'Trait Soup', emoji: '🍲', scope: 'both', weight: 'wild',
     blurb: 'Everyone arrives with baggage.',
     readout: 'Most slots (driver, car, team) are born with a trait card.',
     patch: { traits: { genesisChance: 0.45 } } },
-  { id: 'no-tags', name: 'No Traits', emoji: '🧼', scope: 'both', weight: 'mild',
+  { id: 'no-traits', name: 'No Traits', emoji: '🧼', scope: 'both', weight: 'mild',
     blurb: 'A clean grid. Pure stats, nothing weird.',
     readout: 'Nobody is born with a trait card.',
     patch: { traits: { genesisChance: 0 } } },
@@ -71,7 +71,18 @@ export const RULE_CARDS: RuleCard[] = [
     patch: { simVars: { pits: { minStops: 0, requireCompoundChange: false, requireAllCompounds: false } } } },
 ];
 
-export const RULE_CARDS_BY_ID: Map<string, RuleCard> = new Map(RULE_CARDS.map(c => [c.id, c]));
+/** Retired ids (#579) → today's: saved presets, ledger rows and `npm run lab` args still resolve. */
+export const RULE_CARD_ALIASES: Record<string, string> = { 'tag-soup': 'trait-soup', 'no-tags': 'no-traits' };
+
+/** A card id as it is today (old tag-era ids mapped). */
+export const canonicalCardId = (id: string): string => RULE_CARD_ALIASES[id] ?? id;
+export const canonicalCardIds = (ids: readonly string[]): string[] => ids.map(canonicalCardId);
+
+/** Every card by id; the retired ids answer too, with the same card. */
+export const RULE_CARDS_BY_ID: Map<string, RuleCard> = new Map([
+  ...RULE_CARDS.map(c => [c.id, c] as const),
+  ...Object.entries(RULE_CARD_ALIASES).map(([old, id]) => [old, RULE_CARDS.find(c => c.id === id)!] as const),
+]);
 
 export function ruleCardsForScope(scope: 'race' | 'season'): RuleCard[] {
   return RULE_CARDS.filter(c => c.scope === scope || c.scope === 'both');

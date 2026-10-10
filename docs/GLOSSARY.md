@@ -215,8 +215,8 @@ A card adds grade points to its stats at race build (src/cards/apply.ts): bronze
 | ☀️ **Calm** `clear-skies` | race | mild | No weather favours this race. |
 | 🌬️ **Windswept** `always-raining` | season | wild | Every race favours Aggression and Grip. |
 | 🌪️ **Changeable** `wild-weather` | season | wild | Neutral skies become rare; every dry weather is as likely. |
-| 🍲 **Trait Soup** `tag-soup` | both | wild | Most slots (driver, car, team) are born with a trait card. |
-| 🧼 **No Traits** `no-tags` | both | mild | Nobody is born with a trait card. |
+| 🍲 **Trait Soup** `trait-soup` | both | wild | Most slots (driver, car, team) are born with a trait card. |
+| 🧼 **No Traits** `no-traits` | both | mild | Nobody is born with a trait card. |
 | 💥 **Demolition Derby** `demolition-derby` | both | cursed | Crashes 2.5× more likely. |
 | 🧨 **Unreliable Cars** `unreliable-cars` | both | cursed | Engines fail 3× as often. |
 | 🪨 **Tough Tyres** `tough-tyres` | both | mild | Tyres wear half as fast. Fewer stops. |

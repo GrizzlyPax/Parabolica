@@ -98,7 +98,7 @@ export function PhysicsTab({ lab }: { lab: LabProps }) {
           {yoursRun.error && <span className="rc-bad">{yoursRun.error}</span>}
           {canon && !canonRun.progress && <span className="rc-good">✓ current rules · seed {canon.batchSeed} · {canon.races} races · #{canon.fingerprint}</span>}
           {yours && !yoursRun.progress && <span className="rc-good">✓ your rules · same {yours.races} races · #{yours.fingerprint} — see Yours and Δ below</span>}
-          <span className="rc-actions"><code>npm run lab -- {seed} {races} all no-tags</code></span>
+          <span className="rc-actions"><code>npm run lab -- {seed} {races} all no-traits</code></span>
         </div>
       </section>
 
