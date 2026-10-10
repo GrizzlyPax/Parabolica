@@ -23,7 +23,7 @@ Parabolica is an F1-style race sim: draft a team, race a Season, chase two champ
 | [TRACKS_WEATHER](TRACKS_WEATHER.md) | 6 stat-combo tracks + dry weathers (**v0.5**); lap-by-lap Wet + wet tyre (**v0.6**) |
 | [CONDITIONS_LAYER](CONDITIONS_LAYER.md) | History: track tags + weather (retired in v0.6; see TRACKS_WEATHER) |
 | [RUN](RUN.md) | **The run core (v0.7):** 4 leagues × 6 races as facts, derived league setups, the carried team, promotion, run + meta saves, hooks |
-| [SEASON_MODE](SEASON_MODE.md) | **v0.5 Spa build spec:** League Setup, draft, Paddock loop |
+| [SEASON_MODE](SEASON_MODE.md) | **v0.5 Spa build spec:** League Setup, draft, Paddock loop (v0.7: a Season is one league of the run; [RUN.md](RUN.md) is current) |
 | [FUN_CHECK](FUN_CHECK.md) | **Is a season fun?** Six signals with probe targets, playtest look-fors, red flags |
 | [BALANCE_REPORT_2026-10-09](BALANCE_REPORT_2026-10-09.html) | **Steward's balance report (Oct 9):** stat parity, tracks & weather, how Season titles are decided; findings only ([published copy](https://claude.ai/artifact/MC5fwYaqd6KJD8Gk9q8E94)) |
 | [BALANCE_DIALS_2026-10-09](BALANCE_DIALS_2026-10-09.html) | **Steward: raw-stat balance philosophy:** king stat vs emperor, stat balance vs competitive balance, the three dials ([published copy](https://claude.ai/artifact/SBycLd28QF1vfPtihJLWmd)) |

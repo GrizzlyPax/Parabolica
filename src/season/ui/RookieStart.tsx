@@ -44,7 +44,7 @@ export default function RookieStart({ onBack, onStarted }: Props) {
   };
 
   return (
-    <div className="run-setup season-setup rk" style={teamThemeVars(you)}>
+    <div className="run-setup season-setup" style={teamThemeVars(you)}>
       <header className="rs-top">
         <div className="rs-title-block">
           <button type="button" className="rs-back" onClick={onBack}>← The run</button>
