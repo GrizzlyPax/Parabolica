@@ -7,6 +7,7 @@ import { getTrackById } from '../../generators/tracks';
 import { MAX_TEAMS, MIN_TEAMS, generateSeasonPool } from '../genesis';
 import { loadSeason, newSeason, saveSeason, seasonState, type SeasonFacts } from '../season';
 import { MAX_RACES, MIN_RACES, clampRaces, clampTeams, defaultSetup, humansFor, keepPicks, nextTrack, resolvePicks, tapTeam, type TeamPick, randomSeasonSeed, seasonCalendar, seasonName } from '../setup';
+import { TEAM_COLOURS, TEAM_LOGOS, TEAM_NAME_MAX, DEFAULT_TEAM_NAME, wearBuiltTeam, type BuiltTeam } from '../teamCreator';
 import '../../RunSetup.css';
 import './Season.css';
 
@@ -38,10 +39,17 @@ export default function LeagueSetup({ onBack, onStarted }: Props) {
     return initial.humans.map(h => pool0.teams.find(t => t.id === h.teamId)?.deckTeamId ?? h.teamId);
   });
   const [calendar, setCalendar] = useState(initial.calendar);
+  // The team creator (#346, Pax picked A: one page): build your own, or race as a deck team.
+  const [own, setOwn] = useState(true);
+  const [built, setBuilt] = useState<BuiltTeam>(() => {
+    const logos = TEAM_LOGOS.flatMap(g => g.ids);
+    return { name: '', colour: TEAM_COLOURS[initial.seed % TEAM_COLOURS.length].hex, logo: logos[Math.floor(initial.seed / 7) % logos.length] };
+  });
   const [confirming, setConfirming] = useState(false);
 
   const pool = useMemo(() => generateSeasonPool(seed, teamCount), [seed, teamCount]);
-  const humans = useMemo(() => humansFor(pool, picks), [pool, picks]);
+  const humans = useMemo(() => humansFor(pool, picks).map(h => (own ? wearBuiltTeam(h, built) : h)), [pool, picks, own, built]);
+  const you = humans[0];
   const owners = useMemo(() => resolvePicks(pool, picks), [pool, picks]);
   const saved = useMemo(() => {
     const facts = loadSeason();
@@ -76,7 +84,7 @@ export default function LeagueSetup({ onBack, onStarted }: Props) {
   const savedState = saved && seasonState(saved);
 
   return (
-    <div className="run-setup season-setup" style={teamThemeVars(pool.teams.find(t => t.id === owners[0]))}>
+    <div className="run-setup season-setup" style={teamThemeVars(you)}>
       <header className="rs-top">
         <div className="rs-title-block">
           <button type="button" className="rs-back" onClick={onBack}>← Menu</button>
@@ -98,6 +106,43 @@ export default function LeagueSetup({ onBack, onStarted }: Props) {
         </div>
       </header>
 
+      <section className="rs-row tc">
+        <div className="rs-row-head">
+          <span className="rs-k">Your team</span>
+          <button type="button" className="rs-link" onClick={() => setOwn(o => !o)}>{own ? 'Or race as a deck team' : 'Build your own instead'}</button>
+        </div>
+        <div className="tc-badge">
+          <TeamLogo team={you} size={44} />
+          {own ? (
+            <label className="tc-name">
+              <span className="sr-only">Team name</span>
+              <input id="tc-name" type="text" value={built.name} maxLength={TEAM_NAME_MAX} placeholder={DEFAULT_TEAM_NAME} autoComplete="off"
+                onChange={e => setBuilt(b => ({ ...b, name: e.target.value }))} />
+            </label>
+          ) : <b className="tc-deckname">{you.name}</b>}
+        </div>
+        {own && (
+          <>
+            <div className="tc-colours" role="radiogroup" aria-label="Colour">
+              {TEAM_COLOURS.map(c => (
+                <button key={c.hex} type="button" role="radio" aria-checked={built.colour === c.hex} aria-label={c.name} title={c.name}
+                  className={`tc-colour ${built.colour === c.hex ? 'on' : ''}`} style={{ background: c.hex }}
+                  onClick={() => setBuilt(b => ({ ...b, colour: c.hex }))} />
+              ))}
+            </div>
+            <div className="tc-logos" role="radiogroup" aria-label="Logo">
+              {TEAM_LOGOS.flatMap(g => g.ids).map(id => (
+                <button key={id} type="button" role="radio" aria-checked={built.logo === id} aria-label={id.replace(/-/g, ' ')}
+                  className={`tc-logo ${built.logo === id ? 'on' : ''}`} style={{ background: you.color, color: you.ink }}
+                  onClick={() => setBuilt(b => ({ ...b, logo: id }))}>
+                  <GameIcon name={id} size={22} />
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+      </section>
+
       <section className="rs-row">
         <div className="rs-row-head"><span className="rs-k">League</span></div>
         <div className="ss-name">{seasonName({ seed })}</div>
@@ -116,8 +161,8 @@ export default function LeagueSetup({ onBack, onStarted }: Props) {
         <div className="ss-counts">
           <div className="ss-count"><span className="ss-count-label">Teams</span><Stepper label="Teams" value={teamCount} min={MIN_TEAMS} max={MAX_TEAMS} onChange={changeTeams} /></div>
         </div>
-        <p className="rs-hint">You against {teamCount - 1} CPU teams. Tap a team to make it yours.</p>
-        <div className="rt-scroll">
+        <p className="rs-hint">{own ? `You against ${teamCount - 1} CPU teams.` : `You against ${teamCount - 1} CPU teams. Tap a team to make it yours.`}</p>
+        {!own && <div className="rt-scroll">
           <table className="rt rt-compact ss-teams-table">
             <thead><tr><th className="rt-name">Team</th><th className="ss-seat">Seat</th></tr></thead>
             <tbody>
@@ -148,8 +193,7 @@ export default function LeagueSetup({ onBack, onStarted }: Props) {
               })}
             </tbody>
           </table>
-        </div>
-        <p className="rs-hint">Naming your own team comes with the team creator.</p>
+        </div>}
       </section>
 
       <section className="rs-row">
