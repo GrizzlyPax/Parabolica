@@ -20,6 +20,7 @@ import type { RaceDigest } from '../league/types';
 import { DEFAULT_TEAMS, type CarriedTeam, type LeagueContext, type TeamIdentity } from '../season/genesis';
 import { draftState, quickDraft } from '../season/draft';
 import { carriedCards, teamCardState } from '../season/pack';
+import { carriedEffects } from '../season/effects';
 import { constructorStandings, poolFor, seasonState, settleRound, type SeasonFacts, type SeasonHuman, type SeasonSetup, type SeasonStore } from '../season/season';
 import { seasonCalendar } from '../season/setup';
 
@@ -93,7 +94,7 @@ export interface RunState {
 }
 
 export function emptyLeague(): LeagueFacts {
-  return { draftPicks: [], lineups: [], cardFacts: [], results: [] };
+  return { draftPicks: [], lineups: [], cardFacts: [], effectFacts: [], results: [] };
 }
 
 export function newRun(setup: Omit<RunSetup, 'start' | 'races' | 'teamCount'> & Partial<Pick<RunSetup, 'start' | 'races' | 'teamCount'>>): RunFacts {
@@ -194,7 +195,10 @@ export function carriedTeam(prev: SeasonFacts): CarriedTeam {
   const car = pool.cars.find(c => c.id === roster.carId);
   const team = pool.teams.find(t => t.id === teamId);
   if (!car || !team) throw new Error(`run: ${teamId} has no car or team to carry`);
-  return { teamId, drivers, car: { ...strip(car), avatarSeed: car.avatarSeed ?? pool.seed }, team, cards: carriedCards(teamCardState(prev, teamId)), nemesis: runnerUp(prev) };
+  return {
+    teamId, drivers, car: { ...strip(car), avatarSeed: car.avatarSeed ?? pool.seed }, team,
+    cards: carriedCards(teamCardState(prev, teamId)), nemesis: runnerUp(prev), effects: carriedEffects(prev, teamId),
+  };
 }
 
 /** The nemesis for the league above (#626): the league's runner-up (P2 in
@@ -268,7 +272,7 @@ export function loadRun(store: SeasonStore | null = defaultStore()): RunFacts | 
     const r = envelope.data;
     if (!r?.setup || typeof r.setup.seed !== 'number' || !r.setup.team || !Array.isArray(r.leagues)) return null;
     if (r.leagues.length < 1 || r.leagues.length > LEAGUES_PER_RUN || !r.leagues.every(isLeague)) return null;
-    return r;
+    return { ...r, leagues: r.leagues.map(l => ({ ...l, effectFacts: l.effectFacts ?? [] })) };
   } catch { return null; }
 }
 

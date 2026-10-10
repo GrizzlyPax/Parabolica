@@ -28,6 +28,7 @@ import { draftOrder, draftState, draftedRosters, type DraftPick } from './draft'
 import { portraitFor, vehicleFor } from '../generators/avatars';
 import type { IconId } from '../icons/registry';
 import { packOpened, seasonCardsFor, type CardFact } from './pack';
+import { roundEffects, type EffectFact } from './effects';
 
 /** 6 since the run (#597, v0.7): a league is 4 × 6; League Setup can still change it. */
 export const DEFAULT_CALENDAR_LENGTH = 6;
@@ -67,6 +68,8 @@ export interface SeasonFacts {
   lineups: SeasonLineup[];
   /** Pack applications and gear moves (#316), one ordered log. */
   cardFacts: CardFact[];
+  /** Timed effects dealt this league (#332), in order. Absent on older facts = none. */
+  effectFacts?: EffectFact[];
   /** Race digests, one per settled round, in order. Event logs are not kept. */
   results: RaceDigest[];
 }
@@ -96,7 +99,7 @@ export interface SeasonState {
 }
 
 export function newSeason(setup: SeasonSetup): SeasonFacts {
-  return { setup, draftPicks: [], lineups: [], cardFacts: [], results: [] };
+  return { setup, draftPicks: [], lineups: [], cardFacts: [], effectFacts: [], results: [] };
 }
 
 export function poolFor(facts: SeasonFacts): SeasonPool {
@@ -275,7 +278,7 @@ export function leagueForRound(facts: SeasonFacts, round: number): LeagueState {
   const { setup } = facts;
   const pool = poolFor(facts);
   const rosters = draftedRosters(pool, facts.draftPicks);
-  const roster = seasonRoster(pool, rosters, lineupsFor(facts, round), { cards: cardsForRound(facts, round), identities: identitiesFor(facts), shifts: rivalShifts(facts) });
+  const roster = seasonRoster(pool, rosters, lineupsFor(facts, round), { cards: cardsForRound(facts, round), identities: identitiesFor(facts), shifts: rivalShifts(facts), effects: roundEffects(facts, round) });
   return {
     engineVersion,
     leagueSeed: setup.seed,

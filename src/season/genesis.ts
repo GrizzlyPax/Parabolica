@@ -20,9 +20,9 @@ import { generateRackCar, generateTeamStats, type CarStats, type TeamStats } fro
 import { rollRacingNumbers } from '../generators/racingNumbers';
 import { teamIdentitiesForSeed } from '../generators/teamIdentity';
 import { BASE_DECK_TEAMS } from '../data/deckTeams';
-import { MOTORSPORT_DECK, cardsBy, pickCard, applyCards, applyPercents, DRIVER_STATS, CAR_STATS, TEAM_STATS, type Card, type CardTarget, type StatKey } from '../cards';
+import { MOTORSPORT_DECK, cardsBy, pickCard, applyCards, applyPercents, favourPercents, DRIVER_STATS, CAR_STATS, TEAM_STATS, type Card, type CardStat, type CardTarget, type StatKey } from '../cards';
 import { Ruleset, defaultRuleset } from '../rules/ruleset';
-import type { RosterDriver } from '../RaceEngine';
+import type { RosterDriver, LapEffect, EffectInfo } from '../RaceEngine';
 
 export const MIN_TEAMS = 5;
 export const MAX_TEAMS = 10;
@@ -104,6 +104,8 @@ export interface CarriedTeam {
   /** The league's runner-up comes up too, as the nemesis (#626): the look
    * only; its drivers, car and stats are rolled fresh at the new level. */
   nemesis?: TeamIdentity;
+  /** Timed effects still live (#332), re-dated so their races left hold. */
+  effects?: import('./effects').EffectFact[];
 }
 
 /** Which league of a run this season is (#597). Rival levels (#626) and the
@@ -247,6 +249,10 @@ export interface SeasonRosterOptions {
    * drivers, car and team at race build, after cards. Keyed by team id;
    * teams not named (the player) race their rolled stats. */
   shifts?: Record<string, number>;
+  /** Timed effects (#332), keyed by driver id: race-timed grade points
+   * (applied after cards, before the rival shift), lap effects the engine
+   * runs, and what to show. */
+  effects?: { points: Record<number, CardStat[]>; laps: Record<number, LapEffect[]>; infos: Record<number, EffectInfo[]> };
 }
 
 const ALL_STATS: StatKey[] = [...DRIVER_STATS, ...CAR_STATS, ...TEAM_STATS];
@@ -298,7 +304,10 @@ export function seasonRoster(pool: SeasonPool, rosters: TeamRoster[], lineups: L
       const driver = pool.drivers.find(d => d.id === driverId);
       if (!driver) throw new Error(`seasonRoster: unknown driver ${driverId}`);
       const cards = cardsForDriver(pool, team.id, driverId, car.id, opts.cards);
-      const adjusted = shiftStats(applyCards({ driver: driver.stats, car: car.stats, team: team.teamStats }, cards), opts.shifts?.[team.id] ?? 0);
+      const carded = applyCards({ driver: driver.stats, car: car.stats, team: team.teamStats }, cards);
+      const points = opts.effects?.points[driverId];
+      const timed = points?.length ? applyPercents(carded, favourPercents(points)) : carded;
+      const adjusted = shiftStats(timed, opts.shifts?.[team.id] ?? 0);
       out.push({
         id: driver.id,
         firstName: driver.firstName,
@@ -320,6 +329,8 @@ export function seasonRoster(pool: SeasonPool, rosters: TeamRoster[], lineups: L
         number: driver.number,
         // Display only: already baked into the stats above. The race view shows them (#451).
         cards,
+        effects: opts.effects?.infos[driverId],
+        lapEffects: opts.effects?.laps[driverId],
       });
     });
   }
