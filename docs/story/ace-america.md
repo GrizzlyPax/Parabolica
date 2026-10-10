@@ -76,6 +76,11 @@
 - **The Wheel:** the Accord's banner, a gold wheel on midnight blue. America's flag swaps its stars for one wheel; Ace America's prize carries the Wheel.
 - **Cards:** trading cards. The rules in [card-names](card-names.md) still hold: a corner badge (races, or the DNA mark), a "where it applies" circle, its own icon, quiet metal.
 
+## Beyond America (later; not in this version)
+- **The ladder keeps going: Ace America → Ace Earth → Ace Universe** (Pax, Oct 10). Possibly the surprise when you win the slice: there's more.
+- **Ace Earth:** you race the other nations' champions (the regional blocs, on the Parabolica).
+- **Ace Universe:** after Earth's success, **other planets have started racing too.** Nobody else in the galaxy ever built cars until they watched us; now they want in, and you race them to be Ace Universe.
+
 ## How it gets weirder (later decks)
 - **The base deck:** the season as the papers report it, gloves on.
 - **Later decks:** Parcel decks (gifts from upstairs), Watcher factions, the Worlds and the Parabolica, and the parked Horror deck ("what the Watchers watched before us").
