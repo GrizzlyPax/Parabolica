@@ -2,7 +2,7 @@
 
 *📻 Radio, Oct 10 2026, while Pax was out on a run. **A proposal, not canon.** Page with the cards and tables: [Five Worlds](https://claude.ai/artifact/QZBSzFg5MEStyg5826jLwV). Pax asked: what is this world (alternate US? another planet? modern, future, fantasy?), what should the cards feel like in your hands, and how do sillier decks arrive later. Touchstones he named: Star Wars: Galactic Racer (after the Empire falls, everybody races: a global circus that travels), loosely baseball, tactile tabletop UIs, Inscryption.*
 
-**Outcome (Pax, Oct 10):** World B, widened to the whole world. See [pastime-of-nations](pastime-of-nations.md).
+**Outcome (Pax, Oct 10):** World B, widened to the whole world. Now **Ace America**: see [ace-america](ace-america.md).
 
 ## TL;DR
 - **Five worlds, each with its own card:** A The Circuit (paddock pass) · B The National Pastime (trading card) · C The Basement Game (cardboard chit) · D Far Circuit (steel tag) · E The Almanac Year (seed packet).
