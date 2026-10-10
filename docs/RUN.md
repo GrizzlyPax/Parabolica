@@ -34,6 +34,14 @@ The pool generator (`generateSeasonPool(seed, teams, rs, { carry, league })`) pu
 - **The nemesis** is the league's runner-up (P2 in the Constructors'), carried up as a **look only** (`CarriedTeam.nemesis`, `runnerUp(prev)`): it wears the first fresh slot in the next pool (`CompetitorTeam.nemesis = true`, the deck never deals that look twice), rolls fresh drivers, car and stats, and gets `nemesis` points on top of the field shift. Rivals keep genesis traits only: no packs, no mid-league levelling (as before).
 - Shifting at race build (not in the pool) keeps the draft board honest and the pool unchanged; the pool's grades are the rolls, the race is the level. `rivalShifts(facts)` gives the UI the per-team points (Hub: stat levels, #623).
 
+## Timed effects (#332)
+- **An effect** (`src/season/effects.ts`, `EffectFact`): a target (one driver, the car or the team: car and team reach both drivers), grade points per stat (negative = a curse), a **timer** in **races** (`{ races: n }`) or **laps** (`{ laps: n, fromLap? }`), a source (`gear` · `curse` · `event`) and an id. Dealt with `addEffect(facts, e)` into `SeasonFacts.effectFacts`; the dealer (a pack, a curse, an event) owns the clock rules.
+- **Facts, not ticks:** live in round R iff `round ≤ R < round + races`; a lap effect lives in its own round. Nothing is written per race, so saves and replays need nothing more. `activeEffects(facts, teamId, round)` gives what is live with `left` ("2 races left", `describeLeft`); `roundEffects` feeds the roster builder.
+- **Race timers** apply at race build through the card math (`applyPercents`), after cards and before the rival shift. **Lap timers** go to the engine as `RosterDriver.lapEffects` in raw units (`rawDeltas`): the engine keeps `baseStats`, rebuilds driver / car / team stats at every lap boundary from base + live windows, logs `effect_applied` / `effect_expired`, and `reset()` restores the base. No RNG touched either way.
+- **Display:** `RosterDriver.effects` / `Driver.effects` carry `EffectInfo { name, emoji, source, left }` for chips and sheets (Hub).
+- **Carrying up a run:** `carriedEffects(prev, teamId)` re-dates live race timers by the races already used (`round − calendar length`), so what had 2 races left still has 2; lap effects don't carry. `CarriedTeam.effects` → `effectFactsOf(facts)` folds them before the league's own.
+- Nothing deals an effect yet: race results don't move until #627 (gear mileage, curses).
+
 ## Hooks left on purpose
 - **Boss race (#593):** `LeagueContext.bossRound` (the last round).
 - **Rookie pick (#594):** `RunSetup.start` ('draft' today); the draft is the run's start until then.

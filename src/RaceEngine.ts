@@ -83,6 +83,35 @@ export interface RosterDriver {
   number?: number;
   /** Trait cards baked into the stats (Quick Race #337, Season Mode). Display only. */
   cards?: Card[];
+  /** Stat changes that last N laps of this race (#332). Raw units, already
+   * converted from grade points by whoever dealt them. */
+  lapEffects?: LapEffect[];
+  /** Race-timed effects on this driver's team, for display (#332): what and how long. */
+  effects?: EffectInfo[];
+}
+
+/** A stat change for a stretch of the race (#332): from lap `fromLap`, for
+ * `laps` laps. The engine adds the deltas to the base stats while it runs
+ * and takes them off after; events say when. */
+export interface LapEffect {
+  id: string;
+  name: string;
+  emoji: string;
+  fromLap: number;
+  laps: number;
+  driver?: Partial<DriverStats>;
+  car?: Partial<CarStats>;
+  team?: Partial<TeamStats>;
+}
+
+/** What a timed effect is, for chips and sheets (#332). */
+export interface EffectInfo {
+  id: string;
+  name: string;
+  emoji: string;
+  source: 'gear' | 'curse' | 'event';
+  /** "2 races left" / "5 laps". */
+  left: string;
 }
 
 export interface Driver {
@@ -116,6 +145,10 @@ export interface Driver {
   teamStats?: TeamStats;  // Team operational stats (tire management, pit crew)
   number?: number;        // Racing number; display only
   cards?: Card[];         // Trait cards already baked into the stats; display only
+  effects?: EffectInfo[]; // Race-timed effects on the team; display only
+  lapEffects?: LapEffect[];   // Lap-timed stat changes (#332); the engine applies them
+  /** The stats as loaded, before any lap effect; stats are rebuilt from these each lap. */
+  baseStats?: { driver: DriverStats; car?: CarStats; team?: TeamStats };
   // Tire/Pit/Crash state
   tireState: TireState;
   status: DriverStatus;
@@ -715,6 +748,9 @@ class RaceEngine {
         teamStats: d.teamStats,
         number: d.number,
         cards: d.cards,
+        effects: d.effects,
+        lapEffects: d.lapEffects,
+        baseStats: d.lapEffects?.length ? { driver: { ...d.stats }, car: d.carStats && { ...d.carStats }, team: d.teamStats && { ...d.teamStats } } : undefined,
         // Tire/Pit/Crash initial state
         tireState: {
           compound: startingCompound,
@@ -897,6 +933,37 @@ class RaceEngine {
       const driver = this.drivers.find(d => d.id === driverId);
       if (!driver) continue;
       this.expireInRaceEffects(driver, e => e.expiresAtLap !== null && driver.currentLap >= e.expiresAtLap);
+    }
+  }
+
+  // === LAP-TIMED EFFECTS (#332) ===
+  // A driver's stats are base + every lap effect whose window holds the
+  // current lap; rebuilt at each lap boundary (and lap 0). No RNG involved.
+  private lapEffectsActive = new Map<number, string>();
+
+  private applyLapEffects(): void {
+    for (const driver of this.drivers) {
+      if (!driver.lapEffects?.length || !driver.baseStats) continue;
+      const active = driver.lapEffects.filter(e => driver.currentLap >= e.fromLap && driver.currentLap < e.fromLap + e.laps);
+      const key = active.map(e => e.id).join('|');
+      if (this.lapEffectsActive.get(driver.id) === key) continue;
+      const before = this.lapEffectsActive.get(driver.id) ?? '';
+      this.lapEffectsActive.set(driver.id, key);
+      const stats = { ...driver.baseStats.driver };
+      const car = driver.baseStats.car ? { ...driver.baseStats.car } : undefined;
+      const team = driver.baseStats.team ? { ...driver.baseStats.team } : undefined;
+      for (const e of active) {
+        for (const [k, v] of Object.entries(e.driver ?? {})) (stats as Record<string, number>)[k] += v ?? 0;
+        if (car) for (const [k, v] of Object.entries(e.car ?? {})) (car as Record<string, number>)[k] += v ?? 0;
+        if (team) for (const [k, v] of Object.entries(e.team ?? {})) (team as Record<string, number>)[k] += v ?? 0;
+      }
+      driver.stats = stats;
+      if (car) driver.carStats = car;
+      if (team) driver.teamStats = team;
+      const was = new Set(before.split('|').filter(Boolean));
+      const now = new Set(active.map(e => e.id));
+      for (const e of active) if (!was.has(e.id)) this.logEvent('effect_applied', driver, `${e.name}: for ${e.laps} lap${e.laps === 1 ? '' : 's'}`, 'neutral', 0.5, e.emoji);
+      for (const e of driver.lapEffects) if (was.has(e.id) && !now.has(e.id)) this.logEvent('effect_expired', driver, `${e.name} wears off`, 'neutral', 0.3, e.emoji);
     }
   }
 
@@ -1096,6 +1163,10 @@ class RaceEngine {
       const startingCompound = selectStartingTires(d.stats);
       return {
         ...d,
+        // Lap effects (#332) start over: back to the loaded stats.
+        stats: d.baseStats ? { ...d.baseStats.driver } : d.stats,
+        carStats: d.baseStats?.car ? { ...d.baseStats.car } : d.carStats,
+        teamStats: d.baseStats?.team ? { ...d.baseStats.team } : d.teamStats,
         position: 0,
         currentLap: 0,
         lapTimes: [],
@@ -1160,6 +1231,7 @@ class RaceEngine {
     this.lastRecordedLap = 0;
     // Reset in-race effects + unified effect storage
     this.inRaceEffects = new Map();
+    this.lapEffectsActive = new Map();
     this.unifiedEffects = new Map();
     this.notifyListeners();
     this.notifyStateListeners();
@@ -2118,6 +2190,7 @@ class RaceEngine {
     // Clean up expired effects
     this.cleanupExpiredEffects();
     this.expireInRaceEffectsByLap();
+    this.applyLapEffects();
 
     // === CRASH DETECTION (before movement) ===
     const proximityPairs = this.detectProximityPairs();
