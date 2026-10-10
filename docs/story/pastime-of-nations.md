@@ -1,8 +1,64 @@
-# Pastime of Nations: the world (draft)
+# Pastime of Nations: the world (brainstorm hub)
 
 *📻 Radio with Pax, Oct 10 2026. **Pax picked the world; the details are Radio's draft, not canon** until Pax moves them into the [bible](../STORY_BIBLE.md). Pages: [Pastime of Nations](https://claude.ai/artifact/2Hy78ZXA4cLEdYGyYQWcQ6) (the world bible draft) · [Republic of Speed](https://claude.ai/artifact/3U6mvrDNu5adQPhRymUfPy) (the round before: banner, ladder, gum cards). Grew out of World B in [five-worlds](five-worlds.md).*
 
-## TL;DR
+## Latest: the brainstorm with Pax (Oct 10, evening)
+
+*Talked through on mobile, one question at a time. **Direction, not canon, and not for building yet.** Where this conflicts with the draft below, this section wins. Pax: "This is now where we finally got an angle on story… the framing is really getting pretty locked."*
+
+### The Watchers
+- **Why us:** nobody else in the galaxy ever made cars. They all skipped straight to flying ("what a stupid idea, why not just fly?"). Cars are **Earth's quaint, charming thing**, and the galaxy loves it.
+- **One sighting, never repeated:** a light over Times Square at the start of the Great Race, 12 February 1908.
+- **They speak only by radio, and rarely.** It started with broadcasts in their own language, then came polite announcements (working name: **the Interval**, after the tune radio plays between programmes).
+- **Polite, not ominous.** They quietly took war, famine and the economy off our plate so humanity can focus on racing.
+- **Earth is the galaxy's favourite show:** Dungeon Crawler Carl / Hunger Games energy. The universe is watching.
+- **Mostly background for us.** Players get it in pieces over time; it isn't explained up front.
+- **Later, maybe:** Watcher factions. **Purists** keep Earth vintage; **Modernisers** want to update it ("we'll just give you penicillin"). That would explain the anachronisms.
+
+### The map and the world
+- **Today's countries.** The Watchers redrew the borders "as they should be", the way modern folks know them.
+- **America is racing's birthplace, like baseball:** we started it; other nations are as good or better. We were just the lucky ones standing there when the Watchers came down.
+- **The Worlds (full game, later) are regional blocs** (North America, South America, Europe, Asia, a Saharan bloc…), not every country, to avoid politics. About 20 easy bloc flags, invented. No religious symbols.
+- **Who reaches the Worlds is random, picked by something** (idea: a sealed envelope arrives in a Parcel).
+- **Time stands still between seasons:** the Watchers like it as it is. Fifty seasons in, still no jet engine. That's a joke we can use.
+
+### Parcels (card packs)
+- Most are **standard league issue**. A **rare** one comes from a **sponsor or fan out there** (Hunger Games sponsor gifts, Dungeon Crawler Carl boxes).
+
+### The run
+- **Each run is a new season:** "who wins the cup this year? Will it be you?" Not a time loop.
+- **Between seasons, later:** some stats carry over, or the deck grows as you hit milestones (Dead Cells). Not now.
+
+### The vertical slice: America
+- **America only.** The slice ends when you win America; the Worlds come in the full game.
+- **Three steps, locked:** **City → State → Nationals.** Each state has a sensible number of cities to win.
+- **The Nationals:** all 50 states start, 100 cars on track. Race one: DNFs are out. Then Hunger Games-style cuts, bottom finishers out, down to the **top 10 states (20 cars)** for a normal closing series. (A Steward question, later.)
+
+### You and your team
+- **You are a team principal,** hired to run a local team.
+- **Run start:**
+  1. Name yourself.
+  2. Pick one of about five starting garages, each competing for a city title somewhere in America.
+  3. Pick your colour.
+- **Your identity is your title, like Miss America:** win your city and you race as **the Spirit of Toledo**; win your state and you're **the Spirit of Ohio**; win the Nationals and you're **the Spirit of America**.
+  - Drivers stay the same; the brand climbs to your most impressive title.
+  - You can rebrand or recolour between stages.
+  - Past titles stay visible, so anyone can see where you came from.
+  - Shorthand is just the place name; the full title is the moment: "Congratulations, you are now the Spirit of Ohio."
+  - **Why "Spirit":** it's evocative, and "motor spirit" was the 1920s word for petrol (and the *Spirit of St. Louis* flew in 1927).
+- **The 28 base-deck teams are scrapped and rethought** (Pax: "I don't care about any of them"). The one-outfit-the-whole-run idea is gone.
+
+### Still to talk through
+- Starting garages: who they are and what makes the five different.
+- How rival cities, states and the nemesis fit the Spirit titles.
+- Other regional bloc names and flags (later).
+- Where lore docs live: Git is the hub for now; maybe Google Docs later, for co-editing lore.
+
+---
+
+## The first draft (earlier Oct 10; parts superseded above)
+
+### TL;DR
 - **An alternate 1920s Earth, with the 1950s' faith in tomorrow.** In 1908 the world raced from New York to Paris; something up above watched. In 1909 every nation signed **the Accord**: no armies, every quarrel settled on a circuit. Open-wheel racing is the pastime of every nation.
 - **The Watchers** are unseen. "We'll learn later." The base deck plays it straight; stranger decks bring them closer.
 - **The whole world races; you choose your start.** Three cities are rolled from anywhere on Earth; pick one. Climb **City → Region → Nation → the Worlds** (Eurovision with engines), taking a title at each step.
