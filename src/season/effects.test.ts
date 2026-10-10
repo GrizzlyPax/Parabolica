@@ -104,7 +104,8 @@ describe('lap timers', () => {
     for (const lap of [2, 3, 4]) if (seen[lap]) { expect(seen[lap][0]).toBeCloseTo(base0.baseSpeed + 0.15, 10); expect(seen[lap][1]).toBeCloseTo(grip0 + 1, 10); }
     if (seen[5]) expect(seen[5]).toEqual([base0.baseSpeed, grip0]);
     const events = engine.getFullEvents().filter(e => e.driverId === a && (e.type === 'effect_applied' || e.type === 'effect_expired') && /Spurt/.test(e.description));
-    expect(events.map(e => e.type)).toEqual(['effect_applied', 'effect_expired']);
+    // Applied at lap 2; expired at lap 5 unless the driver's race ended first.
+    expect(events.map(e => e.type)).toEqual(d().currentLap >= 5 ? ['effect_applied', 'effect_expired'] : ['effect_applied']);
     // reset: the base again
     engine.reset();
     expect(d().stats).toEqual(base0);

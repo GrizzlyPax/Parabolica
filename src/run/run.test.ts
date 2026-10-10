@@ -99,7 +99,7 @@ describe('the ladder', () => {
     const you = prev.setup.humans[0].teamId;
     const prevPool = poolFor(prev);
     const prevRoster = draftState(prevPool, prev.draftPicks).rosters[you];
-    const prevCards = teamCardState(prev, you);
+    const prevCards = teamCardState(prev, you, RACES);
 
     const next = promote(won);
     expect(next.leagues).toHaveLength(2);
@@ -119,7 +119,7 @@ describe('the ladder', () => {
     expect(pool.cars.find(c => c.id === roster.carId)).toMatchObject({ stats: prevPool.cars.find(c => c.id === roster.carId)!.stats, reservedFor: you });
     expect(pool.teams.find(t => t.id === you)!.teamStats).toEqual(prevPool.teams.find(t => t.id === you)!.teamStats);
     // Cards start where they ended, before any new pack.
-    expect(carriedCards(teamCardState(league, you))).toEqual(carriedCards(prevCards));
+    expect(carriedCards(teamCardState(league, you), RACES)).toEqual(carriedCards(prevCards, RACES));
     // The field is fresh: new ids above the stride, unique ids and numbers, nobody else holds your people.
     const others = pool.drivers.filter(d => d.reservedFor !== you);
     expect(others.every(d => d.id >= LEAGUE_ID_STRIDE)).toBe(true);

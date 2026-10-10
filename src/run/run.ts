@@ -197,7 +197,8 @@ export function carriedTeam(prev: SeasonFacts): CarriedTeam {
   if (!car || !team) throw new Error(`run: ${teamId} has no car or team to carry`);
   return {
     teamId, drivers, car: { ...strip(car), avatarSeed: car.avatarSeed ?? pool.seed }, team,
-    cards: carriedCards(teamCardState(prev, teamId)), nemesis: runnerUp(prev), effects: carriedEffects(prev, teamId),
+    // Cards as they stand after the last race, gear re-dated so its races left hold.
+    cards: carriedCards(teamCardState(prev, teamId, prev.setup.calendar.length), prev.setup.calendar.length), nemesis: runnerUp(prev), effects: carriedEffects(prev, teamId),
   };
 }
 

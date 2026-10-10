@@ -26,7 +26,8 @@ import { getTrackById } from '../../generators/tracks';
 import { getDeckTrackById } from '../../data/deckTracks';
 import { weatherForRace } from '../../data/weather';
 import { draftState } from '../draft';
-import { applyPack, moveGear, pendingPack, teamCardState, type CardHolder, type TeamCardState } from '../pack';
+import { applyPack, applyCurse, dealPack, moveGear, pendingOffer, teamCardState, PACK_KIND_LABEL, type CardHolder, type PackKind, type TeamCardState } from '../pack';
+import { effectCards, describeLeft, activeEffects } from '../effects';
 import { constructorStandings, driverStandings, lineupFor, poolFor, seasonState, setLineup, type SeasonFacts } from '../season';
 import { saveCurrentLeague as saveSeason } from '../../run/current';
 import { overall, readStat, type StatReading } from '../grades';
@@ -46,7 +47,7 @@ interface Props {
   onStandings: () => void;
 }
 
-const TIER_LABEL = { common: 'Common', uncommon: 'Uncommon', rare: 'Rare', legendary: 'Legendary' } as const;
+const CURSE_LIFE_TEXT = 'three races';
 const GEAR_FOR: Record<CardHolder['kind'], Card['kind']> = { driver: 'equipment', car: 'upgrade', team: 'facility' };
 const ABBR = STAT_ABBR;
 const ord = (n: number) => `${n}${['th', 'st', 'nd', 'rd'][(n % 100 - 20) % 10] || ['th', 'st', 'nd', 'rd'][n % 100] || 'th'}`;
@@ -92,7 +93,11 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo }: 
 
   const roster = rosters[viewer];
   const cards = teamCardState(facts, viewer);
-  const pack = turn ? pendingPack(facts) : null;
+  // The pack offer (#627): pick 1 of 2 packs, one pack, or a forced curse. The pack shows its place, not its metal.
+  const offer = turn ? pendingOffer(facts) : null;
+  const [picked, setPicked] = useState<PackKind | null>(null);
+  const pack = offer && offer.kind !== 'curse' ? dealPack(facts, offer.round, offer.teamId, picked && offer.packs.includes(picked) ? picked : offer.packs[0]) : null;
+  const curse = offer?.kind === 'curse' ? offer.curse! : null;
   const myTurn = !!turn && state.phase === 'paddock';
   const lineup = lineupFor(facts, state.round, viewer);
   const car = pool.cars.find(c => c.id === roster.carId)!;
@@ -111,20 +116,29 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo }: 
   };
   const lockerFits = !!hand && myTurn && hand.kind !== 'trait' && held!.from !== 'locker';
 
+  // Live timed effects (a curse, #332 / #627) read like cards in the sum.
+  const fx = (h: CardHolder) => effectCards(facts, viewer, round, h);
   const readRow = (k: HolderKey, extra: Card | null) => {
-    if (k === 'car') return CAR_STATS.map(s => readStat(s, car.stats[s as keyof typeof car.stats], withCard([...car.traits, ...cards.car.traits], cards.car.upgrade, extra)));
-    if (k === 'team') return TEAM_STATS.map(s => readStat(s, team.teamStats[s as keyof typeof team.teamStats], withCard([...team.traits, ...cards.team.traits], cards.team.facility, extra)));
+    if (k === 'car') return CAR_STATS.map(s => readStat(s, car.stats[s as keyof typeof car.stats], withCard([...car.traits, ...cards.car.traits, ...fx({ kind: 'car' })], cards.car.upgrade, extra)));
+    if (k === 'team') return TEAM_STATS.map(s => readStat(s, team.teamStats[s as keyof typeof team.teamStats], withCard([...team.traits, ...cards.team.traits, ...fx({ kind: 'team' })], cards.team.facility, extra)));
     const id = Number(k);
     const d = pool.drivers.find(x => x.id === id)!;
-    return DRIVER_STATS.map(s => readStat(s, d.stats[s as keyof typeof d.stats], withCard([...d.traits, ...cards.drivers[id].traits], cards.drivers[id].equipment, extra)));
+    return DRIVER_STATS.map(s => readStat(s, d.stats[s as keyof typeof d.stats], withCard([...d.traits, ...cards.drivers[id].traits, ...fx({ kind: 'driver', id })], cards.drivers[id].equipment, extra)));
   };
+  const liveEffects = activeEffects(facts, viewer, round);
   const targetName = (k: HolderKey) => (k === 'car' ? car.name : k === 'team' ? you.name : pool.drivers.find(x => x.id === Number(k))!.fullName);
 
   // Actions
   /** A picked trait goes on for good, onto the target the reveal asked for. */
   const givePack = (kept: Card, k: HolderKey) => {
     if (!pack) return;
-    commit(applyPack(facts, { type: 'pack', round: pack.round, teamId: pack.teamId, tier: pack.tier, cardId: kept.id, dealt, target: holderOf(k) }));
+    commit(applyPack(facts, { type: 'pack', round: pack.round, teamId: pack.teamId, tier: pack.tier, pack: pack.kind, cardId: kept.id, dealt, target: holderOf(k) }));
+    setRevealing(false);
+  };
+  /** The forced curse (#627): nothing to choose; it lands on the car or the team for three races. */
+  const takeCurse = () => {
+    if (!curse) return;
+    commit(applyCurse(facts, { type: 'curse', round: curse.round, teamId: curse.teamId, effectId: curse.id }));
     setRevealing(false);
   };
   /** A picked gear card goes to the locker (Pax: "ghost your locker"): it lands on its slot (a pack card
@@ -134,7 +148,7 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo }: 
     if (!pack || kept.kind === 'trait') return;
     const target: CardHolder = kept.kind === 'equipment' ? { kind: 'driver', id: roster.driverIds[0] } : kept.kind === 'upgrade' ? { kind: 'car' } : { kind: 'team' };
     const occupant = slotOf(cards, target)[0];
-    let next = applyPack(facts, { type: 'pack', round: pack.round, teamId: pack.teamId, tier: pack.tier, cardId: kept.id, dealt, target, replaces: occupant?.id });
+    let next = applyPack(facts, { type: 'pack', round: pack.round, teamId: pack.teamId, tier: pack.tier, pack: pack.kind, cardId: kept.id, dealt, target, replaces: occupant?.id });
     next = moveGear(next, { type: 'move', round: state.round, teamId: viewer, cardId: kept.id, to: 'locker' });
     if (occupant) next = moveGear(next, { type: 'move', round: state.round, teamId: viewer, cardId: occupant.id, to: target });
     commit(next);
@@ -230,7 +244,7 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo }: 
   const rowClass = (k: HolderKey, extra = '') => `${fitsRow(k) ? 'target' : ''} ${extra}`.trim();
 
   // The turn, in one line
-  const step = !myTurn ? -1 : pack ? 0 : 1;
+  const step = !myTurn ? -1 : offer ? 0 : 1;
   const STEPS = ['Open pack', 'Lock in'];
   const turnLine = state.phase === 'ready-for-go' ? (
     <div className="pk-go"><span>Every team is set for round {state.round + 1}.</span><button type="button" className="rs-btn rs-btn-primary" onClick={onGo}>Go: round {state.round + 1}</button></div>
@@ -239,7 +253,9 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo }: 
       <ol aria-label="Your turn">
         {STEPS.map((s, i) => <li key={s} className={i < step ? 'done' : i === step ? 'now' : ''}>{i + 1} · {s}</li>)}
       </ol>
-      {step === 0 && !revealing && <button type="button" className="rs-btn rs-btn-primary" onClick={() => setRevealing(true)}>Open pack</button>}
+      {step === 0 && !revealing && offer?.kind === 'single' && <button type="button" className="rs-btn rs-btn-primary" onClick={() => setRevealing(true)}>Open pack</button>}
+      {step === 0 && !revealing && offer?.kind === 'choice' && <span className="rs-hint">Pick one of the two packs below.</span>}
+      {step === 0 && !revealing && offer?.kind === 'curse' && <button type="button" className="rs-btn rs-btn-primary" onClick={() => setRevealing(true)}>Open the Curse pack</button>}
       {step >= 1 && <button type="button" className="rs-btn rs-btn-primary" disabled={lineup.length !== 2} onClick={lock}>Lock in</button>}
     </div>
   );
@@ -257,9 +273,9 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo }: 
     <>
       {turnLine}
       {priorityLine}
-      {pack && myTurn && (revealing ? (
+      {offer && myTurn && (revealing && pack ? (
         <PackPick
-          key={`${pack.round}:${pack.teamId}`}
+          key={`${pack.round}:${pack.teamId}:${pack.kind}`}
           cards={pack.cards}
           tier={pack.tier}
           traitTargets={traitTargets}
@@ -267,16 +283,39 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo }: 
           onDetail={c => setDetail({ card: c })}
           onClose={() => setRevealing(false)}
         />
-      ) : (
-        <div className="pk-pack">
-          <button type="button" className={`pk-sealed tier-${pack.tier}`} onClick={() => setRevealing(true)} aria-label={`Open your ${TIER_LABEL[pack.tier]} pack`}><GameIcon name="season.pack" size={30} /><i className="pk-twinkle a" /><i className="pk-twinkle b" /><i className="pk-twinkle c" /></button>
-          <div className="pk-pack-text">
-            <span className="rs-k pk-pack-k">Base deck · {TIER_LABEL[pack.tier]} pack</span>
-            <b>Sealed</b>
-            <span className="rs-hint">Tap the pack to open it. Three cards inside; you keep one.</span>
+      ) : revealing && curse ? (
+        <section className="pp pp-curse" aria-label="Curse pack">
+          <div className="pp-head"><span className="rs-k">Curse pack · nothing to choose</span><button type="button" className="rs-link" onClick={() => setRevealing(false)}>Later</button></div>
+          <div className="pp-keep">
+            <b>{curse.emoji} {curse.name}: {curse.stats.map(s => `${s.pct} ${STAT_LABELS[s.stat]}`).join(', ')} on {curse.target.kind === 'car' ? car.name : you.name}, both drivers, for {CURSE_LIFE_TEXT}.</b>
+            <button type="button" className="rs-btn rs-btn-primary" onClick={takeCurse}>Take the curse</button>
+            <span className="rs-hint">Bad luck. It lifts on its own; benching can't dodge it.</span>
           </div>
+        </section>
+      ) : (
+        <div className={`pk-pack ${offer.kind === 'choice' ? 'pk-offer' : ''}`}>
+          {offer.kind === 'curse' ? (
+            <>
+              <button type="button" className="pk-sealed pk-sealed-curse" onClick={() => setRevealing(true)} aria-label="Open the Curse pack"><GameIcon name="season.pack" size={30} /></button>
+              <div className="pk-pack-text">
+                <span className="rs-k pk-pack-k">Curse pack</span>
+                <b>Forced</b>
+                <span className="rs-hint">Unlucky: this round's only pack is a curse on the car or the team.</span>
+              </div>
+            </>
+          ) : offer.packs.map(kind => (
+            <div key={kind} className="pk-pack-one">
+              <button type="button" className="pk-sealed" onClick={() => { setPicked(kind); setRevealing(true); }} aria-label={`Open the ${PACK_KIND_LABEL[kind]}`}><GameIcon name="season.pack" size={30} /><i className="pk-twinkle a" /><i className="pk-twinkle b" /><i className="pk-twinkle c" /></button>
+              <div className="pk-pack-text">
+                <span className="rs-k pk-pack-k">Base deck · {PACK_KIND_LABEL[kind]}</span>
+                <b>{offer.kind === 'choice' ? 'Pick this one' : 'Sealed'}</b>
+                <span className="rs-hint">{kind === 'driver' ? 'A trait or equipment for a driver.' : kind === 'car' ? 'A trait or upgrade for the car.' : 'A trait or facility for the team.'} Three inside; keep one. The metal shows when it opens.</span>
+              </div>
+            </div>
+          ))}
         </div>
       ))}
+      {liveEffects.length > 0 && <p className="rs-hint pk-hint">{liveEffects.map(e => `${e.emoji} ${e.name}: ${describeLeft(e)}`).join(' · ')}</p>}
       {hand && <p className="rs-hint pk-hint">{hint}</p>}
       <div className="rt-legend">
         {priority.size > 0 && <span><span className="rt-prio-key">{ABBR[[...priority][0]]}</span> next race priority</span>}
