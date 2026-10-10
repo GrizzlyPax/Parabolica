@@ -1,8 +1,7 @@
 import { fantasyStandings, fantasyHex, type FantasyConfig } from './fantasy/types';
 import { getDeckTrackById } from './data/deckTracks';
-import { STAT_LABELS } from './cards/deck';
 import { isNeutralWeather } from './data/weather';
-import { favourText } from './cards/favourText';
+import { favourText, favourParts } from './cards/favourText';
 import RaceEngine, { Driver, RaceConfig, RaceState, TrackInfo, RaceEvent, EffectStackEntry } from './RaceEngine';
 import { useMemo, useRef, useEffect, useState } from 'react';
 import {
@@ -23,6 +22,9 @@ import RaceFeed from './components/race/RaceFeed';
 import { buildLapChartData } from './components/race/lapChartData';
 import { buildRaceReportMd } from './components/race/raceReportMd';
 import FinishSheet from './components/race/FinishSheet';
+import DriverCard from './season/ui/DriverCard';
+import { DRIVER_CARD_STATS, type DriverCardData } from './season/driverCard';
+import { readStat } from './season/grades';
 import { driverDebrief, winnerEdge } from './components/race/debrief';
 import QualiBoard, { type QualiLive, type QualiFollow } from './components/race/QualiBoard';
 import type { DriverHistoryEntry } from './components/race/types';
@@ -182,6 +184,20 @@ function WatchMode({
   // Your team's rows are tinted instead of opened (Pax, Oct 9).
   const mineSet = useMemo(() => (myDriverIds ? new Set(myDriverIds) : undefined), [myDriverIds]);
   const nemesisSet = useMemo(() => (nemesisDriverIds ? new Set(nemesisDriverIds) : undefined), [nemesisDriverIds]);
+  // The driver card from the driver panel (#476). In a race the levels are
+  // race-day: cards and today's favours are already in the stats.
+  const [raceCardOf, setRaceCardOf] = useState<number | null>(null);
+  const raceCard = useMemo((): DriverCardData | null => {
+    const d = raceCardOf === null ? undefined : drivers.find(x => x.id === raceCardOf);
+    if (!d) return null;
+    const sealed = !!sealedDriverIds?.has(d.id);
+    return {
+      id: d.id, name: d.name, number: d.number, teamName: d.teamName ?? '', color: d.color, ink: d.ink,
+      portrait: avatars?.get(d.id)?.portrait, backstory: d.backstory, quirk: d.quirk,
+      cards: d.cards ?? [], sealed,
+      readings: sealed ? undefined : DRIVER_CARD_STATS.map(s => readStat(s, d.stats[s as keyof typeof d.stats] as number, [])),
+    };
+  }, [raceCardOf, drivers, sealedDriverIds, avatars]);
   const [navPanelOpen, setNavPanelOpen] = useState(false);
 
   // Auto-unfocus DNF'd drivers (they can manually re-focus if wanted)
@@ -1017,8 +1033,8 @@ function WatchMode({
   // This race's priority stats (#361): the track's favours plus the weather's.
   const headerPriority = useMemo(() => {
     const deck = trackInfo?.id ? getDeckTrackById(trackInfo.id) : undefined;
-    const stats = [...(deck?.favours ?? []), ...(engine.getWeather()?.favours ?? [])].map(f => STAT_LABELS[f.stat]);
-    return [...new Set(stats)];
+    // In levels (#666): "+2 Speed · +3 Power" (track and weather summed per stat).
+    return favourParts([...(deck?.favours ?? []), ...(engine.getWeather()?.favours ?? [])]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [engine, trackInfo]);
   // The race debrief (#581): read once the flag drops, from the race record.
@@ -1224,6 +1240,7 @@ function WatchMode({
           (desktop/landscape). On portrait phones it falls back to the stacked
           vertical layout. */}
       <div className={`watch-content view-${activeView}`}>
+        {raceCard && <DriverCard data={raceCard} onClose={() => setRaceCardOf(null)} />}
         {raceState.raceFinished && sortedFinished.length >= 1 && (
           <FinishSheet
             podium={sortedFinished}
@@ -1273,6 +1290,7 @@ function WatchMode({
                   lapLength={trackLength}
                   focusedDriverIds={focusedDriverIds}
                   onDriverClick={toggleDriverFocus}
+                  onDriverCard={setRaceCardOf}
                   condensed={false}
                   statusEffects={statusEffectsMap}
                   effectStacks={effectStacksMap}
@@ -1330,6 +1348,7 @@ function WatchMode({
                   lapLength={trackLength}
                   focusedDriverIds={focusedDriverIds}
                   onDriverClick={toggleDriverFocus}
+                  onDriverCard={setRaceCardOf}
                   condensed={false}
                   expandable={true}
                   statusEffects={statusEffectsMap}

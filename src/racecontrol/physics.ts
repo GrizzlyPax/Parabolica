@@ -10,7 +10,7 @@ import RaceEngine from '../RaceEngine';
 import { CANON_VARIABLES, type SimVariables } from '../simlab/types';
 import { livePace, packageScore } from './pace';
 
-export const PHYSICS_CARDS = ['no-tags'];
+export const PHYSICS_CARDS = ['no-traits'];
 export const PHYSICS_RACES = 100;
 
 export type MetricFormat = 'pct' | 'num1' | 'num2' | 'int' | 'corr';

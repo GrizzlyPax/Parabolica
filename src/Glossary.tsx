@@ -6,6 +6,7 @@
 // and export as code or as a prompt for an agent.
 import { useEffect, useMemo, useState, ReactNode } from 'react';
 import { levelDelta } from './season/grades';
+import { favourText } from './cards/favourText';
 import { PLAYER_CARD_SCALE } from './season/pack';
 import { buildGlossary, describeInRaceEffect, effectsOf } from './data/glossary';
 import { RARITIES } from './cards/rarity';
@@ -96,7 +97,6 @@ function FavourIcons({ favours }: { favours: CardStat[] }) {
 }
 /** A deck card as the run deals it to you (#623: card text in levels at 3×). */
 const asDealt = (c: Card): Card => (c.kind === 'effect' ? c : { ...c, stats: c.stats.map(x => ({ ...x, pct: x.pct * PLAYER_CARD_SCALE })) });
-const favourText = (favours: CardStat[]) => favours.map(f => `+${f.pct} ${STAT_LABELS[f.stat]}`).join(' · ');
 const DECK_GROUPS: { id: string; title: string; hint: string; rows: Card[] }[] = [
   { id: 'equipment', title: 'Equipment', hint: `Driver gear: one slot, swappable (Season Mode packs). ${IN_SIM}`, rows: cardsBy({ kind: 'equipment' }) },
   { id: 'upgrade', title: 'Upgrades', hint: `Car gear: one slot (Season Mode packs). ${IN_SIM}`, rows: cardsBy({ kind: 'upgrade' }) },

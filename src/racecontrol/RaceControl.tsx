@@ -138,7 +138,7 @@ function NotebookTab({ notebook, setNotebook, working, onLoad, onDeletePreset, o
               </tr>
               {open === r.id && <tr className="rc-try-row"><td colSpan={7}><div className="rc-try rc-preset-detail">
                 {r.result.metrics.map(m => <div key={m.id}><b>{m.label}</b> <span className={`rc-num ${metricOutOfBand(m) ? 'rc-bad' : ''}`}>{formatMetric(m.value, m.format)}</span></div>)}
-                <div className="rs-hint">Repeat it: <code>npm run lab -- {r.seed} {r.races} all no-tags</code></div>
+                <div className="rs-hint">Repeat it: <code>npm run lab -- {r.seed} {r.races} all no-traits</code></div>
               </div></td></tr>}
               </Fragment>
             ))}
@@ -201,8 +201,8 @@ function MethodTab() {
       <ol>
         <li><b>A lab race is a league race.</b> Every batch goes through <code>src/racecontrol/runner.ts</code>, which builds a one-race Season on the Season pool (10 teams × 2, CPU-drafted) with <code>oneRaceSeason</code> and prepares the engine with <code>prepareScheduledRace</code> — the same path Season Mode and Quick Race race on. Current tracks only, one pool per universe seed, seeded weather, the chosen rule-card hand.</li>
         <li><b>Everything is seeded.</b> A batch is (seed, size, rule cards). Race <i>i</i> derives from <code>deriveSeed(seed, 'lab', i)</code>; nothing in the lab touches <code>Math.random</code>. The same spec gives the same race in this browser, in a vitest, and in the terminal.</li>
-        <li><b>Every result carries a fingerprint.</b> Physics shows <code>#xxxxxxxx</code> next to its seed; <code>npm run lab -- &lt;seed&gt; &lt;races&gt; all no-tags</code> prints the same one when it ran the same races.</li>
-        <li><b>Physics is measured on card-free races.</b> The <code>no-tags</code> rule card (No Traits), so the rules are read without genesis cards on top. Change a knob and the same seeded batch runs with your value — only the knob differs.</li>
+        <li><b>Every result carries a fingerprint.</b> Physics shows <code>#xxxxxxxx</code> next to its seed; <code>npm run lab -- &lt;seed&gt; &lt;races&gt; all no-traits</code> prints the same one when it ran the same races.</li>
+        <li><b>Physics is measured on card-free races.</b> The <code>no-traits</code> rule card (No Traits), so the rules are read without genesis cards on top. Change a knob and the same seeded batch runs with your value — only the knob differs.</li>
         <li><b>Cards are arithmetic, not behaviour.</b> A trait or gear card adds grade points to a stat at roster build (<code>src/cards/apply.ts</code>); the Deck tab shows every card and its numbers. There is nothing to calibrate per card: the stat's own weight (Physics) is the card's weight.</li>
         <li><b>Re-roll to see the dice.</b> Physics can re-run on a fresh seed. A number that moves a lot between seeds is mostly luck; the ± and the Δ flag tell you when a difference is bigger than the noise.</li>
         <li><b>Export what you see.</b> Physics gives you the code for an edit you liked (Copy as code). Paste it into an issue and anyone can rerun it.</li>
@@ -210,7 +210,7 @@ function MethodTab() {
       <div className="rc-cmds">
         <span className="rs-k">Commands</span>
         <code>npm run lab -- 2026 100 all</code><span className="rs-hint">replay a physics batch, print its fingerprint</span>
-        <code>npm run lab -- 2026 100 all no-tags rain</code><span className="rs-hint">…under a rule-card hand</span>
+        <code>npm run lab -- 2026 100 all no-traits rain</code><span className="rs-hint">…under a rule-card hand</span>
         <code>npx tsx scripts/mechanics-probe.mjs 200</code><span className="rs-hint">the card-free mechanics gates (#246)</span>
       </div>
       <p className="rs-hint">Known gaps, parked: the safety-car count reads a double-logged event (halved here). BetLab (odds) is gone; src/betting/utils keeps the odds math.</p>

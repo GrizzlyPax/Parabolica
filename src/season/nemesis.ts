@@ -3,6 +3,8 @@
 // the speaking driver's personality. Flavour only: every roll here is on its
 // own seeded stream ('nemesis-voice'), never the sim's, and nothing is saved.
 //
+// Personalities belong to the nemesis team's seats, not its drivers (#665).
+//
 // Who the nemesis is: the team flagged CompetitorTeam.nemesis: last league's
 // runner-up from the Regional up (#626), and in the Juniors a real rival at
 // its own level (#660) who says the "first meeting" lines.
@@ -102,10 +104,25 @@ export const DOUBLE_ACT_LINES: Pool = {
 
 const voice = (seed: number, ...keys: (string | number)[]) => mulberry32(deriveSeed(seed, 'nemesis-voice', ...keys));
 
-/** Each nemesis driver's personality: equal odds, doubles allowed, its own stream. */
-export function personalityOf(seed: number, driverId: number): Personality {
-  return PERSONALITIES[Math.floor(voice(seed, 'personality', driverId)() * PERSONALITIES.length)];
+/**
+ * Each nemesis seat's personality: equal odds, doubles allowed, its own stream.
+ * Keyed to the run, the nemesis team's look and the seat (0 or 1), never the
+ * driver id (#665, Pax Oct 10): the nemesis rolls fresh drivers each league,
+ * but the same Brat and Old Hand come back. "They're back."
+ */
+export function personalityOf(runKey: string, look: string, seat: number): Personality {
+  return PERSONALITIES[Math.floor(mulberry32(deriveSeed(0, 'nemesis-voice', 'personality', runKey, look, seat))() * PERSONALITIES.length)];
 }
+
+/** A run-stable key: your own drivers' names (rolled from the run seed and
+ * carried up league to league), so personalities hold within a run and vary
+ * between runs. */
+export function runKeyOf(names: readonly string[]): string {
+  return [...names].sort().join('|');
+}
+
+/** The look a team carries up (#626): the deck team, else its name. */
+const lookOf = (t: CompetitorTeam) => t.deckTeamId ?? t.name;
 
 /** The nemesis team in this league: the flagged one. Null outside a run. */
 export function nemesisTeam(facts: SeasonFacts): CompetitorTeam | null {
@@ -158,7 +175,10 @@ export function nemesisLine(facts: SeasonFacts): Spoken | null {
   const names = new Map(pool.drivers.map(d => [d.id, d.fullName]));
   const surname = (id: number) => (names.get(id) ?? '').split(' ').slice(-1)[0];
   const tokens = (id: number) => ({ you: youTeam.name, nemesis: team.name, driver: names.get(id) ?? '', gap: String(gap) });
-  const personalities = theirs.map(id => personalityOf(seed, id));
+  const runKey = runKeyOf(mine.map(id => names.get(id) ?? String(id)));
+  const look = lookOf(team);
+  const personalityAt = (id: number) => personalityOf(runKey, look, Math.max(0, theirs.indexOf(id)));
+  const personalities = theirs.map(personalityAt);
   const doubleAct = personalities.every(p => p === 'show-off');
 
   // One line from a pool, seeded per round, never the same line twice in a row.
@@ -168,7 +188,7 @@ export function nemesisLine(facts: SeasonFacts): Spoken | null {
     return i;
   };
   const say = (id: number): Line & { who: string } => {
-    const p = personalityOf(seed, id);
+    const p = personalityAt(id);
     const lines = NEMESIS_LINES[p][moment] ?? NEMESIS_LINES[p][moment === 'first' ? 'return' : moment === 'bossYouWinTop' ? 'bossYouWin' : 'lead']!;
     const line = lines[pickFrom(lines, `${p}:${moment}:${id}`, round)];
     return { text: fill(line.text, tokens(id)), en: line.en && fill(line.en, tokens(id)), who: `${names.get(id)} · ${team.name}` };

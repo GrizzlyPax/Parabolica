@@ -6,6 +6,7 @@
 // (seed, races, preset) and what came out. (Tag edits and tag-calibration
 // runs retired with tags, #334; old entries are dropped on load.)
 import { compactReport, expandReport, type PhysicsReport } from './physics';
+import { canonicalCardIds } from '../data/ruleCards';
 
 export interface LabPreset {
   id: string;
@@ -31,9 +32,12 @@ export function upgradePreset(p: LabPreset & { tagEdits?: unknown }): LabPreset 
   return { ...rest, knobEdits: rest.knobEdits ?? {} };
 }
 
-/** Only physics runs survive; tag-calibration runs (pre-#334) are dropped. */
+/** Only physics runs survive; tag-calibration runs (pre-#334) are dropped.
+ * Old tag-era card ids become today's (#579). */
 export function upgradeRuns(runs: unknown[]): LabRun[] {
-  return runs.filter((r): r is LabRun => !!r && typeof r === 'object' && (r as LabRun).kind === 'physics');
+  return runs
+    .filter((r): r is LabRun => !!r && typeof r === 'object' && (r as LabRun).kind === 'physics')
+    .map(r => (r.result && Array.isArray(r.result.cards) ? { ...r, result: { ...r.result, cards: canonicalCardIds(r.result.cards) } } : r));
 }
 
 export function loadNotebook(): Notebook {

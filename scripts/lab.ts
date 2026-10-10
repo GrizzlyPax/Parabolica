@@ -4,8 +4,11 @@
 // fingerprints match, the browser and the script ran the same races.
 import { labSpec, runLabRace, raceFingerprint, batchFingerprint } from '../src/racecontrol/runner.ts';
 import RaceEngine from '../src/RaceEngine.ts';
+import { canonicalCardIds } from '../src/data/ruleCards.ts';
 
-const [seedArg, racesArg = '100', modeArg = 'all', ...cards] = process.argv.slice(2);
+const [seedArg, racesArg = '100', modeArg = 'all', ...cardArgs] = process.argv.slice(2);
+// Old tag-era ids (tag-soup, no-tags) still work (#579).
+const cards = canonicalCardIds(cardArgs);
 if (!seedArg) { console.error('usage: npm run lab -- <seed> [races] [all|random] [card ...]'); process.exit(1); }
 const seed = Number(seedArg) >>> 0, races = Number(racesArg);
 const mode = modeArg === 'random' ? 'random' : 'all';

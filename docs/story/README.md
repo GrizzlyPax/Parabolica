@@ -2,6 +2,8 @@
 
 Brainstorms and working notes for Parabolica's story, newest first. **Nothing here is canon** until Pax moves it into `docs/STORY_BIBLE.md`. Agents: read these for direction and tone, but don't write game content from them without the bible saying so.
 
+- [2026-10-10 — Five worlds (proposal)](five-worlds.md): what Parabolica's world could be, five ways (the Circuit, the National Pastime, the Basement Game, Far Circuit, the Almanac Year), each with its own card; Radio's pick is the Circuit played as a 1978 boxed game, with weirder decks as expansion boxes. Lessons from Slay the Spire, Inscryption, Balatro, Wildfrost, Strat-O-Matic, Topps and Galactic Racer.
+- [2026-10-10 — Card names](card-names.md): the run's 60 cards, 8 curses and rank-up cards named (kit with a wink), one icon each, by card id; the corner badge (races or DNA) and the "where it applies" circle; archetypes stay in the back end.
 - [2026-10-10 — The nemesis](nemesis.md): how the rival team talks (#624): a Pokémon rival in the Paddock, one line per visit; two drivers each roll one of five personalities (Brat, Show-off, Old Hand, Brooder, Spanish speaker), two Show-offs become a "we" double act; boss race lines; the newspaper debrief headline.
 - [2026-10-10 — Car names](car-names.md): car names the way real teams name them: people's names, heritage + model years, workshop nicknames, plain chassis codes, and rarely farm + household words (mix 35/20/20/15/10); the sci-fi pool retires.
 - [2026-10-09 — Car vehicles + driver portraits](vehicles-portraits.md): the vehicle and portrait icon lists with weights (90% race car / racing helmet), what's held back for themed decks, and the logo-picker swap (f1-car → speed-boat).

@@ -84,6 +84,8 @@ export interface TimingTowerProps {
   lapLength: number;
   focusedDriverIds?: Set<number>; // Multi-driver focus
   onDriverClick?: (driverId: number) => void;
+  /** The driver panel's "Driver card" button (#476). */
+  onDriverCard?: (driverId: number) => void;
   condensed?: boolean;
   expandable?: boolean; // Show expanded row details on focus (default true, false for Detail View)
   statusEffects?: Map<number, string>;
@@ -119,6 +121,8 @@ export interface DriverRowProps {
   isFocused: boolean;
   expandable?: boolean; // Show expanded details when focused (default true)
   onClick?: () => void;
+  /** Open this driver's card (#476). */
+  onCard?: () => void;
 }
 
 // Race speed options

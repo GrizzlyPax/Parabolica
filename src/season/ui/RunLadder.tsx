@@ -9,7 +9,12 @@ import { currentLeague, loadRun, LEAGUE_LADDER } from '../../run/run';
 import { loadMeta } from '../../run/meta';
 import { promoteCurrentRun } from '../../run/current';
 import { ladderView, ordinal, type RungView } from '../../run/ladderView';
-import { seasonState } from '../season';
+import { poolFor, seasonState } from '../season';
+import { draftState } from '../draft';
+import { portraitFor } from '../../generators/avatars';
+import { Avatar } from '../../icons/Avatar';
+import DriverCard from './DriverCard';
+import { driverCardOf } from '../driverCard';
 import '../../RunSetup.css';
 import './Season.css';
 
@@ -28,7 +33,9 @@ function Squares({ done, total }: { done: number; total: number }) {
   );
 }
 
-function Rung({ r }: { r: RungView }) {
+type YourDriver = { id: number; name: string; portrait: ReturnType<typeof portraitFor>; color: string };
+
+function Rung({ r, drivers, onDriver }: { r: RungView; drivers?: YourDriver[]; onDriver?: (id: number) => void }) {
   const head = (
     <div className="rl-head">
       <span className="rl-no">{r.index + 1}</span>
@@ -62,6 +69,15 @@ function Rung({ r }: { r: RungView }) {
         </div>
         );
       })()}
+      {drivers && drivers.length > 0 && (
+        <div className="rl-drivers">
+          {drivers.map(d => (
+            <button key={d.id} type="button" className="rl-driver" onClick={() => onDriver?.(d.id)} aria-label={`${d.name}: driver card`}>
+              <Avatar icon={d.portrait} color={d.color} size={20} /><span>{d.name}</span>
+            </button>
+          ))}
+        </div>
+      )}
       <p className="rl-note">
         {r.index < LEAGUE_LADDER.length - 1 ? 'Win the league to move up.' : 'Win the league to win the run.'} The last race is the boss race{r.rival?.nemesis ? ' against your nemesis' : ''}.
       </p>
@@ -72,6 +88,7 @@ function Rung({ r }: { r: RungView }) {
 export default function RunLadder({ onMenu, onNewRun, onPlay }: Props) {
   const [run, setRun] = useState(() => loadRun());
   const view = useMemo(() => (run ? ladderView(run, loadMeta()) : null), [run]);
+  const [cardOf, setCardOf] = useState<number | null>(null);
   if (!run || !view) {
     return (
       <div className="run-setup season-setup">
@@ -88,6 +105,13 @@ export default function RunLadder({ onMenu, onNewRun, onPlay }: Props) {
   const next = LEAGUE_LADDER[view.leagueIndex + 1]?.name;
   const leaguePhase = seasonState(currentLeague(run)).phase;
   const up = () => { if (promoteCurrentRun()) setRun(loadRun()); };
+  // Your two drivers on the open rung; a tap opens their driver card (#476).
+  const inPlay = currentLeague(run);
+  const pool = poolFor(inPlay);
+  const youId = inPlay.setup.humans[0]?.teamId;
+  const yourDrivers: YourDriver[] = (youId ? draftState(pool, inPlay.draftPicks).rosters[youId]?.driverIds ?? [] : [])
+    .map(id => pool.drivers.find(d => d.id === id)!).filter(Boolean)
+    .map(d => ({ id: d.id, name: d.fullName, portrait: portraitFor(pool.seed, d.id), color: view.you.color }));
   return (
     <div className="run-setup season-setup rl" style={teamThemeVars(view.you)}>
       <header className="rs-top">
@@ -103,7 +127,7 @@ export default function RunLadder({ onMenu, onNewRun, onPlay }: Props) {
       {view.phase === 'run-lost' && <p className="rl-banner lost">The run is over.</p>}
 
       <ol className="rl-ladder" aria-label="The league ladder, top first">
-        {[...view.rungs].reverse().map(r => <Rung key={r.index} r={r} />)}
+        {[...view.rungs].reverse().map(r => <Rung key={r.index} r={r} drivers={r.status === 'current' ? yourDrivers : undefined} onDriver={setCardOf} />)}
       </ol>
 
       <section className="rl-unlocks">
@@ -115,6 +139,7 @@ export default function RunLadder({ onMenu, onNewRun, onPlay }: Props) {
         </div>
       </section>
 
+      {cardOf !== null && (() => { const data = driverCardOf(inPlay, cardOf); return data && <DriverCard data={data} onClose={() => setCardOf(null)} />; })()}
       <div className="ss-dock">
         {view.phase === 'start'
           ? <button type="button" className="rs-btn rs-btn-primary ss-dock-btn" onClick={() => onPlay('draft')}>Pick your rookies</button>

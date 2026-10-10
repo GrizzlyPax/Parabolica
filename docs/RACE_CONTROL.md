@@ -26,7 +26,7 @@ Every lab job goes through `src/racecontrol/labRunner.ts`: it uses a Web Worker 
 
 ## Physics calibration
 
-**Question:** do the race rules produce racing? `src/racecontrol/physics.ts` runs a seeded batch of card-free races (card `no-tags`, No Traits, 100 races by default, current tracks in order) and reads the mechanics-probe metrics: pace→finish and grid→finish Spearman, pole wins, top-3-package wins, passes, battles, distinct leaders, winning margin, stops per finisher, first-stop distance, stop-lap spread, quick/slow stop share, DNF rate and split, safety cars, close calls, lapped and penalised finishers, race length. Each has a plain-words meaning and a band; out-of-band rows are flagged.
+**Question:** do the race rules produce racing? `src/racecontrol/physics.ts` runs a seeded batch of card-free races (card `no-traits`, No Traits, 100 races by default, current tracks in order) and reads the mechanics-probe metrics: pace→finish and grid→finish Spearman, pole wins, top-3-package wins, passes, battles, distinct leaders, winning margin, stops per finisher, first-stop distance, stop-lap spread, quick/slow stop share, DNF rate and split, safety cars, close calls, lapped and penalised finishers, race length. Each has a plain-words meaning and a band; out-of-band rows are flagged.
 
 The knobs table lists every `SimVariables` entry (`src/racecontrol/knobs.ts`: path, label, meaning, format, range). Click a knob, edit it (field or slider), **Measure**: the same seeded batch runs with your variables and the metrics table gains Yours and Δ columns (Δ above 10% is highlighted). Edits accumulate; **Copy as code** gives `path: value` lines for `CANON_VARIABLES`. **Re-roll** changes the seed so you can see how much of a number is dice.
 
@@ -48,8 +48,8 @@ The repo is the database. **Notebook → Send N new** opens one prefilled GitHub
 
 | | |
 |---|---|
-| `npm run lab -- 2026 100 all no-tags` | replay a Physics batch, print fingerprint + headline numbers |
-| `npm run lab -- 2026 100 all no-tags rain` | …under a card hand |
+| `npm run lab -- 2026 100 all no-traits` | replay a Physics batch, print fingerprint + headline numbers |
+| `npm run lab -- 2026 100 all no-traits rain` | …under a card hand |
 | `npx tsx scripts/mechanics-probe.mjs 200` | the card-free mechanics gates (#246) |
 
 ## Exports

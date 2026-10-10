@@ -466,3 +466,65 @@ button.rt-g:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset:
 .rk-setup.on { box-shadow: inset 0 0 0 2px var(--team-primary); background: color-mix(in srgb, var(--team-primary) 12%, var(--pw-ground)); }
 .rk .rs-link:disabled { opacity: 0.5; cursor: default; }
 @media (max-width: 560px) { .rk-setups { grid-template-columns: 1fr; } }
+/* The rookie pick (#661): 6 rookies, pick 2, a car setup, Start */
+.rp { display: flex; flex-direction: column; gap: 4px; }
+.rp-count { margin-left: auto; font-family: var(--look-data, monospace); font-size: 11px; color: var(--pw-text-2); }
+.rp-rookies { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(150px, calc(50% - 4px)), 1fr)); gap: 8px; }
+.rp-rookie { display: flex; flex-direction: column; gap: 6px; text-align: left; padding: 10px; border: 1px solid var(--pw-border); background: transparent; color: var(--pw-text-1); font: inherit; cursor: pointer; min-width: 0; }
+.rp-rookie.on { border-color: var(--team-primary); box-shadow: inset 0 0 0 1px var(--team-primary); background: color-mix(in srgb, var(--team-primary) 12%, transparent); }
+.rp-rookie:disabled { opacity: 0.45; cursor: default; }
+.rp-rookie:focus-visible, .rp-setup:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset: 2px; }
+.rp-arch { font-family: var(--look-data, monospace); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--pw-text-2); }
+.rp-name { font-size: 17px; line-height: 1.1; }
+.rp-stats { display: flex; flex-direction: column; gap: 3px; font-size: 13px; }
+.rp-stat { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+.rp-others { color: var(--pw-text-2); font-family: var(--look-data, monospace); font-size: 12px; }
+.rp-lv { display: inline-flex; min-width: 1.9em; justify-content: center; font-family: var(--look-data, monospace); font-size: 13px; padding: 0 4px; border: 1px solid currentColor; font-variant-numeric: tabular-nums; }
+.rp-flav { font-size: 13px; font-style: italic; color: var(--pw-text-2); }
+.rp-setups { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.rp-setup { display: flex; flex-direction: column; gap: 4px; text-align: left; padding: 8px; min-width: 0; border: 1px solid var(--pw-border); background: transparent; color: var(--pw-text-1); font: inherit; font-size: 13px; cursor: pointer; }
+.rp-setup.on { border-color: var(--team-primary); box-shadow: inset 0 0 0 1px var(--team-primary); }
+.rp-dock { gap: 8px; }
+.rp-dock .rs-btn-ghost { white-space: nowrap; }
+@media (max-width: 420px) { .rp-rookie { padding: 8px; } .rp-name { font-size: 15px; } .rp-stats { font-size: 12px; } .rp-setup { font-size: 12px; } }
+.rp-lv.tone-s { color: var(--signal-purple); }
+.rp-lv.tone-a { color: var(--signal-green); }
+.rp-lv.tone-c { color: var(--signal-yellow); }
+.rp-lv.tone-d { color: var(--signal-red); }
+
+/* The driver card (#476): a sheet */
+.dc-scrim { position: fixed; inset: 0; z-index: 300; background: color-mix(in srgb, var(--pw-ground) 60%, transparent); display: flex; align-items: flex-end; justify-content: center; }
+.dc { width: 100%; max-width: 520px; max-height: 88vh; overflow-y: auto; background: var(--pw-surface); border: 1px solid var(--pw-border-strong); border-bottom: 0; border-radius: 18px 18px 0 0; padding: 10px 16px calc(18px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 12px; font-family: var(--look-display, serif); color: var(--pw-text-1); animation: dc-up 0.25s ease-out; }
+@keyframes dc-up { from { transform: translateY(100%); } to { transform: none; } }
+@media (prefers-reduced-motion: reduce) { .dc { animation: none; } }
+.dc-grab { align-self: center; width: 44px; height: 5px; border-radius: 3px; border: 0; padding: 0; background: var(--pw-border-strong); cursor: pointer; }
+.dc-who { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; }
+.dc-face { position: relative; width: 64px; height: 64px; display: grid; place-items: center; background: var(--pw-ground); border: 2px solid; }
+.dc-no { position: absolute; left: -6px; bottom: -6px; }
+.dc-id { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.dc-name { font-size: 22px; line-height: 1.05; }
+.dc-team { font-size: 13px; font-style: italic; color: var(--pw-text-2); }
+.dc-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.dc-tag { font-family: var(--look-data, monospace); font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; padding: 1px 6px; border: 1px solid currentColor; color: var(--pw-text-2); }
+.dc-rank { color: var(--rarity-gold); }
+.dc-x { align-self: start; }
+.dc-xp { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--pw-text-2); }
+.dc-bar { height: 6px; background: var(--pw-border); }
+.dc-bar i { display: block; height: 100%; background: var(--rarity-gold); }
+.dc-levels { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px; text-align: center; }
+.dc-levels div { border: 1px solid var(--pw-border); padding: 4px 0; }
+.dc-levels span { display: block; font-family: var(--look-data, monospace); font-size: 9px; color: var(--pw-text-3); }
+.dc-levels b { font-family: var(--look-data, monospace); font-weight: 400; font-size: 18px; }
+.dc-levels .tone-s { color: var(--signal-purple); } .dc-levels .tone-a { color: var(--signal-green); } .dc-levels .tone-c { color: var(--signal-yellow); } .dc-levels .tone-d { color: var(--signal-red); }
+.dc-sealed { margin: 0; font-size: 13px; font-style: italic; color: var(--pw-text-3); }
+.dc-cards { display: flex; flex-direction: column; gap: 6px; }
+.dc-chips { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.dc-story { display: flex; flex-direction: column; gap: 4px; }
+.dc-story p { margin: 0 0 6px; font-size: 15px; line-height: 1.45; }
+.dc-quirk { font-style: italic; color: var(--pw-text-2); }
+.dc-pick { cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px; }
+.dc-pick:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset: 2px; }
+
+.rl-drivers { display: flex; gap: 6px; flex-wrap: wrap; }
+.rl-driver { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border: 1px solid var(--pw-border-strong); background: transparent; color: var(--pw-text-1); font: inherit; font-size: 13px; cursor: pointer; }
+.rl-driver:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset: 2px; }
