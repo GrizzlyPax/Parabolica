@@ -13,7 +13,7 @@
 // A team carried up a run (#597) brings its live effects, with the races
 // already used subtracted, so "2 races left" is still 2 races left.
 
-import type { CardStat, StatKey } from '../cards/types';
+import type { Card, CardStat, StatKey } from '../cards/types';
 import { statRange, favourPercents } from '../cards/apply';
 import type { LapEffect, EffectInfo, DriverStats, CarStats, TeamStats } from '../RaceEngine';
 import type { CardHolder } from './pack';
@@ -121,6 +121,15 @@ export function roundEffects(facts: SeasonFacts, round: number): RoundEffects {
     }
   }
   return out;
+}
+
+/** The team's live effects on a holder as display cards (#627): the Paddock
+ * reads a stat's sum from Card[] (readStat), so a curse shows there as a red
+ * line. Not deck cards: ids are the effect's. */
+export function effectCards(facts: SeasonFacts, teamId: string, round: number, holder: CardHolder): Card[] {
+  return activeEffects(facts, teamId, round)
+    .filter(e => isRaces(e.timer) && (e.target.kind === holder.kind && (holder.kind !== 'driver' || e.target.kind !== 'driver' || e.target.id === holder.id)))
+    .map(e => ({ id: e.id, name: `${e.name} (${describeLeft(e)})`, kind: 'trait', target: e.target.kind, stats: e.stats, deck: 'motorsport' }));
 }
 
 /** Why an effect can't be dealt, or null. The dealer (a pack, a curse, an

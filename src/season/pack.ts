@@ -1,33 +1,42 @@
-// Card packs + the team locker (#316, docs/SEASON_MODE.md §4, docs/CARDS.md).
+// Card packs + the team locker (#316, #533, #627; docs/SEASON_MODE.md §4,
+// docs/CARDS.md, docs/RUN.md).
 //
-// Before every race each HUMAN team opens a pack. Its TIER is set by
-// constructor standing before the round (leader Common → last Legendary; round
-// 1 is Uncommon for everyone). The tier sets the odds of each card's METAL
-// (bronze · silver · gold · iridium). A pack deals THREE cards (#533, Pax's
-// first owner choice); the human keeps one. Each card is a gear card
-// (equipment / upgrade / facility) or, 1 in 4, a trait card, never an effect.
-// The kept card goes on their own team: a driver (bench included), the car or
-// the team; the other two go back.
+// Before every race the player gets a PACK OFFER (#627, Pax Oct 9–10): often
+// pick 1 of 2 packs (60%), sometimes a single pack (30%), sometimes a forced
+// CURSE pack (10%). A pack shows WHERE its card goes (a driver, the car, the
+// team), never its metal: the TIER is set by constructor standing before the
+// round (leader Common → last Legendary; round 1 Uncommon) and shows only
+// once opened. A pack deals THREE cards of its place; the player keeps one.
+// Each card is a gear card (equipment / upgrade / facility) or, 1 in 4, a
+// trait card, never an effect. The kept card goes on their own team.
 //
-// Gear fills slots (one of each in v0.5, slotsFor). A card into a full slot
-// must name what it REPLACES; the old card goes to the team's uncapped locker.
-// In any Paddock turn gear moves freely: equip from the locker, move
-// equipment between your drivers, or unequip to the locker. Traits are
-// permanent and uncapped. CPU teams get no pack in v0.5 (hook only).
+// Cards are 3× louder for the player (PLAYER_CARD_SCALE): a dealt card's
+// grade points are the deck's × 3, traits and gear alike, so the Paddock and
+// the sim read the same number. Rivals never open packs (#478) and keep
+// their genesis traits at 1×. GEAR HAS MILEAGE: double strength (× 2 on top,
+// so × 6) and gone after GEAR_LIFE races, wherever it sits; traits are for
+// good. A CURSE is an effect (#332): all bad, −10 grade (× 3) on one car or
+// team stat, both drivers, CURSE_LIFE races; the offer forces it.
 //
-// Facts: the deal is derived (seed + standings → the same three cards). The
-// first card comes from the pre-#533 stream (always four rng draws), so older
-// saves still replay; cards two and three come from their own sub-streams. The
-// APPLICATION records which three were dealt and which one was kept, and the
+// Gear fills slots (one of each, slotsFor). A card into a full slot must
+// name what it REPLACES; the old card goes to the team's uncapped locker. In
+// any Paddock turn gear moves freely. Traits are permanent and uncapped.
+//
+// Facts: the offer and the deal are derived (seed + standings → the same
+// packs and cards). The APPLICATION records the pack picked, which three were
+// dealt and which was kept; a CURSE application records the curse taken;
 // MOVES are recorded too, in one ordered log, so a swap-then-equip replays in
-// the order it happened.
+// the order it happened. "Packs lean to your plan" waits on the deck list
+// (#565).
 
-import { mulberry32, deriveSeed } from '../engine/rng';
-import { MOTORSPORT_DECK, cardsBy, pickCard, slotsFor, GEAR_KIND, CARDS_BY_ID, type Card, type CardTarget, type Slots } from '../cards';
+import { mulberry32, deriveSeed, shuffle } from '../engine/rng';
+import { MOTORSPORT_DECK, cardsBy, pickCard, slotsFor, GEAR_KIND, CARDS_BY_ID, CAR_STATS, TEAM_STATS, type Card, type CardTarget, type Slots } from '../cards';
 import type { RarityOdds } from '../cards/rarity';
 import type { CarriedCards, SeasonCards } from './genesis';
 import { draftState } from './draft';
 import { constructorStandings, isHuman, poolFor, seasonState, type SeasonFacts } from './season';
+import type { EffectFact } from './effects';
+import type { EffectInfo } from '../RaceEngine';
 
 export type PackTier = 'common' | 'uncommon' | 'rare' | 'legendary';
 export const PACK_TIERS: PackTier[] = ['common', 'uncommon', 'rare', 'legendary'];
@@ -42,7 +51,21 @@ export const PACK_ODDS: Record<PackTier, RarityOdds> = {
 export const TRAIT_CHANCE = 0.25;
 /** Cards a pack deals; the player keeps one (#533). */
 export const PACK_SIZE = 3;
+/** Every card the player is dealt is this many times the deck's grade points (#627, Pax: 3×). */
+export const PLAYER_CARD_SCALE = 3;
+/** Gear mileage (#627): gear is this many times stronger again, and gone after GEAR_LIFE races. */
+export const GEAR_STRENGTH = 2;
+export const GEAR_LIFE = 3;
+/** The offer (#627): pick 1 of 2 packs · one pack · a forced Curse pack. Draft odds (Steward re-probes). */
+export const OFFER_ODDS = { choice: 60, single: 30, curse: 10 };
+/** A curse (#627): one car or team stat, this many deck grade points (× PLAYER_CARD_SCALE), for CURSE_LIFE races. */
+export const CURSE_POINTS = -10;
+export const CURSE_LIFE = 3;
 const TARGETS: CardTarget[] = ['driver', 'car', 'team'];
+
+/** Where a pack's card goes: a pack is named by its place, never its metal. */
+export type PackKind = CardTarget;
+export const PACK_KIND_LABEL: Record<PackKind, string> = { driver: 'Driver pack', car: 'Car pack', team: 'Team pack' };
 
 /** Where a card goes: one of your drivers, your car or your team. */
 export type CardHolder = { kind: 'driver'; id: number } | { kind: 'car' } | { kind: 'team' };
@@ -52,6 +75,8 @@ export interface PackApplication {
   round: number;
   teamId: string;
   tier: PackTier;
+  /** The pack picked from the offer (#627). Absent on facts from before: the old one-pack deal. */
+  pack?: PackKind;
   /** The card kept. */
   cardId: string;
   /** The three cards the pack dealt (#533), in deal order. Absent on facts from before #533. */
@@ -59,6 +84,14 @@ export interface PackApplication {
   target: CardHolder;
   /** Gear into a full slot: the card it pushes to the locker. */
   replaces?: string;
+}
+
+/** The forced Curse pack, taken (#627). The curse itself is an EffectFact on the same facts. */
+export interface CurseApplication {
+  type: 'curse';
+  round: number;
+  teamId: string;
+  effectId: string;
 }
 
 export interface GearMove {
@@ -71,17 +104,29 @@ export interface GearMove {
   to: CardHolder | 'locker';
 }
 
-export type CardFact = PackApplication | GearMove;
+export type CardFact = PackApplication | CurseApplication | GearMove;
 
 export interface DealtPack {
   round: number;
   teamId: string;
   tier: PackTier;
-  /** PACK_SIZE distinct cards, in deal order. */
+  kind: PackKind;
+  /** PACK_SIZE distinct cards, in deal order, at the player's scale. */
   cards: Card[];
 }
 
-/** Hook: who gets a pack. CPU teams don't in v0.5. */
+/** What is on the table this round (#627). */
+export interface PackOffer {
+  round: number;
+  teamId: string;
+  tier: PackTier;
+  /** 'choice': pick one of `packs` (two). 'single': the one pack. 'curse': `curse` is forced. */
+  kind: 'choice' | 'single' | 'curse';
+  packs: PackKind[];
+  curse?: EffectFact;
+}
+
+/** Hook: who gets a pack. CPU teams don't (#478, Pax: packs are the player's edge). */
 export function teamGetsPack(facts: SeasonFacts, teamId: string): boolean {
   return isHuman(facts, teamId);
 }
@@ -105,51 +150,91 @@ export function packTierFor(facts: SeasonFacts, round: number, teamId: string): 
   return packTierForRank(rank, facts.setup.teamCount);
 }
 
-/** One card off a stream: four rng draws (kind, target, metal, pick). */
-function dealOne(rng: () => number, tier: PackTier): Card {
-  const kindRoll = rng();
-  const target = TARGETS[Math.floor(rng() * TARGETS.length)];
-  const pool = kindRoll < TRAIT_CHANCE ? cardsBy({ kind: 'trait', target }, MOTORSPORT_DECK) : cardsBy({ kind: GEAR_KIND[target] }, MOTORSPORT_DECK);
-  const card = pickCard(pool, PACK_ODDS[tier], rng);
-  if (!card) throw new Error(`pack: empty pool for ${target}`);
-  return card;
+const isGear = (c: Card) => c.kind === 'equipment' || c.kind === 'upgrade' || c.kind === 'facility';
+
+/** A card as the player holds it (#627): the deck's grade points × 3, and × 2 again for gear. */
+export function playerCard(c: Card): Card {
+  const k = PLAYER_CARD_SCALE * (isGear(c) ? GEAR_STRENGTH : 1);
+  return k === 1 ? c : { ...c, stats: c.stats.map(s => ({ ...s, pct: s.pct * k })) };
 }
 
 /**
- * The pack a team opens this round: PACK_SIZE distinct cards of its tier.
- * Pure: the same seed and standings deal the same cards. Card one is the
- * pre-#533 single card (same stream, same four draws); each later card has its
- * own sub-stream and redraws on a duplicate. Null for a team that gets no pack.
+ * The offer for a team this round (#627): seeded on its own stream. A
+ * choice is two different places; a curse comes with its effect drawn. Null
+ * for a team that gets no pack.
  */
-export function dealPack(facts: SeasonFacts, round: number, teamId: string): DealtPack | null {
+export function packOffer(facts: SeasonFacts, round: number, teamId: string): PackOffer | null {
   if (!teamGetsPack(facts, teamId)) return null;
   const tier = packTierFor(facts, round, teamId);
-  const cards = [dealOne(mulberry32(deriveSeed(facts.setup.seed, 'season', 'pack', round, teamId)), tier)];
-  for (let i = 1; i < PACK_SIZE; i++) {
-    const rng = mulberry32(deriveSeed(facts.setup.seed, 'season', 'pack', round, teamId, 'card', i));
-    let c = dealOne(rng, tier);
-    for (let tries = 0; cards.some(x => x.id === c.id) && tries < 20; tries++) c = dealOne(rng, tier);
+  const rng = mulberry32(deriveSeed(facts.setup.seed, 'season', 'offer', round, teamId));
+  const roll = rng() * (OFFER_ODDS.choice + OFFER_ODDS.single + OFFER_ODDS.curse);
+  const places = shuffle(TARGETS, rng);
+  if (roll < OFFER_ODDS.choice) return { round, teamId, tier, kind: 'choice', packs: places.slice(0, 2) };
+  if (roll < OFFER_ODDS.choice + OFFER_ODDS.single) return { round, teamId, tier, kind: 'single', packs: places.slice(0, 1) };
+  return { round, teamId, tier, kind: 'curse', packs: [], curse: dealCurse(facts, round, teamId) };
+}
+
+const CURSE_NAMES: Record<string, string> = { power: 'Flat engine', grip: 'Greasy tyres', reliability: 'Gremlins', tireManagement: 'Tyre blindness', pitCrew: 'Butterfingers' };
+
+/** The curse behind a Curse pack (#627): car or team, one stat, all bad, CURSE_LIFE races. */
+export function dealCurse(facts: SeasonFacts, round: number, teamId: string): EffectFact {
+  const rng = mulberry32(deriveSeed(facts.setup.seed, 'season', 'curse', round, teamId));
+  const onCar = rng() < 0.5;
+  const stats = onCar ? CAR_STATS : TEAM_STATS;
+  const stat = stats[Math.floor(rng() * stats.length)];
+  return {
+    type: 'effect', round, teamId, id: `curse-${round}`, name: CURSE_NAMES[stat] ?? 'Curse', emoji: '🪦', source: 'curse',
+    target: { kind: onCar ? 'car' : 'team' }, stats: [{ stat, pct: CURSE_POINTS * PLAYER_CARD_SCALE }], timer: { races: CURSE_LIFE },
+  };
+}
+
+/** One card off a stream for a place: three rng draws (kind, metal, pick). */
+function dealOne(rng: () => number, tier: PackTier, place: PackKind): Card {
+  const kindRoll = rng();
+  const pool = kindRoll < TRAIT_CHANCE ? cardsBy({ kind: 'trait', target: place }, MOTORSPORT_DECK) : cardsBy({ kind: GEAR_KIND[place] }, MOTORSPORT_DECK);
+  const card = pickCard(pool, PACK_ODDS[tier], rng);
+  if (!card) throw new Error(`pack: empty pool for ${place}`);
+  return playerCard(card);
+}
+
+/**
+ * The pack a team opens: PACK_SIZE distinct cards of its tier for `kind`'s
+ * place, at the player's scale. Pure: the same seed and standings deal the
+ * same cards; each card has its own sub-stream and redraws on a duplicate.
+ * Null for a team that gets no pack or an offer without that pack.
+ */
+export function dealPack(facts: SeasonFacts, round: number, teamId: string, kind: PackKind): DealtPack | null {
+  const offer = packOffer(facts, round, teamId);
+  if (!offer || !offer.packs.includes(kind)) return null;
+  const cards: Card[] = [];
+  for (let i = 0; i < PACK_SIZE; i++) {
+    const rng = mulberry32(deriveSeed(facts.setup.seed, 'season', 'pack', round, teamId, kind, i));
+    let c = dealOne(rng, offer.tier, kind);
+    for (let tries = 0; cards.some(x => x.id === c.id) && tries < 20; tries++) c = dealOne(rng, offer.tier, kind);
     cards.push(c);
   }
-  return { round, teamId, tier, cards };
+  return { round, teamId, tier: offer.tier, kind, cards };
 }
 
 // ---------------------------------------------------------------------------
 // A team's cards, derived from the log
 
 export interface TeamCardState {
-  /** Per drafted driver, bench included. */
+  /** Per drafted driver. */
   drivers: Record<number, { traits: Card[]; equipment: Card[] }>;
   car: { traits: Card[]; upgrade: Card[] };
   team: { traits: Card[]; facility: Card[] };
   locker: Card[];
   slots: Slots;
+  /** Gear mileage (#627): races left per gear card id held (the fewest, with two copies). */
+  mileage: Record<string, number>;
 }
 
+/** A card by id, as the player holds it. */
 function card(id: string): Card {
   const c = CARDS_BY_ID.get(id);
   if (!c) throw new Error(`pack: no card ${id}`);
-  return c;
+  return playerCard(c);
 }
 
 function gearSlot(state: TeamCardState, holder: CardHolder): Card[] {
@@ -179,13 +264,26 @@ function take(from: Card[], id: string): Card {
 const ids = (xs: Card[]) => xs.map(c => c.id);
 const cards = (xs: string[]) => xs.map(card);
 
-/** A team's cards as ids by holder: what carries up a run (#597). */
-export function carriedCards(state: TeamCardState): CarriedCards {
+/** The round the facts stand at: the one in play (results so far). */
+export function currentRound(facts: SeasonFacts): number {
+  return facts.results.length;
+}
+
+/** Races a gear card dealt in `dealt` still has in `round` (≤ 0 = worn out). */
+export const gearLeft = (dealt: number, round: number) => dealt + GEAR_LIFE - round;
+
+/** A team's cards as ids by holder, with each gear card's deal round re-dated
+ * to the league after (#597): what carries up a run. */
+export function carriedCards(state: TeamCardState, races: number): CarriedCards {
+  const gearDealt: Record<string, number> = {};
+  for (const [id, left] of Object.entries(state.mileage)) gearDealt[id] = left - GEAR_LIFE; // live from round left − GEAR_LIFE
+  void races;
   return {
     drivers: Object.fromEntries(Object.entries(state.drivers).map(([id, d]) => [id, { traits: ids(d.traits), equipment: ids(d.equipment) }])),
     car: { traits: ids(state.car.traits), upgrade: ids(state.car.upgrade) },
     team: { traits: ids(state.team.traits), facility: ids(state.team.facility) },
     locker: ids(state.locker),
+    gearDealt,
   };
 }
 
@@ -193,27 +291,36 @@ function allTraits(state: TeamCardState): Card[] {
   return [...state.team.traits, ...state.car.traits, ...Object.values(state.drivers).flatMap(d => d.traits)];
 }
 
-/** Fold the team's card log through `round` (inclusive) onto its drafted
- * entities, starting from the cards it carried into this league (#597).
- * Throws on a fact that can't apply, so a bad log never half-applies. */
-export function teamCardState(facts: SeasonFacts, teamId: string, round: number = Infinity): TeamCardState {
+/**
+ * Fold the team's card log through `round` (inclusive) onto its drafted
+ * entities, starting from the cards it carried into this league (#597), with
+ * gear mileage (#627): gear dealt GEAR_LIFE or more rounds before `round` is
+ * worn out and dropped wherever it sat. Throws on a fact that can't apply, so
+ * a bad log never half-applies.
+ */
+export function teamCardState(facts: SeasonFacts, teamId: string, round: number = currentRound(facts)): TeamCardState {
   const pool = poolFor(facts);
   const roster = draftState(pool, facts.draftPicks).rosters[teamId];
   if (!roster) throw new Error(`pack: unknown team ${teamId}`);
   const carried = facts.setup.carry?.teamId === teamId ? facts.setup.carry.cards : null;
+  // Deal round per gear card id (the latest copy's), to know what has worn out.
+  const dealtAt: Record<string, number> = { ...(carried?.gearDealt ?? {}) };
+  const worn = (id: string) => dealtAt[id] !== undefined && gearLeft(dealtAt[id], round) <= 0;
   const state: TeamCardState = {
     drivers: Object.fromEntries(roster.driverIds.map(id => {
       const c = carried?.drivers[id];
-      return [id, { traits: cards(c?.traits ?? []), equipment: cards(c?.equipment ?? []) }];
+      return [id, { traits: cards(c?.traits ?? []), equipment: cards((c?.equipment ?? []).filter(x => !worn(x))) }];
     })),
-    car: { traits: cards(carried?.car.traits ?? []), upgrade: cards(carried?.car.upgrade ?? []) },
-    team: { traits: cards(carried?.team.traits ?? []), facility: cards(carried?.team.facility ?? []) },
-    locker: cards(carried?.locker ?? []),
+    car: { traits: cards(carried?.car.traits ?? []), upgrade: cards((carried?.car.upgrade ?? []).filter(x => !worn(x))) },
+    team: { traits: cards(carried?.team.traits ?? []), facility: cards((carried?.team.facility ?? []).filter(x => !worn(x))) },
+    locker: cards((carried?.locker ?? []).filter(x => !worn(x))),
     slots: slotsFor([]),
+    mileage: {},
   };
   state.slots = slotsFor(allTraits(state));
   for (const f of facts.cardFacts) {
     if (f.teamId !== teamId || f.round > round) continue;
+    if (f.type === 'curse') continue; // the curse lives on the effects (#332)
     const c = card(f.cardId);
     if (f.type === 'pack') {
       if (c.kind === 'trait') {
@@ -231,11 +338,13 @@ export function teamCardState(facts: SeasonFacts, teamId: string, round: number 
         state.slots = slotsFor(allTraits(state));
       } else {
         if (!fits(c, f.target)) throw new Error(`pack: ${c.kind} does not fit a ${f.target.kind}`);
+        dealtAt[c.id] = f.round;
+        if (gearLeft(f.round, round) <= 0) continue; // worn out by now: never arrives in this fold
         const slot = gearSlot(state, f.target);
         if (slot.length >= capacity(state, f.target)) {
           if (!f.replaces) throw new Error('pack: the slot is full; name what the card replaces');
           state.locker.push(take(slot, f.replaces));
-        } else if (f.replaces) {
+        } else if (f.replaces && !worn(f.replaces)) {
           throw new Error('pack: nothing to replace; the slot has room');
         }
         slot.push(c);
@@ -244,6 +353,7 @@ export function teamCardState(facts: SeasonFacts, teamId: string, round: number 
       // A move: find the card wherever it sits on this team, then place it.
       const sources: Card[][] = [state.locker, ...Object.values(state.drivers).map(d => d.equipment), state.car.upgrade, state.team.facility];
       const from = f.from ? (f.from === 'locker' ? state.locker : gearSlot(state, f.from)) : sources.find(s => s.some(x => x.id === f.cardId));
+      if (worn(f.cardId) && !(from && from.some(x => x.id === f.cardId))) continue; // moving gear that has since worn out
       if (from && !from.some(x => x.id === f.cardId)) throw new Error(`pack: card ${f.cardId} is not there`);
       if (!from) throw new Error(`pack: card ${f.cardId} is not on team ${teamId}`);
       if (f.to === 'locker') {
@@ -258,6 +368,8 @@ export function teamCardState(facts: SeasonFacts, teamId: string, round: number 
       }
     }
   }
+  const held = [...state.locker, ...Object.values(state.drivers).flatMap(d => d.equipment), ...state.car.upgrade, ...state.team.facility];
+  for (const g of held) if (dealtAt[g.id] !== undefined) state.mileage[g.id] = gearLeft(dealtAt[g.id], round);
   return state;
 }
 
@@ -275,21 +387,48 @@ export function seasonCardsFor(facts: SeasonFacts, round: number): SeasonCards {
   return out;
 }
 
+/** Gear mileage as display infos per driver (#627): the gear racing with
+ * them (own equipment, the car's upgrade, the team's facility) and its races left. */
+export function gearInfos(facts: SeasonFacts, round: number): Record<number, EffectInfo[]> {
+  const pool = poolFor(facts);
+  const rosters = draftState(pool, facts.draftPicks).rosters;
+  const out: Record<number, EffectInfo[]> = {};
+  const info = (c: Card, left: number): EffectInfo => ({ id: c.id, name: c.name, emoji: '🧰', source: 'gear', left: `${left} race${left === 1 ? '' : 's'} left` });
+  for (const t of pool.teams) {
+    if (!teamGetsPack(facts, t.id)) continue;
+    const s = teamCardState(facts, t.id, round);
+    const shared = [...s.car.upgrade, ...s.team.facility];
+    for (const id of rosters[t.id].driverIds) {
+      const mine = [...s.drivers[id].equipment, ...shared].filter(c => s.mileage[c.id] !== undefined);
+      if (mine.length) out[id] = mine.map(c => info(c, s.mileage[c.id]));
+    }
+  }
+  return out;
+}
+
 // ---------------------------------------------------------------------------
 // Applying, with validation
 
 /** Has this team opened its pack this round (or has none to open)? */
 export function packOpened(facts: SeasonFacts, round: number, teamId: string): boolean {
   if (!teamGetsPack(facts, teamId)) return true;
-  return facts.cardFacts.some(f => f.type === 'pack' && f.round === round && f.teamId === teamId);
+  return facts.cardFacts.some(f => (f.type === 'pack' || f.type === 'curse') && f.round === round && f.teamId === teamId);
 }
 
-/** The pack waiting for the team on the clock, or null. */
-export function pendingPack(facts: SeasonFacts): DealtPack | null {
+/** The offer waiting for the team on the clock, or null. */
+export function pendingOffer(facts: SeasonFacts): PackOffer | null {
   const state = seasonState(facts);
   if (state.phase !== 'paddock' || !state.whoseTurn) return null;
   if (packOpened(facts, state.round, state.whoseTurn)) return null;
-  return dealPack(facts, state.round, state.whoseTurn);
+  return packOffer(facts, state.round, state.whoseTurn);
+}
+
+/** The first pack of the pending offer, dealt (a curse offer has none). Tests and the quick path. */
+export function pendingPack(facts: SeasonFacts, kind?: PackKind): DealtPack | null {
+  const offer = pendingOffer(facts);
+  if (!offer || offer.kind === 'curse') return null;
+  const pick = kind ?? offer.packs[0];
+  return offer.packs.includes(pick) ? dealPack(facts, offer.round, offer.teamId, pick) : null;
 }
 
 /** Only the team on the clock, in the current round, touches its cards. */
@@ -313,14 +452,29 @@ function tryApply(facts: SeasonFacts, f: CardFact): string | null {
 export function validatePackApplication(facts: SeasonFacts, app: PackApplication): string | null {
   const clock = onTheClock(facts, app);
   if (clock) return clock;
-  const dealt = dealPack(facts, app.round, app.teamId);
-  if (!dealt) return `${app.teamId} gets no pack`;
+  const offer = packOffer(facts, app.round, app.teamId);
+  if (!offer) return `${app.teamId} gets no pack`;
   if (packOpened(facts, app.round, app.teamId)) return 'the pack is already open';
+  if (offer.kind === 'curse') return 'the offer is a Curse pack; take the curse';
+  if (!app.pack) return `name the pack picked (${offer.packs.join(' or ')})`;
+  if (!offer.packs.includes(app.pack)) return `the offer is ${offer.packs.join(' or ')}, not ${app.pack}`;
+  const dealt = dealPack(facts, app.round, app.teamId, app.pack)!;
   if (app.tier !== dealt.tier) return `the pack is ${dealt.tier}, not ${app.tier}`;
   const ids = dealt.cards.map(c => c.id);
   if (!app.dealt || app.dealt.join(',') !== ids.join(',')) return `the pack dealt ${ids.join(', ')}; record all three`;
   if (!ids.includes(app.cardId)) return `${app.cardId} was not in the pack (${ids.join(', ')})`;
   return tryApply(facts, app);
+}
+
+export function validateCurse(facts: SeasonFacts, app: CurseApplication): string | null {
+  const clock = onTheClock(facts, app);
+  if (clock) return clock;
+  const offer = packOffer(facts, app.round, app.teamId);
+  if (!offer) return `${app.teamId} gets no pack`;
+  if (packOpened(facts, app.round, app.teamId)) return 'the pack is already open';
+  if (offer.kind !== 'curse') return 'the offer is not a Curse pack';
+  if (app.effectId !== offer.curse!.id) return `the curse is ${offer.curse!.id}`;
+  return null;
 }
 
 export function validateGearMove(facts: SeasonFacts, move: GearMove): string | null {
@@ -335,6 +489,14 @@ export function applyPack(facts: SeasonFacts, app: PackApplication): SeasonFacts
   const why = validatePackApplication(facts, app);
   if (why) throw new Error(`pack: ${why}`);
   return { ...facts, cardFacts: [...facts.cardFacts, app] };
+}
+
+/** Take the forced curse (#627): the fact, and the effect it is. Pure; throws when it isn't yours to take. */
+export function applyCurse(facts: SeasonFacts, app: CurseApplication): SeasonFacts {
+  const why = validateCurse(facts, app);
+  if (why) throw new Error(`pack: ${why}`);
+  const curse = packOffer(facts, app.round, app.teamId)!.curse!;
+  return { ...facts, cardFacts: [...facts.cardFacts, app], effectFacts: [...(facts.effectFacts ?? []), curse] };
 }
 
 /** Move gear between the locker and your slots. Pure; throws on an illegal move. */

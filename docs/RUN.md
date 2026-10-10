@@ -42,6 +42,14 @@ The pool generator (`generateSeasonPool(seed, teams, rs, { carry, league })`) pu
 - **Carrying up a run:** `carriedEffects(prev, teamId)` re-dates live race timers by the races already used (`round − calendar length`), so what had 2 races left still has 2; lap effects don't carry. `CarriedTeam.effects` → `effectFactsOf(facts)` folds them before the league's own.
 - Nothing deals an effect yet: race results don't move until #627 (gear mileage, curses).
 
+## Cards + packs for the run (#627)
+All in `src/season/pack.ts`, data at the top:
+- **3× louder, player only** (`PLAYER_CARD_SCALE`): every card the player is dealt carries the deck's grade points × 3 (`playerCard`), so the Paddock's sums and the sim read the same number. Rivals never open packs (#478) and race their genesis traits at 1×; the player's genesis traits are 1× too (drafted from the same pool).
+- **Gear mileage** (`GEAR_STRENGTH` 2, `GEAR_LIFE` 3): gear is × 2 again (so × 6) and **worn out after 3 races** wherever it sits (slot or locker); `teamCardState(facts, team, round)` drops it from the fold, `mileage` says the races left per gear card, `gearInfos` puts "2 races left" on the roster (`RosterDriver.effects`, source `gear`). Carried up a run with its deal round re-dated (`CarriedCards.gearDealt`).
+- **The pack offer** (`packOffer`, `OFFER_ODDS` 60 / 30 / 10 on its own stream): **pick 1 of 2 packs**, **one pack**, or a **forced Curse pack**. A pack is named by its **place** (Driver · Car · Team pack: a trait or that place's gear), never its metal; the tier (standing quarters, round 1 Uncommon) shows when it opens. `dealPack(facts, round, team, kind)` deals three distinct cards of that place; `PackApplication.pack` records the pick.
+- **Curses** (`dealCurse`, `CURSE_POINTS` −10 × 3, `CURSE_LIFE` 3): all bad, on the **car or the team** (both drivers; benching can't dodge it), one stat, three races, an **effect** (#332). Taking it writes a `CurseApplication` fact and the `EffectFact`. In the Paddock the live curse reads in the stat sums as a red line (`effectCards`) and under the offer ("🪦 Butterfingers: 3 races left").
+- **Not built:** "packs lean to your plan" (needs the archetype deck list, #565).
+
 ## Hooks left on purpose
 - **Boss race (#593):** `LeagueContext.bossRound` (the last round).
 - **Rookie pick (#594):** `RunSetup.start` ('draft' today); the draft is the run's start until then.

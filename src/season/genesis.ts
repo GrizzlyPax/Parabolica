@@ -87,6 +87,8 @@ export interface CarriedCards {
   car: { traits: string[]; upgrade: string[] };
   team: { traits: string[]; facility: string[] };
   locker: string[];
+  /** Gear mileage (#627): each gear card's deal round, re-dated to the new league (≤ 0), so its races left hold. */
+  gearDealt?: Record<string, number>;
 }
 
 /**

@@ -27,7 +27,7 @@ import { generateSeasonPool, seasonRoster, RACE_LINEUP, type SeasonPool, type Se
 import { draftOrder, draftState, draftedRosters, type DraftPick } from './draft';
 import { portraitFor, vehicleFor } from '../generators/avatars';
 import type { IconId } from '../icons/registry';
-import { packOpened, seasonCardsFor, type CardFact } from './pack';
+import { packOpened, seasonCardsFor, gearInfos, type CardFact } from './pack';
 import { roundEffects, type EffectFact } from './effects';
 
 /** 6 since the run (#597, v0.7): a league is 4 × 6; League Setup can still change it. */
@@ -278,7 +278,10 @@ export function leagueForRound(facts: SeasonFacts, round: number): LeagueState {
   const { setup } = facts;
   const pool = poolFor(facts);
   const rosters = draftedRosters(pool, facts.draftPicks);
-  const roster = seasonRoster(pool, rosters, lineupsFor(facts, round), { cards: cardsForRound(facts, round), identities: identitiesFor(facts), shifts: rivalShifts(facts), effects: roundEffects(facts, round) });
+  const effects = roundEffects(facts, round);
+  // Gear mileage shows beside the timed effects (#627).
+  for (const [id, infos] of Object.entries(gearInfos(facts, round))) effects.infos[Number(id)] = [...(effects.infos[Number(id)] ?? []), ...infos];
+  const roster = seasonRoster(pool, rosters, lineupsFor(facts, round), { cards: cardsForRound(facts, round), identities: identitiesFor(facts), shifts: rivalShifts(facts), effects });
   return {
     engineVersion,
     leagueSeed: setup.seed,
