@@ -41,6 +41,8 @@ import { SeasonChart } from './SeasonChart';
 import { LeagueTables } from './LeagueTables';
 import { teamsOf } from './teams';
 import { nemesisLine } from '../nemesis';
+import DriverCard, { DriverName } from './DriverCard';
+import { driverCardOf } from '../driverCard';
 
 interface Props {
   facts: SeasonFacts;
@@ -84,6 +86,8 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, ba
   // A gear card picked up: which copy (#556: two of the same card are two chips) and where it sits.
   const [held, setHeld] = useState<{ id: string; from: CardHolder | 'locker'; n: number } | null>(null);
   const [equipSheet, setEquipSheet] = useState<{ card: Card; from: CardHolder } | null>(null);
+  // The driver card (#476): tap a driver's name.
+  const [cardOf, setCardOf] = useState<number | null>(null);
   const [detail, setDetail] = useState<{ title: string; reading: StatReading } | { card: Card } | null>(null);
 
   const commit = (next: SeasonFacts) => { saveSeason(next); onChange(next); };
@@ -367,7 +371,7 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, ba
               const gear = cards.drivers[id].equipment[0];
               return (
                 <tr key={id} className={rowClass(k)}>
-                  {nameCell(k, <><RaceNumber n={d.number} color={you.color} ink={you.ink} size={24} shape="square" className="rt-numsq" /><Avatar icon={portraitFor(pool.seed, d.id)} color={you.color} size={22} /><span className="rt-nm">{d.fullName}</span></>)}
+                  {nameCell(k, <><RaceNumber n={d.number} color={you.color} ink={you.ink} size={24} shape="square" className="rt-numsq" /><Avatar icon={portraitFor(pool.seed, d.id)} color={you.color} size={22} />{fitsRow(k) ? <span className="rt-nm">{d.fullName}</span> : <DriverName name={d.fullName} onOpen={() => setCardOf(d.id)} />}</>)}
                   {gradeCells(k, d.fullName, DRIVER_STATS, new Set(DRIVER_STATS), false)}
                   <td className="rt-slot" {...dropOn(k)}>{gear ? chip(gear, true, holderOf(k)) : <span className="pk-empty" aria-label="Empty gear slot">—</span>}</td>
                   <td className="rt-traits"><span className="rt-minis">{[...d.traits, ...cards.drivers[id].traits].map(c => chip(c, false))}</span></td>
@@ -427,7 +431,7 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, ba
           {facts.results.length ? <SeasonChart standings={standings} teams={teams} mine={humans} /> : <p className="rs-hint">The chart starts after round 1.</p>}
         </div>
         <div className="pk-tables">
-          <LeagueTables facts={facts} pool={pool} teams={teams} rosters={rosters} lines={standings} drivers={drivers} />
+          <LeagueTables facts={facts} pool={pool} teams={teams} rosters={rosters} lines={standings} drivers={drivers} onDriver={setCardOf} />
         </div>
       </div>
     </>
@@ -496,10 +500,11 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, ba
         );
       })()}
 
+      {cardOf !== null && (() => { const data = driverCardOf(facts, cardOf, round); return data && <DriverCard data={data} onClose={() => setCardOf(null)} />; })()}
       {detail && (
         <div className="pk-sheet" role="dialog" aria-label="Detail">
           {'card' in detail
-            ? <><CardFace card={detail.card} size="small" flippable={false} /><div className="pk-sheet-text"><span className="rs-k">{detail.card.kind} · {detail.card.target}{detail.card.rarity ? ` · ${detail.card.rarity}` : ''}</span><b>{detail.card.name}</b>{detail.card.stats.map(s => <span key={s.stat}>+{s.pct} {STAT_LABELS[s.stat]}</span>)}<span className="rs-hint">{detail.card.kind === 'trait' ? 'Traits are for good.' : 'Gear: move it freely in any Paddock.'}</span></div></>
+            ? <><CardFace card={detail.card} size="small" flippable={false} /><div className="pk-sheet-text"><span className="rs-k">{detail.card.kind} · {detail.card.target}{detail.card.rarity ? ` · ${detail.card.rarity}` : ''}</span><b>{detail.card.name}</b>{detail.card.rule ? <span>{detail.card.rule}</span> : detail.card.stats.map(s => <span key={s.stat}>{levelDelta(s.pct)} {STAT_LABELS[s.stat]}</span>)}<span className="rs-hint">{detail.card.kind === 'trait' ? 'Traits are for good.' : 'Gear: move it freely in any Paddock.'}</span></div></>
             : <ReadingSheet title={detail.title} reading={detail.reading} icon={STAT_ICONS[detail.reading.stat]} />}
           <button type="button" className="rs-link pk-sheet-x" onClick={() => setDetail(null)}>Close</button>
         </div>

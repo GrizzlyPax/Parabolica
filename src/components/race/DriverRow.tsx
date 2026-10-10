@@ -29,7 +29,7 @@ function ovrTiles(d: Driver): [string, number][] {
 }
 const READ = { best: 'front', high: 'front', mid: 'middle', low: 'back' } as const;
 
-function DriverRow({ driver, columns, context, gridTemplate, isFocused, expandable = true, onClick }: DriverRowProps) {
+function DriverRow({ driver, columns, context, gridTemplate, isFocused, expandable = true, onClick, onCard }: DriverRowProps) {
   const { isFinished, isDNF, isPitting } = context;
 
   // Build style with grid template and team color for focus glow
@@ -74,6 +74,7 @@ function DriverRow({ driver, columns, context, gridTemplate, isFocused, expandab
             <b>{driver.name}</b>
             <span>{driver.number !== undefined ? `#${driver.number} · ` : ''}{driver.teamName}{context.nemesis && <span className="nem-tag">NEMESIS</span>}</span>
             {context.fantasyTeam && <span className="fantasy-badge" style={{ '--fantasy-color': context.fantasyTeam.color } as React.CSSProperties}>{context.fantasyTeam.name}</span>}
+            {onCard && <button type="button" className="dp-close" onClick={e => { e.stopPropagation(); onCard(); }}>Driver card</button>}
             <button type="button" className="dp-close" onClick={e => { e.stopPropagation(); onClick?.(); }}>Close</button>
           </div>
           {context.sealed ? (

@@ -30,6 +30,7 @@ function TimingTower({
   lapLength: _lapLength, // No longer used - pure sector-based timing
   focusedDriverIds = new Set(),
   onDriverClick,
+  onDriverCard,
   condensed: _condensed = false, // Reserved for future styling differences
   expandable = true, // Show expanded row details on focus
   statusEffects,
@@ -307,6 +308,7 @@ function TimingTower({
               isFocused={focusedDriverIds.has(driver.id)}
               expandable={expandable}
               onClick={() => onDriverClick?.(driver.id)}
+              onCard={onDriverCard ? () => onDriverCard(driver.id) : undefined}
             />
           );
         })}
