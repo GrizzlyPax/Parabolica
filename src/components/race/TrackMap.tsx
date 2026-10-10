@@ -5,20 +5,10 @@ import { useMemo, useCallback, useState } from 'react';
 import type { Driver } from '../../RaceEngine';
 import './TrackMap.css';
 import { GameIcon } from '../../icons/GameIcon';
+import { driverCode } from './driverCode';
 
 // Default track path (oval) if no layout provided
 const DEFAULT_TRACK_PATH = 'M 150 60 L 450 60 Q 550 60, 550 150 Q 550 240, 450 240 L 150 240 Q 50 240, 50 150 Q 50 60, 150 60 Z';
-
-// Suffixes to ignore when extracting surname
-const NAME_SUFFIXES = new Set(['JR', 'JR.', 'SR', 'SR.', 'II', 'III', 'IV', 'V']);
-
-// Helper to get 3-letter driver code from surname
-function getDriverCode(name: string): string {
-  const parts = name.split(' ').filter(p => p.length > 0);
-  const filteredParts = parts.filter(p => !NAME_SUFFIXES.has(p.toUpperCase()));
-  const surname = filteredParts[filteredParts.length - 1] || parts[parts.length - 1] || '';
-  return surname.slice(0, 3).toUpperCase().replace(/[^A-Z]/g, '');
-}
 
 interface TrackMapProps {
   trackPath?: string;
@@ -440,7 +430,7 @@ function TrackMap({
                     textShadow: '0 1px 2px rgba(0,0,0,0.8)',
                   }}
                 >
-                  {getDriverCode(driver.name)}
+                  {driverCode(driver.name)}
                 </text>
               )}
 
