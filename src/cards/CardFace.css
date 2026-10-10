@@ -74,3 +74,8 @@
 .cf-trait .cf-type { background: var(--pw-ground); border-color: var(--pw-ground); }
 .cf-trait .cf-no { color: color-mix(in srgb, var(--pw-ground) 70%, transparent); }
 .cf-trait .cf-miniface { background: var(--m); color: var(--pw-ground); }
+
+/* Wild cards (#675): a rule, not a stat line */
+.cf-rule-text { display: flex; flex-direction: column; align-items: center; gap: 3px; font-style: italic; line-height: 1.25; text-align: center; }
+.cf-rule-k { font: 400 9px/1 var(--look-data, monospace); font-style: normal; letter-spacing: 0.12em; text-transform: uppercase; padding: 1px 5px; border: 1px solid currentColor; }
+.cf-small .cf-rule-text { font-size: 11px; }

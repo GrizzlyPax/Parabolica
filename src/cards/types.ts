@@ -32,6 +32,8 @@ export interface Card {
   stats: CardStat[];
   /** Effects only: which way the stat moves. */
   direction?: 'up' | 'down';
+  /** A rule-changer with no stat line (wild cards, #675): its rule, shown on the face. */
+  rule?: string;
   deck: 'motorsport';
 }
 

@@ -43,7 +43,7 @@ const metalClass = (card: Card) => `metal-${card.rarity ?? 'none'}`;
 export const kindIcon = (card: Card) => (card.kind === 'trait' ? 'card.trait' : card.kind === 'effect' ? 'card.effect' : 'card.gear');
 const kindClass = (card: Card) => (card.kind === 'trait' ? 'cf-trait' : card.kind === 'effect' ? 'cf-effect' : 'cf-gear');
 /** Placeholder art: the first stat's icon (the flavour pass gives each card its own); a card with no stat (a wild card, #646) wears the trait mark. */
-const artIcon = (card: Card) => (card.stats[0] ? STAT_ICONS[card.stats[0].stat] : 'card.trait');
+const artIcon = (card: Card) => (card.stats[0] ? STAT_ICONS[card.stats[0].stat] : card.rule ? 'card.rule' : 'card.trait');
 
 function Face({ card, mini }: { card: Card; mini: boolean }) {
   if (mini) return <div className="cf-miniface"><GameIcon name={artIcon(card)} size={120} /></div>;
@@ -53,7 +53,9 @@ function Face({ card, mini }: { card: Card; mini: boolean }) {
       <div className="cf-art"><GameIcon name={artIcon(card)} size={70} /></div>
       <div className="cf-type" title={KIND_LABELS[card.kind]}><GameIcon name={kindIcon(card)} size={18} title={card.kind === 'trait' ? 'Trait' : card.kind === 'effect' ? 'Effect' : 'Gear'} /></div>
       <div className="cf-desc">
-        {card.kind === 'effect'
+        {card.rule
+          ? <div className="cf-rule-text"><span className="cf-rule-k">Rule</span>{card.rule}</div>
+          : card.kind === 'effect'
           ? <div>{STAT_LABELS[card.stats[0].stat]} <b>{card.direction === 'up' ? '▲ up' : '▼ down'}</b></div>
           : card.stats.map(s => <div key={s.stat}><b>{levelDelta(s.pct)}</b> {STAT_LABELS[s.stat]}</div>)}
       </div>

@@ -110,7 +110,8 @@ export function rankUpCard(cardId: string): Card {
   const wild = wildOf(cardId);
   if (wild) {
     const track = wild.trackId ? getTrackById(wild.trackId) : undefined;
-    return { id: cardId, name: track ? `${WILD_CARDS[wild.wild].name}: ${track.name}` : WILD_CARDS[wild.wild].name, kind: 'trait', target: 'driver', stats: [], deck: 'motorsport' };
+    const rule = track && wild.wild === 'home-hero' ? `+${HOME_HERO_LEVELS} levels to every stat at ${track.name}.` : WILD_CARDS[wild.wild].blurb;
+    return { id: cardId, name: track ? `${WILD_CARDS[wild.wild].name}: ${track.name}` : WILD_CARDS[wild.wild].name, kind: 'trait', target: 'driver', stats: [], rule, deck: 'motorsport' };
   }
   throw new Error(`xp: no rank-up card ${cardId}`);
 }
