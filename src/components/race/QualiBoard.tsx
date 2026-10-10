@@ -11,7 +11,21 @@ import type { Driver } from '../../RaceEngine';
 import { RaceNumber } from '../../icons/RaceNumber';
 import { GameIcon, TeamLogo, type TeamLike } from '../../icons/GameIcon';
 import { inkFor } from '../../icons/ink';
+import DriverRow from './DriverRow';
+import { QUALI_COLUMNS, getGridTemplate } from './columns';
+import type { RowContext } from './types';
 import './QualiBoard.css';
+
+const gridTemplate = getGridTemplate(QUALI_COLUMNS);
+
+/** A race-tower row context for a lap on the board: just what the qualifying columns read. */
+function rowContext(i: number, mine: boolean, quali: NonNullable<RowContext['quali']>): RowContext {
+  return {
+    displayPosition: String(i + 1), mine: mine || undefined, quali,
+    intervalGap: '', leaderGap: '', lastLapTime: null, lastLapClass: '', bestLapTime: null, bestLapClass: '',
+    isFocused: false, isFinished: false, isDNF: false, isPitting: false, currentLap: 0, totalLaps: 0,
+  };
+}
 
 export interface QualiLap { id: number; score: number; ruined: boolean }
 
@@ -104,7 +118,7 @@ export default function QualiBoard({ laps, drivers, nominalTicks, mine, onDone, 
   };
 
   const num = (d: Driver | undefined, size = 22) => d
-    ? <RaceNumber n={d.number ?? '–'} color={d.color} ink={d.ink ?? inkFor(d.color)} size={size} shape="square" />
+    ? <RaceNumber n={d.number ?? '–'} color={d.color} ink={d.ink ?? inkFor(d.color)} size={size} className="team-marble" />
     : null;
 
   return (
@@ -155,26 +169,26 @@ export default function QualiBoard({ laps, drivers, nominalTicks, mine, onDone, 
       ) : null}
 
       <div className="qb-scroll">
-        <table className="qb-table">
-          <thead><tr><th className="qb-p">P</th><th>Driver</th><th className="qb-r">Time</th><th className="qb-r">Gap</th></tr></thead>
-          <tbody>
+        <div className="timing-tower qb-tower">
+          <div className="timing-tower-header" style={{ gridTemplateColumns: gridTemplate }}>
+            {QUALI_COLUMNS.map(col => <div key={col.id} className={`timing-header-cell col-${col.id}`} style={{ textAlign: col.align }}>{col.header}</div>)}
+          </div>
+          <div className="timing-tower-body">
             {board.map((l, i) => {
               const d = byId.get(l.id);
+              if (!d) return null;
               const sec = qualiSeconds(l.score, nominalTicks);
               const gap = i === 0 ? '—' : `+${(sec - qualiSeconds(pole!.score, nominalTicks)).toFixed(3)}`;
-              const cls = [mine?.has(l.id) ? 'mine' : '', latest?.id === l.id && !done ? 'new' : '', i === 0 ? 'pole' : '', l.ruined ? 'ruined' : ''].filter(Boolean).join(' ');
               return (
-                <tr key={l.id} className={cls}>
-                  <td className="qb-p">{i + 1}</td>
-                  <td className="qb-nm">{num(d, 20)}<span>{d?.name}{l.ruined && <span className="qb-note">Lap ruined</span>}</span></td>
-                  <td className="qb-r qb-t">{fmtLap(sec)}</td>
-                  <td className="qb-r">{gap}</td>
-                </tr>
+                <div key={l.id} className={latest?.id === l.id && !done ? 'qb-new' : undefined}>
+                  <DriverRow driver={d} columns={QUALI_COLUMNS} gridTemplate={gridTemplate} isFocused={false} expandable={false}
+                    context={rowContext(i, mine?.has(l.id) ?? false, { time: fmtLap(sec), gap, pole: i === 0, ruined: l.ruined })} />
+                </div>
               );
             })}
-            {!done && <tr className="qb-wait"><td className="qb-p">–</td><td colSpan={3}>{total - set} still to go</td></tr>}
-          </tbody>
-        </table>
+            {!done && <div className="qb-wait">{total - set} still to go</div>}
+          </div>
+        </div>
       </div>
 
       <div className="qb-dock">

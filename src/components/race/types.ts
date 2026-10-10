@@ -40,6 +40,8 @@ export interface RowContext {
   mine?: boolean;
   /** Season Mode (#489): this driver's portrait and their car's vehicle. */
   avatar?: { portrait: IconId; vehicle: IconId };
+  /** Qualifying board (#617): this driver's lap, gap to pole, and how it went. */
+  quali?: { time: string; gap: string; pole: boolean; ruined: boolean };
   /** In a fight right now: attacking the car ahead or defending from the car behind. */
   battle?: { role: 'attacking' | 'defending'; ticks: number; otherId: number };
   intervalGap: string;

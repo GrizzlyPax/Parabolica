@@ -361,6 +361,36 @@ export const DETAIL_COLUMNS: ColumnConfig[] = [
   COLUMN_PITS,
 ];
 
+// Qualifying (#617): the same tower, with the lap time and the gap to pole in
+// place of the race's interval, leader, last lap and tyre.
+export const COLUMN_QUALI_TIME: ColumnConfig = {
+  id: 'qualiTime',
+  header: 'Time',
+  width: 'minmax(72px, 1fr)',
+  align: 'right',
+  render: (_driver: Driver, ctx: RowContext) => (
+    <span className={`lap-time ${ctx.quali?.pole ? 'lap-fastest' : ''} ${ctx.quali?.ruined ? 'lap-ruined' : ''}`} title={ctx.quali?.ruined ? 'Lap ruined' : undefined}>
+      {ctx.quali?.time ?? '—'}
+    </span>
+  ),
+};
+
+export const COLUMN_QUALI_GAP: ColumnConfig = {
+  id: 'qualiGap',
+  header: 'Gap',
+  width: '62px',
+  align: 'right',
+  render: (_driver: Driver, ctx: RowContext) => <span className="gap-value gap-leader">{ctx.quali?.gap ?? ''}</span>,
+};
+
+export const QUALI_COLUMNS: ColumnConfig[] = [
+  COLUMN_POSITION,
+  COLUMN_TEAM_MARBLE,
+  COLUMN_DRIVER_CODE,
+  COLUMN_QUALI_TIME,
+  COLUMN_QUALI_GAP,
+];
+
 // Generate grid-template-columns CSS from column config
 export function getGridTemplate(columns: ColumnConfig[]): string {
   return columns.map(col => col.width).join(' ');
