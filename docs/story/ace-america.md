@@ -6,7 +6,7 @@
 - **The world:** an alternate 1920s Earth with 1950s optimism. In 1908 the **Watchers** (polite, unseen aliens) noticed us racing cars. Nobody else in the galaxy ever built cars; they all skipped straight to flying. So they took war, famine and the economy off our plate, and now every quarrel is settled on the track. **Earth is the galaxy's favourite show.**
 - **The game (the vertical slice):** **Ace America.** You're a team principal with a small local garage. Win your city to become **Ace Toledo**, your state to become **Ace Ohio**, then the nation to become **Ace America.**
 - **The tone:** Bioshock Infinite's sunny strangeness, a little Atlas Shrugged, Gatsby's transatlantic "old sport", Koshien's whole-country tournament, Miss America's titles and sashes, with Dungeon Crawler Carl and the Hunger Games in the background. Gloves on: the strangeness is a faint hum.
-- **Possible game name:** Pax, Oct 10: *"Ace America honestly sounds like an even better name than Parabolica"* (aceamerica.com looked free). The Parabolica lives on as the world circuit.
+- **The game's new name (planned):** Pax, Oct 10: *"Ace America honestly sounds like an even better name than Parabolica."* **Domain secured: playaceamerica.com** (aceamerica.com is parked at about $10k; skipped). The rebrand gets scoped with Pit next. The Parabolica lives on as the world circuit.
 
 ## The world
 **The Watchers.**
@@ -83,7 +83,7 @@
 ## Still open
 - **Who calls the races?** One famous national radio man, local voices that grow grander as you climb, or mostly the newspaper.
 - How the Watchers show up in the slice (an Interval broadcast now and then?).
-- Ace America as the game's name (and a trademark check before buying the domain).
+- The rebrand scope (Pit + Radio + Pax), and a quick trademark check on "Ace America".
 - Mountain states' region; the city pool; garage names.
 - Later: bloc names and flags, the Worlds, factions.
 
