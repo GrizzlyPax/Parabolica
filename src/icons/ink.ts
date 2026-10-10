@@ -1,6 +1,10 @@
 // Ink: the text/icon colour drawn on a team's primary (docs/ICONS.md → colour
 // system). Pure, so data modules (src/data/teams.ts) can pick an ink without
-// pulling in React.
+// pulling in React. One rule (#639): the 28 deck colours take Radio's table
+// ink; any other colour gets whichever of white / near-black contrasts more.
+import { DECK_COLOURS } from '../data/teamColours';
+
+const TABLE_INK = new Map(DECK_COLOURS.map(c => [c.hex.toLowerCase(), c.ink]));
 
 export interface InkTeamLike {
   color: string;
@@ -22,8 +26,11 @@ function luminance(hex: string): number | null {
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
 
-/** White or near-black, whichever contrasts more with `color` (WCAG ratio). */
+/** The ink for `color`: Radio's table for a deck colour, else white or
+ * near-black, whichever contrasts more (WCAG ratio). */
 export function inkFor(color: string): string {
+  const table = TABLE_INK.get(color.trim().toLowerCase());
+  if (table) return table;
   const l = luminance(color);
   if (l === null) return INK_LIGHT;
   const vsWhite = 1.05 / (l + 0.05);

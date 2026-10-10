@@ -41,3 +41,25 @@ describe('team creator', () => {
     expect(teamsOf(facts)[h.teamId]).toMatchObject({ name: 'Pax Racing', color: '#006EBE', iconId: 'fox-head' });
   });
 });
+
+describe('one ink rule (#639)', () => {
+  it("all 28 deck colours get Radio's table ink: from inkFor, on deck teams and in the creator", async () => {
+    const { DECK_COLOURS } = await import('../data/teamColours');
+    const { BASE_DECK_TEAMS } = await import('../data/deckTeams');
+    const { inkFor } = await import('../icons/ink');
+    const [h] = humansFor(generateSeasonPool(7, 10), [null]);
+    expect(DECK_COLOURS).toHaveLength(28);
+    for (const c of DECK_COLOURS) {
+      expect(inkFor(c.hex), c.name).toBe(c.ink);
+      expect(inkFor(c.hex.toLowerCase()), c.name).toBe(c.ink);
+      const team = BASE_DECK_TEAMS.find(t => t.color.toUpperCase() === c.hex);
+      expect(team?.ink, `${c.name} deck team`).toBe(c.ink);
+      expect(wearBuiltTeam(h, { name: 'X', colour: c.hex, logo: 'owl' }).ink, `${c.name} in the creator`).toBe(c.ink);
+    }
+    // Raspberry is white, as Kanzaki ships (the luminance cut alone said near-black).
+    expect(inkFor('#E63281')).toBe('#FFFFFF');
+    // Off-table colours still get the contrast rule.
+    expect(inkFor('#ffffff')).toBe('#0b0b0c');
+    expect(inkFor('#1e3a8a')).toBe('#ffffff');
+  });
+});
