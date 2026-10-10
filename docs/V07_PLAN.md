@@ -7,6 +7,13 @@
 
 Already live from v0.7's first two waves (engine v0.6.3): single-player Season, two drivers, one-tap Quick Race, race debrief, real-pace qualifying on one shared tower, new car and driver names.
 
+## Design pillars (Pax, Oct 10, #668)
+**Genre: auto-battler × sports sim × roguelike deck builder.** Madden Head Coach / Football Manager territory, with roguelike deck building as the inputs.
+- **Inputs feel like Balatro.** Deck building is your choice; the input side doesn't try to reflect reality.
+- **The sim feels like real life.** F1, raced; realism lives in the race, not in the menus.
+- **"It's not an actual card game; it is tossing some fun things into the sim."** Rule of thumb for Steward: cards change the sim's inputs (stats, rules, timers), never the result directly.
+- **Long road:** the same deck-builder × sim shell could run other sports or elections (#669), so keep "sim vs shell" separate in the architecture.
+
 ## Milestones
 | # | Milestone | Pax can… |
 |---|---|---|

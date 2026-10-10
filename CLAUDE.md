@@ -1,6 +1,6 @@
 # Parabolica Race Engine
 
-Formula 1 race simulation with Season Mode (draft, Paddock, two championships). Commissioner leagues were removed in #339; live seasons return in v0.6.
+Formula 1 race simulation becoming a single-player roguelite: **auto-battler × sports sim × roguelike deck builder** (Balatro-like inputs, a realistic sim; design pillars in `docs/V07_PLAN.md`). Commissioner leagues were removed in #339.
 Player betting was retired in June 2026 (git history has it); odds math survives in betting/utils
 for the future NPC-crowd system (BetLab was removed Oct 2026; git history has it).
 
