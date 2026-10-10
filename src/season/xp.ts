@@ -25,7 +25,7 @@
 // are a later issue.
 
 import { mulberry32, deriveSeed, shuffle } from '../engine/rng';
-import { CARDS_BY_ID, DRIVER_STATS, type Card, type DriverStatKey } from '../cards';
+import { cardById, DRIVER_STATS, type Card, type DriverStatKey } from '../cards';
 import { archetypeTraits } from './rookies';
 import type { Rarity } from '../cards/rarity';
 import { driverPointsInRace } from '../fantasy/types';
@@ -97,7 +97,7 @@ export function wildOf(cardId: string): { wild: WildId; trackId?: string } | nul
 /** A rank-up card by id: a stat jump (`jump-<rank>-<stat>+<stat>`), a deck
  * trait at the player's scale, or a wild card (no stats of its own). */
 export function rankUpCard(cardId: string): Card {
-  const deck = CARDS_BY_ID.get(cardId);
+  const deck = cardById(cardId);
   if (deck) return playerCard(deck);
   const jump = cardId.match(/^jump-([123])-(.+)$/);
   if (jump) {
@@ -189,9 +189,10 @@ export function dealRankUp(facts: SeasonFacts, driverId: number, rank: 1 | 2 | 3
   const metal = RANKS[rank].metal!;
   const stats = shuffle(DRIVER_STATS, rng).slice(0, JUMP[rank].stats);
   const jump = rankUpCard(`jump-${rank}-${[...stats].sort().join('+')}`);
-  // A trait of the metal from the driver's own archetype (#660); any, without one.
+  // A run-deck trait of the metal from the driver's own archetype (#660 / #647), not one a rank-up already gave them; any, without one.
   const pool0 = poolFor(facts);
-  const traits = archetypeTraits(pool0.drivers.find(d => d.id === driverId)?.archetype, metal);
+  const taken = new Set(rankUpsOf(facts, driverId).map(p => p.cardId));
+  const traits = archetypeTraits(pool0.drivers.find(d => d.id === driverId)?.archetype, metal, taken);
   const trait = playerCard(traits[Math.floor(rng() * traits.length)]);
   const held = new Set(rankUpsOf(facts, driverId).map(p => wildOf(p.cardId)?.wild));
   const pool = WILD_IDS.filter(w => !held.has(w));

@@ -294,7 +294,9 @@ export function leagueForRound(facts: SeasonFacts, round: number): LeagueState {
   const effects = roundEffects(facts, round);
   // Gear mileage shows beside the timed effects (#627).
   for (const [id, infos] of Object.entries(gearInfos(facts, round))) effects.infos[Number(id)] = [...(effects.infos[Number(id)] ?? []), ...infos];
-  const roster = seasonRoster(pool, rosters, lineupsFor(facts, round), { cards: cardsForRound(facts, round), identities: identitiesFor(facts), shifts: rivalShifts(facts), effects });
+  // The track's lap count turns half-race window cards (#647) into lap effects.
+  const laps = getTrackById(setup.calendar[round])?.laps;
+  const roster = seasonRoster(pool, rosters, lineupsFor(facts, round), { cards: cardsForRound(facts, round), identities: identitiesFor(facts), shifts: rivalShifts(facts), effects, laps });
   return {
     engineVersion,
     leagueSeed: setup.seed,

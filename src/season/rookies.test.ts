@@ -150,19 +150,25 @@ describe('rookies (#660)', () => {
     for (const t of pool.teams) if (!t.nemesis && t.id !== PLAYER_TEAM_ID) expect(shifts[t.id]).toBe(0);
   });
 
-  it('the rank-up trait comes from the driver\'s own archetype', () => {
+  it('the rank-up trait comes from the driver\'s own archetype: the run deck\'s tags (#647), nearest metal when the deck has none', () => {
     for (const a of ARCHETYPES) {
-      const own = new Set(Object.entries(ARCHETYPE_INFO[a].nudge).filter(([, v]) => v > 0).map(([k]) => k));
-      // Silver: exactly the archetype's stats. Gold / iridium pairs and triples rarely match both: the nearest (overlapping) ones.
+      // Pro (silver): every archetype has its own silver driver trait.
       const silver = archetypeTraits(a, 'silver');
-      expect(silver.map(c => c.stats[0].stat).sort()).toEqual([...own].sort());
+      expect(silver.length).toBeGreaterThan(0);
+      for (const c of silver) { expect(c.deck).toBe('run'); expect(c.kind).toBe('trait'); expect(c.target).toBe('driver'); expect(c.rarity).toBe('silver'); expect([a, 'any']).toContain(c.tag); }
       for (const metal of ['gold', 'iridium'] as const) {
         const cards = archetypeTraits(a, metal);
         expect(cards.length).toBeGreaterThan(0);
-        for (const c of cards) expect(c.stats.some(s => own.has(s.stat))).toBe(true);
+        for (const c of cards) expect([a, 'any']).toContain(c.tag);
       }
     }
-    expect(archetypeTraits(undefined, 'silver')).toHaveLength(6);
+    // The deck's gaps fall to the nearest metal, commoner first: a Qualifier Ace gets Pole Sitter (silver).
+    expect(archetypeTraits('qualifier', 'gold').map(c => c.id)).toEqual(['rd-pole-sitter']);
+    expect(archetypeTraits('brawler', 'gold').map(c => c.id)).toEqual(['rd-red-mist']);
+    expect(archetypeTraits('tyre-saver', 'iridium').map(c => c.id)).toEqual(['rd-complete-driver']);
+    // Already held by a rank-up: skipped.
+    expect(archetypeTraits('qualifier', 'gold', new Set(['rd-pole-sitter'])).map(c => c.id)).toEqual(['rd-hot-lapper', 'rd-steady-hands']);
+    expect(archetypeTraits(undefined, 'silver').every(c => c.rarity === 'silver' && c.target === 'driver')).toBe(true);
     const run = rookieRun(21, 5, 2);
     const league = currentLeague(run);
     const [id] = run.rookies.pick!.driverIds;
@@ -170,9 +176,7 @@ describe('rookies (#660)', () => {
     const dealt = dealRankUp(league, id, 1);
     const trait = dealt.cards[1];
     expect(trait.rarity).toBe(RANKS[1].metal);
-    const own = new Set(Object.entries(ARCHETYPE_INFO[archetype].nudge).filter(([, v]) => v > 0).map(([k]) => k));
-    expect(trait.stats).toHaveLength(1);
-    expect(own.has(trait.stats[0].stat)).toBe(true);
-    void seasonFactsFor;
+    expect([archetype, 'any']).toContain(trait.tag);
+    void ARCHETYPE_INFO; void seasonFactsFor;
   });
 });

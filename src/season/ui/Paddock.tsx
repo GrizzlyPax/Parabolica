@@ -27,7 +27,7 @@ import { getTrackById } from '../../generators/tracks';
 import { getDeckTrackById } from '../../data/deckTracks';
 import { weatherForRace } from '../../data/weather';
 import { draftState } from '../draft';
-import { applyPack, applyCurse, dealPack, moveGear, pendingOffer, teamCardState, PACK_KIND_LABEL, type CardHolder, type PackKind, type TeamCardState } from '../pack';
+import { applyPack, applyCurse, dealPack, moveGear, pendingOffer, teamCardState, CURSE_LIFE, PACK_KIND_LABEL, type CardHolder, type PackKind, type TeamCardState } from '../pack';
 import { effectCards, describeLeft, activeEffects } from '../effects';
 import { pendingRankUps, dealRankUp, applyRankUp } from '../xp';
 import RankUpPick from './RankUpPick';
@@ -55,7 +55,7 @@ interface Props {
   backLabel?: string;
 }
 
-const CURSE_LIFE_TEXT = 'three races';
+const CURSE_LIFE_TEXT = CURSE_LIFE === 1 ? 'one race' : `${CURSE_LIFE} races`;
 const GEAR_FOR: Record<CardHolder['kind'], Card['kind']> = { driver: 'equipment', car: 'upgrade', team: 'facility' };
 const ABBR = STAT_ABBR;
 const ord = (n: number) => `${n}${['th', 'st', 'nd', 'rd'][(n % 100 - 20) % 10] || ['th', 'st', 'nd', 'rd'][n % 100] || 'th'}`;
@@ -336,7 +336,7 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, ba
             <div key={kind} className="pk-pack-one">
               <button type="button" className="pk-sealed" onClick={() => { setPicked(kind); setRevealing(true); }} aria-label={`Open the ${PACK_KIND_LABEL[kind]}`}><GameIcon name="season.pack" size={30} /><i className="pk-twinkle a" /><i className="pk-twinkle b" /><i className="pk-twinkle c" /></button>
               <div className="pk-pack-text">
-                <span className="rs-k pk-pack-k">Base deck · {PACK_KIND_LABEL[kind]}</span>
+                <span className="rs-k pk-pack-k">Run deck · {PACK_KIND_LABEL[kind]}</span>
                 <b>{offer.kind === 'choice' ? 'Pick this one' : 'Sealed'}</b>
                 <span className="rs-hint">{kind === 'driver' ? 'A trait or equipment for a driver.' : kind === 'car' ? 'A trait or upgrade for the car.' : 'A trait or facility for the team.'} Three inside; keep one. The metal shows when it opens.</span>
               </div>

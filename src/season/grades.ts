@@ -60,8 +60,9 @@ export interface StatReading {
  * point comes from. */
 export function readStat(stat: StatKey, raw: number, cards: readonly Card[]): StatReading {
   const base = rating(stat, raw);
+  // A window card (#647) counts for half the race, not in the sum.
   const parts = cards
-    .filter(c => c.kind !== 'effect')
+    .filter(c => c.kind !== 'effect' && !c.window)
     .flatMap(c => c.stats.filter(s => s.stat === stat).map(s => ({ card: c, pct: s.pct, points: s.pct })));
   const total = base + parts.reduce((a, p) => a + p.points, 0);
   return { stat, base, parts, total, level: level(total), baseLevel: level(base) };

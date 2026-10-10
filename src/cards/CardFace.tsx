@@ -64,13 +64,13 @@ function Face({ card, mini }: { card: Card; mini: boolean }) {
   );
 }
 
-function Back({ mini }: { mini: boolean }) {
+function Back({ mini, card }: { mini: boolean; card: Card }) {
   return (
     <div className="cf-backrule">
       {!mini && (
         <span className="cf-plate">
           <b>PARABOLICA</b>
-          <span><GameIcon name="race.finish" size={10} />Base deck</span>
+          <span><GameIcon name="race.finish" size={10} />{card.deck === 'run' ? 'Run deck' : 'Base deck'}</span>
         </span>
       )}
     </div>
@@ -108,7 +108,7 @@ export function CardFace({ card, size = 'small', faceDown = false, flippable = !
       <div className="cf-scale" style={{ width: CARD_BOX.w, height: CARD_BOX.h, transform: `scale(${w / CARD_BOX.w})` }}>
         <div className="cf-in">
           <div className="cf-side cf-front" aria-hidden={showBack}>{!faceDown && <Face card={card} mini={mini} />}</div>
-          <div className="cf-side cf-back"><Back mini={mini} /></div>
+          <div className="cf-side cf-back"><Back card={card} mini={mini} /></div>
         </div>
       </div>
     </div>

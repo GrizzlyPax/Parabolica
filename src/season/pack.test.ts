@@ -2,13 +2,13 @@
 import { describe, it, expect } from 'vitest';
 import {
   dealPack, packOffer, packTierForRank, packTierFor, applyPack, applyCurse, moveGear, teamCardState, pendingPack, pendingOffer, validatePackApplication, validateCurse, validateGearMove, gearLeft,
-  PACK_ODDS, PACK_TIERS, TRAIT_CHANCE, FIRST_PACK_TIER, PLAYER_CARD_SCALE, GEAR_STRENGTH, GEAR_LIFE, OFFER_ODDS, CURSE_POINTS, CURSE_LIFE, type PackApplication, type PackKind,
+  PACK_ODDS, PACK_TIERS, TRAIT_CHANCE, FIRST_PACK_TIER, PLAYER_CARD_SCALE, GEAR_STRENGTH, GEAR_LIFE, OFFER_ODDS, CURSE_LIFE, playerCard, type PackApplication, type PackKind,
 } from './pack';
 import { activeEffects } from './effects';
 import { newSeason, seasonState, setLineup, settleRound, constructorStandings, leagueForRound, poolFor, saveSeason, loadSeason, type SeasonFacts, type SeasonStore } from './season';
 import { quickDraft, draftOrder, draftState } from './draft';
 import { openPack } from './testHelpers';
-import { CARDS_BY_ID } from '../cards';
+import { CARDS_BY_ID, RUN_CARDS_BY_ID, RUN_CURSES, RUN_DECK, cardById } from '../cards';
 import { CURRENT_TRACKS } from '../generators/tracks';
 
 const CALENDAR = CURRENT_TRACKS.slice(0, 3).map(t => t.id);
@@ -103,7 +103,7 @@ describe('the deal', () => {
     }
   });
 
-  it('deals a trait about 1 in 4, gear otherwise, with the metal odds of the tier, at the player\'s scale (3×, gear 6×)', () => {
+  it('deals a trait about 1 in 4, gear otherwise, with the metal odds of the tier, from the run deck as written (gear 2×)', () => {
     let traits = 0, n = 0;
     const metals: Record<string, number> = {};
     for (let seed = 0; seed < 150; seed++) {
@@ -117,8 +117,9 @@ describe('the deal', () => {
         metals[p.cards[0].rarity!] = (metals[p.cards[0].rarity!] ?? 0) + 1;
         expect(['trait', 'equipment', 'upgrade', 'facility']).toContain(p.cards[0].kind);
         for (const c of p.cards) {
-          const base = CARDS_BY_ID.get(c.id)!;
-          const k = PLAYER_CARD_SCALE * (c.kind === 'trait' ? 1 : GEAR_STRENGTH);
+          const base = RUN_CARDS_BY_ID.get(c.id)!;
+          expect(base.deck).toBe('run');
+          const k = c.kind === 'trait' ? 1 : GEAR_STRENGTH;
           expect(c.stats.map(s => s.pct)).toEqual(base.stats.map(s => s.pct * k));
         }
       }
@@ -175,7 +176,7 @@ describe('applying a pack', () => {
     expect(pendingOffer(next)).toBeNull();
   });
 
-  it('the forced Curse pack (#627): −10 × 3 on one car or team stat, both drivers, three races; nothing else to open', () => {
+  it('the forced Curse pack (#647): one of the eight named curses on the car or team, both drivers, one race; nothing else to open', () => {
     for (let seed = 100; seed < 3000; seed++) {
       const facts = scripted(seed, 5, [1]);
       const offer = pendingOffer(facts);
@@ -187,8 +188,12 @@ describe('applying a pack', () => {
       const c = offer.curse!;
       expect(c.source).toBe('curse');
       expect(['car', 'team']).toContain(c.target.kind);
-      expect(c.stats).toHaveLength(1);
-      expect(c.stats[0].pct).toBe(CURSE_POINTS * PLAYER_CARD_SCALE);
+      const named = RUN_CURSES.find(x => x.name === c.name)!;
+      expect(named).toBeTruthy();
+      expect(c.target.kind).toBe(named.target);
+      expect(c.stats).toEqual(named.stats);
+      expect(c.stats.every(s => s.pct < 0)).toBe(true);
+      expect(CURSE_LIFE).toBe(1);
       expect(c.timer).toEqual({ races: CURSE_LIFE });
       const next = applyCurse(facts, { type: 'curse', round: 0, teamId: human, effectId: c.id });
       expect(pendingOffer(next)).toBeNull();
@@ -196,14 +201,18 @@ describe('applying a pack', () => {
       expect(activeEffects(next, human, CURSE_LIFE)).toEqual([]);
       // Both drivers carry it in the race; the rest of the grid does not.
       const before = leagueForRound(facts, 0).roster, after = leagueForRound(next, 0).roster;
-      const stat = c.stats[0].stat as keyof NonNullable<(typeof after)[number]['carStats']> & keyof NonNullable<(typeof after)[number]['teamStats']>;
       for (const d of after) {
         const was = before.find(x => x.id === d.id)!;
         if (d.kingdomId !== human) { expect(d).toEqual(was); continue; }
         const block = c.target.kind === 'car' ? [d.carStats!, was.carStats!] : [d.teamStats!, was.teamStats!];
-        expect((block[0] as unknown as Record<string, number>)[stat]).toBeCloseTo((block[1] as unknown as Record<string, number>)[stat] - 1.2, 10); // −30 grade = −1.2★
-        expect(d.effects!.some(e => e.id === c.id && e.left === '3 races left')).toBe(true);
+        for (const s of c.stats) {
+          // grade points on the 1–5 star scale: pct × 4 / 100 stars
+          expect((block[0] as unknown as Record<string, number>)[s.stat]).toBeCloseTo((block[1] as unknown as Record<string, number>)[s.stat] + (s.pct * 4) / 100, 10);
+        }
+        expect(d.effects!.some(e => e.id === c.id && e.left === '1 race left')).toBe(true);
       }
+      // Gone the next race.
+      expect(leagueForRound({ ...next, results: [], lineups: [] }, 1).roster.filter(d => d.kingdomId === human).every(d => !d.effects?.some(e => e.id === c.id))).toBe(true);
       expect(() => applyCurse(next, { type: 'curse', round: 0, teamId: human, effectId: c.id })).toThrow(/already open/);
       return;
     }
@@ -227,8 +236,8 @@ describe('applying a pack', () => {
     expect(after).toHaveLength(2);
     for (const stat of pack.cards[0].stats) {
       const key = stat.stat as 'tireManagement' | 'pitCrew';
-      // #335: grade points on the 1–5 star scale: +pct × 4 / 100 stars; the dealt card already carries the player's 6× (3× × gear 2×).
-      expect(stat.pct).toBe(CARDS_BY_ID.get(pack.cards[0].id)!.stats.find(s => s.stat === key)!.pct * PLAYER_CARD_SCALE * GEAR_STRENGTH);
+      // #335: grade points on the 1–5 star scale: +pct × 4 / 100 stars; the dealt card already carries gear's 2× on the run deck's written points.
+      expect(stat.pct).toBe(RUN_CARDS_BY_ID.get(pack.cards[0].id)!.stats.find(s => s.stat === key)!.pct * GEAR_STRENGTH);
       for (let i = 0; i < 2; i++) expect(after[i].teamStats![key]).toBeCloseTo(before[i].teamStats![key] + (stat.pct * 4) / 100, 10);
     }
     // Rivals untouched.
@@ -322,7 +331,7 @@ describe('the whole season', () => {
       const s = teamCardState(a, h.teamId);
       const held = Object.values(s.drivers).flatMap(d => [...d.traits, ...d.equipment]).length + s.car.traits.length + s.car.upgrade.length + s.team.traits.length + s.team.facility.length + s.locker.length;
       // After three rounds the round-0 gear is worn out (GEAR_LIFE); traits stay; curses hold no card.
-      const kept = a.cardFacts.filter(f => f.type === 'pack' && (CARDS_BY_ID.get(f.cardId)!.kind === 'trait' || gearLeft(f.round, CALENDAR.length) > 0));
+      const kept = a.cardFacts.filter(f => f.type === 'pack' && (cardById(f.cardId)!.kind === 'trait' || gearLeft(f.round, CALENDAR.length) > 0));
       expect(held).toBe(kept.length);
     }
     const store = memoryStore();
@@ -338,6 +347,12 @@ describe('the whole season', () => {
     const bare = { ...a, cardFacts: [] };
     expect(leagueForRound(bare, 2).roster.map(d => d.stats)).not.toEqual(leagueForRound(a, 2).roster.map(d => d.stats));
     expect(CARDS_BY_ID.size).toBe(94);
+    expect(RUN_DECK).toHaveLength(60);
+    // A grid-deck card the player holds (old saves) is still × 3, gear × 6; a run-deck card is as written.
+    expect(playerCard(CARDS_BY_ID.get('eq-bronze-speed')!).stats[0].pct).toBe(5 * PLAYER_CARD_SCALE * GEAR_STRENGTH);
+    expect(playerCard(CARDS_BY_ID.get('tr-driver-bronze-speed')!).stats[0].pct).toBe(5 * PLAYER_CARD_SCALE);
+    expect(playerCard(RUN_CARDS_BY_ID.get('rd-hothead')!).stats[0].pct).toBe(15);
+    expect(playerCard(RUN_CARDS_BY_ID.get('rd-lightweight-helmet')!).stats[0].pct).toBe(15 * GEAR_STRENGTH);
   });
 });
 
@@ -460,8 +475,9 @@ describe('gear mileage (#627)', () => {
     // The sim reads the same: the car's grip gains the upgrade's grade points in round 2, not in round 4 (same lineup, no results needed).
     const grip = (round: number) => leagueForRound({ ...f, lineups: [] }, round).roster.find(d => d.kingdomId === human)!.carStats!.grip;
     const base = poolFor(f).cars.find(c => c.id === draftState(poolFor(f), f.draftPicks).rosters[human].carId)!.stats.grip;
-    const upPts = CARDS_BY_ID.get(up)!.stats[0].pct * PLAYER_CARD_SCALE * GEAR_STRENGTH;
-    const trPts = CARDS_BY_ID.get(tr)!.stats[0].pct * PLAYER_CARD_SCALE;
+    // Grid-deck ids (old saves): held at the player's 3×, gear × 2 again.
+    const upPts = cardById(up)!.stats[0].pct * PLAYER_CARD_SCALE * GEAR_STRENGTH;
+    const trPts = cardById(tr)!.stats[0].pct * PLAYER_CARD_SCALE;
     expect(grip(2)).toBeCloseTo(base + ((upPts + trPts) * 4) / 100, 10);
     expect(grip(4)).toBeCloseTo(base + (trPts * 4) / 100, 10);
     // Gear infos ride on the roster for display.
