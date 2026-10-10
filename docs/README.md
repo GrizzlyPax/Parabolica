@@ -13,6 +13,7 @@ Parabolica is an F1-style race sim: draft a team, race a Season, chase two champ
 | [V05_PLAN](V05_PLAN.md) | **The v0.5 Spa plan (✅ shipped Oct 9, v0.5.1):** milestones, lanes, order, risks, decision log |
 | [HANDOFF_2026-10-08](HANDOFF_2026-10-08.md) | Oct 8: GitHub-only planning, the crew, the Almanac look, icons, metals, numbers, what's next |
 | [HANDOFF_2026-10-07](HANDOFF_2026-10-07.md) | What shipped Oct 5–7, how the pieces fit, traps, open work |
+| [LOOK](LOOK.md) | **The look (v0.8): Ace America, the race program:** tokens, one theme per step, the sash, the components, how a screen wears it; Race Control → Style is the live catalogue |
 | [GLOSSARY](GLOSSARY.md) | Every team, track, card, in-race effect, rule card, weather and flavour pool (**generated**: `npm run glossary`) |
 
 ## Game systems

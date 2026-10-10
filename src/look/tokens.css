@@ -1,0 +1,100 @@
+/* Ace America, the race program (#705; the locked look, Pax Oct 10). The
+   TOKENS: the one place a colour is written. Red, white and blue first, gold
+   as the highlight; a navy ground with cream (paper) panels. Components
+   (look.css) and screens read --ace-* only (icons/theme.test.ts keeps them
+   honest). Starting values: the mock-up CSS on the locked page.
+
+   One theme per step: the root IS Americana (Nationals, and the menus);
+   [data-step] re-points the tokens. A screen wears a step with <StepTheme>
+   (look/Look.tsx), which also sets the --ace-state-* vars for a state. */
+:root {
+  /* Americana (the root; Nationals; menus) */
+  --ace-page: #0b1020;
+  --ace-navy: #111a33;
+  --ace-navy-2: #1d2b4f;
+  --ace-red: #b8312f;
+  --ace-paper: #efe6d2;
+  --ace-paper-2: #e3d7bd;
+  --ace-ink: #16130f;
+  --ace-ink-2: #6b604c;
+  --ace-rule: #c9bda2;
+  --ace-gold: #c99a3a;
+  --ace-brick: #7a3b2a;
+  --ace-white: #ffffff;
+  --ace-brown: #a9845a;
+  --ace-shadow: rgba(0, 0, 0, .3);
+  /* Signals, the program's four colours for levels and results */
+  --ace-green: #3fa26a;
+  --ace-yellow: #d7a32b;
+  --ace-red-lv: #c8402f;
+  /* Roles every component reads */
+  --ace-ground: var(--ace-navy);
+  --ace-fg: var(--ace-paper);
+  --ace-muted: #a9b0c4;
+  --ace-hair: #2b3555;
+  --ace-accent: var(--ace-red);
+  --ace-accent-ink: var(--ace-paper);
+  --ace-accent-shadow: #7e1f1d;
+  --ace-sash: #f6f0e2;
+  --ace-sash-2: var(--ace-white);
+  --ace-sash-edge: var(--ace-red);
+  --ace-sash-ink: var(--ace-navy-2);
+  --ace-wheel: var(--ace-gold);
+  --ace-btn: var(--ace-accent);
+  --ace-btn-ink: var(--ace-accent-ink);
+  --ace-btn-shadow: var(--ace-accent-shadow);
+  --ace-bunt-1: var(--ace-red);
+  --ace-bunt-2: var(--ace-paper);
+  --ace-bunt-3: var(--ace-navy-2);
+  /* Type: the five faces (look/fonts.ts stores them with the app) */
+  --ace-disp: 'Alfa Slab One', 'Old Standard TT', Georgia, serif;
+  --ace-script: 'Playball', 'Brush Script MT', cursive;
+  --ace-cond: 'Oswald', 'Arial Narrow', 'Helvetica Neue', sans-serif;
+  --ace-body: 'Old Standard TT', Georgia, serif;
+  --ace-mono: 'Special Elite', 'Courier New', monospace;
+  /* Phone first: one gutter */
+  --ace-gutter: 16px;
+}
+
+/* Locals: black and white, generic. The accent is a dark grey, the buttons paper. */
+[data-step='locals'] {
+  --ace-navy: #111111;
+  --ace-navy-2: #2b2b2b;
+  --ace-red: #3d3d3d;
+  --ace-gold: #d9d4c7;
+  --ace-brick: #3a3a3a;
+  --ace-ground: #111111;
+  --ace-hair: #3a3a3a;
+  --ace-muted: #b8b4aa;
+  --ace-accent: #3d3d3d;
+  --ace-accent-ink: var(--ace-paper);
+  --ace-accent-shadow: #111111;
+  --ace-sash-edge: #111111;
+  --ace-sash-ink: #111111;
+  --ace-wheel: #d9d4c7;
+  --ace-btn: var(--ace-paper);
+  --ace-btn-ink: #111111;
+  --ace-btn-shadow: #8a8579;
+  --ace-bunt-1: #3d3d3d;
+  --ace-bunt-2: var(--ace-paper);
+  --ace-bunt-3: #2b2b2b;
+}
+
+/* State: that state's colours as accents only; the ground stays dark. The
+   --ace-state-* vars come from <StepTheme state> (stepThemeVars); the ink
+   from inkFor. */
+[data-step='state'] {
+  --ace-navy-2: var(--ace-state-secondary);
+  --ace-ground: var(--ace-state-ground, var(--ace-navy));
+  --ace-accent: var(--ace-state-primary);
+  --ace-accent-ink: var(--ace-state-ink);
+  --ace-accent-shadow: color-mix(in srgb, var(--ace-state-primary) 60%, #000000);
+  --ace-sash-edge: var(--ace-state-primary);
+  --ace-sash-ink: var(--ace-state-secondary);
+  --ace-bunt-1: var(--ace-state-primary);
+  --ace-bunt-2: var(--ace-paper);
+  --ace-bunt-3: var(--ace-state-secondary);
+}
+
+/* Nationals, Globals, Galacticals: Americana (the root) until their own looks land. */
+[data-step='nationals'], [data-step='globals'], [data-step='galacticals'] {}
