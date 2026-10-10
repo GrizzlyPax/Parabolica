@@ -31,26 +31,35 @@
 
 ### The vertical slice: America
 - **America only.** The slice ends when you win America; the Worlds come in the full game.
-- **Three steps, locked:** **City → State → Nationals.** Each state has a sensible number of cities to win.
+- **Three steps, locked:** **City → State → Nationals.** Each state has a sensible number of cities to win. The final crowns **Ace America**.
 - **The Nationals:** all 50 states start, 100 cars on track. Race one: DNFs are out. Then Hunger Games-style cuts, bottom finishers out, down to the **top 10 states (20 cars)** for a normal closing series. (A Steward question, later.)
 
 ### You and your team
-- **You are a team principal,** hired to run a local team.
-- **Run start:**
-  1. Name yourself.
-  2. Pick one of about five starting garages, each competing for a city title somewhere in America.
-  3. Pick your colour.
-- **Your identity is your title, like Miss America:** win your city and you race as **the Spirit of Toledo**; win your state and you're **the Spirit of Ohio**; win the Nationals and you're **the Spirit of America**.
-  - Drivers stay the same; the brand climbs to your most impressive title.
-  - You can rebrand or recolour between stages.
-  - Past titles stay visible, so anyone can see where you came from.
-  - Shorthand is just the place name; the full title is the moment: "Congratulations, you are now the Spirit of Ohio."
-  - **Why "Spirit":** it's evocative, and "motor spirit" was the 1920s word for petrol (and the *Spirit of St. Louis* flew in 1927).
+- **You are a team principal,** hired to run a local team. **Run start:** name yourself → pick one of about five starting garages (one per region, each competing for some city's title) → pick your colour.
+- **A garage is just a name.** Everyone starts weak ("it's a roguelite"); garage kinds don't need to differ.
+- **Six regions (plain names):** the West Coast · the Southwest (Texas, Oklahoma) · the Plains above it · the Midwest · the Southeast · the Northeast. (Mountain states fold into one of them later.) Cities are just flavour, drawn from a big pool.
+- **Difficulty is geography:** the State field follows population (about 5 cities compete to be Ace Vermont, about 30 for Ace Texas). Each garage card shows **the honest number** ("Ace Vermont · 5 cities compete"); in practice roughly **5 / 10 / 20 at State = easy / medium / hard**. Big cities field more garages too.
+- **Your identity is your title.** The title word is **Ace**, like Miss America: **Ace Toledo → Ace Ohio → Ace America**. "Congratulations, you are now Ace Ohio." Drivers stay the same; the brand climbs to your best title; you can rebrand or recolour between stages; past titles stay visible. (Ace replaces "Spirit of", which was the first idea; it clashes with the driver rank "Ace", and Pax doesn't mind.)
+- **Sashes:** drivers wear their titles. **Pennants** for city titles; for states, **that state's flag with a wheel worked in** (50 wheel-flags over time).
+- **Win your state once, never again** (Miss America): a constant rotation, no dynasties, which is also why every run starts fresh.
+- **No rivals or nemesis for now:** only one team goes up, so there's no one to follow you. They return with multi-season play. **No boss race:** win the table, win the title.
+- **Drivers:** anyone with a licence, mostly young.
 - **The 28 base-deck teams are scrapped and rethought** (Pax: "I don't care about any of them"). The one-outfit-the-whole-run idea is gone.
 
+### Drivers, fame and cards
+- **Drivers are war heroes and movie stars in one,** at the birth of celebrity. A monoculture: newspapers, radio, maybe early TV the Watchers handed over. Larger-than-life, **but only once they've won.** Everyone starts with the same dream.
+- **Driver trading cards exist in-world** (cigarette and gum cards): that's *why* the game has cards.
+- **Design idea for later:** traits as **stamps on the driver's card**, so the card kids collect updates as the driver earns traits.
+- **Koshien is the touchstone:** hundreds of teams, single performances, the whole country watching one silly little sport, everyone with one chance. (Not the dirt ritual.)
+- **Later:** regions known for a style; other nations run their circuits their own way (some militaristic; America runs it like baseball).
+
+### The Parabolica
+- **The world circuit, for the Worlds (full game):** one long, slow curve that goes **all the way around the Earth**. The ultimate "long way round", after 1908.
+- **Built by everyone, at the Watchers' direction:** the disbanded armies laid it, nation by nation, from blueprints in the Parcels. Robin Hobb's dragons directing people is the feel: "they're telling us what to do, and we're kind of listening."
+
 ### Still to talk through
-- Starting garages: who they are and what makes the five different.
-- How rival cities, states and the nemesis fit the Spirit titles.
+- What happens on a race day in the slice; who calls the races.
+- How the Watchers show up in the slice (an Interval broadcast now and then?).
 - Other regional bloc names and flags (later).
 - Where lore docs live: Git is the hub for now; maybe Google Docs later, for co-editing lore.
 
