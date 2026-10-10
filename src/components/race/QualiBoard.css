@@ -18,22 +18,14 @@
 .qb-sectors span.best { background: var(--signal-purple); }
 .qb-sectors span.ruined { background: var(--signal-red); }
 .qb-scroll { flex: 1; min-height: 0; overflow-y: auto; }
-.qb-table { width: 100%; border-collapse: collapse; font-size: 14px; }
-.qb-table th, .qb-table td { height: 34px; border-bottom: 1px solid var(--pw-hairline); padding: 0 6px; }
-.qb-table thead th { height: 26px; font-family: var(--look-data, monospace); font-weight: 400; font-size: 10px; color: var(--pw-text-2); text-align: left; }
-.qb-p { width: 30px; text-align: right; font-family: var(--look-data, monospace); color: var(--pw-text-2); }
-.qb-table th.qb-p { text-align: right; }
-.qb-r { text-align: right !important; font-family: var(--look-data, monospace); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.qb-nm { display: flex; align-items: center; gap: 8px; min-width: 0; }
-.qb-nm > span { display: flex; flex-direction: column; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.qb-note { font-size: 11px; font-style: italic; color: var(--signal-red); }
-.qb-table tr.mine td { background: color-mix(in srgb, var(--team-primary) 14%, transparent); }
-.qb-table tr.new td { animation: qb-drop 0.9s ease-out; }
-.qb-table tr.pole .qb-t { color: var(--signal-purple); }
-.qb-table tr.ruined .qb-t { color: var(--signal-red); }
-.qb-wait td { color: var(--pw-text-3); font-style: italic; }
-@keyframes qb-drop { from { background: color-mix(in srgb, var(--pw-text-1) 18%, transparent); } to { background: transparent; } }
-@media (prefers-reduced-motion: reduce) { .qb-table tr.new td { animation: none; } }
+/* The board is the race timing tower (#617): same header, rows, marbles, codes. */
+.qb-tower { height: auto; }
+.qb-tower .timing-row { cursor: default; }
+.qb-new .timing-row { animation: qb-drop 0.9s ease-out; }
+.qb-tower .lap-time.lap-ruined { color: var(--signal-red); }
+.qb-wait { padding: 8px 12px; color: var(--pw-text-3); font-style: italic; font-size: 13px; }
+@keyframes qb-drop { from { background: color-mix(in srgb, var(--pw-text-1) 18%, transparent); } }
+@media (prefers-reduced-motion: reduce) { .qb-new .timing-row { animation: none; } }
 .qb-dock { display: flex; gap: 8px; padding-top: 4px; }
 .qb-btn { flex: 1; height: 44px; border: 1px solid var(--pw-border-strong); background: transparent; color: var(--pw-text-1); font-family: var(--look-display, serif); font-weight: 700; font-size: 15px; cursor: pointer; }
 .qb-btn:first-child:not(:only-child) { flex: 0 0 72px; }
