@@ -27,6 +27,8 @@ interface Props {
   onMenu: () => void;
   onEndSeason: () => void;
   onDone: () => void;
+  /** The back button's label ("← The run" inside a run). */
+  backLabel?: string;
 }
 
 const THIRD: Record<FieldRank['tone'], { cls: string; label: string }> = {
@@ -50,7 +52,7 @@ function Open({ traits }: { traits: Card[] }) {
   return traits.length ? <span className="ss-open">{traits.map(c => <span key={c.id} className="ss-open-card"><CardDot card={c} />{c.name}</span>)}</span> : null;
 }
 
-export default function DraftBoard({ facts, onChange, onMenu, onDone, onEndSeason }: Props) {
+export default function DraftBoard({ facts, onChange, onMenu, onDone, onEndSeason, backLabel = '← Menu' }: Props) {
   const pool = useMemo(() => poolFor(facts), [facts.setup]); // eslint-disable-line react-hooks/exhaustive-deps
   const teams = useMemo(() => teamsOf(facts), [facts.setup]); // eslint-disable-line react-hooks/exhaustive-deps
   const humanIds = useMemo(() => facts.setup.humans.map(h => h.teamId), [facts.setup]);
@@ -132,7 +134,7 @@ export default function DraftBoard({ facts, onChange, onMenu, onDone, onEndSeaso
     <div className="run-setup season-setup ss-draft" style={teamThemeVars(you)}>
       <header className="rs-top">
         <div className="rs-title-block">
-          <button type="button" className="rs-back" onClick={onMenu}>← Menu</button>
+          <button type="button" className="rs-back" onClick={onMenu}>{backLabel}</button>
           <h1 className="rs-title">Draft</h1>
           <span className="rs-sub">{seasonName(facts.setup)} · {state.done ? 'every team is full' : `pick ${facts.draftPicks.length + 1} of ${total} · ${slot!.kind === 'driver' ? `round ${slot!.round}, drivers` : 'last round, cars'}`}</span>
         </div>

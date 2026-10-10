@@ -12,6 +12,7 @@ import LeagueSetup from './LeagueSetup';
 import DraftBoard from './DraftBoard';
 import Paddock from './Paddock';
 import Standings from './Standings';
+import RunLadder from './RunLadder';
 import '../../RunSetup.css';
 import './Season.css';
 
@@ -29,7 +30,11 @@ export function seasonScreenFor(facts: SeasonFacts): Screen {
 
 export default function SeasonScreen({ screen, navigate, onMenu }: Props) {
   if (screen === 'setup') {
-    return <LeagueSetup onBack={onMenu} onStarted={facts => navigate({ name: 'season', screen: seasonScreenFor(facts) }, { replace: true })} />;
+    // The run's first step (#346, #628): your team, then the ladder.
+    return <LeagueSetup onBack={onMenu} onStarted={() => navigate({ name: 'season', screen: 'run' }, { replace: true })} />;
+  }
+  if (screen === 'run') {
+    return <RunLadder onMenu={onMenu} onNewRun={() => navigate({ name: 'season', screen: 'setup' })} onPlay={s => navigate({ name: 'season', screen: s })} />;
   }
   // Keyed by screen: each screen reads the saved season fresh on arrival.
   return <SavedSeason key={screen} screen={screen} navigate={navigate} onMenu={onMenu} />;
@@ -58,20 +63,22 @@ function SavedSeason({ screen, navigate, onMenu }: Props) {
   }, [wrongPlace, at, navigate]);
   if (wrongPlace) return null;
   const onEndSeason = () => navigate({ name: 'season', screen: 'setup' }, { replace: true });
+  const toRun = () => navigate({ name: 'season', screen: 'run' });
   if (facts && screen === 'draft') {
-    return <DraftBoard facts={facts} onChange={setFacts} onMenu={onMenu} onEndSeason={onEndSeason} onDone={() => navigate({ name: 'season', screen: 'paddock' })} />;
+    return <DraftBoard facts={facts} onChange={setFacts} onMenu={toRun} backLabel="← The run" onEndSeason={onEndSeason} onDone={() => navigate({ name: 'season', screen: 'paddock' })} />;
   }
   if (facts && screen === 'paddock') {
-    return <Paddock facts={facts} onChange={setFacts} onMenu={onMenu} onEndSeason={onEndSeason} onGo={() => navigate({ name: 'season', screen: 'race' })} onStandings={() => navigate({ name: 'season', screen: 'standings' })} />;
+    return <Paddock facts={facts} onChange={setFacts} onMenu={toRun} backLabel="← The run" onEndSeason={onEndSeason} onGo={() => navigate({ name: 'season', screen: 'race' })} onStandings={() => navigate({ name: 'season', screen: 'standings' })} />;
   }
   if (facts && screen === 'standings') {
     return <Standings facts={facts} onMenu={onMenu} onEndSeason={onEndSeason} onPaddock={() => navigate({ name: 'season', screen: 'paddock' })} onPlayAgain={() => navigate({ name: 'season', screen: 'setup' }, { replace: true })}
-      onPromote={() => { if (promoteCurrentRun()) navigate({ name: 'season', screen: 'paddock' }, { replace: true }); }} />;
+      onPromote={() => { if (promoteCurrentRun()) navigate({ name: 'season', screen: 'run' }, { replace: true }); }} />;
   }
   return <SeasonHolding screen={screen} navigate={navigate} onMenu={onMenu} />;
 }
 
 const NEXT: Record<Exclude<Screen, 'setup'>, string> = {
+  run: 'The league ladder',
   draft: 'The draft board',
   paddock: 'The Paddock',
   race: 'The race view',

@@ -45,6 +45,8 @@ interface Props {
   onEndSeason: () => void;
   onGo: () => void;
   onStandings: () => void;
+  /** The back button's label ("← The run" inside a run). */
+  backLabel?: string;
 }
 
 const CURSE_LIFE_TEXT = 'three races';
@@ -65,7 +67,7 @@ function withCard(own: Card[], gear: Card[], extra: Card | null): Card[] {
   return extra.kind === 'trait' ? [...own, ...gear, extra] : [...own, extra];
 }
 
-export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo }: Props) {
+export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, backLabel = '← Menu' }: Props) {
   const pool = useMemo(() => poolFor(facts), [facts.setup]); // eslint-disable-line react-hooks/exhaustive-deps
   const teams = useMemo(() => teamsOf(facts), [facts.setup]); // eslint-disable-line react-hooks/exhaustive-deps
   const rosters = useMemo(() => draftState(pool, facts.draftPicks).rosters, [pool, facts.draftPicks]);
@@ -413,7 +415,7 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo }: 
       <header className="pk-head">
         <TeamLogo team={you} size={32} />
         <div className="pk-title">
-          <button type="button" className="rs-back" onClick={onMenu}>← Menu</button>
+          <button type="button" className="rs-back" onClick={onMenu}>{backLabel}</button>
           <h1 className="rs-title">Paddock</h1>
           <span className="rs-sub">Round {state.round + 1} of {total} · {you.name}</span>
         </div>

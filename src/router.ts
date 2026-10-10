@@ -10,7 +10,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 /** Season Mode screens (docs/SEASON_MODE.md). Each gets /#/season/<screen>;
  * the Season build registers a component per name in App's switch. */
-export const SEASON_SCREENS = ['setup', 'draft', 'paddock', 'race', 'standings'] as const;
+export const SEASON_SCREENS = ['setup', 'run', 'draft', 'paddock', 'race', 'standings'] as const;
 export type SeasonScreen = (typeof SEASON_SCREENS)[number];
 
 export type Route =

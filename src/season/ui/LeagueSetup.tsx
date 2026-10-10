@@ -88,12 +88,12 @@ export default function LeagueSetup({ onBack, onStarted }: Props) {
       <header className="rs-top">
         <div className="rs-title-block">
           <button type="button" className="rs-back" onClick={onBack}>← Menu</button>
-          <h1 className="rs-title">New season</h1>
-          <span className="rs-sub">Draft two drivers and a car, race the calendar, win the constructors’.</span>
+          <h1 className="rs-title">New run</h1>
+          <span className="rs-sub">Build your team, draft two drivers and a car, then climb four leagues. Win each to move up.</span>
         </div>
         <div className="ss-start-block">
           <button type="button" className="rs-btn rs-btn-primary rs-start" onClick={start}>
-            {confirming ? 'Replace and start' : 'Start season'}
+            {confirming ? 'Replace and start' : 'Start the run'}
           </button>
           {confirming && saved && savedState && (
             <div className="ss-confirm" role="alert">
