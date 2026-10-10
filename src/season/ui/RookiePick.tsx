@@ -6,10 +6,11 @@
 import type { ReactNode } from 'react';
 import { STAT_LABELS } from '../../cards/deck';
 import { levelTone } from '../grades';
-import { CAR_SETUPS, rookieCard, setupView, type CarSetupId, type RookieOffer } from '../rookieView';
+import { SETUPS, rookieCard, setupView, type CarSetupId, type RookieOffer } from '../rookieView';
+import { OFFER_PICKS } from '../rookies';
 import './Season.css';
 
-export const PICKS = 2;
+export const PICKS = OFFER_PICKS;
 
 interface Props {
   /** "Juniors". */
@@ -61,12 +62,13 @@ export default function RookiePick({ league, offer, picked, rerollsLeft, setup, 
       <section className="rs-row rp-block" aria-label="Car setup">
         <div className="rs-row-head"><span className="rs-k">Car setup · pick 1</span></div>
         <div className="rp-setups" role="radiogroup" aria-label="Car setup">
-          {CAR_SETUPS.map(s => {
-            const v = setupView(s);
+          {SETUPS.map(s => {
+            const v = setupView(s.id);
             return (
               <button key={s.id} type="button" role="radio" aria-checked={setup === s.id} className={`rp-setup ${setup === s.id ? 'on' : ''}`} onClick={() => onSetup(s.id)}>
                 <b>{s.name}</b>
                 <span>{STAT_LABELS[v.stat]} <Lv n={v.level} /> · others <Lv n={v.others} /></span>
+                <small className="rp-setup-blurb">{s.blurb}</small>
               </button>
             );
           })}
