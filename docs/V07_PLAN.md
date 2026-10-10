@@ -1,0 +1,49 @@
+# v0.7 Suzuka — the plan
+
+*Master plan for the current release. Owner: 🎤 Pit. The work lives in GitHub: milestones `v0.7 · 1 Run core` → `2 Run screens` → `3 Ship`, one issue per task, a `crew:` label for the owner, and a Paste line at the top of each issue. v0.6's record, its decision log and the full v0.7 direction: [V06_PLAN](V06_PLAN.md). Roadmap page: [Suzuka Roadmap](https://claude.ai/artifact/KqtZyQjwMaHcC9TNNKuV8F).*
+
+## What v0.7 is
+**Parabolica becomes a single-player roguelite run.** You start in the Juniors with two rookies, race **4 leagues × 6 races**, and **win each league to move up**; each league ends in a **boss race** against your **nemesis** (last league's runner-up, promoted with you). Lose and the run ends; you keep **unlocks** (content and starting options, never raw power). Cards are **3× louder and yours alone**; gear has **mileage**; packs offer **choices and the odd forced curse**. A normal run is won **about 1 in 3**. Touchstones: Balatro, Slay the Spire.
+
+Already live from v0.7's first two waves (engine v0.6.3): single-player Season, two drivers, one-tap Quick Race, race debrief, real-pace qualifying on one shared tower, new car and driver names.
+
+## Milestones
+| # | Milestone | Pax can… |
+|---|---|---|
+| **1** | **Run core** (Apex builds, Steward designs) | (mostly under the hood) a run that climbs leagues, carries your team up, faces a nemesis, and runs on 3× cards, gear mileage and curses |
+| **2** | **Run screens** (Hub) | See the run: the league ladder, your team, the nemesis, level-ups and rookie picks as their designs land |
+| **3** | **Ship** | Play a full run; Steward's re-probe says it's in band |
+
+## The lanes
+**🏎️ Apex — milestone 1, in order (one PR each; Pit tests and merges):**
+1. Run core: the league ladder, promotion, run + meta saves (#597)
+2. Rival levels + the nemesis (#626)
+3. Timed effects engine: any stat up or down for N races or laps (#332)
+4. Cards + packs for the run: 3× ladder, gear mileage, the pack offer, curses (#627)
+5. The lab races the Season pool (#612), any time
+6. Later: XP and level-ups from race facts, once #592 is designed
+
+**🏛️ Steward — milestone 1 design, in order:**
+1. Driver XP + level-ups (#592) **and** stat levels replacing letter grades (#623), one page: what a "level" means
+2. The ~60-card deck list with archetype tags (#565)
+3. The rookie pick (#594) → boss twists (#593) → the run debrief (#595) → stakes + unlocks (#596)
+
+**🛞 Hub — milestone 2:**
+1. Accented driver codes (#621)
+2. Build your own team as the run's start (#346)
+3. The league ladder screen (#628), after #597
+4. Then screens as designs land: stat levels (#623), level-up pick (#592), rookie pick (#594), run debrief (#595)
+
+**📻 Radio — milestone 2:** the nemesis: banter, returns, the boss race (#624)
+
+**🏛️ Steward — milestone 3:** re-probe a full run on the build (#629)
+
+## Rules
+- **Pit tests and merges** anything that moves race results or saves (one version bump per PR; `npm test` + `tsc` on the merge with main).
+- **Every new random draw gets its own seeded stream.**
+- **Mock-ups first, one page per decision; handoffs in a ```text block.**
+- **Spotter sweep** at every planning step.
+
+## Decision log
+The run's decisions (Oct 9–10: run shape, rival levels + nemesis, cards and packs, single-player, two drivers) are logged in [V06_PLAN → v0.7 direction](V06_PLAN.md). New ones go here.
+- **Oct 10:** Apex builds the run core (#597, #626, #332, #627, #612); Hub builds the screens on top; v0.7 split into Run core → Run screens → Ship.

@@ -45,10 +45,10 @@ for the future NPC-crowd system (BetLab was removed Oct 2026; git history has it
 - GitHub: GrizzlyPax/Parabolica
 
 ## How we work
-- **Read first:** `docs/V06_PLAN.md` (v0.6 Monza, **shipped Oct 10**: the record, the decision log and the v0.7 direction; the v0.7 plan comes next), then the newest `docs/HANDOFF_*.md` (how the pieces fit, traps). v0.5's record: `docs/V05_PLAN.md`.
+- **Read first:** `docs/V07_PLAN.md` (the current release: v0.7 Suzuka, the roguelite run), then the newest `docs/HANDOFF_*.md` (how the pieces fit, traps). v0.6's record and the run's design decisions: `docs/V06_PLAN.md`; v0.5's: `docs/V05_PLAN.md`.
 - **Skills (`.claude/skills/`)** hold the procedures: `write-issue` (issue shape, triage, `ready`), `ship-pr` (build → test → PR → merge rules), `republish-preview`, `balance-read`, `season-report`.
 - **GitHub is the task system. Every thread, every crew member.** No Asana, no TODO docs; the issue is the task.
-  - **Milestones = sequence.** Each release splits into numbered milestones worked in order (v0.6 was `1 Choices` → `2 The bump` → `3 Ship`). v0.5 Spa shipped Oct 9, v0.6 Monza Oct 10; `v0.7 Suzuka` holds the next release until Pit splits it. No due dates.
+  - **Milestones = sequence.** Each release splits into numbered milestones worked in order (v0.6 was `1 Choices` → `2 The bump` → `3 Ship`). v0.5 Spa shipped Oct 9, v0.6 Monza Oct 10; v0.7 is `1 Run core` → `2 Run screens` → `3 Ship`, and `v0.7 Suzuka` holds v0.7 work not yet placed. No due dates.
   - **Crew = a label:** `crew: apex` · `crew: hub` · `crew: radio` · `crew: steward` · `crew: pit` · `crew: pax` (needs Pax's call). Only current-release issues carry crew labels.
   - **Not in a release:** label `queued` (committed) or `icebox` (maybe / needs Pax).
   - **Order inside a milestone:** each issue's "Depends on" line. Pick the first open issue in the earliest milestone with your crew label whose dependencies are closed.
@@ -90,6 +90,7 @@ Every current-release issue has a `crew:` label saying who (and which model) sho
   Check what Pit already handled before listing it.
 
 ## Docs
+- `docs/V07_PLAN.md` - **The v0.7 Suzuka plan (current):** the roguelite run; milestones, lanes, rules
 - `docs/V06_PLAN.md` - The v0.6 Monza plan (shipped Oct 10, v0.6.1): owner choices; milestones, lanes, decision log, v0.7 direction
 - `docs/V05_PLAN.md` - The v0.5 Spa plan (shipped Oct 9, v0.5.1): milestones, crew lanes, build order, risks, decision log
 - `docs/README.md` - Index of every doc, grouped by area (update it when a doc is added, renamed or retired)
