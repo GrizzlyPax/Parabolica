@@ -108,6 +108,10 @@ export interface CarriedTeam {
   nemesis?: TeamIdentity;
   /** Timed effects still live (#332), re-dated so their races left hold. */
   effects?: import('./effects').EffectFact[];
+  /** Driver XP at the end of the league below (#646), by stable driver id. */
+  xp?: Record<number, number>;
+  /** Every rank-up pick made so far in the run (#646): cards for the whole run. */
+  rankUps?: import('./xp').RankUpPick[];
 }
 
 /** Which league of a run this season is (#597). Rival levels (#626) and the
