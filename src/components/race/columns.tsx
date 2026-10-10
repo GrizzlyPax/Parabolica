@@ -170,29 +170,6 @@ export const COLUMN_GRID_DELTA: ColumnConfig = {
 };
 
 
-// Pace bar (#557, Pax picked A): who's quicker, steady. The driver's last lap
-// against the pack's median last lap; green to the right is quicker, red to the
-// left slower; ±6% fills the bar. No number, so it reads at a glance, and it
-// only moves once a lap. (Replaces the km/h column, which bounced every corner.)
-export const COLUMN_SPEED: ColumnConfig = {
-  id: 'speed',
-  header: 'Pace',
-  width: '76px',
-  align: 'center',
-  render: (driver: Driver, ctx: RowContext) => {
-    if (ctx.paceRel === undefined || driver.status === 'dnf') return <span className="muted-cell">—</span>;
-    const rel = ctx.paceRel;
-    const pct = ctx.pacePct ?? 0;
-    const title = Math.abs(pct) < 0.2 ? 'Pack pace over the last lap' : `${Math.abs(pct).toFixed(1)}% ${pct > 0 ? 'quicker' : 'slower'} than the pack over the last lap`;
-    return (
-      <span className="pace-bar" title={title} aria-label={title}>
-        <span className="pace-mid" />
-        <span className={`pace-fill ${rel >= 0 ? 'quick' : 'slow'}`} style={rel >= 0 ? { left: '50%', width: `${rel * 50}%` } : { right: '50%', width: `${-rel * 50}%` }} />
-      </span>
-    );
-  },
-};
-
 // Interval to the car ahead (the racing battle)
 export const COLUMN_GAP_AHEAD: ColumnConfig = {
   id: 'gapAhead',
@@ -363,7 +340,6 @@ export const TRACK_COLUMNS: ColumnConfig[] = [
   COLUMN_DRIVER_CODE,
   COLUMN_GAP_AHEAD,
   COLUMN_GAP_LEADER,
-  COLUMN_SPEED,
   COLUMN_LAST_LAP,
   COLUMN_TIRE_AGE,
 ];
@@ -378,7 +354,6 @@ export const DETAIL_COLUMNS: ColumnConfig[] = [
   COLUMN_GRID,
   COLUMN_GAP_AHEAD,
   COLUMN_GAP_LEADER,
-  COLUMN_SPEED,
   COLUMN_LAST_LAP,
   COLUMN_BEST_LAP,
   COLUMN_TIRE_AGE,
