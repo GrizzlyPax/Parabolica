@@ -14,6 +14,7 @@ import { CURRENT_TEAMS, HISTORIC_TEAMS } from './teams';
 import { BASE_DECK_TEAMS, TEAM_KINDS } from './deckTeams';
 import { BASE_DECK_TRACKS } from './deckTracks';
 import { BASE_DECK_WEATHER } from './deckWeather';
+import { US_PLACES } from './states';
 import { US_FIRST_NAMES, US_LAST_NAMES, US_SHARE, INTL_FIRST_NAMES, INTL_LAST_NAMES, ABSURD_FIRST_NAMES, ABSURD_LAST_NAMES, NAME_TIER_WEIGHTS, ONE_WORD_CHANCE } from '../generators/names';
 import { LEAGUE_ADJECTIVES, LEAGUE_NOUNS } from '../generators/leagueName';
 import { BACKSTORY_TEMPLATES, BACKSTORY_FILLS, QUIRKS } from '../generators/drivers';
@@ -72,6 +73,8 @@ export interface Glossary {
   /** The 6 stat-combo tracks and Neutral + 5 dry weathers: shown now, raced after #359. */
   deckTracks: typeof BASE_DECK_TRACKS;
   deckWeather: typeof BASE_DECK_WEATHER;
+  /** Ace America's 52 places and their State-step looks (#695). */
+  places: typeof US_PLACES;
   teams: typeof CURRENT_TEAMS;
   historicTeams: typeof HISTORIC_TEAMS;
   /** Flavour pools, each with its size and a few samples. */
@@ -83,7 +86,7 @@ export function buildGlossary(): Glossary {
   return {
     deck: MOTORSPORT_DECK, inRaceEffects: IN_RACE_EFFECTS, cards: RULE_CARDS,
     weather: WEATHER_TYPES, tracks: CURRENT_TRACKS,
-    historicTracks: HISTORIC_TRACKS, deckTeams: BASE_DECK_TEAMS, deckTracks: BASE_DECK_TRACKS, deckWeather: BASE_DECK_WEATHER, teams: CURRENT_TEAMS, historicTeams: HISTORIC_TEAMS,
+    historicTracks: HISTORIC_TRACKS, deckTeams: BASE_DECK_TEAMS, deckTracks: BASE_DECK_TRACKS, deckWeather: BASE_DECK_WEATHER, places: US_PLACES, teams: CURRENT_TEAMS, historicTeams: HISTORIC_TEAMS,
     pools: [
       { id: 'names-us-first', title: `Driver first names · American (${Math.round(NAME_TIER_WEIGHTS.international * 100)}% of drivers have a real name; each half is American ${Math.round(US_SHARE * 100)}% of the time)`, where: 'src/generators/names.ts US_FIRST_NAMES', size: US_FIRST_NAMES.length, samples: US_FIRST_NAMES.slice(0, 8) },
       { id: 'names-us-last', title: 'Driver last names · American', where: 'src/generators/names.ts US_LAST_NAMES', size: US_LAST_NAMES.length, samples: US_LAST_NAMES.slice(0, 8) },
@@ -132,6 +135,9 @@ export function renderGlossaryMd(g: Glossary, version: string): string {
   for (const t of g.deckTracks) L.push(`| **${t.name}** \`${t.id}\` | ${favs(t.favours)} | ×${t.tyreWear} | ${t.layoutId} |`);
   L.push('', '## Weather', '', '*Source: `src/data/deckWeather.ts`. Neutral + five dry weathers, favours (grade points) × intensity, stacking with the track. No rain until Wet arrives in v0.6; the old weathers and the inflictions retired (the inflictions are parked as Horror-deck material).*', '', '| Weather | Odds | Favours |', '|---|---|---|');
   for (const w of g.deckWeather) L.push(`| **${w.name}** \`${w.id}\` | ${w.odds}% | ${favs(w.favours)} |`);
+  L.push('');
+  L.push('## States', '', '*Source: `src/data/states.ts` (#695). Ace America\'s 52 places: 50 states, DC and Puerto Rico. A look is the accents the UI takes while you race for that state (primary = the state bar, buttons and sash edge; ink from `inkFor`); the rest fill in from #708.*', '', '| Place | Primary · secondary · accent | Ink | Wheel-flag |', '|---|---|---|---|');
+  for (const p of g.places) L.push(`| **${p.name}** \`${p.id}\`${p.kind === 'state' ? '' : ` (${p.kind})`} | ${p.look ? `${p.look.primary} · ${p.look.secondary} · ${p.look.accent}` : '—'} | ${p.look?.ink ?? '—'} | ${p.look?.flag.note ?? '—'} |`);
   L.push('');
   L.push('');
   const rs = defaultRuleset();
