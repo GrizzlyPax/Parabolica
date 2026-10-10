@@ -1,6 +1,8 @@
 # v0.7 Suzuka — the plan
 
-*Master plan for the current release. Owner: 🎤 Pit. The work lives in GitHub: milestones `v0.7 · 1 Run core` → `2 Run screens` → `3 Ship`, one issue per task, a `crew:` label for the owner, and a Paste line at the top of each issue. v0.6's record, its decision log and the full v0.7 direction: [V06_PLAN](V06_PLAN.md). Roadmap page: [Suzuka Roadmap](https://claude.ai/artifact/KqtZyQjwMaHcC9TNNKuV8F).*
+*✅ **Shipped Oct 10 as v0.7.4, trimmed** (Pax, Oct 10): boss twists (#593), stakes (#596) and signatures (#653) are parked, the debrief (#595) folds into the Ace America run design (#693), the run-deck World Deck view (#689) waits for stamps (#704), and the re-probe (#629) moves to v0.8. Next: [V08_PLAN](V08_PLAN.md).*
+
+*Master plan for the release. Owner: 🎤 Pit. The work lives in GitHub: milestones `v0.7 · 1 Run core` → `2 Run screens` → `3 Ship`, one issue per task, a `crew:` label for the owner, and a Paste line at the top of each issue. v0.6's record, its decision log and the full v0.7 direction: [V06_PLAN](V06_PLAN.md). Roadmap page: [Suzuka Roadmap](https://claude.ai/artifact/KqtZyQjwMaHcC9TNNKuV8F).*
 
 ## What v0.7 is
 **Parabolica becomes a single-player roguelite run.** You start in the Juniors with two rookies, race **4 leagues × 6 races**, and **win each league to move up**; each league ends in a **boss race** against your **nemesis** (last league's runner-up, promoted with you). Lose and the run ends; you keep **unlocks** (content and starting options, never raw power). Cards are **3× louder and yours alone**; gear has **mileage**; packs offer **choices and the odd forced curse**. A normal run is won **about 1 in 3**. Touchstones: Balatro, Slay the Spire.
