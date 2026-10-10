@@ -1,5 +1,7 @@
 # Season Mode — v0.5 "Spa" build spec
 
+> **v0.7: a Season is now one league of the run.** The run (four leagues × six races, the rookie pick instead of the draft, promotion, the nemesis, levels, XP and rank-ups, the pack offer and curses) is documented in **[docs/RUN.md](RUN.md)**; where this v0.5 spec and RUN.md disagree, **RUN.md is current**. The sections below keep the v0.5 record; notes marked *v0.7* point at what changed.
+
 *The build cut for v0.5. Source: Dev's design artifact (Fantasy Design, "v0.5 · Spa" tab), with the design reasoning in [#305 fantasy modes](https://github.com/GrizzlyPax/Parabolica/pull/305) and [#303 mystery box (now card packs)](https://github.com/GrizzlyPax/Parabolica/pull/303). Where this doc and Pax disagree, Pax wins; tell Pit.*
 
 ## TL;DR
@@ -9,6 +11,7 @@
 - **Deterministic throughout:** every Paddock action is a fact locked before the race.
 
 ## Flow
+*v0.7: New run (your team) → the ladder → the rookie pick → [Paddock → race] × 6 → the league finale → up a league or the run ends. See [RUN.md → Screens](RUN.md).*
 ```
 LEAGUE SETUP ─▶ DRAFT ─▶ [ PADDOCK turn ─▶ RACE ] × calendar ─▶ FINALE
  (new page)    (all teams,   (your 2 decisions)  (engine, holds   (champion)
@@ -22,10 +25,10 @@ One page with defaults, so a solo player can hit Start immediately.
 |---|---|---|
 | League name | generated | Editable; flavour only |
 | Universe seed | random | Enter or reroll; generates the driver + car pool and track character |
-| Teams | 10 | **5–10** (Pax). **Drivers = teams × 3, cars = teams** |
+| Teams | 10 | **5–10** (Pax). Drivers = teams × 2 since #585 (× 3 in v0.5), cars = teams. *v0.7: the run's CPU teams are rookies (#660).* |
 | Player-controlled | 1 | You (single-player since #588; hotseat removed) |
 | CPU teams | auto | = teams − humans; deck teams (e.g. For Rory) with a CPU badge; dumb AI |
-| Calendar | random, 10 races (from the 6 stat-combo tracks, so tracks repeat) | Random from the pool or hand-picked; reuses existing tracks |
+| Calendar | random, 10 races in v0.5 (from the 6 stat-combo tracks, so tracks repeat) | Random from the pool or hand-picked; reuses existing tracks. *v0.7: six races a league (`RACES_PER_LEAGUE`).* |
 
 Fixed (not settings): squad 2, both race (no bench since #585) · car rack = team count · reverse-standings Paddock order · points championship, no elimination · one draft opacity for everyone.
 
@@ -35,6 +38,7 @@ Team stats (tyre management, pit crew) belong to the **competitor team**; a rack
 Instead of 2 drivers pre-assigned to each named team, the seed summons a **shared pool**: teams × 2 drivers + a rack of `teams` cars. The draft distributes the pool. Team identities are human-named or CPU-generated.
 
 ## 3. Draft
+*v0.7: in a run the draft is gone; the run starts with **the rookie pick** (6 rookies, pick 2, one re-roll, 3 car setups; #660 / #661, [RUN.md](RUN.md)). `draft.ts` remains for Quick Race's CPU field.*
 - One **snake draft for all teams**, interleaved by pick order; AI picks are simmed alongside the humans.
 - Each team takes **2 drivers + 1 car**: rounds 1–2 drivers, **round 3 cars** (snake continues; 3 drivers until #585). Scarcity makes draft order matter. The draft itself goes in v0.7 (#594).
 - **AI heuristic is dumb:** take the highest tier available, fill the car. Opening order is seeded.
@@ -42,6 +46,7 @@ Instead of 2 drivers pre-assigned to each named team, the seed summons a **share
 - **Board opacity (decided):** the driver's name, a 🟢/🟡/🔴 read across core stats (no numbers), and sealed rarity dots for rolled tags (severity only, never which tag). Cars get the same RYG read. **Rivals stay dark:** you only see detail on your own picks.
 
 ## 4. The Paddock (before every race)
+*v0.7: packs became **the pack offer** (pick 1 of 2 packs, one pack, or a forced curse; packs named by place), cards are 3× for you, gear wears out after 3 races, and rank-ups arrive with XP (#627, #646). Stats read as **levels** (#623). Current rules: [RUN.md](RUN.md) and [CARDS.md](CARDS.md).*
 - Turn-based, in **reverse-standings order** (last place goes first; the opening order is seeded).
 - **CPU turns are no-ops in v0.5:** build the framework and per-team hook only. CPU actions come later with no rework.
 - Your turn is **Open pack → Lock in**. Both your drivers race every round (#585: the lineup step and the bench are gone).
@@ -52,6 +57,7 @@ Instead of 2 drivers pre-assigned to each named team, the seed summons a **share
 - **Card rarity is a metal: Bronze · Silver · Gold · Iridium** (Pax, Oct 8). Pack odds for the card's metal (B/S/G/I, illustrative): Common pack 60/30/9/1 · Uncommon 52/32/13/3 · Rare 43/34/18/5 · Legendary 35/35/22/8. **The first pack is Uncommon** for everyone.
 
 ## 5. Race & standings
+*v0.7: win the league (P1 in the Constructors') to move up; the last race is the boss race against your nemesis ([RUN.md](RUN.md)).*
 - The **existing engine** races the drafted drivers, cars and tags, with no new physics. Each race **holds for "Go"**, then you **watch live or skip to the result**.
 - **Score:** two championships, like F1 (Pax, Oct 9, #509): **Constructors'** = your 2 racers' points combined; **Drivers'** = each driver's own. No bonus. A finale crowns both champions.
 - **The in-race UI hides rivals' detailed stats**, matching the draft opacity.
