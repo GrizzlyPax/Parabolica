@@ -69,7 +69,7 @@ Instead of 2 drivers pre-assigned to each named team, the seed summons a **share
 - **Race view:** Go opens the live broadcast; Skip to result is always one tap away.
 - **Phone first:** every Season Mode screen is designed and tested at phone width; desktop must still work.
 - **Name:** the mode is called **Season** ("Play a Season").
-- **Your team:** pick a pre-made deck team, or build your own: logo picker, **one primary colour**, name ([#346](https://github.com/GrizzlyPax/Parabolica/issues/346)).
+- **Your team:** build your own (the default since Oct 10: one page, a name, one of the 28 deck colours, one of Radio's 20 logos; `season/teamCreator.ts`), or race as a deck team ([#346](https://github.com/GrizzlyPax/Parabolica/issues/346)).
 - **Shipping:** no formal gate. Pieces merge to main as they land, since nobody else is on prod yet.
 - ~~Bench: the 3rd driver sits out~~: gone in #585 (Oct 10). Two drivers, both race; 3-driver saves are archived (save schema 2).
 - **CPU teams** are deck teams (e.g. For Rory) with a CPU badge: no persona, no owner name.

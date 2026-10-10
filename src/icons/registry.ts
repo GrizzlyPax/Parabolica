@@ -174,6 +174,28 @@ export const ICONS = [
   { id: 'lighthouse', file: 'lighthouse.svg', author: 'delapouite' },
   { id: 'volcano', file: 'volcano.svg', author: 'lorc' },
   { id: 'water-drop', file: 'water-drop.svg', author: 'sbed' },
+  // Team creator logos (#346; docs/story/team-identity.md → Team creator). The
+  // Badges cog is `cog-badge`: `cog` is Lorc's, already the gear card's icon.
+  { id: 'fox-head', file: 'fox-head.svg', author: 'lorc' },
+  { id: 'wolf-head', file: 'wolf-head.svg', author: 'lorc' },
+  { id: 'lion', file: 'lion.svg', author: 'lorc' },
+  { id: 'owl', file: 'owl.svg', author: 'lorc' },
+  { id: 'octopus', file: 'octopus.svg', author: 'lorc' },
+  { id: 'speed-boat', file: 'speed-boat.svg', author: 'delapouite' },
+  { id: 'spark-plug', file: 'spark-plug.svg', author: 'delapouite' },
+  { id: 'rocket', file: 'rocket.svg', author: 'lorc' },
+  { id: 'cog-badge', file: 'cog-badge.svg', author: 'badges' },
+  { id: 'seven-pointed-star', file: 'seven-pointed-star.svg', author: 'delapouite' },
+  { id: 'key', file: 'key.svg', author: 'lorc' },
+  { id: 'fleur-de-lys', file: 'fleur-de-lys.svg', author: 'delapouite' },
+  { id: 'lightning-helix', file: 'lightning-helix.svg', author: 'lorc' },
+  { id: 'pirate-flag', file: 'pirate-flag.svg', author: 'delapouite' },
+  { id: 'traffic-cone', file: 'traffic-cone.svg', author: 'delapouite' },
+  { id: 'megaphone', file: 'megaphone.svg', author: 'delapouite' },
+  { id: 'ghost', file: 'ghost.svg', author: 'lorc' },
+  { id: 'alien-stare', file: 'alien-stare.svg', author: 'lorc' },
+  { id: 'tentacle-heart', file: 'tentacle-heart.svg', author: 'lorc' },
+  { id: 'plastic-duck', file: 'plastic-duck.svg', author: 'delapouite' },
 ] as const satisfies readonly IconEntry[];
 
 export type IconId = (typeof ICONS)[number]['id'];

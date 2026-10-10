@@ -389,3 +389,22 @@ button.rt-g:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset:
 .pp-ask-btns { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
 @media (max-width: 400px) { .pp-three { gap: 6px; } .pp-three .card-face { zoom: 0.92; } }
 @media (prefers-reduced-motion: reduce) { .pp-card { transition: none; } }
+
+/* Team creator (#346, Pax picked A: one page, small) */
+.tc-badge { display: flex; align-items: center; gap: 12px; }
+.tc-name { flex: 1; min-width: 0; }
+.tc-name input { width: 100%; height: 44px; padding: 0 10px; background: transparent; border: 1px solid var(--pw-border-strong); color: var(--pw-text-1); font-family: var(--look-display, serif); font-size: 18px; font-weight: 700; }
+.tc-name input:focus-visible { outline: 2px solid var(--team-primary); outline-offset: 1px; }
+.tc-name input::placeholder { color: var(--pw-text-3); font-weight: 400; font-style: italic; }
+.tc-deckname { font-size: 18px; }
+.tc-colours { display: grid; grid-template-columns: repeat(7, minmax(0, 32px)); gap: 6px; }
+.tc-colour { aspect-ratio: 1; width: 100%; max-width: 32px; border: 0; padding: 0; cursor: pointer; }
+.tc-colour.on, .tc-logo.on { outline: 2px solid var(--pw-text-1); outline-offset: 2px; }
+.tc-logos { display: flex; flex-wrap: wrap; gap: 6px; max-width: 420px; }
+.tc-logo { width: 36px; height: 36px; display: grid; place-items: center; border: 0; padding: 0; cursor: pointer; opacity: 0.55; }
+.tc-logo.on { opacity: 1; }
+.tc-colour:focus-visible, .tc-logo:focus-visible { outline: 2px dashed var(--pw-text-1); outline-offset: 2px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.tc { display: flex; flex-direction: column; gap: 12px; }
+.tc .rs-row-head { margin-bottom: 0; }
+.tc-colours { row-gap: 6px; column-gap: 6px; }
