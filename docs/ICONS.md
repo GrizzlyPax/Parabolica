@@ -33,7 +33,9 @@ The whole UI is **black and white plus one colour: your team's.** Everything els
 
 **Type: "Pulp Almanac" (Pax, Oct 8).** The first pick (Archivo + Source Serif 4) read slick, like a magazine; Pax wanted Blaseball's handmade feel. Picked from [Parabolica Type Tests](https://claude.ai/artifact/WVsivr593kRTZ2Fqb116gM), option C: *a stewards' report typed up and pasted into a farmers' almanac.*
 
-### Typefaces (Google Fonts)
+> **Since #713 (Oct 10):** fonts are stored with the app (`src/look/fonts.ts`, `@fontsource` packages); nothing loads from Google Fonts. The race-program look adds Playball (script), Oswald and Alfa Slab One; see `docs/LOOK.md`.
+
+### Typefaces (the Pulp Almanac set)
 | Role | Face | Use |
 |---|---|---|
 | **Display** | **Old Standard TT** 700 | screen titles, buttons, the wordmark, big numbers (racing numbers on cards) |
