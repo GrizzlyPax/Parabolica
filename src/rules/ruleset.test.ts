@@ -28,7 +28,7 @@ describe('ruleset (#241)', () => {
   });
 
   it('cards compose in hand order and never mutate CANON', () => {
-    const rs = resolveRuleset(['demolition-derby', 'unreliable-cars', 'tag-soup'], RULE_CARDS_BY_ID);
+    const rs = resolveRuleset(['demolition-derby', 'unreliable-cars', 'trait-soup'], RULE_CARDS_BY_ID);
     expect(rs.simVars.crashes.baseCrashChance).toBeCloseTo(CANON_VARIABLES.crashes.baseCrashChance * 2.5);
     expect(rs.simVars.mechanical.baseFailureChance).toBeCloseTo(CANON_VARIABLES.mechanical.baseFailureChance * 3);
     expect(rs.traits.genesisChance).toBe(0.45);
@@ -48,7 +48,7 @@ describe('ruleset (#241)', () => {
     for (let i = 0; i < 20; i++) expect(weatherForRace(7, i, wet.weather.weights).id).toBe('aggression-grip');
     const rng = mulberry32(1);
     const roster = generateRosterFromTeams(TEAMS.slice(0, 6).map(t => t.id), rng);
-    const none = rollGenesisTraits(roster, 99, resolveRuleset(['no-tags'], RULE_CARDS_BY_ID));
+    const none = rollGenesisTraits(roster, 99, resolveRuleset(['no-traits'], RULE_CARDS_BY_ID));
     expect([...none.values()].every(t => t.length === 0)).toBe(true);
   });
 
@@ -57,7 +57,7 @@ describe('ruleset (#241)', () => {
     const roster = generateRosterFromTeams(TEAMS.slice(0, 6).map(t => t.id), rng);
     const cars = generateCarsForKingdoms(TEAMS.slice(0, 6).map(t => t.id), mulberry32(43));
     const a = buildRoster(roster, cars, 5, defaultRuleset());
-    const b = buildRoster(roster, cars, 5, resolveRuleset(['tag-soup'], RULE_CARDS_BY_ID));
+    const b = buildRoster(roster, cars, 5, resolveRuleset(['trait-soup'], RULE_CARDS_BY_ID));
     expect(b.map(d => [d.fullName, d.number, d.carName])).toEqual(a.map(d => [d.fullName, d.number, d.carName]));
     const cardsA = a.reduce((n, d) => n + d.cards!.length, 0), cardsB = b.reduce((n, d) => n + d.cards!.length, 0);
     expect(cardsB).toBeGreaterThan(cardsA);
@@ -125,5 +125,21 @@ describe('rarity metals: old saves still load', () => {
     const up = upgradeRuleset(old as never);
     expect(Object.keys(old.traits.rarityOdds)).toEqual(['common', 'uncommon', 'rare', 'legendary']);
     expect(up.traits.rarityOdds.iridium).toBe(5);
+  });
+});
+
+describe('retired rule-card ids (#579)', () => {
+  it('tag-soup / no-tags still resolve to Trait Soup / No Traits, and normalise to the new ids', async () => {
+    const { RULE_CARD_ALIASES, canonicalCardIds } = await import('../data/ruleCards');
+    expect(RULE_CARD_ALIASES).toEqual({ 'tag-soup': 'trait-soup', 'no-tags': 'no-traits' });
+    expect(RULE_CARDS_BY_ID.get('tag-soup')?.id).toBe('trait-soup');
+    expect(RULE_CARDS_BY_ID.get('no-tags')?.name).toBe('No Traits');
+    expect(resolveRuleset(['no-tags'], RULE_CARDS_BY_ID)).toEqual(resolveRuleset(['no-traits'], RULE_CARDS_BY_ID));
+    expect(canonicalCardIds(['rain', 'tag-soup'])).toEqual(['rain', 'trait-soup']);
+    const { labSpec } = await import('../racecontrol/runner');
+    expect(labSpec(7, 0, ['no-tags']).cardIds).toEqual(['no-traits']);
+    const { upgradeRuns } = await import('../racecontrol/notebook');
+    const [run] = upgradeRuns([{ kind: 'physics', result: { cards: ['no-tags'] } }]);
+    expect(run.result.cards).toEqual(['no-traits']);
   });
 });

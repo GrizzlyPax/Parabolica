@@ -22,7 +22,7 @@ function createRosterWithCars(roster: GeneratedDriver[], cars: Map<string, Gener
   return buildRoster(roster, cars, seed, rs);
 }
 /** The No Traits rule card: a grid with no genesis cards, pure stats. */
-const NO_CARDS = resolveRuleset(['no-tags'], RULE_CARDS_BY_ID);
+const NO_CARDS = resolveRuleset(['no-traits'], RULE_CARDS_BY_ID);
 
 function runOneRace(track: Track) {
   const engine = RaceEngine.createForWorker(CANON_VARIABLES);

@@ -32,7 +32,7 @@ describe('Race Control runner', () => {
   });
 
   it('the No Traits card clears every genesis card; the default hand deals some', () => {
-    const spec = labSpec(7, 0, ['no-tags']);
+    const spec = labSpec(7, 0, ['no-traits']);
     const clean = runLabRace(spec);
     expect(clean.roster.every(d => d.cards?.length === 0)).toBe(true);
     const dealt = runLabRace(labSpec(7, 0, []));

@@ -21,7 +21,7 @@ import type { LeagueState } from '../league/types';
 import { prepareScheduledRace } from '../league/settle';
 import { CURRENT_TRACKS, type Track } from '../generators/tracks';
 import { resolveRuleset, type Ruleset } from '../rules/ruleset';
-import { RULE_CARDS_BY_ID } from '../data/ruleCards';
+import { RULE_CARDS_BY_ID, canonicalCardIds } from '../data/ruleCards';
 import { deriveSeed, mulberry32 } from '../engine/rng';
 import { weatherForRace, type WeatherState } from '../data/weather';
 import { oneRaceSeason } from '../season/quickRace';
@@ -53,7 +53,7 @@ export function labSpec(batchSeed: number, index: number, cardIds: string[], tra
   const track = trackMode === 'all'
     ? CURRENT_TRACKS[index % CURRENT_TRACKS.length]
     : CURRENT_TRACKS[Math.floor(pick * CURRENT_TRACKS.length)];
-  return { batchSeed, index, seed, trackId: track.id, cardIds };
+  return { batchSeed, index, seed, trackId: track.id, cardIds: canonicalCardIds(cardIds) };
 }
 
 export interface LabRaceResult {

@@ -153,7 +153,7 @@ describe('rosterRanks on a real generated grid', () => {
   it('every driver 1–20 once; cars 1–10 once, shared by teammates (the Season pool field, #612)', async () => {
     const { labSpec, runLabRace } = await import('../racecontrol/runner');
     for (const seed of [1, 2026, 77777]) {
-      const { roster } = runLabRace(labSpec(seed, 0, ['no-tags']));
+      const { roster } = runLabRace(labSpec(seed, 0, ['no-traits']));
       const drivers = roster.map(d => ({ id: d.id, stats: d.stats, carStats: d.carStats, teamStats: d.teamStats, kingdomId: d.kingdomId }));
       const { driver, car } = rosterRanks(drivers);
       expect([...driver.values()].map(r => r.rank).sort((a, b) => a - b)).toEqual(Array.from({ length: 20 }, (_, i) => i + 1));
