@@ -11,6 +11,7 @@ How we got here: [five-worlds](five-worlds.md); World B, the National Pastime, w
 - **The world:** an alternate 1920s Earth with 1950s optimism. In 1908 the **Watchers** (polite, unseen aliens) noticed us racing cars. Nobody else in the galaxy ever built cars; they all skipped straight to flying. So the Watchers took war, famine and the economy off our plate, and now every quarrel is settled on the track. **Earth is the galaxy's favourite show.**
 - **The game (the slice):** **Ace America.** You're a team principal with a small local garage, climbing three steps: **Locals → State → Nationals.** Win them to become **Ace Toledo**, then **Ace Ohio**, then **Ace America.**
 - **The tone:** Bioshock Infinite's sunny strangeness, a little Atlas Shrugged, Gatsby's transatlantic "old sport", Koshien's whole-country tournament, Miss America's titles and sashes. Dungeon Crawler Carl and the Hunger Games sit in the background. Gloves on: the strangeness is a faint hum.
+- **No baseball** (Pax, Oct 10): in this world, baseball isn't important. No baseball comparisons in the lore.
 - **The look:** **a race program.** Red, white and blue first, gold as the highlight, bunting, and the sash as the title.
 - **The name:** Ace America, at **playaceamerica.com** (Pax registered it Oct 10; v0.8 Indianapolis is the rebrand). The Parabolica lives on as the circuit around the world.
 
@@ -34,7 +35,7 @@ How we got here: [five-worlds](five-worlds.md); World B, the National Pastime, w
 
 **The map.**
 - **Today's countries:** the Watchers redrew the borders "as they should be", the way modern folks know them.
-- **America is racing's birthplace,** the way it's baseball's: we started it, and other nations are as good or better. We just happened to be standing there when the Watchers came down.
+- **America is racing's birthplace:** we started it, and other nations are as good or better. We just happened to be standing there when the Watchers came down.
 
 **Time stands still between seasons:** the Watchers like it as it is. Fifty seasons in, still no jet engine. That's a joke we can use.
 
@@ -88,11 +89,11 @@ How we got here: [five-worlds](five-worlds.md); World B, the National Pastime, w
   - The deck builder slims down: **each driver card and your car card build up over the run with stamps**.
   - **Parcels** deliver them: league issue, or a rare gift from the Watchers.
   - Steward designs the system in [#704](https://github.com/GrizzlyPax/Parabolica/issues/704). Radio names the stamps and Parcels after that.
-- **Later:** regions known for a style ("folks from the Plains always drive like this"); other nations run their circuits their own way (some militaristic; America runs it like baseball).
+- **Later:** regions known for a style ("folks from the Plains always drive like this"); other nations run their circuits their own way (some militaristic; America runs it town by town).
 
 ## The look (locked, #698)
 *Page: [The race program](https://claude.ai/artifact/DX3c8cStUC8sbBFkPxdoc3). This replaces the earlier "deco gold on black".*
-- **A race program:** old program books and baseball cards.
+- **A race program:** old program books and trading cards.
   - **Red, white and blue first; gold only as the highlight** (gold, not yellow).
   - Bunting, motorsport marks, an **Official Program** number.
   - No "national pastime" subtitle.

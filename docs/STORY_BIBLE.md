@@ -5,7 +5,7 @@
 **Status:** Ace America, drafted by 📻 Radio from Pax's calls (Oct 10, [#692](https://github.com/GrizzlyPax/Parabolica/issues/692)). **Canon once Pax says so.** Everything older (the Booth, Mister Marbles, the gods, tags, the 28 deck teams) is retired; `docs/story/` keeps it as history.
 
 ## The theme in a paragraph
-It's 1928, more or less, on an Earth a little brighter than ours. In 1908 something up above watched us race cars from New York to Paris and fell in love: nobody else in the galaxy had ever built a car. They're polite and unseen. They took war, famine and the economy off our plate, and asked only that we race. So now every quarrel on Earth is settled on a circuit, every town has a garage, and America, the sport's birthplace, runs it like baseball. You're a team principal with a small local garage. Win your town and you're **Ace Toledo**; win your state and you're **Ace Ohio**; win Nationals and you're **Ace America**. The whole country listens on the radio. Somewhere up there, so does everyone else.
+It's 1928, more or less, on an Earth a little brighter than ours. In 1908 something up above watched us race cars from New York to Paris and fell in love: nobody else in the galaxy had ever built a car. They're polite and unseen. They took war, famine and the economy off our plate, and asked only that we race. So now every quarrel on Earth is settled on a circuit, every town has a garage, and America, where it all started, loves it most of all. You're a team principal with a small local garage. Win your town and you're **Ace Toledo**; win your state and you're **Ace Ohio**; win Nationals and you're **Ace America**. The whole country listens on the radio. Somewhere up there, so does everyone else.
 
 ## The six questions
 1. **What is this sport?** Open-wheel racing. Since 1909, it is the world's only way to settle a quarrel, and it is America's pastime.
@@ -26,7 +26,7 @@ It's 1928, more or less, on an Earth a little brighter than ours. In 1908 someth
 - **The Accord (1909).** Every nation signed it.
   - No armies; every quarrel settled on a circuit, in public; Race Day a holiday everywhere.
   - Article VI, which nobody wrote: *"Somebody is always watching. Race well."*
-- **The map.** Today's countries; the Watchers redrew the borders "as they should be". America is the sport's birthplace, the way it's baseball's: we started it, and others are as good or better.
+- **The map.** Today's countries; the Watchers redrew the borders "as they should be". America is the sport's birthplace: we started it, and others are as good or better.
 - **Time stands still** between seasons. The Watchers like it as it is: fifty seasons on, still no jet engine. Modern open-wheel cars race past gaslamps, and nobody finds that strange any more.
 - **Celebrity.** Winners become war heroes and movie stars in one: newspapers, radio, a monoculture. Larger-than-life, **but only once they've won.** Everyone starts with the same dream.
 
@@ -49,7 +49,7 @@ It's 1928, more or less, on an Earth a little brighter than ours. In 1908 someth
 - **Short.** Titles are tight; card names are kit with a wink ([card-names](story/card-names.md)).
 - **Never explain the Watchers.** Hint, don't tell.
 - **The Watchers' voice is the only discord:** very polite, slightly too formal, slightly out of time. Rare, and rarer at Locals.
-- **Never:** real politics, religion, war as a subject (it's backstory), real people.
+- **Never:** real politics, religion, war as a subject (it's backstory), real people, baseball (it isn't important in this world).
 - **Always:** the town, the title, the radio.
 
 ## Anchors, by content type
