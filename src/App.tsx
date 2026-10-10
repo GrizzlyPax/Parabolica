@@ -316,7 +316,8 @@ function App() {
     const state = seasonState(savedSeason);
     return { name: seasonName(savedSeason.setup), round: state.round, total: savedSeason.setup.calendar.length, finished: state.phase === 'finished' };
   }, [savedSeason]);
-  const handleSeason = () => navigate({ name: 'season', screen: savedSeason && seasonState(savedSeason).phase !== 'finished' ? seasonScreenFor(savedSeason) : 'setup' });
+  // A saved run opens on its ladder (#628); none starts a new one.
+  const handleSeason = () => navigate({ name: 'season', screen: savedSeason ? 'run' : 'setup' });
 
   const ideaContext = { screen, seed: quickRun?.seed ?? engine.getSeed(), track: trackInfo?.name };
   const screenEl = (() => {

@@ -50,6 +50,11 @@ All in `src/season/pack.ts`, data at the top:
 - **Curses** (`dealCurse`, `CURSE_POINTS` −10 × 3, `CURSE_LIFE` 3): all bad, on the **car or the team** (both drivers; benching can't dodge it), one stat, three races, an **effect** (#332). Taking it writes a `CurseApplication` fact and the `EffectFact`. In the Paddock the live curse reads in the stat sums as a red line (`effectCards`) and under the offer ("🪦 Butterfingers: 3 races left").
 - **Not built:** "packs lean to your plan" (needs the archetype deck list, #565).
 
+## Screens (#628)
+- **The run's first step** is League Setup ("New run"): your team (the creator, #346) on top, then the league, teams and calendar. **Start the run** lands on the ladder.
+- **The ladder** (`#/season/run`, `season/ui/RunLadder.tsx`; Pax picked A) is the run's home: four leagues stacked, Top flight on top. The league in play is open (race squares, the last one gold for the boss race; you vs your nemesis, or the nearest team in the Juniors; how you go up); won leagues keep one line ("X were runners-up and came up with you"); leagues ahead are dimmed; the unlocks strip lists `UNLOCKS` (none granted until #596). Its button goes to the draft or the Paddock, **Up to <next> →** when the league is won, **New run** when the run is over. The view is pure: `run/ladderView.ts`.
+- Menu → Season opens a saved run on its ladder. The draft and the Paddock go **← The run**; the finale's **Up to <next> →** promotes and lands on the ladder.
+
 ## Hooks left on purpose
 - **Boss race (#593):** `LeagueContext.bossRound` (the last round).
 - **Rookie pick (#594):** `RunSetup.start` ('draft' today); the draft is the run's start until then.

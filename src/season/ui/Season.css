@@ -408,3 +408,35 @@ button.rt-g:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset:
 .tc { display: flex; flex-direction: column; gap: 12px; }
 .tc .rs-row-head { margin-bottom: 0; }
 .tc-colours { row-gap: 6px; column-gap: 6px; }
+
+/* The league ladder (#628, Pax picked A): the run's home screen */
+.rl-team { display: inline-flex; align-items: center; gap: 6px; font-style: normal; font-weight: 700; }
+.rl-banner { margin: 0; padding: 10px 12px; border: 1px solid var(--rarity-gold); color: var(--pw-text-1); font-size: 16px; }
+.rl-banner.lost { border-color: var(--signal-red); }
+.rl-ladder { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; max-width: 560px; }
+.rl-rung { border: 1px solid var(--pw-border); padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+.rl-rung.current { border-color: var(--team-primary); background: color-mix(in srgb, var(--team-primary) 12%, transparent); }
+.rl-rung.ahead { opacity: 0.45; }
+.rl-head { display: flex; align-items: baseline; gap: 8px; }
+.rl-no { font-family: var(--look-data, monospace); font-size: 12px; color: var(--pw-text-3); width: 14px; }
+.rl-name { font-size: 18px; }
+.rl-tag { margin-left: auto; display: inline-flex; align-items: center; gap: 4px; font-family: var(--look-data, monospace); font-size: 11px; color: var(--pw-text-2); }
+.rl-tag.won { color: var(--rarity-gold); }
+.rl-tag.lost { color: var(--signal-red); }
+.rl-memory { font-size: 13px; font-style: italic; color: var(--pw-text-2); }
+.rl-races { display: flex; gap: 5px; }
+.rl-races i { width: 16px; height: 16px; border: 1px solid var(--pw-border-strong); }
+.rl-races i.done { background: var(--pw-text-1); border-color: var(--pw-text-1); }
+.rl-races i.boss { border: 2px solid var(--rarity-gold); }
+.rl-vs { display: grid; grid-template-columns: auto minmax(0, 1fr) auto minmax(0, 1fr) auto; gap: 8px; align-items: center; font-size: 14px; }
+.rl-side { min-width: 0; }
+.rl-side b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rl-side small { display: block; font-size: 12px; color: var(--pw-text-2); }
+.rl-right { text-align: right; }
+.rl-v { font-family: var(--look-data, monospace); color: var(--pw-text-3); }
+.rl-note { margin: 0; font-size: 13px; font-style: italic; color: var(--pw-text-2); }
+.rl-unlocks { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+.rl-unl-row { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; max-width: 100%; }
+.rl-unl { flex: none; width: 132px; border: 1px dashed var(--pw-border-strong); padding: 6px 8px; font-size: 12px; font-weight: 700; color: var(--pw-text-3); display: flex; flex-direction: column; gap: 2px; }
+.rl-unl small { font-weight: 400; font-style: italic; }
+.rl-unl.got { border-style: solid; border-color: var(--rarity-gold); color: var(--pw-text-1); }
