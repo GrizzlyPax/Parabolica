@@ -62,6 +62,14 @@ All in `src/season/pack.ts`, data at the top:
 - **One line per Paddock visit** (`nemesisLine(facts)`): the moment from the doc's table, the speaker by the doc's rule, a seeded pick never repeating the last round's; both drivers before the boss race; two Show-offs speak as "we". Spanish lines carry the English underneath.
 - **NEMESIS tag:** the Paddock line, the constructors' table, the tower (team name in the detail view, the driver panel, a red stripe on the row in the track view).
 
+## Driver XP, ranks and the rank-up pick (#646)
+`src/season/xp.ts`, data at the top. **XP = championship points only**, per driver, per race (`driverXp`, `xpInRound`); no moments, no catch-up. **Ranks** (`RANKS`): Rookie → **Pro 100** → **Ace 220** → **Legend 400**. CPU drivers never rank up. A **stat level is 5 grade points** (`LEVEL_POINTS`, #623).
+- **A rank-up** (`pendingRankUps`, owed when a rank is reached beyond the picks taken) **blocks the Paddock turn** (`turnDone`) until taken. `dealRankUp` deals three cards on `(seed, 'season', 'rank-up', driver, rank)`: a **stat jump** (`jump-<rank>-<stats>`), a **driver trait** of the rank's metal at the player's 3× (any trait until #565's archetype tags; #647), a **wild card** not yet held. Sizes (`JUMP`): Pro = Silver (+6 levels to one stat = +30 grade), Ace = Gold (+6 to two), Legend = Iridium (+9 to three).
+- **The pick is a fact** (`SeasonFacts.rankUps`, `RankUpPick` with its round); `rankUpCardsFor` puts the cards on the driver from that round (`cardsForRound`); replays exact.
+- **Wild cards** (`WILD_CARDS`): Showboat (points × 1.5 XP), Mentor (teammate gets 25% of your XP), Grudge Match (+3 levels to every stat in the boss race, `LeagueContext.bossRound`), Home Hero (+6 levels to every stat at one track: `wild-home-hero:<trackId>`). Engine-hook signatures are a later issue.
+- **Carry:** `CarriedTeam.xp` (XP at the end of the league) and `.rankUps` (every pick) ride up; `driverXp` counts on from the carried XP.
+- **Paddock:** the rank-up strip ("Rank-up · Kim Wood is now Pro · keep one", three cards, Take) shows above the pack offer; `driverRanks(facts)` gives XP / rank / next for Hub's tables (#623).
+
 ## Hooks left on purpose
 - **Boss race (#593):** `LeagueContext.bossRound` (the last round).
 - **Rookie pick (#594):** `RunSetup.start` ('draft' today); the draft is the run's start until then.
