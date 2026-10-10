@@ -23,6 +23,7 @@ import { BASE_DECK_TEAMS } from '../data/deckTeams';
 import { MOTORSPORT_DECK, cardsBy, pickCard, applyCards, applyPercents, favourPercents, DRIVER_STATS, CAR_STATS, TEAM_STATS, type Card, type CardStat, type CardTarget, type StatKey } from '../cards';
 import { Ruleset, defaultRuleset } from '../rules/ruleset';
 import type { RosterDriver, LapEffect, EffectInfo } from '../RaceEngine';
+import { ARCHETYPES, CPU_WOBBLE, rookieCar, rookieDriver, rookieTeamStats, type Archetype } from './rookies';
 
 export const MIN_TEAMS = 5;
 export const MAX_TEAMS = 10;
@@ -40,6 +41,8 @@ export interface PoolDriver extends GeneratedPoolDriver {
   reservedFor?: string;
   /** The seed their portrait was rolled on (the league they were born in); absent = this pool's. */
   avatarSeed?: number;
+  /** A rookie's archetype (#660): the stat nudge they were born with, and their rank-up trait path. */
+  archetype?: Archetype;
 }
 
 export interface RackCar {
@@ -131,6 +134,9 @@ export interface LeagueContext {
 export interface SeasonPoolOptions {
   carry?: CarriedTeam;
   league?: LeagueContext;
+  /** A run's field (#660): fresh drivers, cars and teams are rookie rolls (no genesis traits),
+   * and the first fresh team is the nemesis. Absent = genesis rolls (Quick Race, the lab). */
+  rookies?: boolean;
 }
 
 /** One slot: does it hit? → which metal? → which card? Always three rng()
@@ -179,37 +185,46 @@ export function generateSeasonPool(seed: number, teamCount: number = DEFAULT_TEA
     throw new Error(`generateSeasonPool: teamCount must be ${MIN_TEAMS}–${MAX_TEAMS}, got ${teamCount}`);
   }
   const carry = opts.carry;
+  const rookies = !!opts.rookies;
   const base = (opts.league?.index ?? 0) * LEAGUE_ID_STRIDE;
   const fresh = teamCount - (carry ? 1 : 0);
   const taken = new Set(carry?.drivers.map(d => d.number) ?? []);
 
-  const driverRng = mulberry32(deriveSeed(seed, 'season', 'drivers'));
+  // Rookie fields (#660) roll on their own streams; the genesis streams below are untouched.
+  const driverRng = mulberry32(deriveSeed(seed, 'season', rookies ? 'rookies' : 'drivers'));
   // Roll a full grid of numbers and skip the carried team's: unique on the grid.
   const numbers = rollRacingNumbers(teamCount * SQUAD_SIZE, mulberry32(deriveSeed(seed, 'season', 'numbers'))).filter(n => !taken.has(n));
   const drivers: PoolDriver[] = carry ? carry.drivers.map(d => ({ ...d, reservedFor: carry.teamId })) : [];
   for (let i = 0; i < fresh * SQUAD_SIZE; i++) {
     const id = base + i;
-    drivers.push({ ...generatePoolDriver(id, driverRng), number: numbers[i], traits: traitsFor('driver', seed, id, rs) });
+    if (rookies) {
+      const archetype = ARCHETYPES[Math.floor(driverRng() * ARCHETYPES.length)];
+      drivers.push(rookieDriver(id, numbers[i], archetype, CPU_WOBBLE, driverRng));
+    } else {
+      drivers.push({ ...generatePoolDriver(id, driverRng), number: numbers[i], traits: traitsFor('driver', seed, id, rs) });
+    }
   }
 
-  const carRng = mulberry32(deriveSeed(seed, 'season', 'cars'));
+  const carRng = mulberry32(deriveSeed(seed, 'season', rookies ? 'rookie-cars' : 'cars'));
   const cars: RackCar[] = carry ? [{ ...carry.car, reservedFor: carry.teamId }] : [];
   const carNames = new Set<string>(carry ? [carry.car.name] : []);
   for (let i = 0; i < fresh; i++) {
     const id = `car-${base + i}`;
-    cars.push({ ...generateRackCar(id, carRng, carNames), traits: traitsFor('car', seed, id, rs) });
+    cars.push(rookies ? rookieCar(id, CPU_WOBBLE, carRng, carNames) : { ...generateRackCar(id, carRng, carNames), traits: traitsFor('car', seed, id, rs) });
   }
 
-  const statsRng = mulberry32(deriveSeed(seed, 'season', 'team-stats'));
+  const statsRng = mulberry32(deriveSeed(seed, 'season', rookies ? 'rookie-teams' : 'team-stats'));
   const teams: CompetitorTeam[] = carry ? [carry.team] : [];
-  // The nemesis (#626) wears last league's runner-up's look on the first fresh
-  // slot; the deck never deals that look twice. Its stats are the level's.
+  // The nemesis (#626) is the first fresh slot of a run league: it wears last
+  // league's runner-up's look (the deck never deals that look twice) or, in
+  // the Juniors (#660), its own. Its stats are the level's (rivalShifts).
   const nemesis = carry?.nemesis;
   const exclude = new Set<string>([carry?.team.deckTeamId, nemesis?.deckTeamId].filter((x): x is string => !!x));
   teamIdentities(seed, fresh, exclude).forEach((identity, i) => {
     const id = `team-${base + i}`;
     const look = i === 0 && nemesis ? nemesis : identity;
-    teams.push({ id, ...look, teamStats: generateTeamStats(statsRng), traits: traitsFor('team', seed, id, rs), ...(i === 0 && nemesis ? { nemesis: true } : {}) });
+    const teamStats = rookies ? rookieTeamStats(CPU_WOBBLE, statsRng) : generateTeamStats(statsRng);
+    teams.push({ id, ...look, teamStats, traits: rookies ? [] : traitsFor('team', seed, id, rs), ...(i === 0 && (nemesis || rookies) ? { nemesis: true } : {}) });
   });
 
   return { seed, teamCount, drivers, cars, teams };

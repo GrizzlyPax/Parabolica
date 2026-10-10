@@ -9,10 +9,13 @@
 // (drivers, car, team, traits, gear and locker; timers ride with #332). So a
 // saved run is small, and a run replayed from its facts is the run.
 //
-// League 0 is exactly today's Season (same seed, same pool, same calendar):
-// the run changes no race result. Hooks left on purpose: `LeagueContext`
-// (rival levels #626, the boss round #593), `RunSetup.start` (the rookie pick
-// #594 replaces the draft), XP (#592) will be its own fact log here.
+// The rookie start (#660): a run opens on an OFFER of six rookies (pick two,
+// one free re-roll) and three car setups; the offer, the re-roll and the pick
+// are facts on the run (`RunFacts.rookies`), each roll on its own stream. The
+// picked pair, a 2★ car wearing the setup and the player's own look become
+// league 0's carried team, so every league is built the same way; the CPU
+// draft then fills the rookie field (`draftPicks` stay the roster facts).
+// Hooks left on purpose: `LeagueContext` (the boss round #593), stakes (#596).
 
 import { deriveSeed } from '../engine/rng';
 import type { Ruleset } from '../rules/ruleset';
@@ -22,6 +25,9 @@ import { draftState, quickDraft } from '../season/draft';
 import { carriedCards, teamCardState } from '../season/pack';
 import { carriedEffects } from '../season/effects';
 import { driverXp, rankUpsOf } from '../season/xp';
+import { OFFER_PICKS, isCarSetup, rookieOffer, rookiePlayerCar, rookiePlayerTeamStats, type CarSetupId } from '../season/rookies';
+import { inkFor } from '../icons/ink';
+import type { PoolDriver } from '../season/genesis';
 import { constructorStandings, poolFor, seasonState, settleRound, type SeasonFacts, type SeasonHuman, type SeasonSetup, type SeasonStore } from '../season/season';
 import { seasonCalendar } from '../season/setup';
 
@@ -29,21 +35,39 @@ export const LEAGUES_PER_RUN = 4;
 export const RACES_PER_LEAGUE = 6;
 
 /**
- * The ladder, bottom to top, with the rival levels (#626; Steward's fit,
- * Pax Oct 10, [Rival Levels Report]): `field` is the grade points added to
- * every stat of every rival at race build; the nemesis (last league's
- * runner-up, promoted with you) gets `nemesis` on top. One table, so Steward
- * can re-fit it after #592 / #593 / #594. A normal run is won about 1 in 3.
+ * The ladder, bottom to top, with the rival levels (#626; Steward's re-fit
+ * for the rookie start, Pax Oct 10, the Rookie Pick Report): `field` is the
+ * grade points added to every stat of every rival at race build; the nemesis
+ * (the Juniors' own, then last league's runner-up promoted with you) gets
+ * `nemesis` on top. One table, so Steward can re-fit it (#629). Runs won
+ * about 32%; race 1 is no longer a stomp.
  */
 export const LEAGUE_LADDER: readonly { name: string; level: number; field: number; nemesis: number }[] = [
-  { name: 'Juniors', level: 1, field: -25, nemesis: 12 },
-  { name: 'Regional', level: 2, field: -5, nemesis: 12 },
-  { name: 'National', level: 3, field: 10, nemesis: 14 },
-  { name: 'Top flight', level: 4, field: 22, nemesis: 12 },
+  { name: 'Juniors', level: 1, field: 0, nemesis: 6 },
+  { name: 'Regional', level: 2, field: 7, nemesis: 12 },
+  { name: 'National', level: 3, field: 22, nemesis: 14 },
+  { name: 'Top flight', level: 4, field: 37, nemesis: 12 },
 ];
 
-/** How a run starts: today's draft, until the rookie pick (#594) lands. */
-export type RunStart = 'draft';
+/** How a run starts: the rookie pick (#660). The draft is retired. */
+export type RunStart = 'rookie';
+
+/** The player's team id in a run: their own team, never a pool slot. */
+export const PLAYER_TEAM_ID = 'you';
+
+/** The rookie pick (#660), as a fact. */
+export interface RookiePick {
+  /** Two of the offer's ids. */
+  driverIds: [number, number];
+  setup: CarSetupId;
+}
+
+/** The rookie start's facts: which deal of the offer stands, and the pick once made. */
+export interface RookieStart {
+  /** The free re-roll was used: the offer is the second deal. */
+  rerolled: boolean;
+  pick?: RookiePick;
+}
 
 export interface RunSetup {
   seed: number;
@@ -63,11 +87,15 @@ export type LeagueFacts = Omit<SeasonFacts, 'setup'>;
 
 export interface RunFacts {
   setup: RunSetup;
+  /** The rookie start (#660): the offer's deal and the pick. */
+  rookies: RookieStart;
   /** One per league entered, bottom first; the last is the one in play. */
   leagues: LeagueFacts[];
 }
 
 export type RunPhase =
+  /** The run waits on the rookie pick (#660). */
+  | 'start'
   /** The current league is being raced. */
   | 'league'
   /** The league is over and won; the next one waits on `promote`. */
@@ -98,10 +126,71 @@ export function emptyLeague(): LeagueFacts {
   return { draftPicks: [], lineups: [], cardFacts: [], effectFacts: [], rankUps: [], results: [] };
 }
 
+/** A run before its rookie pick. The player's team wears PLAYER_TEAM_ID whatever League Setup chose. */
 export function newRun(setup: Omit<RunSetup, 'start' | 'races' | 'teamCount'> & Partial<Pick<RunSetup, 'start' | 'races' | 'teamCount'>>): RunFacts {
   return {
-    setup: { teamCount: DEFAULT_TEAMS, races: RACES_PER_LEAGUE, start: 'draft', ...setup },
+    setup: { teamCount: DEFAULT_TEAMS, races: RACES_PER_LEAGUE, start: 'rookie', ...setup, team: { ...setup.team, teamId: PLAYER_TEAM_ID } },
+    rookies: { rerolled: false },
     leagues: [emptyLeague()],
+  };
+}
+
+// ---------------------------------------------------------------------------
+// The rookie start (#660)
+
+/** The six rookies on offer: the first deal, or the re-roll once taken. */
+export function rookieOfferFor(run: RunFacts): PoolDriver[] {
+  return rookieOffer(run.setup.seed, run.rookies.rerolled ? 1 : 0);
+}
+
+/** Take the free re-roll. Pure; throws once it is spent or the pick is made. */
+export function rerollRookies(run: RunFacts): RunFacts {
+  if (run.rookies.pick) throw new Error('run: the rookies are picked');
+  if (run.rookies.rerolled) throw new Error('run: the re-roll is spent');
+  return { ...run, rookies: { ...run.rookies, rerolled: true } };
+}
+
+/** Why a rookie pick is illegal, or null. */
+export function validateRookiePick(run: RunFacts, pick: RookiePick): string | null {
+  if (run.rookies.pick) return 'the rookies are picked';
+  const offer = new Set(rookieOfferFor(run).map(d => d.id));
+  if (pick.driverIds.length !== OFFER_PICKS || pick.driverIds[0] === pick.driverIds[1]) return `pick ${OFFER_PICKS} different rookies`;
+  if (!pick.driverIds.every(id => offer.has(id))) return 'both rookies must be from the offer';
+  if (!isCarSetup(pick.setup)) return `no car setup '${String(pick.setup)}'`;
+  return null;
+}
+
+/**
+ * Pick two rookies and a setup: the team is made, and league 0 opens in the
+ * Paddock with the CPU field drafted behind the scenes. Pure; throws on an
+ * illegal pick.
+ */
+export function pickRookies(run: RunFacts, pick: RookiePick): RunFacts {
+  const why = validateRookiePick(run, pick);
+  if (why) throw new Error(`run: ${why}`);
+  const picked: RunFacts = { ...run, rookies: { ...run.rookies, pick } };
+  const facts = seasonFactsFor(picked, 0);
+  return withCurrentLeague(picked, { ...facts, draftPicks: quickDraft(poolFor(facts)) });
+}
+
+/** The player's team at the start: the two rookies, a 2★ car wearing the
+ * setup, their own look with 2★ team stats, no cards yet. Undefined before the pick. */
+export function rookieTeam(run: RunFacts): CarriedTeam | undefined {
+  const pick = run.rookies.pick;
+  if (!pick) return undefined;
+  const { seed, team } = run.setup;
+  const offer = rookieOfferFor(run);
+  const drivers = pick.driverIds.map(id => {
+    const d = offer.find(x => x.id === id);
+    if (!d) throw new Error(`run: rookie ${id} is not on offer`);
+    return d;
+  });
+  return {
+    teamId: team.teamId,
+    drivers,
+    car: rookiePlayerCar(seed, `car-${team.teamId}`, pick.setup),
+    team: { id: team.teamId, name: team.name, color: team.color, ink: team.ink ?? inkFor(team.color), emoji: '🏁', iconId: team.iconId, deckTeamId: team.deckTeamId, teamStats: rookiePlayerTeamStats(), traits: [] },
+    cards: { drivers: {}, car: { traits: [], upgrade: [] }, team: { traits: [], facility: [] }, locker: [] },
   };
 }
 
@@ -145,7 +234,8 @@ export function leagueSetup(run: RunFacts, index: number): SeasonSetup {
     calendar: seasonCalendar(seed, races),
     ruleset,
     league: leagueContext(index, races),
-    carry: index === 0 ? undefined : carriedTeam(seasonFactsFor(run, index - 1)),
+    // League 0 carries the rookie pick in (#660); each league above, the team that won the one below.
+    carry: index === 0 ? rookieTeam(run) : carriedTeam(seasonFactsFor(run, index - 1)),
   };
 }
 
@@ -169,9 +259,10 @@ export function leagueWon(facts: SeasonFacts): boolean {
 export function runState(run: RunFacts): RunState {
   const leagueIndex = run.leagues.length - 1;
   const league = currentLeague(run);
-  const finished = seasonState(league).phase === 'finished';
+  const started = !!run.rookies.pick;
+  const finished = started && seasonState(league).phase === 'finished';
   const won = finished && leagueWon(league);
-  const phase: RunPhase = !finished ? 'league' : !won ? 'run-lost' : leagueIndex >= LEAGUES_PER_RUN - 1 ? 'run-won' : 'league-won';
+  const phase: RunPhase = !started ? 'start' : !finished ? 'league' : !won ? 'run-lost' : leagueIndex >= LEAGUES_PER_RUN - 1 ? 'run-won' : 'league-won';
   const ladder: LadderRung[] = LEAGUE_LADDER.map((r, i) => ({
     index: i, name: r.name, level: r.level,
     status: i < leagueIndex ? 'won' : i > leagueIndex ? 'ahead' : won ? 'won' : phase === 'run-lost' ? 'lost' : 'current',
@@ -247,7 +338,8 @@ export function replayRun(run: RunFacts): RaceDigest[][] {
 // Save / restore: facts only, one slot
 
 export const RUN_KEY = 'parabolica.run.v1';
-export const RUN_SCHEMA_VERSION = 1;
+/** 2 since the rookie start (#660): a drafted run (schema 1) is archived, not loaded. */
+export const RUN_SCHEMA_VERSION = 2;
 
 interface RunEnvelope { schemaVersion: number; savedAt: number; data: RunFacts }
 
@@ -277,6 +369,7 @@ export function loadRun(store: SeasonStore | null = defaultStore()): RunFacts | 
     const r = envelope.data;
     if (!r?.setup || typeof r.setup.seed !== 'number' || !r.setup.team || !Array.isArray(r.leagues)) return null;
     if (r.leagues.length < 1 || r.leagues.length > LEAGUES_PER_RUN || !r.leagues.every(isLeague)) return null;
+    if (!r.rookies || typeof r.rookies.rerolled !== 'boolean') return null;
     return { ...r, leagues: r.leagues.map(l => ({ ...l, effectFacts: l.effectFacts ?? [], rankUps: l.rankUps ?? [] })) };
   } catch { return null; }
 }

@@ -4,7 +4,7 @@
 // choices, promote, and keep the meta record. Hub's run screens (#628) read
 // `currentRunState`.
 import type { SeasonFacts, SeasonSetup, SeasonStore } from '../season/season';
-import { currentLeague, loadRun, newRun, promote, runState, saveRun, withCurrentLeague, clearRun as clearRunSave, type RunFacts, type RunState } from './run';
+import { currentLeague, loadRun, newRun, pickRookies, promote, rerollRookies, runState, saveRun, withCurrentLeague, clearRun as clearRunSave, type RookiePick, type RunFacts, type RunState } from './run';
 import { loadMeta, recordRun, saveMeta } from './meta';
 
 export { clearRunSave as clearRun };
@@ -41,6 +41,22 @@ export function startRun(setup: Pick<SeasonSetup, 'seed' | 'teamCount' | 'humans
   const run = newRun({ seed: setup.seed, teamCount: setup.teamCount, team, races: setup.calendar.length, ruleset: setup.ruleset });
   commit(run, store);
   return currentLeague(run);
+}
+
+/** The rookie start (#660): the free re-roll, and the pick that opens league 0. Null with no run. */
+export function rerollCurrentRookies(store?: SeasonStore | null): RunFacts | null {
+  const run = store === undefined ? loadRun() : loadRun(store);
+  if (!run) return null;
+  const next = rerollRookies(run);
+  commit(next, store);
+  return next;
+}
+export function pickCurrentRookies(pick: RookiePick, store?: SeasonStore | null): RunFacts | null {
+  const run = store === undefined ? loadRun() : loadRun(store);
+  if (!run) return null;
+  const next = pickRookies(run, pick);
+  commit(next, store);
+  return next;
 }
 
 /** Up a league (the league in play must be won). Returns the new league, or null with no run. */

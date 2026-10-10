@@ -16,7 +16,7 @@ import './Season.css';
 interface Props {
   onMenu: () => void;
   onNewRun: () => void;
-  /** Into the league in play: the draft or the Paddock. */
+  /** Into the run: the rookie pick (at the old draft address), the Paddock or the standings. */
   onPlay: (screen: 'draft' | 'paddock' | 'standings') => void;
 }
 
@@ -37,7 +37,8 @@ function Rung({ r }: { r: RungView }) {
         {r.status === 'won' ? <><GameIcon name="race.lead_change" size={13} /> Won</>
           : r.status === 'lost' ? 'Lost'
           : r.status === 'ahead' ? 'Locked'
-          : r.races && r.races.done < r.races.total ? `Race ${r.races.done + 1} of ${r.races.total} next` : 'Done'}
+          : !r.races ? 'Pick your rookies'
+          : r.races.done < r.races.total ? `Race ${r.races.done + 1} of ${r.races.total} next` : 'Done'}
       </span>
     </div>
   );
@@ -115,8 +116,10 @@ export default function RunLadder({ onMenu, onNewRun, onPlay }: Props) {
       </section>
 
       <div className="ss-dock">
-        {view.phase === 'league'
-          ? <button type="button" className="rs-btn rs-btn-primary ss-dock-btn" onClick={() => onPlay(leaguePhase === 'draft' ? 'draft' : leaguePhase === 'finished' ? 'standings' : 'paddock')}>{leaguePhase === 'draft' ? 'To the draft' : 'To the Paddock'}</button>
+        {view.phase === 'start'
+          ? <button type="button" className="rs-btn rs-btn-primary ss-dock-btn" onClick={() => onPlay('draft')}>Pick your rookies</button>
+          : view.phase === 'league'
+          ? <button type="button" className="rs-btn rs-btn-primary ss-dock-btn" onClick={() => onPlay(leaguePhase === 'finished' ? 'standings' : 'paddock')}>To the Paddock</button>
           : view.phase === 'league-won'
             ? <button type="button" className="rs-btn rs-btn-primary ss-dock-btn" onClick={up}>Up to {next} →</button>
             : <button type="button" className="rs-btn rs-btn-primary ss-dock-btn" onClick={onNewRun}>New run</button>}

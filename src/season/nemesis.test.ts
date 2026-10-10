@@ -4,19 +4,14 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { NEMESIS_LINES, DOUBLE_ACT_LINES, PERSONALITIES, PERSONALITY_NAMES, personalityOf, nemesisLine, nemesisTeam, type Moment } from './nemesis';
-import { newRun, currentLeague, withCurrentLeague, runState, promote, type RunFacts } from '../run/run';
-import { generateSeasonPool } from './genesis';
+import { currentLeague, withCurrentLeague, runState, promote, type RunFacts } from '../run/run';
 import { seasonState, setLineup, settleRound, poolFor, newSeason } from './season';
-import { draftState, quickDraft } from './draft';
+import { draftState } from './draft';
 import { openPack } from './testHelpers';
+import { rookieRun } from '../run/testHelpers';
 
 const TEAMS = 5, RACES = 3;
-function runFor(seed: number): RunFacts {
-  const t = generateSeasonPool(seed, TEAMS).teams[0];
-  let run = newRun({ seed, teamCount: TEAMS, races: RACES, team: { teamId: t.id, name: 'Kitty Hut', color: '#006EBE', ink: '#FFFFFF' } });
-  const league = currentLeague(run);
-  return withCurrentLeague(run, { ...league, draftPicks: quickDraft(poolFor(league)) });
-}
+const runFor = (seed: number): RunFacts => rookieRun(seed, TEAMS, RACES);
 function playRounds(run: RunFacts, n = Infinity): RunFacts {
   let f = currentLeague(run); let done = 0;
   while (seasonState(f).phase !== 'finished' && done < n) {
@@ -52,11 +47,11 @@ describe('nemesis lines (#635)', () => {
     expect(personalityOf(42, 7)).toBe(personalityOf(42, 7));
   });
 
-  it('Juniors: a voice-only rival says a first-meeting line; outside a run nobody talks', () => {
+  it('Juniors: the real nemesis (#660) says a first-meeting line; outside a run nobody talks', () => {
     const run = runFor(7);
     const facts = currentLeague(run);
     const team = nemesisTeam(facts)!;
-    expect(team.nemesis).toBeUndefined();
+    expect(team.nemesis).toBe(true);
     expect(team.id).not.toBe(facts.setup.humans[0].teamId);
     const spoken = nemesisLine(facts)!;
     expect(spoken.moment).toBe('first');

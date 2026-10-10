@@ -89,7 +89,7 @@ export default function LeagueSetup({ onBack, onStarted }: Props) {
         <div className="rs-title-block">
           <button type="button" className="rs-back" onClick={onBack}>← Menu</button>
           <h1 className="rs-title">New run</h1>
-          <span className="rs-sub">Build your team, draft two drivers and a car, then climb four leagues. Win each to move up.</span>
+          <span className="rs-sub">Build your team, pick two rookies and a car setup, then climb four leagues. Win each to move up.</span>
         </div>
         <div className="ss-start-block">
           <button type="button" className="rs-btn rs-btn-primary rs-start" onClick={start}>

@@ -78,7 +78,7 @@ export function tapTeam(pool: SeasonPool, picks: TeamPick[], picker: number, tea
 export function humansFor(pool: SeasonPool, picks: TeamPick[]): SeasonHuman[] {
   return resolvePicks(pool, picks).map(id => {
     const t = pool.teams.find(x => x.id === id)!;
-    return { teamId: t.id, name: t.name, color: t.color, ink: t.ink, iconId: t.iconId };
+    return { teamId: t.id, name: t.name, color: t.color, ink: t.ink, iconId: t.iconId, deckTeamId: t.deckTeamId };
   });
 }
 

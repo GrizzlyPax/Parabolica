@@ -448,3 +448,21 @@ button.rt-g:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset:
 .nem-text { margin: 0; font-size: 17px; font-style: italic; color: var(--pw-text-1); line-height: 1.35; }
 .nem-en { margin: 0; font-size: 12px; color: var(--pw-text-2); }
 .nem-who { font-family: var(--look-data, monospace); font-size: 11px; color: var(--pw-text-2); }
+
+/* The rookie start (#660): the offer table + the three setups. Hub's #661 designs the cards. */
+.rk .rt .rt-arch { width: 190px; min-width: 190px; text-align: left; padding: 0 10px; border-left: 1px solid var(--pw-hairline); font-family: var(--look-data); font-size: 12px; }
+.rk .rt .rt-arch b { display: block; font-size: 13px; }
+.rk .rt .rt-arch small { color: var(--pw-text-2); font-size: 11px; }
+.rk .rt tr.picked th.rt-name { box-shadow: inset 3px 0 0 var(--team-primary); background: color-mix(in srgb, var(--team-primary) 14%, var(--pw-ground)); }
+.rk .rt tr.picked td { background: color-mix(in srgb, var(--team-primary) 7%, transparent); }
+.rk-setups { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.rk-setup {
+  display: grid; gap: 4px; padding: 12px; text-align: left; cursor: pointer;
+  background: var(--pw-ground); color: var(--pw-text-1); border: 1px solid var(--pw-text-1); border-radius: 0; font: inherit;
+}
+.rk-setup b { font-family: var(--look-display); font-size: 16px; }
+.rk-setup span { font-family: var(--look-data); font-size: 13px; }
+.rk-setup small { color: var(--pw-text-2); font-size: 12px; }
+.rk-setup.on { box-shadow: inset 0 0 0 2px var(--team-primary); background: color-mix(in srgb, var(--team-primary) 12%, var(--pw-ground)); }
+.rk .rs-link:disabled { opacity: 0.5; cursor: default; }
+@media (max-width: 560px) { .rk-setups { grid-template-columns: 1fr; } }

@@ -9,7 +9,7 @@ import { seasonState, type SeasonFacts } from '../season';
 import { loadCurrentLeague as loadSeason, promoteCurrentRun } from '../../run/current';
 import { seasonName } from '../setup';
 import LeagueSetup from './LeagueSetup';
-import DraftBoard from './DraftBoard';
+import RookieStart from './RookieStart';
 import Paddock from './Paddock';
 import Standings from './Standings';
 import RunLadder from './RunLadder';
@@ -35,6 +35,10 @@ export default function SeasonScreen({ screen, navigate, onMenu }: Props) {
   }
   if (screen === 'run') {
     return <RunLadder onMenu={onMenu} onNewRun={() => navigate({ name: 'season', screen: 'setup' })} onPlay={s => navigate({ name: 'season', screen: s })} />;
+  }
+  if (screen === 'draft') {
+    // The rookie start (#660) replaced the draft; it keeps the draft's address. Start lands on the ladder.
+    return <RookieStart onBack={() => navigate({ name: 'season', screen: 'run' })} onStarted={() => navigate({ name: 'season', screen: 'run' }, { replace: true })} />;
   }
   // Keyed by screen: each screen reads the saved season fresh on arrival.
   return <SavedSeason key={screen} screen={screen} navigate={navigate} onMenu={onMenu} />;
@@ -64,9 +68,6 @@ function SavedSeason({ screen, navigate, onMenu }: Props) {
   if (wrongPlace) return null;
   const onEndSeason = () => navigate({ name: 'season', screen: 'setup' }, { replace: true });
   const toRun = () => navigate({ name: 'season', screen: 'run' });
-  if (facts && screen === 'draft') {
-    return <DraftBoard facts={facts} onChange={setFacts} onMenu={toRun} backLabel="← The run" onEndSeason={onEndSeason} onDone={() => navigate({ name: 'season', screen: 'paddock' })} />;
-  }
   if (facts && screen === 'paddock') {
     return <Paddock facts={facts} onChange={setFacts} onMenu={toRun} backLabel="← The run" onEndSeason={onEndSeason} onGo={() => navigate({ name: 'season', screen: 'race' })} onStandings={() => navigate({ name: 'season', screen: 'standings' })} />;
   }
@@ -79,7 +80,7 @@ function SavedSeason({ screen, navigate, onMenu }: Props) {
 
 const NEXT: Record<Exclude<Screen, 'setup'>, string> = {
   run: 'The league ladder',
-  draft: 'The draft board',
+  draft: 'The rookie pick',
   paddock: 'The Paddock',
   race: 'The race view',
   standings: 'The standings',
