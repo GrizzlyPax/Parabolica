@@ -153,3 +153,25 @@
 .rs-grade.tone-a, .rs-grade.tone-b { color: var(--signal-green); }
 .rs-grade.tone-c { color: var(--signal-yellow); }
 .rs-grade.tone-d, .rs-grade.tone-f { color: var(--signal-red); }
+
+/* Run setup in the race program (#737): it lives inside Race Control's page,
+   so it drops its own frame and takes the program's pieces. Rule cards and
+   the grid's teams sit on paper (.ace-paper-table re-points their tokens). Tokens only. */
+.run-setup.rs-program { min-height: 0; padding: 0; max-width: none; background: none; gap: 18px; }
+.rs-program .rs-top { align-items: center; border-bottom-color: var(--ace-gold); }
+.rs-program .rs-program-title { font-size: 26px; }
+.rs-program .rs-seed-value { background: var(--ace-paper); color: var(--ace-ink); border-color: var(--ace-ink); }
+.rs-program .rs-start { margin-left: auto; min-height: 52px; padding: 0 28px; font-size: 18px; }
+.rs-program .rs-row { border-top-color: var(--ace-hair); }
+.rs-program .rs-track { flex-direction: row; border-top: 0; padding: 12px 16px; }
+.rs-program .rs-track-pick select, .rs-program .rs-preset select { background: var(--ace-white); color: var(--ace-ink); border-color: var(--ace-ink); }
+.rs-program .rs-card { background: var(--ace-paper); color: var(--ace-ink); border: 1px solid var(--ace-ink); border-radius: 0; }
+.rs-program .rs-card:hover { border-color: var(--ace-accent); }
+.rs-program .rs-card.on { background: var(--ace-paper); border-color: var(--ace-accent); box-shadow: inset 0 0 0 3px var(--ace-accent); }
+.rs-program .rs-card.w-wild .rs-card-weight { color: var(--ace-brick); }
+.rs-program .rs-card.w-cursed .rs-card-weight { color: var(--ace-red-lv); }
+.rs-program .rs-team { background: var(--ace-paper); color: var(--ace-ink); border: 1px solid var(--ace-ink); border-top: 4px solid var(--team-color); padding: 10px 12px; }
+@media (min-width: 1024px) {
+  .rs-program .rs-program-title { font-size: 32px; }
+  .rs-program .rs-hand { grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); }
+}

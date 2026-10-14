@@ -6,6 +6,7 @@
 // Everything is derived from one seed + the hand of cards, so a report's seed
 // reproduces the race and flipping a card re-rolls only what it touches
 // (trait cards), never names, stats, teams or track.
+import { AceButton } from './look/Look';
 import { useEffect, useMemo, useState } from 'react';
 import RaceEngine, { RosterDriver } from './RaceEngine';
 import { generateRosterFromTeams } from './generators/drivers';
@@ -119,22 +120,22 @@ export default function RunSetup({ onStartRace, onBack }: RunSetupProps) {
   }, [roster, universe]);
 
   return (
-    <div className="run-setup">
+    <div className="run-setup rs-program">
       <header className="rs-top">
         <div className="rs-title-block">
-          {onBack && <button type="button" className="rs-back" onClick={onBack}>← Menu</button>}
-          <h1 className="rs-title">Run setup</h1>
-          <span className="rs-sub">One race, one universe. Edit anything, then go.</span>
+          {onBack && <button type="button" className="ace-link" onClick={onBack}>Menu</button>}
+          <h2 className="ace-h2 rs-program-title">Run setup</h2>
+          <span className="ace-sub">One race, one universe. Edit anything, then go.</span>
         </div>
         <div className="rs-seed">
           <span className="rs-k">Seed</span>
           <code className="rs-seed-value" title="Paste this into a report to replay the race">{seed}</code>
-          <button type="button" className="rs-btn rs-btn-ghost" onClick={() => { setSeed(randomSeed()); setTrackOverride(null); }}>Reroll</button>
+          <AceButton tone="ghost" onClick={() => { setSeed(randomSeed()); setTrackOverride(null); }}>Reroll</AceButton>
         </div>
-        <button type="button" className="rs-btn rs-btn-primary rs-start" onClick={start}>Start race →</button>
+        <AceButton className="rs-start" onClick={start}>Start race</AceButton>
       </header>
 
-      <section className="rs-row rs-track">
+      <section className="rs-row rs-track ace-panel ace-paper-table">
         <div className="rs-track-main">
           <span className="rs-track-emoji">{track.funEmoji}</span>
           <div>
@@ -165,7 +166,7 @@ export default function RunSetup({ onStartRace, onBack }: RunSetupProps) {
           {ruleCardsForScope('race').map(c => {
             const on = hand.includes(c.id);
             return (
-              <button type="button" key={c.id} className={`rs-card ${on ? 'on' : ''} w-${c.weight}`} onClick={() => toggleCard(c.id)} aria-pressed={on}>
+              <button type="button" key={c.id} className={`rs-card ace-paper-table ${on ? 'on' : ''} w-${c.weight}`} onClick={() => toggleCard(c.id)} aria-pressed={on}>
                 <span className="rs-card-emoji"><GameIcon name={c.iconId ?? 'card.rule'} size={24} /></span>
                 <span className="rs-card-name">{c.name}</span>
                 <span className="rs-card-readout">{c.readout}</span>
@@ -210,7 +211,7 @@ export default function RunSetup({ onStartRace, onBack }: RunSetupProps) {
         <div className="rs-row-head"><span className="rs-k">Grid</span><span className="rs-hint">{roster.length} drivers · {universe.teams.length} teams · trait cards are born with them and baked into the stats; tap a card to flip it</span></div>
         <div className="rs-teams">
           {byTeam.map(({ team, drivers, car }) => (
-            <div key={team.id} className="rs-team" style={{ '--team-color': team.color } as React.CSSProperties}>
+            <div key={team.id} className="rs-team ace-paper-table" style={{ '--team-color': team.color } as React.CSSProperties}>
               <div className="rs-team-head">
                 <span className="rs-team-marble">{team.emoji}</span>
                 <span className="rs-team-name">{team.name}</span>
