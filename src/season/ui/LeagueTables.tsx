@@ -32,7 +32,7 @@ export function LeagueTables({ facts, pool, teams, rosters, lines, drivers, onDr
   const teamPodiums = (teamId: string) => facts.results.reduce((n, r) => n + r.finishOrder.slice(0, 3).filter(id => rosters[teamId].driverIds.includes(id)).length, 0);
   return (
     <>
-      <div className="rt-scroll">
+      <div className="ace-panel flat lt-panel"><div className="rt-scroll">
         <table className="rt rt-compact">
           <thead><tr><th className="rt-pos">Pos</th><th className="rt-name">Constructors</th><th className="rt-numcol">Wins</th><th className="rt-numcol">Pod</th><th className="rt-numcol">Pts</th></tr></thead>
           <tbody>
@@ -47,8 +47,8 @@ export function LeagueTables({ facts, pool, teams, rosters, lines, drivers, onDr
             ))}
           </tbody>
         </table>
-      </div>
-      <div className="rt-scroll">
+      </div></div>
+      <div className="ace-panel flat lt-panel"><div className="rt-scroll">
         <table className="rt rt-compact">
           <thead><tr><th className="rt-pos">Pos</th><th className="rt-name">Drivers</th><th className="rt-numcol">Wins</th><th className="rt-numcol">Pod</th><th className="rt-numcol">Pts</th></tr></thead>
           <tbody>
@@ -67,7 +67,7 @@ export function LeagueTables({ facts, pool, teams, rosters, lines, drivers, onDr
             })}
           </tbody>
         </table>
-      </div>
+      </div></div>
     </>
   );
 }

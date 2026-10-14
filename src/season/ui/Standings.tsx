@@ -18,6 +18,8 @@ import { portraitFor } from '../../generators/avatars';
 import { humanLabel, teamsOf } from './teams';
 import { currentRunState } from '../../run/current';
 import { LEAGUE_LADDER } from '../../run/run';
+import { AceButton, Bunting, Chequer, ProgramLine, Sash, StateBar, StepTheme } from '../../look/Look';
+import { STEPS, programNumber, stateLook, stepForLeague } from '../../look/step';
 
 interface Props {
   facts: SeasonFacts;
@@ -47,20 +49,25 @@ export default function Standings({ facts, onMenu, onPaddock, onPlayAgain, onEnd
   const total = facts.setup.calendar.length;
   const you = teams[facts.setup.humans[0].teamId];
   const dc = table.driversChampion;
+  // The step this league wears (#705; v0.7's leagues onto Locals · State · Nationals until #696).
+  const step = stepForLeague(facts.setup.league?.index ?? 0, LEAGUE_LADDER.length);
 
   return (
-    <div className="run-setup season-setup ss-standings fn" style={teamThemeVars(champion ?? you)}>
-      <header className="rs-top">
-        <div className="rs-title-block">
-          <button type="button" className="rs-back" onClick={onMenu}>← Menu</button>
-          <h1 className="rs-title">{table.final ? 'Champions' : 'Standings'}</h1>
-          <span className="rs-sub">{seasonName(facts.setup)} · {table.final ? `all ${total} races run` : `after ${facts.results.length} of ${total} races`}</span>
-        </div>
+    <StepTheme step={step} state={stateLook('OH')} className="ace-page ss-standings fn" style={teamThemeVars(champion ?? you)}>
+      <Bunting />
+      <ProgramLine right={`No. ${programNumber(facts.setup.seed)} · 10¢`} />
+      <StateBar><b>{STEPS.find(s => s.id === step)!.name}</b> · {table.final ? `all ${total} races run` : `after ${facts.results.length} of ${total} races`}</StateBar>
+      <header className="fn-head">
+        <button type="button" className="ace-link" onClick={onMenu}>Menu</button>
+        <span className="ace-where">{seasonName(facts.setup)}</span>
         <EndSeason onEnded={onEndSeason} />
       </header>
+      <h1 className="ace-h1">{table.final ? 'Champions' : 'Standings'}</h1>
+      <Chequer />
+      {run?.phase === 'run-won' && <div className="ace-sash-wrap"><Sash text="Ace America" className="fn-sash" /></div>}
 
       {table.final && (
-        <section className="fn-result">
+        <section className="fn-result ace-panel ace-paper-table">
           {humans.map(id => {
             const line = table.lines.find(l => l.teamId === id)!;
             const who = 'You';
@@ -75,7 +82,7 @@ export default function Standings({ facts, onMenu, onPaddock, onPlayAgain, onEnd
 
       {champion && dc && (
         <section className="fn-crowns">
-          <div className="fn-crown">
+          <div className="fn-crown ace-panel ace-paper-table">
             <TeamLogo team={champion} size={72} />
             <div className="fn-crown-text">
               <span className="rs-k"><GameIcon name="season.champion" size={14} /> Constructors’ champion{champLabel ? ` · ${champLabel}` : ''}</span>
@@ -83,7 +90,7 @@ export default function Standings({ facts, onMenu, onPaddock, onPlayAgain, onEnd
               <span className="fn-crown-stats">{table.lines[0].points} pts · {table.lines[0].wins} {table.lines[0].wins === 1 ? 'win' : 'wins'} · {podiums(champion.id)} podiums</span>
             </div>
           </div>
-          <div className="fn-crown">
+          <div className="fn-crown ace-panel ace-paper-table">
             <RaceNumber n={driver(dc.driver.driverId).number} color={teams[dc.teamId].color} ink={teams[dc.teamId].ink} size={56} shape="square" />
             <div className="fn-crown-text">
               <span className="rs-k"><GameIcon name="season.champion" size={14} /> Drivers’ champion · {teams[dc.teamId].name}{humanLabel(facts, dc.teamId) ? ` · ${humanLabel(facts, dc.teamId)}` : ''}</span>
@@ -106,13 +113,13 @@ export default function Standings({ facts, onMenu, onPaddock, onPlayAgain, onEnd
       </section>
       <p className="rs-hint">Two championships, like F1: the Constructors’ (both racers’ points) and the Drivers’ (each driver’s own).</p>
 
-      <div className="ss-dock">
+      <div className="ace-dock">
         {table.final
           ? (run?.phase === 'league-won' && onPromote
-            ? <button type="button" className="rs-btn rs-btn-primary ss-dock-btn" onClick={onPromote}>Up to {LEAGUE_LADDER[run.leagueIndex + 1]?.name} →</button>
-            : <button type="button" className="rs-btn rs-btn-primary ss-dock-btn" onClick={onPlayAgain}>{run?.phase === 'run-lost' ? 'New run' : 'Play again'}</button>)
-          : <button type="button" className="rs-btn rs-btn-primary ss-dock-btn" onClick={onPaddock}>Back to the Paddock</button>}
+            ? <AceButton onClick={onPromote}>Up to {LEAGUE_LADDER[run.leagueIndex + 1]?.name}</AceButton>
+            : <AceButton onClick={onPlayAgain}>{run?.phase === 'run-lost' ? 'New run' : 'Play again'}</AceButton>)
+          : <AceButton onClick={onPaddock}>Back to the Paddock</AceButton>}
       </div>
-    </div>
+    </StepTheme>
   );
 }

@@ -550,3 +550,17 @@ button.rt-g:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset:
 @media (min-width: 1024px) {
   .pk.ace-page .pk-tabs button { font-size: 17px; padding: 12px 24px; }
 }
+
+/* Standings and the finale in the race program (#717): the bits look.css doesn't own. */
+.fn.ace-page { max-width: none; }
+.fn.ace-page .fn-head { display: flex; align-items: center; gap: 12px; }
+.fn.ace-page .fn-head .ace-where { flex: 1; min-width: 0; }
+.fn.ace-page .fn-result { gap: 4px; }
+.fn.ace-page .fn-result-line { font-size: 18px; }
+.fn.ace-page .fn-crowns { border-bottom: 0; padding: 0; gap: 16px; }
+.fn.ace-page .fn-crown { flex-direction: row; align-items: center; gap: 18px; padding: 14px 18px; }
+.fn.ace-page .fn-crown-name { font-weight: 400; color: var(--ace-ink); }
+.fn.ace-page .fn-sash { width: min(520px, 100%); }
+.fn.ace-page > .pk-chart { max-width: 960px; }
+.lt-panel { padding: 0; }
+@media (max-width: 719px) { .fn.ace-page .fn-crowns, .fn.ace-page .fn-tables { grid-template-columns: 1fr; } }
