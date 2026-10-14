@@ -24,7 +24,6 @@ export function buildVariableList(): VarDef[] {
   // Tire compounds
   const tireCompoundVars = [
     { key: 'speedBonus', label: 'Speed Bonus', desc: 'Speed multiplier', format: 'multiplier' as const, min: 0.8, max: 1.2, step: 0.01 },
-    { key: 'lifeLaps', label: 'Life (laps)', desc: 'Laps from fresh to the cliff', format: 'decimal' as const, min: 2, max: 20, step: 0.5 },
     { key: 'lifeShare', label: 'Life (share of race)', desc: 'Laps to the cliff = share × race laps (3★ mgmt, mid aggression)', format: 'decimal' as const, min: 0.1, max: 1.5, step: 0.05 },
     { key: 'lifeFloorLaps', label: 'Life Floor', desc: 'Never fewer laps than this (short races)', format: 'integer' as const, min: 1, max: 10, step: 1 },
     { key: 'criticalAt', label: 'Cliff Start', desc: 'Wear % when cliff begins', format: 'integer' as const, min: 50, max: 95, step: 1 },
