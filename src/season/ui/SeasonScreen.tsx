@@ -8,8 +8,7 @@ import type { Route, SeasonScreen as Screen } from '../../router';
 import { seasonState, type SeasonFacts } from '../season';
 import { loadCurrentLeague as loadSeason, promoteCurrentRun } from '../../run/current';
 import { seasonName } from '../setup';
-import LeagueSetup from './LeagueSetup';
-import RookieStart from './RookieStart';
+import StartRun from './StartRun';
 import Paddock from './Paddock';
 import Standings from './Standings';
 import RunLadder from './RunLadder';
@@ -30,15 +29,15 @@ export function seasonScreenFor(facts: SeasonFacts): Screen {
 
 export default function SeasonScreen({ screen, navigate, onMenu }: Props) {
   if (screen === 'setup') {
-    // The run's first step (#346, #628): your team, then the ladder.
-    return <LeagueSetup onBack={onMenu} onStarted={() => navigate({ name: 'season', screen: 'run' }, { replace: true })} />;
+    // The run's start (#696): your state and garage, then the ladder.
+    return <StartRun onBack={onMenu} onStarted={() => navigate({ name: 'season', screen: 'run' }, { replace: true })} />;
   }
   if (screen === 'run') {
     return <RunLadder onMenu={onMenu} onNewRun={() => navigate({ name: 'season', screen: 'setup' })} onPlay={s => navigate({ name: 'season', screen: s })} />;
   }
   if (screen === 'draft') {
-    // The rookie start (#660) replaced the draft; it keeps the draft's address. Start lands on the ladder.
-    return <RookieStart onBack={() => navigate({ name: 'season', screen: 'run' })} onStarted={() => navigate({ name: 'season', screen: 'run' }, { replace: true })} />;
+    // No draft and no rookie pick since #696 (rookies are dealt): the old address goes to the ladder.
+    return <RunLadder onMenu={onMenu} onNewRun={() => navigate({ name: 'season', screen: 'setup' })} onPlay={s => navigate({ name: 'season', screen: s })} />;
   }
   // Keyed by screen: each screen reads the saved season fresh on arrival.
   return <SavedSeason key={screen} screen={screen} navigate={navigate} onMenu={onMenu} />;

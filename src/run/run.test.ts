@@ -1,35 +1,34 @@
-// #597: the run. League 0 opens on the rookie pick (#660); a won league
-// promotes the whole team; every league derives from the facts, replays
-// exactly, and saves as facts only. The meta record survives an engine bump.
+// #696: the run. Three steps (Locals 5 races, State 6, a slot for Nationals);
+// rookies dealt near-identical; the field and rival strength from the state's
+// size; titles as facts; the whole garage carries up; every step derives from
+// the facts, replays exactly, and saves as facts only. The meta record
+// survives an engine version bump.
 import { describe, it, expect } from 'vitest';
 import {
-  newRun, seasonFactsFor, currentLeague, withCurrentLeague, runState, promote, replayRun, leagueWon,
-  saveRun, loadRun, clearRun, RUN_KEY, LEAGUES_PER_RUN, type RunFacts,
+  newRun, seasonFactsFor, currentLeague, withCurrentLeague, runState, promote, replayRun, leagueWon, titlesOf, titleFor, townOf, rivalTowns, fieldAt, fieldShiftAt,
+  startingTeam, saveRun, loadRun, clearRun, RUN_KEY, RUN_SCHEMA_VERSION, STEP_PLAN, STATE_FIELD, LAST_BUILT_STEP, NEMESIS_IN_RUN, PLAYER_TEAM_ID, type RunFacts,
 } from './run';
 import { emptyMeta, recordRun, loadMeta, saveMeta, META_KEY, grant } from './meta';
-import { loadCurrentLeague, saveCurrentLeague, startRun, promoteCurrentRun, currentRunState, pickCurrentRookies } from './current';
-import { LEAGUE_ID_STRIDE } from '../season/genesis';
-import { rookieRun } from './testHelpers';
+import { loadCurrentLeague, saveCurrentLeague, startRun, promoteCurrentRun, currentRunState } from './current';
+import { LEAGUE_ID_STRIDE, shiftStats } from '../season/genesis';
 import { seasonState, setLineup, settleRound, poolFor, constructorStandings, leagueForRound, rivalShifts, type SeasonFacts, type SeasonStore } from '../season/season';
-import { LEAGUE_LADDER, runnerUp } from './run';
-import { STAR_FLOOR, shiftStats } from '../season/genesis';
 import { applyCards } from '../cards';
-import { draftState, aiPick } from '../season/draft';
+import { draftState } from '../season/draft';
 import { teamCardState, carriedCards } from '../season/pack';
 import { openPack } from '../season/testHelpers';
 import { seasonCalendar } from '../season/setup';
+import { dealRookies, ROOKIE_GRADE, ROOKIE_ID_BASE, ROOKIE_WOBBLE } from '../season/rookies';
+import { rating } from '../season/grades';
+import { fieldSize, placeById } from '../data/states';
+import { testRun, TEST_GARAGE } from './testHelpers';
+import { quickRace } from '../season/quickRace';
 
 function memoryStore(): SeasonStore {
   const map = new Map<string, string>();
   return { getItem: k => map.get(k) ?? null, setItem: (k, v) => void map.set(k, v), removeItem: k => void map.delete(k) };
 }
 
-const TEAMS = 5, RACES = 2;
-
-/** A run through its rookie pick: league 0 open in the Paddock. */
-const runFor = (seed: number): RunFacts => rookieRun(seed, TEAMS, RACES);
-
-/** Play the league in play to the end: the player fields their drafted pair and opens every pack. */
+/** Play the step in play to the end: the player fields the dealt pair and opens every pack. */
 function playLeague(run: RunFacts): RunFacts {
   let facts = currentLeague(run);
   while (seasonState(facts).phase !== 'finished') {
@@ -45,108 +44,198 @@ function playLeague(run: RunFacts): RunFacts {
   return withCurrentLeague(run, facts);
 }
 
-/** The first seed whose player wins league 0 (short leagues, small field: a few tries). */
-function wonRun(): RunFacts {
-  for (let seed = 11; seed < 200; seed++) {
-    const run = playLeague(runFor(seed));
+/** The first seed (in a small state: 5 towns, Vermont) whose player wins Locals. */
+function wonRun(stateId = 'vt'): RunFacts {
+  for (let seed = 11; seed < 400; seed++) {
+    const run = playLeague(testRun(seed, stateId));
     if (runState(run).phase === 'league-won') return run;
   }
   throw new Error('no winning seed found');
 }
 function lostRun(): RunFacts {
-  for (let seed = 11; seed < 200; seed++) {
-    const run = playLeague(runFor(seed));
+  for (let seed = 11; seed < 400; seed++) {
+    const run = playLeague(testRun(seed, 'vt'));
     if (runState(run).phase === 'run-lost') return run;
   }
   throw new Error('no losing seed found');
 }
 
 const digests = (f: SeasonFacts) => f.results.map(d => [d.finishOrder, d.totalTicks, d.dnfDriverIds]);
+const grade = (stat: 'baseSpeed' | 'consistency' | 'luck' | 'acceleration' | 'endurance' | 'aggression', raw: number) => rating(stat, raw);
 
-describe('the ladder', () => {
-  it('league 0 is the Juniors on the run seed, carrying the rookie pick in; a run before its pick waits on it', () => {
-    const run = runFor(5);
-    const league = seasonFactsFor(run, 0);
-    expect(league.setup.seed).toBe(5);
-    expect(league.setup.calendar).toEqual(seasonCalendar(5, RACES));
-    expect(league.setup.league?.name).toBe('Juniors');
-    expect(league.setup.carry?.teamId).toBe(run.setup.team.teamId);
-    expect(league.setup.carry?.drivers.map(d => d.id)).toEqual(run.rookies.pick!.driverIds);
-    expect(runState(newRun({ seed: 5, teamCount: TEAMS, races: RACES, team: run.setup.team })).phase).toBe('start');
-    expect(runState(run)).toMatchObject({ leagueIndex: 0, phase: 'league', won: 0 });
-    expect(runState(run).ladder.map(r => r.status)).toEqual(['current', 'ahead', 'ahead', 'ahead']);
+describe('the steps', () => {
+  it('Locals 5 races, State 6, Nationals a slot; the field by the state\'s size; your town from its pool', () => {
+    expect(STEP_PLAN.map(s => [s.id, s.races])).toEqual([['locals', 5], ['state', 6], ['nationals', 0]]);
+    expect(LAST_BUILT_STEP).toBe(1);
+    expect(STATE_FIELD).toEqual({ 5: 20, 10: 27, 20: 34 });
+    const oh = testRun(5, 'oh'), vt = testRun(5, 'vt'), ia = testRun(5, 'ia');
+    expect([fieldSize(placeById('oh')!), fieldSize(placeById('ia')!), fieldSize(placeById('vt')!)]).toEqual([20, 10, 5]);
+    expect([fieldAt(oh, 0), fieldAt(oh, 1), fieldAt(vt, 1), fieldAt(ia, 1)]).toEqual([5, 20, 5, 10]);
+    expect([fieldShiftAt(oh, 0), fieldShiftAt(oh, 1), fieldShiftAt(vt, 1), fieldShiftAt(ia, 1)]).toEqual([0, 34, 20, 27]);
+    expect(placeById('oh')!.cities).toContain(townOf(oh));
+    expect(rivalTowns(oh)).toHaveLength(placeById('oh')!.cities.length - 1);
+    expect(rivalTowns(oh)).not.toContain(townOf(oh));
+    expect([titleFor(oh, 'locals'), titleFor(oh, 'state'), titleFor(oh, 'nationals')]).toEqual([`Ace ${townOf(oh)}`, 'Ace Ohio', 'Ace America']);
+    expect(() => newRun({ seed: 1, stateId: 'zz', garage: TEST_GARAGE })).toThrow(/no state/);
   });
 
-  it('a lost league ends the run; promotion is refused', () => {
+  it('step 0 is Locals on the run seed: your dealt garage reserved, 5 rival garages of your town, open in the Paddock', () => {
+    const run = testRun(5, 'oh');
+    const league = seasonFactsFor(run, 0);
+    expect(league.setup.seed).toBe(5);
+    expect(league.setup.calendar).toEqual(seasonCalendar(5, 5));
+    expect(league.setup.teamCount).toBe(6);
+    expect(league.setup.league).toMatchObject({ index: 0, step: 'locals', name: 'Locals', fieldShift: 0, nemesisShift: 0, bossRound: 4, locale: { stateId: 'oh', town: townOf(run), rivalTowns: [] } });
+    expect(league.setup.humans[0]).toMatchObject({ teamId: PLAYER_TEAM_ID, name: 'Kettle Street Garage' });
+    expect(run.setup.garage.deckTeamId).toBeUndefined();
+    const team = startingTeam(run);
+    expect(league.setup.carry).toEqual(team);
+    expect(team.drivers.map(d => d.id)).toEqual([ROOKIE_ID_BASE, ROOKIE_ID_BASE + 1]);
+    expect(team.car.id).toBe('car-you');
+    expect(seasonState(league).phase).toBe('paddock');
+    const pool = poolFor(league);
+    const roster = draftState(pool, league.draftPicks).rosters[PLAYER_TEAM_ID];
+    expect(roster.driverIds).toEqual(team.drivers.map(d => d.id));
+    expect(roster.carId).toBe('car-you');
+    expect(pool.teams[0].id).toBe(PLAYER_TEAM_ID);
+    // Rival garages: generic names, no deck team, no town at Locals, no nemesis.
+    for (const t of pool.teams.slice(1)) {
+      expect(t.deckTeamId).toBeUndefined();
+      expect(t.town).toBeUndefined();
+      expect(t.nemesis).toBeUndefined();
+      expect(t.name).toMatch(/Sons|Brothers|Motors|Garage|Motor Works|Pump|Speed Shop/);
+      expect(t.traits).toEqual([]);
+    }
+    expect(new Set(pool.teams.map(t => t.name)).size).toBe(pool.teams.length);
+    expect(runState(run)).toMatchObject({ leagueIndex: 0, phase: 'league', won: 0 });
+    expect(runState(run).ladder.map(r => [r.status, r.title, r.later ?? false])).toEqual([['current', `Ace ${townOf(run)}`, false], ['ahead', 'Ace Ohio', false], ['ahead', 'Ace America', true]]);
+    expect(titlesOf(run)).toEqual([]);
+  });
+
+  it('rookies are dealt near-identical: everyone at level 5 ± the wobble, no traits, American names; yours on their own stream', () => {
+    const dealt = dealRookies(5);
+    expect(dealt).toEqual(dealRookies(5));
+    expect(dealt.drivers.map(d => d.number)).toHaveLength(2);
+    const run = testRun(5, 'oh');
+    const pool = poolFor(currentLeague(run));
+    for (const d of pool.drivers) {
+      expect(d.traits).toEqual([]);
+      expect(d.fullName.split(' ')).toHaveLength(2);
+      for (const st of ['baseSpeed', 'consistency', 'luck', 'acceleration', 'endurance', 'aggression'] as const) {
+        expect(Math.abs(grade(st, d.stats[st]) - ROOKIE_GRADE)).toBeLessThanOrEqual(ROOKIE_WOBBLE + 1e-9);
+      }
+    }
+    for (const c of pool.cars) for (const v of Object.values(c.stats)) expect(Math.abs(v - 2)).toBeLessThanOrEqual(0.2 + 1e-9);
+    for (const t of pool.teams) for (const v of Object.values(t.teamStats)) expect(Math.abs(v - 2)).toBeLessThanOrEqual(0.2 + 1e-9);
+    expect(new Set(pool.drivers.map(d => d.number)).size).toBe(pool.drivers.length);
+    expect(new Set(pool.drivers.map(d => d.id)).size).toBe(pool.drivers.length);
+    // Quick Race still rolls genesis (the golden fingerprint's path).
+    const q = quickRace(5);
+    expect(q.facts.setup.league).toBeUndefined();
+    expect(poolFor(q.facts).drivers.some(d => d.traits.length > 0)).toBe(true);
+  });
+
+  it('a lost step ends the run; promotion is refused', () => {
     const run = lostRun();
     const state = runState(run);
     expect(state.phase).toBe('run-lost');
     expect(state.ladder[0].status).toBe('lost');
     expect(leagueWon(state.league)).toBe(false);
     expect(() => promote(run)).toThrow(/cannot promote/);
+    expect(titlesOf(run)).toEqual([]);
   });
 
-  it('a won league promotes the whole team: ids, stats, traits, numbers, cards; rivals are fresh and reserved picks are respected', () => {
-    const won = wonRun();
-    expect(runState(won).ladder.map(r => r.status)).toEqual(['won', 'ahead', 'ahead', 'ahead']);
+  it('a won step is a title and promotes the whole garage: ids, stats, numbers, cards; State races every town\'s Ace, lifted by the state\'s size', () => {
+    const won = wonRun('vt');
+    expect(runState(won).ladder.map(r => r.status)).toEqual(['won', 'ahead', 'ahead']);
+    expect(titlesOf(won)).toEqual([{ step: 'locals', name: `Ace ${townOf(won)}` }]);
     const prev = currentLeague(won);
     const you = prev.setup.humans[0].teamId;
     const prevPool = poolFor(prev);
     const prevRoster = draftState(prevPool, prev.draftPicks).rosters[you];
-    const prevCards = teamCardState(prev, you, RACES);
+    const prevCards = teamCardState(prev, you, 5);
 
     const next = promote(won);
+    expect(next.titles).toEqual([{ step: 'locals', name: `Ace ${townOf(won)}` }]);
     expect(next.leagues).toHaveLength(2);
     const league = currentLeague(next);
-    expect(league.setup.league).toMatchObject({ index: 1, name: 'Regional', bossRound: RACES - 1 });
+    expect(league.setup.league).toMatchObject({ index: 1, step: 'state', name: 'State', fieldShift: 20, bossRound: 5 });
+    expect(league.setup.calendar).toHaveLength(6);
+    expect(league.setup.teamCount).toBe(6); // Vermont: 5 towns
     expect(league.setup.seed).not.toBe(prev.setup.seed);
-    expect(league.setup.humans).toEqual(prev.setup.humans);
     const pool = poolFor(league);
-    // The team came up: same drivers (ids, stats, traits, numbers), same car, same team stats.
     const roster = draftState(pool, league.draftPicks).rosters[you];
     expect(roster.driverIds).toEqual(prevRoster.driverIds);
     expect(roster.carId).toBe(prevRoster.carId);
     for (const id of roster.driverIds) {
       const before = prevPool.drivers.find(d => d.id === id)!, after = pool.drivers.find(d => d.id === id)!;
-      expect(after).toMatchObject({ stats: before.stats, traits: before.traits, number: before.number, fullName: before.fullName, avatarSeed: prev.setup.seed, reservedFor: you });
+      expect(after).toMatchObject({ stats: before.stats, number: before.number, fullName: before.fullName, avatarSeed: won.setup.seed, reservedFor: you });
     }
-    expect(pool.cars.find(c => c.id === roster.carId)).toMatchObject({ stats: prevPool.cars.find(c => c.id === roster.carId)!.stats, reservedFor: you });
-    expect(pool.teams.find(t => t.id === you)!.teamStats).toEqual(prevPool.teams.find(t => t.id === you)!.teamStats);
-    // Cards start where they ended, before any new pack.
-    expect(carriedCards(teamCardState(league, you), RACES)).toEqual(carriedCards(prevCards, RACES));
-    // The field is fresh: new ids above the stride, unique ids and numbers, nobody else holds your people.
-    const others = pool.drivers.filter(d => d.reservedFor !== you);
-    expect(others.every(d => d.id >= LEAGUE_ID_STRIDE)).toBe(true);
-    expect(new Set(pool.drivers.map(d => d.id)).size).toBe(pool.drivers.length);
+    expect(carriedCards(teamCardState(league, you), 6)).toEqual(carriedCards(prevCards, 6));
+    // Every rival garage has its own town; ids above the stride; nobody holds your people.
+    const rivals = pool.teams.filter(t => t.id !== you);
+    expect(rivals.every(t => t.town && t.town !== townOf(won))).toBe(true);
+    expect(new Set(rivals.map(t => t.town)).size).toBe(rivals.length);
+    expect(pool.drivers.filter(d => d.reservedFor !== you).every(d => d.id >= LEAGUE_ID_STRIDE)).toBe(true);
     expect(new Set(pool.drivers.map(d => d.number)).size).toBe(pool.drivers.length);
-    expect(new Set(pool.teams.map(t => t.id)).size).toBe(TEAMS);
-    const state = draftState(pool, league.draftPicks);
-    expect(state.done).toBe(true);
-    for (const [teamId, r] of Object.entries(state.rosters)) {
-      if (teamId === you) continue;
-      expect(r.driverIds.some(id => roster.driverIds.includes(id))).toBe(false);
-      expect(r.carId).not.toBe(roster.carId);
-    }
-    // A CPU on the clock never sees your drivers; you are forced onto yours.
-    const fresh = { ...league, draftPicks: [] };
-    const first = draftState(poolFor(fresh), []);
-    if (first.onTheClock!.teamId !== you) expect(first.availableDrivers.some(d => d.reservedFor === you)).toBe(false);
     expect(seasonState(league).phase).toBe('paddock');
     expect(runState(next)).toMatchObject({ leagueIndex: 1, phase: 'league', won: 1 });
-    void aiPick;
+    // The lift: every rival stat +20 at race build; yours untouched; no nemesis.
+    const shifts = rivalShifts(league);
+    expect(shifts[you]).toBeUndefined();
+    expect(Object.values(shifts)).toEqual(Array(5).fill(20));
+    expect(pool.teams.some(t => t.nemesis)).toBe(false);
+    expect(NEMESIS_IN_RUN).toBe(false);
+    expect(league.setup.carry?.nemesis).toBeUndefined();
+    const grid = leagueForRound(league, 0).roster;
+    for (const d of grid) {
+      const raw = pool.drivers.find(x => x.id === d.id)!;
+      const car = pool.cars.find(c => c.id === draftState(pool, league.draftPicks).rosters[d.kingdomId!].carId)!;
+      const team = pool.teams.find(t => t.id === d.kingdomId)!;
+      const carded = applyCards({ driver: raw.stats, car: car.stats, team: team.teamStats }, d.cards ?? []);
+      const expected = d.kingdomId === you ? carded : shiftStats(carded, 20);
+      expect(d.stats).toEqual(expected.driver);
+      expect(d.carStats).toEqual(expected.car);
+    }
+  });
+
+  it('a 20-town state fields 21 garages (42 cars) at State', () => {
+    const run = promote(wonRun('oh'));
+    const league = currentLeague(run);
+    expect(league.setup.teamCount).toBe(21);
+    expect(poolFor(league).drivers).toHaveLength(42);
+    expect(league.setup.league?.fieldShift).toBe(34);
+    expect(leagueForRound(league, 0).roster).toHaveLength(42);
+  });
+
+  it('winning State wins the run (Nationals waits on #694); the titles are claimed', () => {
+    let run = promote(wonRun('vt'));
+    const state = runState(run);
+    expect(state.ladder[2]).toMatchObject({ status: 'ahead', later: true, title: 'Ace America' });
+    expect(() => seasonFactsFor({ ...run, leagues: [...run.leagues, { draftPicks: [], lineups: [], cardFacts: [], effectFacts: [], results: [] }] }, 2)).toThrow(/not built/);
+    // Hand the player every race (a scripted table): the run is won.
+    let facts = currentLeague(run);
+    const you = facts.setup.humans[0].teamId;
+    const mine = draftState(poolFor(facts), facts.draftPicks).rosters[you].driverIds;
+    const others = poolFor(facts).drivers.map(d => d.id).filter(id => !mine.includes(id));
+    const digest = (i: number) => ({ index: i, trackId: facts.setup.calendar[i], trackName: 't', trackEmoji: '', finishOrder: [...mine, ...others], dnfDriverIds: [], fastestLapDriverId: null, totalTicks: 1000, highlights: [] });
+    facts = { ...facts, results: facts.setup.calendar.map((_, i) => digest(i)) };
+    run = withCurrentLeague(run, facts);
+    expect(runState(run).phase).toBe('run-won');
+    expect(titlesOf(run).map(t => t.name)).toEqual([`Ace ${townOf(run)}`, 'Ace Vermont']);
+    expect(() => promote(run)).toThrow(/cannot promote/);
   });
 
   it('derived setups are stable: twice from the same facts, and through JSON', () => {
-    const next = promote(wonRun());
+    const next = promote(wonRun('vt'));
     const a = seasonFactsFor(next, 1);
     const b = seasonFactsFor(JSON.parse(JSON.stringify(next)), 1);
     expect(b).toEqual(a);
     expect(seasonFactsFor(next, 1)).toBe(a); // memoised per run object
   });
 
-  it('a run replayed from its facts equals the live run, league after league', () => {
-    let run = promote(wonRun());
-    // one round into league 2
+  it('a run replayed from its facts equals the live run, step after step', () => {
+    let run = promote(wonRun('vt'));
     let facts = currentLeague(run);
     const state = seasonState(facts);
     const roster = draftState(poolFor(facts), facts.draftPicks).rosters[state.whoseTurn!];
@@ -156,132 +245,58 @@ describe('the ladder', () => {
     run = withCurrentLeague(run, facts);
     const replay = replayRun(run);
     expect(replay).toHaveLength(2);
-    for (let i = 0; i < 2; i++) {
-      expect(replay[i].map(d => [d.finishOrder, d.totalTicks, d.dnfDriverIds])).toEqual(digests(seasonFactsFor(run, i)));
-    }
+    for (let i = 0; i < 2; i++) expect(replay[i].map(d => [d.finishOrder, d.totalTicks, d.dnfDriverIds])).toEqual(digests(seasonFactsFor(run, i)));
     expect(replay[1]).toHaveLength(1);
-    // The carried team's results count: your drivers are on league 2's grid.
-    expect(replay[1][0].finishOrder.some(id => roster.driverIds.includes(id)) || replay[1][0].dnfDriverIds.some(id => roster.driverIds.includes(id))).toBe(true);
-    // The standings know your team in both leagues
-    expect(constructorStandings(seasonFactsFor(run, 1)).some(s => s.teamId === run.setup.team.teamId)).toBe(true);
-  });
-
-  it('the top league won is the run won', () => {
-    expect(LEAGUES_PER_RUN).toBe(4);
-    expect(LEAGUE_ID_STRIDE).toBe(100);
-  });
-});
-
-describe('rival levels + the nemesis (#626)', () => {
-  it('every rival stat is shifted by the league\'s field at race build; the player is not; stars are floored', () => {
-    const run = promote(wonRun());
-    const league = currentLeague(run);
-    const you = run.setup.team.teamId;
-    const ctx = league.setup.league!;
-    const { field, nemesis } = LEAGUE_LADDER[1];
-    expect(ctx.fieldShift).toBe(field);
-    expect(field).toBe(7);
-    const shifts = rivalShifts(league);
-    expect(shifts[you]).toBeUndefined();
-    expect(Object.keys(shifts)).toHaveLength(TEAMS - 1);
-    expect(Object.values(shifts).sort()).toEqual([...Array(TEAMS - 2).fill(field), field + nemesis].sort());
-    const pool = poolFor(league);
-    const grid = leagueForRound(league, 0).roster;
-    for (const d of grid) {
-      const raw = pool.drivers.find(x => x.id === d.id)!;
-      const car = pool.cars.find(c => c.id === draftState(pool, league.draftPicks).rosters[d.kingdomId!].carId)!;
-      const team = pool.teams.find(t => t.id === d.kingdomId)!;
-      const carded = applyCards({ driver: raw.stats, car: car.stats, team: team.teamStats }, d.cards ?? []);
-      const shift = shifts[d.kingdomId!] ?? 0;
-      const expected = d.kingdomId === you ? carded : shiftStats(carded, shift);
-      expect(d.stats).toEqual(expected.driver);
-      expect(d.carStats).toEqual(expected.car);
-      expect(d.teamStats).toEqual(expected.team);
-      if (d.kingdomId !== you) {
-        // 1 grade point = 0.003 on a speed stat, 0.04★ on a star (floored)
-        expect(d.stats.baseSpeed).toBeCloseTo(carded.driver!.baseSpeed + shift * 0.003, 10);
-        expect(d.carStats!.power).toBeCloseTo(Math.max(STAR_FLOOR, carded.car!.power + shift * 0.04), 10);
-      }
-    }
-    expect(shiftStats({ car: { power: 1, grip: 1, reliability: 1 } }, -25).car!.power).toBe(STAR_FLOOR);
-    // Quick Race and a stand-alone season have no league: nothing shifts.
-    expect(rivalShifts({ ...league, setup: { ...league.setup, league: undefined } })).toEqual({});
-  });
-
-  it('the nemesis is last league\'s runner-up, promoted with you: same look, fresh people, field + nemesis points', () => {
-    const won = wonRun();
-    const prev = currentLeague(won);
-    const second = runnerUp(prev)!;
-    expect(second.name).toBe(poolFor(prev).teams.find(t => t.id === constructorStandings(prev)[1].teamId)!.name);
-    const next = promote(won);
-    const league = currentLeague(next);
-    const pool = poolFor(league);
-    const nemesis = pool.teams.filter(t => t.nemesis);
-    expect(nemesis).toHaveLength(1);
-    expect(nemesis[0]).toMatchObject({ name: second.name, color: second.color, deckTeamId: second.deckTeamId });
-    expect(nemesis[0].id).not.toBe(won.setup.team.teamId);
-    // The look is dealt once: no other team wears it.
-    expect(pool.teams.filter(t => t.deckTeamId && t.deckTeamId === second.deckTeamId)).toHaveLength(1);
-    const shifts = rivalShifts(league);
-    expect(shifts[nemesis[0].id]).toBe(LEAGUE_LADDER[1].field + LEAGUE_LADDER[1].nemesis);
-    for (const t of pool.teams) if (!t.nemesis && t.id !== won.setup.team.teamId) expect(shifts[t.id]).toBe(LEAGUE_LADDER[1].field);
-    // No runner-up before the league is over; the Juniors' nemesis is their own (#660).
-    expect(runnerUp(seasonFactsFor(runFor(7), 0))).toBeUndefined();
-    expect(seasonFactsFor(runFor(7), 0).setup.carry?.nemesis).toBeUndefined();
-    expect(poolFor(seasonFactsFor(runFor(7), 0)).teams.filter(t => t.nemesis)).toHaveLength(1);
+    expect(constructorStandings(seasonFactsFor(run, 1)).some(s => s.teamId === run.setup.garage.teamId)).toBe(true);
   });
 });
 
 describe('saves', () => {
-  it('a run saves as facts only and loads back the same; the current league is the same Season', () => {
+  it('a run saves as facts only and loads back the same; a v0.7 run is archived', () => {
     const store = memoryStore();
-    const run = promote(wonRun());
+    const run = promote(wonRun('vt'));
     expect(saveRun(run, store)).toBe(true);
     const saved = JSON.parse(store.getItem(RUN_KEY)!);
+    expect(saved.schemaVersion).toBe(RUN_SCHEMA_VERSION);
     expect(saved.data.leagues.every((l: object) => !('setup' in l))).toBe(true);
     const loaded = loadRun(store)!;
     expect(loaded).toEqual(run);
     expect(currentLeague(loaded)).toEqual(currentLeague(run));
+    store.setItem(RUN_KEY, JSON.stringify({ ...saved, schemaVersion: 2 }));
+    expect(loadRun(store)).toBeNull();
     clearRun(store);
     expect(loadRun(store)).toBeNull();
   });
 
-  it('the screens\' facade: start → play → save the league → load it back; promote through the facade', () => {
+  it('the screens\' facade: start → play → save the step → load it back; promote through the facade', () => {
     const store = memoryStore();
-    const won = wonRun();
-    const league0 = seasonFactsFor(won, 0);
-    const started = startRun(league0.setup, store);
+    const won = wonRun('vt');
+    const started = startRun({ seed: won.setup.seed, stateId: 'vt', garage: TEST_GARAGE }, store);
     expect(started.setup.seed).toBe(won.setup.seed);
-    expect(currentRunState(store)!.phase).toBe('start');
-    expect(pickCurrentRookies(won.rookies.pick!, store)!.rookies).toEqual(won.rookies);
-    expect(loadCurrentLeague(store)!.setup.league?.index).toBe(0);
-    expect(loadCurrentLeague(store)!.draftPicks).toEqual(league0.draftPicks);
-    // write the played league back
+    expect(currentRunState(store)!.phase).toBe('league');
+    expect(loadCurrentLeague(store)!.draftPicks).toEqual(seasonFactsFor(won, 0).draftPicks);
     expect(saveCurrentLeague(currentLeague(won), store)).toBe(true);
     expect(currentRunState(store)!.phase).toBe('league-won');
     const next = promoteCurrentRun(store)!;
     expect(next.setup.league?.index).toBe(1);
-    expect(loadCurrentLeague(store)!.setup.carry?.teamId).toBe(won.setup.team.teamId);
+    expect(loadCurrentLeague(store)!.setup.carry?.teamId).toBe(won.setup.garage.teamId);
+    expect(loadRun(store)!.titles).toHaveLength(1);
     expect(loadMeta(store).runs).toEqual([]); // still in play: nothing recorded
   });
 
   it('a lost run is recorded once in the meta; the meta survives an engine version bump', () => {
     const store = memoryStore();
     const lost = lostRun();
-    const league0 = seasonFactsFor(lost, 0);
-    startRun(league0.setup, store);
-    pickCurrentRookies(lost.rookies.pick!, store);
+    startRun({ seed: lost.setup.seed, stateId: 'vt', garage: TEST_GARAGE }, store);
     saveCurrentLeague(currentLeague(lost), store);
     saveCurrentLeague(currentLeague(lost), store);
     const meta = loadMeta(store);
     expect(meta.runs).toHaveLength(1);
     expect(meta.runs[0]).toMatchObject({ seed: lost.setup.seed, leaguesWon: 0, won: false });
-    // Another engine saved it: only the data's own schema version matters.
     const raw = JSON.parse(store.getItem(META_KEY)!);
     raw.engineVersion = '9.9.9';
     store.setItem(META_KEY, JSON.stringify(raw));
     expect(loadMeta(store)).toEqual(meta);
-    // Unlocks: granted once, kept, unknown ids dropped on load.
     const granted = grant(grant(meta, 'horror-deck-league-3'), 'horror-deck-league-3');
     expect(granted.unlocks).toEqual(['horror-deck-league-3']);
     saveMeta({ ...granted, unlocks: [...granted.unlocks, 'made-up' as never] }, store);

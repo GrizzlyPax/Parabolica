@@ -513,6 +513,10 @@ button.rt-g:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset:
 .rl-driver:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset: 2px; }
 .rp-setup-blurb { color: var(--pw-text-2); font-size: 11px; font-style: italic; }
 
+/* The start page (#696): the state select and the garage name on paper. */
+.sr-select, .sr-name input { width: 100%; min-height: 44px; padding: 0 10px; background: var(--ace-paper); color: var(--ace-ink); border: 1px solid var(--ace-ink); border-radius: 0; font: inherit; font-size: 16px; }
+.sr-name { display: block; }
+
 /* The ladder in the race program's look (#705): the bits look.css doesn't own. */
 .rl .rl-head-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
 .rl .rl-head-row .ace-where { display: inline-flex; align-items: center; gap: 6px; text-transform: none; letter-spacing: 0; font-family: var(--ace-body); font-size: 14px; }

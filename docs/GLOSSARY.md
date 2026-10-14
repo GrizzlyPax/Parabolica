@@ -1,6 +1,6 @@
 # Parabolica World Deck
 
-*Everything in the sim and the world, generated from the data modules by `npm run glossary` — do not edit by hand; edit the source files named in each section and re-run. Engine v0.7.4. How to add content: docs/WORLD_DECK.md.*
+*Everything in the sim and the world, generated from the data modules by `npm run glossary` — do not edit by hand; edit the source files named in each section and re-run. Engine v0.8.0. How to add content: docs/WORLD_DECK.md.*
 
 28 teams · 6 tracks · 94 cards (36 traits · 36 gear · 22 effects) · 5 in-race effects · 13 rule cards · 6 weathers
 
@@ -130,7 +130,7 @@
 | **South Carolina** `sc` | — | — | — |
 | **South Dakota** `sd` | — | — | — |
 | **Tennessee** `tn` | — | — | — |
-| **Texas** `tx` | — | — | — |
+| **Texas** `tx` | #BF0A30 · #002868 · #EFE6D2 | #ffffff | Texas's lone star field, the wheel in place of the star |
 | **Utah** `ut` | — | — | — |
 | **Vermont** `vt` | #1B4D3E · #0F241C · #C99A3A | #ffffff | Vermont's green field and mountains, a cream wheel at the centre, a gold band with VERMONT along the foot |
 | **Virginia** `va` | — | — | — |

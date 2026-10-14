@@ -9,8 +9,6 @@ import { METAL_LADDER } from '../cards';
 import { RUN_CURSES } from '../cards';
 import { PLAYER_CARD_SCALE } from './pack';
 import { level, levelDelta, levelTone, overall, rating, readStat } from './grades';
-import { rivalRank } from './ranks';
-import { newSeason } from './season';
 
 const card = (id: string) => CARDS_BY_ID.get(id)!;
 
@@ -62,12 +60,4 @@ describe('stat levels', () => {
     expect(overall([r, readStat('luck', 0.55, [])]).total).toBeCloseTo((r.total + rating('luck', 0.55)) / 2);
   });
 
-  it('rival ranks by tier: Rookies → Pros → Aces → Legends; none outside a run or for you', () => {
-    const facts = newSeason({ seed: 1, teamCount: 5, humans: [{ teamId: 'team-0', name: 'You', color: '#006EBE' }], calendar: ['speed-power'] });
-    expect(rivalRank(facts, 'team-1')).toBeNull();
-    const at = (index: number) => ({ ...facts, setup: { ...facts.setup, league: { index, name: '', fieldShift: 0, nemesisShift: 0, bossRound: 0 } } });
-    expect(rivalRank(at(1), 'team-0')).toBeNull();
-    expect(rivalRank(at(2), 'team-3')?.rank).toMatch(/^(Ace|Legend)$/);
-    expect(rivalRank(at(3), 'team-3')?.rank).toBe('Legend');
-  });
 });

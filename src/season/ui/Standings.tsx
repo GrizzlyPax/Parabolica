@@ -17,7 +17,6 @@ import { Avatar } from '../../icons/Avatar';
 import { portraitFor } from '../../generators/avatars';
 import { humanLabel, teamsOf } from './teams';
 import { currentRunState } from '../../run/current';
-import { LEAGUE_LADDER } from '../../run/run';
 
 interface Props {
   facts: SeasonFacts;
@@ -67,9 +66,9 @@ export default function Standings({ facts, onMenu, onPaddock, onPlayAgain, onEnd
             const crown = dc?.teamId === id ? ` · ${driver(dc.driver.driverId).fullName} is Drivers’ champion` : '';
             return <p key={id} className="fn-result-line"><b>{who} finished P{line.rank}</b> in the Constructors’ on {line.points} pts{crown}.</p>;
           })}
-          {run?.phase === 'league-won' && <p className="fn-result-line">League won. <b>{LEAGUE_LADDER[run.leagueIndex + 1]?.name}</b> is next; your whole team goes up with you.</p>}
-          {run?.phase === 'run-won' && <p className="fn-result-line"><b>The run is won:</b> all {LEAGUE_LADDER.length} leagues, bottom to top.</p>}
-          {run?.phase === 'run-lost' && <p className="fn-result-line"><b>The run is over.</b> Only a league win moves you up. Start again; what you unlocked stays.</p>}
+          {run?.phase === 'league-won' && <p className="fn-result-line"><b>Congratulations, you are now {run.ladder[run.leagueIndex].title}.</b> {run.ladder[run.leagueIndex + 1]?.name} is next; your whole garage goes up with you.</p>}
+          {run?.phase === 'run-won' && <p className="fn-result-line"><b>Congratulations, you are now {run.ladder[run.leagueIndex].title}.</b> Nationals comes in a later build.</p>}
+          {run?.phase === 'run-lost' && <p className="fn-result-line"><b>The season is over.</b> Only the title moves you up. Start again; what you unlocked stays.</p>}
         </section>
       )}
 
@@ -109,8 +108,8 @@ export default function Standings({ facts, onMenu, onPaddock, onPlayAgain, onEnd
       <div className="ss-dock">
         {table.final
           ? (run?.phase === 'league-won' && onPromote
-            ? <button type="button" className="rs-btn rs-btn-primary ss-dock-btn" onClick={onPromote}>Up to {LEAGUE_LADDER[run.leagueIndex + 1]?.name} →</button>
-            : <button type="button" className="rs-btn rs-btn-primary ss-dock-btn" onClick={onPlayAgain}>{run?.phase === 'run-lost' ? 'New run' : 'Play again'}</button>)
+            ? <button type="button" className="rs-btn rs-btn-primary ss-dock-btn" onClick={onPromote}>Up to {run.ladder[run.leagueIndex + 1]?.name} →</button>
+            : <button type="button" className="rs-btn rs-btn-primary ss-dock-btn" onClick={onPlayAgain}>{run?.phase === 'run-lost' ? 'A new season' : 'A new season'}</button>)
           : <button type="button" className="rs-btn rs-btn-primary ss-dock-btn" onClick={onPaddock}>Back to the Paddock</button>}
       </div>
     </div>

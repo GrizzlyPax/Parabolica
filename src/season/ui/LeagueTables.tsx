@@ -1,9 +1,8 @@
 // The league's two tables (#453): constructors and every driver, Wins · Pod ·
 // Pts. Shared by the Paddock's League tab and the finale.
-import { GameIcon, TeamLogo } from '../../icons/GameIcon';
+import { TeamLogo } from '../../icons/GameIcon';
 import { DriverName } from './DriverCard';
 import { nemesisTeam } from '../nemesis';
-import { rivalRank } from '../ranks';
 import { RaceNumber } from '../../icons/RaceNumber';
 import { Avatar } from '../../icons/Avatar';
 import { portraitFor } from '../../generators/avatars';
@@ -58,7 +57,7 @@ export function LeagueTables({ facts, pool, teams, rosters, lines, drivers, onDr
               return (
                 <tr key={d.driverId} className={humans.includes(t.id) ? 'mine' : ''}>
                   <td className="rt-pos">{i + 1}</td>
-                  <th className="rt-name" scope="row"><RaceNumber n={p.number} color={t.color} ink={t.ink} size={20} shape="square" className="rt-numsq" /><Avatar icon={portraitFor(pool.seed, p.id)} color={t.color} size={20} />{onDriver ? <DriverName name={p.fullName} onOpen={() => onDriver(p.id)} /> : <span className="rt-nm">{p.fullName}</span>}{(() => { const r = rivalRank(facts, t.id); return r && <span className={`rk-tag ${r.crest ? 'crest' : ''}`} title={r.crest ? 'Legend, with the crest' : r.rank}>{r.crest && <GameIcon name="race.lead_change" size={10} />}{r.rank}</span>; })()}</th>
+                  <th className="rt-name" scope="row"><RaceNumber n={p.number} color={t.color} ink={t.ink} size={20} shape="square" className="rt-numsq" /><Avatar icon={portraitFor(pool.seed, p.id)} color={t.color} size={20} />{onDriver ? <DriverName name={p.fullName} onOpen={() => onDriver(p.id)} /> : <span className="rt-nm">{p.fullName}</span>}</th>
                   <td className="rt-numcol">{d.wins}</td>
                   <td className="rt-numcol">{d.podiums}</td>
                   <td className="rt-numcol">{d.points}</td>

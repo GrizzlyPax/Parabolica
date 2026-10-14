@@ -1,11 +1,12 @@
-// The league ladder's view (#628, Pax picked A: the ladder). Pure: a run in,
-// what the run's home screen shows out. Four rungs, bottom to top; the league
-// in play is open (races run, you against the nemesis, how you go up); won
-// leagues keep one line of memory; leagues ahead wait.
+// The Ladder's view (#628, #696). Pure: a run in, what the run's home screen
+// shows out. Three rungs, Locals at the bottom; the step in play is open
+// (races run, you against the garage nearest you, how you go up); a won rung
+// keeps its title; a lost one says where it ended; Nationals waits (#694).
 import { constructorStandings, seasonState, type SeasonFacts } from '../season/season';
 import { teamsOf } from '../season/ui/teams';
 import type { TeamLike } from '../icons/GameIcon';
-import { LEAGUE_LADDER, runState, runnerUp, seasonFactsFor, type RunFacts, type RunPhase } from './run';
+import { runState, seasonFactsFor, titlesOf, type RunFacts, type RunPhase } from './run';
+import type { Step } from '../look/step';
 import { UNLOCKS, type MetaFacts, type UnlockId } from './meta';
 import { nemesisTeam } from '../season/nemesis';
 
@@ -13,14 +14,19 @@ export interface Standing { team: TeamLike & { id: string }; place: number; poin
 
 export interface RungView {
   index: number;
+  step: Step;
   name: string;
+  /** The title this rung is for ("Ace Toledo"). */
+  title: string;
   status: 'won' | 'lost' | 'current' | 'ahead';
-  /** Races run and the league's length (the last is the boss race). */
+  /** Not built yet (Nationals). */
+  later?: boolean;
+  /** Races run and the step's length (the last is the boss race). */
   races?: { done: number; total: number };
   you?: Standing;
-  /** Who you're up against: the nemesis, or (no nemesis yet) the team nearest you. */
+  /** Who you're up against: the nemesis (parked), else the garage nearest you. */
   rival?: Standing & { nemesis: boolean };
-  /** One line for a finished league. */
+  /** One line for a finished step. */
   memory?: string;
 }
 
@@ -28,6 +34,11 @@ export interface LadderView {
   phase: RunPhase;
   leagueIndex: number;
   you: TeamLike;
+  /** Your state and town. */
+  stateId: string;
+  town: string;
+  /** Titles held, bottom first. */
+  titles: { step: Step; name: string }[];
   rungs: RungView[];
   unlocks: { id: UnlockId; name: string; blurb: string; got: boolean }[];
 }
@@ -42,39 +53,33 @@ function standingOf(facts: SeasonFacts, teamId: string): Standing | undefined {
   return row && team ? { team: { ...team, id: teamId }, place: row.rank, points: row.points } : undefined;
 }
 
-function rungFor(run: RunFacts, i: number, status: RungView['status']): RungView {
-  const facts = seasonFactsFor(run, i);
+function rungFor(run: RunFacts, rung: RungView): RungView {
+  const facts = seasonFactsFor(run, rung.index);
   const youId = facts.setup.humans[0]?.teamId ?? '';
   const you = standingOf(facts, youId);
-  // The nemesis: the Juniors' own (#660), then the carried-up runner-up (#626).
   const nemesisId = nemesisTeam(facts)?.id;
   const table = constructorStandings(facts);
   const nearestId = table.find(s => s.teamId !== youId)?.teamId;
   const rivalId = nemesisId ?? nearestId;
   const rival = rivalId ? standingOf(facts, rivalId) : undefined;
   const done = seasonState(facts).phase === 'finished' ? facts.setup.calendar.length : facts.results.length;
-  const view: RungView = {
-    index: i, name: LEAGUE_LADDER[i].name, status,
-    races: { done, total: facts.setup.calendar.length },
-    you, rival: rival && { ...rival, nemesis: rivalId === nemesisId },
-  };
-  if (status === 'won') {
-    const up = i < run.leagues.length - 1 ? runnerUp(facts) : undefined;
-    view.memory = up ? `${up.name} were runners-up and came up with you.` : 'Won.';
-  } else if (status === 'lost' && you) {
-    view.memory = `Finished ${ordinal(you.place)} with ${you.points} pts. The run ended here.`;
-  }
+  const view: RungView = { ...rung, races: { done, total: facts.setup.calendar.length }, you, rival: rival && { ...rival, nemesis: rivalId === nemesisId } };
+  if (rung.status === 'won') view.memory = `${rung.title}: yours.`;
+  else if (rung.status === 'lost' && you) view.memory = `Finished ${ordinal(you.place)} with ${you.points} pts. The run ended here.`;
   return view;
 }
 
 export function ladderView(run: RunFacts, meta: MetaFacts): LadderView {
   const state = runState(run);
+  const ctx = state.league.setup.league!;
   return {
     phase: state.phase,
     leagueIndex: state.leagueIndex,
-    you: run.setup.team,
-    // Before the rookie pick (#660) the Juniors are open but empty: no team yet.
-    rungs: state.ladder.map(r => (r.status === 'ahead' || state.phase === 'start' ? { index: r.index, name: r.name, status: r.status } : rungFor(run, r.index, r.status))),
+    you: run.setup.garage,
+    stateId: ctx.locale?.stateId ?? run.setup.stateId,
+    town: ctx.locale?.town ?? '',
+    titles: titlesOf(run),
+    rungs: state.ladder.map(r => (r.status === 'ahead' ? { ...r } : rungFor(run, { ...r }))),
     unlocks: (Object.keys(UNLOCKS) as UnlockId[]).map(id => ({ id, ...UNLOCKS[id], got: meta.unlocks.includes(id) })),
   };
 }

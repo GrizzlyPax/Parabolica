@@ -25,7 +25,6 @@ import FinishSheet from './components/race/FinishSheet';
 import DriverCard from './season/ui/DriverCard';
 import { DRIVER_CARD_STATS, type DriverCardData } from './season/driverCard';
 import { readStat } from './season/grades';
-import { RANKS } from './season/xp';
 import { driverDebrief, winnerEdge } from './components/race/debrief';
 import QualiBoard, { type QualiLive, type QualiFollow } from './components/race/QualiBoard';
 import type { DriverHistoryEntry } from './components/race/types';
@@ -77,8 +76,6 @@ interface WatchModeProps {
   myDriverIds?: readonly number[];
   /** A run (#635): the nemesis team's drivers, tagged NEMESIS in the tower. */
   nemesisDriverIds?: readonly number[];
-  /** A run: each driver's rank and XP (#646), for the driver card (#476). */
-  driverRanks?: Readonly<Record<number, { xp: number; rank: string; next: number | null }>>;
   /** Season Mode (#489): each driver's portrait + car vehicle. */
   avatars?: ReadonlyMap<number, { portrait: IconId; vehicle: IconId }>;
   /** The way out, when it isn't the menu or the league ("Paddock"). */
@@ -137,7 +134,6 @@ function WatchMode({
   sealedDriverIds,
   myDriverIds,
   nemesisDriverIds,
-  driverRanks,
   avatars,
   exitLabel,
   // Race controls
@@ -199,10 +195,9 @@ function WatchMode({
       id: d.id, name: d.name, number: d.number, teamName: d.teamName ?? '', color: d.color, ink: d.ink,
       portrait: avatars?.get(d.id)?.portrait, backstory: d.backstory, quirk: d.quirk,
       cards: d.cards ?? [], sealed,
-      rank: (() => { const r = driverRanks?.[d.id]; if (!r) return undefined; const i = RANKS.findIndex(x => x.name === r.rank); return { name: r.rank, xp: r.xp, next: r.next, nextName: RANKS[i + 1]?.name }; })(),
       readings: sealed ? undefined : DRIVER_CARD_STATS.map(s => readStat(s, d.stats[s as keyof typeof d.stats] as number, [])),
     };
-  }, [raceCardOf, drivers, sealedDriverIds, avatars, driverRanks]);
+  }, [raceCardOf, drivers, sealedDriverIds, avatars]);
   const [navPanelOpen, setNavPanelOpen] = useState(false);
 
   // Auto-unfocus DNF'd drivers (they can manually re-focus if wanted)

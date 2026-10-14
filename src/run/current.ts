@@ -1,21 +1,21 @@
-// The one saved run, for the screens (#597). Season Mode's screens keep
-// working on a SeasonFacts: the league in play. These give them that league,
-// write their changes back into the run, start a run from League Setup's
-// choices, promote, and keep the meta record. Hub's run screens (#628) read
-// `currentRunState`.
-import type { SeasonFacts, SeasonSetup, SeasonStore } from '../season/season';
-import { currentLeague, loadRun, newRun, pickRookies, promote, rerollRookies, runState, saveRun, withCurrentLeague, clearRun as clearRunSave, type RookiePick, type RunFacts, type RunState } from './run';
+// The one saved run, for the screens (#597, #696). Season Mode's screens keep
+// working on a SeasonFacts: the step in play. These give them that step,
+// write their changes back into the run, start a run from the start screen's
+// choices (your state, your garage), promote, and keep the meta record. The
+// run screens read `currentRunState` / `loadRun`.
+import type { SeasonFacts, SeasonHuman, SeasonStore } from '../season/season';
+import { claimTitles, currentLeague, loadRun, newRun, promote, runState, saveRun, withCurrentLeague, clearRun as clearRunSave, type RunFacts, type RunState } from './run';
 import { loadMeta, recordRun, saveMeta } from './meta';
 
 export { clearRunSave as clearRun };
 
-/** The league in play, as a Season; null when no run is saved. */
+/** The step in play, as a Season; null when no run is saved. */
 export function loadCurrentLeague(store?: SeasonStore | null): SeasonFacts | null {
   const run = store === undefined ? loadRun() : loadRun(store);
   return run ? currentLeague(run) : null;
 }
 
-/** Save a change to the league in play. When it ends the run, the meta records it. */
+/** Save a change to the step in play. When it ends the run, the titles are claimed and the meta records it. */
 export function saveCurrentLeague(facts: SeasonFacts, store?: SeasonStore | null): boolean {
   const run = store === undefined ? loadRun() : loadRun(store);
   if (!run) return false;
@@ -23,43 +23,25 @@ export function saveCurrentLeague(facts: SeasonFacts, store?: SeasonStore | null
 }
 
 function commit(run: RunFacts, store?: SeasonStore | null): boolean {
-  const ok = store === undefined ? saveRun(run) : saveRun(run, store);
   const phase = runState(run).phase;
+  const final = phase === 'run-won' ? claimTitles(run) : run;
+  const ok = store === undefined ? saveRun(final) : saveRun(final, store);
   if (ok && (phase === 'run-won' || phase === 'run-lost')) {
     const meta = store === undefined ? loadMeta() : loadMeta(store);
-    const next = recordRun(meta, run);
+    const next = recordRun(meta, final);
     if (next !== meta) { if (store === undefined) saveMeta(next); else saveMeta(next, store); }
   }
   return ok;
 }
 
-/** Start a run from League Setup's choices: the player is `humans[0]`, the
- * race count is the calendar's length. Returns the first league. */
-export function startRun(setup: Pick<SeasonSetup, 'seed' | 'teamCount' | 'humans' | 'calendar' | 'ruleset'>, store?: SeasonStore | null): SeasonFacts {
-  const team = setup.humans[0];
-  if (!team) throw new Error('run: a run needs a player team');
-  const run = newRun({ seed: setup.seed, teamCount: setup.teamCount, team, races: setup.calendar.length, ruleset: setup.ruleset });
+/** Start a run: your state and your garage. Returns the first step, open in the Paddock. */
+export function startRun(setup: { seed: number; stateId: string; garage: Omit<SeasonHuman, 'teamId'> }, store?: SeasonStore | null): SeasonFacts {
+  const run = newRun(setup);
   commit(run, store);
   return currentLeague(run);
 }
 
-/** The rookie start (#660): the free re-roll, and the pick that opens league 0. Null with no run. */
-export function rerollCurrentRookies(store?: SeasonStore | null): RunFacts | null {
-  const run = store === undefined ? loadRun() : loadRun(store);
-  if (!run) return null;
-  const next = rerollRookies(run);
-  commit(next, store);
-  return next;
-}
-export function pickCurrentRookies(pick: RookiePick, store?: SeasonStore | null): RunFacts | null {
-  const run = store === undefined ? loadRun() : loadRun(store);
-  if (!run) return null;
-  const next = pickRookies(run, pick);
-  commit(next, store);
-  return next;
-}
-
-/** Up a league (the league in play must be won). Returns the new league, or null with no run. */
+/** Up a step (the step in play must be won). Returns the new step, or null with no run. */
 export function promoteCurrentRun(store?: SeasonStore | null): SeasonFacts | null {
   const run = store === undefined ? loadRun() : loadRun(store);
   if (!run) return null;

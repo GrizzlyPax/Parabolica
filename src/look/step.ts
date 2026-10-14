@@ -7,9 +7,11 @@
 // How a screen wears a theme: wrap it in <StepTheme step state?> (Look.tsx),
 // which sets `data-step` and, for a state, the state's colours as CSS vars;
 // look/tokens.css maps those onto the --ace-* tokens every component reads.
-// State ink is never guessed: `inkFor` (icons/ink.ts) picks it from the colour.
+// The state looks live in src/data/states.ts (#695); `stateLook` is the one
+// reader. State ink is never guessed: `inkFor` picks it from the colour.
 import type { CSSProperties } from 'react';
 import { inkFor } from '../icons/ink';
+import { DEFAULT_LOOK, placeById, US_PLACES, type StateLook as PlaceLook } from '../data/states';
 
 export type Step = 'locals' | 'state' | 'nationals' | 'globals' | 'galacticals';
 export const STEPS: readonly { id: Step; name: string; look: string }[] = [
@@ -20,42 +22,25 @@ export const STEPS: readonly { id: Step; name: string; look: string }[] = [
   { id: 'galacticals', name: 'Galacticals', look: 'Americana until its own look lands' },
 ];
 export const STEP_IDS: readonly Step[] = STEPS.map(s => s.id);
+export const stepName = (id: Step): string => STEPS.find(s => s.id === id)?.name ?? id;
 
-/** A state's look (#695 carries these on the state data; #708 fills all 52). */
-export interface StateLook {
+/** A state's look as the theme reads it: the place's colours plus its code and name. */
+export interface StateLook extends PlaceLook {
   /** Postal code: 'OH'. */
   code: string;
   name: string;
-  /** The bar, the buttons, the sash edge. */
-  primary: string;
-  /** The sash's ink, the second colour of the flag. */
-  secondary: string;
-  /** The flag's highlight (the wheel-flag reads it; the sash's wheels stay gold). */
-  accent: string;
-  /** Text on `primary`: from inkFor, never a guess. */
-  ink: string;
-  /** An optional dark ground tint; absent = the navy. */
-  ground?: string;
 }
 
-type LookSeed = Omit<StateLook, 'ink'> & { ink?: string };
-const look = (s: LookSeed): StateLook => ({ ...s, ink: s.ink ?? inkFor(s.primary) });
+/** Every place's code, for pickers. */
+export const STATE_CODES: readonly string[] = US_PLACES.map(p => p.abbr);
 
-/** Three states from the mock-ups (plus Texas), a STUB until #695 / #708 land the data. */
-export const STATE_LOOKS: Record<string, StateLook> = {
-  OH: look({ code: 'OH', name: 'Ohio', primary: '#b8312f', secondary: '#1d2b4f', accent: '#efe6d2', ground: '#0f1730' }),
-  AZ: look({ code: 'AZ', name: 'Arizona', primary: '#ce5c17', secondary: '#002868', accent: '#fed700', ground: '#1c1410' }),
-  VT: look({ code: 'VT', name: 'Vermont', primary: '#1b4d3e', secondary: '#1b4d3e', accent: '#c99a3a', ground: '#0f241c' }),
-  TX: look({ code: 'TX', name: 'Texas', primary: '#bf0a30', secondary: '#002868', accent: '#efe6d2', ground: '#0d1630' }),
-};
-export const STATE_CODES = Object.keys(STATE_LOOKS);
-
-/** A state's look with the ink read from its primary (any field may be overridden). */
-export function stateLook(code: string, over: Partial<LookSeed> = {}): StateLook {
-  const base = STATE_LOOKS[code];
-  if (!base) throw new Error(`look: no state ${code}`);
+/** A place's look (DEFAULT_LOOK until #708 fills it), ink from inkFor; any field may be overridden. */
+export function stateLook(code: string, over: Partial<Omit<StateLook, 'code' | 'name' | 'flag'>> = {}): StateLook {
+  const place = placeById(code);
+  if (!place) throw new Error(`look: no state ${code}`);
+  const base = place.look ?? DEFAULT_LOOK;
   const merged = { ...base, ...over };
-  return { ...merged, ink: over.ink ?? (over.primary ? inkFor(over.primary) : base.ink) };
+  return { ...merged, code: place.abbr, name: place.name, ink: over.ink ?? (over.primary ? inkFor(over.primary) : base.ink) };
 }
 
 /** The inline vars a themed wrapper sets: a state's colours (the tokens map them). */
@@ -75,17 +60,6 @@ export function stepThemeVars(step: Step, state?: StateLook): CSSProperties {
 export type RibbonStep = 'locals' | 'state' | 'nationals';
 export function ribbonStep(step: Step): RibbonStep {
   return step === 'locals' || step === 'state' ? step : 'nationals';
-}
-
-/**
- * v0.7's four-league run onto the three steps, for the Ladder's proof: the
- * first league is Locals, the last Nationals, the ones between State. #696
- * (the Ace America run core) replaces this with the real steps.
- */
-export function stepForLeague(index: number, leagues: number): Step {
-  if (index <= 0) return 'locals';
-  if (index >= leagues - 1) return 'nationals';
-  return 'state';
 }
 
 /** The Official Program number on a cover: one per run seed, 1–99. */

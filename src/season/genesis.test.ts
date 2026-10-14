@@ -39,9 +39,10 @@ describe('generateSeasonPool', () => {
     expect(a.cars.map(c => c.stats)).not.toEqual(b.cars.map(c => c.stats));
   });
 
-  it('rejects grids outside 5–10 teams', () => {
+  it('rejects grids outside 5–21 teams (21 = a 20-town State, #696)', () => {
     expect(() => generateSeasonPool(1, 4)).toThrow();
-    expect(() => generateSeasonPool(1, 11)).toThrow();
+    expect(() => generateSeasonPool(1, 22)).toThrow();
+    expect(generateSeasonPool(1, 21).drivers).toHaveLength(42);
   });
 
   it('CPU team identities come from the World Deck teams, no repeats', () => {
