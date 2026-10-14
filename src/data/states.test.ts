@@ -1,6 +1,14 @@
 import { describe, it, expect } from 'vitest';
 import { US_PLACES, placeById, fieldSize, fieldLine, FIELD_STEPS, DEFAULT_LOOK } from './states';
-import { inkFor } from '../icons/ink';
+import { inkFor, INK_DARK } from '../icons/ink';
+
+const SASH_CREAM = '#f6f0e2', NAVY = '#111a33';
+function lum(hex: string): number {
+  const [r, g, b] = [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16) / 255).map(c => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+/** WCAG contrast ratio. */
+const contrast = (a: string, b: string) => { const [x, y] = [lum(a), lum(b)].sort((m, n) => n - m); return (x + 0.05) / (y + 0.05); };
 
 const HEX = /^#[0-9A-F]{6}$/;
 
@@ -13,9 +21,23 @@ describe('Ace America places (#695)', () => {
     for (const p of US_PLACES) expect(p.id).toBe(p.abbr.toLowerCase());
   });
 
-  it('fills Ohio, Arizona, Vermont and Texas from the #698 mock-ups; the default look has inkFor ink', () => {
-    expect(US_PLACES.filter(p => p.look).map(p => p.id).sort()).toEqual(['az', 'oh', 'tx', 'vt']);
+  it('all 52 wear their own look (#740): distinct primaries; the fallback has inkFor ink', () => {
+    expect(US_PLACES.every(p => p.look)).toBe(true);
+    expect(new Set(US_PLACES.map(p => p.look!.primary)).size).toBe(52);
+    expect(placeById('az')!.look!.primary).toBe('#A6491B');
+    expect(placeById('oh')!.look!.accent).toBe('#EFE6D2');
     expect(DEFAULT_LOOK.ink).toBe(inkFor(DEFAULT_LOOK.primary));
+  });
+
+  it("Radio's checks hold for every look: ink as the table says, contrast on the sash, the ground and the navy", () => {
+    const DARK_INK = new Set(['co', 'dc', 'fl', 'ga', 'hi', 'ia', 'ks', 'md', 'mn', 'mo', 'mt', 'nc', 'nd', 'ne', 'nj', 'nm', 'pr', 'sd', 'va', 'wi']);
+    for (const p of US_PLACES) {
+      const l = p.look!;
+      expect(l.ink === INK_DARK, p.id).toBe(DARK_INK.has(p.id));
+      expect(contrast(l.secondary, SASH_CREAM), `${p.id} secondary on the sash`).toBeGreaterThanOrEqual(4.5);
+      expect(contrast(l.accent, l.ground!), `${p.id} accent on its ground`).toBeGreaterThanOrEqual(4.5);
+      expect(contrast(l.accent, NAVY), `${p.id} accent on navy`).toBeGreaterThanOrEqual(3);
+    }
   });
 
   it('every place has a population and a pool of at least eight real towns, no town twice', () => {
@@ -40,7 +62,7 @@ describe('Ace America places (#695)', () => {
   it('every filled look has hex colours, inkFor ink and its wheel-flag', () => {
     for (const p of US_PLACES) {
       if (!p.look) continue;
-      for (const c of [p.look.primary, p.look.secondary, p.look.accent]) expect(c).toMatch(HEX);
+      for (const c of [p.look.primary, p.look.secondary, p.look.accent, p.look.ground!]) expect(c).toMatch(HEX);
       expect(p.look.ink).toBe(inkFor(p.look.primary));
       expect(p.look.flag.id).toBe(`wheel-flag-${p.id}`);
       expect(p.look.flag.note.length).toBeGreaterThan(0);
