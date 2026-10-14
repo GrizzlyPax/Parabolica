@@ -119,3 +119,24 @@
   .rt.gl-teams { width: 100%; min-width: 0; table-layout: auto; }
   .rt.gl-teams td.gl-tline { height: auto; padding: 8px 10px; }
 }
+
+/* The World Deck in the race program (#718): Americana, the menus' theme. Tokens only. */
+.glossary.ace-page .gl-head { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 14px 28px; }
+.glossary.ace-page .gl-head-text { display: flex; flex-direction: column; gap: 6px; flex: 1 1 520px; min-width: 0; }
+.glossary.ace-page .gl-head-text .ace-link { align-self: flex-start; }
+.glossary.ace-page .ace-sub { max-width: 80ch; }
+.glossary.ace-page .gl-search input { background: var(--ace-paper); color: var(--ace-ink); border: 1px solid var(--ace-ink); border-radius: 0; }
+.glossary.ace-page .gl-tabs { margin: 0; gap: 4px; border-bottom: 2px solid var(--ace-gold); align-items: flex-end; }
+.glossary.ace-page .gl-tab { font-family: var(--ace-cond); font-size: 14px; letter-spacing: .1em; padding: 9px 14px; color: var(--ace-muted); border: 1px solid transparent; border-bottom: 0; }
+.glossary.ace-page .gl-tab:hover { color: var(--ace-fg); border-color: transparent; }
+.glossary.ace-page .gl-tab.on { background: var(--ace-paper); color: var(--ace-ink); border-color: var(--ace-gold); }
+.glossary.ace-page .gl-tab-add { border: 1px dashed var(--ace-muted); border-bottom: 0; }
+.glossary.ace-page .gl-fold { margin-left: auto; padding-bottom: 8px; }
+.gl-state { display: inline-flex; align-items: center; gap: 10px; }
+.gl-state-sw { display: inline-flex; flex: none; }
+.gl-state-sw i { width: 14px; height: 18px; border: 1px solid var(--pw-border-strong); }
+.gl-state-sw i + i { border-left: 0; }
+.gl-state-sw.empty i { background: none; border-style: dashed; }
+@media (min-width: 1024px) {
+  .glossary.ace-page .gl-tab { font-size: 15px; padding: 11px 18px; }
+}

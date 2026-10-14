@@ -20,6 +20,9 @@ import type { CardStat } from './cards';
 import { STAT_ICONS } from './icons/registry';
 import { MOTORSPORT_DECK, METAL_LADDER, cardsBy, STAT_LABELS, type Card } from './cards';
 import { CardFace } from './cards/CardFace';
+import { Bunting, Chequer, ProgramLine, StepTheme } from './look/Look';
+import { programNo } from './MainMenu';
+import { version } from '../package.json';
 import './RunSetup.css';
 import './Glossary.css';
 import './season/ui/Season.css';
@@ -31,16 +34,16 @@ interface GlossaryProps {
   onTabChange?: (slug: string) => void;
 }
 
-type TabId = 'deck' | 'teams' | 'tracks' | 'cards' | 'rules' | 'conditions' | 'flavour' | 'add' | 'inbox';
+type TabId = 'deck' | 'teams' | 'tracks' | 'cards' | 'rules' | 'conditions' | 'states' | 'flavour' | 'add' | 'inbox';
 /** URL slugs for the tabs (#186). */
 const TAB_SLUG: Record<TabId, string> = {
-  deck: 'cards', teams: 'teams', tracks: 'tracks', cards: 'rule-cards', rules: 'rules', conditions: 'weather', flavour: 'flavour', add: 'add', inbox: 'inbox',
+  deck: 'cards', teams: 'teams', tracks: 'tracks', cards: 'rule-cards', rules: 'rules', conditions: 'weather', states: 'states', flavour: 'flavour', add: 'add', inbox: 'inbox',
 };
 const tabFromSlug = (slug?: string): TabId => (Object.keys(TAB_SLUG) as TabId[]).find(k => TAB_SLUG[k] === slug) ?? 'deck';
 
 const TABS: { id: TabId; label: string }[] = [
   { id: 'deck', label: 'Cards' }, { id: 'teams', label: 'Teams' }, { id: 'tracks', label: 'Tracks' }, { id: 'cards', label: 'Rule cards' },
-  { id: 'rules', label: 'Effects' }, { id: 'conditions', label: 'Weather' }, { id: 'flavour', label: 'Flavour' }, { id: 'inbox', label: 'Inbox' }, { id: 'add', label: '+ Add' },
+  { id: 'rules', label: 'Effects' }, { id: 'conditions', label: 'Weather' }, { id: 'states', label: 'States' }, { id: 'flavour', label: 'Flavour' }, { id: 'inbox', label: 'Inbox' }, { id: 'add', label: '+ Add' },
 ];
 
 function Pills({ effects }: { effects: ReturnType<typeof effectsOf> }) {
@@ -270,18 +273,21 @@ export default function Glossary({ onBack, tab: tabSlug, onTabChange }: Glossary
   const deckTeamGroups = TEAM_KINDS.map(k => ({ id: k.kind, title: k.title, rows: g.deckTeams.filter(t => t.kind === k.kind), hint: `${k.hint} Quick Race draws its 11 and Season Mode its CPU teams from these.` }));
 
   return (
-    <div className="run-setup glossary">
-      <header className="rs-top">
-        <div className="rs-title-block">
-          <button type="button" className="rs-back" onClick={onBack}>← Menu</button>
-          <h1 className="rs-title">World Deck</h1>
-          <span className="rs-sub">Everything in the world, read straight from the data. {MOTORSPORT_DECK.length} cards · {g.counts.deckTeams} teams · {g.counts.deckTracks} tracks · {g.counts.deckWeather} weathers · {g.counts.inRaceEffects} in-race effects · {g.counts.cards} rule cards. Click a line to open it.</span>
+    <StepTheme step="nationals" className="ace-page glossary">
+      <Bunting />
+      <ProgramLine left="The World Deck" right={`No. ${programNo(version)} · 10¢`} />
+      <header className="gl-head">
+        <div className="gl-head-text">
+          <button type="button" className="ace-link" onClick={onBack}>Menu</button>
+          <h1 className="ace-h1">The World Deck</h1>
+          <p className="ace-sub">Everything in the world, read straight from the data. {MOTORSPORT_DECK.length} cards · {g.counts.deckTeams} teams · {g.counts.deckTracks} tracks · {g.counts.deckWeather} weathers · {g.places.length} states · {g.counts.inRaceEffects} in-race effects · {g.counts.cards} rule cards. Click a line to open it.</p>
         </div>
         <label className="gl-search">
           <span className="rs-k">Find</span>
           <input type="search" value={q} onChange={e => setQ(e.target.value)} placeholder="speed, pit, damaged…" />
         </label>
       </header>
+      <Chequer />
 
       <nav className="gl-tabs" aria-label="World Deck sections">
         {TABS.map(t => <button key={t.id} type="button" className={`gl-tab ${tab === t.id ? 'on' : ''} ${t.id === 'add' ? 'gl-tab-add' : ''}`} onClick={() => setTab(t.id)}>{t.label}</button>)}
@@ -418,8 +424,29 @@ export default function Glossary({ onBack, tab: tabSlug, onTabChange }: Glossary
         </Section>
       )}
 
+      {tab === 'states' && (
+        <Section {...sec('states')} title="States" count={g.places.length} hint="Ace America's 52 places: 50 states, DC and Puerto Rico. A look is the accents the UI takes while you race for that state; the rest arrive with #708 (The 52 looks).">
+          <div className="gl-list">
+            {g.places.filter(p => match(p.name, p.abbr, p.kind)).map(p => (
+              <Row key={p.id} id={`state:${p.id}`} open={isOpen(`state:${p.id}`)} onToggle={toggle}
+                lead={<span className="gl-plain gl-state">{p.look
+                  ? <span className="gl-state-sw" aria-hidden="true">{[p.look.primary, p.look.secondary, p.look.accent].map(c => <i key={c} style={{ background: c }} />)}</span>
+                  : <span className="gl-state-sw empty" aria-hidden="true"><i /><i /><i /></span>}{p.name}</span>}
+                note={p.kind === 'state' ? p.abbr : `${p.abbr} · ${p.kind}`}
+                pills={<span className="gl-readout">{p.look ? p.look.flag.note : 'Look to come (#708)'}</span>}>
+                <div className="gl-facts">
+                  <Fact k="Code">{p.abbr}</Fact><Fact k="Kind">{p.kind}</Fact>
+                  {p.look && <><Fact k="Primary">{p.look.primary}</Fact><Fact k="Secondary">{p.look.secondary}</Fact><Fact k="Accent">{p.look.accent}</Fact><Fact k="Ink">{p.look.ink}</Fact><Fact k="Wheel-flag">{p.look.flag.note}</Fact></>}
+                </div>
+                <div className="gl-src">src/data/states.ts</div>
+              </Row>
+            ))}
+          </div>
+        </Section>
+      )}
+
       {tab === 'add' && <AddTab />}
       {tab === 'inbox' && <InboxTab />}
-    </div>
+    </StepTheme>
   );
 }
