@@ -51,6 +51,8 @@
 | Oct 10 | No version bump for data the race doesn't read yet (Hub, #711; Pax can overrule); the bump comes with garage and driver names |
 | Oct 10 | Apex's calls in #713 (Pax to confirm): the sash's wheels stay gold in every theme; a dark ground tint per state (optional `ground`); the menu sash says "Parabolica" until #701; the program number is the version's digits (0.7.4 → No. 74); four stamp slots on the card frame as a shape only (#704 decides) |
 | Oct 10 | **The run's shape** (#693): Locals 5 races, State 6, then Nationals; bigger states field tougher Aces (+20 / +27 / +34 for 5 / 10 / 20 cities); rookies are dealt, near-identical, with one flavour page (team, garage, driver and chassis names, colour, numbers) and no strategic choices; driver ranks go, titles do that job. All growth comes from stamps (#704) |
+| Oct 14 | **The 52 looks** (#708, PR #739): flag plus identity, every state distinct, a dark ground per state, Arizona deep copper `#A6491B`, Ohio's accent cream; `docs/story/states.md` is the single source (Pax picked on Radio's page) |
+| Oct 14 | Apex's calls in #731 (flag any to change): field size by population (2.5M and 8M thresholds); Locals = 5 rival garages at +0; winning State = run won until Nationals is built; v0.7 runs archived (run save schema 3); nemesis parked behind a flag; version 0.8.0 |
 | Oct 14 | **Two drivers stay** in v0.8; Solo may come later as a mode (Pax) |
 | Oct 14 | Fable credits reset Oct 15: Apex takes #696 + #695 part 2, the #694 100-car read, and the #716 race view today (Pax) |
 | Oct 10 | **Desktop first** (replaces phone-first): "when we're really looking at a racing game, the bigger the better." Build for desktop; the phone view is a smaller version of it, later (Pax) |
