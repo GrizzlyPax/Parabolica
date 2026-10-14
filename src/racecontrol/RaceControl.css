@@ -1,5 +1,10 @@
 /* Race Control — The look (docs/ICONS.md): tokens only; your edits wear the team colour. Reuses the Run Setup shell (.run-setup, .rs-*) and World Deck tabs (.gl-tabs). */
 .race-control .rc-tabs { margin: 2px 0 6px; }
+/* The shell in the race program (#719): Americana around the tabs; the tabs' insides take it through the bridge. Tokens only. */
+.race-control.ace-page .rc-head { display: flex; flex-direction: column; gap: 6px; }
+.race-control.ace-page .rc-head .ace-link { align-self: flex-start; }
+.race-control.ace-page .rc-tabs .ace-tab { font-size: 14px; }
+@media (min-width: 1024px) { .race-control.ace-page .rc-tabs .ace-tab { font-size: 15px; padding: 11px 18px; } }
 .race-control code { font-family: var(--look-data); font-size: 12px; color: var(--pw-text-1); border: 1px solid var(--pw-border-strong); padding: 0 5px; }
 .rc-actions { margin-left: auto; display: inline-flex; gap: 14px; }
 .rc-actions .rs-link { margin-left: 0; }
