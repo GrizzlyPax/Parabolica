@@ -29,8 +29,6 @@ import { weatherForRace } from '../../data/weather';
 import { draftState } from '../draft';
 import { applyPack, applyCurse, dealPack, moveGear, pendingOffer, teamCardState, CURSE_LIFE, PACK_KIND_LABEL, type CardHolder, type PackKind, type TeamCardState } from '../pack';
 import { effectCards, describeLeft, activeEffects } from '../effects';
-import { pendingRankUps, dealRankUp, applyRankUp } from '../xp';
-import RankUpPick from './RankUpPick';
 import { constructorStandings, driverStandings, lineupFor, poolFor, seasonState, setLineup, type SeasonFacts } from '../season';
 import { saveCurrentLeague as saveSeason } from '../../run/current';
 import { overall, readStat, type StatReading } from '../grades';
@@ -44,8 +42,7 @@ import { nemesisLine } from '../nemesis';
 import DriverCard, { DriverName } from './DriverCard';
 import { driverCardOf } from '../driverCard';
 import { AceButton, Bunting, Chequer, ProgramLine, StateBar, StepTheme } from '../../look/Look';
-import { STEPS as LOOK_STEPS, programNumber, stateLook, stepForLeague } from '../../look/step';
-import { LEAGUE_LADDER } from '../../run/run';
+import { STEPS as LOOK_STEPS, programNumber, stateLook } from '../../look/step';
 
 interface Props {
   facts: SeasonFacts;
@@ -95,8 +92,9 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, ba
 
   const commit = (next: SeasonFacts) => { saveSeason(next); onChange(next); };
   const total = facts.setup.calendar.length;
-  // The step this league wears (#705; v0.7's leagues onto Locals · State · Nationals until #696).
-  const lookStep = stepForLeague(facts.setup.league?.index ?? 0, LEAGUE_LADDER.length);
+  // The step and state this league wears (#705, #696): the run writes them on the league context.
+  const lookStep = facts.setup.league?.step ?? 'locals';
+  const lookState = stateLook(facts.setup.league?.locale?.stateId ?? 'oh');
   const round = Math.min(state.round, total - 1);
   const trackId = facts.setup.calendar[round];
   const track = getTrackById(trackId);
@@ -116,13 +114,6 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, ba
   const pack = offer && offer.kind !== 'curse' ? dealPack(facts, offer.round, offer.teamId, picked && offer.packs.includes(picked) ? picked : offer.packs[0]) : null;
   const curse = offer?.kind === 'curse' ? offer.curse! : null;
   const myTurn = !!turn && state.phase === 'paddock';
-  // Rank-ups owed this turn (#646): one at a time, the first driver first.
-  const rankUp = myTurn ? pendingRankUps(facts, state.round, viewer)[0] ?? null : null;
-  const rankDeal = rankUp ? dealRankUp(facts, rankUp.driverId, rankUp.rank, state.round) : null;
-  const takeRankUp = (cardId: string) => {
-    if (!rankDeal) return;
-    commit(applyRankUp(facts, { type: 'rank-up', round: rankDeal.round, teamId: viewer, driverId: rankDeal.driverId, rank: rankDeal.rank, dealt: rankDeal.cards.map(c => c.id), cardId }));
-  };
   const lineup = lineupFor(facts, state.round, viewer);
   const car = pool.cars.find(c => c.id === roster.carId)!;
   const team = pool.teams.find(t => t.id === viewer)!;
@@ -268,7 +259,7 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, ba
   const rowClass = (k: HolderKey, extra = '') => `${fitsRow(k) ? 'target' : ''} ${extra}`.trim();
 
   // The turn, in one line
-  const step = !myTurn ? -1 : offer || rankUp ? 0 : 1;
+  const step = !myTurn ? -1 : offer ? 0 : 1;
   const STEPS = ['Open pack', 'Lock in'];
   // The one action of the turn sits in the dock (#715); the turn line keeps the steps.
   const action = state.phase === 'ready-for-go'
@@ -302,16 +293,6 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, ba
     <>
       {turnLine}
       {priorityLine}
-      {rankDeal && (
-        <RankUpPick
-          key={`${rankDeal.driverId}:${rankDeal.rank}`}
-          driverName={pool.drivers.find(d => d.id === rankDeal.driverId)?.fullName ?? ''}
-          rankName={rankDeal.rankName}
-          cards={rankDeal.cards}
-          onPick={takeRankUp}
-          onDetail={c => setDetail({ card: c })}
-        />
-      )}
       {offer && myTurn && (revealing && pack ? (
         <PackPick
           key={`${pack.round}:${pack.teamId}:${pack.kind}`}
@@ -448,7 +429,7 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, ba
   );
 
   return (
-    <StepTheme step={lookStep} state={stateLook('OH')} className="ace-page pk" style={teamThemeVars(you)}>
+    <StepTheme step={lookStep} state={lookState} className="ace-page pk" style={teamThemeVars(you)}>
       <Bunting />
       <ProgramLine right={`No. ${programNumber(facts.setup.seed)} · 10¢`} />
       <StateBar><b>{LOOK_STEPS.find(s => s.id === lookStep)!.name}</b> · round {state.round + 1} of {total}</StateBar>

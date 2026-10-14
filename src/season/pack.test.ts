@@ -7,7 +7,7 @@ import {
 import { activeEffects } from './effects';
 import { newSeason, seasonState, setLineup, settleRound, constructorStandings, leagueForRound, poolFor, saveSeason, loadSeason, type SeasonFacts, type SeasonStore } from './season';
 import { quickDraft, draftOrder, draftState } from './draft';
-import { openPack, takeRankUps } from './testHelpers';
+import { openPack } from './testHelpers';
 import { CARDS_BY_ID, RUN_CARDS_BY_ID, RUN_CURSES, RUN_DECK, cardById } from '../cards';
 import { CURRENT_TRACKS } from '../generators/tracks';
 
@@ -495,7 +495,7 @@ describe('held gear is never dealt again (#723)', () => {
       while (seasonState(facts).phase !== 'finished') {
         const s = seasonState(facts);
         if (s.phase === 'paddock' && s.whoseTurn === human) {
-          const offer = pendingOffer(takeRankUps(facts));
+          const offer = pendingOffer(facts);
           const held = heldGear(facts, human, s.round);
           if (offer && offer.kind !== 'curse') {
             for (const kind of offer.packs) {
@@ -507,7 +507,7 @@ describe('held gear is never dealt again (#723)', () => {
           // The backstop: applying held gear is refused with a clear reason.
           if (offer && offer.kind !== 'curse') {
             for (const id of held) {
-              const why = validatePackApplication(takeRankUps(facts), { type: 'pack', round: s.round, teamId: human, tier: offer.tier, pack: offer.packs[0], cardId: id, dealt: [], target: { kind: 'car' } });
+              const why = validatePackApplication(facts, { type: 'pack', round: s.round, teamId: human, tier: offer.tier, pack: offer.packs[0], cardId: id, dealt: [], target: { kind: 'car' } });
               expect(why).toMatch(/already holds/);
             }
           }

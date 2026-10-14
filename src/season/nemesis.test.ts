@@ -8,10 +8,10 @@ import { currentLeague, withCurrentLeague, runState, promote, type RunFacts } fr
 import { seasonState, setLineup, settleRound, poolFor, newSeason } from './season';
 import { draftState } from './draft';
 import { openPack } from './testHelpers';
-import { rookieRun } from '../run/testHelpers';
+import { testRun } from '../run/testHelpers';
 
-const TEAMS = 5, RACES = 3;
-const runFor = (seed: number): RunFacts => rookieRun(seed, TEAMS, RACES);
+const TEAMS = 5;
+const runFor = (seed: number): RunFacts => testRun(seed, 'vt');
 function playRounds(run: RunFacts, n = Infinity): RunFacts {
   let f = currentLeague(run); let done = 0;
   while (seasonState(f).phase !== 'finished' && done < n) {
@@ -62,36 +62,17 @@ describe('nemesis lines (#635)', () => {
     expect(keyOf(currentLeague(promote(won!)))).toBe(keyOf(currentLeague(won!)));
   });
 
-  it('Juniors: the real nemesis (#660) says a first-meeting line; outside a run nobody talks', () => {
+  it('parked in Ace America\'s run (#696, NEMESIS_IN_RUN): no garage is flagged, nobody talks; the seam returns with multi-season play', () => {
     const run = runFor(7);
     const facts = currentLeague(run);
-    const team = nemesisTeam(facts)!;
-    expect(team.nemesis).toBe(true);
-    expect(team.id).not.toBe(facts.setup.humans[0].teamId);
-    const spoken = nemesisLine(facts)!;
-    expect(spoken.moment).toBe('first');
-    expect(spoken.lines).toHaveLength(1);
-    expect(spoken.lines[0].who).toMatch(new RegExp(` · ${team.name}$`));
+    expect(nemesisTeam(facts)).toBeNull();
+    expect(nemesisLine(facts)).toBeNull();
     expect(nemesisLine(newSeason({ seed: 7, teamCount: TEAMS, humans: facts.setup.humans, calendar: facts.setup.calendar }))).toBeNull();
-  });
-
-  it('Regional: the flagged nemesis returns, reacts to the race, and both drivers speak before the boss race', () => {
     let won: RunFacts | null = null;
     for (let s = 11; s < 300 && !won; s++) { const r = playRounds(runFor(s)); if (runState(r).phase === 'league-won') won = r; }
-    let run = promote(won!);
-    const start = nemesisLine(currentLeague(run))!;
-    expect(nemesisTeam(currentLeague(run))!.nemesis).toBe(true);
-    expect(['return']).toContain(start.moment);
-    run = playRounds(run, 1);
-    const mid = nemesisLine(currentLeague(run))!;
-    expect(['beat', 'beaten', 'lead', 'trail']).toContain(mid.moment);
-    run = playRounds(run, 1); // now before the last race (3 races)
-    const boss = nemesisLine(currentLeague(run))!;
-    expect(boss.moment).toBe('boss');
-    expect(boss.lines.length).toBeGreaterThanOrEqual(1);
-    run = playRounds(run, 1);
-    const after = nemesisLine(currentLeague(run))!;
-    expect(['bossYouWin', 'bossTheyWin']).toContain(after.moment);
-    for (const s of [start, mid, boss, after]) for (const line of s.lines) expect(line.text).not.toMatch(/\{\w+\}/);
+    const up = currentLeague(promote(won!));
+    expect(up.setup.carry?.nemesis).toBeUndefined();
+    expect(nemesisTeam(up)).toBeNull();
   });
+
 });

@@ -5,7 +5,8 @@ import { describe, it, expect } from 'vitest';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { SASH_BOX, SASH_CURVE, bezierPoint, bezierTangent, sashGeometry, shifted, spokes } from './sash';
-import { STATE_CODES, STATE_LOOKS, STEPS, STEP_IDS, programNumber, ribbonStep, stateLook, stepForLeague, stepThemeVars } from './step';
+import { STATE_CODES, STEPS, STEP_IDS, programNumber, ribbonStep, stateLook, stepThemeVars } from './step';
+import { DEFAULT_LOOK, US_PLACES, placeById } from '../data/states';
 import { inkFor } from '../icons/ink';
 
 describe('the sash: one centre curve', () => {
@@ -47,17 +48,20 @@ describe('one theme per step', () => {
     expect(STEP_IDS).toEqual(['locals', 'state', 'nationals', 'globals', 'galacticals']);
     expect(STEPS.map(s => s.name)).toEqual(['Locals', 'State', 'Nationals', 'Globals', 'Galacticals']);
     expect(['locals', 'state', 'nationals', 'globals', 'galacticals'].map(s => ribbonStep(s as never))).toEqual(['locals', 'state', 'nationals', 'nationals', 'nationals']);
-    expect([0, 1, 2, 3].map(i => stepForLeague(i, 4))).toEqual(['locals', 'state', 'state', 'nationals']);
-    expect([0, 1, 2].map(i => stepForLeague(i, 3))).toEqual(['locals', 'state', 'nationals']);
   });
 
   it('a state supplies its colours as vars; the ink is inkFor, never a guess; other steps set nothing inline', () => {
-    expect(STATE_CODES).toEqual(expect.arrayContaining(['OH', 'AZ', 'VT']));
+    expect(STATE_CODES).toHaveLength(52);
+    expect(STATE_CODES).toEqual(US_PLACES.map(p => p.abbr));
     for (const code of STATE_CODES) {
-      const s = STATE_LOOKS[code];
+      const s = stateLook(code);
       expect(s.ink).toBe(inkFor(s.primary));
       for (const c of [s.primary, s.secondary, s.accent]) expect(c).toMatch(/^#[0-9a-f]{6}$/i);
+      expect(s.name).toBe(placeById(code)!.name);
     }
+    // A place without its own look (until #708) wears the default.
+    expect(stateLook('WY')).toMatchObject({ primary: DEFAULT_LOOK.primary, code: 'WY', name: 'Wyoming' });
+    expect(stateLook('AZ').primary).not.toBe(DEFAULT_LOOK.primary);
     const oh = stateLook('OH');
     expect(stepThemeVars('state', oh)).toEqual({ '--ace-state-primary': oh.primary, '--ace-state-secondary': oh.secondary, '--ace-state-accent': oh.accent, '--ace-state-ink': oh.ink, '--ace-state-ground': oh.ground });
     const pale = stateLook('OH', { primary: '#f5f0e0' });

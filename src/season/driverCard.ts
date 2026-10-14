@@ -1,7 +1,8 @@
 // The driver card's data (#476): who a driver is, from the season facts.
 // Pure. Your own drivers get levels (the same sums the Paddock shows: rolls,
-// traits, gear, rank-up cards, live effects); rivals get who they are and
-// their traits as sealed dots, never their levels.
+// traits, gear, live effects); rivals get who they are and their traits as
+// sealed dots, never their levels. Ranks and XP went with #696: titles do
+// that job (the ribbons, #699).
 import type { Card, StatKey } from '../cards/types';
 import type { IconId } from '../icons/registry';
 import { portraitFor } from '../generators/avatars';
@@ -9,7 +10,6 @@ import { draftState } from './draft';
 import { poolFor, type SeasonFacts } from './season';
 import { teamCardState } from './pack';
 import { effectCards } from './effects';
-import { driverRanks, RANKS } from './xp';
 import { readStat, type StatReading } from './grades';
 import { teamsOf } from './ui/teams';
 
@@ -25,9 +25,6 @@ export interface DriverCardData {
   portrait?: IconId;
   backstory?: string;
   quirk?: string;
-  /** "Qualifier", once the rookie start (#660) gives drivers an archetype. */
-  archetype?: string;
-  rank?: { name: string; xp: number; next: number | null; nextName?: string };
   /** Your own drivers only. */
   readings?: StatReading[];
   cards: Card[];
@@ -42,13 +39,9 @@ export function driverCardOf(facts: SeasonFacts, driverId: number, round: number
   const teamId = Object.keys(rosters).find(t => rosters[t].driverIds.includes(driverId));
   const team = teamId ? teamsOf(facts)[teamId] : undefined;
   const mine = !!teamId && facts.setup.humans.some(h => h.teamId === teamId);
-  const r = driverRanks(facts)[driverId];
-  const ri = r ? RANKS.findIndex(x => x.name === r.rank) : -1;
   const base: DriverCardData = {
     id: d.id, name: d.fullName, number: d.number, teamName: team?.name ?? '', color: team?.color ?? '#718295', ink: team?.ink,
     portrait: portraitFor(pool.seed, d.id), backstory: d.backstory, quirk: d.quirk,
-    archetype: (d as { archetype?: string }).archetype,
-    rank: r ? { name: r.rank, xp: r.xp, next: r.next, nextName: RANKS[ri + 1]?.name } : undefined,
     cards: [...d.traits], sealed: !mine,
   };
   if (!mine || !teamId) return base;

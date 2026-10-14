@@ -3,7 +3,8 @@
 // (pick a state) · Nationals. Pure display; nothing here touches the sim.
 import { useState, type ReactNode } from 'react';
 import { AceButton, AceCard, Bunting, CarCard, Chequer, Level, Parcel, ParcelStrip, Pennant, ProgramLine, Racer, Roundel, Sash, Stamp, StateBar, StepTheme, TitleRibbon, Wheel } from '../look/Look';
-import { STATE_CODES, STATE_LOOKS, STEPS, stateLook, type Step } from '../look/step';
+import { STATE_CODES, STEPS, stateLook, type Step } from '../look/step';
+import { placeById } from '../data/states';
 import { GradeCell, STAT_ABBR } from '../season/ui/RosterTable';
 import './StyleTab.css';
 
@@ -35,7 +36,7 @@ export function StyleTab() {
       <div className="st-intro">
         <p className="ace-sub">The race program (the locked look, Oct 10): red, white and blue first, gold the highlight; a navy ground, cream panels; one theme per step. Components read <code>--ace-*</code> tokens (<code>src/look/tokens.css</code>); a screen wears a step with <code>&lt;StepTheme step state?&gt;</code> (<code>src/look/Look.tsx</code>). Guide: <code>docs/LOOK.md</code>.</p>
         <label className="st-pick">State for the middle column
-          <select value={code} onChange={e => setCode(e.target.value)}>{STATE_CODES.map(c => <option key={c} value={c}>{STATE_LOOKS[c].name}</option>)}</select>
+          <select value={code} onChange={e => setCode(e.target.value)}>{STATE_CODES.map(c => <option key={c} value={c}>{placeById(c)?.name ?? c}{placeById(c)?.look ? '' : ' (default look)'}</option>)}</select>
         </label>
       </div>
 

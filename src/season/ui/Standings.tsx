@@ -17,9 +17,8 @@ import { Avatar } from '../../icons/Avatar';
 import { portraitFor } from '../../generators/avatars';
 import { humanLabel, teamsOf } from './teams';
 import { currentRunState } from '../../run/current';
-import { LEAGUE_LADDER } from '../../run/run';
 import { AceButton, Bunting, Chequer, ProgramLine, Sash, StateBar, StepTheme } from '../../look/Look';
-import { STEPS, programNumber, stateLook, stepForLeague } from '../../look/step';
+import { STEPS, programNumber, stateLook } from '../../look/step';
 
 interface Props {
   facts: SeasonFacts;
@@ -49,11 +48,12 @@ export default function Standings({ facts, onMenu, onPaddock, onPlayAgain, onEnd
   const total = facts.setup.calendar.length;
   const you = teams[facts.setup.humans[0].teamId];
   const dc = table.driversChampion;
-  // The step this league wears (#705; v0.7's leagues onto Locals · State · Nationals until #696).
-  const step = stepForLeague(facts.setup.league?.index ?? 0, LEAGUE_LADDER.length);
+  // The step and state this league wears (#705, #696): the run writes them on the league context.
+  const step = facts.setup.league?.step ?? 'locals';
+  const state = stateLook(facts.setup.league?.locale?.stateId ?? 'oh');
 
   return (
-    <StepTheme step={step} state={stateLook('OH')} className="ace-page ss-standings fn" style={teamThemeVars(champion ?? you)}>
+    <StepTheme step={step} state={state} className="ace-page ss-standings fn" style={teamThemeVars(champion ?? you)}>
       <Bunting />
       <ProgramLine right={`No. ${programNumber(facts.setup.seed)} · 10¢`} />
       <StateBar><b>{STEPS.find(s => s.id === step)!.name}</b> · {table.final ? `all ${total} races run` : `after ${facts.results.length} of ${total} races`}</StateBar>
@@ -64,7 +64,7 @@ export default function Standings({ facts, onMenu, onPaddock, onPlayAgain, onEnd
       </header>
       <h1 className="ace-h1">{table.final ? 'Champions' : 'Standings'}</h1>
       <Chequer />
-      {run?.phase === 'run-won' && <div className="ace-sash-wrap"><Sash text="Ace America" className="fn-sash" /></div>}
+      {run?.phase === 'run-won' && <div className="ace-sash-wrap"><Sash text={run.ladder[run.leagueIndex]?.title ?? 'Ace America'} className="fn-sash" /></div>}
 
       {table.final && (
         <section className="fn-result ace-panel ace-paper-table">
@@ -74,9 +74,9 @@ export default function Standings({ facts, onMenu, onPaddock, onPlayAgain, onEnd
             const crown = dc?.teamId === id ? ` · ${driver(dc.driver.driverId).fullName} is Drivers’ champion` : '';
             return <p key={id} className="fn-result-line"><b>{who} finished P{line.rank}</b> in the Constructors’ on {line.points} pts{crown}.</p>;
           })}
-          {run?.phase === 'league-won' && <p className="fn-result-line">League won. <b>{LEAGUE_LADDER[run.leagueIndex + 1]?.name}</b> is next; your whole team goes up with you.</p>}
-          {run?.phase === 'run-won' && <p className="fn-result-line"><b>The run is won:</b> all {LEAGUE_LADDER.length} leagues, bottom to top.</p>}
-          {run?.phase === 'run-lost' && <p className="fn-result-line"><b>The run is over.</b> Only a league win moves you up. Start again; what you unlocked stays.</p>}
+          {run?.phase === 'league-won' && <p className="fn-result-line"><b>Congratulations, you are now {run.ladder[run.leagueIndex].title}.</b> {run.ladder[run.leagueIndex + 1]?.name} is next; your whole garage goes up with you.</p>}
+          {run?.phase === 'run-won' && <p className="fn-result-line"><b>Congratulations, you are now {run.ladder[run.leagueIndex].title}.</b> Nationals comes in a later build.</p>}
+          {run?.phase === 'run-lost' && <p className="fn-result-line"><b>The season is over.</b> Only the title moves you up. Start again; what you unlocked stays.</p>}
         </section>
       )}
 
@@ -116,8 +116,8 @@ export default function Standings({ facts, onMenu, onPaddock, onPlayAgain, onEnd
       <div className="ace-dock">
         {table.final
           ? (run?.phase === 'league-won' && onPromote
-            ? <AceButton onClick={onPromote}>Up to {LEAGUE_LADDER[run.leagueIndex + 1]?.name}</AceButton>
-            : <AceButton onClick={onPlayAgain}>{run?.phase === 'run-lost' ? 'New run' : 'Play again'}</AceButton>)
+            ? <AceButton onClick={onPromote}>Up to {run.ladder[run.leagueIndex + 1]?.name}</AceButton>
+            : <AceButton onClick={onPlayAgain}>A new season</AceButton>)
           : <AceButton onClick={onPaddock}>Back to the Paddock</AceButton>}
       </div>
     </StepTheme>

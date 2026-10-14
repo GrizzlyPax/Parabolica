@@ -334,6 +334,23 @@ function realHalf(us: readonly string[], intl: readonly string[], rng: Rng): str
   return pick(fromUs ? us : intl, rng);
 }
 
+/** Share of American halves in a run's rookie names (#695: "mostly American"). */
+export const RUN_US_SHARE = 0.92;
+
+/**
+ * A driver name for Ace America's runs (#695): a plain two-word name, each
+ * half American RUN_US_SHARE of the time, else from the international pool;
+ * no absurd, corrupted or one-word names. Exactly four rng draws. Quick
+ * Race and stand-alone seasons keep generateDriverName (the fingerprint).
+ */
+export function generateAmericanDriverName(rng: Rng = Math.random): DriverName {
+  const firstUs = rng() < RUN_US_SHARE;
+  const firstName = pick(firstUs ? US_FIRST_NAMES : INTL_FIRST_NAMES, rng);
+  const lastUs = rng() < RUN_US_SHARE;
+  const lastName = pick(lastUs ? US_LAST_NAMES : INTL_LAST_NAMES, rng);
+  return { firstName, middleName: '', lastName, fullName: `${firstName} ${lastName}`, shortName: makeShortName(firstName, lastName, false), tier: 'international', isCorrupted: false };
+}
+
 /** Generate a driver name. Same call shape as before (rng in, name out) so
  * the generator pipeline is unchanged; now tiered + international. */
 export function generateDriverName(rng: Rng = Math.random): DriverName {

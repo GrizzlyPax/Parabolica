@@ -22,8 +22,6 @@ export default function DriverCard({ data, onClose }: { data: DriverCardData; on
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
-  const r = data.rank;
-  const pct = r && r.next ? Math.min(100, (r.xp / r.next) * 100) : 100;
   return (
     <div className="dc-scrim" onClick={onClose}>
       <section className="dc" role="dialog" aria-label={`${data.name}, driver card`} onClick={e => e.stopPropagation()}>
@@ -36,20 +34,9 @@ export default function DriverCard({ data, onClose }: { data: DriverCardData; on
           <div className="dc-id">
             <b className="dc-name">{data.name}</b>
             <span className="dc-team">{data.number !== undefined ? `#${data.number} · ` : ''}{data.teamName}</span>
-            <span className="dc-tags">
-              {data.archetype && <span className="dc-tag">{data.archetype}</span>}
-              {r && <span className="dc-tag dc-rank">{r.name}</span>}
-            </span>
           </div>
           <button type="button" className="rs-link dc-x" onClick={onClose}>Close</button>
         </div>
-
-        {r && (
-          <div className="dc-xp">
-            <span>{r.next ? `${r.name} · ${Math.round(r.xp)} / ${r.next} XP to ${r.nextName}` : `${r.name} · ${Math.round(r.xp)} XP · top rank`}</span>
-            <span className="dc-bar" aria-hidden="true"><i style={{ width: `${pct}%` }} /></span>
-          </div>
-        )}
 
         {data.readings ? (
           <div className="dc-levels">

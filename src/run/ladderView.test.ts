@@ -1,16 +1,15 @@
-// #628: the ladder screen's view of a run: the league in play is open, a won
-// league remembers its runner-up, and from league 2 you face the nemesis.
+// #628, #696: the ladder screen's view of a run: three rungs with their
+// titles, the step in play open, a won rung wearing its title, your state
+// and town for the theme.
 import { describe, it, expect } from 'vitest';
-import { newRun, currentLeague, withCurrentLeague, runState, promote, runnerUp, type RunFacts } from './run';
+import { currentLeague, withCurrentLeague, runState, promote, townOf, type RunFacts } from './run';
 import { emptyMeta, grant } from './meta';
 import { ladderView } from './ladderView';
 import { seasonState, setLineup, settleRound, poolFor } from '../season/season';
 import { draftState } from '../season/draft';
 import { openPack } from '../season/testHelpers';
-import { rookieRun, TEST_TEAM } from './testHelpers';
+import { testRun } from './testHelpers';
 
-const TEAMS = 5, RACES = 2;
-const runFor = (seed: number): RunFacts => rookieRun(seed, TEAMS, RACES);
 function playLeague(run: RunFacts): RunFacts {
   let facts = currentLeague(run);
   while (seasonState(facts).phase !== 'finished') {
@@ -23,37 +22,35 @@ function playLeague(run: RunFacts): RunFacts {
   return withCurrentLeague(run, facts);
 }
 function findRun(phase: 'league-won' | 'run-lost'): RunFacts {
-  for (let seed = 11; seed < 200; seed++) {
-    const run = playLeague(runFor(seed));
+  for (let seed = 11; seed < 400; seed++) {
+    const run = playLeague(testRun(seed, 'vt'));
     if (runState(run).phase === phase) return run;
   }
   throw new Error(`no ${phase} seed`);
 }
 
-describe('league ladder view (#628)', () => {
-  it('a fresh run: Juniors open with no races run, the rest ahead, every unlock listed', () => {
-    const v = ladderView(runFor(7), grant(emptyMeta(), 'next-difficulty'));
-    expect(v.rungs.map(r => [r.name, r.status])).toEqual([['Juniors', 'current'], ['Regional', 'ahead'], ['National', 'ahead'], ['Top flight', 'ahead']]);
-    expect(v.rungs[0].races).toEqual({ done: 0, total: RACES });
-    expect(v.rungs[0].you?.team.name).toBe('Kitty Hut');
-    // The Juniors' rival is their real nemesis (#660).
-    expect(v.rungs[0].rival?.nemesis).toBe(true);
-    // Before the rookie pick the Juniors are open but empty.
-    const fresh = ladderView(newRun({ seed: 7, teamCount: TEAMS, races: RACES, team: TEST_TEAM }), emptyMeta());
-    expect(fresh.phase).toBe('start');
-    expect(fresh.rungs[0]).toEqual({ index: 0, name: 'Juniors', status: 'current' });
+describe('the ladder view (#628, #696)', () => {
+  it('a fresh run: Locals open with no races run, State ahead, Nationals ahead and later; your state and town; every unlock listed', () => {
+    const run = testRun(7, 'oh');
+    const v = ladderView(run, grant(emptyMeta(), 'next-difficulty'));
+    expect(v.rungs.map(r => [r.name, r.status, r.title])).toEqual([['Locals', 'current', `Ace ${townOf(run)}`], ['State', 'ahead', 'Ace Ohio'], ['Nationals', 'ahead', 'Ace America']]);
+    expect(v.rungs[2].later).toBe(true);
+    expect(v.rungs[0].races).toEqual({ done: 0, total: 5 });
+    expect(v.rungs[0].you?.team.name).toBe('Kettle Street Garage');
+    expect(v.rungs[0].rival?.nemesis).toBe(false);
+    expect(v).toMatchObject({ stateId: 'oh', town: townOf(run), titles: [] });
     expect(v.unlocks).toHaveLength(5);
     expect(v.unlocks.filter(u => u.got).map(u => u.id)).toEqual(['next-difficulty']);
   });
 
-  it('won and promoted: Juniors remembers its runner-up, who is the nemesis in Regional', () => {
+  it('won and promoted: Locals wears its title, State is open with six races', () => {
     const won = findRun('league-won');
-    const up = runnerUp(currentLeague(won))!;
     const v = ladderView(promote(won), emptyMeta());
-    expect(v.rungs[0]).toMatchObject({ status: 'won', memory: `${up.name} were runners-up and came up with you.` });
+    expect(v.rungs[0]).toMatchObject({ status: 'won', memory: `Ace ${townOf(won)}: yours.` });
+    expect(v.titles).toEqual([{ step: 'locals', name: `Ace ${townOf(won)}` }]);
     expect(v.rungs[1].status).toBe('current');
-    expect(v.rungs[1].rival).toMatchObject({ nemesis: true, team: { name: up.name } });
-    expect(v.rungs[1].races).toEqual({ done: 0, total: RACES });
+    expect(v.rungs[1].races).toEqual({ done: 0, total: 6 });
+    expect(v.rungs[1].rival?.team.name).toBeTruthy();
   });
 
   it('lost: the rung says where you finished and that the run ended', () => {

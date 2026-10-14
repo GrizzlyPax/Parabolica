@@ -24,10 +24,13 @@ import { MOTORSPORT_DECK, cardsBy, pickCard, applyCards, applyPercents, favourPe
 import { rawDeltas } from '../cards/apply';
 import { Ruleset, defaultRuleset } from '../rules/ruleset';
 import type { RosterDriver, LapEffect, EffectInfo } from '../RaceEngine';
-import { ARCHETYPES, CPU_WOBBLE, rookieCar, rookieDriver, rookieTeamStats, type Archetype } from './rookies';
+import { rookieCar, rookieDriver, rookieTeamStats } from './rookies';
+import { rivalGarages } from '../data/garages';
+import type { Step } from '../look/step';
 
 export const MIN_TEAMS = 5;
-export const MAX_TEAMS = 10;
+/** 21 since Ace America (#696): a 20-town State is 21 garages, 42 cars. */
+export const MAX_TEAMS = 21;
 export const DEFAULT_TEAMS = 10;
 /** Drivers each team drafts: two, and both race (#585, Pax Oct 10: no bench). */
 export const SQUAD_SIZE = 2;
@@ -42,8 +45,6 @@ export interface PoolDriver extends GeneratedPoolDriver {
   reservedFor?: string;
   /** The seed their portrait was rolled on (the league they were born in); absent = this pool's. */
   avatarSeed?: number;
-  /** A rookie's archetype (#660): the stat nudge they were born with, and their rank-up trait path. */
-  archetype?: Archetype;
 }
 
 export interface RackCar {
@@ -70,8 +71,10 @@ export interface CompetitorTeam {
   /** Tyre management + pit crew belong to the team (Pax, Oct 8). */
   teamStats: TeamStats;
   traits: Card[];
-  /** The nemesis (#626): last league's runner-up, promoted with you. */
+  /** The nemesis (#626): last league's runner-up, promoted with you. Parked in the run (#696). */
   nemesis?: boolean;
+  /** A rival garage's town (#696): at State, every town's Ace; absent at Locals (your town's garages). */
+  town?: string;
 }
 
 /** A team's look, carried up without its people: the nemesis (#626). */
@@ -112,17 +115,15 @@ export interface CarriedTeam {
   nemesis?: TeamIdentity;
   /** Timed effects still live (#332), re-dated so their races left hold. */
   effects?: import('./effects').EffectFact[];
-  /** Driver XP at the end of the league below (#646), by stable driver id. */
-  xp?: Record<number, number>;
-  /** Every rank-up pick made so far in the run (#646): cards for the whole run. */
-  rankUps?: import('./xp').RankUpPick[];
 }
 
 /** Which league of a run this season is (#597). Rival levels (#626) and the
  * boss race (#593) read it; absent = a stand-alone season. */
 export interface LeagueContext {
-  /** 0-based league on the ladder. */
+  /** 0-based step on the ladder. */
   index: number;
+  /** The step (#696): Locals · State · Nationals; the theme and the words read it. */
+  step?: Step;
   name: string;
   /** Grade points added to every stat a rival rolls (#626; 0 until it lands). */
   fieldShift: number;
@@ -130,6 +131,8 @@ export interface LeagueContext {
   nemesisShift: number;
   /** The round that is the boss race (#593): the last one. */
   bossRound: number;
+  /** Where the step is raced (#696): your state and town, and the rival towns at State (empty at Locals). Rival garages are named from it. */
+  locale?: { stateId: string; town: string; rivalTowns: string[] };
 }
 
 export interface SeasonPoolOptions {
@@ -199,8 +202,7 @@ export function generateSeasonPool(seed: number, teamCount: number = DEFAULT_TEA
   for (let i = 0; i < fresh * SQUAD_SIZE; i++) {
     const id = base + i;
     if (rookies) {
-      const archetype = ARCHETYPES[Math.floor(driverRng() * ARCHETYPES.length)];
-      drivers.push(rookieDriver(id, numbers[i], archetype, CPU_WOBBLE, driverRng));
+      drivers.push(rookieDriver(id, numbers[i], driverRng));
     } else {
       drivers.push({ ...generatePoolDriver(id, driverRng), number: numbers[i], traits: traitsFor('driver', seed, id, rs) });
     }
@@ -211,21 +213,26 @@ export function generateSeasonPool(seed: number, teamCount: number = DEFAULT_TEA
   const carNames = new Set<string>(carry ? [carry.car.name] : []);
   for (let i = 0; i < fresh; i++) {
     const id = `car-${base + i}`;
-    cars.push(rookies ? rookieCar(id, CPU_WOBBLE, carRng, carNames) : { ...generateRackCar(id, carRng, carNames), traits: traitsFor('car', seed, id, rs) });
+    cars.push(rookies ? rookieCar(id, carRng, carNames) : { ...generateRackCar(id, carRng, carNames), traits: traitsFor('car', seed, id, rs) });
   }
 
   const statsRng = mulberry32(deriveSeed(seed, 'season', rookies ? 'rookie-teams' : 'team-stats'));
   const teams: CompetitorTeam[] = carry ? [carry.team] : [];
-  // The nemesis (#626) is the first fresh slot of a run league: it wears last
-  // league's runner-up's look (the deck never deals that look twice) or, in
-  // the Juniors (#660), its own. Its stats are the level's (rivalShifts).
+  // The nemesis (#626, parked in the run #696) wears last league's runner-up's
+  // look on the first fresh slot when one is carried; the deck never deals
+  // that look twice. Its stats are the level's (rivalShifts).
   const nemesis = carry?.nemesis;
   const exclude = new Set<string>([carry?.team.deckTeamId, nemesis?.deckTeamId].filter((x): x is string => !!x));
-  teamIdentities(seed, fresh, exclude).forEach((identity, i) => {
+  // A run's rivals are local garages (#695): generic names on their own stream, each with its town at State.
+  const locale = opts.league?.locale;
+  const identities: (TeamIdentity & { town?: string })[] = locale
+    ? rivalGarages(mulberry32(deriveSeed(seed, 'season', 'garages')), fresh, locale.rivalTowns, [carry?.team.name ?? '']).map(g => ({ name: g.name, color: g.color, ink: g.ink, emoji: '', iconId: g.iconId, town: g.town }))
+    : teamIdentities(seed, fresh, exclude);
+  identities.forEach((identity, i) => {
     const id = `team-${base + i}`;
     const look = i === 0 && nemesis ? nemesis : identity;
-    const teamStats = rookies ? rookieTeamStats(CPU_WOBBLE, statsRng) : generateTeamStats(statsRng);
-    teams.push({ id, ...look, teamStats, traits: rookies ? [] : traitsFor('team', seed, id, rs), ...(i === 0 && (nemesis || rookies) ? { nemesis: true } : {}) });
+    const teamStats = rookies ? rookieTeamStats(statsRng) : generateTeamStats(statsRng);
+    teams.push({ id, ...look, teamStats, traits: rookies ? [] : traitsFor('team', seed, id, rs), ...(i === 0 && nemesis ? { nemesis: true } : {}) });
   });
 
   return { seed, teamCount, drivers, cars, teams };
