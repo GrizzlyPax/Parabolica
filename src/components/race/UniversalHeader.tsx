@@ -36,6 +36,7 @@ function UniversalHeader({
   onStop,
   onReset,
   onSpeedChange,
+  program,
 }: UniversalHeaderProps) {
   const state = SESSION_STATES[sessionState];
   // Publish the header's height so the phone layout can pin the track right under it.
@@ -84,6 +85,7 @@ function UniversalHeader({
         )}
       </div>
       <div className="uh-sub">
+        {program && <span className="uh-program">{program}</span>}
         <span className="uh-track">{trackName}{weather ? <span className="uh-weather"> · {weather}</span> : null}</span>
         <WearPill tyreWear={tyreWear} />
         {priority && priority.length > 0 && <span className="uh-prio" title="Everyone gets these levels on these stats here">Priority: {priority.join(' · ')}</span>}

@@ -1,0 +1,165 @@
+/* The race view in the race program (#716). Tokens only (icons/theme.test.ts).
+   Scoped to .ace-race, the class WatchMode's <StepTheme> wears: the header as
+   the program's masthead on the navy ground, the tower, feed, footer, lap
+   chart and finish sheet on cream paper, the map on the ground. The old
+   --pw-* tokens are re-pointed inside each paper panel (the bridge from
+   look.css) so the race components wear the step without a rewrite. Desktop
+   first: from 1024px the track view runs tower | map | feed side by side. */
+
+.ace-race { background: var(--ace-ground); color: var(--ace-fg); font-family: var(--ace-body); }
+
+/* --- The header: the scoreboard as a masthead, a gold rule under it --- */
+.ace-race .uh, .ace-race.watch-mode .uh { background: var(--ace-ground); border-bottom: 2px solid var(--ace-gold); }
+.ace-race .uh-cells { border-bottom: 1px solid var(--ace-hair); }
+.ace-race .uh-cells > * { border-left-color: var(--ace-hair); }
+.ace-race .uh-menu { color: var(--ace-fg); }
+.ace-race .uh-k { font-family: var(--ace-cond); letter-spacing: .16em; color: var(--ace-muted); }
+.ace-race .uh-v { font-family: var(--ace-cond); color: var(--ace-fg); }
+.ace-race .uh-lap { color: var(--ace-muted); }
+.ace-race .uh-lap b { font-family: var(--ace-disp); font-weight: 400; color: var(--ace-fg); }
+.ace-race .uh-state { font-family: var(--ace-cond); letter-spacing: .12em; }
+.ace-race .uh-state.tone-green { color: var(--ace-green); }
+.ace-race .uh-state.tone-yellow { color: var(--ace-yellow); }
+.ace-race .uh-state.tone-red { color: var(--ace-red-lv); }
+.ace-race .uh-state.tone-white { color: var(--ace-fg); }
+.ace-race .uh-state.tone-dim { color: var(--ace-muted); }
+.ace-race .uh-btn { border: 1px solid var(--ace-paper); color: var(--ace-fg); font-family: var(--ace-cond); }
+.ace-race .uh-btn:focus-visible, .ace-race .uh-menu:focus-visible { outline: 2px solid var(--ace-gold); outline-offset: -2px; }
+.ace-race .uh-sub { padding: 5px var(--ace-gutter); }
+.ace-race .uh-program { font-family: var(--ace-cond); font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--ace-gold); padding-right: 10px; border-right: 1px solid var(--ace-hair); white-space: nowrap; }
+.ace-race .uh-track { font-family: var(--ace-body); color: var(--ace-fg); }
+.ace-race .uh-weather { color: var(--ace-muted); }
+.ace-race .uh-prio { font-family: var(--ace-mono); color: var(--ace-paper); border-color: var(--ace-hair); }
+
+/* --- The frame: the navy ground, the program's width --- */
+.ace-race .broadcast-frame { background: var(--ace-ground); border: 0; border-radius: 0; }
+
+/* --- Paper panels: the tower, the data table, the feed, the footer, the lap chart.
+       Inside each the old tokens read the paper, and gold is the session best. --- */
+.ace-race .bf-tower, .ace-race .bf-table, .ace-race .bf-feed, .ace-race .bf-footer, .ace-race .bf-lapchart {
+  background: var(--ace-paper); color: var(--ace-ink); border: 1px solid var(--ace-ink); border-radius: 0;
+  --pw-ground: var(--ace-paper); --pw-surface: var(--ace-paper-2); --pw-raised: var(--ace-paper-2);
+  --pw-text-1: var(--ace-ink); --pw-text-2: var(--ace-ink-2); --pw-text-3: var(--ace-ink-2);
+  --pw-hairline: var(--ace-rule); --pw-border: var(--ace-rule); --pw-border-strong: var(--ace-ink);
+  --pw-green: var(--ace-green); --pw-yellow: var(--ace-yellow); --pw-red: var(--ace-red-lv); --pw-red-soft: var(--ace-red-lv); --pw-purple: var(--ace-gold);
+  --signal-green: var(--ace-green); --signal-yellow: var(--ace-yellow); --signal-red: var(--ace-red-lv); --signal-purple: var(--ace-gold);
+  --look-display: var(--ace-disp); --look-serif: var(--ace-body); --look-data: var(--ace-cond);
+}
+.ace-race .frame-track .bf-tower { backdrop-filter: none; }
+
+/* The tower on paper: condensed caps in the header, slab numbers, ink text */
+.ace-race .timing-tower-header, .ace-race .frame-detail .timing-tower-detail .timing-tower-header {
+  background: var(--ace-paper) !important; color: var(--ace-ink-2) !important; border-bottom: 2px solid var(--ace-ink) !important;
+  font-family: var(--ace-cond); font-weight: 400; letter-spacing: .14em;
+}
+.ace-race .timing-row { border-bottom-color: var(--ace-rule); }
+.ace-race .timing-row:hover { background: var(--ace-paper-2) !important; }
+.ace-race .timing-row.focused { background: var(--ace-paper-2); box-shadow: none; }
+.ace-race .timing-row.finished { background: color-mix(in srgb, var(--ace-green) 12%, var(--ace-paper)); }
+.ace-race .timing-row.dnf { background: color-mix(in srgb, var(--ace-red-lv) 10%, var(--ace-paper)); }
+.ace-race .position-number { color: var(--ace-ink); font-family: var(--ace-disp); font-weight: 400; }
+.ace-race .position-number.pitting { color: var(--ace-navy-2); }
+.ace-race .driver-code, .ace-race .driver-full-name { color: var(--ace-ink); font-family: var(--ace-cond); letter-spacing: .04em; }
+.ace-race .team-name { color: var(--ace-ink-2) !important; font-family: var(--ace-body); font-style: italic; }
+.ace-race .gap-ahead { color: var(--ace-ink); }
+.ace-race .gap-leader { color: var(--ace-ink-2); }
+.ace-race .gap-battle { color: var(--ace-red-lv) !important; }
+.ace-race .lap-time { color: var(--ace-ink); }
+.ace-race .lap-fastest { color: var(--ace-gold) !important; }
+.ace-race .lap-improved { color: var(--ace-green) !important; }
+.ace-race .lap-slower { color: var(--ace-ink-2) !important; }
+.ace-race .lap-time-empty, .ace-race .muted-cell { color: var(--ace-rule) !important; }
+.ace-race .tire-pip { border-radius: 0; }
+.ace-race .tire-pip-soft { background: var(--ace-red-lv); color: var(--ace-paper); }
+.ace-race .tire-pip-medium { background: var(--ace-yellow); color: var(--ace-ink); }
+.ace-race .tire-pip-hard { background: var(--ace-ink); color: var(--ace-paper); }
+.ace-race .tire-age-laps, .ace-race .pit-count { color: var(--ace-ink); }
+.ace-race .tire-life { background: var(--ace-rule); }
+.ace-race .tire-life-cliff { background: var(--ace-ink-2); }
+.ace-race .expanded-content { border-bottom-color: var(--ace-rule); }
+.ace-race .expanded-tire[data-compound] { background: var(--ace-paper-2); color: var(--ace-ink); border-radius: 0; }
+
+/* The feed on paper: the Booth in condensed caps, the words in the body face */
+.ace-race .story-feed { background: transparent; }
+.ace-race .story-feed-label { font-family: var(--ace-cond); font-weight: 400; letter-spacing: .14em; color: var(--ace-ink-2); }
+.ace-race .story-feed-count { background: var(--ace-ink); color: var(--ace-paper); border-radius: 0; font-family: var(--ace-cond); }
+.ace-race .story-item { background: var(--ace-paper); border-bottom: 1px solid var(--ace-rule); border-left-color: var(--story-accent, var(--ace-ink)); }
+.ace-race .story-marbles, .ace-race .story-track { background: var(--ace-paper-2); }
+.ace-race .story-marbles .story-persona { color: var(--ace-brick); }
+.ace-race .story-track .story-persona { color: var(--ace-navy-2); }
+.ace-race .story-big { background: var(--ace-ink); }
+.ace-race .story-big .story-text, .ace-race .story-big .story-persona, .ace-race .story-big .story-lap, .ace-race .story-big .story-driver-chip { color: var(--ace-paper); }
+.ace-race .story-persona { font-family: var(--ace-cond); letter-spacing: .1em; text-transform: uppercase; }
+.ace-race .story-lap { font-family: var(--ace-cond); color: var(--ace-ink-2); }
+.ace-race .story-text { font-family: var(--ace-body); color: var(--ace-ink); }
+.ace-race .story-feed-empty { color: var(--ace-ink-2); }
+
+/* The footer: conditions and the two strips */
+.ace-race .conditions-panel-label, .ace-race .track-strip-label { font-family: var(--ace-cond); font-weight: 400; letter-spacing: .14em; color: var(--ace-ink-2); }
+.ace-race .conditions-panel-name { color: var(--ace-ink); }
+.ace-race .conditions-panel-sub { color: var(--ace-ink-2); }
+.ace-race .track-strip-line { border-bottom-color: var(--ace-ink); }
+.ace-race .track-strip-dot { border-color: var(--ace-ink); }
+.ace-race .track-strip-dot.focused { box-shadow: 0 0 0 2px var(--ace-gold); }
+
+/* The lap chart */
+.ace-race .bf-lapchart-head { border-bottom: 2px solid var(--ace-ink); }
+.ace-race .bf-lapchart-title { font-family: var(--ace-disp); font-weight: 400; color: var(--ace-ink); }
+.ace-race .bf-lapchart-lap { font-family: var(--ace-cond); color: var(--ace-ink-2); }
+
+/* Buttons: the program's condensed caps; the one primary in the accent block */
+.ace-race .clear-focus-btn, .ace-race .bf-copy-report-btn, .ace-race .qb-btn, .ace-race .fs-btn, .ace-race .fs-bar-cta {
+  font-family: var(--ace-cond); font-weight: 400; letter-spacing: .12em; text-transform: uppercase; border-radius: 0;
+  background: var(--ace-paper); color: var(--ace-ink); border: 1px solid var(--ace-ink);
+}
+.ace-race .clear-focus-btn:hover, .ace-race .bf-copy-report-btn:hover { background: var(--ace-paper-2); color: var(--ace-ink); border-color: var(--ace-ink); }
+.ace-race .qb-btn-primary, .ace-race .fs-btn-primary { background: var(--ace-btn); color: var(--ace-btn-ink); border: 0; border-bottom: 4px solid var(--ace-btn-shadow); }
+.ace-race .qb-btn:focus-visible, .ace-race .fs-btn:focus-visible { outline: 2px solid var(--ace-gold); outline-offset: 2px; }
+
+/* The navigation panel: a paper leaf with a gold edge */
+.ace-race .nav-backdrop { background: var(--ace-shadow); }
+.ace-race .nav-panel { background: var(--ace-paper); color: var(--ace-ink); border-right: 2px solid var(--ace-gold); }
+.ace-race .nav-panel-header { border-bottom: 2px solid var(--ace-ink); color: var(--ace-ink); }
+.ace-race .nav-close-btn { color: var(--ace-ink); }
+.ace-race .nav-close-btn:hover { background: var(--ace-paper-2); color: var(--ace-ink); }
+.ace-race .nav-option { background: var(--ace-paper); border: 1px solid var(--ace-rule); border-radius: 0; }
+.ace-race .nav-option:hover { background: var(--ace-paper-2); border-color: var(--ace-ink); }
+.ace-race .nav-option.active { background: var(--ace-ink); border-color: var(--ace-ink); }
+.ace-race .nav-option-label { font-family: var(--ace-cond); text-transform: uppercase; letter-spacing: .1em; color: var(--ace-ink); }
+.ace-race .nav-option-desc, .ace-race .nav-option-icon { color: var(--ace-ink-2); }
+.ace-race .nav-option.active .nav-option-label, .ace-race .nav-option.active .nav-option-desc, .ace-race .nav-option.active .nav-option-icon, .ace-race .nav-option.active .nav-option-check { color: var(--ace-paper); }
+
+/* The finish sheet: a paper sheet with the sash across the top */
+.ace-race .fs {
+  background: var(--ace-paper); color: var(--ace-ink); border: 1px solid var(--ace-ink); border-bottom: 0; border-radius: 0; font-family: var(--ace-body);
+  --pw-ground: var(--ace-paper); --pw-surface: var(--ace-paper-2); --pw-text-1: var(--ace-ink); --pw-text-2: var(--ace-ink-2); --pw-border: var(--ace-rule); --pw-border-strong: var(--ace-ink);
+  --signal-green: var(--ace-green); --signal-red: var(--ace-red-lv); --look-display: var(--ace-disp); --look-data: var(--ace-cond);
+  --rarity-gold: var(--ace-gold); --rarity-silver: var(--ace-muted); --rarity-bronze: var(--ace-brown);
+}
+.ace-race .fs-grab { background: var(--ace-rule); }
+.ace-race .fs-sash { display: flex; justify-content: center; }
+.ace-race .fs-k { font-family: var(--ace-cond); letter-spacing: .14em; }
+.ace-race .fs-nm { font-family: var(--ace-disp); font-weight: 400; }
+.ace-race .fs-block { color: var(--ace-ink); font-family: var(--ace-disp); }
+.ace-race .fs-hide, .ace-race .fs-links button, .ace-race .fs-links a { color: var(--ace-ink-2); text-decoration-color: var(--ace-gold); }
+.ace-race .fs-bar { background: var(--ace-paper); color: var(--ace-ink); border-color: var(--ace-ink); border-radius: 0; }
+
+/* --- Desktop first (#722): the frame is the program's width; from 1024px the
+       track view runs tower | map | feed; the detail view table | feed. --- */
+@media (min-width: 800px) {
+  .ace-race .watch-content { padding: 0; }
+  .ace-race .broadcast-frame { max-width: calc(var(--ace-max) + var(--ace-gutter) * 2); }
+  .ace-race .frame-track, .ace-race .frame-detail, .ace-race .bf-lapchart { padding: 10px var(--ace-gutter); }
+  .ace-race .frame-track .bf-feed { display: none; }
+  .ace-race .frame-detail .timing-tower-detail .timing-tower-header { position: sticky; top: 0; z-index: 5; }
+}
+@media (min-width: 1024px) {
+  .ace-race .frame-track { grid-template-columns: max-content minmax(0, 1fr) minmax(280px, 360px); }
+  .ace-race .frame-track .bf-feed { display: flex; flex-direction: column; grid-column: 3; grid-row: 1; padding: 0; min-width: 0; min-height: 0; overflow: hidden; }
+  .ace-race .frame-track .bf-feed .story-feed { flex: 1; min-height: 0; }
+  .ace-race .frame-track .bf-feed .story-feed-list { max-height: none; flex: 1; }
+  .ace-race .frame-detail { grid-template-columns: minmax(0, 1fr) minmax(280px, 360px); }
+  .ace-race .frame-detail .bf-table { grid-column: 1; }
+  .ace-race .frame-detail .bf-feed { display: flex; flex-direction: column; grid-column: 2; padding: 0; }
+  .ace-race .frame-detail .bf-feed .story-feed-list { max-height: none; flex: 1; }
+}

@@ -32,6 +32,9 @@ import type { IconId } from './icons/registry';
 import { version as appVersion } from '../package.json';
 import { voiceNotification, type FeedItem } from './feed/commentary';
 import './WatchMode.css';
+import './look/race.css';
+import { StepTheme } from './look/Look';
+import type { StateLook, Step } from './look/step';
 import { GameIcon } from './icons/GameIcon';
 
 // Suffixes to ignore when extracting surname
@@ -87,6 +90,10 @@ interface WatchModeProps {
   onStop?: () => void;
   onReset?: () => void;
   onSpeedChange?: (speed: RaceSpeed) => void;
+  /** The race program (#716): the step whose theme the race wears (Nationals' Americana when absent), the state's colours, and the program line under the scoreboard. */
+  step?: Step;
+  state?: StateLook;
+  program?: string;
 }
 
 // Modular notification system for race events
@@ -143,6 +150,9 @@ function WatchMode({
   onStop,
   onReset,
   onSpeedChange,
+  step = 'nationals',
+  state,
+  program,
   fantasy,
 }: WatchModeProps) {
   const trackLength = config.lapLength;
@@ -1200,7 +1210,7 @@ function WatchMode({
   const currentLapForHeader = Math.min(totalLaps, Math.max(1, (frozenSortedDrivers[0]?.currentLap || 0) + 1));
 
   return (
-    <div className="watch-mode">
+    <StepTheme step={step} state={state} className="watch-mode ace-race">
       {/* Universal Header - new navigation system */}
       <UniversalHeader
         currentLap={currentLapForHeader}
@@ -1213,6 +1223,7 @@ function WatchMode({
         priority={headerPriority}
         tyreWear={trackInfo?.id ? getDeckTrackById(trackInfo.id)?.tyreWear : undefined}
         elapsedTime={raceState.totalTicks}
+        program={program}
         onMenuOpen={() => setNavPanelOpen(true)}
         liveBadge={spectator && !raceState.raceFinished}
         // Race controls (a live broadcast offers none)
@@ -1320,6 +1331,11 @@ function WatchMode({
                   unsafetyCarPosition={raceState.unsafetyCarPosition}
                   battles={battles}
                 />
+              </section>
+
+              {/* The feed beside the map on a big screen (#716); stacked under it on a phone. */}
+              <section className="bf-feed">
+                <RaceFeed items={feedItems} className="story-feed-detail" />
               </section>
             </>
           )}
@@ -1437,7 +1453,7 @@ function WatchMode({
         </div>
       </div>
 
-    </div>
+    </StepTheme>
   );
 }
 
