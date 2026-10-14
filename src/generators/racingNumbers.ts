@@ -26,13 +26,16 @@ export function racingNumberWeight(n: number): number {
   return RACING_NUMBER_WEIGHTS.find(w => w.test(n))!.weight;
 }
 
-/** `count` distinct numbers in draw order. Exactly `count` rng() draws. */
+/** `count` numbers in draw order, distinct while the 98 last; past that the
+ * pool refills and numbers repeat (Nationals' hundred cars, #694). Exactly
+ * `count` rng() draws, so a longer roll shares its first draws with a shorter one. */
 export function rollRacingNumbers(count: number, rng: Rng): number[] {
+  const fill = () => { for (let n = MIN_RACING_NUMBER; n <= MAX_RACING_NUMBER; n++) pool.push({ n, w: racingNumberWeight(n) }); };
   const pool: { n: number; w: number }[] = [];
-  for (let n = MIN_RACING_NUMBER; n <= MAX_RACING_NUMBER; n++) pool.push({ n, w: racingNumberWeight(n) });
-  if (count > pool.length) throw new Error(`rollRacingNumbers: ${count} numbers asked, ${pool.length} exist`);
+  fill();
   const out: number[] = [];
   for (let i = 0; i < count; i++) {
+    if (!pool.length) fill();
     const total = pool.reduce((s, p) => s + p.w, 0);
     let x = rng() * total;
     let idx = pool.length - 1;

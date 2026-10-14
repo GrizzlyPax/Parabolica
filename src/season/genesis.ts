@@ -30,7 +30,8 @@ import type { Step } from '../look/step';
 
 export const MIN_TEAMS = 5;
 /** 21 since Ace America (#696): a 20-town State is 21 garages, 42 cars. */
-export const MAX_TEAMS = 21;
+/** 52: Nationals fields every state's Ace (#694). */
+export const MAX_TEAMS = 52;
 export const DEFAULT_TEAMS = 10;
 /** Drivers each team drafts: two, and both race (#585, Pax Oct 10: no bench). */
 export const SQUAD_SIZE = 2;
@@ -130,8 +131,11 @@ export interface LeagueContext {
   nemesisShift: number;
   /** The round that is the boss race (#593): the last one. */
   bossRound: number;
-  /** Where the step is raced (#696): your state and town, and the rival towns at State (empty at Locals). Rival garages are named from it. */
-  locale?: { stateId: string; town: string; rivalTowns: string[] };
+  /** Where the step is raced (#696): your state and town, and the rival towns at State (empty at Locals). Rival garages are named from it.
+   * At Nationals (#694) `rivals` seats one garage per state: its town and, when the state has a look, its colour. */
+  locale?: { stateId: string; town: string; rivalTowns: string[]; rivals?: { stateId: string; town: string; color?: string }[] };
+  /** Nationals (#694): the knockout, the cuts and the Final (season/format.ts). */
+  format?: import('./format').SeasonFormat;
 }
 
 export interface SeasonPoolOptions {
@@ -195,8 +199,9 @@ export function generateSeasonPool(seed: number, teamCount: number = DEFAULT_TEA
 
   // Rookie fields (#660) roll on their own streams; the genesis streams below are untouched.
   const driverRng = mulberry32(deriveSeed(seed, 'season', rookies ? 'rookies' : 'drivers'));
-  // Roll a full grid of numbers and skip the carried team's: unique on the grid.
-  const numbers = rollRacingNumbers(teamCount * SQUAD_SIZE, mulberry32(deriveSeed(seed, 'season', 'numbers'))).filter(n => !taken.has(n));
+  // Roll a full grid of numbers and skip the carried team's: unique on the grid (past 98 cars they repeat, #694).
+  // The first teamCount × 2 draws are the grid's whatever the count, so the extra rolls move no seeded grid.
+  const numbers = rollRacingNumbers(teamCount * SQUAD_SIZE + taken.size * 2, mulberry32(deriveSeed(seed, 'season', 'numbers'))).filter(n => !taken.has(n));
   const drivers: PoolDriver[] = carry ? carry.drivers.map(d => ({ ...d, reservedFor: carry.teamId })) : [];
   for (let i = 0; i < fresh * SQUAD_SIZE; i++) {
     const id = base + i;
@@ -225,7 +230,7 @@ export function generateSeasonPool(seed: number, teamCount: number = DEFAULT_TEA
   // A run's rivals are local garages (#695): generic names on their own stream, each with its town at State.
   const locale = opts.league?.locale;
   const identities: (TeamIdentity & { town?: string })[] = locale
-    ? rivalGarages(mulberry32(deriveSeed(seed, 'season', 'garages')), fresh, locale.rivalTowns, [carry?.team.name ?? '']).map(g => ({ name: g.name, color: g.color, ink: g.ink, emoji: '', iconId: g.iconId, town: g.town }))
+    ? rivalGarages(mulberry32(deriveSeed(seed, 'season', 'garages')), fresh, locale.rivals ? locale.rivals.map(r => r.town) : locale.rivalTowns, [carry?.team.name ?? ''], locale.rivals?.map(r => r.color ?? null)).map(g => ({ name: g.name, color: g.color, ink: g.ink, emoji: '', iconId: g.iconId, town: g.town }))
     : teamIdentities(seed, fresh, exclude);
   identities.forEach((identity, i) => {
     const id = `team-${base + i}`;
@@ -250,7 +255,8 @@ export interface TeamRoster {
 /** Who races this round: exactly two of the team's drivers. */
 export interface Lineup {
   teamId: string;
-  driverIds: [number, number];
+  /** Two drivers; one when a team is down to one car (Nationals, #694). */
+  driverIds: number[];
 }
 
 /** Cards beyond genesis traits: gear from packs (#316) and, later, anything
@@ -344,8 +350,8 @@ export function seasonRoster(pool: SeasonPool, rosters: TeamRoster[], lineups: L
     if (!roster || !team) throw new Error(`seasonRoster: unknown team ${lineup.teamId}`);
     const car = pool.cars.find(c => c.id === roster.carId);
     if (!car) throw new Error(`seasonRoster: team ${lineup.teamId} has no car (${roster.carId})`);
-    if (lineup.driverIds.length !== RACE_LINEUP || lineup.driverIds[0] === lineup.driverIds[1]) {
-      throw new Error(`seasonRoster: team ${lineup.teamId} must field ${RACE_LINEUP} different drivers`);
+    if (lineup.driverIds.length < 1 || lineup.driverIds.length > RACE_LINEUP || new Set(lineup.driverIds).size !== lineup.driverIds.length) {
+      throw new Error(`seasonRoster: team ${lineup.teamId} must field 1–${RACE_LINEUP} different drivers`);
     }
     const identity = { ...team, ...(opts.identities?.[team.id] ?? {}) };
     lineup.driverIds.forEach((driverId, slot) => {

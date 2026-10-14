@@ -71,19 +71,21 @@ export const GARAGE_LOGOS: readonly string[] = [
  * duplicate, up to a limit). `towns`, when given, hands each garage its own
  * town in order (the State step); fewer towns than garages wrap.
  */
-export function rivalGarages(rng: Rng, count: number, towns?: readonly string[], excludeNames: readonly string[] = []): Garage[] {
+export function rivalGarages(rng: Rng, count: number, towns?: readonly string[], excludeNames: readonly string[] = [], colours?: readonly (string | null)[]): Garage[] {
   const names = new Set(excludeNames);
-  const colours = new Set<string>();
+  const taken = new Set<string>();
   const out: Garage[] = [];
   for (let i = 0; i < count; i++) {
     let name = garageName(rng);
     for (let tries = 0; names.has(name) && tries < 30; tries++) name = garageName(rng);
     names.add(name);
-    let colour = pick(DECK_COLOURS, rng);
-    for (let tries = 0; colours.has(colour.hex) && tries < 30 && colours.size < DECK_COLOURS.length; tries++) colour = pick(DECK_COLOURS, rng);
-    colours.add(colour.hex);
+    let colour = pick(DECK_COLOURS, rng).hex;
+    for (let tries = 0; taken.has(colour) && tries < 30 && taken.size < DECK_COLOURS.length; tries++) colour = pick(DECK_COLOURS, rng).hex;
+    // A seat with its own colour (a state's look at Nationals, #694) wears it instead.
+    colour = colours?.[i] ?? colour;
+    taken.add(colour);
     const iconId = pick(GARAGE_LOGOS, rng);
-    out.push({ name, color: colour.hex, ink: inkFor(colour.hex), iconId, ...(towns?.length ? { town: towns[i % towns.length] } : {}) });
+    out.push({ name, color: colour, ink: inkFor(colour), iconId, ...(towns?.length ? { town: towns[i % towns.length] } : {}) });
   }
   return out;
 }

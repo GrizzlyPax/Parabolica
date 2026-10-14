@@ -34,7 +34,8 @@ import { DRIVER_STATS, type DriverStatKey } from '../cards';
 import { carriedEffects } from '../season/effects';
 import { dealRookies } from '../season/rookies';
 import { inkFor } from '../icons/ink';
-import { fieldSize, placeById, type FieldSize, type UsPlace } from '../data/states';
+import { fieldSize, placeById, US_PLACES, type FieldSize, type UsPlace } from '../data/states';
+import { isOut, type SeasonFormat } from '../season/format';
 import type { Step } from '../look/step';
 import { constructorStandings, poolFor, seasonState, settleRound, type SeasonFacts, type SeasonHuman, type SeasonSetup, type SeasonStore } from '../season/season';
 import { seasonCalendar } from '../season/setup';
@@ -46,18 +47,28 @@ export const PLAYER_TEAM_ID = 'you';
 export interface StepPlan {
   id: Step;
   name: string;
-  /** Races at this step; 0 = not built (Nationals, #694). */
+  /** Races at this step; 0 = not built. */
   races: number;
-  /** Rival garages at this step: a number, or 'state' for the state's field size. */
-  field: number | 'state';
+  /** Rival garages at this step: a number, 'state' for the state's field size, 'nation' for every other state's Ace. */
+  field: number | 'state' | 'nation';
 }
 
-/** Locals 5 races, State 6, a slot for Nationals (Pax, #693). */
+/** Locals 5 races, State 6, Nationals 7 (Pax, #693; Steward's schedule, #694). */
 export const STEP_PLAN: readonly StepPlan[] = [
   { id: 'locals', name: 'Locals', races: 5, field: 5 },
   { id: 'state', name: 'State', races: 6, field: 'state' },
-  { id: 'nationals', name: 'Nationals', races: 0, field: 'state' },
+  { id: 'nationals', name: 'Nationals', races: 7, field: 'nation' },
 ];
+
+/** Nationals (#694, Steward Oct 14): the Hundred, then 30 → 20 → 10 states by best finisher, then a three-race Final on fresh points. */
+export const NATIONALS_FORMAT: SeasonFormat = {
+  knockoutRace: 0,
+  cuts: [{ after: 1, keep: 30 }, { after: 2, keep: 20 }, { after: 3, keep: 10 }],
+  finalFrom: 4,
+  stages: ['The Hundred', 'First cut', 'Second cut', 'The Twenty', 'The Final', 'The Final', 'The Final'],
+};
+/** Rival Aces at Nationals: grade points on every stat (Steward's fit, #694). */
+export const NATIONALS_SHIFT = 40;
 export const STEPS_PER_RUN = STEP_PLAN.length;
 
 /** Rival strength at State by the state's size (Steward's fit, #693): grade points on every rival stat at race build. */
@@ -183,16 +194,22 @@ export function titleFor(run: RunFacts, step: Step): string {
   return step === 'globals' ? 'Ace Earth' : 'Ace Universe';
 }
 
+/** The other states at Nationals (#694): every state but yours, each with a town and, when it has a look, its colour. The pool order is the states'. */
+export function rivalStates(run: RunFacts): { stateId: string; town: string; color?: string }[] {
+  return US_PLACES.filter(p => p.kind === 'state' && p.id !== run.setup.stateId)
+    .map(p => ({ stateId: p.id, town: p.cities[Math.abs(Math.floor(run.setup.seed)) % p.cities.length], ...(p.look ? { color: p.look.primary } : {}) }));
+}
+
 /** Rival garages at a step (not counting you). */
 export function fieldAt(run: RunFacts, index: number): number {
   const plan = STEP_PLAN[Math.min(index, STEP_PLAN.length - 1)];
-  return plan.field === 'state' ? fieldSize(stateOf(run)) : plan.field;
+  return plan.field === 'state' ? fieldSize(stateOf(run)) : plan.field === 'nation' ? rivalStates(run).length : plan.field;
 }
 
 /** Grade points on every rival stat at race build, by step. */
 export function fieldShiftAt(run: RunFacts, index: number): number {
   const plan = STEP_PLAN[Math.min(index, STEP_PLAN.length - 1)];
-  return plan.id === 'locals' ? LOCALS_SHIFT : STATE_FIELD[fieldSize(stateOf(run))];
+  return plan.id === 'locals' ? LOCALS_SHIFT : plan.id === 'nationals' ? NATIONALS_SHIFT : STATE_FIELD[fieldSize(stateOf(run))];
 }
 
 // ---------------------------------------------------------------------------
@@ -206,10 +223,12 @@ export function leagueSeed(run: RunFacts, index: number): number {
 export function leagueContext(run: RunFacts, index: number): LeagueContext {
   const plan = STEP_PLAN[Math.min(index, STEP_PLAN.length - 1)];
   const town = townOf(run);
+  const rivals = plan.id === 'nationals' ? rivalStates(run) : undefined;
   return {
     index, step: plan.id, name: plan.name,
     fieldShift: fieldShiftAt(run, index), nemesisShift: 0, bossRound: Math.max(0, plan.races - 1),
-    locale: { stateId: stateOf(run).id, town, rivalTowns: plan.id === 'locals' ? [] : rivalTowns(run) },
+    locale: { stateId: stateOf(run).id, town, rivalTowns: plan.id === 'locals' ? [] : rivals ? rivals.map(r => r.town) : rivalTowns(run), ...(rivals ? { rivals } : {}) },
+    ...(plan.id === 'nationals' ? { format: NATIONALS_FORMAT } : {}),
   };
 }
 
@@ -234,7 +253,7 @@ export function seasonFactsFor(run: RunFacts, index: number): SeasonFacts {
 /** The SeasonSetup of step `index`: seed, calendar, your garage, the field, and your team carried in. */
 export function leagueSetup(run: RunFacts, index: number): SeasonSetup {
   const plan = STEP_PLAN[Math.min(index, STEP_PLAN.length - 1)];
-  if (!plan.races) throw new Error(`run: ${plan.name} is not built yet (#694)`);
+  if (!plan.races) throw new Error(`run: ${plan.name} is not built yet`);
   const seed = leagueSeed(run, index);
   return {
     seed,
@@ -271,14 +290,21 @@ export function withCurrentLeague(run: RunFacts, facts: SeasonFacts): RunFacts {
   return { ...run, leagues: [...run.leagues.slice(0, -1), league] };
 }
 
-/** P1 in the table after every race: the title. */
+/** P1 in the table after every race: the title (at Nationals, the Final's table, and only if you are still in). */
 export function leagueWon(facts: SeasonFacts): boolean {
   if (seasonState(facts).phase !== 'finished') return false;
   const you = facts.setup.humans[0]?.teamId;
+  if (!you || isOut(facts, you)) return false;
   return constructorStandings(facts)[0]?.teamId === you;
 }
 
-/** The last step that is built: winning it wins the run until Nationals lands. */
+/** Out of the step before its end (a Nationals cut, #694): the run is over. */
+export function runOut(facts: SeasonFacts): boolean {
+  const you = facts.setup.humans[0]?.teamId;
+  return !!you && isOut(facts, you);
+}
+
+/** The last step that is built: winning it wins the run. */
 export const LAST_BUILT_STEP = STEP_PLAN.reduce((last, s, i) => (s.races ? i : last), 0);
 
 export function runState(run: RunFacts): RunState {
@@ -286,7 +312,7 @@ export function runState(run: RunFacts): RunState {
   const league = currentLeague(run);
   const finished = seasonState(league).phase === 'finished';
   const won = finished && leagueWon(league);
-  const phase: RunPhase = !finished ? 'league' : !won ? 'run-lost' : leagueIndex >= LAST_BUILT_STEP ? 'run-won' : 'league-won';
+  const phase: RunPhase = runOut(league) ? 'run-lost' : !finished ? 'league' : !won ? 'run-lost' : leagueIndex >= LAST_BUILT_STEP ? 'run-won' : 'league-won';
   const ladder: LadderRung[] = STEP_PLAN.map((s, i) => ({
     index: i, step: s.id, name: s.name, title: titleFor(run, s.id), later: !s.races || undefined,
     status: i < leagueIndex ? 'won' : i > leagueIndex ? 'ahead' : won ? 'won' : phase === 'run-lost' ? 'lost' : 'current',

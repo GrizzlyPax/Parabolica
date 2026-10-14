@@ -6,12 +6,12 @@
 import { describe, it, expect } from 'vitest';
 import {
   newRun, seasonFactsFor, currentLeague, withCurrentLeague, runState, promote, replayRun, leagueWon, titlesOf, titleFor, townOf, rivalTowns, fieldAt, fieldShiftAt,
-  startingTeam, saveRun, loadRun, clearRun, RUN_KEY, RUN_SCHEMA_VERSION, STEP_PLAN, STATE_FIELD, LAST_BUILT_STEP, NEMESIS_IN_RUN, PLAYER_TEAM_ID, type RunFacts,
+  startingTeam, saveRun, loadRun, clearRun, RUN_KEY, RUN_SCHEMA_VERSION, STEP_PLAN, STATE_FIELD, LAST_BUILT_STEP, NEMESIS_IN_RUN, PLAYER_TEAM_ID, NATIONALS_SHIFT, NATIONALS_FORMAT, rivalStates, type RunFacts,
 } from './run';
 import { emptyMeta, recordRun, loadMeta, saveMeta, META_KEY, grant } from './meta';
 import { loadCurrentLeague, saveCurrentLeague, startRun, promoteCurrentRun, currentRunState } from './current';
 import { LEAGUE_ID_STRIDE, shiftStats } from '../season/genesis';
-import { seasonState, setLineup, settleRound, poolFor, constructorStandings, leagueForRound, rivalShifts, type SeasonFacts, type SeasonStore } from '../season/season';
+import { seasonState, setLineup, settleRound, poolFor, constructorStandings, leagueForRound, lineupFor, lineupsFor, rivalShifts, type SeasonFacts, type SeasonStore } from '../season/season';
 import { applyCards } from '../cards';
 import { draftState } from '../season/draft';
 import { teamStamps, carriedStamps, titleStamp, TITLE_STAMP_LEVELS } from '../season/stamps';
@@ -19,6 +19,7 @@ import { POINTS_PER_LEVEL } from '../season/grades';
 import { openParcelQuick } from '../season/testHelpers';
 import { seasonCalendar } from '../season/setup';
 import { dealRookies, ROOKIE_GRADE, ROOKIE_ID_BASE, ROOKIE_WOBBLE } from '../season/rookies';
+import { aliveAt, bestFinish, isOut, stageOf } from '../season/format';
 import { rating } from '../season/grades';
 import { fieldSize, placeById } from '../data/states';
 import { testRun, TEST_GARAGE } from './testHelpers';
@@ -65,9 +66,9 @@ const digests = (f: SeasonFacts) => f.results.map(d => [d.finishOrder, d.totalTi
 const grade = (stat: 'baseSpeed' | 'consistency' | 'luck' | 'acceleration' | 'endurance' | 'aggression', raw: number) => rating(stat, raw);
 
 describe('the steps', () => {
-  it('Locals 5 races, State 6, Nationals a slot; the field by the state\'s size; your town from its pool', () => {
-    expect(STEP_PLAN.map(s => [s.id, s.races])).toEqual([['locals', 5], ['state', 6], ['nationals', 0]]);
-    expect(LAST_BUILT_STEP).toBe(1);
+  it('Locals 5 races, State 6, Nationals 7; the field by the state\'s size; your town from its pool', () => {
+    expect(STEP_PLAN.map(s => [s.id, s.races])).toEqual([['locals', 5], ['state', 6], ['nationals', 7]]);
+    expect(LAST_BUILT_STEP).toBe(2);
     expect(STATE_FIELD).toEqual({ 5: 20, 10: 27, 20: 34 });
     const oh = testRun(5, 'oh'), vt = testRun(5, 'vt'), ia = testRun(5, 'ia');
     expect([fieldSize(placeById('oh')!), fieldSize(placeById('ia')!), fieldSize(placeById('vt')!)]).toEqual([20, 10, 5]);
@@ -109,7 +110,7 @@ describe('the steps', () => {
     }
     expect(new Set(pool.teams.map(t => t.name)).size).toBe(pool.teams.length);
     expect(runState(run)).toMatchObject({ leagueIndex: 0, phase: 'league', won: 0 });
-    expect(runState(run).ladder.map(r => [r.status, r.title, r.later ?? false])).toEqual([['current', `Ace ${townOf(run)}`, false], ['ahead', 'Ace Ohio', false], ['ahead', 'Ace America', true]]);
+    expect(runState(run).ladder.map(r => [r.status, r.title, r.later ?? false])).toEqual([['current', `Ace ${townOf(run)}`, false], ['ahead', 'Ace Ohio', false], ['ahead', 'Ace America', false]]);
     expect(titlesOf(run)).toEqual([]);
   });
 
@@ -220,12 +221,9 @@ describe('the steps', () => {
     expect(leagueForRound(league, 0).roster).toHaveLength(42);
   });
 
-  it('winning State wins the run (Nationals waits on #694); the titles are claimed', () => {
+  /** A run with State won (a scripted table) and promoted to Nationals. */
+  function atNationals(): RunFacts {
     let run = promote(wonRun('vt'));
-    const state = runState(run);
-    expect(state.ladder[2]).toMatchObject({ status: 'ahead', later: true, title: 'Ace America' });
-    expect(() => seasonFactsFor({ ...run, leagues: [...run.leagues, { draftPicks: [], lineups: [], cardFacts: [], effectFacts: [], results: [] }] }, 2)).toThrow(/not built/);
-    // Hand the player every race (a scripted table): the run is won.
     let facts = currentLeague(run);
     const you = facts.setup.humans[0].teamId;
     const mine = draftState(poolFor(facts), facts.draftPicks).rosters[you].driverIds;
@@ -233,10 +231,87 @@ describe('the steps', () => {
     const digest = (i: number) => ({ index: i, trackId: facts.setup.calendar[i], trackName: 't', trackEmoji: '', finishOrder: [...mine, ...others], dnfDriverIds: [], fastestLapDriverId: null, totalTicks: 1000, highlights: [] });
     facts = { ...facts, results: facts.setup.calendar.map((_, i) => digest(i)) };
     run = withCurrentLeague(run, facts);
-    expect(runState(run).phase).toBe('run-won');
+    expect(runState(run).phase).toBe('league-won');
     expect(titlesOf(run).map(t => t.name)).toEqual([`Ace ${townOf(run)}`, 'Ace Vermont']);
-    expect(() => promote(run)).toThrow(/cannot promote/);
+    return promote(run, { [mine[0]]: ['baseSpeed', 'consistency'], [mine[1]]: ['luck', 'endurance'] });
+  }
+
+  it('Nationals (#694): every other state\'s Ace, 100 cars, rivals +40, the format on the context; the State title stamps ride up', () => {
+    const run = atNationals();
+    expect(run.titles.map(t => t.name)).toEqual([`Ace ${townOf(run)}`, 'Ace Vermont']);
+    expect(run.titles[1].stamps!.map(s => s.stats)).toEqual([['baseSpeed', 'consistency'], ['luck', 'endurance']]);
+    const league = currentLeague(run);
+    expect(league.setup.league).toMatchObject({ index: 2, step: 'nationals', fieldShift: NATIONALS_SHIFT, format: NATIONALS_FORMAT });
+    expect(league.setup.calendar).toHaveLength(7);
+    expect(league.setup.teamCount).toBe(50); // 49 other states + you
+    const pool = poolFor(league);
+    expect(pool.drivers).toHaveLength(100);
+    expect(pool.drivers.every(d => d.number >= 2 && d.number <= 99)).toBe(true);
+    const rivals = pool.teams.filter(t => t.id !== 'you');
+    expect(rivals).toHaveLength(49);
+    const seats = rivalStates(run);
+    expect(seats.map(s => s.stateId)).not.toContain('vt');
+    expect(seats.map(s => s.stateId)).toHaveLength(49);
+    rivals.forEach((t, i) => { expect(t.town).toBe(seats[i].town); if (seats[i].color) expect(t.color).toBe(seats[i].color); });
+    expect(rivalShifts(league)).toMatchObject(Object.fromEntries(rivals.map(t => [t.id, NATIONALS_SHIFT])));
+    const carried = league.setup.carry!;
+    expect(Object.values(carried.cards.titles!).flat()).toHaveLength(6); // 1 + 1 from Locals (defaults), 2 + 2 from State
+    expect(runState(run).ladder[2]).toMatchObject({ status: 'current', title: 'Ace America' });
+    expect(stageOf(league, 0)).toMatchObject({ name: 'The Hundred', alive: 50, drivers: 100 });
   });
+
+  it('Nationals plays out: the Hundred knocks cars out, the cuts keep 30 / 20 / 10 states by best finisher, the Final scores from zero, and the run ends won or out', () => {
+    let run = atNationals();
+    let facts = currentLeague(run);
+    const you = 'you';
+    for (let round = 0; round < 7; round++) {
+      const before = aliveAt(facts, round);
+      const lineups = lineupsFor(facts, round);
+      expect(lineups.map(l => l.teamId)).toEqual(before.teams);
+      expect(lineups.flatMap(l => l.driverIds).sort((a, b) => a - b)).toEqual([...before.drivers].sort((a, b) => a - b));
+      if (!isOut(facts, you, round)) {
+        const state = seasonState(facts);
+        expect(state.whoseTurn).toBe(you);
+        facts = openParcelQuick(setLineup(facts, { round, teamId: you, driverIds: lineupFor(facts, round, you) }));
+      }
+      expect(seasonState(facts).phase).toBe('ready-for-go');
+      facts = settleRound(facts);
+      const after = aliveAt(facts, round + 1);
+      const digest = facts.results[round];
+      expect(digest.finishOrder.length + digest.dnfDriverIds.length).toBe(before.drivers.length);
+      if (round === 0) {
+        expect(after.drivers).toHaveLength(100 - digest.dnfDriverIds.length);
+        for (const id of digest.dnfDriverIds) expect(after.drivers).not.toContain(id);
+      }
+      const cut = NATIONALS_FORMAT.cuts.find(c => c.after === round);
+      if (cut) {
+        expect(after.teams).toHaveLength(Math.min(cut.keep, before.teams.length));
+        // Kept by best finisher: every team kept finished no worse than every team cut.
+        const best = (t: string) => bestFinish(digest, lineups.find(l => l.teamId === t)!.driverIds)[0];
+        const worstKept = Math.max(...after.teams.map(best));
+        const bestCut = Math.min(...before.teams.filter(t => !after.teams.includes(t)).map(best));
+        expect(worstKept).toBeLessThanOrEqual(bestCut);
+      }
+      // Only the Final scores; a team that is out sits below every team still in.
+      const table = constructorStandings(facts);
+      if (round < NATIONALS_FORMAT.finalFrom) expect(table.every(s => s.points === 0)).toBe(true);
+      else expect(table.some(s => s.points > 0)).toBe(true);
+      const outRank = table.filter(s => after.outAt[s.teamId] !== undefined).map(s => s.rank);
+      const inRank = table.filter(s => after.outAt[s.teamId] === undefined).map(s => s.rank);
+      if (outRank.length && inRank.length) expect(Math.min(...outRank)).toBeGreaterThan(Math.max(...inRank));
+    }
+    expect(aliveAt(facts).teams.length).toBeLessThanOrEqual(10);
+    run = withCurrentLeague(run, facts);
+    const state = runState(run);
+    expect(['run-won', 'run-lost']).toContain(state.phase);
+    expect(state.phase === 'run-won').toBe(leagueWon(facts));
+    if (state.phase === 'run-won') expect(titlesOf(run).map(t => t.name)).toEqual([`Ace ${townOf(run)}`, 'Ace Vermont', 'Ace America']);
+    expect(() => promote(run)).toThrow(/cannot promote/);
+    // The record replays (State was scripted above, so Nationals alone): the Hundred included.
+    let again: SeasonFacts = { ...seasonFactsFor(run, 2), results: [] };
+    for (let r = 0; r < 7; r++) again = settleRound(again);
+    expect(digests(again)).toEqual(digests(facts));
+  }, 120000);
 
   it('derived setups are stable: twice from the same facts, and through JSON', () => {
     const next = promote(wonRun('vt'));

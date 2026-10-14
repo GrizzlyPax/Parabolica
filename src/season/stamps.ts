@@ -33,6 +33,7 @@ import type { RarityOdds } from '../cards/rarity';
 import type { CarriedCards, SeasonCards } from './genesis';
 import { draftState } from './draft';
 import { constructorStandings, isHuman, poolFor, seasonState, type SeasonFacts } from './season';
+import { isOut } from './format';
 import type { EffectFact } from './effects';
 import { POINTS_PER_LEVEL } from './grades';
 import { stepName, type Step } from '../look/step';
@@ -146,7 +147,7 @@ function stamp(id: string): Card {
 
 /** Hook: who gets a Parcel. CPU teams don't (#478: kit is the player's edge). */
 export function teamGetsParcel(facts: SeasonFacts, teamId: string): boolean {
-  return isHuman(facts, teamId);
+  return isHuman(facts, teamId) && !isOut(facts, teamId);
 }
 
 /** Standing rank → tier, in quarters of the grid: leader Common, last Legendary. */
@@ -314,7 +315,7 @@ export function seasonCardsFor(facts: SeasonFacts, round: number): SeasonCards {
 
 /** Has this team opened its Parcel this round (or has none to open)? */
 export function parcelOpened(facts: SeasonFacts, round: number, teamId: string): boolean {
-  if (!teamGetsParcel(facts, teamId)) return true;
+  if (!isHuman(facts, teamId) || isOut(facts, teamId, round)) return true;
   return facts.cardFacts.some(f => f.round === round && f.teamId === teamId);
 }
 
