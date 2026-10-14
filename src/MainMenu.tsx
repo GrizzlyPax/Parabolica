@@ -1,6 +1,7 @@
 // The main menu as the program's cover (#705; the locked look): bunting, the
 // Official Program line, the sash as the title, the racer, a chequer, then the
-// contents rows. Wears Americana (the menus' theme). The game's name on the
+// contents rows; on a desktop the cover and the contents sit side by side
+// (#722, desktop first). Wears Americana (the menus' theme). The game's name on the
 // sash stays Parabolica until the rename (#701).
 import { AceButton, Bunting, Chequer, ProgramLine, Racer, Sash, StepTheme } from './look/Look';
 import './MainMenu.css';
@@ -36,14 +37,16 @@ function MainMenu({ onSingleRace, onSeason, season, onCompendium, onGlossary, on
     <StepTheme step="nationals" className="ace-page mm">
       <Bunting />
       <ProgramLine right={`No. ${programNo(version)} · 10¢`} />
+      <div className="mm-body">
       <header className="mm-cover">
         <Sash text="Parabolica" title="Parabolica" className="mm-sash" fontSize={23} />
-        <Racer number={16} width={210} />
+        <Racer number={16} width={210} className="mm-racer" />
         <Chequer tall />
         <span className="ace-where">{live ? `${live.name} · race ${live.round + 1} of ${live.total}` : 'Race day'}</span>
       </header>
 
       <nav className="ace-menu mm-menu" aria-label="Main menu">
+        <span className="ace-k mm-contents">Contents</span>
         <button type="button" className="ace-mi on" onClick={onSeason}>
           <span>{live ? 'Continue' : 'New season'}</span>
           <small>{live ? `${live.name} · race ${live.round + 1}` : 'Pick two rookies and a car setup, then climb'}</small>
@@ -52,6 +55,7 @@ function MainMenu({ onSingleRace, onSeason, season, onCompendium, onGlossary, on
         <button type="button" className="ace-mi" onClick={onGlossary}><span>The World Deck</span><small>Every card, team, track and weather</small></button>
         <button type="button" className="ace-mi" onClick={onCompendium}><span>Race Control</span><small>The lab, seeded and replicable</small></button>
       </nav>
+      </div>
 
       <footer className="mm-foot">
         <span className="ace-note">Somebody is always watching. Race well.</span>

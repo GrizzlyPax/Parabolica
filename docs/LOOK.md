@@ -6,8 +6,15 @@
 - **A race program:** red, white and blue first, **gold as the highlight**; bunting, motorsport marks, an Official Program number; a **navy ground with cream (paper) panels**.
 - **The sash is the title:** cream satin, a thin border, the words in Playball, a gold wheel at each end, no crown.
 - **One theme per step,** not one global theme: **Locals** black and white · **State** that state's colours as accents only (the ground stays dark) · **Nationals** Americana (the menus wear it too). Ids are left for **Globals** and **Galacticals** (Americana until their own looks land). The step id is `nationals`, never `theNationals`.
-- **Desktop first (Pax, Oct 10):** "for a racing game, the bigger the better." Design at 1440 × 900 and check 1280; pages use the full width (`.ace-page.wide` or wider), not a phone column. The phone is a smaller version of the desktop layout: it must not break (one 16px gutter, `--ace-gutter`), but it is not the priority. Icons keep `currentColor`.
+- **Desktop first (Pax, Oct 10):** "for a racing game, the bigger the better." Design at 1440 × 900 and check 1280; pages use the full width (the frame below), not a phone column. The phone is a smaller version of the desktop layout: it must not break (one 16px gutter, `--ace-gutter`), but it is not the priority. Icons keep `currentColor`.
 - **Nothing here touches the sim:** the golden fingerprint stays put.
+
+## The frame (#722)
+- **One centred frame:** `.ace-page` paints the ground edge to edge and centres its children at `--ace-max` (**1376px** = 1440 less two 32px gutters). `.ace-page.narrow` caps them at `--ace-narrow` (720px) for a reading column.
+- **Gutters:** `--ace-gutter` is **32px from 1024px up**, 16px below.
+- **Edge to edge:** the bunting (a repeating pattern, so the pennants keep their size), the state bar and the dock. The state bar's text still lines up with the frame.
+- **Desktop sizes from 1024px:** the h1 is 40px, the logo 80px and the sash 340px; panels and the dock get roomier. Race Control → Style shows the components at these sizes on a desktop.
+- **Columns:** lay a screen out with grid inside the frame; it stacks to one column below 1024px. The menu is cover | contents (6fr | 5fr, 64px gap). The Ladder runs its steps across the screen, Locals on the left, with the open step at double width.
 
 ## Where it lives (`src/look/`)
 | File | What |
