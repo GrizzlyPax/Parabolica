@@ -4,7 +4,7 @@
 // choices (your state, your garage), promote, and keep the meta record. The
 // run screens read `currentRunState` / `loadRun`.
 import type { SeasonFacts, SeasonHuman, SeasonStore } from '../season/season';
-import { claimTitles, currentLeague, loadRun, newRun, promote, runState, saveRun, withCurrentLeague, clearRun as clearRunSave, type RunFacts, type RunState } from './run';
+import { claimTitles, currentLeague, loadRun, newRun, promote, runState, saveRun, withCurrentLeague, clearRun as clearRunSave, type RunFacts, type RunState, type StartNames } from './run';
 import { loadMeta, recordRun, saveMeta } from './meta';
 
 export { clearRunSave as clearRun };
@@ -35,7 +35,7 @@ function commit(run: RunFacts, store?: SeasonStore | null): boolean {
 }
 
 /** Start a run: your state and your garage. Returns the first step, open in the Paddock. */
-export function startRun(setup: { seed: number; stateId: string; garage: Omit<SeasonHuman, 'teamId'> }, store?: SeasonStore | null): SeasonFacts {
+export function startRun(setup: { seed: number; stateId: string; garage: Omit<SeasonHuman, 'teamId'>; names?: StartNames }, store?: SeasonStore | null): SeasonFacts {
   const run = newRun(setup);
   commit(run, store);
   return currentLeague(run);
