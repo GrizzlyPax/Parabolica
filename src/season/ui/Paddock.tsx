@@ -43,6 +43,9 @@ import { teamsOf } from './teams';
 import { nemesisLine } from '../nemesis';
 import DriverCard, { DriverName } from './DriverCard';
 import { driverCardOf } from '../driverCard';
+import { AceButton, Bunting, Chequer, ProgramLine, StateBar, StepTheme } from '../../look/Look';
+import { STEPS as LOOK_STEPS, programNumber, stateLook, stepForLeague } from '../../look/step';
+import { LEAGUE_LADDER } from '../../run/run';
 
 interface Props {
   facts: SeasonFacts;
@@ -92,6 +95,8 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, ba
 
   const commit = (next: SeasonFacts) => { saveSeason(next); onChange(next); };
   const total = facts.setup.calendar.length;
+  // The step this league wears (#705; v0.7's leagues onto Locals · State · Nationals until #696).
+  const lookStep = stepForLeague(facts.setup.league?.index ?? 0, LEAGUE_LADDER.length);
   const round = Math.min(state.round, total - 1);
   const trackId = facts.setup.calendar[round];
   const track = getTrackById(trackId);
@@ -265,17 +270,22 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, ba
   // The turn, in one line
   const step = !myTurn ? -1 : offer || rankUp ? 0 : 1;
   const STEPS = ['Open pack', 'Lock in'];
+  // The one action of the turn sits in the dock (#715); the turn line keeps the steps.
+  const action = state.phase === 'ready-for-go'
+    ? <AceButton onClick={onGo}>Go: round {state.round + 1}</AceButton>
+    : !myTurn ? null
+    : step === 0 && !revealing && offer?.kind === 'single' ? <AceButton onClick={() => setRevealing(true)}>Open pack</AceButton>
+    : step === 0 && !revealing && offer?.kind === 'curse' ? <AceButton onClick={() => setRevealing(true)}>Open the Curse pack</AceButton>
+    : step >= 1 ? <AceButton disabled={lineup.length !== 2} onClick={lock}>Lock in</AceButton>
+    : null;
   const turnLine = state.phase === 'ready-for-go' ? (
-    <div className="pk-go"><span>Every team is set for round {state.round + 1}.</span><button type="button" className="rs-btn rs-btn-primary" onClick={onGo}>Go: round {state.round + 1}</button></div>
+    <div className="pk-go"><span>Every team is set for round {state.round + 1}.</span></div>
   ) : myTurn && (
     <div className="pk-turn">
       <ol aria-label="Your turn">
         {STEPS.map((s, i) => <li key={s} className={i < step ? 'done' : i === step ? 'now' : ''}>{i + 1} · {s}</li>)}
       </ol>
-      {step === 0 && !revealing && offer?.kind === 'single' && <button type="button" className="rs-btn rs-btn-primary" onClick={() => setRevealing(true)}>Open pack</button>}
       {step === 0 && !revealing && offer?.kind === 'choice' && <span className="rs-hint">Pick one of the two packs below.</span>}
-      {step === 0 && !revealing && offer?.kind === 'curse' && <button type="button" className="rs-btn rs-btn-primary" onClick={() => setRevealing(true)}>Open the Curse pack</button>}
-      {step >= 1 && <button type="button" className="rs-btn rs-btn-primary" disabled={lineup.length !== 2} onClick={lock}>Lock in</button>}
     </div>
   );
 
@@ -351,7 +361,7 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, ba
         <span><i className="rt-notch-key" /> cards change this stat · tap a level for the sum</span>
         <span>Tap a card for the full card{myTurn ? '; tap gear to move it' : ''}</span>
       </div>
-      <div className="rt-scroll">
+      <div className="ace-panel flat pk-sheet-panel"><div className="rt-scroll">
         <table className="rt">
           <thead>
             <tr>
@@ -404,7 +414,7 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, ba
             })}
           </tbody>
         </table>
-      </div>
+      </div></div>
       <div
         className={`pk-locker ${lockerFits ? 'droppable pulse' : ''}`}
         {...dropOn('locker')}
@@ -438,16 +448,17 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, ba
   );
 
   return (
-    <div className="run-setup season-setup ss-paddock pk" style={teamThemeVars(you)}>
+    <StepTheme step={lookStep} state={stateLook('OH')} className="ace-page pk" style={teamThemeVars(you)}>
+      <Bunting />
+      <ProgramLine right={`No. ${programNumber(facts.setup.seed)} · 10¢`} />
+      <StateBar><b>{LOOK_STEPS.find(s => s.id === lookStep)!.name}</b> · round {state.round + 1} of {total}</StateBar>
       <header className="pk-head">
-        <TeamLogo team={you} size={32} />
-        <div className="pk-title">
-          <button type="button" className="rs-back" onClick={onMenu}>{backLabel}</button>
-          <h1 className="rs-title">Paddock</h1>
-          <span className="rs-sub">Round {state.round + 1} of {total} · {you.name}</span>
-        </div>
+        <button type="button" className="ace-link" onClick={onMenu}>{backLabel.replace(/^← /, '')}</button>
+        <span className="ace-where pk-you"><TeamLogo team={you} size={20} /> {you.name}</span>
         <EndSeason onEnded={onEndSeason} />
       </header>
+      <h1 className="ace-h1">The Paddock</h1>
+      <Chequer />
       {spoken && (
         <section className="nem-line" aria-label="Your nemesis">
           <TeamLogo team={teams[spoken.teamId]} size={36} />
@@ -462,9 +473,9 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, ba
           </div>
         </section>
       )}
-      <div className="pk-tabs" role="tablist">
-        <button type="button" role="tab" aria-selected={tab === 'team'} onClick={() => setTab('team')}>Team</button>
-        <button type="button" role="tab" aria-selected={tab === 'league'} onClick={() => setTab('league')}>League</button>
+      <div className="ace-tabs pk-tabs" role="tablist">
+        <button type="button" role="tab" className={`ace-tab ${tab === 'team' ? 'on' : ''}`} aria-selected={tab === 'team'} onClick={() => setTab('team')}>Team</button>
+        <button type="button" role="tab" className={`ace-tab ${tab === 'league' ? 'on' : ''}`} aria-selected={tab === 'league'} onClick={() => setTab('league')}>League</button>
         {myRank && <span className="pk-rank">{ord(myRank.rank)} · {myRank.points} pts</span>}
       </div>
 
@@ -509,6 +520,7 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, ba
           <button type="button" className="rs-link pk-sheet-x" onClick={() => setDetail(null)}>Close</button>
         </div>
       )}
-    </div>
+      {action && <div className="ace-dock">{action}</div>}
+    </StepTheme>
   );
 }
