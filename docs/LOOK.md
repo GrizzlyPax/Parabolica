@@ -46,6 +46,13 @@ import { stateLook } from '../look/step';
 - The house data table (`.rt`, `season/ui/RosterTable.tsx`) sits on paper inside an `.ace-panel .rt-scroll` (its `--pw-*` tokens are re-pointed there).
 - Old screens keep working: the `--pw-*` / `--look-*` tokens and the `.rs-*` frame are untouched. Hub moves a screen by wrapping it in `StepTheme` + `.ace-page` and swapping its pieces for the components.
 
+### The bridge (#715)
+Inside `.ace-page`, the old `--pw-*` / `--look-*` tokens point at the program's tokens, and `.rs-btn` / `.rs-btn-primary` take the program's buttons, so a screen that hasn't been swept still wears its step for free. Two cautions:
+- Old rules can beat `.ace-tab` on specificity (the Paddock's `.pk-tabs button` did): override them under the screen's own `.ace-page` class, never by raising the program's specificity.
+- `.ace-panel.ace-paper-table` re-points `--pw-*` to paper, for old components inside a paper panel (the finale's crowns use it).
+
+Frame children get `width` / `max-width` / `margin` at zero specificity (`:where`), so overlays and modals keep their own sizes; the bunting, the state bar and the dock opt out of the frame.
+
 ## The proof
 - **The Ladder** (`season/ui/RunLadder.tsx`): bunting, the program line, the state bar, "The road to Ace America", the rungs as paper panels (the open one outlined in the accent, races as squares, the last chequered), the sash when the run is won, the dock. Its step comes from `stepForLeague` (Juniors = Locals, Regional / National = State (Ohio stub), Top flight = Nationals).
 - **The menu** (`MainMenu.tsx`): the program cover: bunting, the program line, the sash as the title, the racer, the chequer, contents rows.

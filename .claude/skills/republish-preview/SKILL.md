@@ -13,9 +13,10 @@ The preview artifact is `TKD2w88SkEdAA7eWgszpoA` (check the newest `docs/HANDOFF
 2. Copy `dist/*` to the scratchpad.
 3. Rewrite absolute asset paths to relative, in `index.html` **and** every `assets/index-*.js`:
    `"/assets/` → `"./assets/`
+3b. **And in every `assets/index-*.css`** (fonts are bundled since #713): `url(/assets/` → `url(./` (and the quoted form `url("/assets/` → `url("./`). Skip it and the preview silently falls back to system fonts.
 4. List the artifact's current files (`Artifact` tool, `action: list`, `scope: files`, `url` = the artifact).
 5. Publish to the same `url` with a `files` map:
-   - new `assets/*` paths → the rewritten files;
+   - new `assets/*` paths → the rewritten files (the font files too: `.woff2` / `.woff`);
    - **previous asset hashes → `null`** so stale bundles are removed.
 6. Note the new version in the PR (and the handoff doc if it records one).
 
