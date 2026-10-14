@@ -91,22 +91,29 @@ export function Sash({ text, fontSize = 25, className, title, ...geometry }: Sas
 // Bunting, the program line, rules
 
 /** A row of pennants along the top edge, in the step's three colours. */
-export function Bunting({ pennants = 9 }: { pennants?: number }) {
-  const w = 40, h = 26, total = pennants * w;
+export function Bunting() {
+  // One repeat of three pennants as an SVG pattern: the pennants keep their size at any width (desktop first, #722).
+  const id = useId().replace(/:/g, '');
+  const w = 40, h = 26, total = w * 3;
   const fills = ['var(--ace-bunt-1)', 'var(--ace-bunt-2)', 'var(--ace-bunt-3)'];
   return (
-    <svg className="ace-bunting" viewBox={`0 0 ${total} ${h + 2}`} preserveAspectRatio="none" aria-hidden="true">
-      <line x1={0} y1={1} x2={total} y2={1} stroke="var(--ace-ink)" strokeWidth={1.5} />
-      {Array.from({ length: pennants }, (_, i) => {
-        const x = i * w;
-        return (
-          <g key={i}>
-            <path d={`M${x} 0 Q${x + w / 2} ${h} ${x + w} 0 Z`} fill={fills[i % 3]} />
-            <path d={`M${x} 0 Q${x + w / 2} ${h} ${x + w} 0`} fill="none" stroke="var(--ace-ink)" strokeWidth={1} opacity={0.35} />
-            {i % 3 === 2 && <Star cx={x + w / 2} cy={h * 0.38} r={3.2} fill="var(--ace-paper)" />}
-          </g>
-        );
-      })}
+    <svg className="ace-bunting" height={h + 2} aria-hidden="true">
+      <defs>
+        <pattern id={`${id}-bunt`} width={total} height={h + 2} patternUnits="userSpaceOnUse">
+          {fills.map((fill, i) => {
+            const x = i * w;
+            return (
+              <g key={i}>
+                <path d={`M${x} 0 Q${x + w / 2} ${h} ${x + w} 0 Z`} fill={fill} />
+                <path d={`M${x} 0 Q${x + w / 2} ${h} ${x + w} 0`} fill="none" stroke="var(--ace-ink)" strokeWidth={1} opacity={0.35} />
+                {i === 2 && <Star cx={x + w / 2} cy={h * 0.38} r={3.2} fill="var(--ace-paper)" />}
+              </g>
+            );
+          })}
+        </pattern>
+      </defs>
+      <rect width="100%" height={h + 2} fill={`url(#${id}-bunt)`} />
+      <line x1={0} y1={1} x2="100%" y2={1} stroke="var(--ace-ink)" strokeWidth={1.5} />
     </svg>
   );
 }

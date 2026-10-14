@@ -1,7 +1,7 @@
 // #316: card packs + the team locker.
 import { describe, it, expect } from 'vitest';
 import {
-  dealPack, packOffer, packTierForRank, packTierFor, applyPack, applyCurse, moveGear, teamCardState, pendingPack, pendingOffer, validatePackApplication, validateCurse, validateGearMove, gearLeft,
+  dealPack, packOffer, packTierForRank, packTierFor, applyPack, applyCurse, moveGear, teamCardState, pendingPack, pendingOffer, validatePackApplication, validateCurse, validateGearMove, gearLeft, heldGear,
   PACK_ODDS, PACK_TIERS, TRAIT_CHANCE, FIRST_PACK_TIER, PLAYER_CARD_SCALE, GEAR_STRENGTH, GEAR_LIFE, OFFER_ODDS, CURSE_LIFE, playerCard, type PackApplication, type PackKind,
 } from './pack';
 import { activeEffects } from './effects';
@@ -483,5 +483,38 @@ describe('gear mileage (#627)', () => {
     // Gear infos ride on the roster for display.
     const infos = leagueForRound({ ...f, lineups: [] }, 2).roster.find(d => d.kingdomId === human)!.effects!;
     expect(infos.some(e => e.id === up && e.left === '2 races left' && e.source === 'gear')).toBe(true);
+  });
+});
+
+describe('held gear is never dealt again (#723)', () => {
+  it('no pack deals gear the team holds, so no second copy shares its id; picking held gear is refused', () => {
+    let checked = 0;
+    for (let seed = 1; seed <= 12; seed++) {
+      let facts = scripted(seed, 6);
+      const human = facts.setup.humans[0].teamId;
+      while (seasonState(facts).phase !== 'finished') {
+        const s = seasonState(facts);
+        if (s.phase === 'paddock' && s.whoseTurn === human) {
+          const offer = pendingOffer(facts);
+          const held = heldGear(facts, human, s.round);
+          if (offer && offer.kind !== 'curse') {
+            for (const kind of offer.packs) {
+              const pack = dealPack(facts, s.round, human, kind)!;
+              for (const c of pack.cards) expect(held.has(c.id)).toBe(false);
+              if (held.size) checked++;
+            }
+          }
+          // The backstop: applying held gear is refused with a clear reason.
+          if (offer && offer.kind !== 'curse') {
+            for (const id of held) {
+              const why = validatePackApplication(facts, { type: 'pack', round: s.round, teamId: human, tier: offer.tier, pack: offer.packs[0], cardId: id, dealt: [], target: { kind: 'car' } });
+              expect(why).toMatch(/already holds/);
+            }
+          }
+        }
+        facts = s.phase === 'paddock' || s.phase === 'ready-for-go' ? playRound(facts) : facts;
+      }
+    }
+    expect(checked).toBeGreaterThan(0);
   });
 });

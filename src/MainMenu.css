@@ -1,8 +1,25 @@
-/* The main menu as the program's cover (#705): the few bits look.css doesn't own. Tokens only. */
-.mm.ace-page { padding-bottom: 24px; max-width: 560px; min-height: 100vh; }
+/* The main menu as the program's cover (#705; desktop first, #722): the few bits look.css doesn't own. Tokens only. */
+.mm.ace-page { padding-bottom: 72px; min-height: 100vh; }
+.mm-body { display: flex; flex-direction: column; gap: 12px; }
 .mm-cover { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; padding: 6px 0 2px; }
 .mm-sash { width: min(300px, 100%); }
 .mm-menu { margin-top: 8px; }
+.mm-contents { display: none; }
 .mm-foot { margin-top: auto; padding-top: 14px; border-top: 1px solid var(--ace-hair); display: flex; flex-direction: column; gap: 8px; align-items: center; text-align: center; }
 .mm-foot-line { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px 12px; font-family: var(--ace-cond); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--ace-muted); }
 .mm-credits.ace-btn { min-height: 28px; padding: 0 10px; font-size: 11px; }
+
+/* Desktop: the cover on the left, the contents on the right, both centred in the screen's height. */
+@media (min-width: 1024px) {
+  .mm-body { flex: 1; display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); gap: 64px; align-items: center; padding-block: 24px; }
+  .mm-cover { gap: 16px; }
+  .mm-sash.ace-sash { width: min(560px, 100%); }
+  .mm-racer { width: min(380px, 100%); }
+  .mm-cover .ace-chq { max-width: 560px; }
+  .mm-cover .ace-where { font-size: 14px; }
+  .mm-menu { margin-top: 0; gap: 10px; }
+  .mm-contents { display: block; padding-bottom: 6px; border-bottom: 2px solid var(--ace-gold); font-size: 13px; }
+  .mm-menu .ace-mi { padding: 18px 20px; font-size: 22px; }
+  .mm-menu .ace-mi small { font-size: 15px; }
+  .mm-foot { flex-direction: row; justify-content: space-between; }
+}

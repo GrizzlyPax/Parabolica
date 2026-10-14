@@ -527,3 +527,44 @@ button.rt-g:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset:
 .rl .ace-row2 { align-items: baseline; }
 .rl .ace-row2 > span:first-child { display: inline-flex; align-items: center; gap: 6px; flex: none; white-space: nowrap; }
 .rl .ace-row2 > span.dim { text-align: right; min-width: 0; }
+
+/* Desktop first (#722): the steps run across the screen, Locals on the left;
+   the open one takes double width. The list is top first in the DOM (the
+   phone's stack), so the row is reversed. */
+@media (min-width: 1024px) {
+  .rl .rl-ladder { flex-direction: row-reverse; align-items: stretch; gap: 16px; }
+  .rl .rl-ladder > li { flex: 1 1 0; min-width: 0; min-height: 200px; }
+  .rl .rl-ladder > li.now { flex-grow: 2; }
+  .rl .rl-head-row .ace-where { font-size: 16px; }
+  .rl .ace-sq i { width: 22px; height: 22px; }
+  .rl .rl-unl { width: 180px; font-size: 12px; padding: 8px 10px; }
+}
+
+/* The Paddock in the race program (#715): the bits look.css doesn't own. */
+.pk.ace-page .pk-head { align-items: center; padding-bottom: 0; border-bottom: 0; }
+.pk.ace-page .pk-you { display: inline-flex; align-items: center; gap: 6px; text-transform: none; letter-spacing: 0; font-family: var(--ace-body); font-size: 15px; color: var(--ace-fg); }
+.pk.ace-page .pk-tabs { border-bottom: 2px solid var(--ace-gold); align-items: flex-end; }
+.pk.ace-page .pk-tabs button { font-family: var(--ace-cond); font-weight: 400; font-size: 15px; letter-spacing: .1em; text-transform: uppercase; padding: 10px 18px; color: var(--ace-muted); border: 1px solid transparent; border-bottom: 0; }
+.pk.ace-page .pk-tabs button:hover { color: var(--ace-fg); }
+.pk.ace-page .pk-tabs button.on { background: var(--ace-paper); color: var(--ace-ink); border-color: var(--ace-gold); }
+.pk.ace-page .pk-rank { margin-left: auto; font-family: var(--ace-cond); letter-spacing: .08em; text-transform: uppercase; color: var(--ace-muted); padding-bottom: 8px; }
+.pk.ace-page .pk-go { border-color: var(--ace-gold); }
+.pk.ace-page .pk-sheet-panel { padding: 0; }
+.pk.ace-page .pk-locker { border-bottom-color: var(--ace-hair); }
+@media (min-width: 1024px) {
+  .pk.ace-page .pk-tabs button { font-size: 17px; padding: 12px 24px; }
+}
+
+/* Standings and the finale in the race program (#717): the bits look.css doesn't own. */
+.fn.ace-page { max-width: none; }
+.fn.ace-page .fn-head { display: flex; align-items: center; gap: 12px; }
+.fn.ace-page .fn-head .ace-where { flex: 1; min-width: 0; }
+.fn.ace-page .fn-result { gap: 4px; }
+.fn.ace-page .fn-result-line { font-size: 18px; }
+.fn.ace-page .fn-crowns { border-bottom: 0; padding: 0; gap: 16px; }
+.fn.ace-page .fn-crown { flex-direction: row; align-items: center; gap: 18px; padding: 14px 18px; }
+.fn.ace-page .fn-crown-name { font-weight: 400; color: var(--ace-ink); }
+.fn.ace-page .fn-sash { width: min(520px, 100%); }
+.fn.ace-page > .pk-chart { max-width: 960px; }
+.lt-panel { padding: 0; }
+@media (max-width: 719px) { .fn.ace-page .fn-crowns, .fn.ace-page .fn-tables { grid-template-columns: 1fr; } }
