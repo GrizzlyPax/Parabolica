@@ -10,6 +10,7 @@
 // new grade; tap a glowing row to put it there (a trait asks first: it's
 // permanent), or the glowing locker to keep gear for later. Drag works too.
 // Two drivers, both race (#585): no lineup choice; Lock in ends the turn.
+import { raceBadges } from '../badges';
 import { useMemo, useState, type DragEvent } from 'react';
 import { levelDelta } from '../grades';
 import { GameIcon, TeamLogo, teamThemeVars } from '../../icons/GameIcon';
@@ -75,6 +76,7 @@ function withCard(own: Card[], gear: Card[], extra: Card | null): Card[] {
 
 export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, backLabel = '← Menu' }: Props) {
   const pool = useMemo(() => poolFor(facts), [facts.setup]); // eslint-disable-line react-hooks/exhaustive-deps
+  const badges = useMemo(() => raceBadges(facts), [facts.setup, facts.draftPicks]); // eslint-disable-line react-hooks/exhaustive-deps
   const teams = useMemo(() => teamsOf(facts), [facts.setup]); // eslint-disable-line react-hooks/exhaustive-deps
   // The nemesis talks (#635): one line per Paddock visit (the round's moment).
   const spoken = useMemo(() => nemesisLine(facts), [facts.setup, facts.results.length, facts.draftPicks.length]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -362,7 +364,7 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, ba
               const gear = cards.drivers[id].equipment[0];
               return (
                 <tr key={id} className={rowClass(k)}>
-                  {nameCell(k, <><RaceNumber n={d.number} color={you.color} ink={you.ink} size={24} shape="square" className="rt-numsq" /><Avatar icon={portraitFor(pool.seed, d.id)} color={you.color} size={22} />{fitsRow(k) ? <span className="rt-nm">{d.fullName}</span> : <DriverName name={d.fullName} onOpen={() => setCardOf(d.id)} />}</>)}
+                  {nameCell(k, <><RaceNumber n={badges[d.id] ?? d.number} color={you.color} ink={you.ink} size={24} shape="square" className="rt-numsq" /><Avatar icon={portraitFor(pool.seed, d.id)} color={you.color} size={22} />{fitsRow(k) ? <span className="rt-nm">{d.fullName}</span> : <DriverName name={d.fullName} onOpen={() => setCardOf(d.id)} />}</>)}
                   {gradeCells(k, d.fullName, DRIVER_STATS, new Set(DRIVER_STATS), false)}
                   <td className="rt-slot" {...dropOn(k)}>{gear ? chip(gear, true, holderOf(k)) : <span className="pk-empty" aria-label="Empty gear slot">—</span>}</td>
                   <td className="rt-traits"><span className="rt-minis">{[...d.traits, ...cards.drivers[id].traits].map(c => chip(c, false))}</span></td>

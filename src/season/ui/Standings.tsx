@@ -3,6 +3,7 @@
 // both tables. When every round has run: your Constructors' finish as the
 // headline, two crowns (Constructors' and Drivers' champions), the chart, the
 // final tables, and Play again (League Setup with a fresh seed).
+import { raceBadges } from '../badges';
 import { useMemo } from 'react';
 import { GameIcon, TeamLogo, teamThemeVars } from '../../icons/GameIcon';
 import { draftState } from '../draft';
@@ -91,7 +92,7 @@ export default function Standings({ facts, onMenu, onPaddock, onPlayAgain, onEnd
             </div>
           </div>
           <div className="fn-crown ace-panel ace-paper-table">
-            <RaceNumber n={driver(dc.driver.driverId).number} color={teams[dc.teamId].color} ink={teams[dc.teamId].ink} size={56} shape="square" />
+            <RaceNumber n={raceBadges(facts)[dc.driver.driverId] ?? driver(dc.driver.driverId).number} color={teams[dc.teamId].color} ink={teams[dc.teamId].ink} size={56} shape="square" />
             <div className="fn-crown-text">
               <span className="rs-k"><GameIcon name="season.champion" size={14} /> Drivers’ champion · {teams[dc.teamId].name}{humanLabel(facts, dc.teamId) ? ` · ${humanLabel(facts, dc.teamId)}` : ''}</span>
               <span className="fn-crown-name"><Avatar icon={portraitFor(pool.seed, dc.driver.driverId)} color={teams[dc.teamId].color} size={26} /> {driver(dc.driver.driverId).fullName}</span>
