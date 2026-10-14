@@ -72,8 +72,8 @@ export default function Standings({ facts, onMenu, onPaddock, onPlayAgain, onEnd
           {humans.map(id => {
             const line = table.lines.find(l => l.teamId === id)!;
             const who = 'You';
-            const crown = dc?.teamId === id ? ` · ${driver(dc.driver.driverId).fullName} is Drivers’ champion` : '';
-            return <p key={id} className="fn-result-line"><b>{who} finished P{line.rank}</b> in the Constructors’ on {line.points} pts{crown}.</p>;
+            const crown = dc?.teamId === id ? ` · ${driver(dc.driver.driverId).fullName} is the top driver` : '';
+            return <p key={id} className="fn-result-line"><b>{who} finished P{line.rank}</b> in the garages’ table on {line.points} pts{crown}.</p>;
           })}
           {run?.phase === 'league-won' && <p className="fn-result-line"><b>Congratulations, you are now {run.ladder[run.leagueIndex].title}.</b> {run.ladder[run.leagueIndex + 1]?.name} is next; your whole garage goes up with you.</p>}
           {run?.phase === 'run-won' && <p className="fn-result-line"><b>Congratulations, you are now {run.ladder[run.leagueIndex].title}.</b> Nationals comes in a later build.</p>}
@@ -86,7 +86,7 @@ export default function Standings({ facts, onMenu, onPaddock, onPlayAgain, onEnd
           <div className="fn-crown ace-panel ace-paper-table">
             <TeamLogo team={champion} size={72} />
             <div className="fn-crown-text">
-              <span className="rs-k"><GameIcon name="season.champion" size={14} /> Constructors’ champion{champLabel ? ` · ${champLabel}` : ''}</span>
+              <span className="rs-k"><GameIcon name="season.champion" size={14} /> Top garage{champLabel ? ` · ${champLabel}` : ''}</span>
               <span className="fn-crown-name">{champion.name}</span>
               <span className="fn-crown-stats">{table.lines[0].points} pts · {table.lines[0].wins} {table.lines[0].wins === 1 ? 'win' : 'wins'} · {podiums(champion.id)} podiums</span>
             </div>
@@ -94,7 +94,7 @@ export default function Standings({ facts, onMenu, onPaddock, onPlayAgain, onEnd
           <div className="fn-crown ace-panel ace-paper-table">
             <RaceNumber n={raceBadges(facts)[dc.driver.driverId] ?? driver(dc.driver.driverId).number} color={teams[dc.teamId].color} ink={teams[dc.teamId].ink} size={56} shape="square" />
             <div className="fn-crown-text">
-              <span className="rs-k"><GameIcon name="season.champion" size={14} /> Drivers’ champion · {teams[dc.teamId].name}{humanLabel(facts, dc.teamId) ? ` · ${humanLabel(facts, dc.teamId)}` : ''}</span>
+              <span className="rs-k"><GameIcon name="season.champion" size={14} /> Top driver · {teams[dc.teamId].name}{humanLabel(facts, dc.teamId) ? ` · ${humanLabel(facts, dc.teamId)}` : ''}</span>
               <span className="fn-crown-name"><Avatar icon={portraitFor(pool.seed, dc.driver.driverId)} color={teams[dc.teamId].color} size={26} /> {driver(dc.driver.driverId).fullName}</span>
               <span className="fn-crown-stats">{dc.driver.points} pts · {dc.driver.wins} {dc.driver.wins === 1 ? 'win' : 'wins'} · {dc.driver.podiums} podiums</span>
             </div>
@@ -104,7 +104,7 @@ export default function Standings({ facts, onMenu, onPaddock, onPlayAgain, onEnd
 
       {facts.results.length > 0 && (
         <section className="pk-chart">
-          <div className="rs-k">Constructors’ points, race by race</div>
+          <div className="rs-k">Garage points, race by race</div>
           <SeasonChart standings={standings} teams={teams} mine={humans} />
         </section>
       )}
@@ -112,7 +112,7 @@ export default function Standings({ facts, onMenu, onPaddock, onPlayAgain, onEnd
       <section className="fn-tables">
         <LeagueTables facts={facts} pool={pool} teams={teams} rosters={rosters} lines={table.lines} drivers={drivers} />
       </section>
-      <p className="rs-hint">Two championships, like F1: the Constructors’ (both racers’ points) and the Drivers’ (each driver’s own).</p>
+      <p className="rs-hint">Two tables: the garages’ (both cars’ points; win it and the title is yours) and the drivers’ (each driver’s own).</p>
 
       <div className="ace-dock">
         {table.final

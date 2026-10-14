@@ -262,13 +262,13 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, ba
 
   // The turn, in one line
   const step = !myTurn ? -1 : offer ? 0 : 1;
-  const STEPS = ['Open pack', 'Lock in'];
+  const STEPS = ['Open the Parcel', 'Lock in'];
   // The one action of the turn sits in the dock (#715); the turn line keeps the steps.
   const action = state.phase === 'ready-for-go'
     ? <AceButton onClick={onGo}>Go: round {state.round + 1}</AceButton>
     : !myTurn ? null
-    : step === 0 && !revealing && offer?.kind === 'single' ? <AceButton onClick={() => setRevealing(true)}>Open pack</AceButton>
-    : step === 0 && !revealing && offer?.kind === 'curse' ? <AceButton onClick={() => setRevealing(true)}>Open the Curse pack</AceButton>
+    : step === 0 && !revealing && offer?.kind === 'single' ? <AceButton onClick={() => setRevealing(true)}>Open the Parcel</AceButton>
+    : step === 0 && !revealing && offer?.kind === 'curse' ? <AceButton onClick={() => setRevealing(true)}>Open the black Parcel</AceButton>
     : step >= 1 ? <AceButton disabled={lineup.length !== 2} onClick={lock}>Lock in</AceButton>
     : null;
   const turnLine = state.phase === 'ready-for-go' ? (
@@ -278,7 +278,7 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, ba
       <ol aria-label="Your turn">
         {STEPS.map((s, i) => <li key={s} className={i < step ? 'done' : i === step ? 'now' : ''}>{i + 1} · {s}</li>)}
       </ol>
-      {step === 0 && !revealing && offer?.kind === 'choice' && <span className="rs-hint">Pick one of the two packs below.</span>}
+      {step === 0 && !revealing && offer?.kind === 'choice' && <span className="rs-hint">Two Parcels came: open one.</span>}
     </div>
   );
 
@@ -307,7 +307,7 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, ba
         />
       ) : revealing && curse ? (
         <section className="pp pp-curse" aria-label="Curse pack">
-          <div className="pp-head"><span className="rs-k">Curse pack · nothing to choose</span><button type="button" className="rs-link" onClick={() => setRevealing(false)}>Later</button></div>
+          <div className="pp-head"><span className="rs-k">A black Parcel · a curse, nothing to choose</span><button type="button" className="rs-link" onClick={() => setRevealing(false)}>Later</button></div>
           <div className="pp-keep">
             <b>{curse.emoji} {curse.name}: {curse.stats.map(s => `${levelDelta(s.pct)} ${STAT_LABELS[s.stat]}`).join(', ')} on {curse.target.kind === 'car' ? car.name : you.name}, both drivers, for {CURSE_LIFE_TEXT}.</b>
             <button type="button" className="rs-btn rs-btn-primary" onClick={takeCurse}>Take the curse</button>
@@ -318,18 +318,18 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, ba
         <div className={`pk-pack ${offer.kind === 'choice' ? 'pk-offer' : ''}`}>
           {offer.kind === 'curse' ? (
             <>
-              <button type="button" className="pk-sealed pk-sealed-curse" onClick={() => setRevealing(true)} aria-label="Open the Curse pack"><GameIcon name="season.pack" size={30} /></button>
+              <button type="button" className="pk-sealed pk-sealed-curse" onClick={() => setRevealing(true)} aria-label="Open the black Parcel"><GameIcon name="season.pack" size={30} /></button>
               <div className="pk-pack-text">
-                <span className="rs-k pk-pack-k">Curse pack</span>
+                <span className="rs-k pk-pack-k">A black Parcel</span>
                 <b>Forced</b>
-                <span className="rs-hint">Unlucky: this round's only pack is a curse on the car or the team.</span>
+                <span className="rs-hint">Unlucky: this round's only Parcel is a curse on the car or the team.</span>
               </div>
             </>
           ) : offer.packs.map(kind => (
             <div key={kind} className="pk-pack-one">
               <button type="button" className="pk-sealed" onClick={() => { setPicked(kind); setRevealing(true); }} aria-label={`Open the ${PACK_KIND_LABEL[kind]}`}><GameIcon name="season.pack" size={30} /><i className="pk-twinkle a" /><i className="pk-twinkle b" /><i className="pk-twinkle c" /></button>
               <div className="pk-pack-text">
-                <span className="rs-k pk-pack-k">Run deck · {PACK_KIND_LABEL[kind]}</span>
+                <span className="rs-k pk-pack-k">League issue · {PACK_KIND_LABEL[kind]}</span>
                 <b>{offer.kind === 'choice' ? 'Pick this one' : 'Sealed'}</b>
                 <span className="rs-hint">{kind === 'driver' ? 'A trait or equipment for a driver.' : kind === 'car' ? 'A trait or upgrade for the car.' : 'A trait or facility for the team.'} Three inside; keep one. The metal shows when it opens.</span>
               </div>
@@ -416,11 +416,11 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, ba
     <>
       <p className="pk-priority">
         <span className="rs-k">After round {facts.results.length} of {total}</span>{' '}
-        {you.name} {myRank ? ord(myRank.rank) : ''} on <b>{myRank?.points ?? 0}</b> · leader {teams[standings[0].teamId].name} on {standings[0].points}. Two titles: Constructors' (team points) and Drivers'.
+        {you.name} {myRank ? ord(myRank.rank) : ''} on <b>{myRank?.points ?? 0}</b> · leader {teams[standings[0].teamId].name} on {standings[0].points}. Two tables: the garages' (both cars' points) and the drivers'.
       </p>
       <div className="pk-league">
         <div className="pk-chart">
-          <div className="rs-k">Constructors' points, race by race</div>
+          <div className="rs-k">Garage points, race by race</div>
           {facts.results.length ? <SeasonChart standings={standings} teams={teams} mine={humans} /> : <p className="rs-hint">The chart starts after round 1.</p>}
         </div>
         <div className="pk-tables">
@@ -458,7 +458,7 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, ba
       )}
       <div className="ace-tabs pk-tabs" role="tablist">
         <button type="button" role="tab" className={`ace-tab ${tab === 'team' ? 'on' : ''}`} aria-selected={tab === 'team'} onClick={() => setTab('team')}>Team</button>
-        <button type="button" role="tab" className={`ace-tab ${tab === 'league' ? 'on' : ''}`} aria-selected={tab === 'league'} onClick={() => setTab('league')}>League</button>
+        <button type="button" role="tab" className={`ace-tab ${tab === 'league' ? 'on' : ''}`} aria-selected={tab === 'league'} onClick={() => setTab('league')}>The table</button>
         {myRank && <span className="pk-rank">{ord(myRank.rank)} · {myRank.points} pts</span>}
       </div>
 
