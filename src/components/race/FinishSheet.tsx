@@ -6,6 +6,7 @@
 import { useState } from 'react';
 import type { Driver } from '../../RaceEngine';
 import { GameIcon } from '../../icons/GameIcon';
+import { Sash } from '../../look/Look';
 import { RaceNumber } from '../../icons/RaceNumber';
 import { inkFor } from '../../icons/ink';
 import { F1_POINTS } from '../../types/season';
@@ -110,6 +111,7 @@ export default function FinishSheet({ podium, drivers, dnfCount, fastestLap, see
   return (
     <section className="fs" role="dialog" aria-label="Race complete">
       <button type="button" className="fs-grab" onClick={() => setOpen(false)} aria-label="Hide results to watch the cool-down" />
+      <div className="fs-sash"><Sash text="Chequered flag" className="small" /></div>
       <div className="fs-head">
         <GameIcon name="race.finish" size={18} />
         <span className="fs-k">Race complete{trackName ? ` · ${trackName}` : ''}</span>

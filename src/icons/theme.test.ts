@@ -18,6 +18,7 @@ const THEMED = [
   'cards/CardChip.css',
   'season/ui/Season.css',
   'look/look.css',
+  'look/race.css',
   'racecontrol/StyleTab.css',
 ];
 

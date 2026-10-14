@@ -160,6 +160,8 @@ export interface UniversalHeaderProps {
   onStop?: () => void;
   onReset?: () => void;
   onSpeedChange?: (speed: RaceSpeed) => void;
+  /** The program line (#716): the step and the race, in gold, before the track. */
+  program?: string;
 }
 
 // Props for NavPanel

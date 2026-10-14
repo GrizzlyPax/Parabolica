@@ -23,6 +23,7 @@ import { prepareScheduledRace } from './league/settle';
 import { CANON_VARIABLES } from './simlab/types';
 import { mulberry32, deriveSeed, randomSeed } from './engine/rng';
 import { quickRace, type QuickRace } from './season/quickRace';
+import { stateLook, stepName, type Step } from './look/step';
 import { generateTrack, getTrackById, Track } from './generators/tracks';
 import { useRoute, type Route } from './router';
 import './App.css';
@@ -174,7 +175,7 @@ function App() {
   // the same race to its finish. The round is recorded by settleRound (the
   // headless run of the same seeded race), so watching changes nothing.
   const onSeasonRace = route.name === 'season' && route.screen === 'race';
-  const [seasonRace, setSeasonRace] = useState<{ round: number; sealed: Set<number>; mine: number[]; nemesis: number[]; you: TeamLike; avatars: ReturnType<typeof seasonAvatars>; quali: boolean } | null>(null);
+  const [seasonRace, setSeasonRace] = useState<{ round: number; sealed: Set<number>; mine: number[]; nemesis: number[]; you: TeamLike; avatars: ReturnType<typeof seasonAvatars>; quali: boolean; step: Step; stateId?: string; program: string } | null>(null);
   const settlingSeason = useRef(false);
   useEffect(() => {
     if (!onSeasonRace) {
@@ -211,6 +212,9 @@ function App() {
       you: teamsOf(facts)[facts.setup.humans[0].teamId],
       avatars: seasonAvatars(facts),
       quali: true,
+      step: facts.setup.league?.step ?? 'locals',
+      stateId: facts.setup.league?.locale?.stateId,
+      program: `${stepName(facts.setup.league?.step ?? 'locals')} · Race ${state.round + 1} of ${facts.setup.calendar.length}`,
     });
   }, [onSeasonRace]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -351,6 +355,9 @@ function App() {
           myDriverIds={seasonRace.mine}
           nemesisDriverIds={seasonRace.nemesis}
           avatars={seasonRace.avatars}
+          step={seasonRace.step}
+          state={seasonRace.stateId ? stateLook(seasonRace.stateId) : undefined}
+          program={seasonRace.program}
           onQualifyingDone={seasonRace.quali ? endSeasonQuali : undefined}
           onExit={() => leaveSeasonRace(raceState.raceFinished)}
           exitLabel="Paddock"
@@ -400,6 +407,7 @@ function App() {
           raceEvents={raceEvents}
           myDriverIds={mine}
           avatars={quick.avatars}
+          program="Quick race"
           onQualifyingDone={quick.quali ? endQuickRaceQuali : undefined}
           follow={quick.quali ? { teams: Object.values(quickTeams), selected: quick.follow, onPick: id => setQuick(x => (x ? { ...x, follow: x.follow === id ? null : id } : x)) } : undefined}
           onNextRace={startQuickRace}
@@ -436,6 +444,7 @@ function App() {
         onQualifyingDone={quickQuali ? endQuickQuali : undefined}
         raceEvents={raceEvents}
         fantasy={activeFantasy ?? undefined}
+        program="Race Control"
         onExit={handleExitRace}
         rulesLines={quickRun ? (quickRun.ruleset.cards.length ? quickRun.ruleset.cards.map(id => `${RULE_CARDS_BY_ID.get(id)?.emoji ?? ''} ${RULE_CARDS_BY_ID.get(id)?.name ?? id}`.trim()).concat(describeRuleset(quickRun.ruleset)) : ['default']) : undefined}
         // Race controls - now handled by UniversalHeader inside WatchMode
