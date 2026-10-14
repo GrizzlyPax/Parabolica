@@ -7,7 +7,7 @@ import { applyCards } from '../cards/apply';
 import { CARDS_BY_ID } from '../cards/deck';
 import { METAL_LADDER } from '../cards';
 import { RUN_CURSES } from '../cards';
-import { PLAYER_CARD_SCALE } from './pack';
+import { PLAYER_CARD_SCALE } from './stamps';
 import { level, levelDelta, levelTone, overall, rating, readStat } from './grades';
 
 const card = (id: string) => CARDS_BY_ID.get(id)!;

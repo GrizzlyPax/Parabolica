@@ -568,3 +568,15 @@ button.rt-g:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset:
 .fn.ace-page > .pk-chart { max-width: 960px; }
 .lt-panel { padding: 0; }
 @media (max-width: 719px) { .fn.ace-page .fn-crowns, .fn.ace-page .fn-tables { grid-template-columns: 1fr; } }
+
+/* The Parcel (#704): scraping a stamp off a full card; the gift's edge */
+.pp-scrape { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px 4px 4px; background: none; border: 1px solid var(--pw-border-strong); color: var(--pw-text-1); font: inherit; font-size: 13px; cursor: pointer; }
+.pp-scrape:hover, .pp-scrape:focus-visible { border-color: var(--pw-text-1); outline: none; }
+.pp-gift { --tier: var(--ace-gold, var(--signal-purple)); }
+.pp-ask .rs-btn small { font-family: var(--look-data); font-size: 11px; margin-left: 4px; opacity: 0.8; }
+/* The Ladder (#704): the title stamp picks */
+.rl-stamps { display: grid; gap: 8px; margin-top: 8px; }
+.rl-stamp-row { display: grid; gap: 4px; }
+.rl-stamp-who { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; }
+.rl-stamp-stats { display: flex; flex-wrap: wrap; gap: 4px; }
+.rl-stamp-stats .ace-tab { border: 1px solid var(--ace-rule); padding: 4px 8px; font-size: 12px; }

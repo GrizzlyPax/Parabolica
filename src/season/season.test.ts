@@ -7,7 +7,7 @@ import {
 } from './season';
 import { quickDraft, draftOrder, draftState } from './draft';
 import { poolFor } from './season';
-import { openPack } from './testHelpers';
+import { openParcelQuick } from './testHelpers';
 import { prepareScheduledRace } from '../league/settle';
 import { CURRENT_TRACKS, getTrackById } from '../generators/tracks';
 import { CANON_VARIABLES } from '../simlab/types';
@@ -37,7 +37,7 @@ function playRound(facts: SeasonFacts): SeasonFacts {
     if (state.phase !== 'paddock') break;
     const roster = draftState(poolFor(facts), facts.draftPicks).rosters[state.whoseTurn!];
     facts = setLineup(facts, { round: state.round, teamId: state.whoseTurn!, driverIds: [roster.driverIds[1], roster.driverIds[0]] });
-    facts = openPack(facts);
+    facts = openParcelQuick(facts);
   }
   expect(seasonState(facts).phase).toBe('ready-for-go');
   return settleRound(facts);
@@ -87,7 +87,7 @@ describe('phases', () => {
     // The lineup is set, but the pack is still to open (#316): the turn goes on.
     expect(seasonState(facts).whoseTurn).toBe(human);
     expect(() => setLineup(facts, { round: 0, teamId: human, driverIds: [roster[human].driverIds[0], roster[human].driverIds[1]] })).toThrow(/already/);
-    facts = openPack(facts);
+    facts = openParcelQuick(facts);
     expect(seasonState(facts).phase).toBe('ready-for-go');
     expect(() => setLineup(facts, { round: 0, teamId: human, driverIds: [roster[human].driverIds[0], roster[human].driverIds[1]] })).toThrow(/Paddock/);
     facts = settleRound(facts);
@@ -107,9 +107,9 @@ describe('phases', () => {
     expect(order[0]).toBe(b);
     expect(whoseTurn(facts)).toBe(b);
     const roster = draftState(poolFor(facts), facts.draftPicks).rosters;
-    let f = openPack(setLineup(facts, { round: 0, teamId: b, driverIds: [roster[b].driverIds[0], roster[b].driverIds[1]] }));
+    let f = openParcelQuick(setLineup(facts, { round: 0, teamId: b, driverIds: [roster[b].driverIds[0], roster[b].driverIds[1]] }));
     expect(whoseTurn(f)).toBe(a);
-    f = openPack(setLineup(f, { round: 0, teamId: a, driverIds: [roster[a].driverIds[0], roster[a].driverIds[1]] }));
+    f = openParcelQuick(setLineup(f, { round: 0, teamId: a, driverIds: [roster[a].driverIds[0], roster[a].driverIds[1]] }));
     expect(seasonState(f).phase).toBe('ready-for-go');
     expect(whoseTurn(f)).toBeNull();
   });

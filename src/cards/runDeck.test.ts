@@ -7,7 +7,7 @@ import { RUN_DECK, RUN_CURSES, RUN_CARDS_BY_ID, METAL_BUDGET, PRICE_BAND, cardBy
 import { RARITIES } from './rarity';
 import { newSeason, leagueForRound, poolFor, type SeasonFacts } from '../season/season';
 import { quickDraft, draftState } from '../season/draft';
-import { teamCardState } from '../season/pack';
+import { teamStamps } from '../season/stamps';
 import { readStat } from '../season/grades';
 import { windowLaps } from '../season/genesis';
 import { CURRENT_TRACKS, getTrackById } from '../generators/tracks';
@@ -80,11 +80,11 @@ describe('the run deck (#647)', () => {
     facts = { ...facts, draftPicks: quickDraft(poolFor(facts)) };
     const [a] = draftState(poolFor(facts), facts.draftPicks).rosters[human].driverIds;
     const lightsOut = RUN_CARDS_BY_ID.get('rd-lights-out')!;
-    const withCard: SeasonFacts = { ...facts, cardFacts: [{ type: 'pack', round: 0, teamId: human, tier: 'uncommon', pack: 'driver', cardId: lightsOut.id, dealt: [lightsOut.id], target: { kind: 'driver', id: a } }] };
-    // Held as gear (2×: +24 levels of Accel for the first half), shown in the slot, not in the sum.
-    const held = teamCardState(withCard, human).drivers[a].equipment;
+    const withCard: SeasonFacts = { ...facts, cardFacts: [{ type: 'parcel', round: 0, teamId: human, tier: 'uncommon', cardId: lightsOut.id, dealt: [lightsOut.id], holder: { kind: 'driver', id: a } }] };
+    // Held as a stamp (+12 levels of Accel for the first half, as written), shown on the card, not in the sum.
+    const held = teamStamps(withCard, human).drivers[a];
     expect(held.map(c => c.id)).toEqual([lightsOut.id]);
-    expect(held[0].stats).toEqual([{ stat: 'acceleration', pct: 120 }]);
+    expect(held[0].stats).toEqual([{ stat: 'acceleration', pct: 60 }]);
     expect(readStat('acceleration', 1, held).parts).toEqual([]);
     expect(applyCards({ driver: { acceleration: 1 } as never }, held).driver!.acceleration).toBe(1);
     // At race build: the static stats are unchanged, the lap effect covers the first half, the info says so.
@@ -94,10 +94,10 @@ describe('the run deck (#647)', () => {
     const half = Math.ceil(track.laps / 2);
     expect(windowLaps('first', track.laps)).toEqual({ fromLap: 0, laps: half });
     expect(windowLaps('second', track.laps)).toEqual({ fromLap: half, laps: track.laps - half });
-    expect(me.lapEffects).toEqual([{ id: lightsOut.id, name: 'Lights Out', emoji: '', fromLap: 0, laps: half, driver: { acceleration: 0.36 }, car: {}, team: {} }]);
+    expect(me.lapEffects).toEqual([{ id: lightsOut.id, name: 'Lights Out', emoji: '', fromLap: 0, laps: half, driver: { acceleration: 0.18 }, car: {}, team: {} }]);
     expect(me.effects).toContainEqual({ id: lightsOut.id, name: 'Lights Out', emoji: '', source: 'gear', left: 'first half' });
-    expect(me.effects!.some(e => e.id === lightsOut.id && e.left === '3 races left')).toBe(true); // gear mileage
-    // In the engine: +0.36 acceleration until the half, the base after; logged.
+    expect(me.effects!.filter(e => e.id === lightsOut.id)).toHaveLength(1); // a stamp has no mileage (#704)
+    // In the engine: +0.18 acceleration until the half, the base after; logged.
     const engine = RaceEngine.createForWorker();
     prepareScheduledRace(engine, leagueForRound(withCard, 0), 0, getTrackById(track.id)!, CANON_VARIABLES);
     engine.reset();
@@ -110,8 +110,8 @@ describe('the run deck (#647)', () => {
       seen.set(d().currentLap, d().stats.acceleration);
     }
     // The driver may retire early: judge the laps seen.
-    expect(seen.get(0)).toBeCloseTo(base + 0.36, 10);
-    for (const [lap, acc] of seen) expect(acc, `lap ${lap}`).toBeCloseTo(lap < half ? base + 0.36 : base, 10);
+    expect(seen.get(0)).toBeCloseTo(base + 0.18, 10);
+    for (const [lap, acc] of seen) expect(acc, `lap ${lap}`).toBeCloseTo(lap < half ? base + 0.18 : base, 10);
     const log = engine.getFullEvents().slice(logged).filter(e => e.driverId === a && /Lights Out/.test(e.description) && (e.type === 'effect_applied' || e.type === 'effect_expired')).map(e => e.type);
     expect(log).toEqual(seen.has(half) ? ['effect_applied', 'effect_expired'] : ['effect_applied']);
   });

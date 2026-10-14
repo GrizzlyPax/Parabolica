@@ -7,7 +7,7 @@ import { emptyMeta, grant } from './meta';
 import { ladderView } from './ladderView';
 import { seasonState, setLineup, settleRound, poolFor } from '../season/season';
 import { draftState } from '../season/draft';
-import { openPack } from '../season/testHelpers';
+import { openParcelQuick } from '../season/testHelpers';
 import { testRun } from './testHelpers';
 
 function playLeague(run: RunFacts): RunFacts {
@@ -16,7 +16,7 @@ function playLeague(run: RunFacts): RunFacts {
     const state = seasonState(facts);
     if (state.phase === 'paddock') {
       const roster = draftState(poolFor(facts), facts.draftPicks).rosters[state.whoseTurn!];
-      facts = openPack(setLineup(facts, { round: state.round, teamId: state.whoseTurn!, driverIds: [roster.driverIds[0], roster.driverIds[1]] }));
+      facts = openParcelQuick(setLineup(facts, { round: state.round, teamId: state.whoseTurn!, driverIds: [roster.driverIds[0], roster.driverIds[1]] }));
     } else facts = settleRound(facts);
   }
   return withCurrentLeague(run, facts);
@@ -47,7 +47,7 @@ describe('the ladder view (#628, #696)', () => {
     const won = findRun('league-won');
     const v = ladderView(promote(won), emptyMeta());
     expect(v.rungs[0]).toMatchObject({ status: 'won', memory: `Ace ${townOf(won)}: yours.` });
-    expect(v.titles).toEqual([{ step: 'locals', name: `Ace ${townOf(won)}` }]);
+    expect(v.titles).toMatchObject([{ step: 'locals', name: `Ace ${townOf(won)}` }]);
     expect(v.rungs[1].status).toBe('current');
     expect(v.rungs[1].races).toEqual({ done: 0, total: 6 });
     expect(v.rungs[1].rival?.team.name).toBeTruthy();

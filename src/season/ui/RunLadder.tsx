@@ -6,7 +6,10 @@
 // theme in your state's colours.
 import { useMemo, useState } from 'react';
 import { TeamLogo } from '../../icons/GameIcon';
-import { currentLeague, loadRun } from '../../run/run';
+import { currentLeague, loadRun, titleStampsFor, type TitlePicks } from '../../run/run';
+import { TITLE_STAMP_LEVELS, TITLE_STAMP_STATS } from '../stamps';
+import { DRIVER_STATS, STAT_LABELS } from '../../cards/deck';
+import type { DriverStatKey } from '../../cards/types';
 import { loadMeta } from '../../run/meta';
 import { promoteCurrentRun } from '../../run/current';
 import { ladderView, ordinal, type RungView } from '../../run/ladderView';
@@ -81,6 +84,8 @@ export default function RunLadder({ onMenu, onNewRun, onPlay }: Props) {
   const [run, setRun] = useState(() => loadRun());
   const view = useMemo(() => (run ? ladderView(run, loadMeta()) : null), [run]);
   const [cardOf, setCardOf] = useState<number | null>(null);
+  // The title stamps (#704): each driver picks the stats their title stamp goes on before going up.
+  const [picks, setPicks] = useState<TitlePicks>({});
   if (!run || !view) {
     return (
       <StepTheme step="nationals" className="ace-page">
@@ -94,7 +99,14 @@ export default function RunLadder({ onMenu, onNewRun, onPlay }: Props) {
   const rung = view.rungs[view.leagueIndex];
   const next = view.rungs[view.leagueIndex + 1];
   const leaguePhase = seasonState(currentLeague(run)).phase;
-  const up = () => { if (promoteCurrentRun()) setRun(loadRun()); };
+  const stampCount = TITLE_STAMP_STATS[rung.step] ?? 0;
+  const picksDone = (() => { try { titleStampsFor(run, rung.step, picks); return true; } catch { return false; } })();
+  const togglePick = (driverId: number, stat: DriverStatKey) => setPicks(p => {
+    const mine = p[driverId] ?? [];
+    const next = mine.includes(stat) ? mine.filter(s => s !== stat) : mine.length < stampCount ? [...mine, stat] : mine;
+    return { ...p, [driverId]: next };
+  });
+  const up = () => { if (!picksDone) return; if (promoteCurrentRun(picks)) { setPicks({}); setRun(loadRun()); } };
   // Your two drivers on the open rung; a tap opens their driver card (#476).
   const inPlay = currentLeague(run);
   const pool = poolFor(inPlay);
@@ -117,7 +129,26 @@ export default function RunLadder({ onMenu, onNewRun, onPlay }: Props) {
       <Chequer />
 
       {view.phase === 'run-won' && <div className="ace-sash-wrap"><Sash text={view.titles[view.titles.length - 1]?.name ?? rung.title} /></div>}
-      {view.phase === 'league-won' && <div className="ace-panel"><b>Congratulations, you are now {rung.title}.</b> {next ? `${next.name} is next.` : ''}</div>}
+      {view.phase === 'league-won' && (
+        <div className="ace-panel">
+          <b>Congratulations, you are now {rung.title}.</b> {next ? `${next.name} is next.` : ''}
+          {stampCount > 0 && next && !next.later && (
+            <div className="rl-stamps" role="group" aria-label="Title stamps">
+              <span className="ace-k">The title stamp: +{TITLE_STAMP_LEVELS} levels on {stampCount === 1 ? 'one stat' : `${stampCount} stats`} per driver, on the ribbon for good</span>
+              {yourDrivers.map(d => (
+                <div key={d.id} className="rl-stamp-row">
+                  <span className="rl-stamp-who"><Avatar icon={d.portrait} color={d.color} size={18} /> {d.name}</span>
+                  <span className="rl-stamp-stats">
+                    {DRIVER_STATS.map(s => (
+                      <button key={s} type="button" className={`ace-tab ${(picks[d.id] ?? []).includes(s) ? 'on' : ''}`} aria-pressed={(picks[d.id] ?? []).includes(s)} onClick={() => togglePick(d.id, s)}>{STAT_LABELS[s]}</button>
+                    ))}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
       {view.phase === 'run-lost' && <div className="ace-panel"><b>The season is over.</b> {rung.title} went elsewhere this year.</div>}
 
       <ol className="rl-ladder" aria-label="The road up, top first">
@@ -145,7 +176,7 @@ export default function RunLadder({ onMenu, onNewRun, onPlay }: Props) {
         {view.phase === 'league'
           ? <AceButton onClick={() => onPlay(leaguePhase === 'finished' ? 'standings' : 'paddock')}>To the Paddock</AceButton>
           : view.phase === 'league-won' && next && !next.later
-            ? <AceButton onClick={up}>Up to {next.name}</AceButton>
+            ? <AceButton disabled={!picksDone} onClick={up}>{picksDone ? `Up to ${next.name}` : 'Pick the title stamps'}</AceButton>
             : <AceButton onClick={onNewRun}>A new season</AceButton>}
       </div>
     </StepTheme>

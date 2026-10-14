@@ -1,16 +1,15 @@
-// The Paddock (#319; roster table #452; v2 with Pax, Oct 9). Two tabs:
+// The Paddock (#319; roster table #452; v2 with Pax, Oct 9; stamps #704). Two tabs:
 //   Team   — one roster table (drivers, then car and team), grades in fixed
-//            cells, cards as compact chips. Your turn runs along one slim line.
+//            cells, stamps as compact chips. Your turn runs along one slim line.
 //   League — constructors' points race by race (your team highlighted), the
 //            constructors' table and every driver.
 //
-// One idea for moving cards: a card "in hand". After the pack reveal the pack
-// card is in hand; tap any gear chip to pick that up instead. While a card is in
-// hand, every row it can go on glows and every stat it would change flashes its
-// new grade; tap a glowing row to put it there (a trait asks first: it's
-// permanent), or the glowing locker to keep gear for later. Drag works too.
-// Two drivers, both race (#585): no lineup choice; Lock in ends the turn.
-import { useMemo, useState, type DragEvent } from 'react';
+// The turn (#704): a PARCEL waits before every race. Open it, lift one of
+// its three stamps (the rows it fits glow and flash the grade it would give),
+// stamp it on a driver card or the car card (a full card asks what to scrape
+// off), or leave the box shut. A smudged Parcel is a bad stamp for one race,
+// nothing to choose. Then Lock in ends the turn: two drivers, both race (#585).
+import { useMemo, useState } from 'react';
 import { levelDelta } from '../grades';
 import { GameIcon, TeamLogo, teamThemeVars } from '../../icons/GameIcon';
 import { RaceNumber } from '../../icons/RaceNumber';
@@ -27,13 +26,13 @@ import { getTrackById } from '../../generators/tracks';
 import { getDeckTrackById } from '../../data/deckTracks';
 import { weatherForRace } from '../../data/weather';
 import { draftState } from '../draft';
-import { applyPack, applyCurse, dealPack, moveGear, pendingOffer, teamCardState, CURSE_LIFE, PACK_KIND_LABEL, type CardHolder, type PackKind, type TeamCardState } from '../pack';
+import { openParcel, takeSmudge, pendingParcel, teamStamps, holderFits, STAMP_SLOTS, SMUDGE_LIFE, TITLE_STAMP_PREFIX, type StampHolder } from '../stamps';
 import { effectCards, describeLeft, activeEffects } from '../effects';
 import { constructorStandings, driverStandings, lineupFor, poolFor, seasonState, setLineup, type SeasonFacts } from '../season';
 import { saveCurrentLeague as saveSeason } from '../../run/current';
 import { overall, readStat, type StatReading } from '../grades';
 import EndSeason from './EndSeason';
-import PackPick from './PackPick';
+import ParcelPick, { type StampTarget } from './ParcelPick';
 import { CAR_STATS, CT_STATS, DRIVER_STATS, GradeCell, PAD, ReadingSheet, STAT_ABBR, TEAM_STATS } from './RosterTable';
 import { SeasonChart } from './SeasonChart';
 import { LeagueTables } from './LeagueTables';
@@ -55,23 +54,15 @@ interface Props {
   backLabel?: string;
 }
 
-const CURSE_LIFE_TEXT = CURSE_LIFE === 1 ? 'one race' : `${CURSE_LIFE} races`;
-const GEAR_FOR: Record<CardHolder['kind'], Card['kind']> = { driver: 'equipment', car: 'upgrade', team: 'facility' };
+const SMUDGE_LIFE_TEXT = SMUDGE_LIFE === 1 ? 'one race' : `${SMUDGE_LIFE} races`;
 const ABBR = STAT_ABBR;
 const ord = (n: number) => `${n}${['th', 'st', 'nd', 'rd'][(n % 100 - 20) % 10] || ['th', 'st', 'nd', 'rd'][n % 100] || 'th'}`;
 
-type HolderKey = string; // a driver id, 'car' or 'team'
-const keyOf = (h: CardHolder): HolderKey => (h.kind === 'driver' ? String(h.id) : h.kind);
-const holderOf = (k: HolderKey): CardHolder => (k === 'car' ? { kind: 'car' } : k === 'team' ? { kind: 'team' } : { kind: 'driver', id: Number(k) });
-
-function slotOf(state: TeamCardState, h: CardHolder): Card[] {
-  return h.kind === 'driver' ? state.drivers[h.id].equipment : h.kind === 'car' ? state.car.upgrade : state.team.facility;
-}
-/** Cards with one more: a trait stacks, gear takes the slot. */
-function withCard(own: Card[], gear: Card[], extra: Card | null): Card[] {
-  if (!extra) return [...own, ...gear];
-  return extra.kind === 'trait' ? [...own, ...gear, extra] : [...own, extra];
-}
+/** A table row: a driver id, 'car' or 'team'. The car and team rows share the car card (#704). */
+type RowKey = string;
+const holderOf = (k: RowKey): StampHolder => (k === 'car' || k === 'team' ? { kind: 'car' } : { kind: 'driver', id: Number(k) });
+/** Whether a lifted stamp would land on this row: driver stamps on their driver, car stamps on the car row, garage stamps on the team row. */
+const rowFits = (c: Card, k: RowKey) => (k === 'car' ? c.target === 'car' : k === 'team' ? c.target === 'team' : c.target === 'driver');
 
 export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, backLabel = '← Menu' }: Props) {
   const pool = useMemo(() => poolFor(facts), [facts.setup]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -83,9 +74,8 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, ba
   const turn = state.whoseTurn;
   const [tab, setTab] = useState<'team' | 'league'>('team');
   const [revealing, setRevealing] = useState(false);
-  // A gear card picked up: which copy (#556: two of the same card are two chips) and where it sits.
-  const [held, setHeld] = useState<{ id: string; from: CardHolder | 'locker'; n: number } | null>(null);
-  const [equipSheet, setEquipSheet] = useState<{ card: Card; from: CardHolder } | null>(null);
+  // The stamp lifted from the open Parcel: the rows it fits glow and flash.
+  const [lifted, setLifted] = useState<Card | null>(null);
   // The driver card (#476): tap a driver's name.
   const [cardOf, setCardOf] = useState<number | null>(null);
   const [detail, setDetail] = useState<{ title: string; reading: StatReading } | { card: Card } | null>(null);
@@ -107,131 +97,78 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, ba
   const myRank = standings.find(s => s.teamId === viewer);
 
   const roster = rosters[viewer];
-  const cards = teamCardState(facts, viewer);
-  // The pack offer (#627): pick 1 of 2 packs, one pack, or a forced curse. The pack shows its place, not its metal.
-  const offer = turn ? pendingOffer(facts) : null;
-  const [picked, setPicked] = useState<PackKind | null>(null);
-  const pack = offer && offer.kind !== 'curse' ? dealPack(facts, offer.round, offer.teamId, picked && offer.packs.includes(picked) ? picked : offer.packs[0]) : null;
-  const curse = offer?.kind === 'curse' ? offer.curse! : null;
+  const stamps = teamStamps(facts, viewer);
+  // The Parcel on the doorstep (#704): three stamps, a Watcher gift, or a smudge.
+  const parcel = turn ? pendingParcel(facts) : null;
+  const smudge = parcel?.kind === 'smudged' ? parcel.smudge! : null;
   const myTurn = !!turn && state.phase === 'paddock';
   const lineup = lineupFor(facts, state.round, viewer);
   const car = pool.cars.find(c => c.id === roster.carId)!;
   const team = pool.teams.find(t => t.id === viewer)!;
-  const allGear = [...cards.locker, ...Object.values(cards.drivers).flatMap(d => d.equipment), ...cards.car.upgrade, ...cards.team.facility];
 
-  // Keep 1 of 3 on the reveal (#552, Pax Oct 10): the pick happens there, so
-  // the table only ever holds a picked-up gear card.
-  const dealt = pack ? pack.cards.map(c => c.id) : [];
-  const hand: Card | null = held ? allGear.find(c => c.id === held.id) ?? null : null;
-  const fitsRow = (k: HolderKey) => {
-    if (!hand || !myTurn) return false;
-    const h = holderOf(k);
-    const at = held!.from;
-    return GEAR_FOR[h.kind] === hand.kind && !(at !== 'locker' && keyOf(at) === k);
-  };
-  const lockerFits = !!hand && myTurn && hand.kind !== 'trait' && held!.from !== 'locker';
-
-  // Live timed effects (a curse, #332 / #627) read like cards in the sum.
-  const fx = (h: CardHolder) => effectCards(facts, viewer, round, h);
-  const readRow = (k: HolderKey, extra: Card | null) => {
-    if (k === 'car') return CAR_STATS.map(s => readStat(s, car.stats[s as keyof typeof car.stats], withCard([...car.traits, ...cards.car.traits, ...fx({ kind: 'car' })], cards.car.upgrade, extra)));
-    if (k === 'team') return TEAM_STATS.map(s => readStat(s, team.teamStats[s as keyof typeof team.teamStats], withCard([...team.traits, ...cards.team.traits, ...fx({ kind: 'team' })], cards.team.facility, extra)));
-    const id = Number(k);
-    const d = pool.drivers.find(x => x.id === id)!;
-    return DRIVER_STATS.map(s => readStat(s, d.stats[s as keyof typeof d.stats], withCard([...d.traits, ...cards.drivers[id].traits, ...fx({ kind: 'driver', id })], cards.drivers[id].equipment, extra)));
+  const fitsRow = (k: RowKey) => !!lifted && myTurn && rowFits(lifted, k);
+  // Live timed effects (a smudge, #332 / #704) read like cards in the sum.
+  const fx = (k: RowKey) => effectCards(facts, viewer, round, k === 'car' ? { kind: 'car' } : k === 'team' ? { kind: 'team' } : { kind: 'driver', id: Number(k) });
+  const rowStamps = (k: RowKey): Card[] => (k === 'car' ? stamps.car.filter(c => c.target === 'car') : k === 'team' ? stamps.car.filter(c => c.target === 'team') : [...stamps.drivers[Number(k)], ...(stamps.titles[Number(k)] ?? [])]);
+  const readRow = (k: RowKey, extra: Card | null) => {
+    const held = [...rowStamps(k), ...fx(k), ...(extra ? [extra] : [])];
+    if (k === 'car') return CAR_STATS.map(s => readStat(s, car.stats[s as keyof typeof car.stats], [...car.traits, ...held]));
+    if (k === 'team') return TEAM_STATS.map(s => readStat(s, team.teamStats[s as keyof typeof team.teamStats], [...team.traits, ...held]));
+    const d = pool.drivers.find(x => x.id === Number(k))!;
+    return DRIVER_STATS.map(s => readStat(s, d.stats[s as keyof typeof d.stats], [...d.traits, ...held]));
   };
   const liveEffects = activeEffects(facts, viewer, round);
-  const targetName = (k: HolderKey) => (k === 'car' ? car.name : k === 'team' ? you.name : pool.drivers.find(x => x.id === Number(k))!.fullName);
+  const rowName = (k: RowKey) => (k === 'car' ? car.name : k === 'team' ? you.name : pool.drivers.find(x => x.id === Number(k))!.fullName);
+
+  // Where a stamp can go: each driver card and the car card (car and garage together).
+  const targets: StampTarget[] = [
+    ...roster.driverIds.map(id => ({ key: String(id), label: rowName(String(id)), stamps: stamps.drivers[id], slots: STAMP_SLOTS.driver, fits: (c: Card) => holderFits(c, { kind: 'driver', id }) })),
+    { key: 'car', label: `${car.name} (car and garage)`, stamps: stamps.car, slots: STAMP_SLOTS.car, fits: (c: Card) => holderFits(c, { kind: 'car' }) },
+  ];
 
   // Actions
-  /** A picked trait goes on for good, onto the target the reveal asked for. */
-  const givePack = (kept: Card, k: HolderKey) => {
-    if (!pack) return;
-    commit(applyPack(facts, { type: 'pack', round: pack.round, teamId: pack.teamId, tier: pack.tier, pack: pack.kind, cardId: kept.id, dealt, target: holderOf(k) }));
+  const keep = (kept: Card, targetKey: string, replaces?: string) => {
+    if (!parcel || parcel.kind === 'smudged') return;
+    commit(openParcel(facts, { type: 'parcel', round: parcel.round, teamId: parcel.teamId, tier: parcel.tier, gift: parcel.kind === 'gift' || undefined, dealt: parcel.cards.map(c => c.id), cardId: kept.id, holder: holderOf(targetKey), replaces }));
+    setLifted(null);
     setRevealing(false);
   };
-  /** The forced curse (#627): nothing to choose; it lands on the car or the team for three races. */
-  const takeCurse = () => {
-    if (!curse) return;
-    commit(applyCurse(facts, { type: 'curse', round: curse.round, teamId: curse.teamId, effectId: curse.id }));
+  const leave = () => {
+    if (!parcel || parcel.kind === 'smudged') return;
+    commit(openParcel(facts, { type: 'parcel', round: parcel.round, teamId: parcel.teamId, tier: parcel.tier, gift: parcel.kind === 'gift' || undefined, dealt: parcel.cards.map(c => c.id), cardId: null }));
+    setLifted(null);
     setRevealing(false);
   };
-  /** A picked gear card goes to the locker (Pax: "ghost your locker"): it lands on its slot (a pack card
-   * always lands on a holder), moves to the locker, and whatever was in the slot goes back. All plain
-   * facts, so the season replays exactly. */
-  const packToLocker = (kept: Card) => {
-    if (!pack || kept.kind === 'trait') return;
-    const target: CardHolder = kept.kind === 'equipment' ? { kind: 'driver', id: roster.driverIds[0] } : kept.kind === 'upgrade' ? { kind: 'car' } : { kind: 'team' };
-    const occupant = slotOf(cards, target)[0];
-    let next = applyPack(facts, { type: 'pack', round: pack.round, teamId: pack.teamId, tier: pack.tier, pack: pack.kind, cardId: kept.id, dealt, target, replaces: occupant?.id });
-    next = moveGear(next, { type: 'move', round: state.round, teamId: viewer, cardId: kept.id, to: 'locker' });
-    if (occupant) next = moveGear(next, { type: 'move', round: state.round, teamId: viewer, cardId: occupant.id, to: target });
-    commit(next);
+  /** The smudge: nothing to choose; it lands on the car or the garage for one race. */
+  const take = () => {
+    if (!smudge) return;
+    commit(takeSmudge(facts, { type: 'smudge', round: smudge.round, teamId: smudge.teamId, effectId: smudge.id }));
     setRevealing(false);
   };
-  /** Where a picked trait can go: its own target type only. */
-  const traitTargets = (c: Card): { key: HolderKey; label: string }[] => c.target === 'driver'
-    ? roster.driverIds.map(id => ({ key: String(id) as HolderKey, label: pool.drivers.find(x => x.id === id)!.fullName }))
-    : c.target === 'car' ? [{ key: 'car' as HolderKey, label: car.name }] : [{ key: 'team' as HolderKey, label: you.name }];
-  /** Gear into a slot; a full slot sends its card to the locker first (two moves, both facts). */
-  const moveTo = (cardId: string, to: CardHolder | 'locker', from?: CardHolder | 'locker') => {
-    setHeld(null);
-    setEquipSheet(null);
-    if (!myTurn) return;
-    // Swapping a card for an identical copy changes nothing.
-    if (to !== 'locker' && from === 'locker' && slotOf(cards, to)[0]?.id === cardId) return;
-    let next = facts;
-    if (to !== 'locker') {
-      const occupant = slotOf(cards, to)[0];
-      if (occupant) next = moveGear(next, { type: 'move', round: state.round, teamId: viewer, cardId: occupant.id, from: to, to: 'locker' });
-    }
-    // Every move names the copy it moves (#556), so duplicates never get mixed up.
-    commit(moveGear(next, { type: 'move', round: state.round, teamId: viewer, cardId, from: from ?? undefined, to }));
-  };
-  const placeOn = (k: HolderKey) => {
-    if (!fitsRow(k)) return;
-    if (hand) moveTo(hand.id, holderOf(k), held!.from);
-  };
-  const placeInLocker = () => { if (!lockerFits) return; if (hand) moveTo(hand.id, 'locker', held!.from); };
-  /** Tap a chip: a locker card is picked up (rows glow); an equipped card opens Unequip / Swap (#556); a trait shows its card. */
-  const tapChip = (c: Card, from: CardHolder | 'locker' | null, n: number) => {
-    if (c.kind !== 'trait' && from && myTurn) {
-      if (from === 'locker') { setHeld(h => (h && h.from === 'locker' && h.n === n ? null : { id: c.id, from, n })); return; }
-      setHeld(null);
-      setEquipSheet({ card: c, from });
-      return;
-    }
-    setDetail({ card: c });
+  /** Tap a glowing row: the lifted stamp goes there; a full card asks in the Parcel strip what to scrape off. */
+  const stampOn = (k: RowKey) => {
+    if (!fitsRow(k) || !lifted) return;
+    const t = targets.find(x => x.key === (k === 'team' ? 'car' : k))!;
+    if (t.stamps.length < t.slots) keep(lifted, t.key);
   };
   const lock = () => {
-    if (pack || lineup.length !== 2) return;
+    if (parcel || lineup.length !== 2) return;
     commit(setLineup(facts, { round: state.round, teamId: viewer, driverIds: [lineup[0], lineup[1]] }));
   };
-  const dropOn = (k: HolderKey | 'locker') => ({
-    onDragOver: (e: DragEvent) => { if (k === 'locker' ? lockerFits : fitsRow(k)) e.preventDefault(); },
-    onDrop: (e: DragEvent) => { e.preventDefault(); if (k === 'locker') placeInLocker(); else placeOn(k); },
-  });
 
-  const chip = (c: Card, gear: boolean, from: CardHolder | 'locker' | null = null, n = 0) => (
-    <CardChip
-      key={`${from === null ? 'trait' : from === 'locker' ? 'locker' : keyOf(from)}:${c.id}:${n}`}
-      card={c}
-      held={!!held && !!from && held.id === c.id && held.n === n && (held.from === 'locker' ? from === 'locker' : from !== 'locker' && keyOf(held.from) === keyOf(from))}
-      onClick={() => tapChip(c, from, n)}
-      draggable={gear && myTurn && !!from}
-      onDragStart={e => { if (!from) return; e.dataTransfer.setData('text/plain', c.id); setHeld({ id: c.id, from, n }); }}
-    />
+  const chip = (c: Card, where: string) => (
+    <CardChip key={`${where}:${c.id}`} card={c} onClick={() => setDetail({ card: c })} style={c.id.startsWith(TITLE_STAMP_PREFIX) ? { outline: '2px solid var(--ace-gold)', outlineOffset: 1 } : undefined} />
   );
 
-  // One row of grades: OVR + stats (+ dots where a stat doesn't apply), flashing while a fitting card is in hand.
-  const gradeCells = (k: HolderKey, title: string, stats: StatKey[], present: Set<StatKey>, dim: boolean) => {
+  // One row of grades: OVR + stats (+ dots where a stat doesn't apply), flashing while a fitting stamp is lifted.
+  const gradeCells = (k: RowKey, title: string, stats: StatKey[], present: Set<StatKey>, dim: boolean) => {
     const now = readRow(k, null);
-    const after = fitsRow(k) ? readRow(k, hand) : null;
+    const after = fitsRow(k) ? readRow(k, lifted) : null;
     const nowBy = new Map(now.map(r => [r.stat, r]));
     const afterBy = after ? new Map(after.map(r => [r.stat, r])) : null;
     return (
       <>
-        <GradeCell value={overall(now).total} flashTo={after ? overall(after).total : undefined} dim={dim} strong onOpen={fitsRow(k) ? () => placeOn(k) : undefined} />
+        <GradeCell value={overall(now).total} flashTo={after ? overall(after).total : undefined} dim={dim} strong onOpen={fitsRow(k) ? () => stampOn(k) : undefined} />
         {stats.map(s => {
           if (!present.has(s)) return <td key={s} className="rt-cell rt-na">·</td>;
           const r = nowBy.get(s)!;
@@ -242,31 +179,30 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, ba
               flashTo={afterBy?.get(s)?.total}
               notch={r.parts.length > 0}
               dim={dim}
-              onOpen={() => (fitsRow(k) ? placeOn(k) : setDetail({ title: `${title} · ${STAT_LABELS[s]}`, reading: r }))}
+              onOpen={() => (fitsRow(k) ? stampOn(k) : setDetail({ title: `${title} · ${STAT_LABELS[s]}`, reading: r }))}
             />
           );
         })}
       </>
     );
   };
-  const nameCell = (k: HolderKey, body: JSX.Element) => (
-    <th className="rt-name" scope="row" {...dropOn(k)}>
+  const nameCell = (k: RowKey, body: JSX.Element) => (
+    <th className="rt-name" scope="row">
       {fitsRow(k)
-        ? <button type="button" className="rt-pick" onClick={() => placeOn(k)} aria-label={`Put ${hand!.name} on ${targetName(k)}`}>{body}</button>
+        ? <button type="button" className="rt-pick" onClick={() => stampOn(k)} aria-label={`Stamp ${lifted!.name} on ${rowName(k)}`}>{body}</button>
         : body}
     </th>
   );
-  const rowClass = (k: HolderKey, extra = '') => `${fitsRow(k) ? 'target' : ''} ${extra}`.trim();
+  const rowClass = (k: RowKey, extra = '') => `${fitsRow(k) ? 'target' : ''} ${extra}`.trim();
 
   // The turn, in one line
-  const step = !myTurn ? -1 : offer ? 0 : 1;
-  const STEPS = ['Open pack', 'Lock in'];
+  const step = !myTurn ? -1 : parcel ? 0 : 1;
+  const STEPS = ['Open the Parcel', 'Lock in'];
   // The one action of the turn sits in the dock (#715); the turn line keeps the steps.
   const action = state.phase === 'ready-for-go'
     ? <AceButton onClick={onGo}>Go: round {state.round + 1}</AceButton>
     : !myTurn ? null
-    : step === 0 && !revealing && offer?.kind === 'single' ? <AceButton onClick={() => setRevealing(true)}>Open pack</AceButton>
-    : step === 0 && !revealing && offer?.kind === 'curse' ? <AceButton onClick={() => setRevealing(true)}>Open the Curse pack</AceButton>
+    : step === 0 && !revealing ? <AceButton onClick={() => setRevealing(true)}>{smudge ? 'Open the smudged Parcel' : parcel?.kind === 'gift' ? 'Open the gift' : 'Open the Parcel'}</AceButton>
     : step >= 1 ? <AceButton disabled={lineup.length !== 2} onClick={lock}>Lock in</AceButton>
     : null;
   const turnLine = state.phase === 'ready-for-go' ? (
@@ -276,7 +212,6 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, ba
       <ol aria-label="Your turn">
         {STEPS.map((s, i) => <li key={s} className={i < step ? 'done' : i === step ? 'now' : ''}>{i + 1} · {s}</li>)}
       </ol>
-      {step === 0 && !revealing && offer?.kind === 'choice' && <span className="rs-hint">Pick one of the two packs below.</span>}
     </div>
   );
 
@@ -287,60 +222,62 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, ba
     </div>
   );
 
-  const hint = !hand ? null : `Moving ${hand.name}: tap a glowing row or the locker. Tap the card again to put it down.`;
+  const stampsCell = (k: RowKey, own: Card[]) => {
+    const held = rowStamps(k);
+    const cap = k === 'team' ? null : k === 'car' ? STAMP_SLOTS.car : STAMP_SLOTS.driver;
+    return (
+      <td className="rt-traits">
+        <span className="rt-minis">
+          {own.map(c => chip(c, `${k}:trait`))}
+          {held.map(c => chip(c, k))}
+          {!own.length && !held.length && <span className="pk-empty" aria-label="No stamps yet">—</span>}
+        </span>
+        {cap !== null && <span className="pk-carno">{k === 'car' ? stamps.car.length : stamps.drivers[Number(k)].length}/{cap}{k === 'car' ? ' car and garage' : ''}</span>}
+        {k === 'team' && <span className="pk-carno">on the car card</span>}
+      </td>
+    );
+  };
 
   const teamTab = (
     <>
       {turnLine}
       {priorityLine}
-      {offer && myTurn && (revealing && pack ? (
-        <PackPick
-          key={`${pack.round}:${pack.teamId}:${pack.kind}`}
-          cards={pack.cards}
-          tier={pack.tier}
-          traitTargets={traitTargets}
-          onKeep={(kept, k) => (kept.kind === 'trait' ? k && givePack(kept, k) : packToLocker(kept))}
+      {parcel && myTurn && (revealing && !smudge ? (
+        <ParcelPick
+          key={`${parcel.round}:${parcel.teamId}`}
+          parcel={parcel}
+          targets={targets}
+          onKeep={keep}
+          onLeave={leave}
+          onLift={setLifted}
           onDetail={c => setDetail({ card: c })}
           onClose={() => setRevealing(false)}
         />
-      ) : revealing && curse ? (
-        <section className="pp pp-curse" aria-label="Curse pack">
-          <div className="pp-head"><span className="rs-k">Curse pack · nothing to choose</span><button type="button" className="rs-link" onClick={() => setRevealing(false)}>Later</button></div>
+      ) : revealing && smudge ? (
+        <section className="pp pp-curse" aria-label="Smudged Parcel">
+          <div className="pp-head"><span className="rs-k">Smudged · nothing to choose</span><button type="button" className="rs-link" onClick={() => setRevealing(false)}>Later</button></div>
           <div className="pp-keep">
-            <b>{curse.emoji} {curse.name}: {curse.stats.map(s => `${levelDelta(s.pct)} ${STAT_LABELS[s.stat]}`).join(', ')} on {curse.target.kind === 'car' ? car.name : you.name}, both drivers, for {CURSE_LIFE_TEXT}.</b>
-            <button type="button" className="rs-btn rs-btn-primary" onClick={takeCurse}>Take the curse</button>
-            <span className="rs-hint">Bad luck. It lifts on its own; benching can't dodge it.</span>
+            <b>{smudge.name}: {smudge.stats.map(s => `${levelDelta(s.pct)} ${STAT_LABELS[s.stat]}`).join(', ')} on {smudge.target.kind === 'car' ? car.name : you.name}, both drivers, for {SMUDGE_LIFE_TEXT}.</b>
+            <button type="button" className="rs-btn rs-btn-primary" onClick={take}>Take it</button>
+            <span className="rs-hint">Bad luck. The smudge wears off on its own; benching can't dodge it.</span>
           </div>
         </section>
       ) : (
-        <div className={`pk-pack ${offer.kind === 'choice' ? 'pk-offer' : ''}`}>
-          {offer.kind === 'curse' ? (
-            <>
-              <button type="button" className="pk-sealed pk-sealed-curse" onClick={() => setRevealing(true)} aria-label="Open the Curse pack"><GameIcon name="season.pack" size={30} /></button>
-              <div className="pk-pack-text">
-                <span className="rs-k pk-pack-k">Curse pack</span>
-                <b>Forced</b>
-                <span className="rs-hint">Unlucky: this round's only pack is a curse on the car or the team.</span>
-              </div>
-            </>
-          ) : offer.packs.map(kind => (
-            <div key={kind} className="pk-pack-one">
-              <button type="button" className="pk-sealed" onClick={() => { setPicked(kind); setRevealing(true); }} aria-label={`Open the ${PACK_KIND_LABEL[kind]}`}><GameIcon name="season.pack" size={30} /><i className="pk-twinkle a" /><i className="pk-twinkle b" /><i className="pk-twinkle c" /></button>
-              <div className="pk-pack-text">
-                <span className="rs-k pk-pack-k">Run deck · {PACK_KIND_LABEL[kind]}</span>
-                <b>{offer.kind === 'choice' ? 'Pick this one' : 'Sealed'}</b>
-                <span className="rs-hint">{kind === 'driver' ? 'A trait or equipment for a driver.' : kind === 'car' ? 'A trait or upgrade for the car.' : 'A trait or facility for the team.'} Three inside; keep one. The metal shows when it opens.</span>
-              </div>
-            </div>
-          ))}
+        <div className="pk-pack">
+          <button type="button" className={`pk-sealed ${smudge ? 'pk-sealed-curse' : ''}`.trim()} onClick={() => setRevealing(true)} aria-label={smudge ? 'Open the smudged Parcel' : 'Open the Parcel'}><GameIcon name="season.pack" size={30} />{!smudge && <><i className="pk-twinkle a" /><i className="pk-twinkle b" /><i className="pk-twinkle c" /></>}</button>
+          <div className="pk-pack-text">
+            <span className="rs-k pk-pack-k">{parcel.kind === 'gift' ? 'A Parcel from upstairs' : smudge ? 'A smudged Parcel' : 'League issue'}</span>
+            <b>{smudge ? 'Smudged' : 'Sealed'}</b>
+            <span className="rs-hint">{smudge ? 'Unlucky: this one is a bad stamp on the car or the garage for one race.' : parcel.kind === 'gift' ? 'A friend upstairs sends their regards. Three stamps inside, gold at least; keep one.' : 'Three stamps inside; keep one, or leave the box shut. The metal shows when it opens.'}</span>
+          </div>
         </div>
       ))}
-      {liveEffects.length > 0 && <p className="rs-hint pk-hint">{liveEffects.map(e => `${e.emoji} ${e.name}: ${describeLeft(e)}`).join(' · ')}</p>}
-      {hand && <p className="rs-hint pk-hint">{hint}</p>}
+      {liveEffects.length > 0 && <p className="rs-hint pk-hint">{liveEffects.map(e => `${e.name}: ${describeLeft(e)}`).join(' · ')}</p>}
+      {lifted && myTurn && <p className="rs-hint pk-hint">Stamping {lifted.name}: tap a glowing row, or pick the card in the Parcel.</p>}
       <div className="rt-legend">
         {priority.size > 0 && <span><span className="rt-prio-key">{ABBR[[...priority][0]]}</span> next race priority</span>}
-        <span><i className="rt-notch-key" /> cards change this stat · tap a level for the sum</span>
-        <span>Tap a card for the full card{myTurn ? '; tap gear to move it' : ''}</span>
+        <span><i className="rt-notch-key" /> stamps change this stat · tap a level for the sum</span>
+        <span>Tap a stamp for the full card. Stamps are for good: {STAMP_SLOTS.driver} per driver, {STAMP_SLOTS.car} on the car.</span>
       </div>
       <div className="ace-panel flat pk-sheet-panel"><div className="rt-scroll">
         <table className="rt">
@@ -349,8 +286,7 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, ba
               <th className="rt-name">Driver</th>
               <th className="rt-oc">OVR</th>
               {DRIVER_STATS.map(s => <th key={s} className={`rt-stat ${priority.has(s) ? 'prio' : ''}`} title={STAT_LABELS[s]}>{ABBR[s]}</th>)}
-              <th className="rt-slot">Gear</th>
-              <th className="rt-traits">Traits</th>
+              <th className="rt-traits">Stamps</th>
               <th className="rt-act">Car</th>
             </tr>
           </thead>
@@ -359,52 +295,35 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, ba
               const d = pool.drivers.find(x => x.id === id)!;
               const k = String(id);
               const carNo = lineup.indexOf(id);
-              const gear = cards.drivers[id].equipment[0];
               return (
                 <tr key={id} className={rowClass(k)}>
                   {nameCell(k, <><RaceNumber n={d.number} color={you.color} ink={you.ink} size={24} shape="square" className="rt-numsq" /><Avatar icon={portraitFor(pool.seed, d.id)} color={you.color} size={22} />{fitsRow(k) ? <span className="rt-nm">{d.fullName}</span> : <DriverName name={d.fullName} onOpen={() => setCardOf(d.id)} />}</>)}
                   {gradeCells(k, d.fullName, DRIVER_STATS, new Set(DRIVER_STATS), false)}
-                  <td className="rt-slot" {...dropOn(k)}>{gear ? chip(gear, true, holderOf(k)) : <span className="pk-empty" aria-label="Empty gear slot">—</span>}</td>
-                  <td className="rt-traits"><span className="rt-minis">{[...d.traits, ...cards.drivers[id].traits].map(c => chip(c, false))}</span></td>
+                  {stampsCell(k, d.traits)}
                   <td className="rt-act"><span className="pk-carno">Car {carNo + 1}</span></td>
                 </tr>
               );
             })}
             <tr className="rt-sub">
-              <th className="rt-name">Car &amp; team</th>
+              <th className="rt-name">Car &amp; garage</th>
               <th className="rt-oc">OVR</th>
               {CT_STATS.map(s => <th key={s} className={`rt-stat ${priority.has(s) ? 'prio' : ''}`} title={STAT_LABELS[s]}>{ABBR[s]}</th>)}
               {Array.from({ length: PAD }, (_, i) => <th key={i} className="rt-stat rt-pad" />)}
-              <th className="rt-slot">Gear</th>
-              <th className="rt-traits">Traits</th>
+              <th className="rt-traits">Stamps</th>
               <th className="rt-act" />
             </tr>
-            {(['car', 'team'] as const).map(k => {
-              const gear = k === 'car' ? cards.car.upgrade[0] : cards.team.facility[0];
-              const traits = k === 'car' ? [...car.traits, ...cards.car.traits] : [...team.traits, ...cards.team.traits];
-              return (
-                <tr key={k} className={rowClass(k)}>
-                  {nameCell(k, k === 'car' ? <><Avatar icon={vehicleFor(pool.seed, car.id)} color={you.color} size={26} /><span className="rt-nm">{car.name}</span></> : <><TeamLogo team={you} size={22} /><span className="rt-nm">{you.name}</span></>)}
-                  {gradeCells(k, targetName(k), CT_STATS, new Set(k === 'car' ? CAR_STATS : TEAM_STATS), false)}
-                  {Array.from({ length: PAD }, (_, i) => <td key={i} className="rt-cell rt-pad" />)}
-                  <td className="rt-slot" {...dropOn(k)}>{gear ? chip(gear, true, holderOf(k)) : <span className="pk-empty" aria-label="Empty gear slot">—</span>}</td>
-                  <td className="rt-traits"><span className="rt-minis">{traits.map(c => chip(c, false))}</span></td>
-                  <td className="rt-act" />
-                </tr>
-              );
-            })}
+            {(['car', 'team'] as const).map(k => (
+              <tr key={k} className={rowClass(k)}>
+                {nameCell(k, k === 'car' ? <><Avatar icon={vehicleFor(pool.seed, car.id)} color={you.color} size={26} /><span className="rt-nm">{car.name}</span></> : <><TeamLogo team={you} size={22} /><span className="rt-nm">{you.name}</span></>)}
+                {gradeCells(k, rowName(k), CT_STATS, new Set(k === 'car' ? CAR_STATS : TEAM_STATS), false)}
+                {Array.from({ length: PAD }, (_, i) => <td key={i} className="rt-cell rt-pad" />)}
+                {stampsCell(k, k === 'car' ? car.traits : team.traits)}
+                <td className="rt-act" />
+              </tr>
+            ))}
           </tbody>
         </table>
       </div></div>
-      <div
-        className={`pk-locker ${lockerFits ? 'droppable pulse' : ''}`}
-        {...dropOn('locker')}
-        {...(lockerFits ? { onClick: placeInLocker, role: 'button', tabIndex: 0, onKeyDown: (e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); placeInLocker(); } }, 'aria-label': `Keep ${hand!.name} in the locker` } : {})}
-      >
-        <span className="rs-k">Locker · {cards.locker.length}</span>
-        <span className="rt-minis">{cards.locker.length ? cards.locker.map((c, i) => chip(c, true, 'locker', i)) : <span className="pk-empty" aria-label="Empty locker">—</span>}</span>
-        <span className="rs-hint">{lockerFits ? `Tap here to keep ${hand!.name} for later.` : myTurn ? 'Tap a gear card to pick it up, then tap where it goes. Drag works on desktop.' : ''}</span>
-      </div>
     </>
   );
 
@@ -462,41 +381,11 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, ba
 
       {tab === 'team' ? teamTab : leagueTab}
 
-
-      {equipSheet && (() => {
-        const { card: c, from } = equipSheet;
-        const swaps = cards.locker.map((l, i) => ({ l, i })).filter(({ l }) => l.kind === c.kind);
-        return (
-          <div className="pk-sheet" role="dialog" aria-label={`${c.name}: unequip or swap`}>
-            <div className="pk-sheet-text">
-              <span className="rs-k">On {targetName(keyOf(from))}</span>
-              <b>{c.name}</b>
-              <span className="pk-confirm-btns">
-                <button type="button" className="rs-btn rs-btn-primary" onClick={() => moveTo(c.id, 'locker', from)}>Unequip to locker</button>
-                <button type="button" className="rs-btn" onClick={() => { setEquipSheet(null); setHeld({ id: c.id, from, n: 0 }); }}>Move to another row</button>
-              </span>
-              {swaps.length > 0 && (
-                <>
-                  <span className="rs-k">Swap with a locker card</span>
-                  <span className="rt-minis pk-swaps">{swaps.map(({ l, i }) => (
-                    <CardChip key={`swap:${l.id}:${i}`} card={l} size={36} onClick={() => moveTo(l.id, from, 'locker')} />
-                  ))}</span>
-                </>
-              )}
-              <span className="pk-confirm-btns">
-                <button type="button" className="rs-btn rs-btn-ghost" onClick={() => setDetail({ card: c })}>Full card</button>
-                <button type="button" className="rs-btn rs-btn-ghost" onClick={() => setEquipSheet(null)}>Close</button>
-              </span>
-            </div>
-          </div>
-        );
-      })()}
-
       {cardOf !== null && (() => { const data = driverCardOf(facts, cardOf, round); return data && <DriverCard data={data} onClose={() => setCardOf(null)} />; })()}
       {detail && (
         <div className="pk-sheet" role="dialog" aria-label="Detail">
           {'card' in detail
-            ? <><CardFace card={detail.card} size="small" flippable={false} /><div className="pk-sheet-text"><span className="rs-k">{detail.card.kind} · {detail.card.target}{detail.card.rarity ? ` · ${detail.card.rarity}` : ''}</span><b>{detail.card.name}</b>{detail.card.rule ? <span>{detail.card.rule}</span> : detail.card.stats.map(s => <span key={s.stat}>{levelDelta(s.pct)} {STAT_LABELS[s.stat]}</span>)}<span className="rs-hint">{detail.card.kind === 'trait' ? 'Traits are for good.' : 'Gear: move it freely in any Paddock.'}</span></div></>
+            ? <><CardFace card={detail.card} size="small" flippable={false} /><div className="pk-sheet-text"><span className="rs-k">{detail.card.id.startsWith(TITLE_STAMP_PREFIX) ? 'title stamp' : `${detail.card.kind} · ${detail.card.target}`}{detail.card.rarity ? ` · ${detail.card.rarity}` : ''}</span><b>{detail.card.name}</b>{detail.card.rule ? <span>{detail.card.rule}</span> : detail.card.stats.map(s => <span key={s.stat}>{levelDelta(s.pct)} {STAT_LABELS[s.stat]}</span>)}<span className="rs-hint">{detail.card.id.startsWith(TITLE_STAMP_PREFIX) ? 'On the ribbon, outside the slots. For good.' : 'A stamp is for good; a full card scrapes one off for the next.'}</span></div></>
             : <ReadingSheet title={detail.title} reading={detail.reading} icon={STAT_ICONS[detail.reading.stat]} />}
           <button type="button" className="rs-link pk-sheet-x" onClick={() => setDetail(null)}>Close</button>
         </div>

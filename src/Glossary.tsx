@@ -7,7 +7,7 @@
 import { useEffect, useMemo, useState, ReactNode } from 'react';
 import { levelDelta } from './season/grades';
 import { favourText } from './cards/favourText';
-import { PLAYER_CARD_SCALE } from './season/pack';
+import { PLAYER_CARD_SCALE } from './season/stamps';
 import { buildGlossary, describeInRaceEffect, effectsOf } from './data/glossary';
 import { RARITIES } from './cards/rarity';
 import { defaultRuleset, describeChance } from './rules/ruleset';

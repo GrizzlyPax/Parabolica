@@ -10,7 +10,7 @@ import { CANON_VARIABLES } from '../simlab/types';
 import { draftState, quickDraft } from './draft';
 import { leagueForRound, newSeason, poolFor, seasonState, setLineup, settleRound, type SeasonFacts } from './season';
 import { defaultSetup } from './setup';
-import { openPack } from './testHelpers';
+import { openParcelQuick } from './testHelpers';
 import { activeEffects, addEffect, carriedEffects, describeLeft, rawDeltas, roundEffects, validateEffect, type EffectFact } from './effects';
 
 function ready(seed: number): SeasonFacts {
@@ -18,7 +18,7 @@ function ready(seed: number): SeasonFacts {
   facts = { ...facts, draftPicks: quickDraft(poolFor(facts)) };
   const human = seasonState(facts).whoseTurn!;
   const roster = draftState(poolFor(facts), facts.draftPicks).rosters[human];
-  facts = openPack(setLineup(facts, { round: 0, teamId: human, driverIds: [roster.driverIds[0], roster.driverIds[1]] }));
+  facts = openParcelQuick(setLineup(facts, { round: 0, teamId: human, driverIds: [roster.driverIds[0], roster.driverIds[1]] }));
   return facts;
 }
 const you = (f: SeasonFacts) => f.setup.humans[0].teamId;
@@ -130,7 +130,7 @@ describe('carrying up a run', () => {
     expect(carried.map(e => e.id)).toEqual(['long']);
     // dealt round 1 of 3 with 4 races: rounds 1 and 2 used, 2 left → re-dated to start at −2 (live at 0 and 1)
     expect(carried[0].round).toBe(-2);
-    const next: SeasonFacts = { ...base, effectFacts: [], setup: { ...base.setup, carry: { teamId: you(base), drivers: [], car: poolFor(base).cars[0], team: poolFor(base).teams[0], cards: { drivers: {}, car: { traits: [], upgrade: [] }, team: { traits: [], facility: [] }, locker: [] }, effects: carried } } };
+    const next: SeasonFacts = { ...base, effectFacts: [], setup: { ...base.setup, carry: { teamId: you(base), drivers: [], car: poolFor(base).cars[0], team: poolFor(base).teams[0], cards: { drivers: {}, car: [], titles: {} }, effects: carried } } };
     expect(activeEffects(next, you(base), 0).map(e => [e.id, e.left])).toEqual([['long', 2]]);
     expect(activeEffects(next, you(base), 1).map(e => [e.id, e.left])).toEqual([['long', 1]]);
     expect(activeEffects(next, you(base), 2)).toEqual([]);
