@@ -11,6 +11,9 @@ import { formatMetric, metricOutOfBand } from './physics';
 import { ALL_KNOBS, formatValue, canonValue } from './knobs';
 import { DeckTab } from './DeckTab';
 import { StyleTab } from './StyleTab';
+import { Bunting, Chequer, ProgramLine, StepTheme } from '../look/Look';
+import { programNo } from '../MainMenu';
+import { version } from '../../package.json';
 
 type TabId = 'physics' | 'run' | 'deck' | 'style' | 'notebook' | 'method';
 const TABS: { id: TabId; label: string; hint: string }[] = [
@@ -44,17 +47,18 @@ export default function RaceControl({ onBack, onStartRace, tab: tabSlug, onTabCh
   const deleteRun = (id: string) => setNotebook(n => ({ ...n, runs: n.runs.filter(r => r.id !== id) }));
   const lab = { working, setWorking, savePreset, logRun };
   return (
-    <div className="run-setup race-control">
-      <header className="rs-top">
-        <div className="rs-title-block">
-          <button type="button" className="rs-back" onClick={onBack}>← Menu</button>
-          <h1 className="rs-title">Race Control</h1>
-          <span className="rs-sub">The lab. Same engine as the live race, seeded, exportable, replicable.</span>
-        </div>
+    <StepTheme step="nationals" className="ace-page race-control">
+      <Bunting />
+      <ProgramLine left="Race Control · the lab" right={`No. ${programNo(version)} · 10¢`} />
+      <header className="rc-head">
+        <button type="button" className="ace-link" onClick={onBack}>Menu</button>
+        <h1 className="ace-h1">Race Control</h1>
+        <p className="ace-sub">The lab. Same engine as the live race, seeded, exportable, replicable.</p>
       </header>
-      <nav className="gl-tabs rc-tabs" aria-label="Race Control sections">
+      <Chequer />
+      <nav className="ace-tabs rc-tabs" aria-label="Race Control sections">
         {TABS.map(t => (
-          <button key={t.id} type="button" className={`gl-tab ${tab === t.id ? 'on' : ''}`} onClick={() => setTab(t.id)} title={t.hint}>{t.label}</button>
+          <button key={t.id} type="button" className={`ace-tab ${tab === t.id ? 'on' : ''}`} onClick={() => setTab(t.id)} title={t.hint}>{t.label}</button>
         ))}
       </nav>
       {tab === 'physics' && <PhysicsTab lab={lab} />}
@@ -63,7 +67,7 @@ export default function RaceControl({ onBack, onStartRace, tab: tabSlug, onTabCh
       {tab === 'style' && <StyleTab />}
       {tab === 'notebook' && <NotebookTab notebook={notebook} setNotebook={setNotebook} working={working} onLoad={p => { loadPreset(p); }} onDeletePreset={deletePreset} onDeleteRun={deleteRun} />}
       {tab === 'method' && <MethodTab />}
-    </div>
+    </StepTheme>
   );
 }
 
