@@ -52,9 +52,13 @@
   --ace-cond: 'Oswald', 'Arial Narrow', 'Helvetica Neue', sans-serif;
   --ace-body: 'Old Standard TT', Georgia, serif;
   --ace-mono: 'Special Elite', 'Courier New', monospace;
-  /* Phone first: one gutter */
+  /* The frame (#722, desktop first): content up to 1376px (1440 less two
+     32px gutters); a reading column of 720px; 16px gutters on a phone */
   --ace-gutter: 16px;
+  --ace-max: 1376px;
+  --ace-narrow: 720px;
 }
+@media (min-width: 1024px) { :root { --ace-gutter: 32px; } }
 
 /* Locals: black and white, generic. The accent is a dark grey, the buttons paper. */
 [data-step='locals'] {

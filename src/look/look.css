@@ -2,17 +2,23 @@
    tokens.css; icons/theme.test.ts fails on a hex here). Every piece shows on
    Race Control → Style in every step theme; Hub copies from there. */
 
-/* The page: a navy ground, phone first, one 16px gutter, room for the dock. */
+/* The page (#722, desktop first): a navy ground across the whole screen; the
+   content sits in one centred frame, --ace-max wide (1376px = 1440 less two
+   32px gutters). Below 1024px the gutter is 16px and the phone gets the same
+   layout, stacked. The bunting and the state bar run edge to edge; a screen
+   that wants a reading column adds .narrow. */
 .ace-page {
   min-height: 100vh; background: var(--ace-ground); color: var(--ace-fg); font-family: var(--ace-body);
   padding: 0 var(--ace-gutter) calc(88px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 12px;
-  max-width: 720px; margin: 0 auto;
 }
-.ace-page.wide { max-width: 1280px; }
+/* Zero specificity, so a screen's own classes (an overlay, a modal) always win. */
+:where(.ace-page) > :where(*) { width: 100%; max-width: var(--ace-max); margin-inline: auto; }
+:where(.ace-page.narrow) > :where(*) { max-width: var(--ace-narrow); }
+.ace-page > .ace-bunting, .ace-page > .ace-statebar, .ace-page > .ace-dock { max-width: none; }
 .ace-page a { color: inherit; }
 
-/* Bunting: full width, sits on the top edge (the Bunting component draws it). */
-.ace-bunting { display: block; width: calc(100% + var(--ace-gutter) * 2); margin: 0 calc(var(--ace-gutter) * -1); height: 26px; }
+/* Bunting: full width, sits on the top edge; the pattern keeps the pennants their size. */
+.ace-bunting { display: block; width: calc(100% + var(--ace-gutter) * 2); margin: 0 calc(var(--ace-gutter) * -1); height: 28px; }
 
 /* The program line: "OFFICIAL PROGRAM · No. 51 · 10¢" */
 .ace-prog { display: flex; justify-content: space-between; gap: 12px; font-family: var(--ace-cond); font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: var(--ace-muted); }
@@ -75,7 +81,7 @@
 .ace-tab.on { background: var(--ace-paper); color: var(--ace-ink); border-color: var(--ace-gold); }
 
 /* The state bar: the step and the title you're going for, in the accent */
-.ace-statebar { display: flex; align-items: center; gap: 10px; width: calc(100% + var(--ace-gutter) * 2); margin: 0 calc(var(--ace-gutter) * -1); padding: 10px var(--ace-gutter); background: var(--ace-accent); color: var(--ace-accent-ink); font-family: var(--ace-cond); font-size: 14px; letter-spacing: .06em; }
+.ace-statebar { display: flex; align-items: center; gap: 10px; width: calc(100% + var(--ace-gutter) * 2); margin: 0 calc(var(--ace-gutter) * -1); padding: 10px calc(var(--ace-gutter) + max(0px, (100% - var(--ace-max)) / 2)); background: var(--ace-accent); color: var(--ace-accent-ink); font-family: var(--ace-cond); font-size: 14px; letter-spacing: .06em; }
 .ace-statebar b { font-family: var(--ace-disp); font-weight: 400; letter-spacing: 0; }
 .ace-statebar svg { flex: none; }
 
@@ -195,4 +201,18 @@
 @media (min-width: 720px) {
   .ace-h1 { font-size: 30px; }
   .ace-logo { font-size: 64px; }
+}
+/* Desktop (the design size, 1440 × 900): bigger type, a bigger sash, a roomier dock. */
+@media (min-width: 1024px) {
+  .ace-page { gap: 16px; }
+  .ace-h1 { font-size: 40px; }
+  .ace-h2 { font-size: 22px; }
+  .ace-sub { font-size: 15px; }
+  .ace-logo { font-size: 80px; }
+  .ace-prog { font-size: 12px; }
+  .ace-statebar { font-size: 16px; padding-block: 12px; }
+  .ace-sash { width: 340px; }
+  .ace-panel { padding: 14px 18px; gap: 10px; }
+  .ace-rung-head b { font-size: 20px; }
+  .ace-dock .ace-btn { max-width: 480px; }
 }
