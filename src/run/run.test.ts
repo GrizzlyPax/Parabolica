@@ -246,6 +246,26 @@ describe('saves', () => {
     expect(loadRun(store)).toBeNull();
   });
 
+  it('a run with carried gear plays the next league and survives save → load (#723)', () => {
+    const store = memoryStore();
+    let run = promote(wonRun());
+    const carried = currentLeague(run).setup.carry!.cards;
+    const carriedGear = [...Object.values(carried.drivers).flatMap(d => d.equipment), ...carried.car.upgrade, ...carried.team.facility, ...carried.locker];
+    expect(carriedGear.length).toBeGreaterThan(0);
+    run = playLeague(run);
+    const facts = currentLeague(run);
+    // Every round folds, and no gear id is held twice.
+    for (let round = 0; round <= facts.results.length; round++) {
+      const s = teamCardState(facts, 'you', round);
+      const gear = [...s.locker, ...Object.values(s.drivers).flatMap(d => d.equipment), ...s.car.upgrade, ...s.team.facility].map(c => c.id);
+      expect(new Set(gear).size).toBe(gear.length);
+    }
+    expect(saveRun(run, store)).toBe(true);
+    const loaded = loadRun(store)!;
+    expect(loaded).toEqual(run);
+    expect(teamCardState(currentLeague(loaded), 'you')).toEqual(teamCardState(facts, 'you'));
+  });
+
   it('the screens\' facade: start → play → save the league → load it back; promote through the facade', () => {
     const store = memoryStore();
     const won = wonRun();
