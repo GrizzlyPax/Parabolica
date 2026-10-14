@@ -41,7 +41,7 @@
 | Oct 10 | **The sash is the title:** cream satin, a thin border, Playball script, a gold wheel at each end, no crown (a crown on the car, maybe later). Script font: Playball |
 | Oct 10 | **One theme per step:** Locals black and white; State takes the state's colours as accents only (the ground stays dark); Nationals Americana. Menus: navy ground, cream panels (Hub's picks on "lock it in"; Pax can flip) |
 | Oct 10 | **Driver card:** the face is a slot for commissioned art; titles sit under the driver as ribbons (Ace Toledo white, Ace Ohio state colour, Ace America navy and gold). Parcels and stamps as mocked |
-| Oct 10 | All 50 states + DC + Puerto Rico get theme colours and a wheel-flag, designed by Pax + Radio (#708) |
+| Oct 10 | All 50 states + DC + Puerto Rico get theme colours and a wheel-flag, designed by Pax + Radio (#708). **Oct 14:** colours done (#739, into the game in #740); the wheel-flags split off to #742, drawn by Pax in Figma later |
 | Oct 10 | The ladder beyond: Ace Earth, then Ace Universe (later; Radio, #707) |
 | Oct 10 | **The story bible is canon: Ace America** ("This rules. I like it as canon."; #712). The old lore (the Booth, gods, tags, the 28 deck teams) retires |
 | Oct 10 | **No regions:** you pick your start from any of the 52 on a map, then name your garage; rival garages are generic (family names and places) |
