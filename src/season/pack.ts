@@ -197,17 +197,20 @@ function dealOne(rng: () => number, tier: PackTier, place: PackKind): Card {
 /**
  * The pack a team opens: PACK_SIZE distinct cards of its tier for `kind`'s
  * place, at the player's scale. Pure: the same seed and standings deal the
- * same cards; each card has its own sub-stream and redraws on a duplicate.
+ * same cards; each card has its own sub-stream and redraws on a duplicate,
+ * or on gear the team already holds (#723): wear is kept per card id, so a
+ * second copy would share the first one's deal round and break the fold.
  * Null for a team that gets no pack or an offer without that pack.
  */
 export function dealPack(facts: SeasonFacts, round: number, teamId: string, kind: PackKind): DealtPack | null {
   const offer = packOffer(facts, round, teamId);
   if (!offer || !offer.packs.includes(kind)) return null;
+  const held = heldGear(facts, teamId, round);
   const cards: Card[] = [];
   for (let i = 0; i < PACK_SIZE; i++) {
     const rng = mulberry32(deriveSeed(facts.setup.seed, 'season', 'pack', round, teamId, kind, i));
     let c = dealOne(rng, offer.tier, kind);
-    for (let tries = 0; cards.some(x => x.id === c.id) && tries < 20; tries++) c = dealOne(rng, offer.tier, kind);
+    for (let tries = 0; (cards.some(x => x.id === c.id) || held.has(c.id)) && tries < 40; tries++) c = dealOne(rng, offer.tier, kind);
     cards.push(c);
   }
   return { round, teamId, tier: offer.tier, kind, cards };
@@ -264,6 +267,12 @@ const cards = (xs: string[]) => xs.map(card);
 /** The round the facts stand at: the one in play (results so far). */
 export function currentRound(facts: SeasonFacts): number {
   return facts.results.length;
+}
+
+/** The gear a team holds going into `round` (carried or dealt; on a holder or in the locker), by id (#723). */
+export function heldGear(facts: SeasonFacts, teamId: string, round: number): Set<string> {
+  const s = teamCardState(facts, teamId, round);
+  return new Set([...s.locker, ...Object.values(s.drivers).flatMap(d => d.equipment), ...s.car.upgrade, ...s.team.facility].map(c => c.id));
 }
 
 /** Races a gear card dealt in `dealt` still has in `round` (≤ 0 = worn out). */
@@ -458,6 +467,7 @@ export function validatePackApplication(facts: SeasonFacts, app: PackApplication
   const dealt = dealPack(facts, app.round, app.teamId, app.pack)!;
   if (app.tier !== dealt.tier) return `the pack is ${dealt.tier}, not ${app.tier}`;
   const ids = dealt.cards.map(c => c.id);
+  if (cardById(app.cardId)?.kind !== 'trait' && heldGear(facts, app.teamId, app.round).has(app.cardId)) return `${app.teamId} already holds ${app.cardId}`;
   if (!app.dealt || app.dealt.join(',') !== ids.join(',')) return `the pack dealt ${ids.join(', ')}; record all three`;
   if (!ids.includes(app.cardId)) return `${app.cardId} was not in the pack (${ids.join(', ')})`;
   return tryApply(facts, app);
