@@ -3,6 +3,7 @@
 // traits, gear, live effects); rivals get who they are and their traits as
 // sealed dots, never their levels. Ranks and XP went with #696: titles do
 // that job (the ribbons, #699).
+import { raceBadges } from './badges';
 import type { Card, StatKey } from '../cards/types';
 import type { IconId } from '../icons/registry';
 import { portraitFor } from '../generators/avatars';
@@ -18,7 +19,7 @@ export const DRIVER_CARD_STATS: StatKey[] = ['baseSpeed', 'consistency', 'luck',
 export interface DriverCardData {
   id: number;
   name: string;
-  number?: number;
+  number?: number | string;
   teamName: string;
   color: string;
   ink?: string;
@@ -40,7 +41,7 @@ export function driverCardOf(facts: SeasonFacts, driverId: number, round: number
   const team = teamId ? teamsOf(facts)[teamId] : undefined;
   const mine = !!teamId && facts.setup.humans.some(h => h.teamId === teamId);
   const base: DriverCardData = {
-    id: d.id, name: d.fullName, number: d.number, teamName: team?.name ?? '', color: team?.color ?? '#718295', ink: team?.ink,
+    id: d.id, name: d.fullName, number: raceBadges(facts)[d.id] ?? d.number, teamName: team?.name ?? '', color: team?.color ?? '#718295', ink: team?.ink,
     portrait: portraitFor(pool.seed, d.id), backstory: d.backstory, quirk: d.quirk,
     cards: [...d.traits], sealed: !mine,
   };

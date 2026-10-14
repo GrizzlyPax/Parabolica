@@ -1,5 +1,6 @@
 // #476: the driver card's data. Yours: levels (the Paddock's sums), cards,
 // story. Rivals: who they are; levels sealed.
+import { raceBadges } from './badges';
 import { describe, it, expect } from 'vitest';
 import { newSeason, poolFor } from './season';
 import { quickDraft, draftState } from './draft';
@@ -19,7 +20,7 @@ describe('driver card (#476)', () => {
   it('your driver: name, number, face, levels, cards, backstory and quirk', () => {
     const c = driverCardOf(facts, mine)!;
     const d = pool.drivers.find(x => x.id === mine)!;
-    expect(c).toMatchObject({ name: d.fullName, number: d.number, sealed: false, backstory: d.backstory, quirk: d.quirk });
+    expect(c).toMatchObject({ name: d.fullName, number: raceBadges(facts)[d.id], sealed: false, backstory: d.backstory, quirk: d.quirk });
     expect(c.portrait).toBeTruthy();
     expect(c.readings!.map(r => r.stat)).toEqual(DRIVER_CARD_STATS);
     // Same sum as the Paddock: the roll plus every card held.
