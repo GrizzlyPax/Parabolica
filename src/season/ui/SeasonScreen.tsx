@@ -78,7 +78,7 @@ function SavedSeason({ screen, navigate, onMenu }: Props) {
 }
 
 const NEXT: Record<Exclude<Screen, 'setup'>, string> = {
-  run: 'The league ladder',
+  run: 'The Ladder',
   draft: 'The rookie pick',
   paddock: 'The Paddock',
   race: 'The race view',

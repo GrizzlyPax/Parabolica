@@ -66,7 +66,7 @@ const TARGETS: CardTarget[] = ['driver', 'car', 'team'];
 
 /** Where a pack's card goes: a pack is named by its place, never its metal. */
 export type PackKind = CardTarget;
-export const PACK_KIND_LABEL: Record<PackKind, string> = { driver: 'Driver pack', car: 'Car pack', team: 'Team pack' };
+export const PACK_KIND_LABEL: Record<PackKind, string> = { driver: 'Driver Parcel', car: 'Car Parcel', team: 'Team Parcel' };
 
 /** Where a card goes: one of your drivers, your car or your team. */
 export type CardHolder = { kind: 'driver'; id: number } | { kind: 'car' } | { kind: 'team' };

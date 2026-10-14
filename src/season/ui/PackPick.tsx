@@ -35,9 +35,9 @@ export default function PackPick({ cards, tier, traitTargets, onKeep, onDetail, 
   const chosen = cards.find(c => c.id === pick) ?? null;
 
   return (
-    <section className={`pp tier-${tier}`} aria-label={`${TIER_LABEL[tier]} pack: keep one of three`}>
+    <section className={`pp tier-${tier}`} aria-label={`${TIER_LABEL[tier]} Parcel: keep one of three`}>
       <div className="pp-head">
-        <span className="rs-k">Run deck · {TIER_LABEL[tier]} pack · keep one</span>
+        <span className="rs-k">League issue · {TIER_LABEL[tier]} Parcel · keep one</span>
         <button type="button" className="rs-link" onClick={onClose}>Later</button>
       </div>
       <div className="pp-three" role="group" aria-label="Pick one of three">

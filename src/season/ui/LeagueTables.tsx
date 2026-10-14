@@ -35,7 +35,7 @@ export function LeagueTables({ facts, pool, teams, rosters, lines, drivers, onDr
     <>
       <div className="ace-panel flat lt-panel"><div className="rt-scroll">
         <table className="rt rt-compact">
-          <thead><tr><th className="rt-pos">Pos</th><th className="rt-name">Constructors</th><th className="rt-numcol">Wins</th><th className="rt-numcol">Pod</th><th className="rt-numcol">Pts</th></tr></thead>
+          <thead><tr><th className="rt-pos">Pos</th><th className="rt-name">Garages</th><th className="rt-numcol">Wins</th><th className="rt-numcol">Pod</th><th className="rt-numcol">Pts</th></tr></thead>
           <tbody>
             {lines.map(s => (
               <tr key={s.teamId} className={humans.includes(s.teamId) ? 'mine' : ''}>
