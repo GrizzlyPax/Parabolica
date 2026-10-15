@@ -9,6 +9,7 @@
 // stamp it on a driver card or the car card (a full card asks what to scrape
 // off), or leave the box shut. A smudged Parcel is a bad stamp for one race,
 // nothing to choose. Then Lock in ends the turn: two drivers, both race (#585).
+import { raceBadges } from '../badges';
 import { useMemo, useState } from 'react';
 import { levelDelta } from '../grades';
 import { GameIcon, TeamLogo, teamThemeVars } from '../../icons/GameIcon';
@@ -66,6 +67,7 @@ const rowFits = (c: Card, k: RowKey) => (k === 'car' ? c.target === 'car' : k ==
 
 export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, backLabel = '← Menu' }: Props) {
   const pool = useMemo(() => poolFor(facts), [facts.setup]); // eslint-disable-line react-hooks/exhaustive-deps
+  const badges = useMemo(() => raceBadges(facts), [facts.setup, facts.draftPicks]); // eslint-disable-line react-hooks/exhaustive-deps
   const teams = useMemo(() => teamsOf(facts), [facts.setup]); // eslint-disable-line react-hooks/exhaustive-deps
   // The nemesis talks (#635): one line per Paddock visit (the round's moment).
   const spoken = useMemo(() => nemesisLine(facts), [facts.setup, facts.results.length, facts.draftPicks.length]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -297,7 +299,7 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, ba
               const carNo = lineup.indexOf(id);
               return (
                 <tr key={id} className={rowClass(k)}>
-                  {nameCell(k, <><RaceNumber n={d.number} color={you.color} ink={you.ink} size={24} shape="square" className="rt-numsq" /><Avatar icon={portraitFor(pool.seed, d.id)} color={you.color} size={22} />{fitsRow(k) ? <span className="rt-nm">{d.fullName}</span> : <DriverName name={d.fullName} onOpen={() => setCardOf(d.id)} />}</>)}
+                  {nameCell(k, <><RaceNumber n={badges[d.id] ?? d.number} color={you.color} ink={you.ink} size={24} shape="square" className="rt-numsq" /><Avatar icon={portraitFor(pool.seed, d.id)} color={you.color} size={22} />{fitsRow(k) ? <span className="rt-nm">{d.fullName}</span> : <DriverName name={d.fullName} onOpen={() => setCardOf(d.id)} />}</>)}
                   {gradeCells(k, d.fullName, DRIVER_STATS, new Set(DRIVER_STATS), false)}
                   {stampsCell(k, d.traits)}
                   <td className="rt-act"><span className="pk-carno">Car {carNo + 1}</span></td>
@@ -333,11 +335,11 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, ba
     <>
       <p className="pk-priority">
         <span className="rs-k">After round {facts.results.length} of {total}</span>{' '}
-        {you.name} {myRank ? ord(myRank.rank) : ''} on <b>{myRank?.points ?? 0}</b> · leader {teams[standings[0].teamId].name} on {standings[0].points}. Two titles: Constructors' (team points) and Drivers'.
+        {you.name} {myRank ? ord(myRank.rank) : ''} on <b>{myRank?.points ?? 0}</b> · leader {teams[standings[0].teamId].name} on {standings[0].points}. Two tables: the garages' (both cars' points) and the drivers'.
       </p>
       <div className="pk-league">
         <div className="pk-chart">
-          <div className="rs-k">Constructors' points, race by race</div>
+          <div className="rs-k">Garage points, race by race</div>
           {facts.results.length ? <SeasonChart standings={standings} teams={teams} mine={humans} /> : <p className="rs-hint">The chart starts after round 1.</p>}
         </div>
         <div className="pk-tables">
@@ -375,7 +377,7 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, ba
       )}
       <div className="ace-tabs pk-tabs" role="tablist">
         <button type="button" role="tab" className={`ace-tab ${tab === 'team' ? 'on' : ''}`} aria-selected={tab === 'team'} onClick={() => setTab('team')}>Team</button>
-        <button type="button" role="tab" className={`ace-tab ${tab === 'league' ? 'on' : ''}`} aria-selected={tab === 'league'} onClick={() => setTab('league')}>League</button>
+        <button type="button" role="tab" className={`ace-tab ${tab === 'league' ? 'on' : ''}`} aria-selected={tab === 'league'} onClick={() => setTab('league')}>The table</button>
         {myRank && <span className="pk-rank">{ord(myRank.rank)} · {myRank.points} pts</span>}
       </div>
 

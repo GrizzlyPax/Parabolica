@@ -136,8 +136,8 @@ export function renderGlossaryMd(g: Glossary, version: string): string {
   L.push('', '## Weather', '', '*Source: `src/data/deckWeather.ts`. Neutral + five dry weathers, favours (grade points) × intensity, stacking with the track. No rain until Wet arrives in v0.6; the old weathers and the inflictions retired (the inflictions are parked as Horror-deck material).*', '', '| Weather | Odds | Favours |', '|---|---|---|');
   for (const w of g.deckWeather) L.push(`| **${w.name}** \`${w.id}\` | ${w.odds}% | ${favs(w.favours)} |`);
   L.push('');
-  L.push('## States', '', '*Source: `src/data/states.ts` (#695). Ace America\'s 52 places: 50 states, DC and Puerto Rico. A look is the accents the UI takes while you race for that state (primary = the state bar, buttons and sash edge; ink from `inkFor`); the rest fill in from #708.*', '', '| Place | Primary · secondary · accent | Ink | Wheel-flag |', '|---|---|---|---|');
-  for (const p of g.places) L.push(`| **${p.name}** \`${p.id}\`${p.kind === 'state' ? '' : ` (${p.kind})`} | ${p.look ? `${p.look.primary} · ${p.look.secondary} · ${p.look.accent}` : '—'} | ${p.look?.ink ?? '—'} | ${p.look?.flag.note ?? '—'} |`);
+  L.push('## States', '', '*Source: `src/data/states.ts` (#695). Ace America\'s 52 places: 50 states, DC and Puerto Rico. A look is the accents the UI takes while you race for that state (primary = the state bar, buttons and sash edge; ink from `inkFor`; ground = the step\'s background). Radio\'s 52 looks, picked by Pax (docs/story/states.md).*', '', '| Place | Primary · secondary · accent · ground | Ink | Note |', '|---|---|---|---|');
+  for (const p of g.places) L.push(`| **${p.name}** \`${p.id}\`${p.kind === 'state' ? '' : ` (${p.kind})`} | ${p.look ? `${p.look.primary} · ${p.look.secondary} · ${p.look.accent} · ${p.look.ground ?? '—'}` : '—'} | ${p.look?.ink ?? '—'} | ${p.look?.flag.note ?? '—'} |`);
   L.push('');
   L.push('');
   const rs = defaultRuleset();

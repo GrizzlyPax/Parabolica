@@ -1,6 +1,6 @@
 # The 52 looks: state colours (#708)
 
-Every state, plus DC and Puerto Rico, as the **State step** wears it. Colours only; the wheel-flags come later, drawn by Pax in Figma. Picked by Pax on Oct 14 from [the 52 Looks page](https://claude.ai/artifact/Fgj4cdrEXPE9kUqzWUAy1v). This table is the **single source** for `src/data/states.ts` and the `STATE_LOOKS` stub in `src/look/step.ts`.
+Every state, plus DC and Puerto Rico, as the **State step** wears it. Colours only; the wheel-flags come later, drawn by Pax in Figma. Picked by Pax on Oct 14 from [the 52 Looks page](https://claude.ai/artifact/Fgj4cdrEXPE9kUqzWUAy1v). This table is the **single source** for `src/data/states.ts` (in the game since #740; `stateLook` in `src/look/step.ts` reads it there).
 
 ## The rules (Pax, Oct 14)
 

@@ -15,6 +15,7 @@
 // the clock only ever stops on a human.
 
 import { deriveSeed } from '../engine/rng';
+import { raceBadges } from './badges';
 import { getTrackById } from '../generators/tracks';
 import { runScheduledRace } from '../league/settle';
 import type { LeagueState, RaceDigest } from '../league/types';
@@ -284,7 +285,10 @@ export function leagueForRound(facts: SeasonFacts, round: number): LeagueState {
   const effects = roundEffects(facts, round);
   // The track's lap count turns half-race window cards (#647) into lap effects.
   const laps = getTrackById(setup.calendar[round])?.laps;
-  const roster = seasonRoster(pool, rosters, lineupsFor(facts, round), { cards: cardsForRound(facts, round), identities: identitiesFor(facts), shifts: rivalShifts(facts), effects, laps });
+  const badges = raceBadges(facts);
+  // Each car wears its step's identifier (#725): entry numbers, town codes or state codes. Display only.
+  const roster = seasonRoster(pool, rosters, lineupsFor(facts, round), { cards: cardsForRound(facts, round), identities: identitiesFor(facts), shifts: rivalShifts(facts), effects, laps })
+    .map(d => (badges[d.id] ? { ...d, number: badges[d.id] } : d));
   return {
     engineVersion,
     leagueSeed: setup.seed,

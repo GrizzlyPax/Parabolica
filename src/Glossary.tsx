@@ -425,7 +425,7 @@ export default function Glossary({ onBack, tab: tabSlug, onTabChange }: Glossary
       )}
 
       {tab === 'states' && (
-        <Section {...sec('states')} title="States" count={g.places.length} hint="Ace America's 52 places: 50 states, DC and Puerto Rico. A look is the accents the UI takes while you race for that state; the rest arrive with #708 (The 52 looks).">
+        <Section {...sec('states')} title="States" count={g.places.length} hint="Ace America's 52 places: 50 states, DC and Puerto Rico. A look is the accents the UI takes while you race for that state, on its own dark ground (docs/story/states.md, picked by Pax).">
           <div className="gl-list">
             {g.places.filter(p => match(p.name, p.abbr, p.kind)).map(p => (
               <Row key={p.id} id={`state:${p.id}`} open={isOpen(`state:${p.id}`)} onToggle={toggle}
@@ -433,7 +433,7 @@ export default function Glossary({ onBack, tab: tabSlug, onTabChange }: Glossary
                   ? <span className="gl-state-sw" aria-hidden="true">{[p.look.primary, p.look.secondary, p.look.accent].map(c => <i key={c} style={{ background: c }} />)}</span>
                   : <span className="gl-state-sw empty" aria-hidden="true"><i /><i /><i /></span>}{p.name}</span>}
                 note={p.kind === 'state' ? p.abbr : `${p.abbr} · ${p.kind}`}
-                pills={<span className="gl-readout">{p.look ? p.look.flag.note : 'Look to come (#708)'}</span>}>
+                pills={<span className="gl-readout">{p.look ? p.look.flag.note : '—'}</span>}>
                 <div className="gl-facts">
                   <Fact k="Code">{p.abbr}</Fact><Fact k="Kind">{p.kind}</Fact>
                   {p.look && <><Fact k="Primary">{p.look.primary}</Fact><Fact k="Secondary">{p.look.secondary}</Fact><Fact k="Accent">{p.look.accent}</Fact><Fact k="Ink">{p.look.ink}</Fact><Fact k="Wheel-flag">{p.look.flag.note}</Fact></>}

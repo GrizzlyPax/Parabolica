@@ -23,7 +23,7 @@ export interface LapChartSeries {
   dashed?: boolean;
   code: string;
   emoji?: string;
-  number?: number;
+  number?: number | string;
   /** Position (1-based) at each sampled lap; null = not classified (DNF/after). */
   positions: (number | null)[];
   /** Lap numbers at which this driver pitted. */
