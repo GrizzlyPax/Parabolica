@@ -169,3 +169,11 @@ describe('the callers by step (#749, docs/story/voice.md)', () => {
     expect(CALLER_POOLS.pa.lightsOut).toContain(lightsOutLine({ step: 'locals', trackName: 'Fairgrounds' }, 2));
   });
 });
+
+describe('names without emoji (#763)', () => {
+  it('an effect line names the driver plainly, never the toast\'s emoji title', () => {
+    const t = voiceNotification(makeNotification({ type: 'effect_applied', title: '🔧 Comfort Phillips', message: 'limps on with a damaged car' }), ctx)!.text;
+    expect(t).toBe('Comfort Phillips: limps on with a damaged car');
+    expect(t).not.toMatch(/\p{Extended_Pictographic}/u);
+  });
+});

@@ -21,7 +21,7 @@ function RaceFeed({ items, className = '' }: RaceFeedProps) {
       <div className="story-feed-list">
         {items.length === 0 ? (
           <div className="story-feed-empty">
-            <span className="story-feed-empty-text">The Booth clears its throat...</span>
+            <span className="story-feed-empty-text">The caller clears their throat...</span>
           </div>
         ) : (
           items.map(item => (
@@ -52,7 +52,7 @@ function RaceFeed({ items, className = '' }: RaceFeedProps) {
   );
 }
 
-// Wrap driver names in the text with emoji-chip spans for identity
+// Wrap driver names in the text in chip spans: the name alone, no emoji (#763, docs/ICONS.md)
 function withDriverHighlights(
   text: string,
   drivers: Array<{ id: number; name: string; emoji: string }>
@@ -76,9 +76,7 @@ function withDriverHighlights(
     }
     if (earliest.idx > 0) parts.push(remaining.slice(0, earliest.idx));
     parts.push(
-      <span key={key++} className="story-driver-chip">
-        {earliest.driver.emoji} {earliest.driver.name}
-      </span>
+      <span key={key++} className="story-driver-chip">{earliest.driver.name}</span>
     );
     remaining = remaining.slice(earliest.idx + earliest.driver.name.length);
   }
