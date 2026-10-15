@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 import { CardFace } from '../../cards/CardFace';
 import { CardChip } from '../../cards/CardChip';
 import type { Card } from '../../cards/types';
-import type { Parcel, ParcelTier } from '../stamps';
+import { isInk, GEAR_LIFE, type Parcel, type ParcelTier } from '../stamps';
 
 const TIER_LABEL: Record<ParcelTier, string> = { common: 'Common', uncommon: 'Uncommon', rare: 'Rare', legendary: 'Legendary' };
 
@@ -23,6 +23,8 @@ export interface StampTarget {
 interface Props {
   parcel: Parcel;
   targets: StampTarget[];
+  /** A smudged Parcel: what the smudge does, shown over the three. */
+  smudgeLine?: string;
   /** Keep this stamp on that card; `replaces` when the card is full. */
   onKeep: (card: Card, target: string, replaces?: string) => void;
   /** Leave the Parcel shut: nothing kept. */
@@ -33,7 +35,7 @@ interface Props {
   onClose: () => void;
 }
 
-export default function ParcelPick({ parcel, targets, onKeep, onLeave, onLift, onDetail, onClose }: Props) {
+export default function ParcelPick({ parcel, targets, smudgeLine, onKeep, onLeave, onLift, onDetail, onClose }: Props) {
   const [faceUp, setFaceUp] = useState(false);
   const [pick, setPick] = useState<string | null>(null);
   const [target, setTarget] = useState<string | null>(null);
@@ -46,14 +48,15 @@ export default function ParcelPick({ parcel, targets, onKeep, onLeave, onLift, o
   const fitting = chosen ? targets.filter(t => t.fits(chosen)) : [];
   const onto = fitting.find(t => t.key === target) ?? null;
   const lift = (c: Card | null) => { setPick(c?.id ?? null); setTarget(null); onLift(c); };
-  const label = parcel.kind === 'gift' ? 'A Parcel from upstairs' : `League issue · ${TIER_LABEL[parcel.tier]}`;
+  const label = parcel.kind === 'gift' ? 'A Parcel from upstairs' : parcel.kind === 'smudged' ? `A smudged Parcel · ${TIER_LABEL[parcel.tier]}` : `League issue · ${TIER_LABEL[parcel.tier]}`;
 
   return (
-    <section className={`pp tier-${parcel.tier} ${parcel.kind === 'gift' ? 'pp-gift' : ''}`.trim()} aria-label={`${label}: keep one of three stamps`}>
+    <section className={`pp tier-${parcel.tier} ${parcel.kind === 'gift' ? 'pp-gift' : parcel.kind === 'smudged' ? 'pp-curse' : ''}`.trim()} aria-label={`${label}: keep one of three stamps`}>
       <div className="pp-head">
         <span className="rs-k">{label} · keep one stamp</span>
         <button type="button" className="rs-link" onClick={() => { lift(null); onClose(); }}>Later</button>
       </div>
+      {smudgeLine && <p className="rs-hint pp-smudge">{smudgeLine}</p>}
       <div className="pp-three" role="group" aria-label="Pick one of three">
         {parcel.cards.map(c => (
           <button
@@ -90,7 +93,7 @@ export default function ParcelPick({ parcel, targets, onKeep, onLeave, onLift, o
               </button>
             ))}
           </span>
-          <span className="rs-hint">A stamp is for good. Tap it again for the full card; tap a glowing row to stamp it there.</span>
+          <span className="rs-hint">{isInk(chosen) ? `Ink: twice the strength, fades after ${GEAR_LIFE} races.` : 'A trait: a permanent stamp.'} Tap it again for the full card; tap a glowing row to stamp it there.</span>
         </div>
       ) : (
         <div className="pp-keep">

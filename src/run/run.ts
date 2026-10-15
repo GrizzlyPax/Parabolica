@@ -413,7 +413,7 @@ export function replayRun(run: RunFacts): RaceDigest[][] {
 
 export const RUN_KEY = 'parabolica.run.v1';
 /** 3 since Ace America's run (#696): a v0.7 run (schemas 1–2) is archived, not loaded. */
-export const RUN_SCHEMA_VERSION = 4;
+export const RUN_SCHEMA_VERSION = 5;
 
 interface RunEnvelope { schemaVersion: number; savedAt: number; data: RunFacts }
 

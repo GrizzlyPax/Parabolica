@@ -28,7 +28,7 @@ import { generateSeasonPool, seasonRoster, RACE_LINEUP, type SeasonPool, type Se
 import { draftOrder, draftState, draftedRosters, type DraftPick } from './draft';
 import { portraitFor, vehicleFor } from '../generators/avatars';
 import type { IconId } from '../icons/registry';
-import { parcelOpened, seasonCardsFor, type CardFact } from './stamps';
+import { parcelOpened, seasonCardsFor, inkInfos, type CardFact } from './stamps';
 import { roundEffects, type EffectFact } from './effects';
 
 /** 6 since the run (#597, v0.7): a league is 4 × 6; League Setup can still change it. */
@@ -283,6 +283,8 @@ export function leagueForRound(facts: SeasonFacts, round: number): LeagueState {
   const pool = poolFor(facts);
   const rosters = draftedRosters(pool, facts.draftPicks);
   const effects = roundEffects(facts, round);
+  // Ink mileage shows beside the timed effects (#704): "2 races left".
+  for (const [id, infos] of Object.entries(inkInfos(facts, round))) effects.infos[Number(id)] = [...(effects.infos[Number(id)] ?? []), ...infos];
   // The track's lap count turns half-race window cards (#647) into lap effects.
   const laps = getTrackById(setup.calendar[round])?.laps;
   const badges = raceBadges(facts);
@@ -328,7 +330,7 @@ export function settleRound(facts: SeasonFacts, simVars: SimVariables = facts.se
 
 export const SEASON_KEY = 'parabolica.season.v1';
 /** 2 since #585 (two drivers, no bench): older 3-driver seasons are archived, not migrated. */
-export const SEASON_SCHEMA_VERSION = 3;
+export const SEASON_SCHEMA_VERSION = 4;
 
 export interface SeasonStore {
   getItem(key: string): string | null;

@@ -95,6 +95,8 @@ export interface CarriedCards {
   car: string[];
   /** Title stamps on each driver's ribbon (outside the slots). */
   titles?: Record<number, string[]>;
+  /** Ink mileage (#627 / #704): each ink stamp's deal round, re-dated to the new league (≤ 0), so its races left hold. */
+  gearDealt?: Record<string, number>;
 }
 
 /**

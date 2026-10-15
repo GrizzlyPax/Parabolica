@@ -619,3 +619,5 @@ button.rt-g:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset:
   .sr .sr-pick-name { font-size: 34px; }
   .sr .sr-person input { grid-column: 2; }
 }
+.pk-stamp { position: relative; display: inline-flex; }
+.pk-ink { position: absolute; right: -4px; bottom: -4px; min-width: 14px; height: 14px; padding: 0 3px; border-radius: 7px; background: var(--pw-text-1); color: var(--pw-ground); font-family: var(--look-data); font-size: 9px; line-height: 14px; text-align: center; }

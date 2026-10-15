@@ -179,6 +179,8 @@ describe('the steps', () => {
     // Every stamp carries; the title stamps sit on the ribbons (outside the slots) and read in the race build.
     const carried = teamStamps(league, you);
     expect(carriedStamps(carried)).toEqual({ ...carriedStamps(prevStamps), titles: { [d1]: [titleStamp('locals', 'aggression').id], [d2]: [titleStamp('locals', 'luck').id] } });
+    // Ink carried up keeps its races left: a stamp with 2 left at the end of Locals has 2 left in State's round 0.
+    for (const [id, left] of Object.entries(prevStamps.mileage)) expect(carried.mileage[id]).toBe(left);
     expect(carried.titles[d1][0].stats).toEqual([{ stat: 'aggression', pct: TITLE_STAMP_LEVELS * POINTS_PER_LEVEL }]);
     const plain = leagueForRound({ ...league, setup: { ...league.setup, carry: { ...league.setup.carry!, cards: { ...league.setup.carry!.cards, titles: {} } } } }, 0).roster.find(r => r.id === d1)!;
     const stamped = leagueForRound(league, 0).roster.find(r => r.id === d1)!;
