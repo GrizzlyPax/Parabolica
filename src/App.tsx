@@ -23,6 +23,8 @@ import { prepareScheduledRace } from './league/settle';
 import { CANON_VARIABLES } from './simlab/types';
 import { mulberry32, deriveSeed, randomSeed } from './engine/rng';
 import { quickRace, type QuickRace } from './season/quickRace';
+import { feedVoiceFor } from './season/feedVoice';
+import type { FeedVoice } from './feed/commentary';
 import { stateLook, stepName, type Step } from './look/step';
 import { generateTrack, getTrackById, Track } from './generators/tracks';
 import { useRoute, type Route } from './router';
@@ -105,7 +107,7 @@ function App() {
   // One tap: a one-race Season league (random field, track and weather from a
   // fresh seed) on the Season pipeline. Qualifying plays, then the lights. You
   // can pick a team to follow while qualifying runs. Nothing is saved.
-  const [quick, setQuick] = useState<{ q: QuickRace; follow: string | null; quali: boolean; avatars: ReturnType<typeof seasonAvatars> } | null>(null);
+  const [quick, setQuick] = useState<{ q: QuickRace; follow: string | null; quali: boolean; avatars: ReturnType<typeof seasonAvatars>; voice: FeedVoice } | null>(null);
   const startQuickRace = useCallback(() => {
     const q = quickRace(randomSeed());
     engine.stop();
@@ -116,7 +118,7 @@ function App() {
     engine.reset();
     setShowCountdown(false);
     setQuickRun(null);
-    setQuick({ q, follow: null, quali: true, avatars: seasonAvatars(q.facts) });
+    setQuick({ q, follow: null, quali: true, avatars: seasonAvatars(q.facts), voice: feedVoiceFor(q.facts) });
   }, [engine]);
   const quickTeams = useMemo(() => (quick ? teamsOf(quick.q.facts) : {}), [quick?.q]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
@@ -175,7 +177,7 @@ function App() {
   // the same race to its finish. The round is recorded by settleRound (the
   // headless run of the same seeded race), so watching changes nothing.
   const onSeasonRace = route.name === 'season' && route.screen === 'race';
-  const [seasonRace, setSeasonRace] = useState<{ round: number; sealed: Set<number>; mine: number[]; nemesis: number[]; you: TeamLike; avatars: ReturnType<typeof seasonAvatars>; quali: boolean; step: Step; stateId?: string; program: string } | null>(null);
+  const [seasonRace, setSeasonRace] = useState<{ round: number; sealed: Set<number>; mine: number[]; nemesis: number[]; you: TeamLike; avatars: ReturnType<typeof seasonAvatars>; quali: boolean; step: Step; stateId?: string; program: string; voice: FeedVoice } | null>(null);
   const settlingSeason = useRef(false);
   useEffect(() => {
     if (!onSeasonRace) {
@@ -215,6 +217,7 @@ function App() {
       step: facts.setup.league?.step ?? 'locals',
       stateId: facts.setup.league?.locale?.stateId,
       program: `${stepName(facts.setup.league?.step ?? 'locals')} · Race ${state.round + 1} of ${facts.setup.calendar.length}`,
+      voice: feedVoiceFor(facts),
     });
   }, [onSeasonRace]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -358,6 +361,7 @@ function App() {
           step={seasonRace.step}
           state={seasonRace.stateId ? stateLook(seasonRace.stateId) : undefined}
           program={seasonRace.program}
+          feedVoice={seasonRace.voice}
           onQualifyingDone={seasonRace.quali ? endSeasonQuali : undefined}
           onExit={() => leaveSeasonRace(raceState.raceFinished)}
           exitLabel="Paddock"
@@ -408,6 +412,7 @@ function App() {
           myDriverIds={mine}
           avatars={quick.avatars}
           program="Quick race"
+          feedVoice={quick.voice}
           onQualifyingDone={quick.quali ? endQuickRaceQuali : undefined}
           follow={quick.quali ? { teams: Object.values(quickTeams), selected: quick.follow, onPick: id => setQuick(x => (x ? { ...x, follow: x.follow === id ? null : id } : x)) } : undefined}
           onNextRace={startQuickRace}
