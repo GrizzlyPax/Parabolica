@@ -20,9 +20,9 @@ export const COLUMN_POSITION: ColumnConfig = {
   width: '32px',
   align: 'center',
   render: (_driver: Driver, ctx: RowContext) => (
-    <span className={`position-number ${ctx.isFinished ? 'finished' : ''} ${ctx.isDNF ? 'dnf' : ''} ${ctx.isPitting ? 'pitting' : ''}`}
-      title={_driver.penaltyTicks > 0 ? `Penalty: ${_driver.penaltyReason}` : undefined}>
-      {ctx.isDNF ? 'DNF' : ctx.isPitting ? 'PIT' : ctx.displayPosition}
+    <span className={`position-number ${ctx.isFinished ? 'finished' : ''} ${ctx.isDNF ? 'dnf' : ''} ${ctx.isEliminated ? 'eliminated' : ''} ${ctx.isPitting ? 'pitting' : ''}`}
+      title={_driver.penaltyTicks > 0 ? `Penalty: ${_driver.penaltyReason}` : ctx.isEliminated ? `Cut after lap ${_driver.eliminatedLap}` : undefined}>
+      {ctx.isDNF ? 'DNF' : ctx.isEliminated ? 'OUT' : ctx.isPitting ? 'PIT' : ctx.displayPosition}
       {_driver.penaltyTicks > 0 && <span className="pos-penalty" aria-label="penalty">!</span>}
     </span>
   ),
@@ -121,7 +121,7 @@ export const COLUMN_GRID: ColumnConfig = {
   width: '46px',
   align: 'center',
   render: (_driver: Driver, ctx: RowContext) => {
-    if (ctx.gridSlot === undefined || ctx.isDNF) return <span className="muted-cell">—</span>;
+    if (ctx.gridSlot === undefined || ctx.isDNF || ctx.isEliminated) return <span className="muted-cell">—</span>;
     const now = Number(ctx.displayPosition);
     const d = Number.isFinite(now) ? ctx.gridSlot - now : 0;
     return (
@@ -140,7 +140,7 @@ export const COLUMN_GRID_DELTA: ColumnConfig = {
   width: '30px',
   align: 'center',
   render: (_driver: Driver, ctx: RowContext) => {
-    if (ctx.gridSlot === undefined || ctx.isDNF) return null;
+    if (ctx.gridSlot === undefined || ctx.isDNF || ctx.isEliminated) return null;
     const now = Number(ctx.displayPosition);
     const d = Number.isFinite(now) ? ctx.gridSlot - now : 0;
     if (d === 0) return <span className="grid-delta flat" title={`Started P${ctx.gridSlot}`}>·</span>;

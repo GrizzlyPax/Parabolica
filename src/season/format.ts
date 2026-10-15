@@ -1,22 +1,25 @@
-// A season's FORMAT (#694, Nationals; Steward's schedule Oct 14): the plain
-// season has none (every team races every round, points from round 1). A
-// format adds a KNOCKOUT race (a car that doesn't finish is out; a state is
-// out when both its cars are), CUTS (after a race, keep the top N teams by
-// their best finisher) and a FINAL (points count from that race on). All of
-// it is derived from the results, so the facts stay the facts.
+// A season's FORMAT (#694, Nationals; Pax's answers Oct 15): the plain season
+// has none (every team races every round, points from round 1). A format
+// names one race as THE HUNDRED, with LAP CUTS inside it (when the leader
+// completes lap N, the teams are ranked by their best-placed running car and
+// everything below the line is eliminated; the engine does the cutting,
+// RaceConfig.lapCuts) and a car that doesn't finish it is out; the races
+// after it are THE FINAL (points from zero). All of it is derived from the
+// digests, so the facts stay the facts.
 //
-// Nationals: race 1 the Hundred (knockout) · race 2 → 30 states · race 3 →
-// 20 · race 4 → 10 · races 5–7 the Final, points from zero. Ace America is
-// P1 of the Final's table.
+// Nationals: race 1 the Hundred (100 cars; cuts to 30 / 20 / 10 states after
+// laps 1 / 2 / 3), then a three-race Final from zero. Ace America is P1 of
+// the Final's table. The Final's first race starts as the Hundred finished.
 import { draftState } from './draft';
+import type { LapCut } from '../RaceEngine';
 import type { RaceDigest } from '../league/types';
 import { poolFor, type SeasonFacts } from './season';
 
+export type { LapCut };
+
 export interface SeasonFormat {
-  /** The race (0-based) in which a car that doesn't finish is out. */
-  knockoutRace?: number;
-  /** After race `after` (0-based), the top `keep` teams by best finisher stay. */
-  cuts: { after: number; keep: number }[];
+  /** The race (0-based) with lap cuts inside it; a car that doesn't finish it is out. */
+  hundred?: { race: number; lapCuts: LapCut[] };
   /** Points count from this race (0-based) on. */
   finalFrom: number;
   /** The stages' names, for the screens: one per race. */
@@ -28,7 +31,7 @@ export interface AliveState {
   teams: string[];
   /** Drivers still in (a team may be down to one). */
   drivers: number[];
-  /** Teams out, with the race (0-based) after which they went. */
+  /** Teams out, with the race (0-based) that took them. */
   outAt: Record<string, number>;
 }
 
@@ -44,7 +47,8 @@ export function bestFinish(digest: RaceDigest, drivers: readonly number[]): numb
 
 /**
  * Who is still in going into `round` (the state after the results before
- * it). Without a format everyone is. Pure in the facts.
+ * it). Without a format everyone is. Pure in the facts: after the Hundred,
+ * the cars that finished it are in (the cut and the retired are not).
  */
 export function aliveAt(facts: SeasonFacts, round: number = facts.results.length): AliveState {
   const pool = poolFor(facts);
@@ -54,29 +58,13 @@ export function aliveAt(facts: SeasonFacts, round: number = facts.results.length
   const alive = new Map(teams.map(id => [id, [...rosters[id].driverIds]]));
   const outAt: Record<string, number> = {};
   const format = formatOf(facts);
-  if (!format) return { teams, drivers: teams.flatMap(id => alive.get(id)!), outAt };
-  const through = Math.min(round, facts.results.length);
-  for (let r = 0; r < through; r++) {
-    const digest = facts.results[r];
-    if (format.knockoutRace === r) {
-      const dnf = new Set(digest.dnfDriverIds);
-      for (const id of teams) alive.set(id, alive.get(id)!.filter(d => !dnf.has(d)));
-      for (const id of teams) if (!alive.get(id)!.length) outAt[id] = r;
-      teams = teams.filter(id => outAt[id] === undefined);
-    }
-    const cut = format.cuts.find(c => c.after === r);
-    if (cut) {
-      const ranked = [...teams].sort((a, b) => {
-        const fa = bestFinish(digest, alive.get(a)!), fb = bestFinish(digest, alive.get(b)!);
-        for (let i = 0; i < Math.max(fa.length, fb.length); i++) {
-          const d = (fa[i] ?? Infinity) - (fb[i] ?? Infinity);
-          if (d) return d;
-        }
-        return order.indexOf(a) - order.indexOf(b);
-      });
-      for (const id of ranked.slice(cut.keep)) outAt[id] = r;
-      teams = ranked.slice(0, cut.keep).sort((a, b) => order.indexOf(a) - order.indexOf(b));
-    }
+  if (!format?.hundred) return { teams, drivers: teams.flatMap(id => alive.get(id)!), outAt };
+  const r = format.hundred.race;
+  if (r < Math.min(round, facts.results.length)) {
+    const finished = new Set(facts.results[r].finishOrder);
+    for (const id of teams) alive.set(id, alive.get(id)!.filter(d => finished.has(d)));
+    for (const id of teams) if (!alive.get(id)!.length) outAt[id] = r;
+    teams = teams.filter(id => outAt[id] === undefined);
   }
   return { teams, drivers: teams.flatMap(id => alive.get(id)!), outAt };
 }
@@ -92,14 +80,27 @@ export function scoredRounds(facts: SeasonFacts): number[] {
   return facts.results.map((_, i) => i).filter(i => !format || i >= format.finalFrom);
 }
 
+/** The lap cuts a round runs with (the Hundred's), or none. */
+export function lapCutsFor(facts: SeasonFacts, round: number): LapCut[] | undefined {
+  const h = formatOf(facts)?.hundred;
+  return h && h.race === round ? h.lapCuts : undefined;
+}
+
+/** A fixed grid for a round: the race after the Hundred starts as the Hundred finished (no qualifying). */
+export function gridFor(facts: SeasonFacts, round: number): number[] | undefined {
+  const h = formatOf(facts)?.hundred;
+  if (!h || round !== h.race + 1) return undefined;
+  return facts.results[h.race]?.finishOrder;
+}
+
 /** The stage a round is, for the screens: its name, who is still in, what the race decides. */
 export function stageOf(facts: SeasonFacts, round: number): { name: string; alive: number; drivers: number; decides: string } | null {
   const format = formatOf(facts);
   if (!format) return null;
   const a = aliveAt(facts, round);
-  const cut = format.cuts.find(c => c.after === round);
-  const decides = format.knockoutRace === round ? 'a car that doesn\'t finish is out'
-    : cut ? `the top ${cut.keep} stay`
+  const h = format.hundred;
+  const decides = h && h.race === round
+    ? `${h.lapCuts.map(c => c.keep).join(' / ')} states go on after laps ${h.lapCuts.map(c => c.afterLap).join(' / ')}; a car that doesn't finish is out`
     : round >= format.finalFrom ? 'points from zero; most points is the title'
     : '';
   const name = format.stages?.[round] ?? (round >= format.finalFrom ? 'The Final' : `Race ${round + 1}`);

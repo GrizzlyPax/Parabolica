@@ -156,6 +156,8 @@ export interface Driver {
   hasPitted: boolean;
   usedCompounds: TireCompound[];  // Track which compounds have been used (for mandatory variety)
   dnfInfo: DNFInfo | null;
+  /** The lap after which a cut took this car (#694, lapCuts); set with status 'eliminated'. */
+  eliminatedLap?: number;
   pitProgress: number;      // 0-1 during pit stop (overall progress through pit lane)
   pitPhase: PitPhase | null;    // Current phase: entry (driving to box), stopped (pit work), exit (driving out)
   /** Acceleration stat applies until this tick (set at pit exit / SC restart). */
@@ -213,7 +215,15 @@ export interface RaceConfig {
   enableCrashes: boolean;         // Toggle crash system
   enableTireWear: boolean;        // Toggle tire wear system
   maxStoredEvents: number;        // Event log cap (UI default 500; league settle raises it so digests keep the whole race)
+  /** Lap cuts (#694, the Hundred): when the leader completes lap `afterLap`, the teams are ranked by their
+   * best-placed running car and every car of a team below `keep` is eliminated. Absent = no cuts. No RNG. */
+  lapCuts?: LapCut[];
+  /** A fixed starting grid (driver ids, P1 first): no qualifying is run. Absent = qualify on tick 1. */
+  gridOrder?: number[];
 }
+
+/** One cut inside a race (#694): after the leader's lap `afterLap`, `keep` teams go on. */
+export interface LapCut { afterLap: number; keep: number }
 
 export interface RaceState {
   totalTicks: number;
@@ -257,7 +267,10 @@ export const TIRE_COMPOUNDS: Record<TireCompound, TireCompoundConfig> = CANON_VA
 
 // === DRIVER STATUS TYPES ===
 
-export type DriverStatus = 'racing' | 'pitting' | 'finished' | 'dnf';
+/** 'eliminated' (#694): taken out by a lap cut, kept apart from a DNF. */
+export type DriverStatus = 'racing' | 'pitting' | 'finished' | 'dnf' | 'eliminated';
+/** Out of the race for good: retired or cut. */
+export const isOutOfRace = (d: { status: DriverStatus }): boolean => d.status === 'dnf' || d.status === 'eliminated';
 
 // Pit stop phases: entry (driving to box), stopped (pit work), exit (driving to pit exit)
 export type PitPhase = 'entry' | 'stopped' | 'exit';
@@ -302,6 +315,8 @@ export type RaceEventType =
   | 'mechanical_failure' // Engine/gearbox failure (DNF)
   | 'crash'            // Collision occurred
   | 'dnf'              // Driver retired
+  | 'eliminated'       // Taken out by a lap cut (#694)
+  | 'cut'              // A lap cut fell: field-wide (#694)
   | 'close_call'       // Near miss (drama)
   // Track events
   | 'track_event'      // Track event triggered
@@ -1045,9 +1060,9 @@ class RaceEngine {
 
     // Sort by: status (finished > racing/pitting > dnf), then laps, then effective position
     return [...this.drivers].sort((a, b) => {
-      // DNF drivers go last
-      if (a.status === 'dnf' && b.status !== 'dnf') return 1;
-      if (b.status === 'dnf' && a.status !== 'dnf') return -1;
+      // Cars that are out (retired or cut) go last
+      if (isOutOfRace(a) && !isOutOfRace(b)) return 1;
+      if (isOutOfRace(b) && !isOutOfRace(a)) return -1;
 
       // Finished drivers ranked by finish order
       if (a.status === 'finished' && b.status === 'finished') {
@@ -1227,6 +1242,7 @@ class RaceEngine {
     this.lapPositionHistory = [];
     this.gridOrder = [];
     this.qualiScores.clear();
+    this.cutsApplied.clear();
     this.stuckBehind.clear();
     this.lastRecordedLap = 0;
     // Reset in-race effects + unified effect storage
@@ -1678,14 +1694,55 @@ class RaceEngine {
    */
   private runQualifying(): void {
     const g = this.getGridVars();
-    const scored = this.qualifyingLaps().map(({ id, score }) => ({ id, score }));
-    scored.sort((a, b) => b.score - a.score);
-    this.gridOrder = scored.map(x => x.id);
-    this.qualiScores = new Map(scored.map(x => [x.id, x.score]));
+    if (this.config.gridOrder?.length) {
+      // A fixed grid (#694: the Final's first race starts as the Hundred finished): no hot laps.
+      // The quali side stream is simply not read; the main stream is untouched either way.
+      const present = new Set(this.drivers.map(d => d.id));
+      const given = this.config.gridOrder.filter(id => present.has(id));
+      this.gridOrder = [...given, ...this.drivers.map(d => d.id).filter(id => !given.includes(id))];
+      this.qualiScores = new Map(this.gridOrder.map((id, i) => [id, 1 - i / Math.max(1, this.gridOrder.length)]));
+    } else {
+      const scored = this.qualifyingLaps().map(({ id, score }) => ({ id, score }));
+      scored.sort((a, b) => b.score - a.score);
+      this.gridOrder = scored.map(x => x.id);
+      this.qualiScores = new Map(scored.map(x => [x.id, x.score]));
+    }
     const slot = new Map(this.gridOrder.map((id, i) => [id, i]));
     this.drivers = this.drivers.map(d => ({ ...d, position: -(slot.get(d.id) ?? 0) * g.slotSpacing * this.config.lapLength }));
     const pole = this.drivers.find(d => d.id === this.gridOrder[0]);
     if (pole) this.logEvent('grid_set', pole, `takes pole; ${this.drivers.length} cars on the grid`, 'positive', 0.6);
+  }
+
+  /** The cuts already made this race (by `afterLap`). */
+  private cutsApplied = new Set<number>();
+
+  /**
+   * The lap cuts (#694, the Hundred). When the leader has completed lap N and
+   * a cut sits after N: rank the teams by their best-placed running car
+   * (`sorted` is laps done, then distance), keep the top `keep`, and every
+   * running car of a team below the line is eliminated: status 'eliminated'
+   * (not a DNF), off the track, with an event each and one for the cut.
+   * Deterministic: no RNG, so a race without lapCuts is byte-identical.
+   */
+  private applyLapCuts(sorted: Driver[], leaderLap: number): void {
+    for (const cut of [...(this.config.lapCuts ?? [])].sort((a, b) => a.afterLap - b.afterLap)) {
+      if (cut.afterLap > leaderLap || this.cutsApplied.has(cut.afterLap)) continue;
+      this.cutsApplied.add(cut.afterLap);
+      const teamOf = (d: Driver) => d.kingdomId ?? d.teamName ?? String(d.id);
+      const ranked: string[] = [];
+      for (const d of sorted) {
+        if (isOutOfRace(d)) continue;
+        const t = teamOf(d);
+        if (!ranked.includes(t)) ranked.push(t);
+      }
+      const kept = new Set(ranked.slice(0, cut.keep));
+      const gone = this.drivers.filter(d => !isOutOfRace(d) && !kept.has(teamOf(d)));
+      if (!gone.length) { this.logEvent('cut', null, `The cut after lap ${cut.afterLap}: ${ranked.length} states go on`, 'neutral', 0.8); continue; }
+      const goneIds = new Set(gone.map(d => d.id));
+      this.drivers = this.drivers.map(d => (goneIds.has(d.id) ? { ...d, status: 'eliminated' as DriverStatus, eliminatedLap: cut.afterLap, pitPhase: null, pitProgress: 0 } : d));
+      for (const d of gone) this.logEvent('eliminated', this.drivers.find(x => x.id === d.id)!, `Cut after lap ${cut.afterLap}`, 'negative', 0.7);
+      this.logEvent('cut', null, `The cut after lap ${cut.afterLap}: ${kept.size} states go on, ${gone.length} cars out`, 'neutral', 0.9);
+    }
   }
   private readonly PIT_ENTRY_POSITION = 0.85; // Near end of lap
   private readonly PIT_EXIT_POSITION = 0.15;  // Early in lap
@@ -2281,8 +2338,8 @@ class RaceEngine {
     this.tickSpeeds.clear();
     this.tickDistance.clear();
     this.drivers = this.drivers.map(driver => {
-      // Skip DNF drivers
-      if (driver.status === 'dnf') {
+      // Skip cars that are out (retired or cut)
+      if (isOutOfRace(driver)) {
         return driver;
       }
 
@@ -2637,7 +2694,7 @@ class RaceEngine {
       // Handle drivers who completed a lap on track
       for (const { driver, lap } of lapCompletions) {
         // This driver just completed a lap - if winner has finished, classify them
-        if (!this.raceState.finishOrder.includes(driver.id) && driver.status !== 'dnf') {
+        if (!this.raceState.finishOrder.includes(driver.id) && !isOutOfRace(driver)) {
           const lapsBehind = this.raceState.winnerLap - lap;
           this.raceState.finishOrder.push(driver.id);
           const driverIndex = this.drivers.findIndex(d => d.id === driver.id);
@@ -2741,7 +2798,7 @@ class RaceEngine {
       this.lapPositionHistory.push({ lap: 0, order: this.gridOrder.length ? [...this.gridOrder] : sorted.map(d => d.id), sc: false });
     }
     const leaderLap = sorted.length
-      ? Math.max(0, ...sorted.filter(d => d.status !== 'dnf').map(d => d.currentLap))
+      ? Math.max(0, ...sorted.filter(d => !isOutOfRace(d)).map(d => d.currentLap))
       : 0;
     if (leaderLap >= 1 && leaderLap > this.lastRecordedLap) {
       this.lapPositionHistory.push({
@@ -2751,6 +2808,8 @@ class RaceEngine {
       });
       this.lastRecordedLap = leaderLap;
     }
+    // The lap cuts (#694): the moment the leader completes a cut lap. Reads the order above; draws no RNG.
+    if (this.config.lapCuts?.length) this.applyLapCuts(sorted, leaderLap);
 
     // Detect overtakes by comparing current positions to previous
     const currentRanks = new Map<number, number>();
@@ -2780,7 +2839,7 @@ class RaceEngine {
     // - DNF
     const allDone = this.drivers.every(d =>
       d.status === 'finished' ||
-      d.status === 'dnf'
+      isOutOfRace(d)
     );
     if (allDone && this.raceState.winnerFinishTick !== null) {
       this.raceState.raceFinished = true;

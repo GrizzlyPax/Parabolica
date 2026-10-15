@@ -8,7 +8,7 @@ import type { TimingTowerProps, RowContext, LapTimeClass } from './types';
 import { rosterRanks } from '../../betting/utils';
 import { fantasyOwners, fantasyHex } from '../../fantasy/types';
 import '../../fantasy/Fantasy.css';
-import type { Driver } from '../../RaceEngine';
+import { isOutOfRace, type Driver } from '../../RaceEngine';
 import './TimingTower.css';
 import './components.css';
 
@@ -45,6 +45,7 @@ function TimingTower({
   mine,
   nemesis,
   avatars,
+  window,
   className = '',
 }: TimingTowerProps) {
   const { finishOrder } = raceState;
@@ -74,11 +75,15 @@ function TimingTower({
         if (bSectors !== aSectors) return bSectors - aSectors;
         return getSurname(a).localeCompare(getSurname(b));
       });
+    // Cars a cut took (#694): the latest cut first, then by sectors, apart from the DNFs
+    const eliminated = drivers
+      .filter(d => d.status === 'eliminated')
+      .sort((a, b) => (b.eliminatedLap ?? 0) - (a.eliminatedLap ?? 0) || (b.sectorTimes?.length || 0) - (a.sectorTimes?.length || 0) || getSurname(a).localeCompare(getSurname(b)));
 
     // Racing drivers sorted by sectors completed, then by time at last sector
     // If same sectors, whoever crossed that sector FIRST is ahead
     const racing = drivers
-      .filter(d => d.status !== 'finished' && d.status !== 'dnf')
+      .filter(d => d.status !== 'finished' && !isOutOfRace(d))
       .sort((a, b) => {
         const aSectors = a.sectorTimes?.length || 0;
         const bSectors = b.sectorTimes?.length || 0;
@@ -97,7 +102,7 @@ function TimingTower({
         return getSurname(a).localeCompare(getSurname(b));
       });
 
-    return [...finished, ...racing, ...dnf];
+    return [...finished, ...racing, ...eliminated, ...dnf];
   }, [drivers, finishOrder, totalSectorCrossings, gridOrder]);
 
   // Generate row context for each driver
@@ -111,6 +116,7 @@ function TimingTower({
   const getRowContext = (driver: Driver, index: number): RowContext => {
     const isFinished = driver.status === 'finished';
     const isDNF = driver.status === 'dnf';
+    const isEliminated = driver.status === 'eliminated';
     const isPitting = driver.status === 'pitting';
     const isFocused = focusedDriverIds.has(driver.id);
     const isSealed = sealed?.has(driver.id) ?? false;
@@ -122,6 +128,8 @@ function TimingTower({
       displayPosition = `${finishPos + 1}`;
     } else if (isDNF) {
       displayPosition = 'DNF';
+    } else if (isEliminated) {
+      displayPosition = 'OUT';
     } else {
       displayPosition = `${index + 1}`;
     }
@@ -160,6 +168,8 @@ function TimingTower({
       // Keep defaults
     } else if (isDNF) {
       leaderGap = 'DNF';
+    } else if (isEliminated) {
+      leaderGap = `Cut L${driver.eliminatedLap ?? '?'}`;
     } else {
       const leader = sortedDrivers[0];
       const prevDriver = sortedDrivers[index - 1];
@@ -261,6 +271,7 @@ function TimingTower({
       isFocused,
       isFinished,
       isDNF,
+      isEliminated,
       isPitting,
       // For tire history chart
       currentLap: driver.currentLap + 1,
@@ -268,8 +279,37 @@ function TimingTower({
     };
   };
 
-  // Show all drivers (no longer filtering for condensed mode)
-  const displayDrivers = sortedDrivers;
+  // The Hundred's window (#694): the leaders, your cars (with a neighbour each), the cars either side of the
+  // next cut line, your cars that are out; everything else folds into "+N running" / "N out" rows.
+  type Item = { kind: 'row'; driver: Driver } | { kind: 'gap'; key: string; label: string } | { kind: 'cut'; key: string; label: string };
+  const items = useMemo((): Item[] => {
+    if (!window) return sortedDrivers.map(d => ({ kind: 'row' as const, driver: d }));
+    const running = sortedDrivers.filter(d => !isOutOfRace(d));
+    const out = sortedDrivers.filter(d => isOutOfRace(d));
+    const teamOf = (d: Driver) => d.kingdomId ?? d.teamName ?? String(d.id);
+    // Teams ranked by their best-placed running car; the line falls before the first car of a team outside `keep`.
+    const ranked: string[] = [];
+    for (const d of running) if (!ranked.includes(teamOf(d))) ranked.push(teamOf(d));
+    const kept = new Set(ranked.slice(0, window.keep));
+    const cutIndex = running.findIndex(d => !kept.has(teamOf(d)));
+    const show = new Set<number>();
+    for (let i = 0; i < Math.min(3, running.length); i++) show.add(i);
+    running.forEach((d, i) => { if (mine?.has(d.id) || focusedDriverIds.has(d.id)) { show.add(i); if (i > 0) show.add(i - 1); if (i + 1 < running.length) show.add(i + 1); } });
+    if (cutIndex > 0) for (let i = Math.max(0, cutIndex - 2); i < Math.min(running.length, cutIndex + 2); i++) show.add(i);
+    const list: Item[] = [];
+    let hidden = 0;
+    const flush = (at: number) => { if (hidden) { list.push({ kind: 'gap', key: `gap-${at}`, label: `+${hidden} running` }); hidden = 0; } };
+    running.forEach((d, i) => {
+      if (cutIndex > 0 && i === cutIndex) { flush(i); list.push({ kind: 'cut', key: 'cut', label: `The cut · ${window.keep} states go on` }); }
+      if (show.has(i)) { flush(i); list.push({ kind: 'row', driver: d }); } else hidden++;
+    });
+    flush(running.length);
+    const mineOut = out.filter(d => mine?.has(d.id) || focusedDriverIds.has(d.id));
+    for (const d of mineOut) list.push({ kind: 'row', driver: d });
+    const rest = out.length - mineOut.length;
+    if (rest) list.push({ kind: 'gap', key: 'out', label: `${rest} out` });
+    return list;
+  }, [sortedDrivers, window, mine, focusedDriverIds]);
 
   // Grid template from columns
   const gridTemplate = getGridTemplate(columns);
@@ -296,7 +336,10 @@ function TimingTower({
 
       {/* Driver rows */}
       <div className="timing-tower-body">
-        {displayDrivers.map((driver) => {
+        {items.map((item) => {
+          if (item.kind === 'gap') return <div key={item.key} className="timing-row timing-gap" aria-label={item.label}>{item.label}</div>;
+          if (item.kind === 'cut') return <div key={item.key} className="timing-row timing-cut" aria-label={item.label}>{item.label}</div>;
+          const { driver } = item;
           const context = getRowContext(driver, sortedDrivers.indexOf(driver));
           return (
             <DriverRow

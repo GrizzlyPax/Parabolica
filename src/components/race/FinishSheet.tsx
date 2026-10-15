@@ -4,7 +4,7 @@
 // on. Hide it to watch the cool-down; a slim bar at the bottom brings it back.
 // Replaces the Race Complete strip (#200 / #245), which sat at the very top.
 import { useState } from 'react';
-import type { Driver } from '../../RaceEngine';
+import { isOutOfRace, type Driver } from '../../RaceEngine';
 import { GameIcon } from '../../icons/GameIcon';
 import { Sash } from '../../look/Look';
 import { RaceNumber } from '../../icons/RaceNumber';
@@ -63,7 +63,7 @@ function DebriefLines({ db }: { db: DriverDebrief }) {
   return (
     <div className="fs-debrief">
       <span className="fs-dline">
-        Grid P{db.grid} → {db.finish ? `P${db.finish}` : 'DNF'}
+        Grid P{db.grid} → {db.finish ? `P${db.finish}` : db.out === 'cut' ? 'Cut' : 'DNF'}
         {gained !== null && <b className={gained > 0 ? 'up' : gained < 0 ? 'down' : ''}> ({gained > 0 ? `+${gained}` : gained < 0 ? `−${-gained}` : '±0'})</b>}
         {' · '}{db.strategy}
       </span>
@@ -93,7 +93,7 @@ export default function FinishSheet({ podium, drivers, dnfCount, fastestLap, see
   const winner = top[0];
   const placeOf = (id: number) => podium.findIndex(d => d.id === id) + 1;
   const yours = (mine ?? []).map(id => drivers.find(d => d.id === id)).filter((d): d is Driver => !!d)
-    .sort((a, b) => (a.status === 'dnf' ? 99 : placeOf(a.id)) - (b.status === 'dnf' ? 99 : placeOf(b.id)));
+    .sort((a, b) => (isOutOfRace(a) ? 99 : placeOf(a.id)) - (isOutOfRace(b) ? 99 : placeOf(b.id)));
   // The primary button: Season goes back to the Paddock; Quick Race runs the next race.
   const primary = onNextRace ? { label: 'Next race', go: onNextRace } : onExit ? { label: exitLabel === 'Paddock' ? 'To the Paddock' : exitLabel, go: onExit } : null;
   const secondaryExit = onNextRace && onExit ? { label: exitLabel, go: onExit } : null;
@@ -135,14 +135,14 @@ export default function FinishSheet({ podium, drivers, dnfCount, fastestLap, see
         <div className="fs-yours">
           <span className="fs-k">Your drivers</span>
           {yours.map(d => {
-            const dnf = d.status === 'dnf';
+            const dnf = isOutOfRace(d);
             const p = placeOf(d.id);
             const pts = dnf ? 0 : F1_POINTS[p - 1] ?? 0;
             const db = debrief?.mine.find(x => x.driverId === d.id);
             return (
               <div key={d.id} className="fs-ydriver">
                 <div className={`fs-yrow ${dnf ? 'dnf' : pts === 0 ? 'zero' : ''}`}>
-                  <span className="fs-pos">{dnf ? 'DNF' : `P${p}`}</span>
+                  <span className="fs-pos">{d.status === 'eliminated' ? 'OUT' : dnf ? 'DNF' : `P${p}`}</span>
                   {num(d, 22)}
                   <span className="fs-ynm">{d.name}</span>
                   <span className="fs-pts">{pts > 0 ? `+${pts}` : '0'}</span>

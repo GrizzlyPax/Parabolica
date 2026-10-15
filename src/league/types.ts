@@ -6,6 +6,7 @@
 // cache that can be deleted and recomputed from those inputs.
 
 import type { FantasyConfig } from '../fantasy/types';
+import type { LapCut } from '../RaceEngine';
 import { RosterDriver, RaceEvent } from '../RaceEngine';
 import { SeasonState } from '../types/season';
 import { Team } from '../data/teams';
@@ -45,6 +46,10 @@ export interface ScheduledRace {
   trackId: string;
   scheduledAt: number; // epoch ms
   seed: number;
+  /** Lap cuts inside this race (#694, the Hundred); absent = a plain race. */
+  lapCuts?: LapCut[];
+  /** A fixed grid (driver ids, P1 first): no qualifying. */
+  gridOrder?: number[];
 }
 
 /**
@@ -71,6 +76,10 @@ export interface RaceDigest {
   trackEmoji: string;
   finishOrder: number[];
   dnfDriverIds: number[];
+  /** Cars a lap cut took (#694), kept apart from the DNFs; absent on a race without cuts. */
+  eliminatedDriverIds?: number[];
+  /** The lap after which each cut car went (#694). */
+  eliminatedAt?: Record<number, number>;
   fastestLapDriverId: number | null;
   totalTicks: number;
   /** This race's weather (C2). Optional on digests written before the weather

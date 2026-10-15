@@ -121,6 +121,22 @@
   opacity: 0.7;
 }
 
+/* Taken out by a lap cut (#694): dimmed, not red; apart from a DNF */
+.timing-row.eliminated {
+  background: rgba(40, 40, 50, 0.18);
+  opacity: 0.6;
+}
+.position-number.eliminated { color: var(--pw-text-3); font-size: 0.62rem; font-weight: 700; letter-spacing: 0.04em; }
+
+/* The Hundred's window (#694): folded rows and the cut line */
+.timing-row.timing-gap, .timing-row.timing-cut {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 22px; padding: 0.15rem 0.4rem; cursor: default;
+  font-family: var(--font-display), var(--font-emoji); font-size: 0.62rem; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--pw-text-3);
+}
+.timing-row.timing-cut { color: var(--pw-text-1); border-top: 2px dashed var(--pw-border-strong); border-bottom: 2px dashed var(--pw-border-strong); }
+
 /* Row container - wraps row + expanded section */
 .timing-row-container {
   display: flex;

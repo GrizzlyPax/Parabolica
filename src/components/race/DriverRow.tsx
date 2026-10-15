@@ -30,7 +30,7 @@ function ovrTiles(d: Driver): [string, number][] {
 const READ = { best: 'front', high: 'front', mid: 'middle', low: 'back' } as const;
 
 function DriverRow({ driver, columns, context, gridTemplate, isFocused, expandable = true, onClick, onCard }: DriverRowProps) {
-  const { isFinished, isDNF, isPitting } = context;
+  const { isFinished, isDNF, isPitting, isEliminated } = context;
 
   // Build style with grid template and team color for focus glow
   const rowStyle: React.CSSProperties = {
@@ -42,7 +42,7 @@ function DriverRow({ driver, columns, context, gridTemplate, isFocused, expandab
   return (
     <div className={`timing-row-container ${isFocused ? 'expanded' : ''}`}>
       <div
-        className={`timing-row ${isFinished ? 'finished' : ''} ${isDNF ? 'dnf' : ''} ${isPitting ? 'pitting' : ''} ${isFocused ? 'focused' : ''} ${context.fantasyTeam ? 'fantasy' : ''} ${context.mine ? 'mine' : ''} ${context.nemesis ? 'nemesis' : ''}`}
+        className={`timing-row ${isFinished ? 'finished' : ''} ${isDNF ? 'dnf' : ''} ${isEliminated ? 'eliminated' : ''} ${isPitting ? 'pitting' : ''} ${isFocused ? 'focused' : ''} ${context.fantasyTeam ? 'fantasy' : ''} ${context.mine ? 'mine' : ''} ${context.nemesis ? 'nemesis' : ''}`}
         style={rowStyle}
         onClick={onClick}
         role="button"

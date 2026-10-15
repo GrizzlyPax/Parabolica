@@ -35,7 +35,7 @@ import { carriedEffects } from '../season/effects';
 import { dealRookies } from '../season/rookies';
 import { inkFor } from '../icons/ink';
 import { fieldSize, placeById, US_PLACES, type FieldSize, type UsPlace } from '../data/states';
-import { isOut, type SeasonFormat } from '../season/format';
+import { isOut, type SeasonFormat, type LapCut } from '../season/format';
 import type { Step } from '../look/step';
 import { constructorStandings, poolFor, seasonState, settleRound, type SeasonFacts, type SeasonHuman, type SeasonSetup, type SeasonStore } from '../season/season';
 import { seasonCalendar } from '../season/setup';
@@ -53,19 +53,20 @@ export interface StepPlan {
   field: number | 'state' | 'nation';
 }
 
-/** Locals 5 races, State 6, Nationals 7 (Pax, #693; Steward's schedule, #694). */
+/** Locals 5 races, State 6, Nationals 4 (Pax, #693; Pax's answers Oct 15, #694). */
 export const STEP_PLAN: readonly StepPlan[] = [
   { id: 'locals', name: 'Locals', races: 5, field: 5 },
   { id: 'state', name: 'State', races: 6, field: 'state' },
-  { id: 'nationals', name: 'Nationals', races: 7, field: 'nation' },
+  { id: 'nationals', name: 'Nationals', races: 4, field: 'nation' },
 ];
 
-/** Nationals (#694, Steward Oct 14): the Hundred, then 30 → 20 → 10 states by best finisher, then a three-race Final on fresh points. */
+/** The Hundred's cuts (#694, Pax Oct 15): when the leader completes laps 1 / 2 / 3, 30 / 20 / 10 states go on. Data. */
+export const HUNDRED_CUTS: readonly LapCut[] = [{ afterLap: 1, keep: 30 }, { afterLap: 2, keep: 20 }, { afterLap: 3, keep: 10 }];
+/** Nationals (#694): race 1 the Hundred (100 cars, the cuts inside it, a car that doesn't finish is out), then a three-race Final from zero. */
 export const NATIONALS_FORMAT: SeasonFormat = {
-  knockoutRace: 0,
-  cuts: [{ after: 1, keep: 30 }, { after: 2, keep: 20 }, { after: 3, keep: 10 }],
-  finalFrom: 4,
-  stages: ['The Hundred', 'First cut', 'Second cut', 'The Twenty', 'The Final', 'The Final', 'The Final'],
+  hundred: { race: 0, lapCuts: [...HUNDRED_CUTS] },
+  finalFrom: 1,
+  stages: ['The Hundred', 'The Final', 'The Final', 'The Final'],
 };
 /** Rival Aces at Nationals: grade points on every stat (Steward's fit, #694). */
 export const NATIONALS_SHIFT = 40;

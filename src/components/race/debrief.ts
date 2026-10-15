@@ -17,8 +17,10 @@ export interface DebriefMoment {
 export interface DriverDebrief {
   driverId: number;
   grid: number;
-  /** Classified place, or 0 for a retirement. */
+  /** Classified place, or 0 for a retirement or a cut. */
   finish: number;
+  /** Out of the race: retired, or taken by a lap cut (#694). */
+  out?: 'dnf' | 'cut';
   /** "1 stop · H→M" */
   strategy: string;
   /** The biggest moments, at most three, in lap order. */
@@ -82,6 +84,9 @@ function momentsFor(d: Driver, events: RaceEvent[], normalStop: number): Debrief
   if (d.status === 'dnf' && d.dnfInfo) {
     add(RANK.retired, { lap: Math.max(1, d.dnfInfo.lap), what: 'Retired', detail: DNF_WHY[d.dnfInfo.reason] ?? d.dnfInfo.reason, tone: 'bad' });
   }
+  if (d.status === 'eliminated') {
+    add(RANK.retired, { lap: Math.max(1, d.eliminatedLap ?? 1), what: 'Cut', detail: `after lap ${d.eliminatedLap ?? '?'}`, tone: 'bad' });
+  }
   return out
     .sort((a, b) => a.rank - b.rank || a.lap - b.lap)
     .slice(0, 3)
@@ -98,7 +103,8 @@ export function driverDebrief(input: DebriefInput, ids: readonly number[]): Driv
     return [{
       driverId: id,
       grid: input.grid.indexOf(id) + 1,
-      finish: d.status === 'dnf' ? 0 : input.finishOrder.indexOf(id) + 1,
+      finish: d.status === 'dnf' || d.status === 'eliminated' ? 0 : input.finishOrder.indexOf(id) + 1,
+      ...(d.status === 'dnf' ? { out: 'dnf' as const } : d.status === 'eliminated' ? { out: 'cut' as const } : {}),
       strategy: strategyOf(d),
       moments: momentsFor(d, input.events, normalStop),
     }];

@@ -29,7 +29,7 @@ import { draftOrder, draftState, draftedRosters, type DraftPick } from './draft'
 import { portraitFor, vehicleFor } from '../generators/avatars';
 import type { IconId } from '../icons/registry';
 import { parcelOpened, seasonCardsFor, inkInfos, type CardFact } from './stamps';
-import { aliveAt, isOut, scoredRounds } from './format';
+import { aliveAt, isOut, scoredRounds, lapCutsFor, gridFor, bestFinish } from './format';
 import { roundEffects, type EffectFact } from './effects';
 
 /** 6 since the run (#597, v0.7): a league is 4 × 6; League Setup can still change it. */
@@ -179,7 +179,10 @@ export function constructorStandings(facts: SeasonFacts): ConstructorStanding[] 
     return { teamId: t.id, points: perRound.reduce((a, b) => a + b, 0), wins, perRound, rank: 0 };
   });
   const out = (id: string) => (outAt[id] === undefined ? Infinity : outAt[id]);
-  lines.sort((a, b) => out(b.teamId) - out(a.teamId) || b.points - a.points || b.wins - a.wins || order.indexOf(a.teamId) - order.indexOf(b.teamId));
+  // Under a format a tie on points and wins goes to the better finish in the last race (#694); a plain season keeps draft order.
+  const last = facts.setup.league?.format && scored.size ? facts.results[Math.max(...scored)] : undefined;
+  const lastFinish = (id: string) => (last ? bestFinish(last, rosters[id].driverIds)[0] : 0);
+  lines.sort((a, b) => out(b.teamId) - out(a.teamId) || b.points - a.points || b.wins - a.wins || lastFinish(a.teamId) - lastFinish(b.teamId) || order.indexOf(a.teamId) - order.indexOf(b.teamId));
   lines.forEach((l, i) => { l.rank = i + 1; });
   return lines;
 }
@@ -325,7 +328,11 @@ export function leagueForRound(facts: SeasonFacts, round: number): LeagueState {
       createdAt: 0,
       ruleset: setup.ruleset,
     },
-    schedule: setup.calendar.map((trackId, index) => ({ index, trackId, scheduledAt: 0, seed: raceSeed(setup.seed, index) })),
+    // The Hundred's lap cuts and the Final's first grid ride on the schedule (#694); plain rounds carry neither.
+    schedule: setup.calendar.map((trackId, index) => {
+      const lapCuts = lapCutsFor(facts, index), gridOrder = gridFor(facts, index);
+      return { index, trackId, scheduledAt: 0, seed: raceSeed(setup.seed, index), ...(lapCuts ? { lapCuts } : {}), ...(gridOrder ? { gridOrder } : {}) };
+    }),
     interventionLog: [],
     settledThrough: round - 1,
     roster,

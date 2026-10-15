@@ -4,9 +4,12 @@
 // - State: a three-letter town code per garage (both cars share it): the
 //   town's first three letters; on a clash, the first letter and the next two
 //   consonants, then the next free letters. Toledo → TOL.
-// - Nationals (and Quick Race, which wears the Nationals look): the state's
-//   two-letter code, shared by both cars. A Quick Race's teams have no state,
-//   so each is dealt a distinct one on the race seed.
+// - Nationals: the state's postal code plus the car's slot, OH1 / OH2 (#694:
+//   100 cars break the 2–99 racing numbers). Every garage is a state's Ace
+//   (`locale.rivals` seats them), yours is your state.
+// - Quick Race (which wears the Nationals look): the state's two-letter code,
+//   shared by both cars; its teams have no state, so each is dealt a distinct
+//   one on the race seed.
 import { US_PLACES, placeById } from '../data/states';
 import { deriveSeed, mulberry32, shuffle } from '../engine/rng';
 import { draftState } from './draft';
@@ -56,8 +59,18 @@ export function raceBadges(facts: SeasonFacts): Record<number, string> {
     teams.forEach((t, i) => each(t.id, () => codes[i]));
     return out;
   }
-  // Nationals, and anything without a step (Quick Race): state codes. Yours is your state; the rest are dealt.
+  // Nationals (#694): each garage is a state's Ace; its cars wear the state code plus 1 / 2.
   const mine = league?.locale ? placeById(league.locale.stateId)?.abbr : undefined;
+  if (league?.step === 'nationals' && league.locale?.rivals) {
+    const seats = league.locale.rivals;
+    let k = 0;
+    for (const t of teams) {
+      const code = t.id === you ? mine : placeById(seats[k++]?.stateId ?? '')?.abbr;
+      each(t.id, (_, i) => `${code ?? '??'}${i + 1}`);
+    }
+    return out;
+  }
+  // Anything without a step (Quick Race): state codes. Yours is your state; the rest are dealt.
   const dealt = shuffle(US_PLACES.map(p => p.abbr).filter(a => a !== mine), mulberry32(deriveSeed(facts.setup.seed, 'badges', 'states')));
   let k = 0;
   for (const t of teams) {
