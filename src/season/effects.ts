@@ -18,7 +18,8 @@ import { rawDeltas } from '../cards/apply';
 import type { LapEffect, EffectInfo } from '../RaceEngine';
 
 export { rawDeltas };
-import type { CardHolder } from './pack';
+/** Where an effect's cards read (#332): a driver, the car or the team (the Paddock asks per row). */
+export type CardHolder = { kind: 'driver'; id: number } | { kind: 'car' } | { kind: 'team' };
 import { draftState } from './draft';
 import { poolFor, type SeasonFacts } from './season';
 

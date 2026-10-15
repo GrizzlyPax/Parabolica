@@ -14,8 +14,9 @@ import { LEAGUE_ID_STRIDE, shiftStats } from '../season/genesis';
 import { seasonState, setLineup, settleRound, poolFor, constructorStandings, leagueForRound, rivalShifts, type SeasonFacts, type SeasonStore } from '../season/season';
 import { applyCards } from '../cards';
 import { draftState } from '../season/draft';
-import { teamCardState, carriedCards } from '../season/pack';
-import { openPack } from '../season/testHelpers';
+import { teamStamps, carriedStamps, titleStamp, TITLE_STAMP_LEVELS } from '../season/stamps';
+import { POINTS_PER_LEVEL } from '../season/grades';
+import { openParcelQuick } from '../season/testHelpers';
 import { seasonCalendar } from '../season/setup';
 import { dealRookies, ROOKIE_GRADE, ROOKIE_ID_BASE, ROOKIE_WOBBLE } from '../season/rookies';
 import { rating } from '../season/grades';
@@ -36,7 +37,7 @@ function playLeague(run: RunFacts): RunFacts {
     if (state.phase === 'paddock') {
       const roster = draftState(poolFor(facts), facts.draftPicks).rosters[state.whoseTurn!];
       facts = setLineup(facts, { round: state.round, teamId: state.whoseTurn!, driverIds: [roster.driverIds[0], roster.driverIds[1]] });
-      facts = openPack(facts);
+      facts = openParcelQuick(facts);
     } else if (state.phase === 'ready-for-go') {
       facts = settleRound(facts);
     } else throw new Error(`unexpected phase ${state.phase}`);
@@ -148,15 +149,19 @@ describe('the steps', () => {
   it('a won step is a title and promotes the whole garage: ids, stats, numbers, cards; State races every town\'s Ace, lifted by the state\'s size', () => {
     const won = wonRun('vt');
     expect(runState(won).ladder.map(r => r.status)).toEqual(['won', 'ahead', 'ahead']);
-    expect(titlesOf(won)).toEqual([{ step: 'locals', name: `Ace ${townOf(won)}` }]);
+    expect(titlesOf(won)).toMatchObject([{ step: 'locals', name: `Ace ${townOf(won)}` }]);
     const prev = currentLeague(won);
     const you = prev.setup.humans[0].teamId;
     const prevPool = poolFor(prev);
     const prevRoster = draftState(prevPool, prev.draftPicks).rosters[you];
-    const prevCards = teamCardState(prev, you, 5);
+    const prevStamps = teamStamps(prev, you, 5);
 
-    const next = promote(won);
-    expect(next.titles).toEqual([{ step: 'locals', name: `Ace ${townOf(won)}` }]);
+    // The title stamps (#704): each driver picks one stat at Locals; a bad pick is refused.
+    const [d1, d2] = prevRoster.driverIds;
+    expect(() => promote(won, { [d1]: ['baseSpeed', 'luck'], [d2]: ['luck'] })).toThrow(/picks 1 different driver stat/);
+    expect(() => promote(won, { [d1]: ['power' as never], [d2]: ['luck'] })).toThrow(/picks 1/);
+    const next = promote(won, { [d1]: ['aggression'], [d2]: ['luck'] });
+    expect(next.titles).toEqual([{ step: 'locals', name: `Ace ${townOf(won)}`, stamps: [{ driverId: d1, stats: ['aggression'] }, { driverId: d2, stats: ['luck'] }] }]);
     expect(next.leagues).toHaveLength(2);
     const league = currentLeague(next);
     expect(league.setup.league).toMatchObject({ index: 1, step: 'state', name: 'State', fieldShift: 20, bossRound: 5 });
@@ -171,7 +176,16 @@ describe('the steps', () => {
       const before = prevPool.drivers.find(d => d.id === id)!, after = pool.drivers.find(d => d.id === id)!;
       expect(after).toMatchObject({ stats: before.stats, number: before.number, fullName: before.fullName, avatarSeed: won.setup.seed, reservedFor: you });
     }
-    expect(carriedCards(teamCardState(league, you), 6)).toEqual(carriedCards(prevCards, 6));
+    // Every stamp carries; the title stamps sit on the ribbons (outside the slots) and read in the race build.
+    const carried = teamStamps(league, you);
+    expect(carriedStamps(carried)).toEqual({ ...carriedStamps(prevStamps), titles: { [d1]: [titleStamp('locals', 'aggression').id], [d2]: [titleStamp('locals', 'luck').id] } });
+    // Ink carried up keeps its races left: a stamp with 2 left at the end of Locals has 2 left in State's round 0.
+    for (const [id, left] of Object.entries(prevStamps.mileage)) expect(carried.mileage[id]).toBe(left);
+    expect(carried.titles[d1][0].stats).toEqual([{ stat: 'aggression', pct: TITLE_STAMP_LEVELS * POINTS_PER_LEVEL }]);
+    const plain = leagueForRound({ ...league, setup: { ...league.setup, carry: { ...league.setup.carry!, cards: { ...league.setup.carry!.cards, titles: {} } } } }, 0).roster.find(r => r.id === d1)!;
+    const stamped = leagueForRound(league, 0).roster.find(r => r.id === d1)!;
+    expect(stamped.stats.aggression).toBeGreaterThan(plain.stats.aggression);
+    expect(stamped.stats.luck).toBe(plain.stats.luck);
     // Every rival garage has its own town; ids above the stride; nobody holds your people.
     const rivals = pool.teams.filter(t => t.id !== you);
     expect(rivals.every(t => t.town && t.town !== townOf(won))).toBe(true);
@@ -240,7 +254,7 @@ describe('the steps', () => {
     const state = seasonState(facts);
     const roster = draftState(poolFor(facts), facts.draftPicks).rosters[state.whoseTurn!];
     facts = setLineup(facts, { round: 0, teamId: state.whoseTurn!, driverIds: [roster.driverIds[1], roster.driverIds[0]] });
-    facts = openPack(facts);
+    facts = openParcelQuick(facts);
     facts = settleRound(facts);
     run = withCurrentLeague(run, facts);
     const replay = replayRun(run);
@@ -268,24 +282,25 @@ describe('saves', () => {
     expect(loadRun(store)).toBeNull();
   });
 
-  it('a run with carried gear plays the next league and survives save → load (#723)', () => {
+  it('a run with carried stamps plays the next league and survives save → load (#723, #704)', () => {
     const store = memoryStore();
     let run = promote(wonRun());
     const carried = currentLeague(run).setup.carry!.cards;
-    const carriedGear = [...Object.values(carried.drivers).flatMap(d => d.equipment), ...carried.car.upgrade, ...carried.team.facility, ...carried.locker];
-    expect(carriedGear.length).toBeGreaterThan(0);
+    expect([...Object.values(carried.drivers).flat(), ...carried.car].length).toBeGreaterThan(0);
     run = playLeague(run);
     const facts = currentLeague(run);
-    // Every round folds, and no gear id is held twice.
+    // Every round folds, no stamp id is held twice, and no card is over its slots.
     for (let round = 0; round <= facts.results.length; round++) {
-      const s = teamCardState(facts, 'you', round);
-      const gear = [...s.locker, ...Object.values(s.drivers).flatMap(d => d.equipment), ...s.car.upgrade, ...s.team.facility].map(c => c.id);
-      expect(new Set(gear).size).toBe(gear.length);
+      const s = teamStamps(facts, 'you', round);
+      const held = [...Object.values(s.drivers).flat(), ...s.car].map(c => c.id);
+      expect(new Set(held).size).toBe(held.length);
+      for (const t of Object.values(s.titles)) expect(new Set(t.map(c => c.id)).size).toBe(t.length);
+      expect(Object.values(s.drivers).every(d => d.length <= 4) && s.car.length <= 5).toBe(true);
     }
     expect(saveRun(run, store)).toBe(true);
     const loaded = loadRun(store)!;
     expect(loaded).toEqual(run);
-    expect(teamCardState(currentLeague(loaded), 'you')).toEqual(teamCardState(facts, 'you'));
+    expect(teamStamps(currentLeague(loaded), 'you')).toEqual(teamStamps(facts, 'you'));
   });
 
   it('the screens\' facade: start → play → save the step → load it back; promote through the facade', () => {
@@ -297,7 +312,7 @@ describe('saves', () => {
     expect(loadCurrentLeague(store)!.draftPicks).toEqual(seasonFactsFor(won, 0).draftPicks);
     expect(saveCurrentLeague(currentLeague(won), store)).toBe(true);
     expect(currentRunState(store)!.phase).toBe('league-won');
-    const next = promoteCurrentRun(store)!;
+    const next = promoteCurrentRun(undefined, store)!;
     expect(next.setup.league?.index).toBe(1);
     expect(loadCurrentLeague(store)!.setup.carry?.teamId).toBe(won.setup.garage.teamId);
     expect(loadRun(store)!.titles).toHaveLength(1);

@@ -2,7 +2,7 @@
 // path (Quick Race, leagues, Season Mode, the lab) deals these at genesis.
 import { useMemo, useState } from 'react';
 import { levelDelta } from '../season/grades';
-import { PLAYER_CARD_SCALE } from '../season/pack';
+import { PLAYER_CARD_SCALE } from '../season/stamps';
 import { MOTORSPORT_DECK, METAL_LADDER, type Card, type CardKind } from '../cards';
 import { CardMarks, cardReadout, KIND_LABELS } from '../cards/CardMarks';
 import { RARITIES } from '../cards/rarity';

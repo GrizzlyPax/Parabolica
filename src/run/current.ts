@@ -4,7 +4,7 @@
 // choices (your state, your garage), promote, and keep the meta record. The
 // run screens read `currentRunState` / `loadRun`.
 import type { SeasonFacts, SeasonHuman, SeasonStore } from '../season/season';
-import { claimTitles, currentLeague, loadRun, newRun, promote, runState, saveRun, withCurrentLeague, clearRun as clearRunSave, type RunFacts, type RunState, type StartNames } from './run';
+import { claimTitles, currentLeague, loadRun, newRun, promote, runState, saveRun, withCurrentLeague, clearRun as clearRunSave, type RunFacts, type RunState, type StartNames, type TitlePicks } from './run';
 import { loadMeta, recordRun, saveMeta } from './meta';
 
 export { clearRunSave as clearRun };
@@ -41,11 +41,11 @@ export function startRun(setup: { seed: number; stateId: string; garage: Omit<Se
   return currentLeague(run);
 }
 
-/** Up a step (the step in play must be won). Returns the new step, or null with no run. */
-export function promoteCurrentRun(store?: SeasonStore | null): SeasonFacts | null {
+/** Up a step (the step in play must be won), with each driver's title stamp picks (#704). Returns the new step, or null with no run. */
+export function promoteCurrentRun(picks?: TitlePicks, store?: SeasonStore | null): SeasonFacts | null {
   const run = store === undefined ? loadRun() : loadRun(store);
   if (!run) return null;
-  const next = promote(run);
+  const next = promote(run, picks);
   commit(next, store);
   return currentLeague(next);
 }

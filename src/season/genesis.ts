@@ -90,11 +90,12 @@ export interface SeasonPool {
 
 /** Card ids a team holds, by holder: the shape a team's cards carry up a run. */
 export interface CarriedCards {
-  drivers: Record<number, { traits: string[]; equipment: string[] }>;
-  car: { traits: string[]; upgrade: string[] };
-  team: { traits: string[]; facility: string[] };
-  locker: string[];
-  /** Gear mileage (#627): each gear card's deal round, re-dated to the new league (≤ 0), so its races left hold. */
+  /** Stamps (#704) by card: per driver card, and the car card (car + garage). Ids. */
+  drivers: Record<number, string[]>;
+  car: string[];
+  /** Title stamps on each driver's ribbon (outside the slots). */
+  titles?: Record<number, string[]>;
+  /** Ink mileage (#627 / #704): each ink stamp's deal round, re-dated to the new league (≤ 0), so its races left hold. */
   gearDealt?: Record<string, number>;
 }
 

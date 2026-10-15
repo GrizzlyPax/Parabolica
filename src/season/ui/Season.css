@@ -569,6 +569,17 @@ button.rt-g:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset:
 .lt-panel { padding: 0; }
 @media (max-width: 719px) { .fn.ace-page .fn-crowns, .fn.ace-page .fn-tables { grid-template-columns: 1fr; } }
 
+/* The Parcel (#704): scraping a stamp off a full card; the gift's edge */
+.pp-scrape { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px 4px 4px; background: none; border: 1px solid var(--pw-border-strong); color: var(--pw-text-1); font: inherit; font-size: 13px; cursor: pointer; }
+.pp-scrape:hover, .pp-scrape:focus-visible { border-color: var(--pw-text-1); outline: none; }
+.pp-gift { --tier: var(--ace-gold, var(--signal-purple)); }
+.pp-ask .rs-btn small { font-family: var(--look-data); font-size: 11px; margin-left: 4px; opacity: 0.8; }
+/* The Ladder (#704): the title stamp picks */
+.rl-stamps { display: grid; gap: 8px; margin-top: 8px; }
+.rl-stamp-row { display: grid; gap: 4px; }
+.rl-stamp-who { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; }
+.rl-stamp-stats { display: flex; flex-wrap: wrap; gap: 4px; }
+.rl-stamp-stats .ace-tab { border: 1px solid var(--ace-rule); padding: 4px 8px; font-size: 12px; }
 /* The run's start (#697): the tile map and the flavour page. Tokens only; tile colours come from the state data. */
 .sr .sr-links { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .sr .sr-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
@@ -608,3 +619,5 @@ button.rt-g:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset:
   .sr .sr-pick-name { font-size: 34px; }
   .sr .sr-person input { grid-column: 2; }
 }
+.pk-stamp { position: relative; display: inline-flex; }
+.pk-ink { position: absolute; right: -4px; bottom: -4px; min-width: 14px; height: 14px; padding: 0 3px; border-radius: 7px; background: var(--pw-text-1); color: var(--pw-ground); font-family: var(--look-data); font-size: 9px; line-height: 14px; text-align: center; }

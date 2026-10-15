@@ -7,7 +7,7 @@ import { NEMESIS_LINES, DOUBLE_ACT_LINES, PERSONALITIES, PERSONALITY_NAMES, pers
 import { currentLeague, withCurrentLeague, runState, promote, type RunFacts } from '../run/run';
 import { seasonState, setLineup, settleRound, poolFor, newSeason } from './season';
 import { draftState } from './draft';
-import { openPack } from './testHelpers';
+import { openParcelQuick } from './testHelpers';
 import { testRun } from '../run/testHelpers';
 
 const TEAMS = 5;
@@ -16,7 +16,7 @@ function playRounds(run: RunFacts, n = Infinity): RunFacts {
   let f = currentLeague(run); let done = 0;
   while (seasonState(f).phase !== 'finished' && done < n) {
     const s = seasonState(f);
-    if (s.phase === 'paddock') { const r = draftState(poolFor(f), f.draftPicks).rosters[s.whoseTurn!]; f = openPack(setLineup(f, { round: s.round, teamId: s.whoseTurn!, driverIds: [r.driverIds[0], r.driverIds[1]] })); }
+    if (s.phase === 'paddock') { const r = draftState(poolFor(f), f.draftPicks).rosters[s.whoseTurn!]; f = openParcelQuick(setLineup(f, { round: s.round, teamId: s.whoseTurn!, driverIds: [r.driverIds[0], r.driverIds[1]] })); }
     else { f = settleRound(f); done++; }
   }
   return withCurrentLeague(run, f);

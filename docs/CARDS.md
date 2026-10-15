@@ -1,3 +1,5 @@
+> **v0.8 (#704):** in the run, cards are **stamps**: held for good on a driver card (4) or the car card (5, car and garage together), dealt by **Parcels** before every race (pick 1 of 3; Watcher gifts, smudges). Gear mileage, the locker, the hand and the pack offer are gone. See docs/RUN.md → Stamps and Parcels. The rest of this doc is the deck's history and the card engine (`applyCards`), unchanged.
+
 # Cards — the tag system becomes a deck
 
 *Build spec for the Cards revamp. Source: Dev's design artifact "Cards Revamp" (tabs: The Change, Gear, Traits, Effects, Roadmap, Before). Where this doc and Pax disagree, Pax wins; tell Pit.*

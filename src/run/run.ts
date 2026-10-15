@@ -29,7 +29,8 @@ import type { Ruleset } from '../rules/ruleset';
 import type { RaceDigest } from '../league/types';
 import { DEFAULT_TEAMS, type CarriedTeam, type LeagueContext, type TeamIdentity } from '../season/genesis';
 import { draftState, quickDraft } from '../season/draft';
-import { carriedCards, teamCardState } from '../season/pack';
+import { carriedStamps, teamStamps, titleStamp, TITLE_STAMP_STATS } from '../season/stamps';
+import { DRIVER_STATS, type DriverStatKey } from '../cards';
 import { carriedEffects } from '../season/effects';
 import { dealRookies } from '../season/rookies';
 import { inkFor } from '../icons/ink';
@@ -67,8 +68,8 @@ export const LOCALS_SHIFT = 0;
 /** The nemesis is parked for the slice (Pax, Oct 10); it returns with multi-season play. */
 export const NEMESIS_IN_RUN = false;
 
-/** How kit arrives: today's packs; stamps (#704) replace them in a later build. */
-export type KitSystem = 'packs' | 'stamps';
+/** How kit arrives: stamps in Parcels (#704). The seam stays for another kit. */
+export type KitSystem = 'stamps';
 
 export interface RunSetup {
   seed: number;
@@ -84,11 +85,16 @@ export interface RunSetup {
   stake?: string;
 }
 
-/** A title won, as a fact: "Ace Toledo" at Locals. */
+/** A title won, as a fact: "Ace Toledo" at Locals, with the title stamps each driver picked (#704). */
 export interface TitleFact {
   step: Step;
   name: string;
+  stamps?: TitleStamp[];
 }
+/** A driver's title stamps: the stats picked (TITLE_STAMP_STATS of them), each +TITLE_STAMP_LEVELS. */
+export interface TitleStamp { driverId: number; stats: DriverStatKey[] }
+/** The picks a promotion takes: per driver id, the stats. */
+export type TitlePicks = Record<number, DriverStatKey[]>;
 
 /** A step's facts: a Season without its setup, which the run derives. */
 export type LeagueFacts = Omit<SeasonFacts, 'setup'>;
@@ -140,7 +146,7 @@ export function emptyLeague(): LeagueFacts {
 export function newRun(setup: Omit<RunSetup, 'kit' | 'garage'> & { kit?: KitSystem; garage: Omit<SeasonHuman, 'teamId'> & { teamId?: string } }): RunFacts {
   if (!placeById(setup.stateId)) throw new Error(`run: no state '${setup.stateId}'`);
   const garage: SeasonHuman = { ...setup.garage, teamId: PLAYER_TEAM_ID, ink: setup.garage.ink ?? inkFor(setup.garage.color), deckTeamId: undefined };
-  const run: RunFacts = { setup: { kit: 'packs', ...setup, garage }, titles: [], leagues: [emptyLeague()] };
+  const run: RunFacts = { setup: { kit: 'stamps', ...setup, garage }, titles: [], leagues: [emptyLeague()] };
   return withCurrentLeague(run, drafted(currentLeague(run)));
 }
 
@@ -239,8 +245,8 @@ export function leagueSetup(run: RunFacts, index: number): SeasonSetup {
     calendar: seasonCalendar(seed, plan.races),
     ruleset: run.setup.ruleset,
     league: leagueContext(run, index),
-    // Step 0 carries the dealt rookies in; each step above, the garage that won the one below.
-    carry: index === 0 ? startingTeam(run) : carriedTeam(seasonFactsFor(run, index - 1)),
+    // Step 0 carries the dealt rookies in; each step above, the garage that won the one below, wearing its title stamps.
+    carry: index === 0 ? startingTeam(run) : withTitleStamps(carriedTeam(seasonFactsFor(run, index - 1)), run),
   };
 }
 
@@ -268,7 +274,7 @@ export function startingTeam(run: RunFacts): CarriedTeam {
     drivers: [renamedDriver(dealt.drivers[0], names?.drivers?.[0]), renamedDriver(dealt.drivers[1], names?.drivers?.[1])],
     car,
     team: { id: garage.teamId, name: garage.name, color: garage.color, ink: garage.ink ?? inkFor(garage.color), emoji: '', iconId: garage.iconId, teamStats: dealt.teamStats, traits: [] },
-    cards: { drivers: {}, car: { traits: [], upgrade: [] }, team: { traits: [], facility: [] }, locker: [] },
+    cards: { drivers: {}, car: [], titles: {} },
   };
 }
 
@@ -306,13 +312,35 @@ export function runState(run: RunFacts): RunState {
 }
 
 /** Titles as facts: those recorded (`promote`), plus the one just won and not yet claimed. */
-export function titlesOf(run: RunFacts): TitleFact[] {
+export function titlesOf(run: RunFacts, picks?: TitlePicks): TitleFact[] {
   const state = runState(run);
   const held = [...run.titles];
-  if ((state.phase === 'league-won' || state.phase === 'run-won') && !held.some(t => t.step === STEP_PLAN[state.leagueIndex].id)) {
-    held.push({ step: STEP_PLAN[state.leagueIndex].id, name: titleFor(run, STEP_PLAN[state.leagueIndex].id) });
+  const step = STEP_PLAN[state.leagueIndex].id;
+  if ((state.phase === 'league-won' || state.phase === 'run-won') && !held.some(t => t.step === step)) {
+    const stamps = titleStampsFor(run, step, picks);
+    held.push({ step, name: titleFor(run, step), ...(stamps.length ? { stamps } : {}) });
   }
   return held;
+}
+
+/** The title stamps a step grants, from the picks (or the default: the first stats in table order). Validated: every driver, the step's count, distinct driver stats. */
+export function titleStampsFor(run: RunFacts, step: Step, picks?: TitlePicks): TitleStamp[] {
+  const n = TITLE_STAMP_STATS[step] ?? 0;
+  if (!n) return [];
+  const league = currentLeague(run);
+  const roster = draftState(poolFor(league), league.draftPicks).rosters[league.setup.humans[0].teamId];
+  return roster.driverIds.map(driverId => {
+    const stats = picks?.[driverId] ?? (DRIVER_STATS.slice(0, n) as DriverStatKey[]);
+    if (stats.length !== n || new Set(stats).size !== n || stats.some(s => !DRIVER_STATS.includes(s))) throw new Error(`run: driver ${driverId} picks ${n} different driver stat${n === 1 ? '' : 's'} for the ${step} title`);
+    return { driverId, stats };
+  });
+}
+
+/** The carry with every title stamp won so far on each driver's ribbon. */
+function withTitleStamps(carry: CarriedTeam, run: RunFacts): CarriedTeam {
+  const titles: Record<number, string[]> = {};
+  for (const t of run.titles) for (const s of t.stamps ?? []) titles[s.driverId] = [...(titles[s.driverId] ?? []), ...s.stats.map(st => titleStamp(t.step, st).id)];
+  return { ...carry, cards: { ...carry.cards, titles } };
 }
 
 /** The garage at the end of a step, ready to carry up: the drivers and car
@@ -333,8 +361,8 @@ export function carriedTeam(prev: SeasonFacts): CarriedTeam {
   if (!car || !team) throw new Error(`run: ${teamId} has no car or team to carry`);
   return {
     teamId, drivers, car: { ...strip(car), avatarSeed: car.avatarSeed ?? pool.seed }, team,
-    // Cards as they stand after the last race, gear re-dated so its races left hold.
-    cards: carriedCards(teamCardState(prev, teamId, prev.setup.calendar.length), prev.setup.calendar.length),
+    // The stamps as they stand after the last race (title stamps are added from the run's record).
+    cards: carriedStamps(teamStamps(prev, teamId, prev.setup.calendar.length)),
     // The nemesis is parked (NEMESIS_IN_RUN): the runner-up stays home.
     nemesis: NEMESIS_IN_RUN ? runnerUp(prev) : undefined,
     effects: carriedEffects(prev, teamId),
@@ -356,17 +384,17 @@ export function runnerUp(prev: SeasonFacts): TeamIdentity | undefined {
  * garage carried in and its field drafted behind the scenes. Pure; throws
  * unless the step is won and the step above is built.
  */
-export function promote(run: RunFacts): RunFacts {
+export function promote(run: RunFacts, picks?: TitlePicks): RunFacts {
   const state = runState(run);
   if (state.phase !== 'league-won') throw new Error(`run: cannot promote in phase ${state.phase}`);
-  const titles = titlesOf(run);
+  const titles = titlesOf(run, picks);
   const next: RunFacts = { ...run, titles, leagues: [...run.leagues, emptyLeague()] };
   return withCurrentLeague(next, drafted(currentLeague(next)));
 }
 
 /** The run won: the last title on the record (the screens call it from the finale). */
-export function claimTitles(run: RunFacts): RunFacts {
-  return { ...run, titles: titlesOf(run) };
+export function claimTitles(run: RunFacts, picks?: TitlePicks): RunFacts {
+  return { ...run, titles: titlesOf(run, picks) };
 }
 
 /** Every step re-settled from its facts (lineups and cards as recorded),
@@ -385,7 +413,7 @@ export function replayRun(run: RunFacts): RaceDigest[][] {
 
 export const RUN_KEY = 'parabolica.run.v1';
 /** 3 since Ace America's run (#696): a v0.7 run (schemas 1–2) is archived, not loaded. */
-export const RUN_SCHEMA_VERSION = 3;
+export const RUN_SCHEMA_VERSION = 5;
 
 interface RunEnvelope { schemaVersion: number; savedAt: number; data: RunFacts }
 

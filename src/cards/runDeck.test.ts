@@ -7,7 +7,7 @@ import { RUN_DECK, RUN_CURSES, RUN_CARDS_BY_ID, METAL_BUDGET, PRICE_BAND, cardBy
 import { RARITIES } from './rarity';
 import { newSeason, leagueForRound, poolFor, type SeasonFacts } from '../season/season';
 import { quickDraft, draftState } from '../season/draft';
-import { teamCardState } from '../season/pack';
+import { teamStamps } from '../season/stamps';
 import { readStat } from '../season/grades';
 import { windowLaps } from '../season/genesis';
 import { CURRENT_TRACKS, getTrackById } from '../generators/tracks';
@@ -80,9 +80,9 @@ describe('the run deck (#647)', () => {
     facts = { ...facts, draftPicks: quickDraft(poolFor(facts)) };
     const [a] = draftState(poolFor(facts), facts.draftPicks).rosters[human].driverIds;
     const lightsOut = RUN_CARDS_BY_ID.get('rd-lights-out')!;
-    const withCard: SeasonFacts = { ...facts, cardFacts: [{ type: 'pack', round: 0, teamId: human, tier: 'uncommon', pack: 'driver', cardId: lightsOut.id, dealt: [lightsOut.id], target: { kind: 'driver', id: a } }] };
-    // Held as gear (2×: +24 levels of Accel for the first half), shown in the slot, not in the sum.
-    const held = teamCardState(withCard, human).drivers[a].equipment;
+    const withCard: SeasonFacts = { ...facts, cardFacts: [{ type: 'parcel', round: 0, teamId: human, tier: 'uncommon', cardId: lightsOut.id, dealt: [lightsOut.id], holder: { kind: 'driver', id: a } }] };
+    // Held as ink (2×: +24 levels of Accel for the first half), shown on the card, not in the sum.
+    const held = teamStamps(withCard, human).drivers[a];
     expect(held.map(c => c.id)).toEqual([lightsOut.id]);
     expect(held[0].stats).toEqual([{ stat: 'acceleration', pct: 120 }]);
     expect(readStat('acceleration', 1, held).parts).toEqual([]);
@@ -96,7 +96,7 @@ describe('the run deck (#647)', () => {
     expect(windowLaps('second', track.laps)).toEqual({ fromLap: half, laps: track.laps - half });
     expect(me.lapEffects).toEqual([{ id: lightsOut.id, name: 'Lights Out', emoji: '', fromLap: 0, laps: half, driver: { acceleration: 0.36 }, car: {}, team: {} }]);
     expect(me.effects).toContainEqual({ id: lightsOut.id, name: 'Lights Out', emoji: '', source: 'gear', left: 'first half' });
-    expect(me.effects!.some(e => e.id === lightsOut.id && e.left === '3 races left')).toBe(true); // gear mileage
+    expect(me.effects!.some(e => e.id === lightsOut.id && e.left === '3 races left')).toBe(true); // ink mileage (#704)
     // In the engine: +0.36 acceleration until the half, the base after; logged.
     const engine = RaceEngine.createForWorker();
     prepareScheduledRace(engine, leagueForRound(withCard, 0), 0, getTrackById(track.id)!, CANON_VARIABLES);

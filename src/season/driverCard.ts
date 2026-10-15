@@ -9,7 +9,7 @@ import type { IconId } from '../icons/registry';
 import { portraitFor } from '../generators/avatars';
 import { draftState } from './draft';
 import { poolFor, type SeasonFacts } from './season';
-import { teamCardState } from './pack';
+import { teamStamps } from './stamps';
 import { effectCards } from './effects';
 import { readStat, type StatReading } from './grades';
 import { teamsOf } from './ui/teams';
@@ -46,8 +46,8 @@ export function driverCardOf(facts: SeasonFacts, driverId: number, round: number
     cards: [...d.traits], sealed: !mine,
   };
   if (!mine || !teamId) return base;
-  const held = teamCardState(facts, teamId, round).drivers[driverId];
+  const held = teamStamps(facts, teamId, round);
   const fx = effectCards(facts, teamId, round, { kind: 'driver', id: driverId });
-  const cards = [...d.traits, ...(held?.traits ?? []), ...(held?.equipment ?? []), ...fx];
+  const cards = [...d.traits, ...(held.drivers[driverId] ?? []), ...(held.titles[driverId] ?? []), ...fx];
   return { ...base, cards, readings: DRIVER_CARD_STATS.map(s => readStat(s, d.stats[s as keyof typeof d.stats], cards)) };
 }

@@ -8,7 +8,7 @@ import { CANON_VARIABLES } from '../simlab/types';
 import { draftState, quickDraft } from './draft';
 import { leagueForRound, newSeason, poolFor, seasonState, setLineup, settleRound } from './season';
 import { defaultSetup } from './setup';
-import { openPack } from './testHelpers';
+import { openParcelQuick } from './testHelpers';
 
 describe('Season race: Skip shows the race that gets recorded', () => {
   it('reset → fastForward to the finish matches settleRound, round after round', () => {
@@ -17,7 +17,7 @@ describe('Season race: Skip shows the race that gets recorded', () => {
     for (let r = 0; r < 2; r++) {
       const human = seasonState(facts).whoseTurn!;
       const roster = draftState(poolFor(facts), facts.draftPicks).rosters[human];
-      facts = openPack(setLineup(facts, { round: r, teamId: human, driverIds: [roster.driverIds[1], roster.driverIds[0]] }));
+      facts = openParcelQuick(setLineup(facts, { round: r, teamId: human, driverIds: [roster.driverIds[1], roster.driverIds[0]] }));
       const state = seasonState(facts);
       expect(state.phase).toBe('ready-for-go');
       const engine = RaceEngine.createForWorker();
