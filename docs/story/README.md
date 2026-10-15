@@ -2,6 +2,7 @@
 
 Brainstorms and working notes for Parabolica's story, newest first. **Nothing here is canon** until Pax moves it into `docs/STORY_BIBLE.md`. Agents: read these for direction and tone, but don't write game content from them without the bible saying so.
 
+- [2026-10-15 — Stamps by post](stamps.md): what the stamp system calls things (#704): **Seal** (permanent) and **Ink** (fades after 3 races); Parcels are **League Issue**, the rare gift **No Return Address**, and the black **Watcher Box** that leaves a **smudge**; the title stamp is the **Postmark**. All 60 stamps and 8 smudges named by their kept `rd-` ids.
 - [2026-10-14 — The voice](voice.md): how races sound (#700): the caller is a role that grows with the step (The PA · {State} Radio · The Network), 15 race moments each, and ten Interval broadcasts (barely wrong; rare, only after big moments; never at Locals).
 - [2026-10-14 — The venues](tracks.md): the six American track kinds (#370), each at three sizes: your town's dirt track at Locals, a real town's circuit at State, a real landmark at Nationals (Indianapolis, Pikes Peak, Bonneville, Times Square, the Springfield Mile, Atlantic City).
 - [2026-10-14 — The 52 looks](states.md): colours for every state, DC and Puerto Rico (#708): primary, secondary, accent and a dark ground each, from the flag where it's distinctive and the state's own thing where it isn't; every state distinct; Arizona deep copper; the single source for `src/data/states.ts`. Wheel-flags come later (Pax, Figma).
