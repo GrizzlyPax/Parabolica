@@ -3,7 +3,10 @@
 // each at State.
 import { describe, it, expect } from 'vitest';
 import { mulberry32 } from '../engine/rng';
-import { garageName, rivalGarages, GARAGE_FAMILIES, GARAGE_FIRSTS, GARAGE_PLACES, GARAGE_LOGOS } from './garages';
+import { garageName, rivalGarages, colourDistance, TOO_CLOSE, GARAGE_FAMILIES, GARAGE_FIRSTS, GARAGE_PLACES, GARAGE_LOGOS } from './garages';
+import { currentLeague } from '../run/run';
+import { testRun } from '../run/testHelpers';
+import { poolFor } from '../season/season';
 import { DECK_COLOURS } from './teamColours';
 import { inkFor } from '../icons/ink';
 import { resolveIcon } from '../icons/registry';
@@ -35,5 +38,26 @@ describe('rival garages (#695)', () => {
     }
     expect(new Set(field.slice(0, 20).map(g => g.color)).size).toBe(20);
     expect(rivalGarages(mulberry32(7), 5).every(g => g.town === undefined)).toBe(true);
+  });
+});
+
+describe('rivals skip your colour (#638)', () => {
+  it('for every deck colour as yours: no rival within TOO_CLOSE; names and logos stay where the seed put them', () => {
+    for (const mine of DECK_COLOURS) {
+      for (let seed = 1; seed <= 6; seed++) {
+        const plain = rivalGarages(mulberry32(seed), 20);
+        const kept = rivalGarages(mulberry32(seed), 20, undefined, [], mine.hex);
+        expect(kept.map(g => g.name)).toEqual(plain.map(g => g.name));
+        expect(kept.map(g => g.iconId)).toEqual(plain.map(g => g.iconId));
+        for (const g of kept) expect(colourDistance(g.color, mine.hex), `${mine.name} vs ${g.color}`).toBeGreaterThanOrEqual(TOO_CLOSE);
+        expect(new Set(kept.map(g => g.color)).size).toBe(kept.length);
+      }
+    }
+  });
+
+  it('a run: no rival garage at Locals wears your colour or one too close to it', () => {
+    const facts = currentLeague(testRun(5, 'oh'));
+    const you = facts.setup.humans[0];
+    for (const t of poolFor(facts).teams.filter(t => t.id !== you.teamId)) expect(colourDistance(t.color, you.color)).toBeGreaterThanOrEqual(TOO_CLOSE);
   });
 });

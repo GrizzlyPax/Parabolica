@@ -227,7 +227,7 @@ export function generateSeasonPool(seed: number, teamCount: number = DEFAULT_TEA
   // A run's rivals are local garages (#695): generic names on their own stream, each with its town at State.
   const locale = opts.league?.locale;
   const identities: (TeamIdentity & { town?: string })[] = locale
-    ? rivalGarages(mulberry32(deriveSeed(seed, 'season', 'garages')), fresh, locale.rivalTowns, [carry?.team.name ?? '']).map(g => ({ name: g.name, color: g.color, ink: g.ink, emoji: '', iconId: g.iconId, town: g.town }))
+    ? rivalGarages(mulberry32(deriveSeed(seed, 'season', 'garages')), fresh, locale.rivalTowns, [carry?.team.name ?? ''], carry?.team.color).map(g => ({ name: g.name, color: g.color, ink: g.ink, emoji: '', iconId: g.iconId, town: g.town }))
     : teamIdentities(seed, fresh, exclude);
   identities.forEach((identity, i) => {
     const id = `team-${base + i}`;
