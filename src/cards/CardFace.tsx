@@ -42,16 +42,31 @@ const metalClass = (card: Card) => `metal-${card.rarity ?? 'none'}`;
  * trait's frame is dashed like its chip. */
 export const kindIcon = (card: Card) => (card.kind === 'trait' ? 'card.trait' : card.kind === 'effect' ? 'card.effect' : 'card.gear');
 const kindClass = (card: Card) => (card.kind === 'trait' ? 'cf-trait' : card.kind === 'effect' ? 'cf-effect' : 'cf-gear');
-/** Placeholder art: the first stat's icon (the flavour pass gives each card its own); a card with no stat (a wild card, #646) wears the trait mark. */
-const artIcon = (card: Card) => (card.stats[0] ? STAT_ICONS[card.stats[0].stat] : card.rule ? 'card.rule' : 'card.trait');
+/** The art: the card's own icon (#699, the run deck's stamps); otherwise the first stat's icon; a card with no stat (a wild card, #646) wears the trait mark. */
+export const artIcon = (card: Card) => card.iconId ?? (card.stats[0] ? STAT_ICONS[card.stats[0].stat] : card.rule ? 'card.rule' : 'card.trait');
 
-function Face({ card, mini }: { card: Card; mini: boolean }) {
+/** Races an Ink stamp lasts when it is new (stamps.ts GEAR_LIFE; a test keeps them equal). */
+export const INK_RACES = 3;
+/** Where a card applies (card-names.md: the circle that replaced the type box): driver, car or garage. */
+export const WHERE_ICON: Record<Card['target'], string> = { driver: 'full-motorcycle-helmet', car: 'race-car', team: 'mechanic-garage' };
+const WHERE_LABEL: Record<Card['target'], string> = { driver: 'On a driver', car: 'On the car', team: 'On the garage' };
+
+/** The corner badge (card-names.md, Pax Oct 10): races left on Ink (3 · 2 · 1, like a mana cost), the DNA mark on a Seal. */
+function Corner({ card, left }: { card: Card; left?: number }) {
+  if (card.kind === 'effect') return null;
+  if (card.kind === 'trait') return <span className="cf-corner cf-corner-seal" title="Seal: keeps"><GameIcon name="card.trait" size={22} title="Seal" /></span>;
+  const n = left ?? INK_RACES;
+  return <span className="cf-corner cf-corner-ink" title={`Ink: ${n} race${n === 1 ? '' : 's'} left`}>{n}</span>;
+}
+
+function Face({ card, mini, left }: { card: Card; mini: boolean; left?: number }) {
   if (mini) return <div className="cf-miniface"><GameIcon name={artIcon(card)} size={120} /></div>;
   return (
     <div className="cf-rule">
+      <Corner card={card} left={left} />
+      <span className="cf-where" title={WHERE_LABEL[card.target]}><GameIcon name={WHERE_ICON[card.target]} size={20} title={`${KIND_LABELS[card.kind]} · ${WHERE_LABEL[card.target]}`} /></span>
       <div className="cf-banner"><span className="cf-name" style={{ '--cf-name': `${nameSize(card.name)}px` } as CSSProperties}>{card.name}</span></div>
       <div className="cf-art"><GameIcon name={artIcon(card)} size={70} /></div>
-      <div className="cf-type" title={KIND_LABELS[card.kind]}><GameIcon name={kindIcon(card)} size={18} title={card.kind === 'trait' ? 'Trait' : card.kind === 'effect' ? 'Effect' : 'Gear'} /></div>
       <div className="cf-desc">
         {card.rule
           ? <div className="cf-rule-text"><span className="cf-rule-k">Rule</span>{card.rule}</div>
@@ -86,9 +101,11 @@ export interface CardFaceProps {
   flippable?: boolean;
   className?: string;
   style?: CSSProperties;
+  /** An Ink stamp's races left (the corner badge); absent = new (INK_RACES). */
+  left?: number;
 }
 
-export function CardFace({ card, size = 'small', faceDown = false, flippable = !faceDown, className = '', style }: CardFaceProps) {
+export function CardFace({ card, size = 'small', faceDown = false, flippable = !faceDown, className = '', style, left }: CardFaceProps) {
   const [flipped, setFlipped] = useState(false);
   const w = CARD_WIDTHS[size];
   const h = cardHeight(size);
@@ -107,7 +124,7 @@ export function CardFace({ card, size = 'small', faceDown = false, flippable = !
     >
       <div className="cf-scale" style={{ width: CARD_BOX.w, height: CARD_BOX.h, transform: `scale(${w / CARD_BOX.w})` }}>
         <div className="cf-in">
-          <div className="cf-side cf-front" aria-hidden={showBack}>{!faceDown && <Face card={card} mini={mini} />}</div>
+          <div className="cf-side cf-front" aria-hidden={showBack}>{!faceDown && <Face card={card} mini={mini} left={left} />}</div>
           <div className="cf-side cf-back"><Back card={card} mini={mini} /></div>
         </div>
       </div>
