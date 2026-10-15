@@ -265,7 +265,8 @@ export function voiceNotification(
   let text: string | null;
   if (moment) text = callLine(moment, ctx, seed, ids, names);
   else if (n.type === 'track_event') text = `${n.title}. ${n.message || 'Conditions have changed.'}`;
-  else if (n.type === 'effect_applied') text = `${n.title}: ${n.message || 'something just landed.'}`;
+  // The toast's title leads with an emoji; the feed names the driver plainly (#763).
+  else if (n.type === 'effect_applied') text = `${names[0] ?? n.title.replace(/^\P{L}+/u, '')}: ${n.message || 'something just landed.'}`;
   else text = [n.title, n.message].filter(Boolean).join(': '); // unknown/new type: pass through factually
   if (!text) return null;
   const meta = callerMeta(caller, ctx.stateName);
