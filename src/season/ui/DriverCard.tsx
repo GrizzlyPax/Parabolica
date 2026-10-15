@@ -3,6 +3,8 @@
 // driver in the Paddock, the ladder and the race's driver panel: face and
 // number, archetype, rank with XP to the next, stat levels, cards and traits,
 // then the backstory and quirk. Rivals: who they are; levels stay sealed.
+import { TitleRibbon } from '../../look/Look';
+import { stateLook } from '../../look/step';
 import { useEffect } from 'react';
 import { Avatar } from '../../icons/Avatar';
 import { RaceNumber } from '../../icons/RaceNumber';
@@ -34,6 +36,16 @@ export default function DriverCard({ data, onClose }: { data: DriverCardData; on
           <div className="dc-id">
             <b className="dc-name">{data.name}</b>
             <span className="dc-team">{data.number !== undefined ? `#${data.number} · ` : ''}{data.teamName}</span>
+            {data.titles && data.titles.length > 0 && (
+              <span className="dc-titles" aria-label="Titles">
+                {data.titles.map(t => (
+                  <span key={t.step} className="dc-title">
+                    <TitleRibbon step={t.step} state={t.stateId ? stateLook(t.stateId) : undefined}>{t.name}</TitleRibbon>
+                    <small className="dc-postmark">{t.postmark}</small>
+                  </span>
+                ))}
+              </span>
+            )}
           </div>
           <button type="button" className="rs-link dc-x" onClick={onClose}>Close</button>
         </div>

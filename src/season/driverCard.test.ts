@@ -5,7 +5,10 @@ import { describe, it, expect } from 'vitest';
 import { newSeason, poolFor } from './season';
 import { quickDraft, draftState } from './draft';
 import { defaultSetup } from './setup';
-import { driverCardOf, DRIVER_CARD_STATS } from './driverCard';
+import { driverCardOf, DRIVER_CARD_STATS, titlesOf } from './driverCard';
+import { titleStamp } from './stamps';
+import { currentLeague } from '../run/run';
+import { testRun } from '../run/testHelpers';
 import { readStat } from './grades';
 
 describe('driver card (#476)', () => {
@@ -34,5 +37,18 @@ describe('driver card (#476)', () => {
     expect(c.readings).toBeUndefined();
     expect(c.backstory).toBeTruthy();
     expect(driverCardOf(facts, -1)).toBeNull();
+  });
+});
+
+describe('title ribbons on the driver card (#699)', () => {
+  it('one ribbon per step won, oldest first, named for the place, with the Postmark struck on it', () => {
+    const facts = currentLeague(testRun(5, 'oh'));
+    const town = facts.setup.league!.locale!.town;
+    const t = titlesOf(facts, [titleStamp('state', 'aggression'), titleStamp('locals', 'baseSpeed'), titleStamp('state', 'acceleration')]);
+    expect(t.map(x => x.step)).toEqual(['locals', 'state']);
+    expect(t[0]).toMatchObject({ name: `Ace ${town}`, postmark: `${town} Postmark · +6 Speed` });
+    expect(t[1]).toMatchObject({ name: 'Ace Ohio', stateId: 'oh' });
+    expect(t[1].postmark).toMatch(/^Ohio Postmark · \+6 Aggression, \+6 Acc/);
+    expect(titlesOf(facts, [])).toEqual([]);
   });
 });

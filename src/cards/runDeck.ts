@@ -194,10 +194,74 @@ export const STAMP_NAMES: Readonly<Record<string, string>> = {
   'rd-complete-driver': 'The Full Package',
 };
 
+/** Each stamp's own icon (game-icons ids, docs/story/stamps.md), by id: the card face's art (#699). */
+export const STAMP_ICONS: Readonly<Record<string, string>> = {
+  'rd-fresh-gloves': 'leather-boot',
+  'rd-visor-tear-offs': 'protection-glasses',
+  'rd-stiffer-springs': 'spring',
+  'rd-garage-drill': 'hand-truck',
+  'rd-hot-lapper': 'sprint',
+  'rd-lights-out': 'gloves',
+  'rd-quali-mode': 'stopwatch',
+  'rd-out-lap-crew': 'tire-tracks',
+  'rd-pole-sitter': 'podium-winner',
+  'rd-slipstream-helmet': 'paper-plane',
+  'rd-glued-to-the-road': 'magnet',
+  'rd-front-row-lockout': 'comet-spark',
+  'rd-elbow-pads': 'elbow-pad',
+  'rd-launch-control': 'steeltoe-boots',
+  'rd-iron-bodywork': 'armor-upgrade',
+  'rd-spare-front-wings': 'wooden-crate',
+  'rd-late-braker': 'stop-sign',
+  'rd-dive-bomb-helmet': 'falling-bomb',
+  'rd-torque-map': 'gears',
+  'rd-bodyshop': 'claw-hammer',
+  'rd-elbows-out': 'boot-stomp',
+  'rd-battering-ram': 'bulldozer',
+  'rd-red-mist': 'angry-eyes',
+  'rd-no-prisoners': 'mailed-fist',
+  'rd-smooth-gloves': 'winter-gloves',
+  'rd-endurance-seat': 'car-seat',
+  'rd-soft-suspension': 'bouncing-spring',
+  'rd-tyre-blankets': 'blanket',
+  'rd-gentle-feet': 'lungs',
+  'rd-second-wind': 'water-bottle',
+  'rd-kind-suspension': 'mountain-road',
+  'rd-heat-cycling': 'thermometer-hot',
+  'rd-metronome': 'clockwork',
+  'rd-strategy-room': 'pencil-ruler',
+  'rd-long-stint-specialists': 'turtle',
+  'rd-tyre-whisperers': 'barn-owl',
+  'rd-lightweight-helmet': 'feather',
+  'rd-thin-gloves': 'hand',
+  'rd-stripped-interior': 'big-gear',
+  'rd-skeleton-crew': 'skeleton-key',
+  'rd-hothead': 'footprint',
+  'rd-adrenaline': 'coffee-cup',
+  'rd-glass-engine': 'grenade',
+  'rd-gamblers-pit-wall': 'rolling-dice-cup',
+  'rd-fearless': 'jump-across',
+  'rd-throttle-stomper': 'weight',
+  'rd-all-or-nothing': 'coinflip',
+  'rd-rocket-ship': 'rocket-flight',
+  'rd-reliable-unit': 'oil-can',
+  'rd-pit-drills': 'drill',
+  'rd-lucky-seven': 'socks',
+  'rd-fresh-gearbox': 'gear-stick',
+  'rd-spare-parts': 'cardboard-box',
+  'rd-steady-hands': 'hand-ok',
+  'rd-balanced-chassis': 'scales',
+  'rd-pit-lane-ghost': 'heavy-timer',
+  'rd-four-leaf-clover': 'clover',
+  'rd-factory-upgrade': 'factory',
+  'rd-works-chassis': 'wrench',
+  'rd-complete-driver': 'laurel-crown',
+};
+
 function build([name, tag, rarity, place, levels, window]: Row): Card {
   const { kind, target } = PLACE[place];
   const id = `rd-${slug(name)}`;
-  return { id, name: STAMP_NAMES[id] ?? name, kind, target, rarity, tag, stats: stats(levels), deck: 'run', ...(window ? { window, rule: WINDOW_RULE[window] } : {}) };
+  return { id, name: STAMP_NAMES[id] ?? name, ...(STAMP_ICONS[id] ? { iconId: STAMP_ICONS[id] } : {}), kind, target, rarity, tag, stats: stats(levels), deck: 'run', ...(window ? { window, rule: WINDOW_RULE[window] } : {}) };
 }
 
 /** The run deck, in the list's order (archetype by archetype, bronze first). */
@@ -210,7 +274,7 @@ export function cardById(id: string): Card | undefined {
 }
 
 /** A named curse (#647): on the car or the team (both drivers), all bad, in grade points as held. */
-export interface Curse { id: string; name: string; target: 'car' | 'team'; stats: CardStat[] }
+export interface Curse { id: string; name: string; target: 'car' | 'team'; stats: CardStat[]; /** Its icon (docs/story/stamps.md → Smudges). */ iconId?: string }
 const CURSE_ROWS: [name: string, target: 'car' | 'team', levels: Partial<Record<Short, number>>][] = [
   ['Haunted Gearbox', 'car', { rel: -12 }],
   ['Wrong Fuel Map', 'car', { pwr: -6 }],
@@ -232,7 +296,18 @@ export const SMUDGE_NAMES: Readonly<Record<string, string>> = {
   'curse-cold-tyres': 'Forgot the Blankets',
   'curse-bad-contract': 'Budget Cuts',
 };
-export const RUN_CURSES: readonly Curse[] = Object.freeze(CURSE_ROWS.map(([name, target, levels]) => { const id = `curse-${slug(name)}`; return { id, name: SMUDGE_NAMES[id] ?? name, target, stats: stats(levels) }; }));
+/** The smudges' icons, by id. */
+export const SMUDGE_ICONS: Readonly<Record<string, string>> = {
+  'curse-haunted-gearbox': 'goblin-head',
+  'curse-wrong-fuel-map': 'treasure-map',
+  'curse-bent-floor': 'edge-crack',
+  'curse-rusty-engine': 'barrel-leak',
+  'curse-butterfingers': 'butter',
+  'curse-sticky-wheel-nut': 'propeller-beanie',
+  'curse-cold-tyres': 'thermometer-cold',
+  'curse-bad-contract': 'scissors',
+};
+export const RUN_CURSES: readonly Curse[] = Object.freeze(CURSE_ROWS.map(([name, target, levels]) => { const id = `curse-${slug(name)}`; return { id, name: SMUDGE_NAMES[id] ?? name, target, stats: stats(levels), iconId: SMUDGE_ICONS[id] }; }));
 
 /** A card's price in king-stat levels, by the bands (a window halves it). */
 export function cardPrice(card: Card): number {
