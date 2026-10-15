@@ -1,33 +1,24 @@
 import { useState, useRef, useLayoutEffect, useEffect } from 'react';
 import './RaceStartCountdown.css';
 import { GameIcon } from './icons/GameIcon';
+import { lightsOutLine } from './feed/commentary';
+import type { Step } from './look/step';
 
 interface RaceStartCountdownProps {
   onCountdownComplete: () => void;
   trackName?: string;
   trackEmoji?: string;
+  /** The race's step: the lights-out line is its caller's (#749); absent = The Network. */
+  step?: Step;
+  /** The state raced for at State ({state} in Radio's lines). */
+  stateName?: string;
 }
 
-// Generative "lights out" messages
-const LIGHTS_OUT_MESSAGES = [
-  "LIGHTS OUT AND AWAY WE GO!",
-  "Commence.",
-  "Giddyup.",
-  "Ooops, there they go.",
-  "The simulation begins.",
-  "They're off.",
-  "And so it begins...",
-  "Go.",
-  "It has started.",
-  "The marbles roll.",
-];
-
-function RaceStartCountdown({ onCountdownComplete, trackName, trackEmoji }: RaceStartCountdownProps) {
+function RaceStartCountdown({ onCountdownComplete, trackName, trackEmoji, step, stateName }: RaceStartCountdownProps) {
   const [phase, setPhase] = useState<'intro' | 'lights' | 'go' | 'done'>('intro');
   const [lightsOn, setLightsOn] = useState(0);
-  const [goMessage] = useState(() =>
-    LIGHTS_OUT_MESSAGES[Math.floor(Math.random() * LIGHTS_OUT_MESSAGES.length)]
-  );
+  // The caller's lights-out line (#749): The PA, {State} Radio or The Network.
+  const [goMessage] = useState(() => lightsOutLine({ step, stateName, trackName: trackName ?? '' }, Math.floor(Math.random() * 1e6)));
 
   // Store callback in a ref to avoid dependency issues
   const onCompleteRef = useRef(onCountdownComplete);

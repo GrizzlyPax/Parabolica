@@ -30,7 +30,7 @@ import QualiBoard, { type QualiLive, type QualiFollow } from './components/race/
 import type { DriverHistoryEntry } from './components/race/types';
 import type { IconId } from './icons/registry';
 import { version as appVersion } from '../package.json';
-import { voiceNotification, type FeedItem } from './feed/commentary';
+import { voiceNotification, type FeedItem, type FeedVoice } from './feed/commentary';
 import './WatchMode.css';
 import './look/race.css';
 import { StepTheme } from './look/Look';
@@ -94,6 +94,8 @@ interface WatchModeProps {
   step?: Step;
   state?: StateLook;
   program?: string;
+  /** Who's who for the callers (#749): your town and garage, each car's identifier, home town and home state. */
+  feedVoice?: FeedVoice;
 }
 
 // Modular notification system for race events
@@ -153,6 +155,7 @@ function WatchMode({
   step = 'nationals',
   state,
   program,
+  feedVoice,
   fantasy,
 }: WatchModeProps) {
   const trackLength = config.lapLength;
@@ -323,6 +326,10 @@ function WatchMode({
       totalLaps,
       trackName: trackInfo?.name ?? '',
       trackEmoji: trackInfo?.funEmoji ?? '',
+      // The caller by step (#749): The PA, {State} Radio, The Network.
+      step,
+      stateName: state?.name,
+      voice: feedVoice,
     });
     if (voiced) pushFeedItem(voiced);
   };
