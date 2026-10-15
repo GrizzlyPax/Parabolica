@@ -222,6 +222,9 @@ Hand-tuned icons for headline teams · animated icon states (pack reveal) · the
 | `voice.booth` | The Booth | Feed speaker | 🎙️ | [`microphone`](https://game-icons.net/1x1/delapouite/microphone.html) |
 | `voice.marbles` | Mister Marbles | Feed speaker | 🎩 | [`top-hat`](https://game-icons.net/1x1/lorc/top-hat.html) |
 | `voice.track` | The Track | Feed speaker | 🏟️ | [`arena`](https://game-icons.net/1x1/sbed/arena.html) |
+| `voice.pa` | The PA (Locals) | Feed speaker | 📣 | [`megaphone`](https://game-icons.net/1x1/delapouite/megaphone.html) |
+| `voice.radio` | {State} Radio (State) | Feed speaker | 📻 | [`radio-tower`](https://game-icons.net/1x1/delapouite/radio-tower.html) |
+| `voice.network` | The Network (Nationals) | Feed speaker | 🎙️ | [`old-microphone`](https://game-icons.net/1x1/delapouite/old-microphone.html) |
 | **Race screen** | | | | |
 | `view.track` | Track view | Race → menu → views | 🏁 | [`path-distance`](https://game-icons.net/1x1/delapouite/path-distance.html) |
 | `view.detail` | Detail view | Race → menu → views | 📊 | [`histogram`](https://game-icons.net/1x1/delapouite/histogram.html) |
