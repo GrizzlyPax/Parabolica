@@ -27,7 +27,7 @@ export function SeasonChart({ standings, teams, mine }: { standings: Constructor
     );
   };
   return (
-    <svg className="season-chart" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Constructors' points after each round">
+    <svg className="season-chart" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Garage points after each round">
       {[0, top / 2, top].map(v => (
         <g key={v}><line x1={L} x2={W - R} y1={y(v)} y2={y(v)} className="sc-grid" /><text x={L - 6} y={y(v) + 3} textAnchor="end" className="sc-axis">{v}</text></g>
       ))}

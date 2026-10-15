@@ -79,8 +79,8 @@ export interface RosterDriver {
   carStats?: CarStats;
   carName?: string;
   teamStats?: TeamStats;
-  /** Racing number 2–99 (#313 / #337). Display only. */
-  number?: number;
+  /** Racing number 2–99 (#313 / #337), or the step's identifier (#725: entry number, town or state code). Display only. */
+  number?: number | string;
   /** Trait cards baked into the stats (Quick Race #337, Season Mode). Display only. */
   cards?: Card[];
   /** Stat changes that last N laps of this race (#332). Raw units, already
@@ -143,7 +143,7 @@ export interface Driver {
   carName?: string;       // Name of the car
   // Team stats (shared by team)
   teamStats?: TeamStats;  // Team operational stats (tire management, pit crew)
-  number?: number;        // Racing number; display only
+  number?: number | string; // Racing number or tier identifier (#725); display only
   cards?: Card[];         // Trait cards already baked into the stats; display only
   effects?: EffectInfo[]; // Race-timed effects on the team; display only
   lapEffects?: LapEffect[];   // Lap-timed stat changes (#332); the engine applies them

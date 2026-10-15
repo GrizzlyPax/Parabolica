@@ -8,8 +8,8 @@ import { newSeason, poolFor, leagueForRound, seasonState, setLineup, turnDone, t
 import { quickDraft, draftState } from './draft';
 import { CURRENT_TRACKS } from '../generators/tracks';
 import {
-  parcelFor, pendingParcel, openParcel, takeSmudge, teamStamps, seasonCardsFor, carriedStamps, titleStamp, stampById, parcelTierForRank,
-  STAMP_SLOTS, PARCEL_SIZE, PARCEL_ODDS, TITLE_STAMP_LEVELS, GIFT_METAL, type ParcelFact, type StampHolder,
+  parcelFor, pendingParcel, openParcel, teamStamps, seasonCardsFor, carriedStamps, titleStamp, stampById, parcelTierForRank, isInk, inkLeft,
+  STAMP_SLOTS, PARCEL_SIZE, GIFT_ODDS, SMUDGE_ODDS, GEAR_LIFE, GEAR_STRENGTH, TITLE_STAMP_LEVELS, PARCEL_METAL, type ParcelFact, type StampHolder,
 } from './stamps';
 import { RUN_DECK, applyCards } from '../cards';
 import { POINTS_PER_LEVEL } from './grades';
@@ -45,30 +45,35 @@ describe('the Parcel', () => {
     const p = parcelFor(facts, 0, you)!;
     expect(p).toEqual(parcelFor(facts, 0, you));
     expect(p.tier).toBe('uncommon');
-    expect(p.kind === 'smudged' || p.cards.length === PARCEL_SIZE).toBe(true);
-    if (p.kind !== 'smudged') {
-      expect(new Set(p.cards.map(c => c.id)).size).toBe(PARCEL_SIZE);
-      expect(p.cards.every(c => RUN_DECK.some(r => r.id === c.id))).toBe(true);
+    expect(p.cards.length).toBe(PARCEL_SIZE);
+    expect(new Set(p.cards.map(c => c.id)).size).toBe(PARCEL_SIZE);
+    // Every stamp is a run-deck card at the player's scale: ink (gear) at × GEAR_STRENGTH, traits as written.
+    for (const c of p.cards) {
+      const raw = RUN_DECK.find(r => r.id === c.id)!;
+      expect(c.stats.map(x => x.pct)).toEqual(raw.stats.map(x => x.pct * (isInk(c) ? GEAR_STRENGTH : 1)));
     }
     expect(parcelFor(facts, 0, poolFor(facts).teams[1].id)).toBeNull(); // rivals get none
     expect([1, 2, 3, 4, 5].map(r => parcelTierForRank(r, 5))).toEqual(['common', 'common', 'uncommon', 'rare', 'legendary']);
   });
 
-  it('about one in ten is a Watcher gift (gold at least), one in ten smudged (a one-race curse); no gifts at Locals', () => {
+  it('one in ten is a Watcher gift at State (the legendary odds), one in ten smudged (three stamps plus a one-race curse); no gifts at Locals, more at Nationals', () => {
     const { facts, you } = paddock(2);
     const kinds = { plain: 0, gift: 0, smudged: 0 };
     for (let round = 0; round < 400; round++) {
       const p = parcelFor({ ...facts, setup: { ...facts.setup, seed: 1000 + round } }, 0, you)!;
       kinds[p.kind]++;
-      if (p.kind === 'gift') expect(p.cards.every(c => c.rarity === 'gold' || c.rarity === 'iridium')).toBe(true);
+      expect(p.cards).toHaveLength(PARCEL_SIZE);
       if (p.kind === 'smudged') expect(p.smudge).toMatchObject({ source: 'curse', timer: { races: 1 }, round: 0, teamId: you });
+      else expect(p.smudge).toBeUndefined();
     }
-    expect(kinds.gift / 400).toBeGreaterThan(PARCEL_ODDS.gift / 100 - 0.05);
-    expect(kinds.gift / 400).toBeLessThan(PARCEL_ODDS.gift / 100 + 0.05);
-    expect(kinds.smudged / 400).toBeGreaterThan(PARCEL_ODDS.smudge / 100 - 0.05);
-    expect(GIFT_METAL.bronze + GIFT_METAL.silver).toBe(0);
+    expect(kinds.gift / 400).toBeGreaterThan(GIFT_ODDS.state! / 100 - 0.05);
+    expect(kinds.gift / 400).toBeLessThan(GIFT_ODDS.state! / 100 + 0.05);
+    expect(kinds.smudged / 400).toBeGreaterThan(SMUDGE_ODDS / 100 - 0.05);
+    expect(kinds.smudged / 400).toBeLessThan(SMUDGE_ODDS / 100 + 0.05);
+    expect(PARCEL_METAL.legendary.gold + PARCEL_METAL.legendary.iridium).toBeGreaterThan(PARCEL_METAL.uncommon.gold + PARCEL_METAL.uncommon.iridium);
     const locals = paddock(2, 'locals');
     for (let round = 0; round < 200; round++) expect(parcelFor({ ...locals.facts, setup: { ...locals.facts.setup, seed: 1000 + round } }, 0, locals.you)!.kind).not.toBe('gift');
+    expect(GIFT_ODDS.nationals).toBeGreaterThan(GIFT_ODDS.state!);
   });
 
   it('never deals a copy of a stamp the team holds', () => {
@@ -134,19 +139,44 @@ describe('stamps on the cards', () => {
     expect(() => openParcel(facts, { ...fact(facts, you, p.cards[0].id, p.cards[0].target === 'driver' ? { kind: 'driver', id: drivers[0] } : { kind: 'car' }, 'rd-x') })).toThrow(/nothing to scrape/);
   });
 
-  it('a smudge is taken as a one-race effect on the car or the garage', () => {
+  it('a smudged Parcel still deals three; its curse lands for one race whatever you keep, even the box left shut', () => {
     for (let seed = 10; seed < 400; seed++) {
       const { facts, you } = paddock(seed);
       const p = parcelFor(facts, 0, you)!;
       if (p.kind !== 'smudged') continue;
-      expect(() => openParcel(facts, { type: 'parcel', round: 0, teamId: you, tier: p.tier, dealt: [], cardId: null })).toThrow(/smudged/);
-      const next = takeSmudge(facts, { type: 'smudge', round: 0, teamId: you, effectId: p.smudge!.id });
-      expect(activeEffects(next, you, 0).map(e => [e.id, e.left])).toEqual([[p.smudge!.id, 1]]);
-      expect(activeEffects(next, you, 1)).toEqual([]);
-      expect(pendingParcel(next)).toBeNull();
+      const shut = openParcel(facts, fact(facts, you, null));
+      expect(activeEffects(shut, you, 0).map(e => [e.id, e.left])).toEqual([[p.smudge!.id, 1]]);
+      expect(activeEffects(shut, you, 1)).toEqual([]);
+      expect(pendingParcel(shut)).toBeNull();
+      expect(teamStamps(shut, you)).toEqual(teamStamps(facts, you));
       return;
     }
     throw new Error('no smudged seed');
+  });
+
+  it('ink fades after GEAR_LIFE races and frees its slot; a permanent stamp stays; a scraped stamp never returns', () => {
+    const { facts, you, drivers } = paddock(8);
+    const ink = RUN_DECK.filter(c => c.target === 'driver' && c.kind === 'equipment').slice(0, STAMP_SLOTS.driver).map(c => c.id);
+    const trait = RUN_DECK.find(c => c.target === 'driver' && c.kind === 'trait')!.id;
+    // Four ink stamps dealt in round 0 (gearDealt 0): live through round 2, gone in round 3.
+    const inked = withCarry(facts, { drivers: { [drivers[0]]: ink }, car: [], titles: {}, gearDealt: Object.fromEntries(ink.map(id => [id, 0])) });
+    expect(teamStamps(inked, you, 2).drivers[drivers[0]].map(c => c.id)).toEqual(ink);
+    expect(teamStamps(inked, you, 2).mileage[ink[0]]).toBe(1);
+    expect(teamStamps(inked, you, 3).drivers[drivers[0]]).toEqual([]);
+    expect(inkLeft(0, GEAR_LIFE)).toBe(0);
+    // A permanent stamp carried with no deal round never fades; the card is full, so a new stamp scrapes one off, and that one is gone for good.
+    const mixed = withCarry(facts, { drivers: { [drivers[0]]: [trait, ...ink.slice(0, 3)] }, car: [], titles: {}, gearDealt: Object.fromEntries(ink.slice(0, 3).map(id => [id, -1])) });
+    expect(teamStamps(mixed, you, 9).drivers[drivers[0]].map(c => c.id)).toEqual([trait]);
+    const incoming = parcelFor(mixed, 0, you)!;
+    const c = incoming.cards.find(x => x.target === 'driver');
+    if (!c) return;
+    const on = (replaces?: string): ParcelFact => ({ ...fact(mixed, you, c.id, { kind: 'driver', id: drivers[0] }, replaces), dealt: incoming.cards.map(x => x.id), tier: incoming.tier, gift: incoming.kind === 'gift' || undefined });
+    expect(() => openParcel(mixed, on())).toThrow(/full; name the stamp/);
+    const scraped = openParcel(mixed, on(trait));
+    const held = teamStamps(scraped, you).drivers[drivers[0]].map(x => x.id);
+    expect(held).not.toContain(trait);
+    expect(held).toContain(c.id);
+    expect(teamStamps(scraped, you, 9).drivers[drivers[0]].map(x => x.id)).toEqual(isInk(c) ? [] : [c.id]);
   });
 
   it('a title stamp is +6 levels on its stat, outside the slots, and reads in the race build', () => {

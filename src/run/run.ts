@@ -88,6 +88,8 @@ export interface RunSetup {
   stateId: string;
   /** Your garage: the identity you wear all run (teamId is PLAYER_TEAM_ID). */
   garage: SeasonHuman;
+  /** The flavour page's renames (#697): your two dealt drivers and the chassis. Labels only. */
+  names?: StartNames;
   ruleset?: Ruleset;
   kit: KitSystem;
   /** Difficulty setting (#596); plain Paddock until stakes land. */
@@ -267,14 +269,29 @@ export function leagueSetup(run: RunFacts, index: number): SeasonSetup {
   };
 }
 
+/** Names the player gives on the start's flavour page (#697); blank = the dealt name. */
+export interface StartNames {
+  drivers?: [string, string];
+  car?: string;
+}
+
+/** A dealt driver under a new full name: the first word is the first name, the rest the last. */
+export function renamedDriver<D extends { firstName: string; lastName: string; fullName: string }>(d: D, full?: string): D {
+  const name = full?.trim().replace(/\s+/g, ' ');
+  if (!name) return d;
+  const cut = name.indexOf(' ');
+  return { ...d, fullName: name, firstName: cut < 0 ? name : name.slice(0, cut), lastName: cut < 0 ? '' : name.slice(cut + 1) };
+}
+
 /** Your garage at the start: the dealt pair, car and team stats, your own look, no cards yet. */
 export function startingTeam(run: RunFacts): CarriedTeam {
-  const { seed, garage } = run.setup;
+  const { seed, garage, names } = run.setup;
   const dealt = dealRookies(seed);
+  const car = names?.car?.trim() ? { ...dealt.car, name: names.car.trim() } : dealt.car;
   return {
     teamId: garage.teamId,
-    drivers: [...dealt.drivers],
-    car: dealt.car,
+    drivers: [renamedDriver(dealt.drivers[0], names?.drivers?.[0]), renamedDriver(dealt.drivers[1], names?.drivers?.[1])],
+    car,
     team: { id: garage.teamId, name: garage.name, color: garage.color, ink: garage.ink ?? inkFor(garage.color), emoji: '', iconId: garage.iconId, teamStats: dealt.teamStats, traits: [] },
     cards: { drivers: {}, car: [], titles: {} },
   };
@@ -422,7 +439,7 @@ export function replayRun(run: RunFacts): RaceDigest[][] {
 
 export const RUN_KEY = 'parabolica.run.v1';
 /** 3 since Ace America's run (#696): a v0.7 run (schemas 1–2) is archived, not loaded. */
-export const RUN_SCHEMA_VERSION = 4;
+export const RUN_SCHEMA_VERSION = 5;
 
 interface RunEnvelope { schemaVersion: number; savedAt: number; data: RunFacts }
 

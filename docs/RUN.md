@@ -34,7 +34,51 @@ The pool generator (`generateSeasonPool(seed, teams, rs, { carry, league, rookie
 `runState(run)` → `{ leagueIndex, phase: 'league' | 'league-won' | 'run-won' | 'run-lost', league, ladder (3 rungs with `step`, `title`, `later`), won }`. `titlesOf(run)` = the titles recorded plus the one just won. `replayRun(run)` re-settles every step from its facts; the test pins it equal to the recorded digests.
 
 ## Saves (`src/run/run.ts`, `src/run/meta.ts`, `src/run/current.ts`)
-- **Run:** `parabolica.run.v1`, **schema 4** (a v0.7 run, or a v0.8.0 run on packs, is archived, not loaded), one slot: `{ schemaVersion, savedAt, data: RunFacts }`.
+- **Run:** `parabolica.run.v1`, **schema 5** (a v0.7 run, a v0.8.0 run on packs or a v0.8.1 run on all-permanent stamps is archived, not loaded), one slot: `{ schemaVersion, savedAt, data: RunFacts }`.
+- **Meta:** `parabolica.meta.v1`: `{ unlocks: UnlockId[], runs: RunRecord[] }`. Loading reads only the data's own schema version, never the engine version, so a version bump keeps every unlock (tested). `unlocksEarned(run)` grants nothing until Steward's #596. `recordRun` writes a finished run once (by seed).
+- **The screens** keep working on a `SeasonFacts`: `loadCurrentLeague` / `saveCurrentLeague` (write back into the run; a won run claims its titles, a finished run is recorded in the meta), `startRun({ seed, stateId, garage })`, `promoteCurrentRun`, `currentRunState`, `clearRun`.
+
+## Parked behind seams (Pax, Oct 10: park, don't delete)
+- **The nemesis** (#626, #635): `NEMESIS_IN_RUN = false`; `carriedTeam` carries no runner-up, so no garage is flagged and `nemesisLine` says nothing. The module, the lines and the race-view tag stay; flip the seam with multi-season play.
+- **Boss rounds** (#593): `LeagueContext.bossRound` is still the last round; nothing reads it as a twist.
+- **Driver ranks and XP** (#646) are gone: titles do that job (ribbons, #699). Archetypes and car setups (#660) are gone with the rookie pick.
+
+## Timed effects (#332)
+- **An effect** (`src/season/effects.ts`, `EffectFact`): a target (one driver, the car or the team: car and team reach both drivers), grade points per stat (negative = a curse), a **timer** in **races** (`{ races: n }`) or **laps** (`{ laps: n, fromLap? }`), a source (`gear` · `curse` · `event`) and an id. Dealt with `addEffect(facts, e)` into `SeasonFacts.effectFacts`; the dealer (a pack, a curse, an event) owns the clock rules.
+- **Facts, not ticks:** live in round R iff `round ≤ R < round + races`; a lap effect lives in its own round. Nothing is written per race, so saves and replays need nothing more. `activeEffects(facts, teamId, round)` gives what is live with `left` ("2 races left", `describeLeft`); `roundEffects` feeds the roster builder.
+- **Race timers** apply at race build through the card math (`applyPercents`), after cards and before the rival shift. **Lap timers** go to the engine as `RosterDriver.lapEffects` in raw units (`rawDeltas`): the engine keeps `baseStats`, rebuilds driver / car / team stats at every lap boundary from base + live windows, logs `effect_applied` / `effect_expired`, and `reset()` restores the base. No RNG touched either way.
+- **Display:** `RosterDriver.effects` / `Driver.effects` carry `EffectInfo { name, emoji, source, left }` for chips and sheets (Hub).
+- **Carrying up a run:** `carriedEffects(prev, teamId)` re-dates live race timers by the races already used (`round − calendar length`), so what had 2 races left still has 2; lap effects don't carry. `CarriedTeam.effects` → `effectFactsOf(facts)` folds them before the league's own.
+- The smudged Parcel deals one (#704); window stamps run as lap effects.
+
+## Stamps and Parcels (#704; Steward's build spec and Pax's answers, Oct 15)
+All in `src/season/stamps.ts`, data at the top; the stamp pool is the run deck (`src/cards/runDeck.ts`, #647: 60 cards, three price bands, half-race window cards) at the player's scale (`playerCard`: the run deck as written, gear × 2; a grid card × 3).
+- **A stamp** is a run-deck card held on one **driver card** or the **car card** (the car and the garage share it: car and team cards both go there). `applyCards` is unchanged: `seasonCardsFor` hands the race build each driver's stamps (plus their title stamps) and splits the car card by where a stamp applies. Two kinds (Pax: "permanent plus fading ink"): a **trait is permanent**; **gear is ink**: × `GEAR_STRENGTH` 2 and gone after `GEAR_LIFE` 3 races wherever it sits (today's mileage math; `StampState.mileage`, "2 races left" on the roster via `inkInfos`), its slot free the race after it fades. Carried up a run with each ink stamp's deal round re-dated (`CarriedCards.gearDealt`).
+- **Slots:** `STAMP_SLOTS` **4 per driver card, 5 on the car card** (13), permanent and ink together. A full card means a stamp is **scraped off** for the next: the fact names what it `replaces`, and that stamp is gone; a scrape holds whatever fades after it. No locker, no hand, no moves.
+- **Parcels** (`parcelFor`, own stream `'season','parcel',round,team`): **one before every race, pick 1 of 3** from the whole deck (a trait with `STAMP_TRAIT_CHANCE` 0.5, else ink; a driver stamp 2 : car 1 : garage 1), the metal by your table position (`parcelTierFor`: leader Common → last Legendary, round 1 Uncommon; `PARCEL_METAL`), each stamp on its own sub-stream, redrawn on a duplicate or a stamp you hold. **One roll** for the kind: **smudged** (`SMUDGE_ODDS` 10%, every step: you still pick 1 of 3, and one of the eight named curses lands on the car or the garage for **one race**, an effect, no slot, whatever you keep), else a **Watcher gift** (`GIFT_ODDS`: Locals 0 · State 10 · Nationals 15%; the legendary metal odds), else league issue. A Parcel can be **left in the box** (`cardId: null`). Rivals get none.
+- **Title stamps** (`titleStamp`, `TITLE_STAMP_LEVELS` 6, `TITLE_STAMP_STATS` locals 1 · state 2): winning a title, **each driver picks a stat** (two at State) and wears **+6 levels** on it **on the ribbon, outside the slots**, for good. The Ladder asks before "Up to State"; `promote(run, picks)` records them on the `TitleFact`; the next step's carry puts them on (`CarriedCards.titles`). Steward measured the Locals stamp at +14 points of State win chance.
+- **Facts:** `ParcelFact { round, teamId, tier, gift?, dealt, cardId | null, holder?, replaces? }` in the one ordered `cardFacts` log (a smudge's curse is an `EffectFact` written with it); `teamStamps(facts, team, round)` folds them from the carry; `openParcel` validates (on the clock, the Parcel as dealt, the stamp fits the card, a full card names its scrape).
+- **Cut** (the spec): the locker, the three-card hand, gear slots by trait, the pack offer's place choice, the curse pack. Old runs (schema ≤ 4) and seasons (schema ≤ 3) are archived.
+
+## Facts, not state (`src/run/run.ts`)
+```
+RunFacts = { setup: RunSetup; titles: TitleFact[]; leagues: LeagueFacts[] }
+RunSetup = { seed, stateId ('oh'), garage (your look; teamId is PLAYER_TEAM_ID 'you'), ruleset?, kit: 'stamps', stake? }
+TitleFact = { step, name, stamps? }  (written by `promote(run, picks)`, and `claimTitles` when the run is won; stamps = each driver's title stamp stats, #704)
+LeagueFacts = SeasonFacts without its setup: { draftPicks, lineups, cardFacts, effectFacts, results }
+```
+Each step's `SeasonSetup` is **derived**, never saved (`seasonFactsFor(run, i)`, memoised per run object):
+- seed: step 0 = the run seed; step i = `deriveSeed(seed, 'run', 'league', i)`; calendar `seasonCalendar(seed, STEP_PLAN[i].races)`;
+- `teamCount` = the step's field + you; `humans` = your garage;
+- `league: LeagueContext` = { index, step, name, fieldShift, nemesisShift (0), bossRound, **locale** { stateId, town, rivalTowns } }: the pool names the rival garages from `locale`, the theme reads `step` and `stateId`;
+- `carry: CarriedTeam` = step 0: the dealt rookies as a team (`startingTeam`); above: your garage at the end of the step below (`carriedTeam(prev)`): drivers, car and team with their ids, stats, numbers and faces, plus every stamp they hold (`CarriedCards`: per driver card, the car card, the title stamps) and live effects.
+
+The pool generator (`generateSeasonPool(seed, teams, rs, { carry, league, rookies })`) puts the carried team first, **reserves** its drivers and car for it (`reservedFor`), and fills the other slots with fresh rookie garages whose ids start at `league.index × LEAGUE_ID_STRIDE` (100). `draftPicks` stay the roster facts, but no one drafts: the CPU draft (`quickDraft`, reservations honoured) fills every step behind the scenes, in `newRun` for step 0 and `promote` above, so each step opens in the Paddock.
+
+`runState(run)` → `{ leagueIndex, phase: 'league' | 'league-won' | 'run-won' | 'run-lost', league, ladder (3 rungs with `step`, `title`, `later`), won }`. `titlesOf(run)` = the titles recorded plus the one just won. `replayRun(run)` re-settles every step from its facts; the test pins it equal to the recorded digests.
+
+## Saves (`src/run/run.ts`, `src/run/meta.ts`, `src/run/current.ts`)
+- **Run:** `parabolica.run.v1`, **schema 5** (a v0.7 run, a v0.8.0 run on packs or a v0.8.1 run on all-permanent stamps is archived, not loaded), one slot: `{ schemaVersion, savedAt, data: RunFacts }`.
 - **Meta:** `parabolica.meta.v1`: `{ unlocks: UnlockId[], runs: RunRecord[] }`. Loading reads only the data's own schema version, never the engine version, so a version bump keeps every unlock (tested). `unlocksEarned(run)` grants nothing until Steward's #596. `recordRun` writes a finished run once (by seed).
 - **The screens** keep working on a `SeasonFacts`: `loadCurrentLeague` / `saveCurrentLeague` (write back into the run; a won run claims its titles, a finished run is recorded in the meta), `startRun({ seed, stateId, garage })`, `promoteCurrentRun`, `currentRunState`, `clearRun`.
 

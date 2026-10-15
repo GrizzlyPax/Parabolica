@@ -7,7 +7,7 @@ import './Fantasy.css';
 interface TeamMarbleProps {
   color?: string;
   ink?: string;
-  number?: number;
+  number?: number | string;
   emoji?: string;
   size?: number;
   /** Second driver of a team gets a dashed ring, like the tower's slot mark. */

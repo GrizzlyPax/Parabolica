@@ -6,7 +6,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   newRun, seasonFactsFor, currentLeague, withCurrentLeague, runState, promote, replayRun, leagueWon, titlesOf, titleFor, townOf, rivalTowns, fieldAt, fieldShiftAt,
-  startingTeam, saveRun, loadRun, clearRun, RUN_KEY, RUN_SCHEMA_VERSION, STEP_PLAN, STATE_FIELD, LAST_BUILT_STEP, NEMESIS_IN_RUN, PLAYER_TEAM_ID, NATIONALS_SHIFT, NATIONALS_FORMAT, rivalStates, type RunFacts,
+  startingTeam, renamedDriver, saveRun, loadRun, clearRun, RUN_KEY, RUN_SCHEMA_VERSION, STEP_PLAN, STATE_FIELD, LAST_BUILT_STEP, NEMESIS_IN_RUN, PLAYER_TEAM_ID, NATIONALS_SHIFT, NATIONALS_FORMAT, rivalStates, type RunFacts,
 } from './run';
 import { emptyMeta, recordRun, loadMeta, saveMeta, META_KEY, grant } from './meta';
 import { loadCurrentLeague, saveCurrentLeague, startRun, promoteCurrentRun, currentRunState } from './current';
@@ -180,6 +180,8 @@ describe('the steps', () => {
     // Every stamp carries; the title stamps sit on the ribbons (outside the slots) and read in the race build.
     const carried = teamStamps(league, you);
     expect(carriedStamps(carried)).toEqual({ ...carriedStamps(prevStamps), titles: { [d1]: [titleStamp('locals', 'aggression').id], [d2]: [titleStamp('locals', 'luck').id] } });
+    // Ink carried up keeps its races left: a stamp with 2 left at the end of Locals has 2 left in State's round 0.
+    for (const [id, left] of Object.entries(prevStamps.mileage)) expect(carried.mileage[id]).toBe(left);
     expect(carried.titles[d1][0].stats).toEqual([{ stat: 'aggression', pct: TITLE_STAMP_LEVELS * POINTS_PER_LEVEL }]);
     const plain = leagueForRound({ ...league, setup: { ...league.setup, carry: { ...league.setup.carry!, cards: { ...league.setup.carry!.cards, titles: {} } } } }, 0).roster.find(r => r.id === d1)!;
     const stamped = leagueForRound(league, 0).roster.find(r => r.id === d1)!;
@@ -410,5 +412,17 @@ describe('saves', () => {
     saveMeta({ ...granted, unlocks: [...granted.unlocks, 'made-up' as never] }, store);
     expect(loadMeta(store).unlocks).toEqual(['horror-deck-league-3']);
     expect(recordRun(emptyMeta(), lost).runs).toHaveLength(1);
+  });
+});
+
+describe('the start page names (#697)', () => {
+  it('renames the dealt drivers and chassis; blanks keep the dealt names; ids and stats stay', () => {
+    const plain = newRun({ seed: 7, stateId: 'oh', garage: TEST_GARAGE });
+    const named = newRun({ seed: 7, stateId: 'oh', garage: TEST_GARAGE, names: { drivers: ['Ricky  Doormat', ''], car: 'Sunday Best' } });
+    const a = startingTeam(plain), b = startingTeam(named);
+    expect(b.drivers[0]).toMatchObject({ id: a.drivers[0].id, fullName: 'Ricky Doormat', firstName: 'Ricky', lastName: 'Doormat', stats: a.drivers[0].stats });
+    expect(b.drivers[1]).toEqual(a.drivers[1]);
+    expect(b.car).toMatchObject({ id: a.car.id, name: 'Sunday Best', stats: a.car.stats });
+    expect(renamedDriver(a.drivers[0], 'Cher').lastName).toBe('');
   });
 });

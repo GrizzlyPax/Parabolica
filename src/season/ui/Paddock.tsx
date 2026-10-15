@@ -9,6 +9,7 @@
 // stamp it on a driver card or the car card (a full card asks what to scrape
 // off), or leave the box shut. A smudged Parcel is a bad stamp for one race,
 // nothing to choose. Then Lock in ends the turn: two drivers, both race (#585).
+import { raceBadges } from '../badges';
 import { useMemo, useState } from 'react';
 import { levelDelta } from '../grades';
 import { GameIcon, TeamLogo, teamThemeVars } from '../../icons/GameIcon';
@@ -26,7 +27,7 @@ import { getTrackById } from '../../generators/tracks';
 import { getDeckTrackById } from '../../data/deckTracks';
 import { weatherForRace } from '../../data/weather';
 import { draftState } from '../draft';
-import { openParcel, takeSmudge, pendingParcel, teamStamps, holderFits, STAMP_SLOTS, SMUDGE_LIFE, TITLE_STAMP_PREFIX, type StampHolder } from '../stamps';
+import { openParcel, pendingParcel, teamStamps, holderFits, isInk, STAMP_SLOTS, SMUDGE_LIFE, GEAR_LIFE, TITLE_STAMP_PREFIX, type StampHolder } from '../stamps';
 import { effectCards, describeLeft, activeEffects } from '../effects';
 import { constructorStandings, driverStandings, lineupFor, poolFor, seasonState, setLineup, validateLineup, type SeasonFacts } from '../season';
 import { stageOf, isOut } from '../format';
@@ -67,6 +68,7 @@ const rowFits = (c: Card, k: RowKey) => (k === 'car' ? c.target === 'car' : k ==
 
 export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, backLabel = '← Menu' }: Props) {
   const pool = useMemo(() => poolFor(facts), [facts.setup]); // eslint-disable-line react-hooks/exhaustive-deps
+  const badges = useMemo(() => raceBadges(facts), [facts.setup, facts.draftPicks]); // eslint-disable-line react-hooks/exhaustive-deps
   const teams = useMemo(() => teamsOf(facts), [facts.setup]); // eslint-disable-line react-hooks/exhaustive-deps
   // The nemesis talks (#635): one line per Paddock visit (the round's moment).
   const spoken = useMemo(() => nemesisLine(facts), [facts.setup, facts.results.length, facts.draftPicks.length]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -140,12 +142,6 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, ba
     setLifted(null);
     setRevealing(false);
   };
-  /** The smudge: nothing to choose; it lands on the car or the garage for one race. */
-  const take = () => {
-    if (!smudge) return;
-    commit(takeSmudge(facts, { type: 'smudge', round: smudge.round, teamId: smudge.teamId, effectId: smudge.id }));
-    setRevealing(false);
-  };
   /** Tap a glowing row: the lifted stamp goes there; a full card asks in the Parcel strip what to scrape off. */
   const stampOn = (k: RowKey) => {
     if (!fitsRow(k) || !lifted) return;
@@ -162,7 +158,10 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, ba
   const out = isOut(facts, viewer);
 
   const chip = (c: Card, where: string) => (
-    <CardChip key={`${where}:${c.id}`} card={c} onClick={() => setDetail({ card: c })} style={c.id.startsWith(TITLE_STAMP_PREFIX) ? { outline: '2px solid var(--ace-gold)', outlineOffset: 1 } : undefined} />
+    <span key={`${where}:${c.id}`} className="pk-stamp">
+      <CardChip card={c} onClick={() => setDetail({ card: c })} style={c.id.startsWith(TITLE_STAMP_PREFIX) ? { outline: '2px solid var(--ace-gold)', outlineOffset: 1 } : undefined} />
+      {stamps.mileage[c.id] !== undefined && <small className="pk-ink" title={`Ink: ${stamps.mileage[c.id]} race${stamps.mileage[c.id] === 1 ? '' : 's'} left`}>{stamps.mileage[c.id]}</small>}
+    </span>
   );
 
   // One row of grades: OVR + stats (+ dots where a stat doesn't apply), flashing while a fitting stamp is lifted.
@@ -253,33 +252,25 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, ba
       )}
       {turnLine}
       {priorityLine}
-      {parcel && myTurn && (revealing && !smudge ? (
+      {parcel && myTurn && (revealing ? (
         <ParcelPick
           key={`${parcel.round}:${parcel.teamId}`}
           parcel={parcel}
           targets={targets}
+          smudgeLine={smudge ? `Smudged: ${smudge.name} (${smudge.stats.map(s => `${levelDelta(s.pct)} ${STAT_LABELS[s.stat]}`).join(', ')}) on ${smudge.target.kind === 'car' ? car.name : you.name} for ${SMUDGE_LIFE_TEXT}, whatever you keep. It takes no slot and wears off on its own.` : undefined}
           onKeep={keep}
           onLeave={leave}
           onLift={setLifted}
           onDetail={c => setDetail({ card: c })}
           onClose={() => setRevealing(false)}
         />
-      ) : revealing && smudge ? (
-        <section className="pp pp-curse" aria-label="Smudged Parcel">
-          <div className="pp-head"><span className="rs-k">Smudged · nothing to choose</span><button type="button" className="rs-link" onClick={() => setRevealing(false)}>Later</button></div>
-          <div className="pp-keep">
-            <b>{smudge.name}: {smudge.stats.map(s => `${levelDelta(s.pct)} ${STAT_LABELS[s.stat]}`).join(', ')} on {smudge.target.kind === 'car' ? car.name : you.name}, both drivers, for {SMUDGE_LIFE_TEXT}.</b>
-            <button type="button" className="rs-btn rs-btn-primary" onClick={take}>Take it</button>
-            <span className="rs-hint">Bad luck. The smudge wears off on its own; benching can't dodge it.</span>
-          </div>
-        </section>
       ) : (
         <div className="pk-pack">
           <button type="button" className={`pk-sealed ${smudge ? 'pk-sealed-curse' : ''}`.trim()} onClick={() => setRevealing(true)} aria-label={smudge ? 'Open the smudged Parcel' : 'Open the Parcel'}><GameIcon name="season.pack" size={30} />{!smudge && <><i className="pk-twinkle a" /><i className="pk-twinkle b" /><i className="pk-twinkle c" /></>}</button>
           <div className="pk-pack-text">
             <span className="rs-k pk-pack-k">{parcel.kind === 'gift' ? 'A Parcel from upstairs' : smudge ? 'A smudged Parcel' : 'League issue'}</span>
             <b>{smudge ? 'Smudged' : 'Sealed'}</b>
-            <span className="rs-hint">{smudge ? 'Unlucky: this one is a bad stamp on the car or the garage for one race.' : parcel.kind === 'gift' ? 'A friend upstairs sends their regards. Three stamps inside, gold at least; keep one.' : 'Three stamps inside; keep one, or leave the box shut. The metal shows when it opens.'}</span>
+            <span className="rs-hint">{smudge ? 'Unlucky: three stamps inside, and a smudge on the car card for one race whatever you keep.' : parcel.kind === 'gift' ? 'A friend upstairs sends their regards. Three stamps inside at the best odds; keep one.' : 'Three stamps inside; keep one, or leave the box shut. The metal shows when it opens.'}</span>
           </div>
         </div>
       ))}
@@ -288,7 +279,7 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, ba
       <div className="rt-legend">
         {priority.size > 0 && <span><span className="rt-prio-key">{ABBR[[...priority][0]]}</span> next race priority</span>}
         <span><i className="rt-notch-key" /> stamps change this stat · tap a level for the sum</span>
-        <span>Tap a stamp for the full card. Stamps are for good: {STAMP_SLOTS.driver} per driver, {STAMP_SLOTS.car} on the car.</span>
+        <span>Tap a stamp for the full card. Traits stay; ink fades after {GEAR_LIFE} races (the small number). {STAMP_SLOTS.driver} per driver, {STAMP_SLOTS.car} on the car.</span>
       </div>
       <div className="ace-panel flat pk-sheet-panel"><div className="rt-scroll">
         <table className="rt">
@@ -308,7 +299,7 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, ba
               const carNo = lineup.indexOf(id);
               return (
                 <tr key={id} className={rowClass(k)}>
-                  {nameCell(k, <><RaceNumber n={d.number} color={you.color} ink={you.ink} size={24} shape="square" className="rt-numsq" /><Avatar icon={portraitFor(pool.seed, d.id)} color={you.color} size={22} />{fitsRow(k) ? <span className="rt-nm">{d.fullName}</span> : <DriverName name={d.fullName} onOpen={() => setCardOf(d.id)} />}</>)}
+                  {nameCell(k, <><RaceNumber n={badges[d.id] ?? d.number} color={you.color} ink={you.ink} size={24} shape="square" className="rt-numsq" /><Avatar icon={portraitFor(pool.seed, d.id)} color={you.color} size={22} />{fitsRow(k) ? <span className="rt-nm">{d.fullName}</span> : <DriverName name={d.fullName} onOpen={() => setCardOf(d.id)} />}</>)}
                   {gradeCells(k, d.fullName, DRIVER_STATS, new Set(DRIVER_STATS), false)}
                   {stampsCell(k, d.traits)}
                   <td className="rt-act"><span className="pk-carno">Car {carNo + 1}</span></td>
@@ -344,11 +335,11 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, ba
     <>
       <p className="pk-priority">
         <span className="rs-k">After round {facts.results.length} of {total}</span>{' '}
-        {you.name} {myRank ? ord(myRank.rank) : ''} on <b>{myRank?.points ?? 0}</b> · leader {teams[standings[0].teamId].name} on {standings[0].points}. Two titles: Constructors' (team points) and Drivers'.
+        {you.name} {myRank ? ord(myRank.rank) : ''} on <b>{myRank?.points ?? 0}</b> · leader {teams[standings[0].teamId].name} on {standings[0].points}. Two tables: the garages' (both cars' points) and the drivers'.
       </p>
       <div className="pk-league">
         <div className="pk-chart">
-          <div className="rs-k">Constructors' points, race by race</div>
+          <div className="rs-k">Garage points, race by race</div>
           {facts.results.length ? <SeasonChart standings={standings} teams={teams} mine={humans} /> : <p className="rs-hint">The chart starts after round 1.</p>}
         </div>
         <div className="pk-tables">
@@ -386,7 +377,7 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, ba
       )}
       <div className="ace-tabs pk-tabs" role="tablist">
         <button type="button" role="tab" className={`ace-tab ${tab === 'team' ? 'on' : ''}`} aria-selected={tab === 'team'} onClick={() => setTab('team')}>Team</button>
-        <button type="button" role="tab" className={`ace-tab ${tab === 'league' ? 'on' : ''}`} aria-selected={tab === 'league'} onClick={() => setTab('league')}>League</button>
+        <button type="button" role="tab" className={`ace-tab ${tab === 'league' ? 'on' : ''}`} aria-selected={tab === 'league'} onClick={() => setTab('league')}>The table</button>
         {myRank && <span className="pk-rank">{ord(myRank.rank)} · {myRank.points} pts</span>}
       </div>
 
@@ -396,7 +387,7 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, ba
       {detail && (
         <div className="pk-sheet" role="dialog" aria-label="Detail">
           {'card' in detail
-            ? <><CardFace card={detail.card} size="small" flippable={false} /><div className="pk-sheet-text"><span className="rs-k">{detail.card.id.startsWith(TITLE_STAMP_PREFIX) ? 'title stamp' : `${detail.card.kind} · ${detail.card.target}`}{detail.card.rarity ? ` · ${detail.card.rarity}` : ''}</span><b>{detail.card.name}</b>{detail.card.rule ? <span>{detail.card.rule}</span> : detail.card.stats.map(s => <span key={s.stat}>{levelDelta(s.pct)} {STAT_LABELS[s.stat]}</span>)}<span className="rs-hint">{detail.card.id.startsWith(TITLE_STAMP_PREFIX) ? 'On the ribbon, outside the slots. For good.' : 'A stamp is for good; a full card scrapes one off for the next.'}</span></div></>
+            ? <><CardFace card={detail.card} size="small" flippable={false} /><div className="pk-sheet-text"><span className="rs-k">{detail.card.id.startsWith(TITLE_STAMP_PREFIX) ? 'title stamp' : `${detail.card.kind} · ${detail.card.target}`}{detail.card.rarity ? ` · ${detail.card.rarity}` : ''}</span><b>{detail.card.name}</b>{detail.card.rule ? <span>{detail.card.rule}</span> : detail.card.stats.map(s => <span key={s.stat}>{levelDelta(s.pct)} {STAT_LABELS[s.stat]}</span>)}<span className="rs-hint">{detail.card.id.startsWith(TITLE_STAMP_PREFIX) ? 'On the ribbon, outside the slots. For good.' : isInk(detail.card) ? `Ink: twice the strength, fades after ${GEAR_LIFE} races${stamps.mileage[detail.card.id] !== undefined ? ` (${stamps.mileage[detail.card.id]} left)` : ''}.` : 'A permanent stamp; a full card scrapes one off for the next.'}</span></div></>
             : <ReadingSheet title={detail.title} reading={detail.reading} icon={STAT_ICONS[detail.reading.stat]} />}
           <button type="button" className="rs-link pk-sheet-x" onClick={() => setDetail(null)}>Close</button>
         </div>

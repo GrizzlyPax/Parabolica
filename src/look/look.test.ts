@@ -59,9 +59,9 @@ describe('one theme per step', () => {
       for (const c of [s.primary, s.secondary, s.accent]) expect(c).toMatch(/^#[0-9a-f]{6}$/i);
       expect(s.name).toBe(placeById(code)!.name);
     }
-    // A place without its own look (until #708) wears the default.
-    expect(stateLook('WY')).toMatchObject({ primary: DEFAULT_LOOK.primary, code: 'WY', name: 'Wyoming' });
-    expect(stateLook('AZ').primary).not.toBe(DEFAULT_LOOK.primary);
+    // Every place wears its own look since #740; none falls back to the default.
+    expect(stateLook('WY')).toMatchObject({ primary: placeById('WY')!.look!.primary, code: 'WY', name: 'Wyoming' });
+    expect(STATE_CODES.filter(c => stateLook(c).primary === DEFAULT_LOOK.primary)).toEqual(['OH']);
     const oh = stateLook('OH');
     expect(stepThemeVars('state', oh)).toEqual({ '--ace-state-primary': oh.primary, '--ace-state-secondary': oh.secondary, '--ace-state-accent': oh.accent, '--ace-state-ink': oh.ink, '--ace-state-ground': oh.ground });
     const pale = stateLook('OH', { primary: '#f5f0e0' });

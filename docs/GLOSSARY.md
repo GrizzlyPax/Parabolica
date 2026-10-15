@@ -1,6 +1,6 @@
 # Parabolica World Deck
 
-*Everything in the sim and the world, generated from the data modules by `npm run glossary` — do not edit by hand; edit the source files named in each section and re-run. Engine v0.8.1. How to add content: docs/WORLD_DECK.md.*
+*Everything in the sim and the world, generated from the data modules by `npm run glossary` — do not edit by hand; edit the source files named in each section and re-run. Engine v0.8.2. How to add content: docs/WORLD_DECK.md.*
 
 28 teams · 6 tracks · 94 cards (36 traits · 36 gear · 22 effects) · 5 in-race effects · 13 rule cards · 6 weathers
 
@@ -84,62 +84,62 @@
 
 ## States
 
-*Source: `src/data/states.ts` (#695). Ace America's 52 places: 50 states, DC and Puerto Rico. A look is the accents the UI takes while you race for that state (primary = the state bar, buttons and sash edge; ink from `inkFor`); the rest fill in from #708.*
+*Source: `src/data/states.ts` (#695). Ace America's 52 places: 50 states, DC and Puerto Rico. A look is the accents the UI takes while you race for that state (primary = the state bar, buttons and sash edge; ink from `inkFor`; ground = the step's background). Radio's 52 looks, picked by Pax (docs/story/states.md).*
 
-| Place | Primary · secondary · accent | Ink | Wheel-flag |
+| Place | Primary · secondary · accent · ground | Ink | Note |
 |---|---|---|---|
-| **Alabama** `al` | — | — | — |
-| **Alaska** `ak` | — | — | — |
-| **Arizona** `az` | #CE5C17 · #002868 · #FED700 | #0b0b0c | Arizona's red and gold sunburst over blue, a copper wheel in place of the copper star |
-| **Arkansas** `ar` | — | — | — |
-| **California** `ca` | — | — | — |
-| **Colorado** `co` | — | — | — |
-| **Connecticut** `ct` | — | — | — |
-| **Delaware** `de` | — | — | — |
-| **Florida** `fl` | — | — | — |
-| **Georgia** `ga` | — | — | — |
-| **Hawaii** `hi` | — | — | — |
-| **Idaho** `id` | — | — | — |
-| **Illinois** `il` | — | — | — |
-| **Indiana** `in` | — | — | — |
-| **Iowa** `ia` | — | — | — |
-| **Kansas** `ks` | — | — | — |
-| **Kentucky** `ky` | — | — | — |
-| **Louisiana** `la` | — | — | — |
-| **Maine** `me` | — | — | — |
-| **Maryland** `md` | — | — | — |
-| **Massachusetts** `ma` | — | — | — |
-| **Michigan** `mi` | — | — | — |
-| **Minnesota** `mn` | — | — | — |
-| **Mississippi** `ms` | — | — | — |
-| **Missouri** `mo` | — | — | — |
-| **Montana** `mt` | — | — | — |
-| **Nebraska** `ne` | — | — | — |
-| **Nevada** `nv` | — | — | — |
-| **New Hampshire** `nh` | — | — | — |
-| **New Jersey** `nj` | — | — | — |
-| **New Mexico** `nm` | — | — | — |
-| **New York** `ny` | — | — | — |
-| **North Carolina** `nc` | — | — | — |
-| **North Dakota** `nd` | — | — | — |
-| **Ohio** `oh` | #B8312F · #1D2B4F · #C99A3A | #ffffff | Ohio's burgee: red and white stripes on the swallowtail, the wheel in place of the white O on the blue triangle |
-| **Oklahoma** `ok` | — | — | — |
-| **Oregon** `or` | — | — | — |
-| **Pennsylvania** `pa` | — | — | — |
-| **Rhode Island** `ri` | — | — | — |
-| **South Carolina** `sc` | — | — | — |
-| **South Dakota** `sd` | — | — | — |
-| **Tennessee** `tn` | — | — | — |
-| **Texas** `tx` | #BF0A30 · #002868 · #EFE6D2 | #ffffff | Texas's lone star field, the wheel in place of the star |
-| **Utah** `ut` | — | — | — |
-| **Vermont** `vt` | #1B4D3E · #0F241C · #C99A3A | #ffffff | Vermont's green field and mountains, a cream wheel at the centre, a gold band with VERMONT along the foot |
-| **Virginia** `va` | — | — | — |
-| **Washington** `wa` | — | — | — |
-| **West Virginia** `wv` | — | — | — |
-| **Wisconsin** `wi` | — | — | — |
-| **Wyoming** `wy` | — | — | — |
-| **District of Columbia** `dc` (district) | — | — | — |
-| **Puerto Rico** `pr` (territory) | — | — | — |
+| **Alabama** `al` | #A8172E · #3A0911 · #F4A9B8 · #1A080F | #ffffff | The flag's crimson saltire, with the camellia (the state flower) |
+| **Alaska** `ak` | #0F4C8A · #081F3B · #F5C518 · #06111F | #ffffff | The flag's deep blue, with the Big Dipper's gold |
+| **Arizona** `az` | #A6491B · #002868 · #FED700 · #031431 | #ffffff | Copper (the flag's star), with the flag's blue and sunburst gold |
+| **Arkansas** `ar` | #D23A4A · #1C2E6B · #EEF3FA · #0E1733 | #ffffff | The flag's red, blue-ringed white diamond (the Diamond State) |
+| **California** `ca` | #7A4E2D · #341F12 · #F2B33D · #18110F | #ffffff | The bear on the flag: grizzly brown, with Golden State gold |
+| **Colorado** `co` | #6F7FCB · #1C2457 · #F5C116 · #0E132B | #0b0b0c | The columbine (the state flower), with the flag's gold disc |
+| **Connecticut** `ct` | #244A9A · #0F1F45 · #95C15A · #091123 | #ffffff | The flag's royal blue shield, with its green grapevines |
+| **Delaware** `de` | #3A6E97 · #14304A · #EBCB9E · #0B1725 | #ffffff | Colonial blue and buff, straight off the flag's diamond |
+| **Florida** `fl` | #F0861F · #7E1E14 · #3CC7B6 · #351010 | #0b0b0c | Orange groves, with the Gulf's teal |
+| **Georgia** `ga` | #F2A07B · #7A1D24 · #F2C14E · #341016 | #0b0b0c | Peach, with the flag's red stripes and gold arch |
+| **Hawaii** `hi` | #13849A · #08343E · #F2D04B · #061921 | #0b0b0c | Pacific blue, with the yellow hibiscus (the state flower) |
+| **Idaho** `id` | #5E1A2B · #250A12 · #E3B04B · #12080F | #ffffff | The star garnet, Idaho's gem, with gold |
+| **Illinois** `il` | #1F3E6E · #0E1D36 · #EE7E2F · #09101D | #ffffff | The eagle's shield blue, with a prairie-sunset orange |
+| **Indiana** `in` | #8E3B2A · #2E120C · #F2B33A · #150B0D | #ffffff | The Brickyard's brick, with the flag's gold torch |
+| **Iowa** `ia` | #5F9230 · #1F3510 · #F2C94C · #0F190E | #0b0b0c | Corn in July, with corn-silk gold |
+| **Kansas** `ks` | #F2A900 · #4E3214 · #5C9BD6 · #221810 | #0b0b0c | The sunflower: petal gold and seed-head brown, with Kansas sky |
+| **Kentucky** `ky` | #C21E56 · #3E0A1C · #86B9E8 · #1C0813 | #ffffff | A garland of roses, with bluegrass blue |
+| **Louisiana** `la` | #5B2A86 · #24103A · #F2C14E · #110B1F | #ffffff | Purple, green and gold, with the flag's pelican |
+| **Maine** `me` | #4B3F8C · #1E1838 · #E2533A · #0F0E1E | #ffffff | Wild blueberries and a lobster-red accent; the flag's North Star is the wheel |
+| **Maryland** `md` | #F0B323 · #1A1A1A · #F04A55 · #0D0F12 | #0b0b0c | The Calvert gold and black, with the Crossland red |
+| **Massachusetts** `ma` | #A01C3F · #3A0A18 · #F0C987 · #1A0811 | #ffffff | Cranberry bogs, with the flag's gold-trimmed shield |
+| **Michigan** `mi` | #2A7AB8 · #0E2E4E · #F25466 · #091727 | #ffffff | Great Lakes blue, with cherry red |
+| **Minnesota** `mn` | #6FB2DD · #0B2545 · #F7F5EF · #071323 | #0b0b0c | The new flag: lake blue, the dark state shape, a white North Star |
+| **Mississippi** `ms` | #3B7D46 · #14321B · #F4EBD3 · #0B1813 | #ffffff | Magnolia leaves and the new flag's magnolia bloom |
+| **Missouri** `mo` | #B9C2CC · #111D45 · #F2555A · #0A1023 | #0b0b0c | The Gateway Arch's steel, with the flag's blue and red |
+| **Montana** `mt` | #4A8FD0 · #0F2A4A · #E2B33C · #091525 | #0b0b0c | Big Sky blue, with the motto's gold (Oro y Plata) |
+| **Nebraska** `ne` | #8F9440 · #2C2E12 · #E7B93A · #15170F | #0b0b0c | The Sandhills' prairie grass, with goldenrod (the state flower) |
+| **Nevada** `nv` | #0B4FB0 · #0A1F4D · #C9CFD8 · #071127 | #ffffff | The flag's cobalt, with Silver State silver |
+| **New Hampshire** `nh` | #5E6670 · #23272C · #B9A2E0 · #111419 | #ffffff | The Granite State's grey, with purple lilac (the state flower) |
+| **New Jersey** `nj` | #E2C38E · #1F4E79 · #7FB2E5 · #0F2338 | #0b0b0c | The flag's buff field and Jersey blue |
+| **New Mexico** `nm` | #FFD100 · #9C1328 · #35B9A8 · #410C18 | #0b0b0c | The flag's yellow and red Zia, with turquoise |
+| **New York** `ny` | #1D3570 · #0D1838 · #7FCBAE · #080E1E | #ffffff | Empire blue, with the Statue of Liberty's copper-green |
+| **North Carolina** `nc` | #5A9FD6 · #13294B · #E04A4A · #0B1526 | #0b0b0c | Carolina sky blue, with the flag's red bar |
+| **North Dakota** `nd` | #D6B370 · #2F4B7C · #E8749A · #162239 | #0b0b0c | Wheat, with the flag's blue and a prairie rose |
+| **Ohio** `oh` | #B8312F · #1D2B4F · #EFE6D2 · #0F1527 | #ffffff | Ohio's burgee: red stripes, the blue triangle, the white O as the wheel |
+| **Oklahoma** `ok` | #A8437A · #3B1530 · #79B9E6 · #1B0D1B | #ffffff | Redbud blossom, with the flag's sky blue |
+| **Oregon** `or` | #123A63 · #0A1D33 · #F2C230 · #07101C | #ffffff | Navy and gold, the only flag with two sides |
+| **Pennsylvania** `pa` | #2B4C80 · #132443 · #D29143 · #0B1323 | #ffffff | The Keystone flag's blue, with Liberty Bell bronze |
+| **Rhode Island** `ri` | #2F7D7A · #0F3332 · #EBC155 · #09191C | #ffffff | The Ocean State's sea glass, with the flag's gold anchor |
+| **South Carolina** `sc` | #2D2F7E · #13143A · #F3F1EA · #0B0C1F | #ffffff | Indigo, the flag's own colour, with the white palmetto and crescent |
+| **South Dakota** `sd` | #C2814F · #3A2213 · #7FB8E8 · #1A120F | #0b0b0c | The Badlands' banded clay, with the flag's sky blue |
+| **Tennessee** `tn` | #9B1B30 · #132E66 · #BBA2EE · #0B1731 | #ffffff | The flag's red field and blue circle, with the iris (the state flower) |
+| **Texas** `tx` | #BF0A30 · #002868 · #9DB7F2 · #031431 | #ffffff | The Lone Star flag's red and blue, with a bluebonnet accent |
+| **Utah** `ut` | #BC4E2D · #3E1610 · #F0E3C2 · #1C0D0E | #ffffff | Red rock country, with the beehive's honey cream |
+| **Vermont** `vt` | #1B4D3E · #0F241C · #E8892E · #091313 | #ffffff | The Green Mountains, with a maple-in-October accent |
+| **Virginia** `va` | #F0B9C8 · #1A2B5C · #E8414B · #0D152D | #0b0b0c | Dogwood blossom, with the flag's blue and a cardinal red |
+| **Washington** `wa` | #1E6B46 · #0B2A1B · #D8E9A8 · #071513 | #ffffff | The Evergreen State, with new-growth green |
+| **West Virginia** `wv` | #34363D · #16171B · #EAAA00 · #0C0D13 | #ffffff | Coal country, with the old gold of the mountains |
+| **Wisconsin** `wi` | #E9C46A · #5B3A1A · #7DB8E8 · #271B12 | #0b0b0c | Cheddar and dairy-barn brown, with Lake Michigan blue |
+| **Wyoming** `wy` | #6B4A2E · #2A1B10 · #E8D3A6 · #140F0E | #ffffff | The bucking horse's saddle brown, with prairie straw |
+| **District of Columbia** `dc` (district) | #F3EFE8 · #9E1528 · #FF6070 · #420D18 | #0b0b0c | The flag's white field with its red stars and bars |
+| **Puerto Rico** `pr` (territory) | #E4572E · #0B2C59 · #79C2F2 · #07162B | #0b0b0c | Flamboyán red-orange, with the light-blue triangle of 1895 |
 
 
 ## How genesis traits are rolled
