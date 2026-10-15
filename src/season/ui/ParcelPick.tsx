@@ -48,7 +48,7 @@ export default function ParcelPick({ parcel, targets, smudgeLine, onKeep, onLeav
   const fitting = chosen ? targets.filter(t => t.fits(chosen)) : [];
   const onto = fitting.find(t => t.key === target) ?? null;
   const lift = (c: Card | null) => { setPick(c?.id ?? null); setTarget(null); onLift(c); };
-  const label = parcel.kind === 'gift' ? 'A Parcel from upstairs' : parcel.kind === 'smudged' ? `A smudged Parcel · ${TIER_LABEL[parcel.tier]}` : `League issue · ${TIER_LABEL[parcel.tier]}`;
+  const label = parcel.kind === 'gift' ? 'No Return Address' : parcel.kind === 'smudged' ? `Watcher Box · ${TIER_LABEL[parcel.tier]}` : `League Issue · ${TIER_LABEL[parcel.tier]}`;
 
   return (
     <section className={`pp tier-${parcel.tier} ${parcel.kind === 'gift' ? 'pp-gift' : parcel.kind === 'smudged' ? 'pp-curse' : ''}`.trim()} aria-label={`${label}: keep one of three stamps`}>
@@ -93,12 +93,12 @@ export default function ParcelPick({ parcel, targets, smudgeLine, onKeep, onLeav
               </button>
             ))}
           </span>
-          <span className="rs-hint">{isInk(chosen) ? `Ink: twice the strength, fades after ${GEAR_LIFE} races.` : 'A trait: a permanent stamp.'} Tap it again for the full card; tap a glowing row to stamp it there.</span>
+          <span className="rs-hint">{isInk(chosen) ? `Ink: twice the strength, fades after ${GEAR_LIFE} races.` : 'A Seal: pressed in, it keeps for the run.'} Tap it again for the full card; tap a glowing row to stamp it there.</span>
         </div>
       ) : (
         <div className="pp-keep">
           <span className="rs-hint">Tap a stamp to lift it. The other two go back.</span>
-          <button type="button" className="rs-link" onClick={onLeave}>Leave the box shut</button>
+          <button type="button" className="rs-link" onClick={onLeave}>Pass</button>
         </div>
       )}
     </section>

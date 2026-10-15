@@ -3,7 +3,8 @@
 // runs on the lap timer (first or second half) and never in the race-build
 // sum; the eight curses are car / team, all bad; ids resolve in either deck.
 import { describe, it, expect } from 'vitest';
-import { RUN_DECK, RUN_CURSES, RUN_CARDS_BY_ID, METAL_BUDGET, PRICE_BAND, cardById, cardPrice, slug, CARDS_BY_ID, cardsBy, GEAR_KIND, applyCards, type CardTag, type CardTarget } from './index';
+import { RUN_DECK, RUN_CURSES, RUN_CARDS_BY_ID, METAL_BUDGET, PRICE_BAND, cardById, cardPrice, CARDS_BY_ID, cardsBy, GEAR_KIND, applyCards, type CardTag, type CardTarget } from './index';
+import { STAMP_NAMES, SMUDGE_NAMES } from './runDeck';
 import { RARITIES } from './rarity';
 import { newSeason, leagueForRound, poolFor, type SeasonFacts } from '../season/season';
 import { quickDraft, draftState } from '../season/draft';
@@ -32,7 +33,9 @@ describe('the run deck (#647)', () => {
     expect(RARITIES.map(r => count(any, c => c.rarity === r))).toEqual([6, 3, 2, 1]);
     for (const c of RUN_DECK) {
       expect(c.deck).toBe('run');
-      expect(c.id).toBe(`rd-${slug(c.name)}`);
+      // Ids stay the placeholders' slugs (saves hold them); the names are Radio's (#699).
+      expect(c.id).toMatch(/^rd-[a-z0-9-]+$/);
+      expect(c.name).toBe(STAMP_NAMES[c.id]);
       expect(c.stats.length).toBeGreaterThan(0);
       expect(['equipment', 'upgrade', 'facility', 'trait']).toContain(c.kind);
       if (c.kind !== 'trait') expect(GEAR_KIND[c.target]).toBe(c.kind);
@@ -66,7 +69,9 @@ describe('the run deck (#647)', () => {
     expect(new Set(RUN_CURSES.map(c => c.id)).size).toBe(8);
     expect(RUN_CURSES.map(c => c.target)).toEqual(['car', 'car', 'car', 'car', 'team', 'team', 'team', 'team']);
     for (const c of RUN_CURSES) for (const s of c.stats) { expect(s.pct).toBeLessThan(0); expect(Number.isInteger(s.pct / 5)).toBe(true); }
-    expect(cardById('rd-hothead')?.name).toBe('Hothead');
+    expect(cardById('rd-hothead')?.name).toBe('Heavy Right Foot');
+    expect(RUN_CURSES.find(c => c.id === 'curse-bent-floor')?.name).toBe('Curb Damage');
+    for (const c of RUN_CURSES) expect(c.name).toBe(SMUDGE_NAMES[c.id]);
     expect(cardById('tr-driver-bronze-speed')).toBe(CARDS_BY_ID.get('tr-driver-bronze-speed'));
     expect(cardById('nope')).toBeUndefined();
   });
@@ -94,8 +99,8 @@ describe('the run deck (#647)', () => {
     const half = Math.ceil(track.laps / 2);
     expect(windowLaps('first', track.laps)).toEqual({ fromLap: 0, laps: half });
     expect(windowLaps('second', track.laps)).toEqual({ fromLap: half, laps: track.laps - half });
-    expect(me.lapEffects).toEqual([{ id: lightsOut.id, name: 'Lights Out', emoji: '', fromLap: 0, laps: half, driver: { acceleration: 0.36 }, car: {}, team: {} }]);
-    expect(me.effects).toContainEqual({ id: lightsOut.id, name: 'Lights Out', emoji: '', source: 'gear', left: 'first half' });
+    expect(me.lapEffects).toEqual([{ id: lightsOut.id, name: 'Launch Gloves', emoji: '', fromLap: 0, laps: half, driver: { acceleration: 0.36 }, car: {}, team: {} }]);
+    expect(me.effects).toContainEqual({ id: lightsOut.id, name: 'Launch Gloves', emoji: '', source: 'gear', left: 'first half' });
     expect(me.effects!.some(e => e.id === lightsOut.id && e.left === '3 races left')).toBe(true); // ink mileage (#704)
     // In the engine: +0.36 acceleration until the half, the base after; logged.
     const engine = RaceEngine.createForWorker();
@@ -112,7 +117,7 @@ describe('the run deck (#647)', () => {
     // The driver may retire early: judge the laps seen.
     expect(seen.get(0)).toBeCloseTo(base + 0.36, 10);
     for (const [lap, acc] of seen) expect(acc, `lap ${lap}`).toBeCloseTo(lap < half ? base + 0.36 : base, 10);
-    const log = engine.getFullEvents().slice(logged).filter(e => e.driverId === a && /Lights Out/.test(e.description) && (e.type === 'effect_applied' || e.type === 'effect_expired')).map(e => e.type);
+    const log = engine.getFullEvents().slice(logged).filter(e => e.driverId === a && /Launch Gloves/.test(e.description) && (e.type === 'effect_applied' || e.type === 'effect_expired')).map(e => e.type);
     expect(log).toEqual(seen.has(half) ? ['effect_applied', 'effect_expired'] : ['effect_applied']);
   });
 });
