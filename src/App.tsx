@@ -12,6 +12,7 @@ import WatchMode from './WatchMode';
 import RaceControl from './racecontrol/RaceControl';
 import SeasonScreen, { seasonScreenFor } from './season/ui/SeasonScreen';
 import { leagueForRound, seasonAvatars, seasonState, settleRound } from './season/season';
+import { stageOf } from './season/format';
 import { loadCurrentLeague as loadSeason, saveCurrentLeague as saveSeason } from './run/current';
 import { teamsOf } from './season/ui/teams';
 import { nemesisTeam } from './season/nemesis';
@@ -213,12 +214,15 @@ function App() {
       nemesis: (() => { const n = nemesisTeam(facts)?.id; return n ? leagueNow.roster.filter(d => d.kingdomId === n).map(d => d.id) : []; })(),
       you: teamsOf(facts)[facts.setup.humans[0].teamId],
       avatars: seasonAvatars(facts),
-      quali: true,
+      // The Final's first race starts as the Hundred finished (#694): a fixed grid, no qualifying.
+      quali: !leagueNow.schedule[state.round]?.gridOrder,
       step: facts.setup.league?.step ?? 'locals',
       stateId: facts.setup.league?.locale?.stateId,
-      program: `${stepName(facts.setup.league?.step ?? 'locals')} · Race ${state.round + 1} of ${facts.setup.calendar.length}`,
+      program: `${stepName(facts.setup.league?.step ?? 'locals')} · Race ${state.round + 1} of ${facts.setup.calendar.length}${(() => { const st = stageOf(facts, state.round); return st?.name && !/^Race \d/.test(st.name) ? ` · ${st.name}` : ''; })()}`,
       voice: feedVoiceFor(facts),
     });
+    // No qualifying to wait for: the race starts now.
+    if (leagueNow.schedule[state.round]?.gridOrder) engine.start();
   }, [onSeasonRace]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const endSeasonQuali = useCallback(() => {

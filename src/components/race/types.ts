@@ -60,6 +60,8 @@ export interface RowContext {
   isFocused: boolean;
   isFinished: boolean;
   isDNF: boolean;
+  /** Taken out by a lap cut (#694): shown as OUT, apart from a DNF. */
+  isEliminated?: boolean;
   isPitting: boolean;
   // For tire history chart
   currentLap: number;
@@ -109,6 +111,9 @@ export interface TimingTowerProps {
   nemesis?: ReadonlySet<number>;
   /** Season Mode (#489): portraits + vehicles by driver id. */
   avatars?: ReadonlyMap<number, { portrait: IconId; vehicle: IconId }>;
+  /** The Hundred (#694): window the tower on the leaders, your cars and the next cut line (`keep` teams go on);
+   * the rest collapses into "+N running" rows and the cars that are out into one. */
+  window?: { keep: number };
   className?: string;
 }
 

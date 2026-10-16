@@ -39,10 +39,17 @@ describe('generateSeasonPool', () => {
     expect(a.cars.map(c => c.stats)).not.toEqual(b.cars.map(c => c.stats));
   });
 
-  it('rejects grids outside 5–21 teams (21 = a 20-town State, #696)', () => {
+  it('rejects grids outside 5–52 teams (21 = a 20-town State, #696; 52 = Nationals, #694); past 98 cars the numbers repeat', () => {
     expect(() => generateSeasonPool(1, 4)).toThrow();
-    expect(() => generateSeasonPool(1, 22)).toThrow();
+    expect(() => generateSeasonPool(1, 53)).toThrow();
     expect(generateSeasonPool(1, 21).drivers).toHaveLength(42);
+    const big = generateSeasonPool(1, 52);
+    expect(big.drivers).toHaveLength(104);
+    const nums = big.drivers.map(d => d.number);
+    expect(nums.every(n => n >= 2 && n <= 99)).toBe(true);
+    expect(new Set(nums.slice(0, 98)).size).toBe(98);
+    // A longer roll shares its first draws with the shorter one: the 10-team grid is untouched.
+    expect(generateSeasonPool(1, 10).drivers.map(d => d.number)).toEqual(generateSeasonPool(1, 10).drivers.map(d => d.number));
   });
 
   it('CPU team identities come from the World Deck teams, no repeats', () => {

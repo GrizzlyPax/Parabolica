@@ -90,14 +90,15 @@ export const TOO_CLOSE = 25;
  * town in order (the State step); fewer towns than garages wrap. `avoid` is
  * your colour (#638): a rival whose drawn colour is too close to it takes the
  * next free deck colour that isn't, with no extra draws, so names and logos
- * stay where the seed put them.
+ * stay where the seed put them. `colours`, when given, is a colour per seat
+ * (a state's look at Nationals, #694): that seat wears it, whatever was drawn.
  */
-export function rivalGarages(rng: Rng, count: number, towns?: readonly string[], excludeNames: readonly string[] = [], avoid?: string): Garage[] {
+export function rivalGarages(rng: Rng, count: number, towns?: readonly string[], excludeNames: readonly string[] = [], avoid?: string, colours?: readonly (string | null)[]): Garage[] {
   const names = new Set(excludeNames);
-  // `drawn` drives the redraws (the seed's stream, unchanged by `avoid`); `colours` is what the garages wear.
+  // `drawn` drives the redraws (the seed's stream, unchanged by `avoid` or `colours`); `wornSet` is what the garages wear.
   const drawn = new Set<string>();
-  const colours = new Set<string>();
-  const ok = (hex: string) => !colours.has(hex) && !(avoid && colourDistance(hex, avoid) < TOO_CLOSE);
+  const wornSet = new Set<string>();
+  const ok = (hex: string) => !wornSet.has(hex) && !(avoid && colourDistance(hex, avoid) < TOO_CLOSE);
   const out: Garage[] = [];
   for (let i = 0; i < count; i++) {
     let name = garageName(rng);
@@ -111,9 +112,11 @@ export function rivalGarages(rng: Rng, count: number, towns?: readonly string[],
       const next = DECK_COLOURS.map((_, k) => DECK_COLOURS[(at + k) % DECK_COLOURS.length]).find(c => ok(c.hex));
       if (next) colour = next;
     }
-    colours.add(colour.hex);
+    // A seat with its own colour (a state's look at Nationals, #694) wears it instead; the draws above are untouched.
+    const worn = colours?.[i] ?? colour.hex;
+    wornSet.add(worn);
     const iconId = pick(GARAGE_LOGOS, rng);
-    out.push({ name, color: colour.hex, ink: inkFor(colour.hex), iconId, ...(towns?.length ? { town: towns[i % towns.length] } : {}) });
+    out.push({ name, color: worn, ink: inkFor(worn), iconId, ...(towns?.length ? { town: towns[i % towns.length] } : {}) });
   }
   return out;
 }

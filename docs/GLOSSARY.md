@@ -1,6 +1,6 @@
 # Ace America World Deck
 
-*Everything in the sim and the world, generated from the data modules by `npm run glossary` — do not edit by hand; edit the source files named in each section and re-run. Engine v0.8.2. How to add content: docs/WORLD_DECK.md.*
+*Everything in the sim and the world, generated from the data modules by `npm run glossary` — do not edit by hand; edit the source files named in each section and re-run. Engine v0.8.3. How to add content: docs/WORLD_DECK.md.*
 
 28 teams · 6 tracks · 94 cards (36 traits · 36 gear · 22 effects) · 5 in-race effects · 13 rule cards · 6 weathers
 

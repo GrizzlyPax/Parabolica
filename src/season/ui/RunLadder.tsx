@@ -60,6 +60,7 @@ function Rung({ r, drivers, onDriver, stateCode }: { r: RungView; drivers?: Your
     <li className="ace-panel now">
       {head}
       {r.races && <Squares {...r.races} />}
+      {r.stage && <p className="ace-note"><b>{r.stage.name}</b> · {r.stage.alive} of {r.stage.total} states in{r.stage.decides ? ` · ${r.stage.decides}` : ''}</p>}
       {r.you && r.rival && (
         <div className="ace-row2">
           <span><TeamLogo team={r.you.team} size={18} /> You · <b>{line(r.you)}</b></span>

@@ -29,7 +29,8 @@ import { weatherForRace } from '../../data/weather';
 import { draftState } from '../draft';
 import { openParcel, pendingParcel, teamStamps, holderFits, isInk, STAMP_SLOTS, SMUDGE_LIFE, GEAR_LIFE, TITLE_STAMP_PREFIX, type StampHolder } from '../stamps';
 import { effectCards, describeLeft, activeEffects } from '../effects';
-import { constructorStandings, driverStandings, lineupFor, poolFor, seasonState, setLineup, type SeasonFacts } from '../season';
+import { constructorStandings, driverStandings, lineupFor, poolFor, seasonState, setLineup, validateLineup, type SeasonFacts } from '../season';
+import { stageOf, isOut } from '../format';
 import { saveCurrentLeague as saveSeason } from '../../run/current';
 import { overall, readStat, type StatReading } from '../grades';
 import EndSeason from './EndSeason';
@@ -147,10 +148,14 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, ba
     const t = targets.find(x => x.key === (k === 'team' ? 'car' : k))!;
     if (t.stamps.length < t.slots) keep(lifted, t.key);
   };
+  const lineupOk = !parcel && validateLineup(facts, { round: state.round, teamId: viewer, driverIds: lineup }) === null;
   const lock = () => {
-    if (parcel || lineup.length !== 2) return;
-    commit(setLineup(facts, { round: state.round, teamId: viewer, driverIds: [lineup[0], lineup[1]] }));
+    if (!lineupOk) return;
+    commit(setLineup(facts, { round: state.round, teamId: viewer, driverIds: lineup }));
   };
+  // Nationals (#694): the stage, who is still in, and what the race decides.
+  const stage = stageOf(facts, round);
+  const out = isOut(facts, viewer);
 
   const chip = (c: Card, where: string) => (
     <span key={`${where}:${c.id}`} className="pk-stamp">
@@ -202,7 +207,7 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, ba
     ? <AceButton onClick={onGo}>Go: round {state.round + 1}</AceButton>
     : !myTurn ? null
     : step === 0 && !revealing ? <AceButton onClick={() => setRevealing(true)}>{smudge ? 'Open the Watcher Box' : 'Open the Parcel'}</AceButton>
-    : step >= 1 ? <AceButton disabled={lineup.length !== 2} onClick={lock}>Lock in</AceButton>
+    : step >= 1 ? <AceButton disabled={!lineupOk} onClick={lock}>Lock in</AceButton>
     : null;
   const turnLine = state.phase === 'ready-for-go' ? (
     <div className="pk-go"><span>Every team is set for round {state.round + 1}.</span></div>
@@ -239,6 +244,12 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, ba
 
   const teamTab = (
     <>
+      {stage && (
+        <p className="rs-hint pk-hint pk-stage">
+          <b>{stage.name}</b> · {stage.alive} states in, {stage.drivers} cars{stage.decides ? ` · ${stage.decides}` : ''}
+          {out ? ' · Your state is out: the rest of Nationals runs without you.' : lineup.length === 1 ? ' · You are down to one car.' : ''}
+        </p>
+      )}
       {turnLine}
       {priorityLine}
       {parcel && myTurn && (revealing ? (

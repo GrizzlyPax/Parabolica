@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import RaceEngine, { TIRE_COMPOUNDS, RosterDriver } from './RaceEngine';
+import RaceEngine, { TIRE_COMPOUNDS, RosterDriver, type RaceConfig } from './RaceEngine';
 import { CANON_VARIABLES } from './simlab/types';
 import { generateRoster, GeneratedDriver } from './generators/drivers';
 import { generateCarsForKingdoms, GeneratedCar } from './generators/cars';
@@ -671,3 +671,62 @@ describe('acceleration doubles as one-lap pace (#496)', () => {
     expect(quali(1.15, 0)).toBeCloseTo(quali(0.85, 0), 9);
   });
 });
+
+describe('lap cuts and a fixed grid (#694)', () => {
+  const build = (seed: number, extra: Partial<RaceConfig> = {}) => {
+    const track = ALL_TRACKS[0];
+    const engine = RaceEngine.createForWorker(CANON_VARIABLES, seed);
+    engine.loadGeneratedRoster(generateGenesisRoster(seed, TEAMS.slice(0, 8).map(t => t.id)));
+    engine.updateConfig({ totalLaps: track.laps, lapLength: track.length, maxStoredEvents: Number.MAX_SAFE_INTEGER, ...extra });
+    engine.setTrackInfo({ id: track.id, name: track.name, emoji: track.emoji, funEmoji: track.funEmoji, description: track.description, laps: track.laps });
+    return engine;
+  };
+
+  it('a race without lapCuts logs no cut and eliminates nobody', () => {
+    const r = build(31).runHeadless(31);
+    expect(r.events.some(e => e.type === 'cut' || e.type === 'eliminated')).toBe(false);
+    expect(r.drivers.every(d => d.status !== 'eliminated')).toBe(true);
+  });
+
+  it('the cuts fall when the leader completes the lap: keep N teams by their best-placed running car; the cut are eliminated, not DNF, and the race still finishes', () => {
+    const lapCuts = [{ afterLap: 1, keep: 5 }, { afterLap: 2, keep: 3 }];
+    const r = build(31, { lapCuts }).runHeadless(31);
+    const teamOf = (id: number) => r.drivers.find(d => d.id === id)!.kingdomId!;
+    const cuts = r.events.filter(e => e.type === 'cut');
+    expect(cuts.map(e => e.description)).toEqual([expect.stringMatching(/^The cut after lap 1: 5 states go on/), expect.stringMatching(/^The cut after lap 2: 3 states go on/)]);
+    const eliminated = r.drivers.filter(d => d.status === 'eliminated');
+    expect(new Set(eliminated.map(d => teamOf(d.id))).size).toBeGreaterThanOrEqual(4); // 8 teams → 3: five teams cut, less any that retired whole first
+    expect(eliminated.length).toBeGreaterThanOrEqual(8);
+    for (const d of eliminated) {
+      expect([1, 2]).toContain(d.eliminatedLap);
+      expect(d.dnfInfo).toBeNull();
+      expect(r.raceState.finishOrder).not.toContain(d.id);
+      expect(r.events.some(e => e.type === 'eliminated' && e.driverId === d.id && e.description === `Cut after lap ${d.eliminatedLap}`)).toBe(true);
+    }
+    // After the last cut at most 3 teams are still in: only their cars can finish (a car that retired before a cut is a DNF, not a cut).
+    expect(new Set(r.raceState.finishOrder.map(teamOf)).size).toBeLessThanOrEqual(3);
+    expect(r.raceState.finishOrder.length).toBeGreaterThan(0);
+    expect(r.drivers.every(d => d.status === 'finished' || d.status === 'dnf' || d.status === 'eliminated')).toBe(true);
+    expect(r.raceState.raceFinished).toBe(true);
+    // A cut car stopped where it was: it completed no lap after its cut.
+    for (const d of eliminated) expect(d.currentLap).toBeLessThanOrEqual(d.eliminatedLap!);
+    // Deterministic: the same seed cuts the same cars.
+    const again = build(31, { lapCuts }).runHeadless(31);
+    expect(again.drivers.filter(d => d.status === 'eliminated').map(d => [d.id, d.eliminatedLap])).toEqual(eliminated.map(d => [d.id, d.eliminatedLap]));
+    expect(again.raceState.finishOrder).toEqual(r.raceState.finishOrder);
+  });
+
+  it('a fixed grid skips qualifying: the grid is the order given, missing cars at the back, and the race is deterministic', () => {
+    const probe = build(31);
+    const ids = probe.getDrivers().map(d => d.id);
+    const given = [...ids].reverse().slice(0, ids.length - 2); // the last two cars left out
+    const engine = build(31, { gridOrder: given });
+    const r = engine.runHeadless(31);
+    expect(engine.getGridOrder()).toEqual([...given, ...ids.filter(id => !given.includes(id))]);
+    expect(engine.getGridOrder()).toHaveLength(ids.length);
+    expect(r.events.find(e => e.type === 'grid_set')?.driverId).toBe(given[0]);
+    expect(build(31, { gridOrder: given }).runHeadless(31).raceState.finishOrder).toEqual(r.raceState.finishOrder);
+    expect(build(31).runHeadless(31).events.find(e => e.type === 'grid_set')?.driverId).not.toBe(given[0]);
+  });
+});
+

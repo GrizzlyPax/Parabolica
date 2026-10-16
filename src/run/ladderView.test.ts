@@ -30,11 +30,11 @@ function findRun(phase: 'league-won' | 'run-lost'): RunFacts {
 }
 
 describe('the ladder view (#628, #696)', () => {
-  it('a fresh run: Locals open with no races run, State ahead, Nationals ahead and later; your state and town; every unlock listed', () => {
+  it('a fresh run: Locals open with no races run, State and Nationals ahead; your state and town; every unlock listed', () => {
     const run = testRun(7, 'oh');
     const v = ladderView(run, grant(emptyMeta(), 'next-difficulty'));
     expect(v.rungs.map(r => [r.name, r.status, r.title])).toEqual([['Locals', 'current', `Ace ${townOf(run)}`], ['State', 'ahead', 'Ace Ohio'], ['Nationals', 'ahead', 'Ace America']]);
-    expect(v.rungs[2].later).toBe(true);
+    expect(v.rungs[2].later).toBeUndefined();
     expect(v.rungs[0].races).toEqual({ done: 0, total: 5 });
     expect(v.rungs[0].you?.team.name).toBe('Kettle Street Garage');
     expect(v.rungs[0].rival?.nemesis).toBe(false);

@@ -29,6 +29,7 @@ import { draftOrder, draftState, draftedRosters, type DraftPick } from './draft'
 import { portraitFor, vehicleFor } from '../generators/avatars';
 import type { IconId } from '../icons/registry';
 import { parcelOpened, seasonCardsFor, inkInfos, type CardFact } from './stamps';
+import { aliveAt, isOut, scoredRounds, lapCutsFor, gridFor, bestFinish } from './format';
 import { roundEffects, type EffectFact } from './effects';
 
 /** 6 since the run (#597, v0.7): a league is 4 × 6; League Setup can still change it. */
@@ -61,7 +62,8 @@ export interface SeasonSetup {
 export interface SeasonLineup {
   round: number;
   teamId: string;
-  driverIds: [number, number];
+  /** Two drivers; one when the team is down to one car (Nationals, #694). */
+  driverIds: number[];
 }
 
 /** The whole season, as facts. */
@@ -167,13 +169,20 @@ export function constructorStandings(facts: SeasonFacts): ConstructorStanding[] 
   const pool = poolFor(facts);
   const order = draftOrder(pool);
   const rosters = draftState(pool, facts.draftPicks).rosters;
+  // Under a format (#694) only the Final's races score, and a team that is out ranks below every team still in (the later it went, the higher).
+  const scored = new Set(scoredRounds(facts));
+  const { outAt } = aliveAt(facts);
   const lines = pool.teams.map(t => {
     const ids = rosters[t.id].driverIds;
-    const perRound = facts.results.map(d => ids.reduce((s, id) => s + driverPointsInRace(d, id), 0));
-    const wins = facts.results.filter(d => ids.includes(d.finishOrder[0])).length;
+    const perRound = facts.results.map((d, i) => (scored.has(i) ? ids.reduce((s, id) => s + driverPointsInRace(d, id), 0) : 0));
+    const wins = facts.results.filter((d, i) => scored.has(i) && ids.includes(d.finishOrder[0])).length;
     return { teamId: t.id, points: perRound.reduce((a, b) => a + b, 0), wins, perRound, rank: 0 };
   });
-  lines.sort((a, b) => b.points - a.points || b.wins - a.wins || order.indexOf(a.teamId) - order.indexOf(b.teamId));
+  const out = (id: string) => (outAt[id] === undefined ? Infinity : outAt[id]);
+  // Under a format a tie on points and wins goes to the better finish in the last race (#694); a plain season keeps draft order.
+  const last = facts.setup.league?.format && scored.size ? facts.results[Math.max(...scored)] : undefined;
+  const lastFinish = (id: string) => (last ? bestFinish(last, rosters[id].driverIds)[0] : 0);
+  lines.sort((a, b) => out(b.teamId) - out(a.teamId) || b.points - a.points || b.wins - a.wins || lastFinish(a.teamId) - lastFinish(b.teamId) || order.indexOf(a.teamId) - order.indexOf(b.teamId));
   lines.forEach((l, i) => { l.rank = i + 1; });
   return lines;
 }
@@ -182,7 +191,8 @@ export function constructorStandings(facts: SeasonFacts): ConstructorStanding[] 
 export function driverStandings(facts: SeasonFacts): DriverSeasonStats[] {
   const pool = poolFor(facts);
   let season = createInitialSeasonState(facts.setup.calendar.length, pool.drivers.map(d => d.id));
-  for (const d of facts.results) {
+  for (const i of scoredRounds(facts)) {
+    const d = facts.results[i];
     season = updateSeasonWithRaceResult(season, d.finishOrder, d.dnfDriverIds, d.trackName, d.trackEmoji, d.fastestLapDriverId);
   }
   return getSeasonStandings(season);
@@ -197,18 +207,25 @@ export function paddockOrder(facts: SeasonFacts): string[] {
 }
 
 /** The lineup a team races this round: its fact, else its last lineup, else
- * its first two drafted drivers. CPU teams and quiet humans both get this. */
-export function lineupFor(facts: SeasonFacts, round: number, teamId: string): [number, number] {
-  const own = facts.lineups.filter(l => l.teamId === teamId && l.round <= round).sort((a, b) => b.round - a.round);
-  if (own.length) return own[0].driverIds;
+ * its first two drafted drivers. CPU teams and quiet humans both get this.
+ * Under a format (#694) the cars still in race, whatever the fact says. */
+export function lineupFor(facts: SeasonFacts, round: number, teamId: string): number[] {
   const roster = draftState(poolFor(facts), facts.draftPicks).rosters[teamId];
   if (!roster || roster.driverIds.length < RACE_LINEUP) throw new Error(`lineupFor: ${teamId} has not drafted ${RACE_LINEUP} drivers`);
+  if (facts.setup.league?.format) {
+    const alive = new Set(aliveAt(facts, round).drivers);
+    return roster.driverIds.filter(id => alive.has(id));
+  }
+  const own = facts.lineups.filter(l => l.teamId === teamId && l.round <= round).sort((a, b) => b.round - a.round);
+  if (own.length) return own[0].driverIds;
   return [roster.driverIds[0], roster.driverIds[1]];
 }
 
 /** Has this team finished its Paddock turn for the round? Two decisions:
- * who races and the Parcel (when the team gets one), in any order. */
+ * who races and the Parcel (when the team gets one), in any order. A team
+ * that is out (#694) has no turn. */
 export function turnDone(facts: SeasonFacts, round: number, teamId: string): boolean {
+  if (isOut(facts, teamId, round)) return true;
   return facts.lineups.some(l => l.round === round && l.teamId === teamId) && parcelOpened(facts, round, teamId);
 }
 
@@ -225,6 +242,13 @@ export function validateLineup(facts: SeasonFacts, lineup: SeasonLineup): string
   if (lineup.teamId !== state.whoseTurn) return `${lineup.teamId} is not on the clock (${state.whoseTurn} is)`;
   if (facts.lineups.some(l => l.round === lineup.round && l.teamId === lineup.teamId)) return 'the lineup is already set this round';
   const roster = draftState(poolFor(facts), facts.draftPicks).rosters[lineup.teamId];
+  if (facts.setup.league?.format) {
+    // The cars still in race (#694): the lineup names exactly them.
+    const alive = lineupFor(facts, lineup.round, lineup.teamId);
+    if (!alive.length) return `${lineup.teamId} is out`;
+    if ([...lineup.driverIds].sort().join(',') !== [...alive].sort().join(',')) return `the cars still in are ${alive.join(', ')}`;
+    return null;
+  }
   const [a, b] = lineup.driverIds;
   if (lineup.driverIds.length !== RACE_LINEUP || a === b) return `a lineup is ${RACE_LINEUP} different drivers`;
   if (!roster.driverIds.includes(a) || !roster.driverIds.includes(b)) return `both drivers must be on ${lineup.teamId}`;
@@ -266,10 +290,11 @@ export function raceSeed(seed: number, round: number): number {
   return deriveSeed(seed, 'season', 'race', round);
 }
 
-/** Every team's lineup for a round, in team order. */
+/** Every team's lineup for a round, in team order; under a format (#694) only the teams still in. */
 export function lineupsFor(facts: SeasonFacts, round: number): Lineup[] {
   const pool = poolFor(facts);
-  return pool.teams.map(t => ({ teamId: t.id, driverIds: lineupFor(facts, round, t.id) }));
+  const alive = facts.setup.league?.format ? new Set(aliveAt(facts, round).teams) : null;
+  return pool.teams.filter(t => !alive || alive.has(t.id)).map(t => ({ teamId: t.id, driverIds: lineupFor(facts, round, t.id) }));
 }
 
 /**
@@ -303,7 +328,11 @@ export function leagueForRound(facts: SeasonFacts, round: number): LeagueState {
       createdAt: 0,
       ruleset: setup.ruleset,
     },
-    schedule: setup.calendar.map((trackId, index) => ({ index, trackId, scheduledAt: 0, seed: raceSeed(setup.seed, index) })),
+    // The Hundred's lap cuts and the Final's first grid ride on the schedule (#694); plain rounds carry neither.
+    schedule: setup.calendar.map((trackId, index) => {
+      const lapCuts = lapCutsFor(facts, index), gridOrder = gridFor(facts, index);
+      return { index, trackId, scheduledAt: 0, seed: raceSeed(setup.seed, index), ...(lapCuts ? { lapCuts } : {}), ...(gridOrder ? { gridOrder } : {}) };
+    }),
     interventionLog: [],
     settledThrough: round - 1,
     roster,

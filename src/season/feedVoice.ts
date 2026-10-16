@@ -1,7 +1,7 @@
 // Who's who for the race feed's callers (#749, docs/story/voice.md →
 // Placeholders): your town and garage, and per driver their car's identifier
 // ({no}), home town (State: each garage is its town's Ace) and home state
-// (Nationals: the state code on the car, #725). Display only.
+// (Nationals: the state code on the car, OH1 / OH2, #725 / #694). Display only.
 import type { FeedVoice } from '../feed/commentary';
 import { placeById } from '../data/states';
 import { raceBadges } from './badges';
@@ -19,7 +19,8 @@ export function feedVoiceFor(facts: SeasonFacts): FeedVoice {
     const town = t.id === you?.teamId ? locale?.town : t.town;
     for (const id of rosters[t.id]?.driverIds ?? []) {
       const code = badges[id];
-      const state = /^[A-Z]{2}$/.test(code ?? '') ? placeById(code)?.name : undefined;
+      const abbr = /^([A-Z]{2})[12]?$/.exec(code ?? '')?.[1];
+      const state = abbr ? placeById(abbr)?.name : undefined;
       cars[id] = { no: code, town, state };
     }
   }

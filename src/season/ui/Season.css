@@ -580,6 +580,8 @@ button.rt-g:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset:
 .rl-stamp-who { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; }
 .rl-stamp-stats { display: flex; flex-wrap: wrap; gap: 4px; }
 .rl-stamp-stats .ace-tab { border: 1px solid var(--ace-rule); padding: 4px 8px; font-size: 12px; }
+.pk-stage { font-style: normal; }
+.pk-stage b { font-family: var(--look-display); }
 /* The run's start (#697): the tile map and the flavour page. Tokens only; tile colours come from the state data. */
 .sr .sr-links { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .sr .sr-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }

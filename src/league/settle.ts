@@ -8,7 +8,7 @@
 // Pure (input league is never mutated) and synchronous.
 // See docs/COMMISSIONER_MODE_TECH.md (Problem 3).
 
-import RaceEngine, { Driver, RosterDriver } from '../RaceEngine';
+import RaceEngine, { Driver, RosterDriver, isOutOfRace } from '../RaceEngine';
 import { SimVariables, CANON_VARIABLES } from '../simlab/types';
 import { getTrackById, Track } from '../generators/tracks';
 import { updateSeasonWithRaceResult } from '../types/season';
@@ -86,6 +86,9 @@ export function prepareScheduledRace(
     totalLaps: track.laps,
     lapLength: track.length,
     tyreWear: track.tyreWear,
+    // The Hundred's lap cuts and the Final's fixed grid (#694); absent on a plain race
+    ...(race.lapCuts ? { lapCuts: race.lapCuts } : {}),
+    ...(race.gridOrder ? { gridOrder: race.gridOrder } : {}),
   });
   engine.setTrackInfo({
     id: track.id,
@@ -149,6 +152,10 @@ export function runScheduledRace(
     trackEmoji: track.funEmoji,
     finishOrder: raceState.finishOrder,
     dnfDriverIds: drivers.filter(d => d.status === 'dnf').map(d => d.id),
+    ...(drivers.some(d => d.status === 'eliminated') ? {
+      eliminatedDriverIds: drivers.filter(d => d.status === 'eliminated').map(d => d.id),
+      eliminatedAt: Object.fromEntries(drivers.filter(d => d.status === 'eliminated').map(d => [d.id, d.eliminatedLap ?? 0])),
+    } : {}),
     gridOrder: lapHistory[0]?.order,
     damagedDriverIds: drivers.filter(d => d.isDamaged && d.status !== 'dnf').map(d => d.id),
     crashPairs,
@@ -288,11 +295,11 @@ export function liveRaceSnapshot(
   engine.fastForward(Math.floor((Math.min(now, live.endsAt) - live.startedAt) / LIVE_TICK_MS));
 
   const drivers = engine.getDrivers(); // already in race order
-  const racing = drivers.filter(d => d.status !== 'dnf');
-  const dnf = drivers.filter(d => d.status === 'dnf');
+  const racing = drivers.filter(d => !isOutOfRace(d));
+  const out = drivers.filter(d => isOutOfRace(d));
   const leaderLap = Math.max(0, ...racing.map(d => d.currentLap));
   return {
-    runningOrder: [...racing, ...dnf].map(d => d.id),
+    runningOrder: [...racing, ...out].map(d => d.id),
     lap: Math.min(track.laps, leaderLap + 1),
     totalLaps: track.laps,
   };

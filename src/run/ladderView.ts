@@ -9,6 +9,7 @@ import { runState, seasonFactsFor, titlesOf, type RunFacts, type RunPhase } from
 import type { Step } from '../look/step';
 import { UNLOCKS, type MetaFacts, type UnlockId } from './meta';
 import { nemesisTeam } from '../season/nemesis';
+import { aliveAt, stageOf } from '../season/format';
 
 export interface Standing { team: TeamLike & { id: string }; place: number; points: number }
 
@@ -28,6 +29,8 @@ export interface RungView {
   rival?: Standing & { nemesis: boolean };
   /** One line for a finished step. */
   memory?: string;
+  /** A format step (Nationals, #694): the stage in play and who is still in. */
+  stage?: { name: string; alive: number; total: number; decides: string };
 }
 
 export interface LadderView {
@@ -64,7 +67,11 @@ function rungFor(run: RunFacts, rung: RungView): RungView {
   const rival = rivalId ? standingOf(facts, rivalId) : undefined;
   const done = seasonState(facts).phase === 'finished' ? facts.setup.calendar.length : facts.results.length;
   const view: RungView = { ...rung, races: { done, total: facts.setup.calendar.length }, you, rival: rival && { ...rival, nemesis: rivalId === nemesisId } };
+  const stage = stageOf(facts, Math.min(done, facts.setup.calendar.length - 1));
+  if (stage) view.stage = { ...stage, total: facts.setup.teamCount };
+  const outAt = aliveAt(facts).outAt[youId];
   if (rung.status === 'won') view.memory = `${rung.title}: yours.`;
+  else if (rung.status === 'lost' && outAt !== undefined) view.memory = `Out after ${stageOf(facts, outAt)?.name ?? `race ${outAt + 1}`}, with ${aliveAt(facts, outAt + 1).teams.length} states still in. The run ended here.`;
   else if (rung.status === 'lost' && you) view.memory = `Finished ${ordinal(you.place)} with ${you.points} pts. The run ended here.`;
   return view;
 }

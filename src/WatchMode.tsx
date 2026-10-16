@@ -2,7 +2,7 @@ import { fantasyStandings, fantasyHex, type FantasyConfig } from './fantasy/type
 import { getDeckTrackById } from './data/deckTracks';
 import { isNeutralWeather } from './data/weather';
 import { favourText, favourParts } from './cards/favourText';
-import RaceEngine, { Driver, RaceConfig, RaceState, TrackInfo, RaceEvent, EffectStackEntry } from './RaceEngine';
+import RaceEngine, { Driver, RaceConfig, RaceState, TrackInfo, RaceEvent, EffectStackEntry, isOutOfRace } from './RaceEngine';
 import { useMemo, useRef, useEffect, useState } from 'react';
 import {
   UniversalHeader,
@@ -347,7 +347,7 @@ function WatchMode({
   const leaderLapForFeed = () => {
     let lap = 0;
     for (const d of drivers) {
-      if (d.status !== 'dnf' && d.currentLap > lap) lap = d.currentLap;
+      if (!isOutOfRace(d) && d.currentLap > lap) lap = d.currentLap;
     }
     return Math.min(Math.max(lap, 1), totalLaps);
   };
@@ -404,9 +404,29 @@ function WatchMode({
       if (e.type === 'effect_applied') {
         seenEffectsRef.current.add(`${e.tick}-${e.driverId}-${e.description}`);
       }
+      if ((e.type === 'cut' || e.type === 'eliminated') && e.tick > lastCutTickRef.current) lastCutTickRef.current = e.tick;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [drivers, raceState.totalTicks]);
+
+  // The Hundred's cuts (#694): the engine logs them; the banner and the feed pick them up.
+  const lastCutTickRef = useRef<number>(-1);
+  useEffect(() => {
+    if (!raceEvents || raceEvents.length === 0) return;
+    const fresh = raceEvents.filter(e => (e.type === 'cut' || e.type === 'eliminated') && e.tick > lastCutTickRef.current);
+    if (!fresh.length) return;
+    lastCutTickRef.current = Math.max(...fresh.map(e => e.tick));
+    for (const e of fresh) {
+      if (e.type === 'cut') {
+        const [head, body] = e.description.split(':').map(s => s.trim());
+        addNotification('milestone', head.toUpperCase(), body ?? '', 'race.final_lap', undefined, 12000);
+      } else if (e.type === 'eliminated' && mineSet?.has(e.driverId)) {
+        const d = drivers.find(x => x.id === e.driverId);
+        addNotification('info', 'OUT', `${d?.name ?? e.driverName} is out: ${e.description.toLowerCase()}`, 'race.final_lap', d ? [{ id: d.id, name: d.name, emoji: d.emoji }] : undefined, 12000, d?.color);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [raceEvents]);
 
   // Detect new crashes and tire blowouts, add notifications
   useEffect(() => {
@@ -713,8 +733,8 @@ function WatchMode({
     const newSortedDrivers = [...drivers].sort((a, b) => {
       const aFinished = a.status === 'finished';
       const bFinished = b.status === 'finished';
-      const aDNF = a.status === 'dnf';
-      const bDNF = b.status === 'dnf';
+      const aDNF = isOutOfRace(a);
+      const bDNF = isOutOfRace(b);
 
       // Finished drivers first
       if (aFinished && bFinished) {
@@ -981,8 +1001,8 @@ function WatchMode({
   const realtimeSortedDrivers = [...drivers].sort((a, b) => {
     const aFinished = a.status === 'finished';
     const bFinished = b.status === 'finished';
-    const aDNF = a.status === 'dnf';
-    const bDNF = b.status === 'dnf';
+    const aDNF = isOutOfRace(a);
+    const bDNF = isOutOfRace(b);
 
     // Finished drivers first
     if (aFinished && bFinished) {
@@ -1144,6 +1164,13 @@ function WatchMode({
   // Starting grid (set by qualifying on tick 1); cheap, read each render.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const gridOrder = useMemo(() => engine.getGridOrder(), [drivers, engine]);
+  // The Hundred (#694): while a cut is still to fall, the tower windows on the leaders, your cars and the next line.
+  const nextCut = useMemo(() => {
+    if (!config.lapCuts?.length) return undefined;
+    const lap = Math.max(0, ...drivers.filter(d => !isOutOfRace(d)).map(d => d.currentLap));
+    const cut = [...config.lapCuts].sort((a, b) => a.afterLap - b.afterLap).find(c => c.afterLap > lap);
+    return cut ? { keep: cut.keep } : undefined;
+  }, [config.lapCuts, drivers]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const battles = useMemo(() => engine.getBattles().filter(b => b.ticks >= 20), [drivers, engine]);
   const effectStacksMap = useMemo(() => {
@@ -1297,6 +1324,7 @@ function WatchMode({
                 )}
                 {qualifying ? <QualiBoard laps={qualiLaps} drivers={drivers} nominalTicks={engine.nominalLapTicks()} mine={mineSet} onDone={onQualifyingDone!} onLap={setQualiLive} follow={follow} /> : (
                 <TimingTower
+                  window={nextCut}
                   sealed={sealedDriverIds}
                   mine={mineSet}
                   nemesis={nemesisSet}
@@ -1360,6 +1388,7 @@ function WatchMode({
                 )}
                 {qualifying ? <QualiBoard laps={qualiLaps} drivers={drivers} nominalTicks={engine.nominalLapTicks()} mine={mineSet} onDone={onQualifyingDone!} onLap={setQualiLive} follow={follow} /> : (
                 <TimingTower
+                  window={nextCut}
                   sealed={sealedDriverIds}
                   mine={mineSet}
                   nemesis={nemesisSet}

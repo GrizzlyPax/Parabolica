@@ -57,6 +57,10 @@
 .ace-race .timing-row.focused { background: var(--ace-paper-2); box-shadow: none; }
 .ace-race .timing-row.finished { background: color-mix(in srgb, var(--ace-green) 12%, var(--ace-paper)); }
 .ace-race .timing-row.dnf { background: color-mix(in srgb, var(--ace-red-lv) 10%, var(--ace-paper)); }
+.ace-race .timing-row.eliminated { background: var(--ace-paper-2); }
+.ace-race .position-number.eliminated { color: var(--ace-ink-2); }
+.ace-race .timing-row.timing-gap { font-family: var(--ace-cond); letter-spacing: .14em; color: var(--ace-ink-2); background: var(--ace-paper); }
+.ace-race .timing-row.timing-cut { font-family: var(--ace-cond); letter-spacing: .14em; color: var(--ace-ink); background: var(--ace-paper); border-top: 2px dashed var(--ace-ink); border-bottom: 2px dashed var(--ace-ink); }
 .ace-race .position-number { color: var(--ace-ink); font-family: var(--ace-disp); font-weight: 400; }
 .ace-race .position-number.pitting { color: var(--ace-navy-2); }
 .ace-race .driver-code, .ace-race .driver-full-name { color: var(--ace-ink); font-family: var(--ace-cond); letter-spacing: .04em; }
