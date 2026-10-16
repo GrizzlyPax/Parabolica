@@ -2,7 +2,7 @@
 
 Parabolica is an F1-style race sim: draft a team, race a Season, chase two championships. Play it at **[playaceamerica.com](https://playaceamerica.com)** (the game was Parabolica until v0.8; playparabolica.com redirects). Moving the domain: [DOMAIN.md](DOMAIN.md).
 
-**New here? Read in this order:** [the latest handoff](HANDOFF_2026-10-08.md) → [`CLAUDE.md`](../CLAUDE.md) → the doc for the area you're touching.
+**New here? Read in this order:** [the latest handoff](HANDOFF_2026-10-16.md) → [`CLAUDE.md`](../CLAUDE.md) → the doc for the area you're touching.
 
 ## Start here
 | Doc | What it's for |
@@ -11,6 +11,7 @@ Parabolica is an F1-style race sim: draft a team, race a Season, chase two champ
 | [V07_PLAN](V07_PLAN.md) | **The v0.7 Suzuka plan (✅ shipped Oct 10, v0.7.4, trimmed):** the roguelite run; milestones, lanes |
 | [V06_PLAN](V06_PLAN.md) | **The v0.6 Monza plan (✅ shipped Oct 10, v0.6.1):** owner choices; decision log; v0.7 direction |
 | [V05_PLAN](V05_PLAN.md) | **The v0.5 Spa plan (✅ shipped Oct 9, v0.5.1):** milestones, lanes, order, risks, decision log |
+| [HANDOFF_2026-10-16](HANDOFF_2026-10-16.md) | **Oct 16: v0.8 playable end to end:** what v0.8 is and where Pax sees it, how the run, stamps, Nationals, the look, badges and the voice fit, the traps, what's left with the paste lines |
 | [HANDOFF_2026-10-08](HANDOFF_2026-10-08.md) | Oct 8: GitHub-only planning, the crew, the Almanac look, icons, metals, numbers, what's next |
 | [HANDOFF_2026-10-07](HANDOFF_2026-10-07.md) | What shipped Oct 5–7, how the pieces fit, traps, open work |
 | [LOOK](LOOK.md) | **The look (v0.8): Ace America, the race program:** tokens, one theme per step, the sash, the components, how a screen wears it; Race Control → Style is the live catalogue |
@@ -24,7 +25,7 @@ Parabolica is an F1-style race sim: draft a team, race a Season, chase two champ
 | [TAG_SYSTEM](TAG_SYSTEM.md) | History: tags (retired in v0.6; cards replaced them): five sources, magnitude ladder, acquisition engine |
 | [TRACKS_WEATHER](TRACKS_WEATHER.md) | 6 stat-combo tracks + dry weathers (**v0.5**); lap-by-lap Wet + wet tyre (**v0.6**) |
 | [CONDITIONS_LAYER](CONDITIONS_LAYER.md) | History: track tags + weather (retired in v0.6; see TRACKS_WEATHER) |
-| [RUN](RUN.md) | **The run core (v0.7):** 4 leagues × 6 races as facts, derived league setups, the carried team, promotion, run + meta saves, hooks |
+| [RUN](RUN.md) | **The run (v0.8):** Locals → State → Nationals as facts, derived setups, the carried garage, stamps and Parcels, Nationals' format and lap cuts, saves, traps |
 | [SEASON_MODE](SEASON_MODE.md) | **v0.5 Spa build spec:** League Setup, draft, Paddock loop (v0.7: a Season is one league of the run; [RUN.md](RUN.md) is current) |
 | [FUN_CHECK](FUN_CHECK.md) | **Is a season fun?** Six signals with probe targets, playtest look-fors, red flags |
 | [BALANCE_REPORT_2026-10-09](BALANCE_REPORT_2026-10-09.html) | **Steward's balance report (Oct 9):** stat parity, tracks & weather, how Season titles are decided; findings only ([published copy](https://claude.ai/artifact/MC5fwYaqd6KJD8Gk9q8E94)) |

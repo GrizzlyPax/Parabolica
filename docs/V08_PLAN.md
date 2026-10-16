@@ -10,10 +10,10 @@
 ## Milestones
 | # | Milestone | Issues | Pax can… |
 |---|---|---|---|
-| **1** | **Lock + the look** | ✅ #692 story → bible (📻, canon) · #693 run design (🏛️) · #704 cards become stamps (🏛️) · #694 Nationals (🏛️, then one 🏎️ read) · #698 the look, three directions (🛞, mock-ups) | Read the world as canon; pick the run's shape, the stamps and the look |
-| **2** | **Foundations** | ✅ #705 the design system (🏎️, PR #713; guide: `docs/LOOK.md`, catalogue: Race Control → Style) · #695 52 places, population, cities, generic garages (🛞; part 1 ✅) · #696 run core (🏎️) | See the style page and the Ladder in the new look; climb Locals → State |
-| **3** | **Screens + words** | Hub's look sweeps: #715 Paddock · #716 race view · #717 standings + finale · #718 World Deck · #719 Race Control shell · #697 new run screen (🛞) · #699 Parcels, titles, stamp names (🛞) · #700 the caller and the Interval (📻) · #370 six American tracks (📻) | Every screen in Ace America's look and voice |
-| **4** | **Ship** | #701 rename + playaceamerica.com (🛞) · #629 re-probe (🏛️) · Nationals build (filed after #694) | Play it at playaceamerica.com, end to end |
+| **1** | **Lock + the look** | ✅ #692 story → bible (📻, canon) · #693 run design (🏛️) · #704 cards become stamps (🏛️) · #694 Nationals (🏛️, 🏎️ read, then the build: PR #756) · #698 the look, three directions (🛞, mock-ups) | Read the world as canon; pick the run's shape, the stamps and the look |
+| **2** | **Foundations** | ✅ #705 the design system (🏎️, PR #713; guide: `docs/LOOK.md`, catalogue: Race Control → Style) · #695 52 places, population, cities, generic garages (🛞 + 🏎️) · #696 run core (🏎️, PR #731) | See the style page and the Ladder in the new look; climb Locals → State |
+| **3** | **Screens + words** | ✅ #715 Paddock · #716 race view (🏎️) · #717 standings + finale · #718 World Deck · #719 Race Control shell · #722 desktop first · #697 new run screen · #725 tier identifiers · #699 Parcels, titles, stamp names (🛞, three parts) · #704 stamps (🏎️, PR #754) · #749 the three callers (🛞) · #762 voice hooks (🏎️, PR #768) · #638 rival colours · #763 · 🟡 **left:** #750 track names · #751 the Interval · #769 ribbon + toasts (🛞) | Every screen in Ace America's look and voice |
+| **4** | **Ship** | ✅ #701 rename + playaceamerica.com (🛞, PR #771) · 🟡 #629 re-probe (🏛️) | Play it at playaceamerica.com, end to end (**playable since Oct 16**, v0.8.3) |
 
 ## Rules
 - **The gate:** the domain is done; nothing in `src/` renames before #693's steers are answered.
@@ -61,3 +61,5 @@
 | Oct 14 | Fable credits reset Oct 15: Apex takes #696 + #695 part 2, the #694 100-car read, and the #716 race view today (Pax) |
 | Oct 10 | **Desktop first** (replaces phone-first): "when we're really looking at a racing game, the bigger the better." Build for desktop; the phone view is a smaller version of it, later (Pax) |
 | Oct 10 | Focus on the look: an aesthetic pass on every screen; Apex builds the design system, Hub sweeps the screens (Pax) |
+| Oct 16 | **Nationals built to the answers** (#694, PR #756): four races; the cuts fall inside the Hundred when the leader completes laps 1 / 2 / 3 (`RaceConfig.lapCuts`, status `'eliminated'` beside DNF, no RNG); race 2 starts as the Hundred finished; ties by wins then the last race; OH1 / OH2 on the cars. Version 0.8.3 (Apex; Pax authorised the merges) |
+| Oct 16 | **The whole run is playable** on main: Locals → State → Nationals → Ace America, checked in a browser at 1440 × 900 (Apex's Oct 16 playthrough; `docs/HANDOFF_2026-10-16.md`) |
