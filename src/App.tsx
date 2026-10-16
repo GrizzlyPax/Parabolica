@@ -11,7 +11,8 @@ import RaceStartCountdown from './RaceStartCountdown';
 import WatchMode from './WatchMode';
 import RaceControl from './racecontrol/RaceControl';
 import SeasonScreen, { seasonScreenFor } from './season/ui/SeasonScreen';
-import { leagueForRound, seasonAvatars, seasonState, settleRound } from './season/season';
+import { leagueForRound, seasonAvatars, seasonState, settleRound, type SeasonFacts } from './season/season';
+import { leagueWon } from './run/run';
 import { stageOf } from './season/format';
 import { loadCurrentLeague as loadSeason, saveCurrentLeague as saveSeason } from './run/current';
 import { teamsOf } from './season/ui/teams';
@@ -178,7 +179,7 @@ function App() {
   // the same race to its finish. The round is recorded by settleRound (the
   // headless run of the same seeded race), so watching changes nothing.
   const onSeasonRace = route.name === 'season' && route.screen === 'race';
-  const [seasonRace, setSeasonRace] = useState<{ round: number; sealed: Set<number>; mine: number[]; nemesis: number[]; you: TeamLike; avatars: ReturnType<typeof seasonAvatars>; quali: boolean; step: Step; stateId?: string; program: string; voice: FeedVoice } | null>(null);
+  const [seasonRace, setSeasonRace] = useState<{ round: number; sealed: Set<number>; mine: number[]; nemesis: number[]; you: TeamLike; avatars: ReturnType<typeof seasonAvatars>; quali: boolean; step: Step; stateId?: string; program: string; voice: FeedVoice; facts: SeasonFacts } | null>(null);
   const settlingSeason = useRef(false);
   useEffect(() => {
     if (!onSeasonRace) {
@@ -220,6 +221,7 @@ function App() {
       stateId: facts.setup.league?.locale?.stateId,
       program: `${stepName(facts.setup.league?.step ?? 'locals')} · Race ${state.round + 1} of ${facts.setup.calendar.length}${(() => { const st = stageOf(facts, state.round); return st?.name && !/^Race \d/.test(st.name) ? ` · ${st.name}` : ''; })()}`,
       voice: feedVoiceFor(facts),
+      facts,
     });
     // No qualifying to wait for: the race starts now.
     if (leagueNow.schedule[state.round]?.gridOrder) engine.start();
@@ -366,6 +368,14 @@ function App() {
           state={seasonRace.stateId ? stateLook(seasonRace.stateId) : undefined}
           program={seasonRace.program}
           feedVoice={seasonRace.voice}
+          lightsOut
+          titleWon={d => {
+            // The step's title (#762): the table with this result in, if it is the last race.
+            const f = seasonRace.facts;
+            if (f.results.length !== f.setup.calendar.length - 1) return false;
+            const track = getTrackById(f.setup.calendar[seasonRace.round]);
+            return leagueWon({ ...f, results: [...f.results, { index: seasonRace.round, trackId: f.setup.calendar[seasonRace.round], trackName: track?.name ?? '', trackEmoji: track?.funEmoji ?? '', ...d, totalTicks: 0, highlights: [] }] });
+          }}
           onQualifyingDone={seasonRace.quali ? endSeasonQuali : undefined}
           onExit={() => leaveSeasonRace(raceState.raceFinished)}
           exitLabel="Paddock"

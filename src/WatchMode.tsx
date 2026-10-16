@@ -30,7 +30,7 @@ import QualiBoard, { type QualiLive, type QualiFollow } from './components/race/
 import type { DriverHistoryEntry } from './components/race/types';
 import type { IconId } from './icons/registry';
 import { version as appVersion } from '../package.json';
-import { voiceNotification, type FeedItem, type FeedVoice } from './feed/commentary';
+import { voiceNotification, voiceTitle, lightsOutLine, callerFor, callerMeta, type FeedItem, type FeedVoice } from './feed/commentary';
 import './WatchMode.css';
 import './look/race.css';
 import { StepTheme } from './look/Look';
@@ -96,6 +96,10 @@ interface WatchModeProps {
   program?: string;
   /** Who's who for the callers (#749): your town and garage, each car's identifier, home town and home state. */
   feedVoice?: FeedVoice;
+  /** Season races show no countdown (#762): the caller's lights-out line goes to the feed as the race starts. */
+  lightsOut?: boolean;
+  /** Does this result win the step's title (#762)? Asked once at the flag; a yes gets the caller's title line. */
+  titleWon?: (digest: { finishOrder: number[]; dnfDriverIds: number[]; fastestLapDriverId: number | null }) => boolean;
 }
 
 // Modular notification system for race events
@@ -156,6 +160,8 @@ function WatchMode({
   state,
   program,
   feedVoice,
+  lightsOut,
+  titleWon,
   fantasy,
 }: WatchModeProps) {
   const trackLength = config.lapLength;
@@ -352,6 +358,22 @@ function WatchMode({
     return Math.min(Math.max(lap, 1), totalLaps);
   };
 
+  // The feed context for lines the notifications don't carry (#762: lights out, the title).
+  const feedCtx = () => ({ lap: leaderLapForFeed(), totalLaps, trackName: trackInfo?.name ?? '', trackEmoji: trackInfo?.funEmoji ?? '', step, stateName: state?.name, voice: feedVoice });
+
+  // Lights out (#762): a Season race has no countdown, so the caller says it as the first tick lands.
+  // Only when the race is seen from tick 0 (a mid-race join is history, not news).
+  const lightsOutRef = useRef<'armed' | 'done' | 'late'>(raceState.totalTicks === 0 ? 'armed' : 'late');
+  useEffect(() => {
+    if (lightsOutRef.current !== 'armed' || raceState.totalTicks === 0) return;
+    lightsOutRef.current = 'done';
+    if (!lightsOut) return;
+    const caller = callerFor(step);
+    const meta = callerMeta(caller, state?.name);
+    pushFeedItem({ lap: 1, persona: caller, personaName: meta.name, personaEmoji: meta.emoji, text: lightsOutLine(feedCtx(), raceState.totalTicks + drivers.length), emphasis: 'big' });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [raceState.totalTicks]);
+
   // Get track path and pit lane path from layout
   const trackPath = trackInfo?.layout?.trackPath || DEFAULT_TRACK_PATH;
   const pitLanePath = trackInfo?.layout?.pitLanePath;
@@ -404,16 +426,16 @@ function WatchMode({
       if (e.type === 'effect_applied') {
         seenEffectsRef.current.add(`${e.tick}-${e.driverId}-${e.description}`);
       }
-      if ((e.type === 'cut' || e.type === 'eliminated') && e.tick > lastCutTickRef.current) lastCutTickRef.current = e.tick;
+      if ((e.type === 'cut' || e.type === 'eliminated' || e.type === 'weather') && e.tick > lastCutTickRef.current) lastCutTickRef.current = e.tick;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [drivers, raceState.totalTicks]);
 
-  // The Hundred's cuts (#694): the engine logs them; the banner and the feed pick them up.
+  // The Hundred's cuts (#694) and the sky (#762): the engine logs them; the banner and the feed pick them up.
   const lastCutTickRef = useRef<number>(-1);
   useEffect(() => {
     if (!raceEvents || raceEvents.length === 0) return;
-    const fresh = raceEvents.filter(e => (e.type === 'cut' || e.type === 'eliminated') && e.tick > lastCutTickRef.current);
+    const fresh = raceEvents.filter(e => (e.type === 'cut' || e.type === 'eliminated' || e.type === 'weather') && e.tick > lastCutTickRef.current);
     if (!fresh.length) return;
     lastCutTickRef.current = Math.max(...fresh.map(e => e.tick));
     for (const e of fresh) {
@@ -423,6 +445,8 @@ function WatchMode({
       } else if (e.type === 'eliminated' && mineSet?.has(e.driverId)) {
         const d = drivers.find(x => x.id === e.driverId);
         addNotification('info', 'OUT', `${d?.name ?? e.driverName} is out: ${e.description.toLowerCase()}`, 'race.final_lap', d ? [{ id: d.id, name: d.name, emoji: d.emoji }] : undefined, 12000, d?.color);
+      } else if (e.type === 'weather') {
+        addNotification('weather', 'RAIN', e.description, e.emoji, undefined, 12000);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -968,6 +992,13 @@ function WatchMode({
           20000, // Keep winner notification longer
           winner.color
         );
+        // The step's title, clinched (#762): the caller's big line after the flag.
+        if (titleWon) {
+          let best: { id: number; t: number } | null = null;
+          for (const d of drivers) for (const t of d.lapTimes) if (!best || t < best.t) best = { id: d.id, t };
+          const digest = { finishOrder: raceState.finishOrder, dnfDriverIds: drivers.filter(d => d.status === 'dnf').map(d => d.id), fastestLapDriverId: best?.id ?? null };
+          if (titleWon(digest)) pushFeedItem(voiceTitle(feedCtx(), raceState.totalTicks));
+        }
       }
     }
 

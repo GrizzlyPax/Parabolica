@@ -88,9 +88,8 @@
 .ace-race .story-feed-label { font-family: var(--ace-cond); font-weight: 400; letter-spacing: .14em; color: var(--ace-ink-2); }
 .ace-race .story-feed-count { background: var(--ace-ink); color: var(--ace-paper); border-radius: 0; font-family: var(--ace-cond); }
 .ace-race .story-item { background: var(--ace-paper); border-bottom: 1px solid var(--ace-rule); border-left-color: var(--story-accent, var(--ace-ink)); }
-.ace-race .story-marbles, .ace-race .story-track { background: var(--ace-paper-2); }
+.ace-race .story-marbles { background: var(--ace-paper-2); }
 .ace-race .story-marbles .story-persona { color: var(--ace-brick); }
-.ace-race .story-track .story-persona { color: var(--ace-navy-2); }
 .ace-race .story-big { background: var(--ace-ink); }
 .ace-race .story-big .story-text, .ace-race .story-big .story-persona, .ace-race .story-big .story-lap, .ace-race .story-big .story-driver-chip { color: var(--ace-paper); }
 .ace-race .story-persona { font-family: var(--ace-cond); letter-spacing: .1em; text-transform: uppercase; }

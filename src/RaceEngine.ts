@@ -317,6 +317,7 @@ export type RaceEventType =
   | 'dnf'              // Driver retired
   | 'eliminated'       // Taken out by a lap cut (#694)
   | 'cut'              // A lap cut fell: field-wide (#694)
+  | 'weather'          // The sky changed: rain arrives (#762)
   | 'close_call'       // Near miss (drama)
   // Track events
   | 'track_event'      // Track event triggered
@@ -1243,6 +1244,7 @@ class RaceEngine {
     this.gridOrder = [];
     this.qualiScores.clear();
     this.cutsApplied.clear();
+    this.rainCalled = false;
     this.stuckBehind.clear();
     this.lastRecordedLap = 0;
     // Reset in-race effects + unified effect storage
@@ -1744,6 +1746,16 @@ class RaceEngine {
       this.logEvent('cut', null, `The cut after lap ${cut.afterLap}: ${kept.size} states go on, ${gone.length} cars out`, 'neutral', 0.9);
     }
   }
+
+  /** Rain has been called this race (one 'weather' event). */
+  private rainCalled = false;
+
+  /** The sky (#762): one 'weather' event the first tick the weather carries rain. No dry weather does today; Wet will. */
+  private callWeather(): void {
+    if (this.rainCalled || !this.weather?.conditions.includes('rain')) return;
+    this.rainCalled = true;
+    this.logEvent('weather', null, `Rain${this.trackInfo?.name ? ` at ${this.trackInfo.name}` : ''}: ${this.weather.name}`, 'neutral', 0.8, this.weather.emoji);
+  }
   private readonly PIT_ENTRY_POSITION = 0.85; // Near end of lap
   private readonly PIT_EXIT_POSITION = 0.15;  // Early in lap
 
@@ -2242,6 +2254,7 @@ class RaceEngine {
     this.raceState.totalTicks++;
     const previousLeader = this.raceState.currentLeader;
     if (this.raceState.totalTicks === 1) this.runQualifying();
+    this.callWeather();
 
     // === TRACK EVENT SYSTEM ===
     // Clean up expired effects

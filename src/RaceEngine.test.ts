@@ -672,7 +672,7 @@ describe('acceleration doubles as one-lap pace (#496)', () => {
   });
 });
 
-describe('lap cuts and a fixed grid (#694)', () => {
+describe('lap cuts, a fixed grid and the rain call (#694, #762)', () => {
   const build = (seed: number, extra: Partial<RaceConfig> = {}) => {
     const track = ALL_TRACKS[0];
     const engine = RaceEngine.createForWorker(CANON_VARIABLES, seed);
@@ -682,9 +682,9 @@ describe('lap cuts and a fixed grid (#694)', () => {
     return engine;
   };
 
-  it('a race without lapCuts logs no cut and eliminates nobody', () => {
+  it('a race without lapCuts logs no cut, eliminates nobody, and calls no rain under a dry sky', () => {
     const r = build(31).runHeadless(31);
-    expect(r.events.some(e => e.type === 'cut' || e.type === 'eliminated')).toBe(false);
+    expect(r.events.some(e => e.type === 'cut' || e.type === 'eliminated' || e.type === 'weather')).toBe(false);
     expect(r.drivers.every(d => d.status !== 'eliminated')).toBe(true);
   });
 
@@ -727,6 +727,15 @@ describe('lap cuts and a fixed grid (#694)', () => {
     expect(r.events.find(e => e.type === 'grid_set')?.driverId).toBe(given[0]);
     expect(build(31, { gridOrder: given }).runHeadless(31).raceState.finishOrder).toEqual(r.raceState.finishOrder);
     expect(build(31).runHeadless(31).events.find(e => e.type === 'grid_set')?.driverId).not.toBe(given[0]);
+  });
+
+  it('rain is called once, as a weather event, when the sky carries it', () => {
+    const engine = build(31);
+    engine.setWeather(WET);
+    const r = engine.runHeadless(31);
+    const calls = r.events.filter(e => e.type === 'weather');
+    expect(calls).toHaveLength(1);
+    expect(calls[0]).toMatchObject({ tick: 1, driverId: -1, description: expect.stringMatching(/^Rain at .*: Wet$/) });
   });
 });
 
