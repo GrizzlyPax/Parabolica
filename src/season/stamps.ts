@@ -145,7 +145,7 @@ export const TITLE_STAMP_PREFIX = 'title-';
 /** The stamp a title puts on a driver's ribbon: +TITLE_STAMP_LEVELS levels on one stat. Pure in (step, stat); the id carries both. */
 export function titleStamp(step: Step, stat: DriverStatKey): Card {
   return {
-    id: `${TITLE_STAMP_PREFIX}${step}-${stat}`, name: `${stepName(step)} title`, kind: 'trait', target: 'driver', rarity: 'gold',
+    id: `${TITLE_STAMP_PREFIX}${step}-${stat}`, name: `${stepName(step)} Postmark`, kind: 'trait', target: 'driver', rarity: 'gold',
     stats: [{ stat, pct: TITLE_STAMP_LEVELS * POINTS_PER_LEVEL }], tag: 'any', deck: 'run',
   };
 }

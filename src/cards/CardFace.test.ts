@@ -2,41 +2,52 @@
 import { describe, it, expect } from 'vitest';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { CardFace, CardDot, EmptySlot, cardNumber, nameSize, cardHeight, CARD_BOX } from './CardFace';
+import { CardFace, CardDot, EmptySlot, cardNumber, nameSize, cardHeight, CARD_BOX, artIcon, INK_RACES, WHERE_ICON } from './CardFace';
+import { RUN_DECK } from './runDeck';
+import { GEAR_LIFE } from '../season/stamps';
+import { resolveIcon } from '../icons/registry';
 import { CARDS_BY_ID, MOTORSPORT_DECK } from './deck';
 
 const card = (id: string) => CARDS_BY_ID.get(id)!;
 const html = (props: Parameters<typeof CardFace>[0]) => renderToStaticMarkup(createElement(CardFace, props));
 
 describe('CardFace', () => {
-  it('the face: name banner, one icon, type tag, every change, the number; no metal word or holder', () => {
+  it('the face (card-names.md, #699): the corner badge, where it applies, name banner, the art, every change, the number; no metal word', () => {
     const out = html({ card: card('eq-gold-speed+consistency'), size: 'full' });
     expect(out).toContain('Gold Speed + Consistency');
-    // #526: the type tag is the kind's icon (cog = gear), the word only in its title.
-    expect(out).toContain('aria-label="Gear"');
+    // Ink: the races left in the corner (new = 3); where it applies: a driver's helmet, the word only in its title.
+    expect(out).toMatch(/class="cf-corner cf-corner-ink"[^>]*>3</);
+    expect(out).toContain('cf-where');
     expect(out).not.toMatch(/>Equipment</);
     expect(out).toContain('<b>+2</b> Speed'); // #623: levels (10 grade points = +2)
-    expect(out).toContain('Speed');
     expect(out).toContain('Consistency');
     expect(out).toContain('013');
     expect(out).toContain('metal-gold');
-    expect((out.match(/class="game-icon/g) ?? []).length).toBe(3); // the art + the kind icon + the back's flag
+    expect((out.match(/class="game-icon/g) ?? []).length).toBe(3); // the where mark + the art + the back's flag
     expect(out).not.toMatch(/>gold</i);
     expect(out).not.toMatch(/>(Driver|Car|Team)</);
+    expect(html({ card: card('eq-gold-speed+consistency'), size: 'full', left: 1 })).toMatch(/cf-corner-ink"[^>]*>1</);
   });
 
-  it('#526: a trait reads as a trait (DNA icon, dashed frame class); gear as gear', () => {
+  it('#526 / #699: a Seal reads as a Seal (the DNA mark in the corner, dashed frame); Ink as Ink; a stamp wears its own icon', () => {
     const trait = MOTORSPORT_DECK.find(c => c.kind === 'trait')!;
     const t = html({ card: trait, size: 'full' });
     expect(t).toContain('cf-trait');
-    expect(t).toContain('aria-label="Trait"');
+    expect(t).toContain('cf-corner-seal');
+    expect(t).toContain('aria-label="Seal"');
     expect(html({ card: card('eq-gold-speed+consistency'), size: 'full' })).toContain('cf-gear');
     expect(html({ card: trait, faceDown: true })).not.toContain('cf-trait'); // the back hides the kind
+    const boots = RUN_DECK.find(c => c.id === 'rd-fresh-gloves')!;
+    expect(boots.name).toBe('Thin-Sole Boots');
+    expect(artIcon(boots)).toBe('leather-boot');
+    expect(INK_RACES).toBe(GEAR_LIFE);
+    for (const c of RUN_DECK) expect(resolveIcon(artIcon(c)), c.id).toBeDefined();
+    for (const w of Object.values(WHERE_ICON)) expect(resolveIcon(w), w).toBeDefined();
   });
 
-  it('the back says PARABOLICA · Base deck and hides nothing', () => {
+  it('the back says ACE AMERICA · Base deck and hides nothing', () => {
     const out = html({ card: card('fa-iridium-tyre-management+pit-crew'), faceDown: true });
-    expect(out).toContain('PARABOLICA');
+    expect(out).toContain('ACE AMERICA');
     expect(out).toContain('Base deck');
     expect(out).not.toContain('Tyre Management');
     expect(out).toContain('metal-iridium');

@@ -134,8 +134,8 @@ export default function RunLadder({ onMenu, onNewRun, onPlay }: Props) {
         <div className="ace-panel">
           <b>Congratulations, you are now {rung.title}.</b> {next ? `${next.name} is next.` : ''}
           {stampCount > 0 && next && !next.later && (
-            <div className="rl-stamps" role="group" aria-label="Title stamps">
-              <span className="ace-k">The title stamp: +{TITLE_STAMP_LEVELS} levels on {stampCount === 1 ? 'one stat' : `${stampCount} stats`} per driver, on the ribbon for good</span>
+            <div className="rl-stamps" role="group" aria-label="Postmarks">
+              <span className="ace-k">The {rung.title.replace(/^Ace /, '')} Postmark: pick {stampCount === 1 ? 'a stat' : `${stampCount} stats`} for each driver, +{TITLE_STAMP_LEVELS} levels, struck on their ribbon for good</span>
               {yourDrivers.map(d => (
                 <div key={d.id} className="rl-stamp-row">
                   <span className="rl-stamp-who"><Avatar icon={d.portrait} color={d.color} size={18} /> {d.name}</span>
@@ -177,7 +177,7 @@ export default function RunLadder({ onMenu, onNewRun, onPlay }: Props) {
         {view.phase === 'league'
           ? <AceButton onClick={() => onPlay(leaguePhase === 'finished' ? 'standings' : 'paddock')}>To the Paddock</AceButton>
           : view.phase === 'league-won' && next && !next.later
-            ? <AceButton disabled={!picksDone} onClick={up}>{picksDone ? `Up to ${next.name}` : 'Pick the title stamps'}</AceButton>
+            ? <AceButton disabled={!picksDone} onClick={up}>{picksDone ? `Up to ${next.name}` : 'Pick the Postmarks'}</AceButton>
             : <AceButton onClick={onNewRun}>A new season</AceButton>}
       </div>
     </StepTheme>

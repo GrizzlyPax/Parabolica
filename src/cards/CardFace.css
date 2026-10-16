@@ -26,8 +26,6 @@
   background: linear-gradient(135deg, color-mix(in srgb, var(--rarity-iridium) 30%, var(--pw-ground)) 0%, color-mix(in srgb, var(--rarity-silver) 16%, var(--pw-ground)) 45%, color-mix(in srgb, var(--rarity-iridium) 22%, var(--pw-ground)) 55%, color-mix(in srgb, var(--rarity-iridium-sheen) 16%, var(--pw-ground)) 100%);
 }
 .metal-none .cf-art { background: repeating-linear-gradient(45deg, transparent 0 5px, color-mix(in srgb, var(--pw-text-1) 8%, transparent) 5px 6px); }
-.cf-type { position: relative; z-index: 2; margin-top: -10px; min-width: 104px; padding: 0 10px; height: 26px; display: flex; align-items: center; justify-content: center; gap: 6px; color: var(--pw-text-1); background: var(--pw-ground); border: 1px solid var(--m); font: 400 10px/1 var(--look-data); letter-spacing: 0.1em; text-transform: uppercase; }
-.cf-type span { margin-right: -0.1em; }
 .cf-desc { flex: 1; width: 100%; display: flex; flex-direction: column; justify-content: center; gap: 2px; padding: 6px 4px 0; font: 400 15px/1.3 var(--look-serif); }
 .cf-desc b { font-weight: 700; }
 .cf-no { font: 400 9px var(--look-data); letter-spacing: 0.08em; color: var(--pw-text-3); }
@@ -57,23 +55,28 @@
    the kind's icon (cog = gear, DNA = trait) and who it's for. */
 .cf-trait .cf-side.cf-front { border-style: dashed; }
 .cf-trait .cf-rule { border-style: dashed; }
-.cf-type .game-icon { color: var(--m); flex: none; }
 .card-face.cf-mini.cf-trait .cf-side.cf-front { border-style: dashed; }
 
-/* Traits are inverted (Pax, Oct 10): mostly the metal with black ink, so a
-   trait reads at a glance at any size; gear stays black with metal accents. */
-.cf-trait .cf-front { background: var(--m); }
-.cf-trait .cf-rule { color: var(--pw-ground); border-color: var(--pw-ground); }
-.cf-trait .cf-banner { background: var(--m); border-color: var(--pw-ground); }
-.cf-trait .cf-art { color: var(--pw-ground); border-color: color-mix(in srgb, var(--pw-ground) 45%, transparent); background: color-mix(in srgb, var(--pw-ground) 12%, var(--m)); }
-/* Iridium traits: one sheen across the whole face (Pax, Oct 10: the art window
-   and the face didn't match), so the banner and art window let it show through. */
-.metal-iridium.cf-trait .cf-front, .metal-iridium.cf-trait .cf-miniface { background: linear-gradient(135deg, var(--rarity-iridium) 0%, color-mix(in srgb, var(--rarity-iridium) 55%, var(--rarity-silver)) 50%, var(--rarity-iridium-sheen) 100%); }
-.metal-iridium.cf-trait .cf-banner { background: transparent; }
-.metal-iridium.cf-trait .cf-art { margin-top: 4px; background: color-mix(in srgb, var(--pw-ground) 12%, transparent); }
-.cf-trait .cf-type { background: var(--pw-ground); border-color: var(--pw-ground); }
-.cf-trait .cf-no { color: color-mix(in srgb, var(--pw-ground) 70%, transparent); }
-.cf-trait .cf-miniface { background: var(--m); color: var(--pw-ground); }
+/* Quiet metal (card-names.md, Pax Oct 10: "all of it on rarity might be a
+   little much"): the metal sits on the name banner only. The frame, the art
+   window and the art stay neutral; a Seal (trait) keeps its dashed frame and
+   the DNA mark in the corner instead of filling with metal. */
+.cf-side { border-color: var(--pw-border-strong); }
+.card-face.cf-mini .cf-side { border-color: var(--m); }
+.cf-banner { background: color-mix(in srgb, var(--m) 34%, var(--pw-ground)); border-color: var(--m); }
+.cf-art { color: var(--pw-text-1); border-color: var(--pw-hairline); background: var(--pw-ground); }
+.metal-iridium .cf-art { background: var(--pw-ground); }
+.metal-iridium .cf-banner { background: linear-gradient(135deg, color-mix(in srgb, var(--rarity-iridium) 40%, var(--pw-ground)), color-mix(in srgb, var(--rarity-iridium-sheen) 30%, var(--pw-ground))); }
+
+/* The corner badge, top-left, big: races left on Ink (a light disc, like a
+   mana cost), the DNA mark on a Seal (inverted: a dark disc, a light mark). */
+.cf-corner { position: absolute; z-index: 3; left: -2px; top: -2px; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; }
+.cf-corner-ink { background: var(--pw-text-1); color: var(--pw-ground); border: 2px solid var(--m); font: 400 22px/1 var(--look-display); }
+.cf-corner-seal { background: var(--pw-ground); color: var(--pw-text-1); border: 2px solid var(--pw-text-1); }
+/* Where it applies: a circle, top-right (helmet · car · garage); replaces the type box. */
+.cf-where { position: absolute; z-index: 3; right: -2px; top: -2px; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: var(--pw-ground); color: var(--pw-text-1); border: 1px solid var(--pw-text-1); }
+.cf-banner { margin-top: 18px; }
+.cf-art { margin-top: 0; }
 
 /* Wild cards (#675): a rule, not a stat line */
 .cf-rule-text { display: flex; flex-direction: column; align-items: center; gap: 3px; font-style: italic; line-height: 1.25; text-align: center; }

@@ -623,3 +623,9 @@ button.rt-g:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset:
 }
 .pk-stamp { position: relative; display: inline-flex; }
 .pk-ink { position: absolute; right: -4px; bottom: -4px; min-width: 14px; height: 14px; padding: 0 3px; border-radius: 7px; background: var(--pw-text-1); color: var(--pw-ground); font-family: var(--look-data); font-size: 9px; line-height: 14px; text-align: center; }
+
+/* The driver card's titles (#699, the ribbon rules): every title won this run,
+   oldest first, a ribbon in its step's look with its Postmark under it. */
+.dc-titles { display: flex; flex-wrap: wrap; gap: 6px 10px; margin-top: 4px; }
+.dc-title { display: inline-flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+.dc-postmark { font-family: var(--look-data); font-size: 10px; letter-spacing: .04em; color: var(--pw-text-2); }

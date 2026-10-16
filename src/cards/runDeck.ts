@@ -126,9 +126,142 @@ export const slug = (name: string) => name.toLowerCase().replace(/'/g, '').repla
 const stats = (levels: Partial<Record<Short, number>>): CardStat[] => (Object.entries(levels) as [Short, number][]).map(([k, lv]) => ({ stat: S[k], pct: lv * LV }));
 export const WINDOW_RULE: Record<CardWindow, string> = { first: 'First half of the race only.', second: 'Second half of the race only.' };
 
+/**
+ * Radio's names (docs/story/stamps.md, Pax Oct 15), by the card's id. The ids
+ * stay derived from the placeholder names in ROWS above (`rd-<slug>`): saves
+ * hold them, so the names change and the ids never do (#699).
+ */
+export const STAMP_NAMES: Readonly<Record<string, string>> = {
+  'rd-fresh-gloves': 'Thin-Sole Boots',
+  'rd-visor-tear-offs': 'Visor Tear-offs',
+  'rd-stiffer-springs': 'Stiffer Springs',
+  'rd-garage-drill': 'Quick-Lift Jacks',
+  'rd-hot-lapper': 'Quick Off the Line',
+  'rd-lights-out': 'Launch Gloves',
+  'rd-quali-mode': 'Quali Mode',
+  'rd-out-lap-crew': 'Out-Lap Crew',
+  'rd-pole-sitter': 'Saturday Specialist',
+  'rd-slipstream-helmet': 'Low-Drag Helmet',
+  'rd-glued-to-the-road': 'Glued to the Road',
+  'rd-front-row-lockout': 'One-Lap Wonder',
+  'rd-elbow-pads': 'Elbow Pads',
+  'rd-launch-control': 'Steel-Toe Boots',
+  'rd-iron-bodywork': 'Reinforced Nose',
+  'rd-spare-front-wings': 'Spare Front Wings',
+  'rd-late-braker': 'Late Braker',
+  'rd-dive-bomb-helmet': 'Dive-Bomb Helmet',
+  'rd-torque-map': 'Torque Map',
+  'rd-bodyshop': 'Bodyshop',
+  'rd-elbows-out': 'Never Lifts',
+  'rd-battering-ram': 'Battering Ram',
+  'rd-red-mist': 'Red Mist',
+  'rd-no-prisoners': 'No Prisoners',
+  'rd-smooth-gloves': 'Kid Gloves',
+  'rd-endurance-seat': 'Molded Seat',
+  'rd-soft-suspension': 'Soft Suspension',
+  'rd-tyre-blankets': 'Tire Blankets',
+  'rd-gentle-feet': 'Never Tires',
+  'rd-second-wind': 'Drinks Bottle',
+  'rd-kind-suspension': 'Long-Run Setup',
+  'rd-heat-cycling': 'Heat-Cycled Sets',
+  'rd-metronome': 'Metronome',
+  'rd-strategy-room': 'Strategy Room',
+  'rd-long-stint-specialists': 'One-Stop Crew',
+  'rd-tyre-whisperers': 'Tire Whisperers',
+  'rd-lightweight-helmet': 'Lightweight Helmet',
+  'rd-thin-gloves': 'Thin Gloves',
+  'rd-stripped-interior': 'Lightened Flywheel',
+  'rd-skeleton-crew': 'Skeleton Crew',
+  'rd-hothead': 'Heavy Right Foot',
+  'rd-adrenaline': 'Double Espresso',
+  'rd-glass-engine': 'Grenade Engine',
+  'rd-gamblers-pit-wall': 'Gamblers\' Pit Wall',
+  'rd-fearless': 'Fearless',
+  'rd-throttle-stomper': 'Lead Boots',
+  'rd-all-or-nothing': 'All or Nothing',
+  'rd-rocket-ship': 'Rocket Ship',
+  'rd-reliable-unit': 'Old Faithful',
+  'rd-pit-drills': 'Pit Drills',
+  'rd-lucky-seven': 'Lucky Socks',
+  'rd-fresh-gearbox': 'Fresh Gearbox',
+  'rd-spare-parts': 'Spare Parts',
+  'rd-steady-hands': 'Steady Hands',
+  'rd-balanced-chassis': 'Balanced Chassis',
+  'rd-pit-lane-ghost': 'Two-Second Crew',
+  'rd-four-leaf-clover': 'Four-Leaf Clover',
+  'rd-factory-upgrade': 'Factory Upgrade',
+  'rd-works-chassis': 'Works Chassis',
+  'rd-complete-driver': 'The Full Package',
+};
+
+/** Each stamp's own icon (game-icons ids, docs/story/stamps.md), by id: the card face's art (#699). */
+export const STAMP_ICONS: Readonly<Record<string, string>> = {
+  'rd-fresh-gloves': 'leather-boot',
+  'rd-visor-tear-offs': 'protection-glasses',
+  'rd-stiffer-springs': 'spring',
+  'rd-garage-drill': 'hand-truck',
+  'rd-hot-lapper': 'sprint',
+  'rd-lights-out': 'gloves',
+  'rd-quali-mode': 'stopwatch',
+  'rd-out-lap-crew': 'tire-tracks',
+  'rd-pole-sitter': 'podium-winner',
+  'rd-slipstream-helmet': 'paper-plane',
+  'rd-glued-to-the-road': 'magnet',
+  'rd-front-row-lockout': 'comet-spark',
+  'rd-elbow-pads': 'elbow-pad',
+  'rd-launch-control': 'steeltoe-boots',
+  'rd-iron-bodywork': 'armor-upgrade',
+  'rd-spare-front-wings': 'wooden-crate',
+  'rd-late-braker': 'stop-sign',
+  'rd-dive-bomb-helmet': 'falling-bomb',
+  'rd-torque-map': 'gears',
+  'rd-bodyshop': 'claw-hammer',
+  'rd-elbows-out': 'boot-stomp',
+  'rd-battering-ram': 'bulldozer',
+  'rd-red-mist': 'angry-eyes',
+  'rd-no-prisoners': 'mailed-fist',
+  'rd-smooth-gloves': 'winter-gloves',
+  'rd-endurance-seat': 'car-seat',
+  'rd-soft-suspension': 'bouncing-spring',
+  'rd-tyre-blankets': 'blanket',
+  'rd-gentle-feet': 'lungs',
+  'rd-second-wind': 'water-bottle',
+  'rd-kind-suspension': 'mountain-road',
+  'rd-heat-cycling': 'thermometer-hot',
+  'rd-metronome': 'clockwork',
+  'rd-strategy-room': 'pencil-ruler',
+  'rd-long-stint-specialists': 'turtle',
+  'rd-tyre-whisperers': 'barn-owl',
+  'rd-lightweight-helmet': 'feather',
+  'rd-thin-gloves': 'hand',
+  'rd-stripped-interior': 'big-gear',
+  'rd-skeleton-crew': 'skeleton-key',
+  'rd-hothead': 'footprint',
+  'rd-adrenaline': 'coffee-cup',
+  'rd-glass-engine': 'grenade',
+  'rd-gamblers-pit-wall': 'rolling-dice-cup',
+  'rd-fearless': 'jump-across',
+  'rd-throttle-stomper': 'weight',
+  'rd-all-or-nothing': 'coinflip',
+  'rd-rocket-ship': 'rocket-flight',
+  'rd-reliable-unit': 'oil-can',
+  'rd-pit-drills': 'drill',
+  'rd-lucky-seven': 'socks',
+  'rd-fresh-gearbox': 'gear-stick',
+  'rd-spare-parts': 'cardboard-box',
+  'rd-steady-hands': 'hand-ok',
+  'rd-balanced-chassis': 'scales',
+  'rd-pit-lane-ghost': 'heavy-timer',
+  'rd-four-leaf-clover': 'clover',
+  'rd-factory-upgrade': 'factory',
+  'rd-works-chassis': 'wrench',
+  'rd-complete-driver': 'laurel-crown',
+};
+
 function build([name, tag, rarity, place, levels, window]: Row): Card {
   const { kind, target } = PLACE[place];
-  return { id: `rd-${slug(name)}`, name, kind, target, rarity, tag, stats: stats(levels), deck: 'run', ...(window ? { window, rule: WINDOW_RULE[window] } : {}) };
+  const id = `rd-${slug(name)}`;
+  return { id, name: STAMP_NAMES[id] ?? name, ...(STAMP_ICONS[id] ? { iconId: STAMP_ICONS[id] } : {}), kind, target, rarity, tag, stats: stats(levels), deck: 'run', ...(window ? { window, rule: WINDOW_RULE[window] } : {}) };
 }
 
 /** The run deck, in the list's order (archetype by archetype, bronze first). */
@@ -141,7 +274,7 @@ export function cardById(id: string): Card | undefined {
 }
 
 /** A named curse (#647): on the car or the team (both drivers), all bad, in grade points as held. */
-export interface Curse { id: string; name: string; target: 'car' | 'team'; stats: CardStat[] }
+export interface Curse { id: string; name: string; target: 'car' | 'team'; stats: CardStat[]; /** Its icon (docs/story/stamps.md → Smudges). */ iconId?: string }
 const CURSE_ROWS: [name: string, target: 'car' | 'team', levels: Partial<Record<Short, number>>][] = [
   ['Haunted Gearbox', 'car', { rel: -12 }],
   ['Wrong Fuel Map', 'car', { pwr: -6 }],
@@ -152,7 +285,29 @@ const CURSE_ROWS: [name: string, target: 'car' | 'team', levels: Partial<Record<
   ['Cold Tyres', 'team', { tyr: -9 }],
   ['Bad Contract', 'team', { tyr: -3 }],
 ];
-export const RUN_CURSES: readonly Curse[] = Object.freeze(CURSE_ROWS.map(([name, target, levels]) => ({ id: `curse-${slug(name)}`, name, target, stats: stats(levels) })));
+/** Radio's smudge names (docs/story/stamps.md), by id; the ids stay the placeholders' slugs (#699). */
+export const SMUDGE_NAMES: Readonly<Record<string, string>> = {
+  'curse-haunted-gearbox': 'Gremlins',
+  'curse-wrong-fuel-map': 'Someone Changed the Map',
+  'curse-bent-floor': 'Curb Damage',
+  'curse-rusty-engine': 'Last Year\'s Engine',
+  'curse-butterfingers': 'Butterfingers',
+  'curse-sticky-wheel-nut': 'Work Experience Day',
+  'curse-cold-tyres': 'Forgot the Blankets',
+  'curse-bad-contract': 'Budget Cuts',
+};
+/** The smudges' icons, by id. */
+export const SMUDGE_ICONS: Readonly<Record<string, string>> = {
+  'curse-haunted-gearbox': 'goblin-head',
+  'curse-wrong-fuel-map': 'treasure-map',
+  'curse-bent-floor': 'edge-crack',
+  'curse-rusty-engine': 'barrel-leak',
+  'curse-butterfingers': 'butter',
+  'curse-sticky-wheel-nut': 'propeller-beanie',
+  'curse-cold-tyres': 'thermometer-cold',
+  'curse-bad-contract': 'scissors',
+};
+export const RUN_CURSES: readonly Curse[] = Object.freeze(CURSE_ROWS.map(([name, target, levels]) => { const id = `curse-${slug(name)}`; return { id, name: SMUDGE_NAMES[id] ?? name, target, stats: stats(levels), iconId: SMUDGE_ICONS[id] }; }));
 
 /** A card's price in king-stat levels, by the bands (a window halves it). */
 export function cardPrice(card: Card): number {

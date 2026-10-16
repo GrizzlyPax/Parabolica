@@ -206,7 +206,7 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, ba
   const action = state.phase === 'ready-for-go'
     ? <AceButton onClick={onGo}>Go: round {state.round + 1}</AceButton>
     : !myTurn ? null
-    : step === 0 && !revealing ? <AceButton onClick={() => setRevealing(true)}>{smudge ? 'Open the smudged Parcel' : parcel?.kind === 'gift' ? 'Open the gift' : 'Open the Parcel'}</AceButton>
+    : step === 0 && !revealing ? <AceButton onClick={() => setRevealing(true)}>{smudge ? 'Open the Watcher Box' : 'Open the Parcel'}</AceButton>
     : step >= 1 ? <AceButton disabled={!lineupOk} onClick={lock}>Lock in</AceButton>
     : null;
   const turnLine = state.phase === 'ready-for-go' ? (
@@ -266,9 +266,9 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, ba
         />
       ) : (
         <div className="pk-pack">
-          <button type="button" className={`pk-sealed ${smudge ? 'pk-sealed-curse' : ''}`.trim()} onClick={() => setRevealing(true)} aria-label={smudge ? 'Open the smudged Parcel' : 'Open the Parcel'}><GameIcon name="season.pack" size={30} />{!smudge && <><i className="pk-twinkle a" /><i className="pk-twinkle b" /><i className="pk-twinkle c" /></>}</button>
+          <button type="button" className={`pk-sealed ${smudge ? 'pk-sealed-curse' : ''}`.trim()} onClick={() => setRevealing(true)} aria-label={smudge ? 'Open the Watcher Box' : 'Open the Parcel'}><GameIcon name="season.pack" size={30} />{!smudge && <><i className="pk-twinkle a" /><i className="pk-twinkle b" /><i className="pk-twinkle c" /></>}</button>
           <div className="pk-pack-text">
-            <span className="rs-k pk-pack-k">{parcel.kind === 'gift' ? 'A Parcel from upstairs' : smudge ? 'A smudged Parcel' : 'League issue'}</span>
+            <span className="rs-k pk-pack-k">{parcel.kind === 'gift' ? 'No Return Address' : smudge ? 'Watcher Box' : 'League Issue'}</span>
             <b>{smudge ? 'Smudged' : 'Sealed'}</b>
             <span className="rs-hint">{smudge ? 'Unlucky: three stamps inside, and a smudge on the car card for one race whatever you keep.' : parcel.kind === 'gift' ? 'A friend upstairs sends their regards. Three stamps inside at the best odds; keep one.' : 'Three stamps inside; keep one, or leave the box shut. The metal shows when it opens.'}</span>
           </div>
@@ -387,7 +387,7 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, ba
       {detail && (
         <div className="pk-sheet" role="dialog" aria-label="Detail">
           {'card' in detail
-            ? <><CardFace card={detail.card} size="small" flippable={false} /><div className="pk-sheet-text"><span className="rs-k">{detail.card.id.startsWith(TITLE_STAMP_PREFIX) ? 'title stamp' : `${detail.card.kind} · ${detail.card.target}`}{detail.card.rarity ? ` · ${detail.card.rarity}` : ''}</span><b>{detail.card.name}</b>{detail.card.rule ? <span>{detail.card.rule}</span> : detail.card.stats.map(s => <span key={s.stat}>{levelDelta(s.pct)} {STAT_LABELS[s.stat]}</span>)}<span className="rs-hint">{detail.card.id.startsWith(TITLE_STAMP_PREFIX) ? 'On the ribbon, outside the slots. For good.' : isInk(detail.card) ? `Ink: twice the strength, fades after ${GEAR_LIFE} races${stamps.mileage[detail.card.id] !== undefined ? ` (${stamps.mileage[detail.card.id]} left)` : ''}.` : 'A permanent stamp; a full card scrapes one off for the next.'}</span></div></>
+            ? <><CardFace card={detail.card} size="small" flippable={false} /><div className="pk-sheet-text"><span className="rs-k">{detail.card.id.startsWith(TITLE_STAMP_PREFIX) ? 'Postmark' : `${isInk(detail.card) ? 'Ink' : 'Seal'} · ${detail.card.target === 'driver' ? 'driver card' : 'car card'}`}{detail.card.rarity ? ` · ${detail.card.rarity}` : ''}</span><b>{detail.card.name}</b>{detail.card.rule ? <span>{detail.card.rule}</span> : detail.card.stats.map(s => <span key={s.stat}>{levelDelta(s.pct)} {STAT_LABELS[s.stat]}</span>)}<span className="rs-hint">{detail.card.id.startsWith(TITLE_STAMP_PREFIX) ? 'On the ribbon, outside the slots. For good.' : isInk(detail.card) ? `Ink: twice the strength, fades after ${GEAR_LIFE} races${stamps.mileage[detail.card.id] !== undefined ? ` (${stamps.mileage[detail.card.id]} left)` : ''}.` : 'A permanent stamp; a full card scrapes one off for the next.'}</span></div></>
             : <ReadingSheet title={detail.title} reading={detail.reading} icon={STAT_ICONS[detail.reading.stat]} />}
           <button type="button" className="rs-link pk-sheet-x" onClick={() => setDetail(null)}>Close</button>
         </div>

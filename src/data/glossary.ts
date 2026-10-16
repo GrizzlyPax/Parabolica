@@ -122,7 +122,7 @@ export function buildGlossary(): Glossary {
 /** Render the whole glossary as markdown — docs/GLOSSARY.md. */
 export function renderGlossaryMd(g: Glossary, version: string): string {
   const L: string[] = [];
-  L.push(`# Parabolica World Deck`, '', `*Everything in the sim and the world, generated from the data modules by \`npm run glossary\` — do not edit by hand; edit the source files named in each section and re-run. Engine v${version}. How to add content: docs/WORLD_DECK.md.*`, '');
+  L.push(`# Ace America World Deck`, '', `*Everything in the sim and the world, generated from the data modules by \`npm run glossary\` — do not edit by hand; edit the source files named in each section and re-run. Engine v${version}. How to add content: docs/WORLD_DECK.md.*`, '');
   L.push(`${g.counts.deckTeams} teams · ${g.counts.tracks} tracks · ${g.counts.deck} cards (${g.counts.traits} traits · ${g.counts.gear} gear · ${g.counts.effects} effects) · ${g.counts.inRaceEffects} in-race effects · ${g.counts.cards} rule cards · ${g.counts.weather} weathers`, '');
   L.push('## Base-deck teams', '', '*Source: `src/data/deckTeams.ts` (from docs/story/team-identity.md; not canon yet). The 28 world factions, seven of each kind: Quick Race draws its 11 and Season Mode its CPU teams from these. Logo = the icon in `ink` on the team colour.*', '');
   for (const k of TEAM_KINDS) {

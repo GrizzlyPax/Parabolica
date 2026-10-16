@@ -66,26 +66,57 @@ export const GARAGE_LOGOS: readonly string[] = [
   'ghost', 'alien-stare', 'tentacle-heart', 'plastic-duck',
 ];
 
+/** sRGB hex → CIE Lab (D65). */
+function lab(hex: string): [number, number, number] {
+  const h = hex.replace('#', '');
+  const [r, g, b] = [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16) / 255).map(c => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+  const f = (t: number) => (t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116);
+  const x = f((r * 0.4124 + g * 0.3576 + b * 0.1805) / 0.95047), y = f(r * 0.2126 + g * 0.7152 + b * 0.0722), z = f((r * 0.0193 + g * 0.1192 + b * 0.9505) / 1.08883);
+  return [116 * y - 16, 500 * (x - y), 200 * (y - z)];
+}
+
+/** How far apart two colours look (CIE76 ΔE in Lab): under ~25 reads as "the same colour" on a marble. */
+export function colourDistance(a: string, b: string): number {
+  const [p, q] = [lab(a), lab(b)];
+  return Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]);
+}
+
+/** Rival garages skip a colour closer than this to yours (#638). */
+export const TOO_CLOSE = 25;
+
 /**
  * `count` rival garages for a field, no name or colour twice (redraws on a
  * duplicate, up to a limit). `towns`, when given, hands each garage its own
- * town in order (the State step); fewer towns than garages wrap.
+ * town in order (the State step); fewer towns than garages wrap. `avoid` is
+ * your colour (#638): a rival whose drawn colour is too close to it takes the
+ * next free deck colour that isn't, with no extra draws, so names and logos
+ * stay where the seed put them. `colours`, when given, is a colour per seat
+ * (a state's look at Nationals, #694): that seat wears it, whatever was drawn.
  */
-export function rivalGarages(rng: Rng, count: number, towns?: readonly string[], excludeNames: readonly string[] = [], colours?: readonly (string | null)[]): Garage[] {
+export function rivalGarages(rng: Rng, count: number, towns?: readonly string[], excludeNames: readonly string[] = [], avoid?: string, colours?: readonly (string | null)[]): Garage[] {
   const names = new Set(excludeNames);
-  const taken = new Set<string>();
+  // `drawn` drives the redraws (the seed's stream, unchanged by `avoid` or `colours`); `wornSet` is what the garages wear.
+  const drawn = new Set<string>();
+  const wornSet = new Set<string>();
+  const ok = (hex: string) => !wornSet.has(hex) && !(avoid && colourDistance(hex, avoid) < TOO_CLOSE);
   const out: Garage[] = [];
   for (let i = 0; i < count; i++) {
     let name = garageName(rng);
     for (let tries = 0; names.has(name) && tries < 30; tries++) name = garageName(rng);
     names.add(name);
-    let colour = pick(DECK_COLOURS, rng).hex;
-    for (let tries = 0; taken.has(colour) && tries < 30 && taken.size < DECK_COLOURS.length; tries++) colour = pick(DECK_COLOURS, rng).hex;
-    // A seat with its own colour (a state's look at Nationals, #694) wears it instead.
-    colour = colours?.[i] ?? colour;
-    taken.add(colour);
+    let colour = pick(DECK_COLOURS, rng);
+    for (let tries = 0; drawn.has(colour.hex) && tries < 30 && drawn.size < DECK_COLOURS.length; tries++) colour = pick(DECK_COLOURS, rng);
+    drawn.add(colour.hex);
+    if (avoid && !ok(colour.hex)) {
+      const at = DECK_COLOURS.indexOf(colour);
+      const next = DECK_COLOURS.map((_, k) => DECK_COLOURS[(at + k) % DECK_COLOURS.length]).find(c => ok(c.hex));
+      if (next) colour = next;
+    }
+    // A seat with its own colour (a state's look at Nationals, #694) wears it instead; the draws above are untouched.
+    const worn = colours?.[i] ?? colour.hex;
+    wornSet.add(worn);
     const iconId = pick(GARAGE_LOGOS, rng);
-    out.push({ name, color: colour, ink: inkFor(colour), iconId, ...(towns?.length ? { town: towns[i % towns.length] } : {}) });
+    out.push({ name, color: worn, ink: inkFor(worn), iconId, ...(towns?.length ? { town: towns[i % towns.length] } : {}) });
   }
   return out;
 }

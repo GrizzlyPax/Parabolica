@@ -45,6 +45,8 @@ export interface Card {
   window?: 'first' | 'second';
   /** The grid deck (deck.ts; pct at 1×, scaled for the player) or the run deck (runDeck.ts; pct as held). */
   deck: 'motorsport' | 'run';
+  /** Its own icon on the card face (#699; a game-icons id); absent = the first stat's icon. */
+  iconId?: string;
 }
 
 export interface Slots { equipment: number; upgrade: number; facility: number }
