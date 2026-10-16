@@ -131,13 +131,14 @@ export default function Paddock({ facts, onChange, onMenu, onEndSeason, onGo, ba
 
   // Actions
   const keep = (kept: Card, targetKey: string, replaces?: string) => {
-    if (!parcel || parcel.kind === 'smudged') return;
+    // A Watcher Box (smudged, #704 Oct 15) deals three like any Parcel: its curse rides along whatever is kept.
+    if (!parcel) return;
     commit(openParcel(facts, { type: 'parcel', round: parcel.round, teamId: parcel.teamId, tier: parcel.tier, gift: parcel.kind === 'gift' || undefined, dealt: parcel.cards.map(c => c.id), cardId: kept.id, holder: holderOf(targetKey), replaces }));
     setLifted(null);
     setRevealing(false);
   };
   const leave = () => {
-    if (!parcel || parcel.kind === 'smudged') return;
+    if (!parcel) return;
     commit(openParcel(facts, { type: 'parcel', round: parcel.round, teamId: parcel.teamId, tier: parcel.tier, gift: parcel.kind === 'gift' || undefined, dealt: parcel.cards.map(c => c.id), cardId: null }));
     setLifted(null);
     setRevealing(false);
