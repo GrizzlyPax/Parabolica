@@ -9,6 +9,10 @@
 .mm-foot-line { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px 12px; font-family: var(--ace-cond); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--ace-muted); }
 .mm-credits.ace-btn { min-height: 28px; padding: 0 10px; font-size: 11px; }
 
+/* The move to playaceamerica.com (#701): shown on the old domain only. */
+.mm-moved { justify-content: space-between; flex-wrap: wrap; gap: 10px 16px; }
+.mm-moved .ace-btn { min-height: 38px; flex: none; }
+
 /* Desktop: the cover on the left, the contents on the right, both centred in the screen's height. */
 @media (min-width: 1024px) {
   .mm-body { flex: 1; display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); gap: 64px; align-items: center; padding-block: 24px; }

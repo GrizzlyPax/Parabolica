@@ -1,6 +1,6 @@
 ---
 name: republish-preview
-description: Republish the Parabolica preview build to its claude.ai artifact after a merge. Use after merging a PR, or when Pax asks to update / see the preview.
+description: Republish the Ace America (Parabolica) preview build to its claude.ai artifact after a merge. Use after merging a PR, or when Pax asks to update / see the preview.
 ---
 
 # Republish the preview

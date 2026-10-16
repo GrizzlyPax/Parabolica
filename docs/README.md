@@ -1,6 +1,6 @@
-# Parabolica docs
+# Ace America docs (repo: Parabolica)
 
-Parabolica is an F1-style race sim: draft a team, race a Season, chase two championships. Play it at **[playparabolica.com](https://playparabolica.com)**.
+Parabolica is an F1-style race sim: draft a team, race a Season, chase two championships. Play it at **[playaceamerica.com](https://playaceamerica.com)** (the game was Parabolica until v0.8; playparabolica.com redirects). Moving the domain: [DOMAIN.md](DOMAIN.md).
 
 **New here? Read in this order:** [the latest handoff](HANDOFF_2026-10-08.md) → [`CLAUDE.md`](../CLAUDE.md) → the doc for the area you're touching.
 
@@ -42,6 +42,7 @@ Parabolica is an F1-style race sim: draft a team, race a Season, chase two champ
 | [COMMISSIONER_MODE](COMMISSIONER_MODE.md) | History / north star: wall-clock roguelite seasons, decrees |
 | [COMMISSIONER_MODE_TECH](COMMISSIONER_MODE_TECH.md) | History: seeded RNG, persistence, settle loop (the engine half is still live) |
 | [LEAGUE_SERVER](LEAGUE_SERVER.md) | One league, every device: facts, decrees, digests (the server stays for v0.6 live seasons) |
+| [DOMAIN](DOMAIN.md) | Moving to playaceamerica.com (#701): the order, the one-tap save move, Cloudflare steps, the 301 |
 
 ## Lab & balance
 | Doc | What it's for |

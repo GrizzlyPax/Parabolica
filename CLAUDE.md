@@ -1,4 +1,7 @@
-# Parabolica Race Engine
+# Ace America (repo: Parabolica)
+
+The game is **Ace America** at **playaceamerica.com** since #701 (playparabolica.com redirects; docs/DOMAIN.md). The repo, code identifiers and save keys (`parabolica.*`) keep the old name.
+
 
 Formula 1 race simulation becoming a single-player roguelite: **auto-battler × sports sim × roguelike deck builder** (Balatro-like inputs, a realistic sim; design pillars in `docs/V07_PLAN.md`). Commissioner leagues were removed in #339.
 Player betting was retired in June 2026 (git history has it); odds math survives in betting/utils
@@ -29,7 +32,7 @@ for the future NPC-crowd system (BetLab was removed Oct 2026; git history has it
   - `feed/commentary.ts` - Race feed persona/commentary engine
   - `RaceEngine.ts` - Core race simulation engine (seedable: setSeed / runHeadless(seed))
   - `engine/rng.ts` - Seeded RNG (mulberry32, deriveSeed, shuffle) — determinism foundation
-  - `storage/persistence.ts` - Versioned localStorage league save
+  - `storage/persistence.ts` - Versioned localStorage league save; `storage/carry.ts` - the one-tap save move from playparabolica.com to playaceamerica.com (#701, docs/DOMAIN.md)
   - `league/` - the league engine Season Mode reuses: `league.ts` (`createLeague`, `rosterStateAt`), `settle.ts` (`prepareScheduledRace`, settle loop), `types.ts`, interventions/acquisition/highlights. Commissioner leagues' UI, gods and the dev console were removed in #339
     - `remote.ts` - the league server client (publish, open by code, sync, digests; docs/LEAGUE_SERVER.md). No UI uses it now; kept for v0.6 live seasons
 - `server/` - The league service: Cloudflare Worker + Durable Object (`wrangler.toml`, `src/index.ts`); deployed by `.github/workflows/deploy-api.yml`; `cd server && npx wrangler dev --local` to run it locally
@@ -67,7 +70,7 @@ for the future NPC-crowd system (BetLab was removed Oct 2026; git history has it
 - **Pit keeps Pax oriented:** whenever the plan moves (a handoff lands, an issue moves, a milestone closes), Pit's reply includes **where we are**: a milestone table (✅ done / 🟡 now / what's left, with issue links and crew) and **when Pax can play it** ("after #N you can …"). Pull the numbers live from GitHub milestones; close a milestone when its last issue closes.
 - **Spotter sweep (Pax, Oct 10):** whenever Pit plans, scopes or processes a handoff, it first lists `idea` issues created since the last sweep (`gh api "repos/GrizzlyPax/Parabolica/issues?labels=idea&sort=created&direction=desc"`) and triages each: slot into a release (milestone + crew + `ready` when buildable), fold into an existing issue, or leave in the icebox with a one-line note. Bugs Spotter files go straight into the current release. Pit's reply names what it slotted.
 - **Desktop first (Pax, Oct 10):** screens are built for a big screen (design at 1440 × 900); the phone view is a smaller version that must not break, not the priority. (Pax still reads artifacts and steers on his phone.)
-- **Done** = merged, live on playparabolica.com, and (for UI) checked in the browser.
+- **Done** = merged, live on playaceamerica.com, and (for UI) checked in the browser.
 
 ## The crew
 Every current-release issue has a `crew:` label saying who (and which model) should take it, and starts with a Paste line Pax uses to open the chat.
@@ -121,6 +124,7 @@ Every current-release issue has a `crew:` label saying who (and which model) sho
 - `docs/GLOSSARY.md` - GENERATED World Deck: every team, track, card, rule, weather and flavour pool (`npm run glossary`; `src/data/worldDeck.test.ts` checks content)
 - `docs/SEASON_MODE.md` - v0.5 Spa build spec: Season Mode (League Setup, snake draft, Paddock → Race loop, card packs)
 - `docs/FANTASY.md` - Fantasy teams: snake draft, obfuscated draft info, scoring, where it shows
+- `docs/DOMAIN.md` - Moving to playaceamerica.com (#701): serve both domains, the one-tap save move, then the 301; Cloudflare click-by-click
 - `docs/LEAGUE_SERVER.md` - One league, every device: the server holds facts + decrees + canonical digests; devices replay; publish / open by code / link; deploy secrets
 - `docs/RACE_CONTROL.md` - The lab: parity rule, seeds and fingerprints, physics calibration, how to replicate and export
 - `docs/ICONS.md` - Design change: game-icons.net replaces every emoji (meaning registry, currentColor), and the UI + icons take your team's colours
