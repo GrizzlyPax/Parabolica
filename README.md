@@ -1,8 +1,8 @@
-# Parabolica
+# Ace America
 
-**Racing, where everything is fine.**
+**Win your town, then your state, then the nation.**
 
-Parabolica is a browser-based racing simulation and betting game. Watch procedurally generated drivers compete across fictional tracks while you place bets with virtual marbles. It's part idle game, part sports betting satire, and entirely chaotic.
+Ace America is a browser racing roguelite in an alternate 1920s: run a small local garage, win your town's title (Ace Toledo), then your state's (Ace Ohio), then the Nationals (Ace America). Underneath is a realistic race sim you watch, not drive. The game was called Parabolica until v0.8; the repo, the code and the save keys keep that name (the Parabolica lives on in the lore as the world circuit).
 
 ---
 
@@ -20,7 +20,7 @@ Parabolica is a browser-based racing simulation and betting game. Watch procedur
 
 ## Play the Game
 
-**[playparabolica.com](https://playparabolica.com)**
+**[playaceamerica.com](https://playaceamerica.com)** (playparabolica.com redirects there)
 
 No download required. Works on desktop and mobile browsers.
 

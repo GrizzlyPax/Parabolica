@@ -2,7 +2,7 @@
 // "Almanac Plate" on a Slay the Spire layout: name banner over one centred
 // icon on a metal-tinted window, a fixed-width type tag, the changes centred
 // below, the deck number at the foot. The back is bold metal stripes and
-// "PARABOLICA · Base deck"; it hides nothing.
+// "ACE AMERICA · Base deck"; it hides nothing.
 //
 // Every size is the same 210 × 294 card scaled down, so stripes, edges and
 // type keep their proportions. The mini is its own simple face (one centred
@@ -84,7 +84,7 @@ function Back({ mini, card }: { mini: boolean; card: Card }) {
     <div className="cf-backrule">
       {!mini && (
         <span className="cf-plate">
-          <b>PARABOLICA</b>
+          <b>ACE AMERICA</b>
           <span><GameIcon name="race.finish" size={10} />{card.deck === 'run' ? 'Run deck' : 'Base deck'}</span>
         </span>
       )}

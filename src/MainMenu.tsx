@@ -2,9 +2,11 @@
 // Official Program line, the sash as the title, the racer, a chequer, then the
 // contents rows; on a desktop the cover and the contents sit side by side
 // (#722, desktop first). Wears Americana (the menus' theme). The game's name on the
-// sash stays Parabolica until the rename (#701).
+// sash says Ace America (#701). On the old domain it offers to move your
+// save to playaceamerica.com (storage/carry.ts).
 import { AceButton, Bunting, Chequer, ProgramLine, Racer, Sash, StepTheme } from './look/Look';
 import './MainMenu.css';
+import { carryLink, onOldDomain } from './storage/carry';
 import { version } from '../package.json';
 
 /** The saved Season, if there is one (one save slot). */
@@ -36,10 +38,16 @@ function MainMenu({ onSingleRace, onSeason, season, onCompendium, onGlossary, on
   return (
     <StepTheme step="nationals" className="ace-page mm">
       <Bunting />
+      {onOldDomain() && (
+        <div className="ace-strip mm-moved" role="status">
+          <span><b>Ace America has moved</b> to playaceamerica.com. Your save stays on this address unless you bring it.</span>
+          <a className="ace-btn" href={carryLink()}>Move my save</a>
+        </div>
+      )}
       <ProgramLine right={`No. ${programNo(version)} · 10¢`} />
       <div className="mm-body">
       <header className="mm-cover">
-        <Sash text="Parabolica" title="Parabolica" className="mm-sash" fontSize={23} />
+        <Sash text="Ace America" title="Ace America" className="mm-sash" fontSize={23} />
         <Racer number={16} width={210} className="mm-racer" />
         <Chequer tall />
         <span className="ace-where">{live ? `${live.name} · race ${live.round + 1} of ${live.total}` : 'Race day'}</span>
@@ -49,7 +57,7 @@ function MainMenu({ onSingleRace, onSeason, season, onCompendium, onGlossary, on
         <span className="ace-k mm-contents">Contents</span>
         <button type="button" className="ace-mi on" onClick={onSeason}>
           <span>{live ? 'Continue' : 'New season'}</span>
-          <small>{live ? `${live.name} · race ${live.round + 1}` : 'Pick two rookies and a car setup, then climb'}</small>
+          <small>{live ? `${live.name} · race ${live.round + 1}` : 'Pick your state, name your garage, then climb'}</small>
         </button>
         <button type="button" className="ace-mi" onClick={onSingleRace}><span>Quick race</span><small>One random race, right now</small></button>
         <button type="button" className="ace-mi" onClick={onGlossary}><span>The World Deck</span><small>Every card, team, track and weather</small></button>
@@ -62,7 +70,7 @@ function MainMenu({ onSingleRace, onSeason, season, onCompendium, onGlossary, on
         <span className="mm-foot-line">
           <span>v{version} · {new Date(__BUILD_TIME__).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</span>
           <AceButton tone="ghost" onClick={onCredits} className="mm-credits">Credits</AceButton>
-          <span>playparabolica.com</span>
+          <span>playaceamerica.com</span>
         </span>
       </footer>
     </StepTheme>

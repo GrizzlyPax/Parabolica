@@ -45,9 +45,9 @@ describe('CardFace', () => {
     for (const w of Object.values(WHERE_ICON)) expect(resolveIcon(w), w).toBeDefined();
   });
 
-  it('the back says PARABOLICA · Base deck and hides nothing', () => {
+  it('the back says ACE AMERICA · Base deck and hides nothing', () => {
     const out = html({ card: card('fa-iridium-tyre-management+pit-crew'), faceDown: true });
-    expect(out).toContain('PARABOLICA');
+    expect(out).toContain('ACE AMERICA');
     expect(out).toContain('Base deck');
     expect(out).not.toContain('Tyre Management');
     expect(out).toContain('metal-iridium');

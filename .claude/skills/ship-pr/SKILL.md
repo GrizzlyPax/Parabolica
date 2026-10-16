@@ -58,7 +58,7 @@ Write the **handoff to Pit** (format in CLAUDE.md → The crew): TL;DR · Shippe
 
 ## Merging
 
-- Merging to `main` deploys playparabolica.com. Merge only green, self-contained PRs.
+- Merging to `main` deploys playaceamerica.com (and playparabolica.com until its 301, docs/DOMAIN.md). Merge only green, self-contained PRs.
 - **Leave unmerged and say why:** save-format changes, `server/` changes, sim balance shifts.
 - Workflow dispatch is blocked (403). To redeploy the API, push a change under `server/`.
 - UI changes: check in the browser (Playwright from repo root, `executablePath: '/opt/pw-browsers/chromium'`; for back use `page.evaluate(() => history.back())`, since `page.goBack()` hangs on hash routes; never `pkill -f` a pattern that's in your own command). Then run `republish-preview`.
