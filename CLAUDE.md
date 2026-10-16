@@ -31,7 +31,7 @@ for the future NPC-crowd system (BetLab was removed Oct 2026; git history has it
   - `data/deckTeams.ts` · `deckTracks.ts` · `deckWeather.ts` - the 28 base-deck teams, 6 stat-combo tracks, Neutral + 5 dry weathers (the sim runs on them from the v0.5 bundle PR; `trackTags.ts` / `inflictions.ts` are gone)
   - `betting/utils.ts` - Pure odds/rating utilities (kept for NPC crowds later)
   - `feed/commentary.ts` - Race feed persona/commentary engine
-  - `RaceEngine.ts` - Core race simulation engine (seedable: setSeed / runHeadless(seed)); `RaceConfig.lapCuts` (#694: the Hundred's cuts, status `'eliminated'` ≠ DNF, `isOutOfRace`), `RaceConfig.gridOrder` (a fixed grid, no qualifying)
+  - `RaceEngine.ts` - Core race simulation engine (seedable: setSeed / runHeadless(seed)); `RaceConfig.lapCuts` (#694: the Hundred's cuts, status `'eliminated'` ≠ DNF, `isOutOfRace`), `RaceConfig.gridOrder` (a fixed grid, no qualifying), a `'weather'` event when rain arrives (#762)
   - `engine/rng.ts` - Seeded RNG (mulberry32, deriveSeed, shuffle) — determinism foundation
   - `storage/persistence.ts` - Versioned localStorage league save; `storage/carry.ts` - the one-tap save move from playparabolica.com to playaceamerica.com (#701, docs/DOMAIN.md)
   - `league/` - the league engine Season Mode reuses: `league.ts` (`createLeague`, `rosterStateAt`), `settle.ts` (`prepareScheduledRace`, settle loop), `types.ts`, interventions/acquisition/highlights. Commissioner leagues' UI, gods and the dev console were removed in #339
