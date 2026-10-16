@@ -1,11 +1,14 @@
-# Parabolica league service. Deployed by .github/workflows/deploy-api.yml.
+# Ace America (repo: Parabolica) league service. Deployed by .github/workflows/deploy-api.yml.
 name = "parabolica-api"
 main = "src/index.ts"
 compatibility_date = "2025-09-01"
 
 # Served under the game's own domain so the client needs no CORS dance:
-# https://playparabolica.com/api/...  (Worker routes take precedence over Pages.)
+# https://playaceamerica.com/api/... (and the old playparabolica.com until its
+# 301, docs/DOMAIN.md). Worker routes take precedence over Pages.
 routes = [
+  { pattern = "playaceamerica.com/api/*", zone_name = "playaceamerica.com" },
+  { pattern = "www.playaceamerica.com/api/*", zone_name = "playaceamerica.com" },
   { pattern = "playparabolica.com/api/*", zone_name = "playparabolica.com" },
   { pattern = "www.playparabolica.com/api/*", zone_name = "playparabolica.com" },
 ]
