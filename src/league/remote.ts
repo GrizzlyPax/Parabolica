@@ -11,7 +11,7 @@ import { version as engineVersion } from '../../package.json';
 
 /** Same origin on the real site; the deployed API elsewhere (localhost, the preview). */
 export const API_BASE: string = (import.meta.env?.VITE_API_BASE as string | undefined)
-  ?? (typeof location !== 'undefined' && /(^|\.)play(parabolica|aceamerica)\.com$/.test(location.hostname) ? '/api' : 'https://playparabolica.com/api');
+  ?? (typeof location !== 'undefined' && /(^|\.)play(parabolica|aceamerica)\.com$/.test(location.hostname) ? '/api' : 'https://playaceamerica.com/api');
 
 /** Everything a device needs to rebuild the league. Opaque to the server. */
 export interface LeagueDefinition {

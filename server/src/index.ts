@@ -1,4 +1,4 @@
-// Parabolica league service — Cloudflare Worker + one Durable Object per league.
+// Ace America (repo: Parabolica) league service — Cloudflare Worker + one Durable Object per league.
 //
 // The server never runs the sim. A league is a few KB of facts (seed, setup,
 // start time, interval, decrees); every device replays the same deterministic
