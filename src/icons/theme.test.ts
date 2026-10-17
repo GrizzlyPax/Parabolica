@@ -10,7 +10,6 @@ const THEMED = [
   'RunSetup.css',
   'Glossary.css',
   'racecontrol/RaceControl.css',
-  'fantasy/Fantasy.css',
   'IdeaBox.css',
   'cards/CardFace.css',
   'cards/CardChip.css',
@@ -20,6 +19,7 @@ const THEMED = [
   'season/ui/Season.css',
   'look/look.css',
   'look/race.css',
+  'components/race/UniversalHeader.css',
   'racecontrol/StyleTab.css',
 ];
 

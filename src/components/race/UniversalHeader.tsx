@@ -1,11 +1,13 @@
-// The race header (Pax, Oct 9: "the top of the race view is crushed together").
-// A scoreboard, like the Paddock's tables: one row of cells (menu · Lap · Time ·
-// State · controls), then the track and its priority stats underneath.
+// The masthead (#778; Pax, Oct 9: "the top of the race view is crushed
+// together"). One row of cells: the run's words (the title you hold, the one
+// you're going for, the race), Lap · Time · State, the controls (play, speed,
+// skip, restart) and the way out. Under it the views as tabs (Track · Detail ·
+// Lap chart) and the track: its name, kind, the weather, tyre wear, priority.
 import { useEffect, useRef } from 'react';
 import { ticksToTime } from '../../utils/raceTime';
 import { GameIcon } from '../../icons/GameIcon';
 import { WearPill } from '../../cards/WearPill';
-import type { UniversalHeaderProps, SessionState, RaceSpeed } from './types';
+import type { UniversalHeaderProps, SessionState, RaceSpeed, RaceView } from './types';
 import './UniversalHeader.css';
 
 const SESSION_STATES: Record<SessionState, { tone: string; label: string }> = {
@@ -17,17 +19,23 @@ const SESSION_STATES: Record<SessionState, { tone: string; label: string }> = {
 };
 
 const SPEED_OPTIONS: RaceSpeed[] = [0.5, 1, 2, 10];
+const VIEWS: { id: RaceView; label: string }[] = [{ id: 'track', label: 'Track' }, { id: 'detail', label: 'Detail' }, { id: 'lap', label: 'Lap chart' }];
 
 function UniversalHeader({
   currentLap,
   totalLaps,
   sessionState,
   trackName,
+  trackKind,
   conditions,
   priority,
   tyreWear,
   elapsedTime,
-  onMenuOpen,
+  activeView,
+  onViewChange,
+  onExit,
+  exitLabel = 'Menu',
+  onSkip,
   liveBadge = false,
   isRunning = false,
   raceFinished = false,
@@ -56,7 +64,10 @@ function UniversalHeader({
   return (
     <header className="uh" ref={ref}>
       <div className="uh-cells">
-        <button type="button" className="uh-menu" onClick={onMenuOpen} aria-label="Open navigation menu"><span className="uh-burger" /></button>
+        <div className="uh-program-cell">
+          <span className="uh-k">Official program</span>
+          <span className="uh-program">{program ?? 'Race day'}</span>
+        </div>
         <div className="uh-cell">
           <span className="uh-k">Lap</span>
           <span className="uh-v uh-lap"><b>{currentLap}</b>/{totalLaps}</span>
@@ -80,13 +91,19 @@ function UniversalHeader({
               onClick={() => { const i = SPEED_OPTIONS.indexOf(raceSpeed); onSpeedChange?.(SPEED_OPTIONS[(i + 1) % SPEED_OPTIONS.length]); }}
               aria-label={`Speed ${raceSpeed}x, tap to change`}
             >{raceSpeed}×</button>
+            {onSkip && !raceFinished && <button type="button" className="uh-btn uh-skip" onClick={onSkip}>Skip to result</button>}
             {onReset && <button type="button" className="uh-btn uh-reset" onClick={onReset} aria-label="Restart the race"><GameIcon name="ui.restart" size={16} /></button>}
           </div>
         )}
+        {onExit && <div className="uh-exit"><button type="button" className="ace-link" onClick={onExit}>{exitLabel}</button></div>}
       </div>
       <div className="uh-sub">
-        {program && <span className="uh-program">{program}</span>}
-        <span className="uh-track">{trackName}{weather ? <span className="uh-weather"> · {weather}</span> : null}</span>
+        <div className="uh-tabs" role="tablist" aria-label="Views">
+          {VIEWS.map(v => (
+            <button key={v.id} type="button" role="tab" className={`uh-tab ${activeView === v.id ? 'on' : ''}`} aria-selected={activeView === v.id} onClick={() => onViewChange(v.id)}>{v.label}</button>
+          ))}
+        </div>
+        <span className="uh-track"><b>{trackName}</b>{trackKind ? <span className="uh-kind"> · {trackKind}</span> : null}{weather ? <span className="uh-weather"> · {weather}</span> : null}</span>
         <WearPill tyreWear={tyreWear} />
         {priority && priority.length > 0 && <span className="uh-prio" title="Everyone gets these levels on these stats here">Priority: {priority.join(' · ')}</span>}
       </div>

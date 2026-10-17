@@ -11,7 +11,13 @@ import { Driver } from '../../RaceEngine';
 import { EffectChips } from './EffectChips';
 import { CANON_VARIABLES } from '../../simlab/types';
 import { GameIcon } from '../../icons/GameIcon';
-import { driverCode } from './driverCode';
+import { driverCode, driverSurname } from './driverCode';
+import { TitleRibbon } from '../../look/Look';
+import { stateLook } from '../../look/step';
+import type { TitleTag } from './types';
+
+/** Your latest title's ribbon after your name (#769); rivals wear none. */
+const ribbon = (t: TitleTag | undefined) => (t ? <TitleRibbon step={t.step} state={t.stateId ? stateLook(t.stateId) : undefined}>{t.name}</TitleRibbon> : null);
 
 // Position column (P)
 export const COLUMN_POSITION: ColumnConfig = {
@@ -71,6 +77,19 @@ export const COLUMN_DRIVER_CODE: ColumnConfig = {
   ),
 };
 
+// Surname column (the track view, #778): COOPER, readable at a glance, your ribbon after it
+export const COLUMN_DRIVER_NAME: ColumnConfig = {
+  id: 'driverName',
+  header: 'Driver',
+  width: 'minmax(92px, max-content)',
+  align: 'left',
+  render: (driver: Driver, ctx: RowContext) => (
+    <span className={`driver-code driver-surname ${ctx.isFocused ? 'focused' : ''}`}>
+      {driverSurname(driver.name)}{ribbon(ctx.title)}
+    </span>
+  ),
+};
+
 // Full driver name column (for detail view)
 export const COLUMN_DRIVER_FULL_NAME: ColumnConfig = {
   id: 'driverFullName',
@@ -78,12 +97,9 @@ export const COLUMN_DRIVER_FULL_NAME: ColumnConfig = {
   width: 'minmax(140px, 1.4fr)',
   align: 'left',
   render: (driver: Driver, ctx: RowContext) => (
-    <>
-      <span className={`driver-full-name ${ctx.isFocused ? 'focused' : ''}`}>
-        {driver.name}
-      </span>
-      {ctx.fantasyTeam && <span className="fantasy-badge" style={{ '--fantasy-color': ctx.fantasyTeam.color } as React.CSSProperties}>{ctx.fantasyTeam.name}</span>}
-    </>
+    <span className={`driver-full-name ${ctx.isFocused ? 'focused' : ''}`}>
+      {driver.name}{ribbon(ctx.title)}
+    </span>
   ),
 };
 
@@ -316,7 +332,7 @@ export const TRACK_COLUMNS: ColumnConfig[] = [
   COLUMN_POSITION,
   COLUMN_GRID_DELTA,
   COLUMN_TEAM_MARBLE,
-  COLUMN_DRIVER_CODE,
+  COLUMN_DRIVER_NAME,
   COLUMN_GAP_AHEAD,
   COLUMN_GAP_LEADER,
   COLUMN_LAST_LAP,

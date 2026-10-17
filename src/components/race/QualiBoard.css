@@ -38,3 +38,4 @@
 .qb-follow-team.on { border-color: var(--team-primary); padding-right: 8px; }
 .qb-follow-team:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset: 1px; }
 .qb-follow-nm { white-space: nowrap; }
+.qb-swatch { display: inline-block; width: 22px; height: 22px; border: 1px solid var(--pw-text-1); flex: none; }

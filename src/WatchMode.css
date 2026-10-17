@@ -1247,3 +1247,6 @@
   }
   .broadcast-frame.frame-track .bf-map .track-map { max-height: 30vh; }
 }
+
+/* The cut banner's entrance (#778; the banner itself is styled in look/race.css). */
+@keyframes cut-in { from { opacity: 0; transform: translate(-50%, -8px); } to { opacity: 1; transform: translate(-50%, 0); } }

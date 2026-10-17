@@ -12,6 +12,13 @@ function letters(s: string): string {
   return s.normalize('NFD').replace(/\p{M}/gu, '').replace(/[łŁøØđĐßıæÆœŒ]/g, c => FOLD[c]).toUpperCase().replace(/[^A-Z]/g, '');
 }
 
+/** The surname alone, in capitals (the tower's track view, #778): "Jake Cooper Jr." → COOPER. */
+export function driverSurname(name: string): string {
+  const parts = name.split(' ').filter(p => p.length > 0);
+  const filtered = parts.filter(p => !NAME_SUFFIXES.has(p.toUpperCase()));
+  return (filtered[filtered.length - 1] || parts[parts.length - 1] || '').toUpperCase();
+}
+
 export function driverCode(name: string): string {
   const parts = name.split(' ').filter(p => p.length > 0);
   const filtered = parts.filter(p => !NAME_SUFFIXES.has(p.toUpperCase()));

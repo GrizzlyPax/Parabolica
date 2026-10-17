@@ -14,6 +14,7 @@ import SeasonScreen, { seasonScreenFor } from './season/ui/SeasonScreen';
 import { leagueForRound, seasonAvatars, seasonState, settleRound, type SeasonFacts } from './season/season';
 import { leagueWon } from './run/run';
 import { stageOf } from './season/format';
+import type { TitleTag } from './components/race/types';
 import { currentRunState, loadCurrentLeague as loadSeason, saveCurrentLeague as saveSeason } from './run/current';
 import { teamsOf } from './season/ui/teams';
 import { nemesisTeam } from './season/nemesis';
@@ -26,7 +27,7 @@ import { mulberry32, deriveSeed, randomSeed } from './engine/rng';
 import { quickRace, type QuickRace } from './season/quickRace';
 import { feedVoiceFor } from './season/feedVoice';
 import type { FeedVoice } from './feed/commentary';
-import { stateLook, stepName, type Step } from './look/step';
+import { stateLook, type Step } from './look/step';
 import { generateTrack, getTrackById, Track } from './generators/tracks';
 import { useRoute, type Route } from './router';
 import './App.css';
@@ -175,7 +176,7 @@ function App() {
   // the same race to its finish. The round is recorded by settleRound (the
   // headless run of the same seeded race), so watching changes nothing.
   const onSeasonRace = route.name === 'season' && route.screen === 'race';
-  const [seasonRace, setSeasonRace] = useState<{ round: number; sealed: Set<number>; mine: number[]; nemesis: number[]; you: TeamLike; avatars: ReturnType<typeof seasonAvatars>; quali: boolean; step: Step; stateId?: string; program: string; voice: FeedVoice; facts: SeasonFacts } | null>(null);
+  const [seasonRace, setSeasonRace] = useState<{ round: number; sealed: Set<number>; mine: number[]; nemesis: number[]; you: TeamLike; avatars: ReturnType<typeof seasonAvatars>; quali: boolean; step: Step; stateId?: string; program: string; title?: TitleTag; voice: FeedVoice; facts: SeasonFacts } | null>(null);
   const settlingSeason = useRef(false);
   useEffect(() => {
     if (!onSeasonRace) {
@@ -215,7 +216,9 @@ function App() {
       quali: !leagueNow.schedule[state.round]?.gridOrder,
       step: facts.setup.league?.step ?? 'locals',
       stateId: facts.setup.league?.locale?.stateId,
-      program: `${stepName(facts.setup.league?.step ?? 'locals')} · Race ${state.round + 1} of ${facts.setup.calendar.length}${(() => { const st = stageOf(facts, state.round); return st?.name && !/^Race \d/.test(st.name) ? ` · ${st.name}` : ''; })()}`,
+      // The masthead's words (#778): the title you hold · going for the next · the race, and the stage at Nationals.
+      program: (() => { const w = runWhere(facts); const st = stageOf(facts, state.round); return `${whereLine(w)} · race ${state.round + 1} of ${w.total}${st?.name && !/^Race \d/.test(st.name) ? ` · ${st.name}` : ''}`; })(),
+      title: (() => { const w = runWhere(facts); return w.latest ? { ...w.latest, ...(w.latest.step === 'state' ? { stateId: facts.setup.league?.locale?.stateId } : {}) } : undefined; })(),
       voice: feedVoiceFor(facts),
       facts,
     });
@@ -366,6 +369,8 @@ function App() {
           step={seasonRace.step}
           state={seasonRace.stateId ? stateLook(seasonRace.stateId) : undefined}
           program={seasonRace.program}
+          myTitle={seasonRace.title}
+          onSkip={() => engine.fastForward(Infinity)}
           feedVoice={seasonRace.voice}
           lightsOut
           titleWon={d => {
@@ -384,9 +389,6 @@ function App() {
           onStop={handleStop}
           onSpeedChange={setRaceSpeed}
         />
-        {!raceState.raceFinished && !seasonRace.quali && (
-          <button type="button" className="season-skip" onClick={() => engine.fastForward(Infinity)}>Skip to result</button>
-        )}
       </div>
     );
   }
@@ -462,6 +464,7 @@ function App() {
         onQualifyingDone={quickQuali ? endQuickQuali : undefined}
         raceEvents={raceEvents}
         program="Race Control"
+        exitLabel="Race Control"
         onExit={handleExitRace}
         rulesLines={quickRun ? (quickRun.ruleset.cards.length ? quickRun.ruleset.cards.map(id => `${RULE_CARDS_BY_ID.get(id)?.emoji ?? ''} ${RULE_CARDS_BY_ID.get(id)?.name ?? id}`.trim()).concat(describeRuleset(quickRun.ruleset)) : ['default']) : undefined}
         // Race controls - now handled by UniversalHeader inside WatchMode

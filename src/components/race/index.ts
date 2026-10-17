@@ -4,7 +4,6 @@
 export { default as TimingTower } from './TimingTower';
 export { default as DriverRow } from './DriverRow';
 export { default as UniversalHeader } from './UniversalHeader';
-export { default as NavPanel } from './NavPanel';
 export { default as TrackMap } from './TrackMap';
 export { default as TrackStrip } from './TrackStrip';
 export { default as LapChart, type LapChartSeries } from './LapChart';
@@ -23,6 +22,7 @@ export {
   COLUMN_TEAM_STRIPE,
   COLUMN_TEAM_MARBLE,
   COLUMN_DRIVER_CODE,
+  COLUMN_DRIVER_NAME,
   COLUMN_DRIVER_FULL_NAME,
   COLUMN_DELTA_POS,
   COLUMN_GAP_AHEAD,
@@ -48,6 +48,6 @@ export type {
   TimingTowerProps,
   DriverRowProps,
   UniversalHeaderProps,
-  NavPanelProps,
+  TitleTag,
   DriverPosition,
 } from './types';
