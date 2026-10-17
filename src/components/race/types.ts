@@ -1,7 +1,10 @@
 import type { IconId } from '../../icons/registry';
 // Shared types for race components
 import type { FieldRank } from '../../betting/utils';
-import type { FantasyConfig } from '../../fantasy/types';
+import type { Step } from '../../look/step';
+
+/** A title as a ribbon (#769): the step it was won at, its name, the state for its colours. */
+export interface TitleTag { step: Step; name: string; stateId?: string }
 
 import { Driver, RaceState, EffectStackEntry } from '../../RaceEngine';
 
@@ -32,8 +35,8 @@ export interface RowContext {
   /** Where this driver's skill / car package ranks in this field (stats only, not race form). */
   driverRank?: FieldRank;
   carRank?: FieldRank;
-  /** The fantasy team that drafted this driver, if any. */
-  fantasyTeam?: { name: string; color: string };
+  /** Your latest title (#769): your rows wear its ribbon; rivals none. */
+  title?: TitleTag;
   /** A rival in Season Mode (#322): no ranks, no effect stack, cards as metal dots. */
   sealed?: boolean;
   /** Your team's car (Season Mode): the row wears a faded team colour (Pax, Oct 9). */
@@ -101,8 +104,8 @@ export interface TimingTowerProps {
   /** Live fights (engine.getBattles()). */
   battles?: { chaserId: number; aheadId: number; ticks: number }[];
   fastestLapOverall?: number;
-  /** Fantasy teams in play: drafted rows carry their team's colour. */
-  fantasy?: FantasyConfig;
+  /** Your latest title (#769), worn by your rows. */
+  title?: TitleTag;
   /** Season Mode (#322): drivers whose detail stays dark (rivals). */
   sealed?: ReadonlySet<number>;
   /** Season Mode: your team's drivers (their rows are tinted). */
@@ -145,8 +148,8 @@ export interface UniversalHeaderProps {
   totalLaps: number;
   sessionState: SessionState;
   trackName: string;
-  trackEmoji: string; // Fun/theme emoji for the track
-  trackFlagEmoji?: string; // Flag emoji for the track location
+  /** The track's kind, under its name (#750: Board Track, Brickyard…). */
+  trackKind?: string;
   /** Ambient conditions for this race (weather, track character). */
   conditions?: ConditionChip[];
   /** This race's priority stats (track + weather favours), shown as a chip. */
@@ -154,7 +157,14 @@ export interface UniversalHeaderProps {
   /** The track's tyre-wear dial (#547), shown as a pill beside the priority stats. */
   tyreWear?: number;
   elapsedTime: number;
-  onMenuOpen: () => void;
+  /** The views (#778): Track · Detail · Lap chart, as tabs in the masthead. */
+  activeView: RaceView;
+  onViewChange: (view: RaceView) => void;
+  /** The way out ("Paddock", "Menu", "Race Control"). */
+  onExit?: () => void;
+  exitLabel?: string;
+  /** Season races: jump to the result. */
+  onSkip?: () => void;
   /** Show a pulsing LIVE pill (broadcast spectating). */
   liveBadge?: boolean;
   // Race controls
@@ -167,18 +177,6 @@ export interface UniversalHeaderProps {
   onSpeedChange?: (speed: RaceSpeed) => void;
   /** The program line (#716): the step and the race, in gold, before the track. */
   program?: string;
-}
-
-// Props for NavPanel
-export interface NavPanelProps {
-  isOpen: boolean;
-  activeView: RaceView;
-  onViewChange: (view: RaceView) => void;
-  onClose: () => void;
-  /** Leave the race entirely (back to main menu / league). */
-  onExit?: () => void;
-  exitLabel?: string;
-  exitDescription?: string;
 }
 
 // Driver position on track map

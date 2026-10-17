@@ -13,6 +13,8 @@ export interface RunWhere {
   town: string;
   /** Titles held coming into this step, bottom first ("Ace Toledo"). */
   held: string[];
+  /** The latest title held, with its step (the ribbon your rows wear, #769). */
+  latest?: { step: Step; name: string };
   /** The title this step is for. */
   goingFor: string;
   /** The next title up, and its step's name, when a step waits above. */
@@ -39,8 +41,10 @@ export function runWhere(facts: SeasonFacts): RunWhere {
   const st = seasonState(facts);
   const you = facts.setup.humans[0]?.teamId;
   const line = you ? constructorStandings(facts).find(s => s.teamId === you) : undefined;
+  const latestStep = STEP_PLAN[index - 1];
   return {
     step, index, state, town, held, goingFor: title(step),
+    ...(latestStep ? { latest: { step: latestStep.id, name: title(latestStep.id) } } : {}),
     ...(above && above.races ? { next: title(above.id), nextStep: above.name } : {}),
     round: st.round, total: facts.setup.calendar.length, finished: st.phase === 'finished',
     ...(facts.results.length && line ? { place: { rank: line.rank, points: line.points } } : {}),

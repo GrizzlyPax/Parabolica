@@ -8,28 +8,7 @@
 
 .ace-race { background: var(--ace-ground); color: var(--ace-fg); font-family: var(--ace-body); }
 
-/* --- The header: the scoreboard as a masthead, a gold rule under it --- */
-.ace-race .uh, .ace-race.watch-mode .uh { background: var(--ace-ground); border-bottom: 2px solid var(--ace-gold); }
-.ace-race .uh-cells { border-bottom: 1px solid var(--ace-hair); }
-.ace-race .uh-cells > * { border-left-color: var(--ace-hair); }
-.ace-race .uh-menu { color: var(--ace-fg); }
-.ace-race .uh-k { font-family: var(--ace-cond); letter-spacing: .16em; color: var(--ace-muted); }
-.ace-race .uh-v { font-family: var(--ace-cond); color: var(--ace-fg); }
-.ace-race .uh-lap { color: var(--ace-muted); }
-.ace-race .uh-lap b { font-family: var(--ace-disp); font-weight: 400; color: var(--ace-fg); }
-.ace-race .uh-state { font-family: var(--ace-cond); letter-spacing: .12em; }
-.ace-race .uh-state.tone-green { color: var(--ace-green); }
-.ace-race .uh-state.tone-yellow { color: var(--ace-yellow); }
-.ace-race .uh-state.tone-red { color: var(--ace-red-lv); }
-.ace-race .uh-state.tone-white { color: var(--ace-fg); }
-.ace-race .uh-state.tone-dim { color: var(--ace-muted); }
-.ace-race .uh-btn { border: 1px solid var(--ace-paper); color: var(--ace-fg); font-family: var(--ace-cond); }
-.ace-race .uh-btn:focus-visible, .ace-race .uh-menu:focus-visible { outline: 2px solid var(--ace-gold); outline-offset: -2px; }
-.ace-race .uh-sub { padding: 5px var(--ace-gutter); }
-.ace-race .uh-program { font-family: var(--ace-cond); font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--ace-gold); padding-right: 10px; border-right: 1px solid var(--ace-hair); white-space: nowrap; }
-.ace-race .uh-track { font-family: var(--ace-body); color: var(--ace-fg); }
-.ace-race .uh-weather { color: var(--ace-muted); }
-.ace-race .uh-prio { font-family: var(--ace-mono); color: var(--ace-paper); border-color: var(--ace-hair); }
+/* --- The header is the masthead (components/race/UniversalHeader.css, on tokens since #778) --- */
 
 /* --- The frame: the navy ground, the program's width --- */
 .ace-race .broadcast-frame { background: var(--ace-ground); border: 0; border-radius: 0; }
@@ -117,18 +96,22 @@
 .ace-race .qb-btn-primary, .ace-race .fs-btn-primary { background: var(--ace-btn); color: var(--ace-btn-ink); border: 0; border-bottom: 4px solid var(--ace-btn-shadow); }
 .ace-race .qb-btn:focus-visible, .ace-race .fs-btn:focus-visible { outline: 2px solid var(--ace-gold); outline-offset: 2px; }
 
-/* The navigation panel: a paper leaf with a gold edge */
-.ace-race .nav-backdrop { background: var(--ace-shadow); }
-.ace-race .nav-panel { background: var(--ace-paper); color: var(--ace-ink); border-right: 2px solid var(--ace-gold); }
-.ace-race .nav-panel-header { border-bottom: 2px solid var(--ace-ink); color: var(--ace-ink); }
-.ace-race .nav-close-btn { color: var(--ace-ink); }
-.ace-race .nav-close-btn:hover { background: var(--ace-paper-2); color: var(--ace-ink); }
-.ace-race .nav-option { background: var(--ace-paper); border: 1px solid var(--ace-rule); border-radius: 0; }
-.ace-race .nav-option:hover { background: var(--ace-paper-2); border-color: var(--ace-ink); }
-.ace-race .nav-option.active { background: var(--ace-ink); border-color: var(--ace-ink); }
-.ace-race .nav-option-label { font-family: var(--ace-cond); text-transform: uppercase; letter-spacing: .1em; color: var(--ace-ink); }
-.ace-race .nav-option-desc, .ace-race .nav-option-icon { color: var(--ace-ink-2); }
-.ace-race .nav-option.active .nav-option-label, .ace-race .nav-option.active .nav-option-desc, .ace-race .nav-option.active .nav-option-icon, .ace-race .nav-option.active .nav-option-check { color: var(--ace-paper); }
+/* The tower's names (#778): surnames in the track view, your ribbon after your name, small */
+.ace-race .driver-surname, .ace-race .driver-full-name { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
+.ace-race .driver-surname .ace-ribbon, .ace-race .driver-full-name .ace-ribbon { font-size: 11px; line-height: 1.4; padding: 0 9px; }
+
+/* The Hundred's cut (#694, #778): a banner across the map when a cut lands; red when it took your state */
+.ace-race .cut-banner { position: absolute; left: 50%; top: 12px; transform: translateX(-50%); z-index: 3; max-width: calc(100% - 24px); display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 18px; background: var(--ace-paper); color: var(--ace-ink); border: 2px solid var(--ace-ink); box-shadow: 0 6px 0 var(--ace-shadow); text-align: center; animation: cut-in .35s ease-out; }
+.ace-race .cut-banner b { font-family: var(--ace-disp); font-weight: 400; font-size: 20px; letter-spacing: .02em; text-transform: uppercase; }
+.ace-race .cut-banner span { font-family: var(--ace-body); font-size: 14px; color: var(--ace-ink-2); }
+.ace-race .cut-banner.out { background: var(--ace-accent); color: var(--ace-accent-ink); border-color: var(--ace-ink); }
+.ace-race .cut-banner.out span { color: var(--ace-accent-ink); }
+@media (prefers-reduced-motion: reduce) { .ace-race .cut-banner { animation: none; } }
+
+/* The strips under the map (#778): where everyone is in the race and on the lap, on paper; a phone keeps its pinned map alone */
+.ace-race .bf-map { position: relative; flex-direction: column; align-items: stretch; gap: 8px; }
+.ace-race .bf-map-strips { width: 100%; display: flex; flex-direction: column; gap: 4px; padding: 8px 10px; background: var(--ace-paper); color: var(--ace-ink); border: 1px solid var(--ace-ink); }
+@media (max-width: 799px) { .ace-race .bf-map-strips { display: none; } }
 
 /* The finish sheet: a paper sheet with the sash across the top */
 .ace-race .fs {
@@ -156,6 +139,8 @@
 }
 @media (min-width: 1024px) {
   .ace-race .frame-track { grid-template-columns: max-content minmax(0, 1fr) minmax(280px, 360px); }
+  .ace-race .frame-track .bf-map { display: flex; flex-direction: column; align-items: stretch; justify-content: center; gap: 10px; }
+  .ace-race .frame-track .bf-map .track-map { flex: 1; min-height: 0; }
   .ace-race .frame-track .bf-feed { display: flex; flex-direction: column; grid-column: 3; grid-row: 1; padding: 0; min-width: 0; min-height: 0; overflow: hidden; }
   .ace-race .frame-track .bf-feed .story-feed { flex: 1; min-height: 0; }
   .ace-race .frame-track .bf-feed .story-feed-list { max-height: none; flex: 1; }

@@ -1,4 +1,3 @@
-import { fantasyStandings, fantasyHex, type FantasyConfig } from './fantasy/types';
 import { getDeckTrackById } from './data/deckTracks';
 import { isNeutralWeather } from './data/weather';
 import { favourText, favourParts } from './cards/favourText';
@@ -6,7 +5,6 @@ import RaceEngine, { Driver, RaceConfig, RaceState, TrackInfo, RaceEvent, Effect
 import { useMemo, useRef, useEffect, useState } from 'react';
 import {
   UniversalHeader,
-  NavPanel,
   TimingTower,
   TrackMap,
   TrackStrip,
@@ -34,18 +32,13 @@ import { voiceNotification, voiceTitle, lightsOutLine, callerFor, callerMeta, ty
 import './WatchMode.css';
 import './look/race.css';
 import { StepTheme } from './look/Look';
+import { driverSurname } from './components/race/driverCode';
+import type { TitleTag } from './components/race/types';
 import type { StateLook, Step } from './look/step';
 import { GameIcon } from './icons/GameIcon';
 
-// Suffixes to ignore when extracting surname
-const NAME_SUFFIXES = new Set(['JR', 'JR.', 'SR', 'SR.', 'II', 'III', 'IV', 'V']);
-
 // Helper to extract surname for alphabetical sorting
-function getSurname(driver: Driver): string {
-  const parts = driver.name.split(' ').filter(p => p.length > 0);
-  const filteredParts = parts.filter(p => !NAME_SUFFIXES.has(p.toUpperCase()));
-  return (filteredParts[filteredParts.length - 1] || parts[parts.length - 1] || '').toUpperCase();
-}
+const getSurname = (driver: Driver): string => driverSurname(driver.name);
 
 export interface PowerActivation {
   power: { name: string; emoji: string; description: string; category: 'blessing' | 'curse' | 'god' };
@@ -71,8 +64,10 @@ interface WatchModeProps {
   /** Live broadcast mode: no pause/speed/reset — you're a spectator of
    * something really happening. Exit reads "Back to League". */
   spectator?: boolean;
-  /** Fantasy teams in play: drafted rows carry their colour in the tower. */
-  fantasy?: FantasyConfig;
+  /** Your latest title (#769): your tower rows wear its ribbon. */
+  myTitle?: TitleTag;
+  /** Season races: jump to the result (the masthead's Skip to result). */
+  onSkip?: () => void;
   /** Season Mode (#322): rivals' drivers, whose stats and cards stay sealed. */
   sealedDriverIds?: ReadonlySet<number>;
   /** Season Mode (#451): your drivers, lit (focused) from the first lap. */
@@ -162,7 +157,8 @@ function WatchMode({
   feedVoice,
   lightsOut,
   titleWon,
-  fantasy,
+  myTitle,
+  onSkip,
 }: WatchModeProps) {
   const trackLength = config.lapLength;
   const totalLaps = config.totalLaps;
@@ -217,7 +213,6 @@ function WatchMode({
       readings: sealed ? undefined : DRIVER_CARD_STATS.map(s => readStat(s, d.stats[s as keyof typeof d.stats] as number, [])),
     };
   }, [raceCardOf, drivers, sealedDriverIds, avatars]);
-  const [navPanelOpen, setNavPanelOpen] = useState(false);
 
   // Auto-unfocus DNF'd drivers (they can manually re-focus if wanted)
   const unfocusedDnfDriversRef = useRef<Set<number>>(new Set());
@@ -433,6 +428,15 @@ function WatchMode({
 
   // The Hundred's cuts (#694) and the sky (#762): the engine logs them; the banner and the feed pick them up.
   const lastCutTickRef = useRef<number>(-1);
+  // The cut banner across the map (#778): the last cut, for a few seconds; red when it took one of yours.
+  const [cutBanner, setCutBanner] = useState<{ head: string; body: string; out: boolean } | null>(null);
+  const cutTimerRef = useRef<number | null>(null);
+  const showCut = (b: { head: string; body: string; out: boolean }) => {
+    setCutBanner(prev => (prev?.out && !b.out ? prev : b));
+    if (cutTimerRef.current) window.clearTimeout(cutTimerRef.current);
+    cutTimerRef.current = window.setTimeout(() => setCutBanner(null), 9000);
+  };
+  useEffect(() => () => { if (cutTimerRef.current) window.clearTimeout(cutTimerRef.current); }, []);
   useEffect(() => {
     if (!raceEvents || raceEvents.length === 0) return;
     const fresh = raceEvents.filter(e => (e.type === 'cut' || e.type === 'eliminated' || e.type === 'weather') && e.tick > lastCutTickRef.current);
@@ -442,9 +446,11 @@ function WatchMode({
       if (e.type === 'cut') {
         const [head, body] = e.description.split(':').map(s => s.trim());
         addNotification('milestone', head.toUpperCase(), body ?? '', 'race.final_lap', undefined, 12000);
+        showCut({ head, body: body ?? '', out: false });
       } else if (e.type === 'eliminated' && mineSet?.has(e.driverId)) {
         const d = drivers.find(x => x.id === e.driverId);
         addNotification('info', 'OUT', `${d?.name ?? e.driverName} is out: ${e.description.toLowerCase()}`, 'race.final_lap', d ? [{ id: d.id, name: d.name, emoji: d.emoji }] : undefined, 12000, d?.color);
+        showCut({ head: `${d?.name ?? e.driverName} is out`, body: e.description, out: true });
       } else if (e.type === 'weather') {
         addNotification('weather', 'RAIN', e.description, e.emoji, undefined, 12000);
       }
@@ -1282,14 +1288,16 @@ function WatchMode({
         totalLaps={totalLaps}
         sessionState={getSessionState()}
         trackName={trackInfo?.name || 'Grand Prix'}
-        trackEmoji={trackInfo?.funEmoji || ''}
-        trackFlagEmoji={trackInfo?.emoji}
         conditions={headerConditions}
         priority={headerPriority}
         tyreWear={trackInfo?.id ? getDeckTrackById(trackInfo.id)?.tyreWear : undefined}
         elapsedTime={raceState.totalTicks}
         program={program}
-        onMenuOpen={() => setNavPanelOpen(true)}
+        activeView={activeView}
+        onViewChange={setActiveView}
+        onExit={onExit}
+        exitLabel={exitLabel ?? (spectator ? 'League' : 'Menu')}
+        onSkip={spectator || qualifying ? undefined : onSkip}
         liveBadge={spectator && !raceState.raceFinished}
         // Race controls (a live broadcast offers none)
         isRunning={isRunning}
@@ -1299,17 +1307,6 @@ function WatchMode({
         onStop={spectator || qualifying ? undefined : onStop}
         onReset={spectator || qualifying ? undefined : onReset}
         onSpeedChange={spectator || qualifying ? undefined : onSpeedChange}
-      />
-
-      {/* Navigation Panel - slide-in from left */}
-      <NavPanel
-        isOpen={navPanelOpen}
-        activeView={activeView}
-        onViewChange={setActiveView}
-        onClose={() => setNavPanelOpen(false)}
-        onExit={onExit}
-        exitLabel={exitLabel ?? (spectator ? 'League' : 'Main Menu')}
-        exitDescription={spectator ? 'Back to the league view' : 'Leave the race'}
       />
 
       {/* Main content: a 16:9 broadcast frame that scales to fit the viewport
@@ -1335,12 +1332,6 @@ function WatchMode({
             onNextRace={onNextRace}
             onExit={onExit}
             exitLabel={exitLabel ?? (spectator ? 'Back to League' : 'Menu')}
-            fantasy={fantasy ? (() => {
-              const digest = { finishOrder: raceState.finishOrder, dnfDriverIds: drivers.filter(d => d.status === 'dnf').map(d => d.id) };
-              return fantasyStandings(fantasy, [digest]).map(l => ({
-                name: l.team.name, color: fantasyHex(l.team.color), points: l.points,
-              }));
-            })() : undefined}
           />
         )}
         <div className={`broadcast-frame frame-${activeView}`}>
@@ -1376,13 +1367,16 @@ function WatchMode({
                   gridOrder={gridOrder}
                   battles={battles}
                   fastestLapOverall={fastestLapOverall ?? undefined}
-                  fantasy={fantasy}
+                  title={myTitle}
                   className="timing-tower-track"
                 />
                 )}
               </section>
 
               <section className="bf-map">
+                {cutBanner && !qualifying && (
+                  <div className={`cut-banner ${cutBanner.out ? 'out' : ''}`} role="status"><b>{cutBanner.head}</b>{cutBanner.body && <span>{cutBanner.body}</span>}</div>
+                )}
                 <TrackMap
                   trackPath={trackPath}
                   pitLanePath={pitLanePath}
@@ -1397,6 +1391,12 @@ function WatchMode({
                   unsafetyCarPosition={raceState.unsafetyCarPosition}
                   battles={battles}
                 />
+                {!qualifying && (
+                  <div className="bf-map-strips">
+                    <TrackStrip drivers={drivers} totalLaps={totalLaps} lapLength={trackLength} mode="race" label="Race" focusedDriverIds={focusedDriverIds} />
+                    <TrackStrip drivers={drivers} totalLaps={totalLaps} lapLength={trackLength} mode="lap" label="Lap" focusedDriverIds={focusedDriverIds} />
+                  </div>
+                )}
               </section>
 
               {/* The feed beside the map on a big screen (#716); stacked under it on a phone. */}
@@ -1441,7 +1441,7 @@ function WatchMode({
                   gridOrder={gridOrder}
                   battles={battles}
                   fastestLapOverall={fastestLapOverall ?? undefined}
-                  fantasy={fantasy}
+                  title={myTitle}
                   className="timing-tower-detail"
                 />
                 )}

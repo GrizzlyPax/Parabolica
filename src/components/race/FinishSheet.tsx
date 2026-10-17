@@ -26,8 +26,6 @@ interface FinishSheetProps {
   onNextRace?: () => void;
   onExit?: () => void;
   exitLabel?: string;
-  /** Fantasy points this race, per team (Quick Race). */
-  fantasy?: { name: string; color: string; points: number }[];
   /** The race debrief (#581): your drivers' grid → finish, strategy and moments, and how the winner did it. */
   debrief?: { mine: DriverDebrief[]; winner: WinnerEdge | null };
 }
@@ -76,7 +74,7 @@ function DebriefLines({ db }: { db: DriverDebrief }) {
   );
 }
 
-export default function FinishSheet({ podium, drivers, dnfCount, fastestLap, seed, trackName, mine, buildReport, onNextRace, onExit, exitLabel = 'Menu', fantasy, debrief }: FinishSheetProps) {
+export default function FinishSheet({ podium, drivers, dnfCount, fastestLap, seed, trackName, mine, buildReport, onNextRace, onExit, exitLabel = 'Menu', debrief }: FinishSheetProps) {
   const [open, setOpen] = useState(true);
   const [copied, setCopied] = useState<'idle' | 'ok' | 'fail'>('idle');
   const [report, setReport] = useState<string | null>(null);
@@ -159,16 +157,6 @@ export default function FinishSheet({ podium, drivers, dnfCount, fastestLap, see
           <span className="fs-k">How it was won</span>{' '}
           <b>{winner.name}</b> from P{debrief.winner.grid} · {debrief.winner.strategy} · led {debrief.winner.led} of {debrief.winner.laps} laps
         </p>
-      )}
-
-      {fantasy && fantasy.length > 0 && (
-        <div className="fs-fantasy" aria-label="Fantasy points this race">
-          {fantasy.map(t => (
-            <span key={t.name} className="fs-fantasy-team" style={{ '--fantasy-color': t.color } as React.CSSProperties}>
-              <span className="fantasy-badge">{t.name}</span> <b>{t.points}</b>
-            </span>
-          ))}
-        </div>
       )}
 
       <div className="fs-facts">

@@ -339,7 +339,6 @@
 .fs-ynm { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .fs-pts { margin-left: auto; font-family: var(--look-data, monospace); color: var(--signal-green); }
 .fs-yrow.dnf .fs-pts, .fs-yrow.dnf .fs-pos { color: var(--signal-red); }
-.fs-fantasy { display: flex; gap: 10px; flex-wrap: wrap; }
 /* Race debrief (#581): plain facts under each of your drivers */
 .fs-ydriver { display: flex; flex-direction: column; gap: 4px; }
 .fs-debrief { display: flex; flex-direction: column; gap: 2px; padding-left: 42px; font-size: 13px; color: var(--pw-text-2); }

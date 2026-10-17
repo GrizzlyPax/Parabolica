@@ -9,7 +9,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { Driver } from '../../RaceEngine';
 import { RaceNumber } from '../../icons/RaceNumber';
-import { GameIcon, TeamLogo, type TeamLike } from '../../icons/GameIcon';
+import { GameIcon, type TeamLike } from '../../icons/GameIcon';
 import { inkFor } from '../../icons/ink';
 import DriverRow from './DriverRow';
 import { QUALI_COLUMNS, getGridTemplate } from './columns';
@@ -134,7 +134,7 @@ export default function QualiBoard({ laps, drivers, nominalTicks, mine, onDone, 
           <div className="qb-follow-row">
             {follow.teams.map(t => (
               <button key={t.id} type="button" className={`qb-follow-team ${follow.selected === t.id ? 'on' : ''}`} onClick={() => follow.onPick(t.id)} aria-pressed={follow.selected === t.id} title={t.name}>
-                <TeamLogo team={t} size={26} />
+                <i className="qb-swatch" style={{ background: t.color }} aria-hidden="true" />
                 {follow.selected === t.id && <span className="qb-follow-nm">{t.name}</span>}
               </button>
             ))}
