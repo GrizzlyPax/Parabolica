@@ -164,3 +164,13 @@
   .ace-race .frame-detail .bf-feed { display: flex; flex-direction: column; grid-column: 2; padding: 0; }
   .ace-race .frame-detail .bf-feed .story-feed-list { max-height: none; flex: 1; }
 }
+
+/* The bridge, race view only (#715; the pages retired it in #778): the old
+   --pw-* / --look-* tokens re-pointed onto the program until the race view's
+   own sweep moves WatchMode.css and components/race/*.css onto --ace-*. */
+.ace-race {
+  --pw-ground: var(--ace-ground); --pw-surface: color-mix(in srgb, var(--ace-fg) 6%, var(--ace-ground)); --pw-raised: color-mix(in srgb, var(--ace-fg) 10%, var(--ace-ground));
+  --pw-hairline: var(--ace-hair); --pw-border: var(--ace-hair); --pw-border-strong: var(--ace-muted);
+  --pw-text-1: var(--ace-fg); --pw-text-2: var(--ace-muted); --pw-text-3: var(--ace-muted);
+  --look-display: var(--ace-disp); --look-serif: var(--ace-body); --look-data: var(--ace-cond);
+}

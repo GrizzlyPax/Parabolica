@@ -1,13 +1,13 @@
 /* Race Control → Style (#705): the components, three themes side by side. Tokens only. */
 .st { display: flex; flex-direction: column; gap: 22px; }
 .st-intro { display: flex; flex-direction: column; gap: 10px; max-width: 80ch; }
-.st-intro code { font-family: var(--look-data); font-size: 12px; border: 1px solid var(--pw-border-strong); padding: 0 5px; }
-.st-pick { display: inline-flex; align-items: center; gap: 10px; font-family: var(--look-data); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--pw-text-2); }
-.st-pick select { background: var(--pw-ground); color: var(--pw-text-1); border: 1px solid var(--pw-text-1); border-radius: 0; padding: 6px 10px; font: inherit; font-size: 14px; }
-.st-row { display: flex; flex-direction: column; gap: 10px; border-top: 1px solid var(--pw-text-1); padding-top: 10px; }
+.st-intro code { font-family: var(--ace-data); font-size: 12px; border: 1px solid var(--ace-muted); padding: 0 5px; }
+.st-pick { display: inline-flex; align-items: center; gap: 10px; font-family: var(--ace-data); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--ace-muted); }
+.st-pick select { background: var(--ace-bg); color: var(--ace-fg); border: 1px solid var(--ace-fg); border-radius: 0; padding: 6px 10px; font: inherit; font-size: 14px; }
+.st-row { display: flex; flex-direction: column; gap: 10px; border-top: 1px solid var(--ace-fg); padding-top: 10px; }
 .st-row-head { display: flex; flex-direction: column; gap: 4px; max-width: 80ch; }
-.st-row-head .ace-h2 { color: var(--pw-text-1); font-family: var(--look-display); font-weight: 700; }
-.st-row-head .ace-sub { color: var(--pw-text-2); font-size: 14px; }
+.st-row-head .ace-h2 { color: var(--ace-fg); font-family: var(--ace-disp); font-weight: 700; }
+.st-row-head .ace-sub { color: var(--ace-muted); font-size: 14px; }
 .st-cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
 .st-col { min-width: 0; }
 .st-pane { background: var(--ace-ground); color: var(--ace-fg); font-family: var(--ace-body); padding: 14px var(--ace-gutter) 16px; display: flex; flex-direction: column; gap: 10px; min-height: 100%; border: 1px solid var(--ace-hair); overflow: hidden; }

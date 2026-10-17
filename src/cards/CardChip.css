@@ -1,20 +1,20 @@
 /* CardChip (Pax, Oct 9): a 28 px square in the card's metal. Gear solid, trait dashed. */
 .card-chip {
-  --m: var(--pw-border-strong);
+  --m: var(--ace-plate-muted);
   flex: none; display: inline-flex; align-items: center; justify-content: center; padding: 0; border-radius: 0;
   border: 2px solid var(--m); color: var(--m);
-  background: color-mix(in srgb, var(--m) 14%, var(--pw-ground));
+  background: color-mix(in srgb, var(--m) 14%, var(--ace-plate));
 }
 button.card-chip { cursor: pointer; }
-button.card-chip:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset: 2px; }
+button.card-chip:focus-visible { outline: 2px solid var(--ace-plate-ink); outline-offset: 2px; }
 .card-chip.trait { border-style: dashed; }
 .card-chip.metal-bronze { --m: var(--rarity-bronze); }
 .card-chip.metal-silver { --m: var(--rarity-silver); }
 .card-chip.metal-gold { --m: var(--rarity-gold); }
-.card-chip.metal-iridium { --m: var(--rarity-iridium); background: linear-gradient(135deg, color-mix(in srgb, var(--rarity-iridium) 26%, var(--pw-ground)), color-mix(in srgb, var(--rarity-iridium-sheen) 20%, var(--pw-ground))); }
+.card-chip.metal-iridium { --m: var(--rarity-iridium); background: linear-gradient(135deg, color-mix(in srgb, var(--rarity-iridium) 26%, var(--ace-plate)), color-mix(in srgb, var(--rarity-iridium-sheen) 20%, var(--ace-plate))); }
 @keyframes card-chip-wiggle { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(-7deg); } 50% { transform: rotate(6deg); } 75% { transform: rotate(-3deg); } }
-.card-chip.held { outline: 2px solid var(--pw-text-1); outline-offset: 2px; animation: card-chip-wiggle 1.4s ease-in-out infinite; }
+.card-chip.held { outline: 2px solid var(--ace-plate-ink); outline-offset: 2px; animation: card-chip-wiggle 1.4s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .card-chip.held { animation: none; } }
 /* Traits inverted (Pax, Oct 10): metal fill, black icon. */
-.card-chip.trait { background: var(--m); color: var(--pw-ground); border-color: color-mix(in srgb, var(--pw-ground) 55%, var(--m)); }
+.card-chip.trait { background: var(--m); color: var(--ace-plate); border-color: color-mix(in srgb, var(--ace-plate) 55%, var(--m)); }
 .card-chip.trait.metal-iridium { background: linear-gradient(135deg, var(--rarity-iridium), var(--rarity-iridium-sheen)); }

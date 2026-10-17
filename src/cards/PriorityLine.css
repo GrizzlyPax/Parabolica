@@ -1,4 +1,4 @@
 /* Priority stats sentence (#361): Paddock + Run Setup. */
-.pk-priority { margin: 0; font-style: italic; color: var(--pw-text-2); }
-.pk-priority .rs-k { font-style: normal; color: var(--pw-text-1); }
-.pk-priority b { font-style: normal; color: var(--pw-text-1); }
+.pk-priority { margin: 0; font-style: italic; color: var(--ace-muted); }
+.pk-priority .ace-k { font-style: normal; color: var(--ace-fg); }
+.pk-priority b { font-style: normal; color: var(--ace-fg); }

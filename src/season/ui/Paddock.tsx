@@ -239,7 +239,7 @@ export default function Paddock({ facts, onChange, onMenu, onRoad, onEndRun, onG
     <StepTheme step={lookStep} state={lookState} className="ace-page pk" style={teamThemeVars(you)}>
       <RunHeader facts={facts} title="The Paddock" onMenu={onMenu} onRoad={onRoad} onEndRun={onEndRun} />
       {stage && (
-        <p className="rs-hint pk-hint pk-stage">
+        <p className="ace-note pk-hint pk-stage">
           <b>{stage.name}</b> · {stage.alive} states in, {stage.drivers} cars{stage.decides ? ` · ${stage.decides}` : ''}
           {out ? ' · Your state is out: the rest of Nationals runs without you.' : lineup.length === 1 ? ' · You are down to one car.' : ''}
         </p>
@@ -275,8 +275,8 @@ export default function Paddock({ facts, onChange, onMenu, onRoad, onEndRun, onG
             <PriorityLine label={`Race ${raceNo} · priority stats`} track={{ name: track?.name ?? 'the', favours: trackFav }} weather={weather} />
             <WearPill tyreWear={getDeckTrackById(trackId)?.tyreWear} />
           </div>
-          {liveEffects.length > 0 && <p className="rs-hint pk-hint">{liveEffects.map(e => `${e.name}: ${describeLeft(e)}`).join(' · ')}</p>}
-          {lifted && myTurn && <p className="rs-hint pk-hint">Stamping {lifted.name}: tap a glowing row, or pick the card under the Parcel.</p>}
+          {liveEffects.length > 0 && <p className="ace-note pk-hint">{liveEffects.map(e => `${e.name}: ${describeLeft(e)}`).join(' · ')}</p>}
+          {lifted && myTurn && <p className="ace-note pk-hint">Stamping {lifted.name}: tap a glowing row, or pick the card under the Parcel.</p>}
           <div className="ace-panel flat pk-sheet-panel"><div className="rt-scroll">
             <table className="rt">
               <thead>
@@ -336,9 +336,9 @@ export default function Paddock({ facts, onChange, onMenu, onRoad, onEndRun, onG
 
       {cardOf !== null && (() => { const data = driverCardOf(facts, cardOf, round); return data && <DriverCard data={data} onClose={() => setCardOf(null)} />; })()}
       {detail && (
-        <div className="pk-sheet" role="dialog" aria-label="Detail">
+        <div className="pk-sheet ace-panel" role="dialog" aria-label="Detail">
           {'card' in detail
-            ? <><CardFace card={detail.card} size="small" flippable={false} /><div className="pk-sheet-text"><span className="rs-k">{detail.card.id.startsWith(TITLE_STAMP_PREFIX) ? 'Postmark' : `${isInk(detail.card) ? 'Ink' : 'Seal'} · ${detail.card.target === 'driver' ? 'driver card' : 'car card'}`}{detail.card.rarity ? ` · ${detail.card.rarity}` : ''}</span><b>{detail.card.name}</b>{detail.card.rule ? <span>{detail.card.rule}</span> : detail.card.stats.map(s => <span key={s.stat}>{levelDelta(s.pct)} {STAT_LABELS[s.stat]}</span>)}<span className="rs-hint">{detail.card.id.startsWith(TITLE_STAMP_PREFIX) ? 'On the ribbon, outside the slots. For good.' : isInk(detail.card) ? `Ink: twice the strength, fades after ${GEAR_LIFE} races${stamps.mileage[detail.card.id] !== undefined ? ` (${stamps.mileage[detail.card.id]} left)` : ''}.` : 'A permanent stamp; a full card scrapes one off for the next.'}</span></div></>
+            ? <><CardFace card={detail.card} size="small" flippable={false} /><div className="pk-sheet-text"><span className="ace-k">{detail.card.id.startsWith(TITLE_STAMP_PREFIX) ? 'Postmark' : `${isInk(detail.card) ? 'Ink' : 'Seal'} · ${detail.card.target === 'driver' ? 'driver card' : 'car card'}`}{detail.card.rarity ? ` · ${detail.card.rarity}` : ''}</span><b>{detail.card.name}</b>{detail.card.rule ? <span>{detail.card.rule}</span> : detail.card.stats.map(s => <span key={s.stat}>{levelDelta(s.pct)} {STAT_LABELS[s.stat]}</span>)}<span className="ace-note">{detail.card.id.startsWith(TITLE_STAMP_PREFIX) ? 'On the ribbon, outside the slots. For good.' : isInk(detail.card) ? `Ink: twice the strength, fades after ${GEAR_LIFE} races${stamps.mileage[detail.card.id] !== undefined ? ` (${stamps.mileage[detail.card.id]} left)` : ''}.` : 'A permanent stamp; a full card scrapes one off for the next.'}</span></div></>
             : <ReadingSheet title={detail.title} reading={detail.reading} icon={STAT_ICONS[detail.reading.stat]} />}
           <button type="button" className="ace-link pk-sheet-x" onClick={() => setDetail(null)}>Close</button>
         </div>

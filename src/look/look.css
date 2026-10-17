@@ -17,17 +17,6 @@
 .ace-page > .ace-bunting, .ace-page > .ace-statebar, .ace-page > .ace-dock { max-width: none; }
 .ace-page a { color: inherit; }
 
-/* The bridge (#715): an old screen's --pw-* / --look-* tokens re-pointed onto
-   the program inside a page, so its insides wear the step while Hub sweeps
-   it. Panels on paper re-point them again (the .rt rule below). */
-.ace-page, .ace-race {
-  --pw-ground: var(--ace-ground); --pw-surface: color-mix(in srgb, var(--ace-fg) 6%, var(--ace-ground)); --pw-raised: color-mix(in srgb, var(--ace-fg) 10%, var(--ace-ground));
-  --pw-hairline: var(--ace-hair); --pw-border: var(--ace-hair); --pw-border-strong: var(--ace-muted);
-  --pw-text-1: var(--ace-fg); --pw-text-2: var(--ace-muted); --pw-text-3: var(--ace-muted);
-  --look-display: var(--ace-disp); --look-serif: var(--ace-body); --look-data: var(--ace-cond);
-}
-.ace-page .rs-btn { font-family: var(--ace-cond); font-weight: 400; letter-spacing: .12em; text-transform: uppercase; }
-.ace-page .rs-btn-primary { background: var(--ace-btn); color: var(--ace-btn-ink); border: 0; border-bottom: 4px solid var(--ace-btn-shadow); }
 
 /* Bunting: full width, sits on the top edge; the pattern keeps the pennants their size. */
 .ace-bunting { display: block; width: calc(100% + var(--ace-gutter) * 2); margin: 0 calc(var(--ace-gutter) * -1); height: 28px; }
@@ -57,7 +46,13 @@
 .ace-rule-dotted { flex: 1; border-bottom: 2px dotted var(--ace-muted); transform: translateY(-4px); }
 
 /* Panels: cream paper on the navy ground */
-.ace-panel { background: var(--ace-paper); color: var(--ace-ink); border: 1px solid var(--ace-ink); padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; --ace-fg: var(--ace-ink); --ace-muted: var(--ace-ink-2); --ace-hair: var(--ace-rule); }
+.ace-panel { background: var(--ace-paper); color: var(--ace-ink); border: 1px solid var(--ace-ink); padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+/* On paper the roles flip to ink (#778): a panel, or anything marked .ace-paper-table, re-points them for whatever sits inside. */
+.ace-panel, .ace-paper-table {
+  --ace-fg: var(--ace-ink); --ace-muted: var(--ace-ink-2); --ace-hair: var(--ace-rule); --ace-bg: var(--ace-paper);
+  --ace-surface: color-mix(in srgb, var(--ace-ink) 6%, var(--ace-paper)); --ace-raised: color-mix(in srgb, var(--ace-ink) 10%, var(--ace-paper));
+  --ace-data: var(--ace-mono); --team-primary: var(--ace-accent);
+}
 .ace-panel .ace-h1, .ace-panel .ace-h2 { color: var(--ace-ink); }
 .ace-panel .ace-k, .ace-panel .ace-sub, .ace-panel .ace-note, .ace-panel .ace-prog, .ace-panel .ace-where { color: var(--ace-ink-2); }
 .ace-panel.dim { opacity: .55; }
@@ -127,8 +122,7 @@
 .ace-pts { text-align: right; font-family: var(--ace-cond); color: var(--ace-accent); letter-spacing: .04em; }
 .ace-pts.out { color: var(--ace-ink-2); }
 
-/* The house data table (.rt, Season.css) on paper: re-point its tokens inside a panel */
-.ace-panel .rt-scroll, .ace-paper-table { --pw-ground: var(--ace-paper); --pw-text-1: var(--ace-ink); --pw-text-2: var(--ace-ink-2); --pw-text-3: var(--ace-ink-2); --pw-hairline: var(--ace-rule); --pw-border-strong: var(--ace-ink); --team-primary: var(--ace-accent); --signal-green: var(--ace-green); --signal-yellow: var(--ace-yellow); --signal-red: var(--ace-red-lv); --look-display: var(--ace-disp); --look-serif: var(--ace-body); --look-data: var(--ace-mono); }
+/* The house data table (.rt, Season.css) sits on paper: names stay regular weight there. */
 .ace-panel .rt tbody .rt-name { font-weight: 400; }
 
 /* Menus: contents-page rows */

@@ -2,29 +2,29 @@
 .idea-fab {
   position: fixed; right: 18px; bottom: 18px; z-index: 900;
   width: 46px; height: 46px; border-radius: 0;
-  background: var(--pw-raised); border: 1px solid var(--pw-border-strong); color: var(--pw-text-1);
+  background: var(--ace-raised); border: 1px solid var(--ace-muted); color: var(--ace-fg);
   font-size: 20px; cursor: pointer;
 }
-.idea-fab:hover { border-color: var(--pw-text-1); }
-.idea-fab-count { position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 0; background: var(--team-primary); color: var(--team-ink); font: 700 11px/18px var(--look-data); }
+.idea-fab:hover { border-color: var(--ace-fg); }
+.idea-fab-count { position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 0; background: var(--team-primary); color: var(--team-ink); font: 700 11px/18px var(--ace-data); }
 .idea-panel {
   position: fixed; right: 18px; bottom: 74px; z-index: 901; width: min(460px, calc(100vw - 36px));
-  background: var(--pw-surface); border: 1px solid var(--pw-border-strong); border-radius: 0; padding: 14px;
+  background: var(--ace-surface); border: 1px solid var(--ace-muted); border-radius: 0; padding: 14px;
   display: flex; flex-direction: column; gap: 10px;
 }
 .idea-head { display: flex; align-items: center; gap: 10px; }
-.idea-ctx { color: var(--pw-text-3); font-family: var(--look-data); font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.idea-close { margin-left: auto; background: none; border: 0; color: var(--pw-text-2); font-size: 20px; cursor: pointer; line-height: 1; }
-.idea-text { width: 100%; box-sizing: border-box; background: var(--pw-ground); color: var(--pw-text-1); border: 1px solid var(--pw-border-strong); border-radius: 0; padding: 10px 12px; font: inherit; font-size: 14px; line-height: 1.4; resize: vertical; }
+.idea-ctx { color: var(--ace-muted); font-family: var(--ace-data); font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.idea-close { margin-left: auto; background: none; border: 0; color: var(--ace-muted); font-size: 20px; cursor: pointer; line-height: 1; }
+.idea-text { width: 100%; box-sizing: border-box; background: var(--ace-bg); color: var(--ace-fg); border: 1px solid var(--ace-muted); border-radius: 0; padding: 10px 12px; font: inherit; font-size: 14px; line-height: 1.4; resize: vertical; }
 .idea-kinds { display: flex; flex-wrap: wrap; gap: 6px; }
-.idea-kind { background: var(--pw-ground); color: var(--pw-text-2); border: 1px solid var(--pw-border); border-radius: 0; padding: 4px 10px; font: inherit; font-size: 12px; cursor: pointer; }
-.idea-kind.on { border-color: var(--pw-text-1); color: var(--pw-ground); background: var(--pw-text-1); }
+.idea-kind { background: var(--ace-bg); color: var(--ace-muted); border: 1px solid var(--ace-hair); border-radius: 0; padding: 4px 10px; font: inherit; font-size: 12px; cursor: pointer; }
+.idea-kind.on { border-color: var(--ace-fg); color: var(--ace-bg); background: var(--ace-fg); }
 .idea-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .idea-spacer { flex: 1; }
-.idea-listening { border-color: var(--signal-red) !important; color: var(--pw-red-soft) !important; }
-.idea-foot { color: var(--pw-text-3); font-size: 11.5px; line-height: 1.4; }
-.idea-foot code { font-family: var(--look-data); color: var(--pw-text-2); }
-.idea-toast { position: fixed; right: 18px; bottom: 74px; z-index: 902; background: var(--pw-raised); border: 1px solid var(--pw-border-strong); color: var(--pw-text-1); padding: 8px 12px; border-radius: 0; font-size: 13px; }
+.idea-listening { border-color: var(--ace-red-lv) !important; color: var(--ace-red-lv) !important; }
+.idea-foot { color: var(--ace-muted); font-size: 11.5px; line-height: 1.4; }
+.idea-foot code { font-family: var(--ace-data); color: var(--ace-muted); }
+.idea-toast { position: fixed; right: 18px; bottom: 74px; z-index: 902; background: var(--ace-raised); border: 1px solid var(--ace-muted); color: var(--ace-fg); padding: 8px 12px; border-radius: 0; font-size: 13px; }
 @media (max-width: 799px) {
   .idea-fab { right: 12px; bottom: 12px; }
   .idea-panel { right: 12px; bottom: 66px; }

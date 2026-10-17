@@ -12,7 +12,6 @@ import Paddock from './Paddock';
 import Standings from './Standings';
 import RunLadder from './RunLadder';
 import { AceButton, Bunting, StepTheme } from '../../look/Look';
-import '../../RunSetup.css';
 import './Season.css';
 
 interface Props {
