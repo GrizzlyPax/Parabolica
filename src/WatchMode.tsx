@@ -13,6 +13,7 @@ import {
   TRACK_COLUMNS,
   DETAIL_COLUMNS,
   type RaceView,
+  type RaceScope,
   type RaceSpeed,
   type SessionState,
 } from './components/race';
@@ -34,6 +35,7 @@ import './look/race.css';
 import { StepTheme } from './look/Look';
 import { driverSurname } from './components/race/driverCode';
 import { intervalNext, intervalStart, type IntervalMoment, type IntervalState } from './feed/interval';
+import { sceneForTrackId, type SceneCtx } from './look/venues/scenes';
 import type { TitleTag } from './components/race/types';
 import type { StateLook, Step } from './look/step';
 import { GameIcon } from './icons/GameIcon';
@@ -207,6 +209,8 @@ function WatchMode({
   // Multi-view system - different "lenses" over the same race state
   // New view system: track (map + tower), detail (full tower)
   const [activeView, setActiveView] = useState<RaceView>('track');
+  // The scope (#778): who the picture is about. Follow takes the focused car, else your lead car, else the leader.
+  const [scope, setScope] = useState<RaceScope>('all');
   // Multi-driver focus - allow up to 10 focused drivers (click to toggle)
   const [focusedDriverIds, setFocusedDriverIds] = useState<Set<number>>(() => new Set());
   // Your team's rows are tinted instead of opened (Pax, Oct 9).
@@ -386,6 +390,9 @@ function WatchMode({
   // Get track path and pit lane path from layout
   const trackPath = trackInfo?.layout?.trackPath || DEFAULT_TRACK_PATH;
   const pitLanePath = trackInfo?.layout?.pitLanePath;
+  // The venue, drawn (#778): by the track's kind; the lab's default loop has none.
+  const scene = useMemo(() => sceneForTrackId(trackInfo?.id), [trackInfo?.id]);
+  const sceneCtx: SceneCtx = { stateName: state?.name, title: titleName, venueName: trackInfo?.name, kind: trackKind, raceLine: program };
 
   // Joining a broadcast mid-race: everything that already happened is
   // history, not news. On first observation of an in-progress race, prime
@@ -1103,6 +1110,8 @@ function WatchMode({
   // Use frozen sorted order for timing tower (synced with sector updates)
   // Fall back to realtime if frozen is empty (during initialization)
   const sortedDrivers = frozenSortedDrivers.length > 0 ? frozenSortedDrivers : realtimeSortedDrivers;
+  const followId = scope === 'follow' ? ([...focusedDriverIds][0] ?? myDriverIds?.[0] ?? sortedDrivers[0]?.id) : undefined;
+  const followName = followId !== undefined ? driverSurname(drivers.find(d => d.id === followId)?.name ?? '') : undefined;
 
   // P1–P3 always stand out on the map (bigger marker + team emoji) so the
   // front of the race stays trackable through lapped traffic.
@@ -1330,6 +1339,10 @@ function WatchMode({
         program={program}
         activeView={activeView}
         onViewChange={setActiveView}
+        scope={scope}
+        onScopeChange={setScope}
+        followName={followName}
+        hasMine={!!myDriverIds?.length}
         onExit={onExit}
         exitLabel={exitLabel ?? (spectator ? 'League' : 'Menu')}
         onSkip={spectator || qualifying ? undefined : onSkip}
@@ -1428,6 +1441,10 @@ function WatchMode({
                   unsafetyCarActive={raceState.unsafetyCarActive}
                   unsafetyCarPosition={raceState.unsafetyCarPosition}
                   battles={battles}
+                  scene={scene}
+                  sceneCtx={sceneCtx}
+                  scope={scope}
+                  followId={followId}
                 />
                 {!qualifying && (
                   <div className="bf-map-strips">

@@ -3,6 +3,8 @@
 // (pick a state) · Nationals. Pure display; nothing here touches the sim.
 import { useState, type ReactNode } from 'react';
 import { AceButton, AceCard, Bunting, CarCard, Chequer, Confetti, Level, Parcel, ParcelStrip, Pennant, ProgramLine, Racer, Rosette, Roundel, Sash, Stamp, StateBar, StepTheme, TitleRibbon, Wheel } from '../look/Look';
+import TrackMap from '../components/race/TrackMap';
+import { VENUE_KINDS, sceneForKind } from '../look/venues/scenes';
 import { STATE_CODES, STEPS, stateLook, type Step } from '../look/step';
 import { placeById } from '../data/states';
 import { GradeCell, STAT_ABBR } from '../season/ui/RosterTable';
@@ -67,6 +69,19 @@ export function StyleTab() {
             <Sash text="Ace Fredericksburg" />
             <Sash text={TITLE[step]} className="small" />
             <Sash text="Kettle Street Garage" className="wide" fontSize={18} />
+          </div>
+        ))}
+      </Row>
+
+      <Row title="The venues, drawn" note="One scene per kind on cream paper (look/venues/scenes.tsx): the surface in its material, the landmark, a stand in the step's bunting, the crowd, the infield in the state's words. The cars ride each scene's own line; the race view picks the scene by the track's kind.">
+        {step => themed(step, (
+          <div className="st-venues">
+            {VENUE_KINDS.map(k => (
+              <figure key={k} className="st-venue">
+                <TrackMap scene={sceneForKind(k)} sceneCtx={{ stateName: step === 'state' ? state.name : step === 'locals' ? 'Ohio' : 'America', title: step === 'locals' ? 'Ace Toledo' : step === 'state' ? `Ace ${state.name}` : 'Ace America' }} drivers={[]} trackLength={1} />
+                <figcaption className="ace-k">{k}</figcaption>
+              </figure>
+            ))}
           </div>
         ))}
       </Row>

@@ -129,7 +129,7 @@
   .ace-race .frame-detail .timing-tower-detail .timing-tower-header { position: sticky; top: 0; z-index: 5; }
 }
 @media (min-width: 1024px) {
-  .ace-race .frame-track { grid-template-columns: max-content minmax(0, 1fr) minmax(280px, 360px); }
+  .ace-race .frame-track { grid-template-columns: max-content minmax(0, 1fr) minmax(260px, 320px); }
   .ace-race .frame-track .bf-map { display: flex; flex-direction: column; align-items: stretch; justify-content: center; gap: 10px; }
   .ace-race .frame-track .bf-map .track-map { flex: 1; min-height: 0; }
   .ace-race .frame-track .bf-feed { display: flex; flex-direction: column; grid-column: 3; grid-row: 1; padding: 0; min-width: 0; min-height: 0; overflow: hidden; }

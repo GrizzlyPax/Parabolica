@@ -22,3 +22,8 @@
 .st-token i { width: 18px; height: 18px; border: 1px solid var(--ace-paper); flex: none; }
 .st-token code { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 @media (max-width: 899px) { .st-cols { grid-template-columns: 1fr; } }
+
+/* The venues row (#778): six small maps. */
+.st-venues { display: grid; gap: 10px; }
+.st-venue { margin: 0; display: grid; gap: 4px; }
+.st-venue .track-map { min-height: 0; aspect-ratio: 5 / 3; }

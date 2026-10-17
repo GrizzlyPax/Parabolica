@@ -30,6 +30,13 @@
 .uh-tab:hover { color: var(--ace-fg); }
 .uh-tab.on { color: var(--ace-fg); border-bottom-color: var(--ace-gold); }
 .uh-tab:focus-visible { outline: 2px solid var(--ace-gold); outline-offset: -2px; }
+/* The scope (#778): who the picture is about. */
+.uh-scope { display: inline-flex; align-items: center; gap: 2px; }
+.uh-scope .uh-k { margin-right: 6px; }
+.uh-scope-btn { background: none; border: 1px solid var(--ace-hair); border-radius: 0; padding: 4px 10px; font-family: var(--ace-cond); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--ace-muted); cursor: pointer; white-space: nowrap; }
+.uh-scope-btn:hover { color: var(--ace-fg); border-color: var(--ace-muted); }
+.uh-scope-btn.on { background: var(--ace-paper); color: var(--ace-ink); border-color: var(--ace-paper); }
+.uh-scope-btn:focus-visible { outline: 2px solid var(--ace-gold); outline-offset: 1px; }
 .uh-track { font-family: var(--ace-body); font-size: 14px; color: var(--ace-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .uh-track b { font-family: var(--ace-disp); font-weight: 400; color: var(--ace-fg); }
 .uh-kind { font-style: italic; }

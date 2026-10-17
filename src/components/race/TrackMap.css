@@ -3,14 +3,24 @@
    ============================================ */
 
 .track-map {
+  --map-ink: var(--ace-fg);
   width: 100%;
   aspect-ratio: 5/3;
   min-height: 180px;
+  display: flex; align-items: center; justify-content: center;
   background: var(--ace-bg);
   border: none;
   border-radius: 0;
   overflow: hidden;
 }
+/* A drawn venue (#778): cream paper, the labels in ink. */
+.track-map.scene { --map-ink: var(--ace-ink); background: var(--ace-paper); aspect-ratio: 600 / 404; box-shadow: 0 6px 0 var(--ace-shadow); }
+.marker-label { fill: var(--map-ink); paint-order: stroke; stroke: var(--ace-bg); stroke-width: 3px; stroke-linejoin: round; }
+.track-map.scene .marker-label { stroke: var(--ace-paper); }
+.driver-marker.dimmed .marker-circle { transition: none; }
+.marker-follow-ring { animation: follow-ring 6s linear infinite; pointer-events: none; }
+@keyframes follow-ring { to { stroke-dashoffset: -28; } }
+@media (prefers-reduced-motion: reduce) { .marker-follow-ring { animation: none; } }
 
 .track-svg {
   width: 100%;
