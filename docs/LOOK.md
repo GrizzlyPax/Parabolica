@@ -43,6 +43,7 @@ import { stateLook } from '../look/step';
 </StepTheme>
 ```
 - `StepTheme` sets `data-step` and, for a state, the `--ace-state-*` vars; everything inside reads the tokens. Nest one for a panel that should show another step (a title ribbon takes its own `step`).
+- **Run screens share one header** (`season/ui/RunHeader.tsx`, #778): bunting, the program line, the state bar with the town pennant and the words every run screen says first (**the title you hold · going for the next · race N of M · your place**, from `run/where.ts` `runWhere(facts)`), then the row Menu · garage small · The road · End run, then the screen's `.ace-h1` and the chequer. The Paddock, the finale and the road use it; a new run screen starts with it. Identity is your title, not your garage: no logos anywhere in the run, a garage is its colour (a swatch) and its name small.
 - **The race view** takes `step`, `state` and `program` props on `WatchMode` (App passes the Season race's step, its state and "State · Race 2 of 6"; Quick Race and the lab wear Nationals). From 1024px the track view runs **tower | map | feed** side by side and the detail view **table | feed**; a phone stacks them (map pinned under the header, then the tower, then the feed).
 - **State accents use `inkFor`** (`icons/ink.ts`) for readable ink, never a per-state guess: `stateLook(code)` does it.
 - The house data table (`.rt`, `season/ui/RosterTable.tsx`) sits on paper inside an `.ace-panel .rt-scroll` (its `--pw-*` tokens are re-pointed there).
@@ -56,13 +57,15 @@ Inside `.ace-page`, the old `--pw-*` / `--look-*` tokens point at the program's 
 Frame children get `width` / `max-width` / `margin` at zero specificity (`:where`), so overlays and modals keep their own sizes; the bunting, the state bar and the dock opt out of the frame.
 
 ## The proof
-- **The Ladder** (`season/ui/RunLadder.tsx`): bunting, the program line, the state bar, "The road to Ace America", the rungs as paper panels (the open one outlined in the accent, races as squares, the last chequered), the sash when the run is won, the dock. Its step and state come from the run (#696).
+- **The road** (`season/ui/RunLadder.tsx`): the run header, "The road to Ace America", the rungs as paper panels (the open one outlined in the accent, races as squares, the last chequered), your titles as ribbons, the dock. Out of the loop since #778 (the Paddock's header links to it).
+- **The Paddock** (`season/ui/Paddock.tsx`, #778): the run header, then two columns from 1024px: your garage (the Parcel face up on arrival, the roster table) | the league's two tables. The dock: Leave it shut (ghost) + Go racing.
+- **The finale** (`season/ui/Standings.tsx`, #778): the title moment from the locked look's frame 8: "Congratulations, you are now" + the sash, the Postmark picks, the crowns, the chart and the tables, Up to State in the dock (straight into the next Paddock).
 - **The race view** (`WatchMode.tsx`, #716): the masthead, paper tower and feed beside the map, the finish sheet with the sash.
 - **The menu** (`MainMenu.tsx`): the program cover: bunting, the program line, the sash as the title, the racer, the chequer, contents rows.
 
 ## Hub's sweep checklist
 1. Wrap the screen: `StepTheme` + `.ace-page`; the step and state from the run (`facts.setup.league?.step`, `.locale?.stateId`).
-2. Top: `Bunting` → `ProgramLine` → `StateBar` (the step and the title) → `.ace-h1` → `Chequer`.
+2. Top: a run screen uses `RunHeader`; anything else `Bunting` → `ProgramLine` → `StateBar` (the step and the title) → `.ace-h1` → `Chequer`.
 3. Content in `.ace-panel`s; tables inside `.rt-scroll`; the one action in `.ace-dock`.
 4. Titles under drivers: `TitleRibbon`; the driver card: `AceCard` with `art` (the commissioned-art slot) and `Stamp`s (#704); Parcels: `Parcel` / `ParcelStrip`.
 5. Copy from **Race Control → Style**; add a component there when you need a new one, in every theme.

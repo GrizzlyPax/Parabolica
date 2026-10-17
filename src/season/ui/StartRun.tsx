@@ -3,15 +3,15 @@
 //     the honest number and a difficulty word); the panel beside it shows the
 //     sash you'd race for, your town and the steps.
 // 2 · The flavour page (Pax, #693): name the garage, pick its colour (it shows
-//     at Locals; at State you wear the state's) and logo, rename your two dealt
-//     drivers and the chassis. No real strategic choices: all flavour.
+//     at Locals; at State you wear the state's), rename your two dealt drivers
+//     and the chassis. No real strategic choices: all flavour. No logo (#778):
+//     identity is your title, not your garage.
 // One save slot: starting over a run in progress asks first, on the page.
 import { useMemo, useState } from 'react';
-import { GameIcon, TeamLogo } from '../../icons/GameIcon';
 import { Avatar } from '../../icons/Avatar';
 import { portraitFor, vehicleFor } from '../../generators/avatars';
 import { fieldLine, fieldSize, placeById, type FieldSize } from '../../data/states';
-import { TEAM_COLOURS, TEAM_LOGOS, TEAM_NAME_MAX, wearBuiltTeam, type BuiltTeam } from '../teamCreator';
+import { TEAM_COLOURS, TEAM_NAME_MAX, wearBuiltTeam, type BuiltTeam } from '../teamCreator';
 import { randomSeasonSeed } from '../setup';
 import { dealRookies } from '../rookies';
 import { currentRunState, startRun } from '../../run/current';
@@ -37,10 +37,7 @@ export default function StartRun({ onBack, onStarted }: Props) {
   const [page, setPage] = useState<'state' | 'garage'>('state');
   const [seed, setSeed] = useState(() => randomSeasonSeed());
   const [stateId, setStateId] = useState('oh');
-  const [built, setBuilt] = useState<BuiltTeam>(() => {
-    const logos = TEAM_LOGOS.flatMap(g => g.ids);
-    return { name: '', colour: TEAM_COLOURS[seed % TEAM_COLOURS.length].hex, logo: logos[Math.floor(seed / 7) % logos.length] };
-  });
+  const [built, setBuilt] = useState<BuiltTeam>(() => ({ name: '', colour: TEAM_COLOURS[seed % TEAM_COLOURS.length].hex }));
   const [drivers, setDrivers] = useState<[string, string]>(['', '']);
   const [car, setCar] = useState('');
   const [confirming, setConfirming] = useState(false);
@@ -136,7 +133,7 @@ export default function StartRun({ onBack, onStarted }: Props) {
       {head('Your garage', <><b>Locals</b> · going for Ace {town} · {place.name}</>)}
       <div className="sr-grid sr-grid-garage">
         <div className="ace-panel">
-          <div className="sr-row"><span className="ace-k">The garage</span><TeamLogo team={garage} size={32} /></div>
+          <div className="sr-row"><span className="ace-k">The garage</span><i className="sr-swatch" style={{ background: garage.color }} aria-hidden="true" /></div>
           <label className="sr-field">
             <span className="ace-k">Name</span>
             <input id="sr-name" type="text" value={built.name} maxLength={TEAM_NAME_MAX} placeholder={DEFAULT_GARAGE} autoComplete="off" onChange={e => setBuilt(b => ({ ...b, name: e.target.value }))} />
@@ -146,15 +143,6 @@ export default function StartRun({ onBack, onStarted }: Props) {
             {TEAM_COLOURS.map(c => (
               <button key={c.hex} type="button" role="radio" aria-checked={built.colour === c.hex} aria-label={c.name} title={c.name}
                 className={`tc-colour ${built.colour === c.hex ? 'on' : ''}`} style={{ background: c.hex }} onClick={() => setBuilt(b => ({ ...b, colour: c.hex }))} />
-            ))}
-          </div>
-          <span className="ace-k">Logo</span>
-          <div className="tc-logos" role="radiogroup" aria-label="Logo">
-            {TEAM_LOGOS.flatMap(g => g.ids).map(id => (
-              <button key={id} type="button" role="radio" aria-checked={built.logo === id} aria-label={id.replace(/-/g, ' ')}
-                className={`tc-logo ${built.logo === id ? 'on' : ''}`} style={{ background: garage.color, color: garage.ink }} onClick={() => setBuilt(b => ({ ...b, logo: id }))}>
-                <GameIcon name={id} size={22} />
-              </button>
             ))}
           </div>
         </div>
@@ -185,7 +173,6 @@ export default function StartRun({ onBack, onStarted }: Props) {
         </div>
       )}
       <div className="ace-dock">
-        <AceButton tone="ghost" onClick={() => setPage('state')}>Back</AceButton>
         <AceButton onClick={start}>{confirming ? 'Replace and start' : `Start in ${town}`}</AceButton>
       </div>
     </StepTheme>

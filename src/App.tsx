@@ -14,11 +14,11 @@ import SeasonScreen, { seasonScreenFor } from './season/ui/SeasonScreen';
 import { leagueForRound, seasonAvatars, seasonState, settleRound, type SeasonFacts } from './season/season';
 import { leagueWon } from './run/run';
 import { stageOf } from './season/format';
-import { loadCurrentLeague as loadSeason, saveCurrentLeague as saveSeason } from './run/current';
+import { currentRunState, loadCurrentLeague as loadSeason, saveCurrentLeague as saveSeason } from './run/current';
 import { teamsOf } from './season/ui/teams';
 import { nemesisTeam } from './season/nemesis';
 import { teamThemeVars, type TeamLike } from './icons/GameIcon';
-import { seasonName } from './season/setup';
+import { runWhere, whereLine } from './run/where';
 import { applyFavours } from './cards/apply';
 import type { FantasyConfig } from './fantasy/types';
 import { prepareScheduledRace } from './league/settle';
@@ -328,11 +328,13 @@ function App() {
   const savedSeason = useMemo(() => (screen === 'main-menu' ? loadSeason() : null), [screen]);
   const seasonSummary = useMemo<SeasonCardSummary | null>(() => {
     if (!savedSeason) return null;
-    const state = seasonState(savedSeason);
-    return { name: seasonName(savedSeason.setup), round: state.round, total: savedSeason.setup.calendar.length, finished: state.phase === 'finished' };
+    const w = runWhere(savedSeason);
+    const phase = currentRunState()?.phase ?? 'league';
+    return { line: whereLine(w), round: w.round, total: w.total, phase, title: w.goingFor, next: w.next };
   }, [savedSeason]);
-  // A saved run opens on its ladder (#628); none starts a new one.
-  const handleSeason = () => navigate({ name: 'season', screen: savedSeason ? 'run' : 'setup' });
+  // Continue lands where the run stands (#778): the Paddock, or the finale once the step is over.
+  const handleSeason = () => navigate({ name: 'season', screen: savedSeason ? seasonScreenFor(savedSeason) : 'setup' });
+  const handleNewSeason = () => navigate({ name: 'season', screen: 'setup' });
 
   const ideaContext = { screen, seed: quickRun?.seed ?? engine.getSeed(), track: trackInfo?.name };
   const screenEl = (() => {
@@ -342,6 +344,7 @@ function App() {
       <MainMenu
         onSingleRace={handleSingleRace}
         onSeason={handleSeason}
+        onNewSeason={handleNewSeason}
         season={seasonSummary}
         onCompendium={handleCompendium}
         onGlossary={() => setScreen('glossary')}

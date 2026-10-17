@@ -1,16 +1,15 @@
-// Standings + finale (#321, #453 layout A, #509). Two championships, no bonus.
-// Mid-season (the Paddock's League tab is the usual way in): the chart and
-// both tables. When every round has run: your Constructors' finish as the
-// headline, two crowns (Constructors' and Drivers' champions), the chart, the
-// final tables, and Play again (League Setup with a fresh seed).
+// The finale (#321, #453 layout A, #509; the title screen since #778). When
+// every race has run: the title you won as the sash ("Congratulations, you
+// are now Ace Toledo"), the Postmark picks, and the way up, straight into
+// the next step's Paddock; or the run over, and a new season. Under that:
+// two crowns (the top garage and the top driver), the points race by race
+// and the final tables. Mid-season the table lives in the Paddock.
 import { raceBadges } from '../badges';
-import { useMemo } from 'react';
-import { GameIcon, TeamLogo, teamThemeVars } from '../../icons/GameIcon';
+import { useMemo, useState } from 'react';
+import { GameIcon, teamThemeVars } from '../../icons/GameIcon';
 import { draftState } from '../draft';
 import { constructorStandings, driverStandings, poolFor, type SeasonFacts } from '../season';
 import { seasonTable } from '../scoring';
-import { seasonName } from '../setup';
-import EndSeason from './EndSeason';
 import { LeagueTables } from './LeagueTables';
 import { SeasonChart } from './SeasonChart';
 import { RaceNumber } from '../../icons/RaceNumber';
@@ -18,21 +17,29 @@ import { Avatar } from '../../icons/Avatar';
 import { portraitFor } from '../../generators/avatars';
 import { humanLabel, teamsOf } from './teams';
 import { currentRunState } from '../../run/current';
-import { AceButton, Bunting, Chequer, ProgramLine, Sash, StateBar, StepTheme } from '../../look/Look';
-import { STEPS, programNumber, stateLook } from '../../look/step';
+import type { TitlePicks } from '../../run/run';
+import { runWhere } from '../../run/where';
+import { TITLE_STAMP_LEVELS, TITLE_STAMP_STATS } from '../stamps';
+import { DRIVER_STATS, STAT_LABELS } from '../../cards/deck';
+import type { DriverStatKey } from '../../cards/types';
+import DriverCard from './DriverCard';
+import { driverCardOf } from '../driverCard';
+import RunHeader from './RunHeader';
+import { AceButton, Sash, StepTheme } from '../../look/Look';
 
 interface Props {
   facts: SeasonFacts;
   onMenu: () => void;
-  onEndSeason: () => void;
+  onRoad: () => void;
+  onEndRun: () => void;
   onPaddock: () => void;
   onPlayAgain: () => void;
-  /** Up the ladder (#597): shown when this league is won and one waits above. */
-  onPromote?: () => void;
+  /** Up the ladder (#597, #704): the title's Postmark picks, then the next step's Paddock. */
+  onPromote: (picks: TitlePicks) => void;
 }
 
-export default function Standings({ facts, onMenu, onPaddock, onPlayAgain, onEndSeason, onPromote }: Props) {
-  // The run this league belongs to (#597); the screens for it are Hub's (#628).
+export default function Standings({ facts, onMenu, onRoad, onEndRun, onPaddock, onPlayAgain, onPromote }: Props) {
+  // The run this league belongs to (#597).
   const run = useMemo(() => (facts.results.length ? currentRunState() : null), [facts.results.length]);
   const teams = useMemo(() => teamsOf(facts), [facts]);
   const pool = useMemo(() => poolFor(facts), [facts]);
@@ -40,51 +47,75 @@ export default function Standings({ facts, onMenu, onPaddock, onPlayAgain, onEnd
   const drivers = useMemo(() => driverStandings(facts), [facts]);
   const rosters = useMemo(() => draftState(pool, facts.draftPicks).rosters, [pool, facts.draftPicks]);
   const standings = useMemo(() => constructorStandings(facts), [facts]);
+  const where = useMemo(() => runWhere(facts), [facts]);
+  const [cardOf, setCardOf] = useState<number | null>(null);
   const humans = facts.setup.humans.map(h => h.teamId);
   const podiums = (teamId: string) => facts.results.reduce((n, r) => n + r.finishOrder.slice(0, 3).filter(id => rosters[teamId].driverIds.includes(id)).length, 0);
   const driver = (id: number) => pool.drivers.find(d => d.id === id)!;
 
   const champion = table.final ? teams[table.lines[0].teamId] : null;
   const champLabel = champion ? humanLabel(facts, champion.id) : null;
-  const total = facts.setup.calendar.length;
-  const you = teams[facts.setup.humans[0].teamId];
+  const youId = facts.setup.humans[0].teamId;
+  const you = teams[youId];
   const dc = table.driversChampion;
-  // The step and state this league wears (#705, #696): the run writes them on the league context.
-  const step = facts.setup.league?.step ?? 'locals';
-  const state = stateLook(facts.setup.league?.locale?.stateId ?? 'oh');
+  const mine = table.lines.find(l => l.teamId === youId);
+  const phase = run?.phase;
+  const title = where.goingFor;
+
+  // The title stamps (#704): each driver picks the stats their Postmark goes on before going up.
+  const [picks, setPicks] = useState<TitlePicks>({});
+  const stampCount = TITLE_STAMP_STATS[where.step] ?? 0;
+  const yourDrivers = (rosters[youId]?.driverIds ?? []).map(id => driver(id));
+  // Every driver has picked: no defaults, the choice is the moment (#704).
+  const picksDone = stampCount === 0 || yourDrivers.every(d => (picks[d.id] ?? []).length === stampCount);
+  const togglePick = (driverId: number, stat: DriverStatKey) => setPicks(p => {
+    const held = p[driverId] ?? [];
+    const next = held.includes(stat) ? held.filter(s => s !== stat) : held.length < stampCount ? [...held, stat] : held;
+    return { ...p, [driverId]: next };
+  });
 
   return (
-    <StepTheme step={step} state={state} className="ace-page ss-standings fn" style={teamThemeVars(champion ?? you)}>
-      <Bunting />
-      <ProgramLine right={`No. ${programNumber(facts.setup.seed)} · 10¢`} />
-      <StateBar><b>{STEPS.find(s => s.id === step)!.name}</b> · {table.final ? `all ${total} races run` : `after ${facts.results.length} of ${total} races`}</StateBar>
-      <header className="fn-head">
-        <button type="button" className="ace-link" onClick={onMenu}>Menu</button>
-        <span className="ace-where">{seasonName(facts.setup)}</span>
-        <EndSeason onEnded={onEndSeason} />
-      </header>
-      <h1 className="ace-h1">{table.final ? 'Champions' : 'Standings'}</h1>
-      <Chequer />
-      {run?.phase === 'run-won' && <div className="ace-sash-wrap"><Sash text={run.ladder[run.leagueIndex]?.title ?? 'Ace America'} className="fn-sash" /></div>}
+    <StepTheme step={where.step} state={where.state} className="ace-page fn" style={teamThemeVars(champion ?? you)}>
+      <RunHeader facts={facts} title={phase === 'league-won' || phase === 'run-won' ? undefined : table.final ? 'The season is over' : 'The table'} won={phase === 'league-won' || phase === 'run-won'} onMenu={onMenu} onRoad={onRoad} onEndRun={phase === 'league' ? onEndRun : undefined} />
 
-      {table.final && (
-        <section className="fn-result ace-panel ace-paper-table">
-          {humans.map(id => {
-            const line = table.lines.find(l => l.teamId === id)!;
-            const who = 'You';
-            const crown = dc?.teamId === id ? ` · ${driver(dc.driver.driverId).fullName} is the top driver` : '';
-            return <p key={id} className="fn-result-line"><b>{who} finished P{line.rank}</b> in the garages’ table on {line.points} pts{crown}.</p>;
-          })}
-          {run?.phase === 'league-won' && <p className="fn-result-line"><b>Congratulations, you are now {run.ladder[run.leagueIndex].title}.</b> {run.ladder[run.leagueIndex + 1]?.name} is next; your whole garage goes up with you.</p>}
-          {run?.phase === 'run-won' && <p className="fn-result-line"><b>Congratulations, you are now {run.ladder[run.leagueIndex].title}.</b> Nationals comes in a later build.</p>}
-          {run?.phase === 'run-lost' && <p className="fn-result-line"><b>The season is over.</b> Only the title moves you up. Start again; what you unlocked stays.</p>}
+      {(phase === 'league-won' || phase === 'run-won') && (
+        <section className="fn-hero" aria-label="Your title">
+          <span className="ace-k">Congratulations, you are now</span>
+          <div className="ace-sash-wrap"><Sash text={title} className="fn-sash" fontSize={title.length > 14 ? 19 : 23} /></div>
+          <p className="fn-line">
+            {phase === 'run-won'
+              ? 'The top of the road. Every title on it is yours.'
+              : <>Next: {where.nextStep}, for {where.next}. Your whole garage goes up with you{mine ? ` on ${mine.points} pts` : ''}.</>}
+          </p>
+          {phase === 'league-won' && stampCount > 0 && (
+            <div className="ace-panel fn-stamps" role="group" aria-label="Postmarks">
+              <span className="ace-k">The {title.replace(/^Ace /, '')} Postmark · pick {stampCount === 1 ? 'a stat' : `${stampCount} stats`} for each driver: +{TITLE_STAMP_LEVELS} levels, struck on their ribbon for good</span>
+              {yourDrivers.map(d => (
+                <div key={d.id} className="fn-stamp-row">
+                  <span className="fn-stamp-who"><Avatar icon={portraitFor(pool.seed, d.id)} color={you.color} size={22} /> {d.fullName}</span>
+                  <span className="fn-stamp-stats">
+                    {DRIVER_STATS.map(s => (
+                      <button key={s} type="button" className={`ace-tab ${(picks[d.id] ?? []).includes(s) ? 'on' : ''}`} aria-pressed={(picks[d.id] ?? []).includes(s)} onClick={() => togglePick(d.id, s)}>{STAT_LABELS[s]}</button>
+                    ))}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </section>
+      )}
+      {phase === 'run-lost' && (
+        <p className="fn-line">
+          {champion ? <>{title} went to <b>{champion.name}</b>. </> : null}
+          {mine ? `You finished ${mine.rank === 1 ? 'P1' : `P${mine.rank}`} on ${mine.points} pts. ` : ''}
+          Only the title moves you up. Start again; the road is the same.
+        </p>
       )}
 
       {champion && dc && (
         <section className="fn-crowns">
           <div className="fn-crown ace-panel ace-paper-table">
-            <TeamLogo team={champion} size={72} />
+            <i className="fn-swatch" style={{ background: champion.color }} aria-hidden="true" />
             <div className="fn-crown-text">
               <span className="rs-k"><GameIcon name="season.champion" size={14} /> Top garage{champLabel ? ` · ${champLabel}` : ''}</span>
               <span className="fn-crown-name">{champion.name}</span>
@@ -102,24 +133,25 @@ export default function Standings({ facts, onMenu, onPaddock, onPlayAgain, onEnd
         </section>
       )}
 
-      {facts.results.length > 0 && (
-        <section className="pk-chart">
-          <div className="rs-k">Garage points, race by race</div>
-          <SeasonChart standings={standings} teams={teams} mine={humans} />
+      <div className="fn-grid">
+        {facts.results.length > 0 && (
+          <section className="pk-chart">
+            <div className="rs-k">Garage points, race by race</div>
+            <SeasonChart standings={standings} teams={teams} mine={humans} />
+          </section>
+        )}
+        <section className="fn-tables">
+          <LeagueTables facts={facts} pool={pool} teams={teams} rosters={rosters} lines={table.lines} drivers={drivers} onDriver={setCardOf} />
         </section>
-      )}
+      </div>
 
-      <section className="fn-tables">
-        <LeagueTables facts={facts} pool={pool} teams={teams} rosters={rosters} lines={table.lines} drivers={drivers} />
-      </section>
-      <p className="rs-hint">Two tables: the garages’ (both cars’ points; win it and the title is yours) and the drivers’ (each driver’s own).</p>
-
+      {cardOf !== null && (() => { const data = driverCardOf(facts, cardOf); return data && <DriverCard data={data} onClose={() => setCardOf(null)} />; })()}
       <div className="ace-dock">
-        {table.final
-          ? (run?.phase === 'league-won' && onPromote
-            ? <AceButton onClick={onPromote}>Up to {run.ladder[run.leagueIndex + 1]?.name}</AceButton>
-            : <AceButton onClick={onPlayAgain}>A new season</AceButton>)
-          : <AceButton onClick={onPaddock}>Back to the Paddock</AceButton>}
+        {!table.final
+          ? <AceButton onClick={onPaddock}>Back to the Paddock</AceButton>
+          : phase === 'league-won'
+            ? <AceButton disabled={!picksDone} onClick={() => picksDone && onPromote(picks)}>{picksDone ? `Up to ${where.nextStep}` : 'Pick the Postmarks'}</AceButton>
+            : <AceButton onClick={onPlayAgain}>A new season</AceButton>}
       </div>
     </StepTheme>
   );

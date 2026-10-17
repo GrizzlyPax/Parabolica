@@ -1,8 +1,9 @@
 // The Parcel, opened (#704; Pax Oct 10: "tap, then Keep", in place, not a
-// takeover). Three stamps flip where the Parcel sits at the top of the
-// Paddock; tap one to lift it (the rows it fits glow below), then say which
-// card it goes on. A full card asks which stamp to scrape off first. The box
-// can be left shut. Tap the lifted stamp again for its full face.
+// takeover; #778: it is face up when you arrive). Three stamps flip where the
+// Parcel sits at the top of the Paddock; tap one to lift it (the rows it fits
+// glow below), then say which card it goes on. A full card asks which stamp
+// to scrape off first. Leaving the box shut is the dock's ghost button. Tap
+// the lifted stamp again for its full face.
 import { useEffect, useState } from 'react';
 import { CardFace } from '../../cards/CardFace';
 import { CardChip } from '../../cards/CardChip';
@@ -27,15 +28,12 @@ interface Props {
   smudgeLine?: string;
   /** Keep this stamp on that card; `replaces` when the card is full. */
   onKeep: (card: Card, target: string, replaces?: string) => void;
-  /** Leave the Parcel shut: nothing kept. */
-  onLeave: () => void;
   /** The stamp lifted (or put down), so the table can glow. */
   onLift: (card: Card | null) => void;
   onDetail: (card: Card) => void;
-  onClose: () => void;
 }
 
-export default function ParcelPick({ parcel, targets, smudgeLine, onKeep, onLeave, onLift, onDetail, onClose }: Props) {
+export default function ParcelPick({ parcel, targets, smudgeLine, onKeep, onLift, onDetail }: Props) {
   const [faceUp, setFaceUp] = useState(false);
   const [pick, setPick] = useState<string | null>(null);
   const [target, setTarget] = useState<string | null>(null);
@@ -54,7 +52,7 @@ export default function ParcelPick({ parcel, targets, smudgeLine, onKeep, onLeav
     <section className={`pp tier-${parcel.tier} ${parcel.kind === 'gift' ? 'pp-gift' : parcel.kind === 'smudged' ? 'pp-curse' : ''}`.trim()} aria-label={`${label}: keep one of three stamps`}>
       <div className="pp-head">
         <span className="rs-k">{label} · keep one stamp</span>
-        <button type="button" className="rs-link" onClick={() => { lift(null); onClose(); }}>Later</button>
+        <span className="rs-hint">{parcel.kind === 'gift' ? 'A friend upstairs sends their regards: the best odds.' : parcel.kind === 'smudged' ? 'Unlucky.' : 'Before every race.'}</span>
       </div>
       {smudgeLine && <p className="rs-hint pp-smudge">{smudgeLine}</p>}
       <div className="pp-three" role="group" aria-label="Pick one of three">
@@ -81,25 +79,22 @@ export default function ParcelPick({ parcel, targets, smudgeLine, onKeep, onLeav
               </button>
             ))}
           </span>
-          <button type="button" className="rs-link" onClick={() => setTarget(null)}>Back</button>
+          <button type="button" className="ace-link" onClick={() => setTarget(null)}>Back</button>
         </div>
       ) : chosen ? (
         <div className="pp-ask" role="group" aria-label="Which card gets the stamp">
           <b>Stamp {chosen.name} on…</b>
           <span className="pp-ask-btns">
             {fitting.map(t => (
-              <button key={t.key} type="button" className="rs-btn" onClick={() => (t.stamps.length >= t.slots ? setTarget(t.key) : onKeep(chosen, t.key))}>
+              <button key={t.key} type="button" className="ace-btn paper" onClick={() => (t.stamps.length >= t.slots ? setTarget(t.key) : onKeep(chosen, t.key))}>
                 {t.label} <small>{t.stamps.length}/{t.slots}</small>
               </button>
             ))}
           </span>
-          <span className="rs-hint">{isInk(chosen) ? `Ink: twice the strength, fades after ${GEAR_LIFE} races.` : 'A Seal: pressed in, it keeps for the run.'} Tap it again for the full card; tap a glowing row to stamp it there.</span>
+          <span className="rs-hint">{isInk(chosen) ? `Ink: twice the strength, fades after ${GEAR_LIFE} races.` : 'A Seal: pressed in, it keeps for the run.'} Tap it again for the full card.</span>
         </div>
       ) : (
-        <div className="pp-keep">
-          <span className="rs-hint">Tap a stamp to lift it. The other two go back.</span>
-          <button type="button" className="rs-link" onClick={onLeave}>Pass</button>
-        </div>
+        <p className="rs-hint pp-keep">Tap a stamp to lift it; the other two go back. Or leave the box shut and go racing.</p>
       )}
     </section>
   );

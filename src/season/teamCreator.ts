@@ -1,7 +1,8 @@
 // The team creator (#346; docs/story/team-identity.md → Team creator): build
-// your own team from one of the 28 deck colours (ink automatic), one of
-// Radio's 20 logos and a name. It only dresses your pool slot: the human's
-// SeasonHuman identity (name, color, ink, iconId) overrides that team's look.
+// your own team from one of the 28 deck colours (ink automatic) and a name.
+// It only dresses your pool slot: the human's SeasonHuman identity (name,
+// color, ink) overrides that team's look. No logo since #778 (identity is
+// your title, not your garage); Radio's 20 stay vendored for the record.
 import type { IconId } from '../icons/registry';
 import type { SeasonHuman } from './season';
 
@@ -21,12 +22,12 @@ export const TEAM_LOGOS: readonly { theme: string; ids: readonly IconId[] }[] = 
 export const TEAM_NAME_MAX = 22;
 export const DEFAULT_TEAM_NAME = 'Your team';
 
-export interface BuiltTeam { name: string; colour: string; logo: IconId }
+export interface BuiltTeam { name: string; colour: string }
 
 /** Your human wearing the team you built (the pool slot stays the same). */
 export function wearBuiltTeam(human: SeasonHuman, built: BuiltTeam): SeasonHuman {
   const colour = TEAM_COLOURS.find(c => c.hex === built.colour) ?? TEAM_COLOURS[0];
   const name = built.name.trim().replace(/\s+/g, ' ').slice(0, TEAM_NAME_MAX) || DEFAULT_TEAM_NAME;
   // Your own look: the deck team you started from goes back to the pool (#660).
-  return { ...human, name, color: colour.hex, ink: inkFor(colour.hex), iconId: built.logo, deckTeamId: undefined };
+  return { ...human, name, color: colour.hex, ink: inkFor(colour.hex), iconId: undefined, deckTeamId: undefined };
 }

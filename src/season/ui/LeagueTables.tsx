@@ -1,7 +1,6 @@
 // The league's two tables (#453): constructors and every driver, Wins · Pod ·
 // Pts. Shared by the Paddock's League tab and the finale.
 import { raceBadges } from '../badges';
-import { TeamLogo } from '../../icons/GameIcon';
 import { DriverName } from './DriverCard';
 import { nemesisTeam } from '../nemesis';
 import { RaceNumber } from '../../icons/RaceNumber';
@@ -40,7 +39,7 @@ export function LeagueTables({ facts, pool, teams, rosters, lines, drivers, onDr
             {lines.map(s => (
               <tr key={s.teamId} className={humans.includes(s.teamId) ? 'mine' : ''}>
                 <td className="rt-pos">{s.rank}</td>
-                <th className="rt-name" scope="row"><TeamLogo team={teams[s.teamId]} size={18} /><span className="rt-nm">{teams[s.teamId].name}</span>{s.teamId === nemesisId && <span className="nem-tag">NEMESIS</span>}</th>
+                <th className="rt-name" scope="row"><i className="rt-swatch" style={{ background: teams[s.teamId].color }} aria-hidden="true" /><span className="rt-nm">{teams[s.teamId].name}</span>{s.teamId === nemesisId && <span className="nem-tag">NEMESIS</span>}</th>
                 <td className="rt-numcol">{s.wins}</td>
                 <td className="rt-numcol">{teamPodiums(s.teamId)}</td>
                 <td className="rt-numcol">{s.points}</td>
