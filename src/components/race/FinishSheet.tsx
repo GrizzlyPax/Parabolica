@@ -33,6 +33,8 @@ interface FinishSheetProps {
   debrief?: { mine: DriverDebrief[]; winner: WinnerEdge | null };
   /** The step's title, when this race won it (#778): the sash says it. */
   wonTitle?: string;
+  /** The garage as the screen names it (#778): its title after Locals. */
+  teamLabel?: (name: string) => string;
 }
 
 async function copyText(text: string): Promise<boolean> {
@@ -82,7 +84,7 @@ function DebriefLines({ db }: { db: DriverDebrief }) {
   );
 }
 
-export default function FinishSheet({ podium, drivers, dnfCount, fastestLap, seed, trackName, mine, buildReport, onNextRace, onExit, exitLabel = 'Menu', debrief, wonTitle }: FinishSheetProps) {
+export default function FinishSheet({ podium, drivers, dnfCount, fastestLap, seed, trackName, mine, buildReport, onNextRace, onExit, exitLabel = 'Menu', debrief, wonTitle, teamLabel }: FinishSheetProps) {
   const [open, setOpen] = useState(true);
   const [copied, setCopied] = useState<'idle' | 'ok' | 'fail'>('idle');
   const [report, setReport] = useState<string | null>(null);
@@ -131,7 +133,7 @@ export default function FinishSheet({ podium, drivers, dnfCount, fastestLap, see
             <span className="fs-who">
               {num(d, [2, 1, 3][i] === 1 ? 30 : 24)}
               <span className="fs-nm">{d.name}</span>
-              {d.teamName && <span className="fs-tm">{d.teamName}</span>}
+              {d.teamName && <span className="fs-tm">{teamLabel?.(d.teamName) ?? d.teamName}</span>}
             </span>
             <span className="fs-block">{[2, 1, 3][i]}</span>
           </li>

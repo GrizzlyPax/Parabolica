@@ -98,6 +98,8 @@ interface WatchModeProps {
   titleName?: string;
   /** The track's kind (#750), under its name in the masthead. */
   trackKind?: string;
+  /** Garage data name → the name to show (#778: the title after Locals). */
+  teamLabels?: Record<string, string>;
   /** The step's last race (#751): the Interval's odds rise, and the flag is a moment it can follow. */
   lastRaceOfStep?: boolean;
   /** Does this result win the step's title (#762)? Asked once at the flag; a yes gets the caller's title line. */
@@ -165,6 +167,7 @@ function WatchMode({
   lightsOut,
   titleName,
   trackKind,
+  teamLabels,
   lastRaceOfStep = false,
   titleWon,
   myTitle,
@@ -1348,6 +1351,7 @@ function WatchMode({
         {raceCard && <DriverCard data={raceCard} onClose={() => setRaceCardOf(null)} />}
         {raceState.raceFinished && sortedFinished.length >= 1 && (
           <FinishSheet
+            teamLabel={n => teamLabels?.[n] ?? n}
             podium={sortedFinished}
             drivers={drivers}
             mine={myDriverIds}
@@ -1401,6 +1405,7 @@ function WatchMode({
                   battles={battles}
                   fastestLapOverall={fastestLapOverall ?? undefined}
                   title={myTitle}
+                  teamLabels={teamLabels}
                   className="timing-tower-track"
                 />
                 )}
@@ -1475,6 +1480,7 @@ function WatchMode({
                   battles={battles}
                   fastestLapOverall={fastestLapOverall ?? undefined}
                   title={myTitle}
+                  teamLabels={teamLabels}
                   className="timing-tower-detail"
                 />
                 )}

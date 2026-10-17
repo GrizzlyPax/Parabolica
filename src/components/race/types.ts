@@ -37,6 +37,8 @@ export interface RowContext {
   carRank?: FieldRank;
   /** Your latest title (#769): your rows wear its ribbon; rivals none. */
   title?: TitleTag;
+  /** The garage as the screen names it (#778): its title after Locals; the data name otherwise. */
+  teamName?: string;
   /** A rival in Season Mode (#322): no ranks, no effect stack, cards as metal dots. */
   sealed?: boolean;
   /** Your team's car (Season Mode): the row wears a faded team colour (Pax, Oct 9). */
@@ -106,6 +108,8 @@ export interface TimingTowerProps {
   fastestLapOverall?: number;
   /** Your latest title (#769), worn by your rows. */
   title?: TitleTag;
+  /** Garage data name → the name to show (#778: the title after Locals). */
+  teamLabels?: Record<string, string>;
   /** Season Mode (#322): drivers whose detail stays dark (rivals). */
   sealed?: ReadonlySet<number>;
   /** Season Mode: your team's drivers (their rows are tinted). */

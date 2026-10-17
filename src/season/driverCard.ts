@@ -16,7 +16,7 @@ import { poolFor, type SeasonFacts } from './season';
 import { teamStamps } from './stamps';
 import { effectCards } from './effects';
 import { readStat, type StatReading } from './grades';
-import { teamsOf } from './ui/teams';
+import { teamsOf, garageLabels } from './ui/teams';
 
 export const DRIVER_CARD_STATS: StatKey[] = ['baseSpeed', 'consistency', 'luck', 'acceleration', 'endurance', 'aggression'];
 
@@ -51,7 +51,7 @@ export function driverCardOf(facts: SeasonFacts, driverId: number, round: number
   const team = teamId ? teamsOf(facts)[teamId] : undefined;
   const mine = !!teamId && facts.setup.humans.some(h => h.teamId === teamId);
   const base: DriverCardData = {
-    id: d.id, name: d.fullName, number: raceBadges(facts)[d.id] ?? d.number, teamName: team?.name ?? '', color: team?.color ?? '#718295', ink: team?.ink,
+    id: d.id, name: d.fullName, number: raceBadges(facts)[d.id] ?? d.number, teamName: (teamId && garageLabels(facts)[teamId]?.name) || team?.name || '', color: team?.color ?? '#718295', ink: team?.ink,
     portrait: portraitFor(pool.seed, d.id), backstory: d.backstory, quirk: d.quirk,
     cards: [...d.traits], sealed: !mine,
   };

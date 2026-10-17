@@ -111,7 +111,7 @@ export const COLUMN_TEAM_NAME: ColumnConfig = {
   align: 'left',
   render: (driver: Driver, ctx: RowContext) => (
     <span className="team-name">
-      {driver.teamName || ''}
+      {ctx.teamName ?? driver.teamName ?? ''}
       {ctx.nemesis && <span className="nem-tag">NEMESIS</span>}
     </span>
   ),

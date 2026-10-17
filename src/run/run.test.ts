@@ -6,7 +6,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   newRun, seasonFactsFor, currentLeague, withCurrentLeague, runState, promote, replayRun, leagueWon, titlesOf, titleFor, townOf, rivalTowns, fieldAt, fieldShiftAt,
-  startingTeam, renamedDriver, saveRun, loadRun, clearRun, RUN_KEY, RUN_SCHEMA_VERSION, STEP_PLAN, STATE_FIELD, LAST_BUILT_STEP, NEMESIS_IN_RUN, PLAYER_TEAM_ID, NATIONALS_SHIFT, NATIONALS_FORMAT, HUNDRED_CUTS, rivalStates, type RunFacts,
+  startingTeam, renamedDriver, saveRun, loadRun, clearRun, RUN_KEY, RUN_SCHEMA_VERSION, legacyTownOf, dealTown, STEP_PLAN, STATE_FIELD, LAST_BUILT_STEP, NEMESIS_IN_RUN, PLAYER_TEAM_ID, NATIONALS_SHIFT, NATIONALS_FORMAT, HUNDRED_CUTS, rivalStates, type RunFacts,
 } from './run';
 import { emptyMeta, recordRun, loadMeta, saveMeta, META_KEY, grant } from './meta';
 import { loadCurrentLeague, saveCurrentLeague, startRun, promoteCurrentRun, currentRunState } from './current';
@@ -27,7 +27,7 @@ import { getTrackById } from '../generators/tracks';
 import { CANON_VARIABLES } from '../simlab/types';
 import { ladderView } from './ladderView';
 import { rating } from '../season/grades';
-import { fieldSize, placeById } from '../data/states';
+import { fieldSize, placeById, TOWN_POOL_OCT14 } from '../data/states';
 import { testRun, TEST_GARAGE } from './testHelpers';
 import { quickRace } from '../season/quickRace';
 
@@ -421,6 +421,14 @@ describe('saves', () => {
     const loaded = loadRun(store)!;
     expect(loaded).toEqual(run);
     expect(currentLeague(loaded)).toEqual(currentLeague(run));
+    // Schema 5 (before #778) loads: its town comes from the Oct 14 pool, the same town it had.
+    const five = { ...saved, schemaVersion: 5, data: { ...saved.data, setup: { ...saved.data.setup, town: undefined } } };
+    store.setItem(RUN_KEY, JSON.stringify(five));
+    const migrated = loadRun(store)!;
+    expect(migrated.setup.town).toBe(legacyTownOf(saved.data.setup.seed, saved.data.setup.stateId));
+    expect(placeById(saved.data.setup.stateId)!.cities.slice(0, TOWN_POOL_OCT14[saved.data.setup.stateId])).toContain(migrated.setup.town);
+    // A new run writes its town down, from the whole pool.
+    expect(saved.data.setup.town).toBe(dealTown(saved.data.setup.seed, saved.data.setup.stateId));
     store.setItem(RUN_KEY, JSON.stringify({ ...saved, schemaVersion: 2 }));
     expect(loadRun(store)).toBeNull();
     clearRun(store);

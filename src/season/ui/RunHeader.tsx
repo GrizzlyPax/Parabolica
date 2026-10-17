@@ -47,7 +47,7 @@ export default function RunHeader({ facts, title, onMenu, onRoad, onEndRun, stat
       <StateBar pennant={<Pennant name={w.town} width={72} />}>{whereWords(w, won)} · {status ?? raceWords(w)}</StateBar>
       <div className="rh-row">
         <button type="button" className="ace-link" onClick={onMenu}>Menu</button>
-        <span className="ace-where rh-garage">{garage} · {w.town}, {w.state.name}</span>
+        <span className="ace-where rh-garage">{w.step === 'locals' ? `${garage} · ` : ''}{w.town}, {w.state.name}</span>
         <span className="rh-links">
           {onRoad && <button type="button" className="ace-link" onClick={onRoad}>The road</button>}
           {onEndRun && <EndSeason onEnded={onEndRun} />}

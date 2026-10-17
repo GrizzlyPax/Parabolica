@@ -8,7 +8,7 @@
 // the road reads like a run map: what's coming, and what a stamp is for.
 import { constructorStandings, poolFor, seasonState, type SeasonFacts } from '../season/season';
 import { draftState } from '../season/draft';
-import { teamsOf } from '../season/ui/teams';
+import { garageLabels, teamsOf } from '../season/ui/teams';
 import { venueFor, venueForSetup } from '../season/venues';
 import { seasonCalendar } from '../season/setup';
 import type { TeamLike } from '../icons/GameIcon';
@@ -75,7 +75,8 @@ function standingOf(facts: SeasonFacts, teamId: string): Standing | undefined {
   const table = constructorStandings(facts);
   const row = table.find(s => s.teamId === teamId);
   const team = teamsOf(facts)[teamId];
-  return row && team ? { team: { ...team, id: teamId }, place: row.rank, points: row.points } : undefined;
+  // Named as the screen names it (#778): the title after Locals.
+  return row && team ? { team: { ...team, id: teamId, name: garageLabels(facts)[teamId]?.name ?? team.name }, place: row.rank, points: row.points } : undefined;
 }
 
 function rungFor(run: RunFacts, rung: RungView): RungView {

@@ -71,7 +71,7 @@ function DriverRow({ driver, columns, context, gridTemplate, isFocused, expandab
           <div className="dp-who">
             {context.avatar && <span className="dp-av"><Avatar icon={context.avatar.portrait} color={driver.color} size={24} /><Avatar icon={context.avatar.vehicle} color={driver.color} size={26} /></span>}
             <b>{driver.name}</b>
-            <span>{driver.number !== undefined ? `#${driver.number} · ` : ''}{driver.teamName}{context.nemesis && <span className="nem-tag">NEMESIS</span>}</span>
+            <span>{driver.number !== undefined ? `#${driver.number} · ` : ''}{context.teamName ?? driver.teamName}{context.nemesis && <span className="nem-tag">NEMESIS</span>}</span>
             {onCard && <button type="button" className="dp-close" onClick={e => { e.stopPropagation(); onCard(); }}>Driver card</button>}
             <button type="button" className="dp-close" onClick={e => { e.stopPropagation(); onClick?.(); }}>Close</button>
           </div>

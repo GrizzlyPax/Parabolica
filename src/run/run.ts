@@ -34,7 +34,7 @@ import { DRIVER_STATS, type DriverStatKey } from '../cards';
 import { carriedEffects } from '../season/effects';
 import { dealRookies } from '../season/rookies';
 import { inkFor } from '../icons/ink';
-import { fieldSize, placeById, US_PLACES, type FieldSize, type UsPlace } from '../data/states';
+import { fieldSize, placeById, TOWN_POOL_OCT14, US_PLACES, type FieldSize, type UsPlace } from '../data/states';
 import { isOut, type SeasonFormat, type LapCut } from '../season/format';
 import type { Step } from '../look/step';
 import { constructorStandings, poolFor, seasonState, settleRound, type SeasonFacts, type SeasonHuman, type SeasonSetup, type SeasonStore } from '../season/season';
@@ -85,8 +85,10 @@ export type KitSystem = 'stamps';
 
 export interface RunSetup {
   seed: number;
-  /** Your state: a place id ('oh'). The town is drawn from its pool (`townOf`). */
+  /** Your state: a place id ('oh'). */
   stateId: string;
+  /** Your town, drawn from the state's pool at the start (#778, schema 6); a save from before carries none and `townOf` reads the Oct 14 pool. */
+  town?: string;
   /** Your garage: the identity you wear all run (teamId is PLAYER_TEAM_ID). */
   garage: SeasonHuman;
   /** The flavour page's renames (#697): your two dealt drivers and the chassis. Labels only. */
@@ -158,7 +160,8 @@ export function emptyLeague(): LeagueFacts {
 export function newRun(setup: Omit<RunSetup, 'kit' | 'garage'> & { kit?: KitSystem; garage: Omit<SeasonHuman, 'teamId'> & { teamId?: string } }): RunFacts {
   if (!placeById(setup.stateId)) throw new Error(`run: no state '${setup.stateId}'`);
   const garage: SeasonHuman = { ...setup.garage, teamId: PLAYER_TEAM_ID, ink: setup.garage.ink ?? inkFor(setup.garage.color), deckTeamId: undefined };
-  const run: RunFacts = { setup: { kit: 'stamps', ...setup, garage }, titles: [], leagues: [emptyLeague()] };
+  // The town is drawn once and written down (#778), so a longer pool later never moves it.
+  const run: RunFacts = { setup: { kit: 'stamps', ...setup, garage, town: setup.town ?? dealTown(setup.seed, setup.stateId) }, titles: [], leagues: [emptyLeague()] };
   return withCurrentLeague(run, drafted(currentLeague(run)));
 }
 
@@ -176,10 +179,24 @@ export function stateOf(run: RunFacts): UsPlace {
   return p;
 }
 
-/** Your town, drawn from the state's pool on the run seed. */
+/** Your town: the one the run wrote down at its start (#778); a save from before draws it from the Oct 14 pool. */
 export function townOf(run: RunFacts): string {
-  const s = stateOf(run);
-  return s.cities[Math.abs(Math.floor(run.setup.seed)) % s.cities.length];
+  return run.setup.town ?? legacyTownOf(run.setup.seed, run.setup.stateId);
+}
+
+/** The town a seed draws from a state's pool today (the whole pool). */
+export function dealTown(seed: number, stateId: string): string {
+  const s = placeById(stateId);
+  if (!s) throw new Error(`run: no state '${stateId}'`);
+  return s.cities[Math.abs(Math.floor(seed)) % s.cities.length];
+}
+
+/** The town a run saved before #778 drew: the same seed over the Oct 14 pool (its first N towns), so no saved run changes town. */
+export function legacyTownOf(seed: number, stateId: string): string {
+  const s = placeById(stateId);
+  if (!s) throw new Error(`run: no state '${stateId}'`);
+  const n = Math.min(s.cities.length, TOWN_POOL_OCT14[s.id] ?? s.cities.length);
+  return s.cities[Math.abs(Math.floor(seed)) % n];
 }
 
 /** The other towns of the state, for the State step's rivals, in pool order starting after yours. */
@@ -444,8 +461,9 @@ export function replayRun(run: RunFacts): RaceDigest[][] {
 // Save / restore: facts only, one slot
 
 export const RUN_KEY = 'parabolica.run.v1';
-/** 3 since Ace America's run (#696): a v0.7 run (schemas 1–2) is archived, not loaded. */
-export const RUN_SCHEMA_VERSION = 5;
+/** 3 since Ace America's run (#696): a v0.7 run (schemas 1–2) is archived, not loaded. 6 since #778 (the town stored on the setup); a 5 loads and takes its town from the Oct 14 pool. */
+export const RUN_SCHEMA_VERSION = 6;
+const LOADABLE_SCHEMAS = new Set([5, RUN_SCHEMA_VERSION]);
 
 interface RunEnvelope { schemaVersion: number; savedAt: number; data: RunFacts }
 
@@ -471,11 +489,13 @@ export function loadRun(store: SeasonStore | null = defaultStore()): RunFacts | 
     const raw = store.getItem(RUN_KEY);
     if (!raw) return null;
     const envelope = JSON.parse(raw) as RunEnvelope;
-    if (envelope?.schemaVersion !== RUN_SCHEMA_VERSION) return null;
+    if (!LOADABLE_SCHEMAS.has(envelope?.schemaVersion)) return null;
     const r = envelope.data;
     if (!r?.setup || typeof r.setup.seed !== 'number' || !r.setup.garage || !placeById(r.setup.stateId ?? '') || !Array.isArray(r.leagues)) return null;
     if (r.leagues.length < 1 || r.leagues.length > STEPS_PER_RUN || !r.leagues.every(isLeague)) return null;
-    return { ...r, titles: Array.isArray(r.titles) ? r.titles : [], leagues: r.leagues.map(l => ({ ...l, effectFacts: l.effectFacts ?? [] })) };
+    // Schema 5 → 6: the town it drew is written down (from the Oct 14 pool), so the longer pools change nothing for it.
+    const setup = r.setup.town ? r.setup : { ...r.setup, town: legacyTownOf(r.setup.seed, r.setup.stateId) };
+    return { ...r, setup, titles: Array.isArray(r.titles) ? r.titles : [], leagues: r.leagues.map(l => ({ ...l, effectFacts: l.effectFacts ?? [] })) };
   } catch { return null; }
 }
 

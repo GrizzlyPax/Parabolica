@@ -18,7 +18,8 @@ import { SeasonChart } from './SeasonChart';
 import { RaceNumber } from '../../icons/RaceNumber';
 import { Avatar } from '../../icons/Avatar';
 import { portraitFor } from '../../generators/avatars';
-import { humanLabel, teamsOf } from './teams';
+import { garageLabels, humanLabel, teamsOf } from './teams';
+import { GarageName } from './GarageName';
 import { currentRunState } from '../../run/current';
 import type { TitlePicks } from '../../run/run';
 import { heldTitles, runWhere } from '../../run/where';
@@ -46,6 +47,8 @@ export default function Standings({ facts, onMenu, onRoad, onEndRun, onPaddock, 
   // The run this league belongs to (#597).
   const run = useMemo(() => (facts.results.length ? currentRunState() : null), [facts.results.length]);
   const teams = useMemo(() => teamsOf(facts), [facts]);
+  const labels = useMemo(() => garageLabels(facts), [facts]);
+  const chartTeams = useMemo(() => Object.fromEntries(Object.entries(teams).map(([id, t]) => [id, { ...t, name: labels[id]?.name ?? t.name }])), [teams, labels]);
   const pool = useMemo(() => poolFor(facts), [facts]);
   const table = useMemo(() => seasonTable(facts), [facts]);
   const drivers = useMemo(() => driverStandings(facts), [facts]);
@@ -84,7 +87,7 @@ export default function Standings({ facts, onMenu, onRoad, onEndRun, onPaddock, 
   const car = pool.cars.find(c => c.id === rosters[youId]?.carId);
   const deckCards = [
     ...yourDrivers.flatMap(d => (deck.drivers[d.id] ?? []).map(c => ({ card: c, who: d.fullName }))),
-    ...deck.car.map(c => ({ card: c, who: c.target === 'team' ? you.name : car?.name ?? 'The car' })),
+    ...deck.car.map(c => ({ card: c, who: c.target === 'team' ? labels[youId]?.name ?? you.name : car?.name ?? 'The car' })),
   ];
   const badge = yourDrivers[0] ? raceBadges(facts)[yourDrivers[0].id] ?? yourDrivers[0].number : undefined;
 
@@ -146,7 +149,7 @@ export default function Standings({ facts, onMenu, onRoad, onEndRun, onPaddock, 
       )}
       {phase === 'run-lost' && (
         <p className="fn-line">
-          {champion ? <>{title} went to <b>{champion.name}</b>. </> : null}
+          {champion ? <>{title} went to <b>{labels[champion.id]?.name ?? champion.name}</b>. </> : null}
           {mine ? `You finished ${mine.rank === 1 ? 'P1' : `P${mine.rank}`} on ${mine.points} pts. ` : ''}
           Only the title moves you up. Start again; the road is the same.
         </p>
@@ -158,14 +161,14 @@ export default function Standings({ facts, onMenu, onRoad, onEndRun, onPaddock, 
             <i className="fn-swatch" style={{ background: champion.color }} aria-hidden="true" />
             <div className="fn-crown-text">
               <span className="ace-k"><GameIcon name="season.champion" size={14} /> Top garage{champLabel ? ` · ${champLabel}` : ''}</span>
-              <span className="fn-crown-name">{champion.name}</span>
+              <span className="fn-crown-name"><GarageName label={labels[champion.id]} className="" /></span>
               <span className="fn-crown-stats">{table.lines[0].points} pts · {table.lines[0].wins} {table.lines[0].wins === 1 ? 'win' : 'wins'} · {podiums(champion.id)} podiums</span>
             </div>
           </div>
           <div className="fn-crown ace-panel ace-paper-table">
             <RaceNumber n={raceBadges(facts)[dc.driver.driverId] ?? driver(dc.driver.driverId).number} color={teams[dc.teamId].color} ink={teams[dc.teamId].ink} size={56} shape="square" />
             <div className="fn-crown-text">
-              <span className="ace-k"><GameIcon name="season.champion" size={14} /> Top driver · {teams[dc.teamId].name}{humanLabel(facts, dc.teamId) ? ` · ${humanLabel(facts, dc.teamId)}` : ''}</span>
+              <span className="ace-k"><GameIcon name="season.champion" size={14} /> Top driver · {labels[dc.teamId]?.name ?? teams[dc.teamId].name}{humanLabel(facts, dc.teamId) ? ` · ${humanLabel(facts, dc.teamId)}` : ''}</span>
               <span className="fn-crown-name"><Avatar icon={portraitFor(pool.seed, dc.driver.driverId)} color={teams[dc.teamId].color} size={26} /> {driver(dc.driver.driverId).fullName}</span>
               <span className="fn-crown-stats">{dc.driver.points} pts · {dc.driver.wins} {dc.driver.wins === 1 ? 'win' : 'wins'} · {dc.driver.podiums} podiums</span>
             </div>
@@ -177,7 +180,7 @@ export default function Standings({ facts, onMenu, onRoad, onEndRun, onPaddock, 
         {facts.results.length > 0 && (
           <section className="pk-chart">
             <div className="ace-k">Garage points, race by race</div>
-            <SeasonChart standings={standings} teams={teams} mine={humans} />
+            <SeasonChart standings={standings} teams={chartTeams} mine={humans} />
           </section>
         )}
         <section className="fn-tables">
