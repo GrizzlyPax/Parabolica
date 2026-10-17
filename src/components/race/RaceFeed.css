@@ -126,6 +126,15 @@
   color: var(--ace-purple);
 }
 
+/* The Interval (#751; Radio's look): a pale green-grey panel, a double rule, typewriter text, the persona spaced too wide */
+.story-interval {
+  border-left: 6px double var(--ace-ink);
+  background: color-mix(in srgb, var(--ace-green) 10%, var(--ace-paper));
+}
+.story-interval .story-persona { letter-spacing: .3em; color: var(--ace-ink); }
+.story-interval .story-text { font-family: var(--ace-mono); }
+.story-frame { margin: 0; font-family: var(--ace-mono); font-size: 0.72rem; font-style: italic; color: var(--ace-muted); }
+
 /* Big moments: louder card */
 .story-big {
   background: var(--ace-bg);

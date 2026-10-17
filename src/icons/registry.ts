@@ -294,6 +294,7 @@ export const MEANINGS = {
   'voice.pa': 'megaphone',
   'voice.radio': 'radio-tower',
   'voice.network': 'old-microphone',
+  'voice.interval': 'metronome',
   'view.track': 'path-distance',
   'view.detail': 'histogram',
   'view.lapchart': 'chart',

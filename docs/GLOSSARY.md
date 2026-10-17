@@ -60,14 +60,14 @@
 
 *Source: `src/data/deckTracks.ts` (docs/TRACKS_WEATHER.md). Six stat-combo tracks; each favours one driver stat and one car/team stat for the race, field-wide (+10 grade points, through the card math at race build). Each has a tyre-wear dial (#536): wear per tick × `tyreWear`. Every race and season calendar draws from these; the 31 themed circuits, track events and track characters retired with Tracks & Weather v2.*
 
-| Track | Favours | Tyre wear | Layout |
-|---|---|---|---|
-| **Speed + Power** `speed-power` | +10 Speed · +10 Power | ×0.85 | power |
-| **Consistency + Grip** `consistency-grip` | +10 Consistency · +10 Grip | ×1.1 | technical |
-| **Aggression + Reliability** `aggression-reliability` | +10 Aggression · +10 Reliability | ×1 | street |
-| **Endurance + Tyre Management** `endurance-tyre-management` | +10 Endurance · +10 Tyre Management | ×1.25 | flowing |
-| **Acceleration + Pit Crew** `acceleration-pit-crew` | +10 Acceleration · +10 Pit Crew | ×1.15 | modern |
-| **Luck + Reliability** `luck-reliability` | +10 Luck · +10 Reliability | ×0.95 | classic |
+| Track (the Nationals landmark) | Kind | Favours | Tyre wear | Layout |
+|---|---|---|---|---|
+| **Bonneville Salt Flats, Utah** `speed-power` | Salt Flats | +10 Speed · +10 Power | ×0.85 | power |
+| **Pikes Peak, Colorado** `consistency-grip` | Hill-climb | +10 Consistency · +10 Grip | ×1.1 | technical |
+| **Times Square, New York** `aggression-reliability` | Street Circuit | +10 Aggression · +10 Reliability | ×1 | street |
+| **The Brickyard, Indianapolis** `endurance-tyre-management` | Brickyard | +10 Endurance · +10 Tyre Management | ×1.25 | flowing |
+| **The Springfield Mile, Illinois** `acceleration-pit-crew` | Fairgrounds | +10 Acceleration · +10 Pit Crew | ×1.15 | modern |
+| **Atlantic City Board Speedway, New Jersey** `luck-reliability` | Board Track | +10 Luck · +10 Reliability | ×0.95 | classic |
 
 ## Weather
 

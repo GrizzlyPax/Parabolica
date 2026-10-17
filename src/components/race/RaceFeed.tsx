@@ -34,8 +34,9 @@ function RaceFeed({ items, className = '' }: RaceFeedProps) {
               <div className="story-body">
                 <div className="story-meta">
                   <span className="story-persona">{item.personaName}</span>
-                  <span className="story-lap">LAP {item.lap}</span>
+                  <span className="story-lap">LAP {item.frame ? '—' : item.lap}</span>
                 </div>
+                {item.frame && <p className="story-frame">{item.frame.before}</p>}
                 <p className="story-text">
                   {item.drivers?.length ? (
                     withDriverHighlights(item.text, item.drivers)
@@ -43,6 +44,7 @@ function RaceFeed({ items, className = '' }: RaceFeedProps) {
                     item.text
                   )}
                 </p>
+                {item.frame && <p className="story-frame">{item.frame.after}</p>}
               </div>
             </div>
           ))

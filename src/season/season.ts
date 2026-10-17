@@ -17,6 +17,7 @@
 import { deriveSeed } from '../engine/rng';
 import { raceBadges } from './badges';
 import { getTrackById } from '../generators/tracks';
+import { trackForRound } from './venues';
 import { runScheduledRace } from '../league/settle';
 import type { LeagueState, RaceDigest } from '../league/types';
 import { createInitialSeasonState, updateSeasonWithRaceResult, getSeasonStandings, type DriverSeasonStats } from '../types/season';
@@ -347,7 +348,8 @@ export function settleRound(facts: SeasonFacts, simVars: SimVariables = facts.se
   const state = seasonState(facts);
   if (state.phase !== 'ready-for-go') throw new Error(`season: cannot race in phase ${state.phase}`);
   const round = state.round;
-  const track = getTrackById(facts.setup.calendar[round]);
+  // The venue's name (#750) rides on the Track, so the record says what you watched.
+  const track = trackForRound(facts, round);
   if (!track) throw new Error(`season: unknown track '${facts.setup.calendar[round]}' at round ${round}`);
   const { digest } = runScheduledRace(leagueForRound(facts, round), round, track, simVars);
   const { events: _events, ...kept } = digest;
