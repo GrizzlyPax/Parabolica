@@ -4,7 +4,8 @@
 // (#722, desktop first). Wears Americana (the menus' theme). The game's name on the
 // sash says Ace America (#701). On the old domain it offers to move your
 // save to playaceamerica.com (storage/carry.ts).
-import { AceButton, Bunting, Chequer, ProgramLine, Racer, Sash, StepTheme } from './look/Look';
+import { AceButton, Bunting, Chequer, ProgramLine, Racer, Sash, StepTheme, TitleRibbon } from './look/Look';
+import type { StateLook, Step } from './look/step';
 import './MainMenu.css';
 import { carryLink, onOldDomain } from './storage/carry';
 import { version } from '../package.json';
@@ -21,6 +22,9 @@ export interface SeasonCardSummary {
   /** The title just won, when a step is won. */
   title?: string;
   next?: string;
+  /** The titles held (the one just won included), worn as ribbons on the cover (#778). */
+  titles?: { step: Step; name: string }[];
+  state?: StateLook;
 }
 
 interface MainMenuProps {
@@ -59,6 +63,7 @@ function MainMenu({ onSingleRace, onSeason, onNewSeason, season, onCompendium, o
         <Sash text="Ace America" title="Ace America" className="mm-sash" fontSize={23} />
         <Racer number={16} width={210} className="mm-racer" />
         <Chequer tall />
+        {season?.titles?.length ? <div className="ace-ribbons mm-titles">{season.titles.map(t => <TitleRibbon key={t.step} step={t.step} state={season.state}>{t.name}</TitleRibbon>)}</div> : null}
         <span className="ace-where">{liveLine ?? 'Locals · State · Nationals'}</span>
       </header>
 

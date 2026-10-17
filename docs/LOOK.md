@@ -4,7 +4,7 @@
 
 ## The idea
 - **A race program:** red, white and blue first, **gold as the highlight**; bunting, motorsport marks, an Official Program number; a **navy ground with cream (paper) panels**.
-- **The sash is the title:** cream satin, a thin border, the words in Playball, a gold wheel at each end, no crown.
+- **The sash is the title:** cream satin, a thin border, the words in Playball set straight across the band (#778: on a curve the script's joins broke), a gold wheel at each end, no crown. At the title moment it lands askew (`drape`) under confetti, with a rosette per title held (the pageant, Pax Oct 17).
 - **One theme per step,** not one global theme: **Locals** black and white · **State** that state's colours as accents only (the ground stays dark) · **Nationals** Americana (the menus wear it too). Ids are left for **Globals** and **Galacticals** (Americana until their own looks land). The step id is `nationals`, never `theNationals`.
 - **Desktop first (Pax, Oct 10):** "for a racing game, the bigger the better." Design at 1440 × 900 and check 1280; pages use the full width (the frame below), not a phone column. The phone is a smaller version of the desktop layout: it must not break (one 16px gutter, `--ace-gutter`), but it is not the priority. Icons keep `currentColor`.
 - **Nothing here touches the sim:** the golden fingerprint stays put.
@@ -20,9 +20,9 @@
 | File | What |
 |---|---|
 | `tokens.css` | **The one place a colour is written.** `--ace-*` roles (ground, paper, ink, accent, gold, sash…) and the five fonts; `[data-step='locals']` re-points them to black and white; `[data-step='state']` maps `--ace-state-*` (primary · secondary · accent · ink) onto the accents only |
-| `look.css` | The components, **tokens only** (`icons/theme.test.ts` fails on a hex here): page, bunting, program line, type, rules, panels, buttons, dock, tabs, state bar, sash, ribbons, roundel, levels, sheet, the `.rt` table on paper, menu rows, rungs, chips, strip, card, stamps, Parcel |
-| `Look.tsx` | The React pieces: `StepTheme`, `Sash`, `Wheel`, `Bunting`, `Star`, `ProgramLine`, `Chequer`, `TitleRibbon`, `Pennant`, `StateBar`, `Racer`, `AceButton`, `Roundel`, `Level`, `Stamp`, `AceCard`, `CarCard`, `Parcel`, `ParcelStrip` |
-| `sash.ts` | The sash's geometry: **one centre curve**; the band and pinstripes are offsets of it, the words ride it (`textPath`), the wheels sit on points of it |
+| `look.css` | The components, **tokens only** (`icons/theme.test.ts` fails on a hex here): page, bunting, program line, type, rules, panels, buttons, dock, tabs, state bar, sash (and its `drape`), ribbons, honours (a rosette over its ribbon), confetti, a stage, roundel, levels, sheet, the `.rt` table on paper, menu rows, rungs, chips, strip, card, stamps, Parcel |
+| `Look.tsx` | The React pieces: `StepTheme`, `Sash`, `Wheel`, `Bunting`, `Star`, `ProgramLine`, `Chequer`, `TitleRibbon`, `Rosette`, `Confetti`, `Pennant`, `StateBar`, `Racer`, `AceButton`, `Roundel`, `Level`, `Stamp`, `AceCard`, `CarCard`, `Parcel`, `ParcelStrip` |
+| `sash.ts` | The sash's geometry: **one centre curve** (a gentle wave); the band and pinstripes are offsets of it, the wheels sit on points of it, the words sit straight on its middle (`sashTextSpan`: the room between the wheels; `Sash` measures the title once the font is in and shrinks a long one to fit, never a `textPath`) |
 | `step.ts` | `Step` ids, `STEPS`, `stepName`, `StateLook` read from `data/states.ts` (`stateLook(code)`: the state's palette, `DEFAULT_LOOK` until Radio fills it, ink from `inkFor`), `stepThemeVars`, `ribbonStep`, `programNumber`. A screen's step and state come from the run (#696): `facts.setup.league.step` and `.locale.stateId` |
 | `race.css` | **The race view (#716):** every rule scoped to `.ace-race`, the class `WatchMode`'s `StepTheme` wears. The header is the masthead on the ground (a gold rule, the program line in gold), the tower / feed / footer / lap chart / finish sheet are paper panels (the `--pw-*` tokens re-pointed inside each), the map stays on the ground. `look/race.test.ts` keeps it scoped |
 | `fonts.ts` | The five faces **stored with the app** (`@fontsource/*`, latin subsets): Alfa Slab One · Playball · Oswald · Old Standard TT · Special Elite. Nothing loads from Google Fonts |
@@ -60,7 +60,7 @@ Frame children get `width` / `max-width` / `margin` at zero specificity (`:where
 ## The proof
 - **The road** (`season/ui/RunLadder.tsx`): the run header, "The road to Ace America", the rungs as paper panels (the open one outlined in the accent, races as squares, the last chequered), your titles as ribbons, the dock. Out of the loop since #778 (the Paddock's header links to it).
 - **The Paddock** (`season/ui/Paddock.tsx`, #778): the run header, then two columns from 1024px: your garage (the Parcel face up on arrival, the roster table) | the league's two tables. The dock: Leave it shut (ghost) + Go racing.
-- **The finale** (`season/ui/Standings.tsx`, #778): the title moment from the locked look's frame 8: "Congratulations, you are now" + the sash, the Postmark picks, the crowns, the chart and the tables, Up to State in the dock (straight into the next Paddock).
+- **The finale** (`season/ui/Standings.tsx`, #778): the title moment from the locked look's frame 8, as a pageant: confetti, the town's pennant, "Congratulations, you are now" + the sash draped on, your car in your colour, the honours (a rosette over each title's ribbon); the Postmark struck (picks previewed as gold stamps), the deck that won it (every stamp in play as cards), the crowns, the chart and the tables, Up to State in the dock (straight into the next Paddock).
 - **The race view** (`WatchMode.tsx`, #716): the masthead, paper tower and feed beside the map, the finish sheet with the sash.
 - **The menu** (`MainMenu.tsx`): the program cover: bunting, the program line, the sash as the title, the racer, the chequer, contents rows.
 - **The program number** (the `No. 51 · 10¢` line): the covers (the menu, the World Deck, Race Control, Credits) carry the edition, `programNo(version)`; a run's screens carry the run's own number, `programNumber(seed)`, one per run.

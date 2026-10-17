@@ -14,7 +14,7 @@ import { Avatar } from '../../icons/Avatar';
 import DriverCard from './DriverCard';
 import { driverCardOf } from '../driverCard';
 import RunHeader from './RunHeader';
-import { AceButton, Bunting, Roundel, StepTheme, TitleRibbon, Wheel } from '../../look/Look';
+import { AceButton, Bunting, Rosette, Roundel, Sash, StepTheme, TitleRibbon, Wheel } from '../../look/Look';
 import { stateLook } from '../../look/step';
 import './Season.css';
 
@@ -47,7 +47,13 @@ function Rung({ r, drivers, onDriver, stateCode }: { r: RungView; drivers?: Your
     </div>
   );
   if (r.status !== 'current') {
-    return <li className={`ace-panel ${r.status === 'ahead' ? 'dim' : ''}`.trim()}>{head}{r.memory && <p className="ace-note">{r.memory}</p>}</li>;
+    return (
+      <li className={`ace-panel ${r.status === 'ahead' ? 'dim' : ''}`.trim()}>
+        {head}
+        {r.status === 'won' && <div className="ace-sash-wrap rl-sash"><Sash text={r.title} className="small" /></div>}
+        {r.memory && <p className="ace-note">{r.memory}</p>}
+      </li>
+    );
   }
   const fresh = !r.races?.done;
   const line = (st: NonNullable<RungView['you']>) => (fresh ? 'no races yet' : `${ordinal(st.place)} · ${st.points} pts`);
@@ -111,7 +117,7 @@ export default function RunLadder({ onMenu, onNewRun, onPlay }: Props) {
       {view.titles.length > 0 && (
         <section className="rl-titles">
           <span className="ace-k">Your titles</span>
-          <div className="ace-ribbons" style={{ justifyContent: 'flex-start' }}>{view.titles.map(t => <TitleRibbon key={t.step} step={t.step} state={state}>{t.name}</TitleRibbon>)}</div>
+          <div className="ace-honours" style={{ justifyContent: 'flex-start' }}>{view.titles.map(t => <span key={t.step} className="ace-honour"><Rosette step={t.step} state={state} size={40} /><TitleRibbon step={t.step} state={state}>{t.name}</TitleRibbon></span>)}</div>
         </section>
       )}
 

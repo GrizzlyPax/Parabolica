@@ -19,7 +19,7 @@ import { currentRunState, loadCurrentLeague as loadSeason, saveCurrentLeague as 
 import { teamsOf } from './season/ui/teams';
 import { nemesisTeam } from './season/nemesis';
 import { teamThemeVars, type TeamLike } from './icons/GameIcon';
-import { runWhere, whereLine } from './run/where';
+import { heldTitles, runWhere, whereLine } from './run/where';
 import { applyFavours } from './cards/apply';
 import { prepareScheduledRace } from './league/settle';
 import { CANON_VARIABLES } from './simlab/types';
@@ -334,7 +334,7 @@ function App() {
     if (!savedSeason) return null;
     const w = runWhere(savedSeason);
     const phase = currentRunState()?.phase ?? 'league';
-    return { line: whereLine(w), round: w.round, total: w.total, phase, title: w.goingFor, next: w.next };
+    return { line: whereLine(w), round: w.round, total: w.total, phase, title: w.goingFor, next: w.next, titles: heldTitles(w, phase === 'league-won' || phase === 'run-won'), state: w.state };
   }, [savedSeason]);
   // Continue lands where the run stands (#778): the Paddock, or the finale once the step is over.
   const handleSeason = () => navigate({ name: 'season', screen: savedSeason ? seasonScreenFor(savedSeason) : 'setup' });

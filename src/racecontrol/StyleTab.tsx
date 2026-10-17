@@ -2,7 +2,7 @@
 // step theme, side by side, so Hub copies and never guesses. Locals · State
 // (pick a state) · Nationals. Pure display; nothing here touches the sim.
 import { useState, type ReactNode } from 'react';
-import { AceButton, AceCard, Bunting, CarCard, Chequer, Level, Parcel, ParcelStrip, Pennant, ProgramLine, Racer, Roundel, Sash, Stamp, StateBar, StepTheme, TitleRibbon, Wheel } from '../look/Look';
+import { AceButton, AceCard, Bunting, CarCard, Chequer, Confetti, Level, Parcel, ParcelStrip, Pennant, ProgramLine, Racer, Rosette, Roundel, Sash, Stamp, StateBar, StepTheme, TitleRibbon, Wheel } from '../look/Look';
 import { STATE_CODES, STEPS, stateLook, type Step } from '../look/step';
 import { placeById } from '../data/states';
 import { GradeCell, STAT_ABBR } from '../season/ui/RosterTable';
@@ -60,12 +60,26 @@ export function StyleTab() {
         ))}
       </Row>
 
-      <Row title="The sash" note="It IS the title. One centre curve: the band and pinstripes are offsets of it, the words ride it, a gold wheel sits on it at each end (src/look/sash.ts). Any width; the state colours its edge and ink.">
+      <Row title="The sash" note="It IS the title. One centre curve: the band and pinstripes are offsets of it, a gold wheel sits on it at each end, and the words are set straight across its middle and shrink to fit between the wheels (src/look/sash.ts). Any width; the state colours its edge and ink.">
         {step => themed(step, (
           <div className="st-stack">
             <Sash text={TITLE[step]} />
+            <Sash text="Ace Fredericksburg" />
             <Sash text={TITLE[step]} className="small" />
             <Sash text="Kettle Street Garage" className="wide" fontSize={18} />
+          </div>
+        ))}
+      </Row>
+
+      <Row title="The pageant: rosettes, the drape, confetti" note="A rosette per title in its step's look, over its ribbon (the honours); the title moment's sash lands askew, once; drawn confetti in the bunting's colours falls through whatever box it sits in.">
+        {step => themed(step, (
+          <div className="st-stack">
+            <div className="ace-honours">
+              <span className="ace-honour"><Rosette step="locals" /><TitleRibbon step="locals">Ace Toledo</TitleRibbon></span>
+              <span className="ace-honour"><Rosette step="state" state={state} /><TitleRibbon step="state" state={state}>Ace {state.name}</TitleRibbon></span>
+              <span className="ace-honour"><Rosette step="nationals" /><TitleRibbon step="nationals">Ace America</TitleRibbon></span>
+            </div>
+            <div className="ace-stage"><Confetti count={30} /><Sash text={TITLE[step]} className="drape" /></div>
           </div>
         ))}
       </Row>

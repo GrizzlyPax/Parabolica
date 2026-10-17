@@ -13,6 +13,8 @@ export interface RunWhere {
   town: string;
   /** Titles held coming into this step, bottom first ("Ace Toledo"). */
   held: string[];
+  /** The same, with their steps: ribbons and rosettes wear them (#778). */
+  titles: { step: Step; name: string }[];
   /** The latest title held, with its step (the ribbon your rows wear, #769). */
   latest?: { step: Step; name: string };
   /** The title this step is for. */
@@ -37,18 +39,24 @@ export function runWhere(facts: SeasonFacts): RunWhere {
   const town = league?.locale?.town ?? '';
   const title = (s: Step) => titleName(s, town, state.name);
   const held = STEP_PLAN.slice(0, index).map(s => title(s.id));
+  const titles = STEP_PLAN.slice(0, index).map(s => ({ step: s.id, name: title(s.id) }));
   const above = STEP_PLAN[index + 1];
   const st = seasonState(facts);
   const you = facts.setup.humans[0]?.teamId;
   const line = you ? constructorStandings(facts).find(s => s.teamId === you) : undefined;
   const latestStep = STEP_PLAN[index - 1];
   return {
-    step, index, state, town, held, goingFor: title(step),
+    step, index, state, town, held, titles, goingFor: title(step),
     ...(latestStep ? { latest: { step: latestStep.id, name: title(latestStep.id) } } : {}),
     ...(above && above.races ? { next: title(above.id), nextStep: above.name } : {}),
     round: st.round, total: facts.setup.calendar.length, finished: st.phase === 'finished',
     ...(facts.results.length && line ? { place: { rank: line.rank, points: line.points } } : {}),
   };
+}
+
+/** The titles to wear: the ones held, plus this step's once it is won. */
+export function heldTitles(w: RunWhere, won = false): { step: Step; name: string }[] {
+  return won ? [...w.titles, { step: w.step, name: w.goingFor }] : w.titles;
 }
 
 /** One line for the menu and the holding screens: "Ace Toledo · going for Ace Ohio" / "Going for Ace Toledo". */
