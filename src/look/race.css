@@ -20,7 +20,7 @@
   --ace-fg: var(--ace-ink); --ace-muted: var(--ace-ink-2); --ace-hair: var(--ace-rule); --ace-bg: var(--ace-paper);
   --ace-surface: var(--ace-paper-2); --ace-raised: var(--ace-paper-2); --ace-data: var(--ace-cond); --ace-purple: var(--ace-gold);
 }
-.ace-race .frame-track .bf-tower { backdrop-filter: none; }
+.ace-race .frame-track .bf-tower, .ace-race .frame-stand .bf-tower { backdrop-filter: none; }
 
 /* The tower on paper: condensed caps in the header, slab numbers, ink text */
 .ace-race .timing-tower-header, .ace-race .frame-detail .timing-tower-detail .timing-tower-header {
@@ -124,8 +124,17 @@
 @media (min-width: 800px) {
   .ace-race .watch-content { padding: 0; }
   .ace-race .broadcast-frame { max-width: calc(var(--ace-max) + var(--ace-gutter) * 2); }
-  .ace-race .frame-track, .ace-race .frame-detail, .ace-race .bf-lapchart { padding: 10px var(--ace-gutter); }
+  .ace-race .frame-track, .ace-race .frame-stand, .ace-race .frame-detail, .ace-race .bf-lapchart { padding: 10px var(--ace-gutter); }
   .ace-race .frame-track .bf-feed { display: none; }
+  /* The stand (#778, direction B): the camera wide across the top like the broadcast picture, the tower and the feed under it. */
+  .ace-race .frame-stand { display: grid; grid-template-columns: max-content minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); gap: 10px; }
+  .ace-race .frame-stand .bf-map { grid-column: 1 / -1; grid-row: 1; display: flex; flex-direction: column; align-items: stretch; gap: 10px; min-width: 0; min-height: 0; }
+  .ace-race .frame-stand .bf-map .track-camera-svg { max-height: 46vh; }
+  .ace-race .frame-stand .bf-tower { grid-column: 1; grid-row: 2; display: flex; flex-direction: column; min-height: 0; }
+  .ace-race .frame-stand .bf-tower .timing-tower { flex: 1; min-height: 0; overflow-y: auto; scrollbar-gutter: stable; }
+  .ace-race .frame-stand .bf-feed { grid-column: 2; grid-row: 2; display: flex; flex-direction: column; padding: 0; min-width: 0; min-height: 0; overflow: hidden; }
+  .ace-race .frame-stand .bf-feed .story-feed { flex: 1; min-height: 0; }
+  .ace-race .frame-stand .bf-feed .story-feed-list { max-height: none; flex: 1; }
   .ace-race .frame-detail .timing-tower-detail .timing-tower-header { position: sticky; top: 0; z-index: 5; }
 }
 @media (min-width: 1024px) {

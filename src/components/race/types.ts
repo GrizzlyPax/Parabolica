@@ -77,7 +77,8 @@ export interface RowContext {
 export type LapTimeClass = '' | 'fastest' | 'improved' | 'slower';
 
 // View types
-export type RaceView = 'track' | 'detail' | 'lap';
+/** The race's views (#778): the map, the stand's camera, the data screen, the lap chart. */
+export type RaceView = 'track' | 'stand' | 'detail' | 'lap';
 /** Who the picture is about (#778): every car, your cars, or one car the camera follows. */
 export type RaceScope = 'all' | 'mine' | 'follow';
 

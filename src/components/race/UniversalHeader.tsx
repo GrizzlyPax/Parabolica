@@ -19,7 +19,7 @@ const SESSION_STATES: Record<SessionState, { tone: string; label: string }> = {
 };
 
 const SPEED_OPTIONS: RaceSpeed[] = [0.5, 1, 2, 10];
-const VIEWS: { id: RaceView; label: string }[] = [{ id: 'track', label: 'Track' }, { id: 'detail', label: 'Detail' }, { id: 'lap', label: 'Lap chart' }];
+const VIEWS: { id: RaceView; label: string }[] = [{ id: 'track', label: 'Track' }, { id: 'stand', label: 'Stand' }, { id: 'detail', label: 'Detail' }, { id: 'lap', label: 'Lap chart' }];
 
 function UniversalHeader({
   currentLap,
