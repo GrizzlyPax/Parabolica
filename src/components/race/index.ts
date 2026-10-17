@@ -5,6 +5,7 @@ export { default as TimingTower } from './TimingTower';
 export { default as DriverRow } from './DriverRow';
 export { default as UniversalHeader } from './UniversalHeader';
 export { default as TrackMap } from './TrackMap';
+export { default as TrackCamera } from './TrackCamera';
 export { default as TrackStrip } from './TrackStrip';
 export { default as LapChart, type LapChartSeries } from './LapChart';
 export { default as ConditionsBar } from './ConditionsBar';

@@ -1,0 +1,21 @@
+/* The grandstand camera (#778, direction B; components/race/TrackCamera.tsx): the
+   stand's view of the race. Tokens only; the layout around it is in look/race.css. */
+.track-camera { width: 100%; display: flex; justify-content: center; }
+.track-camera-svg { width: 100%; height: auto; display: block; }
+.track-camera .cam-car { transition: transform .12s linear; }
+.track-camera .cam-label { font-family: var(--ace-cond); font-size: 11px; letter-spacing: .04em; fill: var(--ace-ink); paint-order: stroke; stroke: var(--ace-paper); stroke-width: 3px; stroke-linejoin: round; }
+.track-camera .cam-label.follow { font-family: var(--ace-disp); font-size: 12px; }
+.track-camera .cam-gap { font-family: var(--ace-mono); font-size: 10px; fill: var(--ace-ink-2); paint-order: stroke; stroke: var(--ace-paper); stroke-width: 3px; stroke-linejoin: round; }
+.track-camera .cam-gap.ahead { fill: var(--ace-green); }
+.track-camera .cam-gap.behind { fill: var(--ace-red-lv); }
+.track-camera .cam-car.follow .cam-gap { fill: var(--ace-ink); }
+.track-camera .cam-fold { font-family: var(--ace-cond); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; fill: var(--ace-paper); }
+.track-camera .cam-wheel { animation: cam-spin .4s linear infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes cam-spin { to { transform: rotate(360deg); } }
+.track-camera .cam-follow-mark { animation: cam-bob 1.2s ease-in-out infinite; }
+@keyframes cam-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+.track-camera.newsreel .track-camera-svg { filter: saturate(.55) contrast(1.08); }
+@media (prefers-reduced-motion: reduce) {
+  .track-camera .cam-wheel, .track-camera .cam-follow-mark { animation: none; }
+  .track-camera .cam-car { transition: none; }
+}

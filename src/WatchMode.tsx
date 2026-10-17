@@ -7,6 +7,7 @@ import {
   UniversalHeader,
   TimingTower,
   TrackMap,
+  TrackCamera,
   TrackStrip,
   ConditionsPanel,
   LapChart,
@@ -1112,6 +1113,8 @@ function WatchMode({
   const sortedDrivers = frozenSortedDrivers.length > 0 ? frozenSortedDrivers : realtimeSortedDrivers;
   const followId = scope === 'follow' ? ([...focusedDriverIds][0] ?? myDriverIds?.[0] ?? sortedDrivers[0]?.id) : undefined;
   const followName = followId !== undefined ? driverSurname(drivers.find(d => d.id === followId)?.name ?? '') : undefined;
+  // The stand's camera always follows someone: the Follow pick, else your first car, else the leader (#778).
+  const cameraFollowId = followId ?? [...focusedDriverIds][0] ?? myDriverIds?.[0] ?? sortedDrivers[0]?.id;
 
   // P1–P3 always stand out on the map (bigger marker + team emoji) so the
   // front of the race stays trackable through lapped traffic.
@@ -1385,8 +1388,9 @@ function WatchMode({
           />
         )}
         <div className={`broadcast-frame frame-${activeView}`}>
-          {/* TRACK VIEW: track map fills the frame, timing tower floats left */}
-          {activeView === 'track' && (
+          {/* TRACK VIEW: track map fills the frame, timing tower floats left.
+              THE STAND (#778): the same frame with the grandstand camera in the map's place. */}
+          {(activeView === 'track' || activeView === 'stand') && (
             <>
               <section className="bf-tower bf-tower-floating">
                 {focusedDriverIds.size > 0 && (
@@ -1428,6 +1432,22 @@ function WatchMode({
                 {cutBanner && !qualifying && (
                   <div className={`cut-banner ${cutBanner.out ? 'out' : ''}`} role="status"><b>{cutBanner.head}</b>{cutBanner.body && <span>{cutBanner.body}</span>}</div>
                 )}
+                {activeView === 'stand' && !qualifying ? (
+                  <TrackCamera
+                    drivers={drivers}
+                    lapLength={trackLength}
+                    followId={cameraFollowId}
+                    mine={myDriverIds}
+                    scope={scope}
+                    kind={trackKind}
+                    step={step}
+                    venueName={trackInfo?.name}
+                    raceLine={program}
+                    teamLabel={n => teamLabels?.[n] ?? n}
+                    raceSpeed={raceSpeed}
+                    running={isRunning}
+                  />
+                ) : (
                 <TrackMap
                   trackPath={trackPath}
                   pitLanePath={pitLanePath}
@@ -1446,6 +1466,7 @@ function WatchMode({
                   scope={scope}
                   followId={followId}
                 />
+                )}
                 {!qualifying && (
                   <div className="bf-map-strips">
                     <TrackStrip drivers={drivers} totalLaps={totalLaps} lapLength={trackLength} mode="race" label="Race" focusedDriverIds={focusedDriverIds} />

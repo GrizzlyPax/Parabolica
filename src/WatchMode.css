@@ -1246,6 +1246,12 @@
     background: var(--ace-bg); padding: 6px 12px; border-bottom: 1px solid var(--ace-hair);
   }
   .broadcast-frame.frame-track .bf-map .track-map { max-height: 30vh; }
+  /* The stand on a phone (#778): the camera pinned under the header like the map. */
+  .broadcast-frame.frame-stand .bf-map {
+    order: -1; position: sticky; top: var(--uh-height, 84px); z-index: 10;
+    background: var(--ace-bg); padding: 6px 12px; border-bottom: 1px solid var(--ace-hair);
+  }
+  .broadcast-frame.frame-stand .bf-map .track-camera-svg { max-height: 30vh; }
 }
 
 /* The cut banner's entrance (#778; the banner itself is styled in look/race.css). */
