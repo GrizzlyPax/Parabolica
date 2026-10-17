@@ -20,6 +20,14 @@ const THEMED = [
   'look/look.css',
   'look/race.css',
   'components/race/UniversalHeader.css',
+  'WatchMode.css',
+  'components/race/components.css',
+  'components/race/TimingTower.css',
+  'components/race/RaceFeed.css',
+  'components/race/LapChart.css',
+  'components/race/TrackMap.css',
+  'components/race/QualiBoard.css',
+  'RaceStartCountdown.css',
   'racecontrol/StyleTab.css',
 ];
 

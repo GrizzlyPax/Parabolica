@@ -1,148 +1,25 @@
-.race-start-countdown {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(4px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.countdown-content {
-  text-align: center;
-  background: rgba(0, 0, 0, 0.6);
-  padding: 3rem 4rem;
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-/* Intro phase */
-.intro-phase {
-  animation: fadeIn 0.5s ease;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: scale(0.9); }
-  to { opacity: 1; transform: scale(1); }
-}
-
-.track-emoji-large {
-  font-size: 5rem;
-  display: block;
-  margin-bottom: 1rem;
-}
-
-.track-name-large {
-  font-size: 2.5rem;
-  color: var(--pw-text-1);
-  margin: 0 0 0.5rem 0;
-  text-shadow: 0 0 30px rgba(155, 89, 182, 0.5);
-}
-
-.formation-text {
-  color: var(--pw-text-3);
-  font-size: 1.1rem;
-  margin: 0;
-}
-
-/* Lights phase */
-.lights-phase {
-  animation: fadeIn 0.3s ease;
-}
-
-.lights-array {
-  display: flex;
-  gap: 1.5rem;
-  justify-content: center;
-  margin-bottom: 2rem;
-}
-
-.light-column {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  padding: 0.75rem;
-  background: var(--pw-surface);
-  border-radius: 8px;
-  border: 2px solid var(--pw-border);
-}
-
-.light {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: var(--pw-border);
-  border: 2px solid var(--pw-border-strong);
-  transition: all 0.15s ease;
-}
-
-.light-column.on .light.red {
-  background: var(--pw-red);
-  box-shadow: 0 0 20px var(--pw-red), 0 0 40px var(--pw-red);
-  border-color: var(--pw-red-soft);
-}
-
-/* Go phase */
-.go-phase {
-  animation: zoomIn 0.3s ease;
-}
-
-@keyframes zoomIn {
-  from {
-    opacity: 0;
-    transform: scale(2);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-.go-text {
-  font-size: 2.5rem;
-  font-weight: bold;
-  color: var(--pw-green);
-  text-shadow: 0 0 30px var(--pw-green), 0 0 60px var(--pw-green);
-  animation: pulse 0.3s ease infinite alternate;
-}
-
-@keyframes pulse {
-  from { transform: scale(1); }
-  to { transform: scale(1.05); }
-}
-
-/* Mobile responsive */
+/* The start (Quick Race and the lab; a Season race has none, #762): a paper
+   card over the race, the track in slab, five lamps on a navy strip, then the
+   caller's line. Tokens only (icons/theme.test.ts). */
+.race-start-countdown { position: fixed; inset: 0; background: var(--ace-shadow); backdrop-filter: blur(3px); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 16px; }
+.countdown-content { text-align: center; background: var(--ace-paper); color: var(--ace-ink); border: 2px solid var(--ace-ink); box-shadow: 0 10px 0 var(--ace-shadow); padding: 32px 48px; max-width: min(640px, 100%); }
+.intro-phase, .lights-phase { animation: cd-fade 0.4s ease; }
+@keyframes cd-fade { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: none; } }
+.track-emoji-large { display: block; margin: 0 auto 10px; color: var(--ace-ink); }
+.track-name-large { font-family: var(--ace-disp); font-weight: 400; font-size: 36px; line-height: 1.05; text-transform: uppercase; margin: 0 0 8px; }
+.formation-text { margin: 0; font-family: var(--ace-cond); font-size: 13px; letter-spacing: .16em; text-transform: uppercase; color: var(--ace-ink-2); }
+.lights-array { display: flex; gap: 14px; justify-content: center; padding: 18px 22px; background: var(--ace-navy-2); border: 2px solid var(--ace-ink); }
+.light-column { display: flex; flex-direction: column; gap: 8px; }
+.light { width: 36px; height: 36px; border-radius: 50%; background: var(--ace-ink); border: 2px solid var(--ace-rule); transition: background 0.15s ease, box-shadow 0.15s ease; }
+.light-column.on .light.red { background: var(--ace-red-lv); border-color: var(--ace-paper); box-shadow: 0 0 16px var(--ace-red-lv); }
+.go-phase { animation: cd-zoom 0.3s ease; }
+@keyframes cd-zoom { from { opacity: 0; transform: scale(1.6); } to { opacity: 1; transform: scale(1); } }
+.go-text { display: block; font-family: var(--ace-script); font-size: 34px; line-height: 1.2; color: var(--ace-ink); max-width: 22ch; margin: 0 auto; text-wrap: balance; }
+@media (prefers-reduced-motion: reduce) { .intro-phase, .lights-phase, .go-phase { animation: none; } }
 @media (max-width: 480px) {
-  .countdown-content {
-    padding: 2rem 1.5rem;
-    margin: 1rem;
-  }
-
-  .track-emoji-large {
-    font-size: 3.5rem;
-  }
-
-  .track-name-large {
-    font-size: 1.75rem;
-  }
-
-  .lights-array {
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-  }
-
-  .light-column {
-    padding: 0.4rem;
-    gap: 0.3rem;
-  }
-
-  .light {
-    width: 28px;
-    height: 28px;
-  }
-
-  .go-text {
-    font-size: 1.5rem;
-  }
+  .countdown-content { padding: 22px 18px; }
+  .track-name-large { font-size: 26px; }
+  .lights-array { gap: 8px; padding: 12px 14px; }
+  .light { width: 26px; height: 26px; }
+  .go-text { font-size: 24px; }
 }

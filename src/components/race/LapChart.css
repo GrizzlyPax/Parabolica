@@ -9,13 +9,13 @@
 }
 
 .lap-chart .chart-tick {
-  fill: var(--pw-text-3);
+  fill: var(--ace-muted);
   font-size: 9px;
-  font-family: var(--font-mono), monospace;
+  font-family: var(--ace-data);
 }
 
 .chart-waiting {
-  color: var(--pw-text-3);
+  color: var(--ace-muted);
   font-size: 0.8rem;
   text-align: center;
   padding: 1.5rem 1rem;
@@ -24,13 +24,13 @@
 .lap-rank {
   font-size: 10px;
   font-weight: 700;
-  fill: var(--pw-text-2);
+  fill: var(--ace-muted);
   font-variant-numeric: tabular-nums;
-  font-family: var(--font-mono), monospace;
+  font-family: var(--ace-data);
 }
-.lap-rank.focused { fill: var(--pw-text-1); }
+.lap-rank.focused { fill: var(--ace-fg); }
 .lap-rank.dnf {
-  fill: var(--pw-red-soft);
+  fill: var(--ace-red-lv);
   font-size: 7.5px;
   letter-spacing: 0.04em;
 }
@@ -38,23 +38,23 @@
 .lap-name {
   font-size: 10px;
   font-weight: 600;
-  fill: var(--pw-text-1);
-  font-family: var(--font-display), var(--font-emoji);
+  fill: var(--ace-fg);
+  font-family: var(--ace-disp);
 }
 .lap-name.focused { font-weight: 700; }
 
 .lap-dnf-mark {
   font-size: 10px;
   font-weight: 700;
-  fill: var(--pw-red-soft);
+  fill: var(--ace-red-lv);
 }
 
 /* Compact-legend code labels (drivers): the Points-chart end-label look */
 .lap-code {
   font-size: 11px;
   font-weight: 700;
-  fill: var(--pw-text-1);
-  font-family: var(--font-display), var(--font-emoji);
+  fill: var(--ace-fg);
+  font-family: var(--ace-disp);
   letter-spacing: 0.03em;
 }
 .lap-code.dashed { opacity: 0.85; }

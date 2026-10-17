@@ -93,6 +93,8 @@ interface WatchModeProps {
   feedVoice?: FeedVoice;
   /** Season races show no countdown (#762): the caller's lights-out line goes to the feed as the race starts. */
   lightsOut?: boolean;
+  /** The step's title ("Ace Zanesville"): the finish sheet's sash says it when `titleWon` says yes (#778). */
+  titleName?: string;
   /** Does this result win the step's title (#762)? Asked once at the flag; a yes gets the caller's title line. */
   titleWon?: (digest: { finishOrder: number[]; dnfDriverIds: number[]; fastestLapDriverId: number | null }) => boolean;
 }
@@ -156,6 +158,7 @@ function WatchMode({
   program,
   feedVoice,
   lightsOut,
+  titleName,
   titleWon,
   myTitle,
   onSkip,
@@ -428,6 +431,8 @@ function WatchMode({
 
   // The Hundred's cuts (#694) and the sky (#762): the engine logs them; the banner and the feed pick them up.
   const lastCutTickRef = useRef<number>(-1);
+  // The title, clinched at the flag (#778): the finish sheet's sash wears it.
+  const [wonTitle, setWonTitle] = useState<string | null>(null);
   // The cut banner across the map (#778): the last cut, for a few seconds; red when it took one of yours.
   const [cutBanner, setCutBanner] = useState<{ head: string; body: string; out: boolean } | null>(null);
   const cutTimerRef = useRef<number | null>(null);
@@ -478,7 +483,7 @@ function WatchMode({
 
       if (!isPartOfExistingCrash) {
         const isPileup = newlyCrashed.length > 1;
-        const driverNames = newlyCrashed.map(d => `${d.emoji} ${d.name}`).join(', ');
+        const driverNames = newlyCrashed.map(d => d.name).join(', ');
 
         addNotification(
           'crash',
@@ -500,7 +505,7 @@ function WatchMode({
         addNotification(
           'crash',  // Still uses crash notification type for styling
           'BLOWOUT!',
-          `${driver.emoji} ${driver.name} - tire failure!`,
+          `${driver.name} - tire failure!`,
           'race.tire_failure',
           [{ id: driver.id, name: driver.name, emoji: driver.emoji }]
         );
@@ -518,7 +523,7 @@ function WatchMode({
         addNotification(
           'crash',  // Uses crash notification type for styling
           'MECHANICAL!',
-          `${driver.emoji} ${driver.name} - engine failure!`,
+          `${driver.name} - engine failure!`,
           'race.mechanical',
           [{ id: driver.id, name: driver.name, emoji: driver.emoji }]
         );
@@ -723,7 +728,7 @@ function WatchMode({
 
       addNotification(
         'effect_applied',
-        event.emoji ? `${event.emoji} ${driverName}` : driverName,
+        driverName,
         event.description,
         event.emoji || 'race.card_trigger',
         driver ? [{ id: driver.id, name: driver.name, emoji: driver.emoji }] : undefined,
@@ -905,7 +910,7 @@ function WatchMode({
         addNotification(
           'lead_change',
           'LEAD CHANGE',
-          `${leader.emoji} ${leader.name} takes the lead!`,
+          `${leader.name} takes the lead!`,
           'race.lead_change',
           [{ id: leader.id, name: leader.name, emoji: leader.emoji }],
           12000,
@@ -944,7 +949,7 @@ function WatchMode({
       addNotification(
         'milestone',
         'HALFWAY',
-        `${leader.emoji} ${leader.name} leads at the halfway point`,
+        `${leader.name} leads at the halfway point`,
         'race.halfway'
       );
     }
@@ -972,7 +977,7 @@ function WatchMode({
           addNotification(
             'fastest_lap',
             'FASTEST LAP',
-            `${fastest.driver.emoji} ${fastest.driver.name} sets the pace!`,
+            `${fastest.driver.name} sets the pace!`,
             'race.fastest_lap',
             [{ id: fastest.driver.id, name: fastest.driver.name, emoji: fastest.driver.emoji }],
             12000,
@@ -992,7 +997,7 @@ function WatchMode({
         addNotification(
           'finish',
           'CHECKERED FLAG',
-          `${winner.emoji} ${winner.name} wins the race!`,
+          `${winner.name} wins the race!`,
           'race.finish',
           [{ id: winner.id, name: winner.name, emoji: winner.emoji }],
           20000, // Keep winner notification longer
@@ -1003,7 +1008,7 @@ function WatchMode({
           let best: { id: number; t: number } | null = null;
           for (const d of drivers) for (const t of d.lapTimes) if (!best || t < best.t) best = { id: d.id, t };
           const digest = { finishOrder: raceState.finishOrder, dnfDriverIds: drivers.filter(d => d.status === 'dnf').map(d => d.id), fastestLapDriverId: best?.id ?? null };
-          if (titleWon(digest)) pushFeedItem(voiceTitle(feedCtx(), raceState.totalTicks));
+          if (titleWon(digest)) { pushFeedItem(voiceTitle(feedCtx(), raceState.totalTicks)); setWonTitle(titleName ?? null); }
         }
       }
     }
@@ -1329,6 +1334,7 @@ function WatchMode({
             seed={engine.getSeed()}
             buildReport={buildReport}
             debrief={finishDebrief}
+            wonTitle={wonTitle ?? undefined}
             onNextRace={onNextRace}
             onExit={onExit}
             exitLabel={exitLabel ?? (spectator ? 'Back to League' : 'Menu')}

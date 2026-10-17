@@ -39,7 +39,10 @@ export interface DebriefInput {
   finishOrder: number[];
 }
 
-const COMPOUND: Record<string, string> = { soft: 'S', medium: 'M', hard: 'H', wet: 'W' };
+const COMPOUND: Record<string, string> = { soft: 'soft', medium: 'medium', hard: 'hard', wet: 'wet' };
+const COUNT = ['no', 'one', 'two', 'three', 'four', 'five', 'six'];
+/** "three" or "7". */
+const count = (n: number) => COUNT[n] ?? String(n);
 const s1 = (ticks: number) => `${(ticks / 10).toFixed(1)}s`;
 
 function median(xs: number[]): number {
@@ -49,13 +52,15 @@ function median(xs: number[]): number {
   return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
 }
 
-/** "1 stop · H→M" (or "No stops · M"). */
+/** "one stop: medium, then hard" · "no stops, on softs" · "three stops: medium, hard, soft, medium". Plain words (#778). */
 export function strategyOf(d: Driver): string {
   const first = d.usedCompounds?.[0];
-  const tyres = first ? [first, ...d.pitStops.map(p => p.tiresAfter)].map(c => COMPOUND[c] ?? '?').join('→') : '';
+  const tyres = first ? [first, ...d.pitStops.map(p => p.tiresAfter)].map(c => COMPOUND[c] ?? c) : [];
   const n = d.pitStops.length;
-  const stops = n === 0 ? 'No stops' : `${n} stop${n === 1 ? '' : 's'}`;
-  return tyres ? `${stops} · ${tyres}` : stops;
+  if (n === 0) return tyres.length ? `no stops, on ${tyres[0]}s` : 'no stops';
+  const stops = `${count(n)} stop${n === 1 ? '' : 's'}`;
+  if (!tyres.length) return stops;
+  return n === 1 ? `${stops}: ${tyres[0]}, then ${tyres[1]}` : `${stops}: ${tyres.join(', ')}`;
 }
 
 const DNF_WHY: Record<string, string> = { crash: 'crash', mechanical: 'engine', tire_failure: 'tyre blowout' };
@@ -70,7 +75,7 @@ function momentsFor(d: Driver, events: RaceEvent[], normalStop: number): Debrief
   for (const p of d.pitStops) {
     if (!p.wasSlowStop && !p.wasQuickStop) continue;
     const diff = p.duration - normalStop;
-    const vs = normalStop > 0 ? `${diff >= 0 ? '+' : '−'}${s1(Math.abs(diff))} vs a normal stop` : undefined;
+    const vs = normalStop > 0 ? `${s1(Math.abs(diff))} ${diff >= 0 ? 'slower' : 'quicker'} than a normal stop` : undefined;
     if (p.wasSlowStop) add(RANK.slow, { lap: p.lap, what: 'Slow stop', detail: vs, tone: 'bad' });
     else add(RANK.quick, { lap: p.lap, what: 'Quick stop', detail: vs, tone: 'good' });
   }

@@ -1,8 +1,10 @@
-// The finish sheet (#521, Pax picked A: https://claude.ai/artifact/CFXysCjJoUCrncy2qoKmK8).
-// When the flag drops a sheet slides up from the bottom: a 2-1-3 podium in team
-// colours, your drivers with their points (Season), the race facts, and the way
-// on. Hide it to watch the cool-down; a slim bar at the bottom brings it back.
-// Replaces the Race Complete strip (#200 / #245), which sat at the very top.
+// The finish sheet (#521, Pax picked A: https://claude.ai/artifact/CFXysCjJoUCrncy2qoKmK8;
+// in plain words since #778). When the flag drops a sheet slides up from the
+// bottom: the sash (the title, when this race won it), a 2-1-3 podium, your
+// drivers with their points and what happened to them in sentences, how the
+// winner did it, and the way on. The lab's furniture (fastest lap, DNF count,
+// the seed, the report) shows only for a race without your drivers (Quick
+// Race, the lab). Hide it to watch the cool-down; a slim bar brings it back.
 import { useState } from 'react';
 import { isOutOfRace, type Driver } from '../../RaceEngine';
 import { GameIcon } from '../../icons/GameIcon';
@@ -11,6 +13,7 @@ import { RaceNumber } from '../../icons/RaceNumber';
 import { inkFor } from '../../icons/ink';
 import { F1_POINTS } from '../../types/season';
 import type { DriverDebrief, WinnerEdge } from './debrief';
+import { ordinal } from '../../run/ladderView';
 
 interface FinishSheetProps {
   /** Finish order, classified first. */
@@ -28,6 +31,8 @@ interface FinishSheetProps {
   exitLabel?: string;
   /** The race debrief (#581): your drivers' grid → finish, strategy and moments, and how the winner did it. */
   debrief?: { mine: DriverDebrief[]; winner: WinnerEdge | null };
+  /** The step's title, when this race won it (#778): the sash says it. */
+  wonTitle?: string;
 }
 
 async function copyText(text: string): Promise<boolean> {
@@ -55,26 +60,29 @@ const num = (d: Driver, size: number) => (
   <RaceNumber n={d.number ?? '–'} color={d.color} ink={d.ink ?? inkFor(d.color)} size={size} shape="square" />
 );
 
-/** Under each of your drivers: grid → finish, strategy, then the moments by lap. */
+const PLACES = ['', 'one place', 'two places', 'three places', 'four places', 'five places'];
+const places = (n: number) => PLACES[n] ?? `${n} places`;
+
+/** Under each of your drivers, in sentences: where they started and finished, the stops, then the moments by lap. */
 function DebriefLines({ db }: { db: DriverDebrief }) {
   const gained = db.finish ? db.grid - db.finish : null;
+  const end = db.finish ? `finished ${ordinal(db.finish)}` : db.out === 'cut' ? 'was cut' : 'retired';
+  const move = gained === null || gained === 0 ? '' : gained > 0 ? `, up ${places(gained)}` : `, down ${places(-gained)}`;
   return (
     <div className="fs-debrief">
       <span className="fs-dline">
-        Grid P{db.grid} → {db.finish ? `P${db.finish}` : db.out === 'cut' ? 'Cut' : 'DNF'}
-        {gained !== null && <b className={gained > 0 ? 'up' : gained < 0 ? 'down' : ''}> ({gained > 0 ? `+${gained}` : gained < 0 ? `−${-gained}` : '±0'})</b>}
-        {' · '}{db.strategy}
+        Started {ordinal(db.grid)}, {end}{gained !== null && gained !== 0 ? <b className={gained > 0 ? 'up' : 'down'}>{move}</b> : null}. {db.strategy.charAt(0).toUpperCase() + db.strategy.slice(1)}.
       </span>
       {db.moments.map((m, i) => (
         <span key={i} className={`fs-moment ${m.tone}`}>
-          <span className="fs-mlap">L{m.lap}</span> {m.what}{m.detail && <span className="fs-mdet"> · {m.detail}</span>}
+          <span className="fs-mlap">Lap {m.lap}:</span> {m.what.toLowerCase()}{m.detail && <span className="fs-mdet">, {m.detail}</span>}.
         </span>
       ))}
     </div>
   );
 }
 
-export default function FinishSheet({ podium, drivers, dnfCount, fastestLap, seed, trackName, mine, buildReport, onNextRace, onExit, exitLabel = 'Menu', debrief }: FinishSheetProps) {
+export default function FinishSheet({ podium, drivers, dnfCount, fastestLap, seed, trackName, mine, buildReport, onNextRace, onExit, exitLabel = 'Menu', debrief, wonTitle }: FinishSheetProps) {
   const [open, setOpen] = useState(true);
   const [copied, setCopied] = useState<'idle' | 'ok' | 'fail'>('idle');
   const [report, setReport] = useState<string | null>(null);
@@ -109,10 +117,10 @@ export default function FinishSheet({ podium, drivers, dnfCount, fastestLap, see
   return (
     <section className="fs" role="dialog" aria-label="Race complete">
       <button type="button" className="fs-grab" onClick={() => setOpen(false)} aria-label="Hide results to watch the cool-down" />
-      <div className="fs-sash"><Sash text="Chequered flag" className="small" /></div>
+      <div className="fs-sash"><Sash text={wonTitle ?? 'Chequered flag'} className={wonTitle ? '' : 'small'} fontSize={wonTitle && wonTitle.length > 14 ? 19 : 23} /></div>
       <div className="fs-head">
         <GameIcon name="race.finish" size={18} />
-        <span className="fs-k">Race complete{trackName ? ` · ${trackName}` : ''}</span>
+        <span className="fs-k">{wonTitle ? `The title is yours` : 'Race complete'}{trackName ? ` · ${trackName}` : ''}</span>
         <button type="button" className="fs-hide" onClick={() => setOpen(false)}>Hide</button>
       </div>
 
@@ -154,25 +162,30 @@ export default function FinishSheet({ podium, drivers, dnfCount, fastestLap, see
 
       {debrief?.winner && winner && (
         <p className="fs-edge">
-          <span className="fs-k">How it was won</span>{' '}
-          <b>{winner.name}</b> from P{debrief.winner.grid} · {debrief.winner.strategy} · led {debrief.winner.led} of {debrief.winner.laps} laps
+          <b>{winner.name}</b> won it from {ordinal(debrief.winner.grid)} on the grid with {debrief.winner.strategy}, and led {debrief.winner.led} of the {debrief.winner.laps} laps.
         </p>
       )}
 
-      <div className="fs-facts">
-        {fastestLap && <span><span className="fs-k">Fastest</span> <b>{fastestLap.driver.shortName}</b> {(fastestLap.ticks / 10).toFixed(1)}s</span>}
-        <span><span className="fs-k">DNF</span> <b>{dnfCount}</b></span>
-        {seed !== null && <span><span className="fs-k">Seed</span> {seed}</span>}
-      </div>
+      {yours.length > 0
+        ? fastestLap && <p className="fs-edge">Fastest lap: <b>{fastestLap.driver.name}</b>, {(fastestLap.ticks / 10).toFixed(1)}s{dnfCount > 0 ? `. ${dnfCount === 1 ? 'One car' : `${dnfCount} cars`} did not finish.` : '.'}</p>
+        : (
+          <div className="fs-facts">
+            {fastestLap && <span><span className="fs-k">Fastest</span> <b>{fastestLap.driver.shortName}</b> {(fastestLap.ticks / 10).toFixed(1)}s</span>}
+            <span><span className="fs-k">DNF</span> <b>{dnfCount}</b></span>
+            {seed !== null && <span><span className="fs-k">Seed</span> {seed}</span>}
+          </div>
+        )}
 
       <div className="fs-btns">
         {primary && <button type="button" className="fs-btn fs-btn-primary" onClick={primary.go}>{primary.label}</button>}
         {secondaryExit && <button type="button" className="fs-btn" onClick={secondaryExit.go}>{secondaryExit.label}</button>}
       </div>
-      <div className="fs-links">
-        <button type="button" className="fs-link" onClick={doCopy}>{copied === 'ok' ? <><GameIcon name="ui.done" size={12} /> Copied</> : copied === 'fail' ? 'Select the report below' : <><GameIcon name="ui.copy" size={12} /> Copy report</>}</button>
-        <button type="button" className="fs-link" onClick={() => setReport(r => (r === null ? buildReport() : null))}>{report === null ? 'View report' : 'Hide report'}</button>
-      </div>
+      {yours.length === 0 && (
+        <div className="fs-links">
+          <button type="button" className="fs-link" onClick={doCopy}>{copied === 'ok' ? <><GameIcon name="ui.done" size={12} /> Copied</> : copied === 'fail' ? 'Select the report below' : <><GameIcon name="ui.copy" size={12} /> Copy report</>}</button>
+          <button type="button" className="fs-link" onClick={() => setReport(r => (r === null ? buildReport() : null))}>{report === null ? 'View report' : 'Hide report'}</button>
+        </div>
+      )}
       {report !== null && (
         <textarea className="fs-report" readOnly value={report} onFocus={e => e.currentTarget.select()} aria-label="Race report (markdown)" />
       )}
