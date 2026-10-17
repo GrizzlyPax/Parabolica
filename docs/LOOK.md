@@ -62,6 +62,8 @@ Frame children get `width` / `max-width` / `margin` at zero specificity (`:where
 - **The finale** (`season/ui/Standings.tsx`, #778): the title moment from the locked look's frame 8: "Congratulations, you are now" + the sash, the Postmark picks, the crowns, the chart and the tables, Up to State in the dock (straight into the next Paddock).
 - **The race view** (`WatchMode.tsx`, #716): the masthead, paper tower and feed beside the map, the finish sheet with the sash.
 - **The menu** (`MainMenu.tsx`): the program cover: bunting, the program line, the sash as the title, the racer, the chequer, contents rows.
+- **The program number** (the `No. 51 · 10¢` line): the covers (the menu, the World Deck, Race Control, Credits) carry the edition, `programNo(version)`; a run's screens carry the run's own number, `programNumber(seed)`, one per run.
+- **Dead CSS** (#778): a rule whose classes no TSX uses is dead; the sweep removed ~3,000 lines (the old dashboard, leaderboard, hover cards, finish modal, packs, the draft board). Before adding a class, check Race Control → Style for the component.
 
 ## Hub's sweep checklist
 1. Wrap the screen: `StepTheme` + `.ace-page`; the step and state from the run (`facts.setup.league?.step`, `.locale?.stateId`).

@@ -12,8 +12,6 @@ const THEMED = [
   'racecontrol/RaceControl.css',
   'fantasy/Fantasy.css',
   'IdeaBox.css',
-  'components/Tooltip.css',
-  'cards/CardSheet.css',
   'cards/CardFace.css',
   'cards/CardChip.css',
   'season/ui/Season.css',

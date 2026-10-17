@@ -107,7 +107,7 @@ const DECK_GROUPS: { id: string; title: string; hint: string; rows: Card[] }[] =
   { id: 'trait-driver', title: 'Driver traits', hint: `Permanent. What a driver is born with. ${IN_SIM}`, rows: cardsBy({ kind: 'trait', target: 'driver' }) },
   { id: 'trait-car', title: 'Car traits', hint: `Permanent. What a chassis is born with. ${IN_SIM}`, rows: cardsBy({ kind: 'trait', target: 'car' }) },
   { id: 'trait-team', title: 'Team traits', hint: `Permanent, shared by teammates. ${IN_SIM}`, rows: cardsBy({ kind: 'trait', target: 'team' }) },
-  { id: 'effect', title: 'Effects (v0.6)', hint: 'Timed, dealt by the race (a lightning pit, crash damage). Size comes from the moment. Arrive in v0.6.', rows: cardsBy({ kind: 'effect' }) },
+  { id: 'effect', title: 'Effects', hint: 'Timed: dealt by the race or a Parcel, they wear off on their own (a smudge lasts a race; a window card half a race).', rows: cardsBy({ kind: 'effect' }) },
 ];
 
 // ---------- Add tab: drafts ----------
@@ -270,7 +270,7 @@ export default function Glossary({ onBack, tab: tabSlug, onTabChange }: Glossary
   const isOpen = (id: string) => open.has(id);
   const sec = (id: string) => ({ id, collapsed: isCollapsed(id), onToggle: toggleSection });
 
-  const deckTeamGroups = TEAM_KINDS.map(k => ({ id: k.kind, title: k.title, rows: g.deckTeams.filter(t => t.kind === k.kind), hint: `${k.hint} Quick Race draws its 11 and Season Mode its CPU teams from these.` }));
+  const deckTeamGroups = TEAM_KINDS.map(k => ({ id: k.kind, title: k.title, rows: g.deckTeams.filter(t => t.kind === k.kind), hint: `${k.hint} Quick Race draws its field from these; in a run your rivals are your state's garages instead.` }));
 
   return (
     <StepTheme step="nationals" className="ace-page glossary">
@@ -344,7 +344,7 @@ export default function Glossary({ onBack, tab: tabSlug, onTabChange }: Glossary
         );
       })}
       {tab === 'tracks' && (
-        <Section {...sec('tracks:deck')} title="Tracks (v0.5)" count={BASE_DECK_TRACKS.length} hint={`Six tracks, one stat combo each: the favoured stats gain +10 grade for the race, and each has its own tyre-wear dial. ${NOT_YET_TRACK}`}>
+        <Section {...sec('tracks:deck')} title="Tracks" count={BASE_DECK_TRACKS.length} hint={`Six tracks, one stat combo each: the favoured stats gain +10 grade for the race, and each has its own tyre-wear dial. ${NOT_YET_TRACK}`}>
           <div className="gl-list">
             {BASE_DECK_TRACKS.filter(t => match(t.name, t.id, t.layoutId)).map(t => (
               <Row key={t.id} id={`dtrack:${t.id}`} open={isOpen(`dtrack:${t.id}`)} onToggle={toggle}
@@ -392,7 +392,7 @@ export default function Glossary({ onBack, tab: tabSlug, onTabChange }: Glossary
 
       {tab === 'conditions' && (
         <>
-          <Section {...sec('weather:deck')} title="Weather (v0.5)" count={BASE_DECK_WEATHER.length} hint={`Neutral most races; otherwise a dry weather favouring two stats (+10 grade × intensity), stacking with the track. No rain until v0.6. ${NOT_YET_TRACK}`}>
+          <Section {...sec('weather:deck')} title="Weather" count={BASE_DECK_WEATHER.length} hint={`Neutral most races; otherwise a dry weather favouring two stats (+10 grade × intensity), stacking with the track. Rain can arrive mid-race, lap by lap, with a wet tyre. ${NOT_YET_TRACK}`}>
             <div className="gl-list">
               {BASE_DECK_WEATHER.filter(w => match(w.name, w.id)).map(w => (
                 <Row key={w.id} id={`dwx:${w.id}`} open={isOpen(`dwx:${w.id}`)} onToggle={toggle}

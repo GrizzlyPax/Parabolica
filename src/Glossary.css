@@ -40,7 +40,6 @@
   .gl-pills { grid-column: 1; }
   .gl-chev { grid-row: 1; grid-column: 2; }
 }
-.gl-does { margin-left: 6px; color: var(--pw-text-1); }
 .gl-roll { margin: 4px 0 0; padding-left: 22px; color: var(--pw-text-2); font-size: 15px; line-height: 1.6; max-width: 80ch; }
 .gl-roll b { color: var(--pw-text-1); font-weight: 700; }
 .gl-swatch { display: inline-block; width: 12px; height: 12px; margin-right: 6px; vertical-align: -1px; }
@@ -64,7 +63,6 @@
 .gl-sort { background: var(--pw-ground); color: var(--pw-text-1); border: 1px solid var(--pw-border-strong); border-radius: 0; padding: 4px 6px; font-family: var(--look-data); font-size: 12px; }
 
 /* Add tab */
-.gl-kind { display: flex; gap: 8px; margin: 8px 0 12px; }
 .gl-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px 14px; }
 .gl-form label { display: flex; flex-direction: column; gap: 4px; }
 .gl-form .gl-wide { grid-column: 1 / -1; }
@@ -93,7 +91,6 @@
 .gl-credit-icons { display: flex; flex-wrap: wrap; gap: 6px 14px; }
 .gl-credit-icon, .gl-credit-size { display: inline-flex; align-items: center; gap: 6px; color: var(--pw-text-1); }
 .gl-credit-icon code, .gl-credit-size code { color: var(--pw-text-3); font-family: var(--look-data); font-size: 11px; }
-.gl-credit-sizes { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--pw-hairline); }
 @media (max-width: 799px) {
   .gl-section-head { flex-wrap: wrap; align-items: flex-start; }
   .gl-section-toggle { flex-wrap: wrap; row-gap: 4px; }
@@ -140,3 +137,6 @@
 @media (min-width: 1024px) {
   .glossary.ace-page .gl-tab { font-size: 15px; padding: 11px 18px; }
 }
+
+/* Credits (#778): the icon list on the ground, a gap under the heading. */
+.credits .credits-icons { display: flex; flex-direction: column; gap: 10px; }

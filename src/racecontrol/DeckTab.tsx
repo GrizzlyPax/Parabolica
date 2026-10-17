@@ -35,7 +35,7 @@ export function DeckTab() {
                 <td className="rc-tag"><CardMarks card={c} size={15} /> {c.name}</td>
                 <td className="rc-dim">{KIND_LABELS[c.kind].toLowerCase()}</td>
                 <td className="rc-dim">{c.target}</td>
-                <td>{c.rarity ? <span className={`rc-rarity rarity-word rarity-${c.rarity}`}>{c.rarity}</span> : <span className="rc-dim">v0.6</span>}</td>
+                <td>{c.rarity ? <span className={`rc-rarity rarity-word rarity-${c.rarity}`}>{c.rarity}</span> : <span className="rc-dim">—</span>}</td>
                 <td className="rc-num">{cardReadout(c)}</td>
                 <td className="rc-dim">in the stats</td>
               </tr>
