@@ -36,6 +36,14 @@ describe('the ladder view (#628, #696)', () => {
     expect(v.rungs.map(r => [r.name, r.status, r.title])).toEqual([['Locals', 'current', `Ace ${townOf(run)}`], ['State', 'ahead', 'Ace Ohio'], ['Nationals', 'ahead', 'Ace America']]);
     expect(v.rungs[2].later).toBeUndefined();
     expect(v.rungs[0].races).toEqual({ done: 0, total: 5 });
+    // The route (#778): five races named for your town, the last the title race; the steps ahead show theirs too.
+    expect(v.rungs[0].route).toHaveLength(5);
+    expect(v.rungs[0].route!.every(n => n.venue.includes(townOf(run)) && n.kind && n.place === undefined)).toBe(true);
+    expect(v.rungs[0].route!.map(n => n.last)).toEqual([false, false, false, false, true]);
+    expect(v.rungs[1].route).toHaveLength(6);
+    expect(v.rungs[2].route).toHaveLength(4);
+    // Nationals race the landmarks ("Pikes Peak, Colorado"), four of the six kinds.
+    expect(v.rungs[2].route!.every(n => /, /.test(n.venue) && n.kind)).toBe(true);
     expect(v.rungs[0].you?.team.name).toBe('Kettle Street Garage');
     expect(v.rungs[0].rival?.nemesis).toBe(false);
     expect(v).toMatchObject({ stateId: 'oh', town: townOf(run), titles: [] });
@@ -51,6 +59,9 @@ describe('the ladder view (#628, #696)', () => {
     expect(v.rungs[1].status).toBe('current');
     expect(v.rungs[1].races).toEqual({ done: 0, total: 6 });
     expect(v.rungs[1].rival?.team.name).toBeTruthy();
+    // The won rung's route holds your place in every race; the step shown ahead before promotion is the step you get.
+    expect(v.rungs[0].route!.every(n => typeof n.place === 'number' && n.place >= 0)).toBe(true);
+    expect(ladderView(won, emptyMeta()).rungs[1].route!.map(n => n.venue)).toEqual(v.rungs[1].route!.map(n => n.venue));
   });
 
   it('lost: the rung says where you finished and that the run ended', () => {

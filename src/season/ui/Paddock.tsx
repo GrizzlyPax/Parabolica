@@ -235,6 +235,12 @@ export default function Paddock({ facts, onChange, onMenu, onRoad, onEndRun, onG
 
   const drivers = driverStandings(facts);
   const leader = standings[0] ? teams[standings[0].teamId] : null;
+  // Your deck (#778, the deck-builder shape): every stamp in play, as cards, by the card it sits on.
+  const deckCards = [
+    ...roster.driverIds.flatMap(id => [...stamps.drivers[id], ...(stamps.titles[id] ?? [])].map(c => ({ card: c, who: rowName(String(id)) }))),
+    ...stamps.car.map(c => ({ card: c, who: c.target === 'team' ? you.name : car.name })),
+  ];
+  const fading = deckCards.filter(({ card }) => stamps.mileage[card.id] !== undefined).length;
 
   return (
     <StepTheme step={lookStep} state={lookState} className="ace-page pk" style={teamThemeVars(you)}>
@@ -266,6 +272,7 @@ export default function Paddock({ facts, onChange, onMenu, onRoad, onEndRun, onG
               key={`${parcel.round}:${parcel.teamId}`}
               parcel={parcel}
               targets={targets}
+              to={{ garage: you.name, place: [facts.setup.league?.locale?.town, lookState.name].filter(Boolean).join(', ') }}
               smudgeLine={smudge ? `Smudged: ${smudge.name} (${smudge.stats.map(s => `${levelDelta(s.pct)} ${STAT_LABELS[s.stat]}`).join(', ')}) on ${smudge.target.kind === 'car' ? car.name : you.name} for ${SMUDGE_LIFE_TEXT}, whatever you keep. It takes no slot and wears off on its own.` : undefined}
               onKeep={keep}
               onLift={setLifted}
@@ -318,6 +325,22 @@ export default function Paddock({ facts, onChange, onMenu, onRoad, onEndRun, onG
               </tbody>
             </table>
           </div></div>
+          {deckCards.length > 0 && (
+            <section className="pk-deck" aria-label="Your deck">
+              <div className="pk-deck-head">
+                <span className="ace-k">Your deck · {deckCards.length} {deckCards.length === 1 ? 'stamp' : 'stamps'} in play{fading ? ` · ${fading} ink fading` : ''}</span>
+                <span className="ace-note">Tap a card for its face. Ink fades after {GEAR_LIFE} races; a Seal keeps.</span>
+              </div>
+              <div className="pk-deck-row">
+                {deckCards.map(({ card: c, who }) => (
+                  <figure key={c.id} className="pk-deck-card">
+                    <button type="button" className="pk-deck-btn" onClick={() => setDetail({ card: c })} aria-label={`${c.name} on ${who}`}><CardFace card={c} size="small" flippable={false} left={stamps.mileage[c.id]} /></button>
+                    <figcaption className="ace-note">{who}</figcaption>
+                  </figure>
+                ))}
+              </div>
+            </section>
+          )}
           <div className="rt-legend">
             {priority.size > 0 && <span><span className="rt-prio-key">{ABBR[[...priority][0]]}</span> this race's priority stat</span>}
             <span><i className="rt-notch-key" /> a stamp changes this stat · tap a level for the sum, a stamp for its card · ink fades after {GEAR_LIFE} races (the small number)</span>

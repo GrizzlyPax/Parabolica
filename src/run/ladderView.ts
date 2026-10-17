@@ -2,16 +2,36 @@
 // shows out. Three rungs, Locals at the bottom; the step in play is open
 // (races run, you against the garage nearest you, how you go up); a won rung
 // keeps its title; a lost one says where it ended; Nationals waits (#694).
-import { constructorStandings, seasonState, type SeasonFacts } from '../season/season';
+// Since #778 (the deck-builder shape, Pax Oct 17) every rung carries its
+// ROUTE: each race as a node with its venue and kind, your place once it has
+// run; a step ahead shows its route too (its calendar is the run seed's), so
+// the road reads like a run map: what's coming, and what a stamp is for.
+import { constructorStandings, poolFor, seasonState, type SeasonFacts } from '../season/season';
+import { draftState } from '../season/draft';
 import { teamsOf } from '../season/ui/teams';
+import { venueFor, venueForSetup } from '../season/venues';
+import { seasonCalendar } from '../season/setup';
 import type { TeamLike } from '../icons/GameIcon';
-import { runState, seasonFactsFor, titlesOf, type RunFacts, type RunPhase } from './run';
+import { STEP_PLAN, leagueContext, leagueSeed, runState, seasonFactsFor, titlesOf, type RunFacts, type RunPhase } from './run';
 import type { Step } from '../look/step';
 import { UNLOCKS, type MetaFacts, type UnlockId } from './meta';
 import { nemesisTeam } from '../season/nemesis';
 import { aliveAt, stageOf } from '../season/format';
 
 export interface Standing { team: TeamLike & { id: string }; place: number; points: number }
+
+/** One race on a step's route (#778). */
+export interface RouteNode {
+  round: number;
+  venue: string;
+  kind: string;
+  /** Your best finish once the race has run; 0 when none of yours was classified (cut, retired). */
+  place?: number;
+  /** A named stage at Nationals (the Hundred, the Final). */
+  stage?: string;
+  /** The step's last race: the title race. */
+  last: boolean;
+}
 
 export interface RungView {
   index: number;
@@ -31,6 +51,8 @@ export interface RungView {
   memory?: string;
   /** A format step (Nationals, #694): the stage in play and who is still in. */
   stage?: { name: string; alive: number; total: number; decides: string };
+  /** The step's races, in order: the venue, the kind, your place once run (#778). */
+  route?: RouteNode[];
 }
 
 export interface LadderView {
@@ -66,7 +88,18 @@ function rungFor(run: RunFacts, rung: RungView): RungView {
   const rivalId = nemesisId ?? nearestId;
   const rival = rivalId ? standingOf(facts, rivalId) : undefined;
   const done = seasonState(facts).phase === 'finished' ? facts.setup.calendar.length : facts.results.length;
-  const view: RungView = { ...rung, races: { done, total: facts.setup.calendar.length }, you, rival: rival && { ...rival, nemesis: rivalId === nemesisId } };
+  const mine = draftState(poolFor(facts), facts.draftPicks).rosters[youId]?.driverIds ?? [];
+  const route: RouteNode[] = facts.setup.calendar.map((_, r) => {
+    const v = venueFor(facts, r);
+    const res = facts.results[r];
+    const st = stageOf(facts, r);
+    return {
+      round: r, venue: v.name, kind: v.kind, last: r === facts.setup.calendar.length - 1,
+      ...(res ? { place: res.finishOrder.findIndex(id => mine.includes(id)) + 1 } : {}),
+      ...(st?.name && !/^Race \d/.test(st.name) ? { stage: st.name } : {}),
+    };
+  });
+  const view: RungView = { ...rung, races: { done, total: facts.setup.calendar.length }, you, rival: rival && { ...rival, nemesis: rivalId === nemesisId }, route };
   const stage = stageOf(facts, Math.min(done, facts.setup.calendar.length - 1));
   if (stage) view.stage = { ...stage, total: facts.setup.teamCount };
   const outAt = aliveAt(facts).outAt[youId];
@@ -74,6 +107,15 @@ function rungFor(run: RunFacts, rung: RungView): RungView {
   else if (rung.status === 'lost' && outAt !== undefined) view.memory = `Out after ${stageOf(facts, outAt)?.name ?? `race ${outAt + 1}`}, with ${aliveAt(facts, outAt + 1).teams.length} states still in. The run ended here.`;
   else if (rung.status === 'lost' && you) view.memory = `Finished ${ordinal(you.place)} with ${you.points} pts. The run ended here.`;
   return view;
+}
+
+/** A step not yet played: its calendar is the run seed's, so its venues are known (what's coming). */
+export function routeAhead(run: RunFacts, index: number): RouteNode[] | undefined {
+  const plan = STEP_PLAN[index];
+  if (!plan?.races) return undefined;
+  const seed = leagueSeed(run, index);
+  const setup = { seed, calendar: seasonCalendar(seed, plan.races), league: leagueContext(run, index) };
+  return setup.calendar.map((_, r) => { const v = venueForSetup(setup, r); return { round: r, venue: v.name, kind: v.kind, last: r === plan.races - 1 }; });
 }
 
 export function ladderView(run: RunFacts, meta: MetaFacts): LadderView {
@@ -86,7 +128,7 @@ export function ladderView(run: RunFacts, meta: MetaFacts): LadderView {
     stateId: ctx.locale?.stateId ?? run.setup.stateId,
     town: ctx.locale?.town ?? '',
     titles: titlesOf(run),
-    rungs: state.ladder.map(r => (r.status === 'ahead' ? { ...r } : rungFor(run, { ...r }))),
+    rungs: state.ladder.map(r => (r.status === 'ahead' ? { ...r, route: routeAhead(run, r.index) } : rungFor(run, { ...r }))),
     unlocks: (Object.keys(UNLOCKS) as UnlockId[]).map(id => ({ id, ...UNLOCKS[id], got: meta.unlocks.includes(id) })),
   };
 }

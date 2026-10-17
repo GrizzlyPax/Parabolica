@@ -1,11 +1,15 @@
 // The Parcel, opened (#704; Pax Oct 10: "tap, then Keep", in place, not a
-// takeover; #778: it is face up when you arrive). Three stamps flip where the
-// Parcel sits at the top of the Paddock; tap one to lift it (the rows it fits
-// glow below), then say which card it goes on. A full card asks which stamp
-// to scrape off first. Leaving the box shut is the dock's ghost button. Tap
-// the lifted stamp again for its full face.
+// takeover; #778: it is face up when you arrive, and since Pax's Oct 17 steer
+// it opens like a pack: brown paper, cream string, the typed label (League
+// Issue · To: your garage, your town; the gift in midnight paper with gold
+// string, the Watcher Box in black), the three stamps flipping in turn on
+// the paper. Tap one to lift it (it rises, the other two sink; the rows it
+// fits glow below), then say which card it goes on. A full card asks which
+// stamp to scrape off first. Leaving the box shut is the dock's ghost
+// button. Tap the lifted stamp again for its full face.
 import { useEffect, useState } from 'react';
 import { CardFace } from '../../cards/CardFace';
+import { Star } from '../../look/Look';
 import { CardChip } from '../../cards/CardChip';
 import type { Card } from '../../cards/types';
 import { isInk, GEAR_LIFE, type Parcel, type ParcelTier } from '../stamps';
@@ -26,6 +30,8 @@ interface Props {
   targets: StampTarget[];
   /** A smudged Parcel: what the smudge does, shown over the three. */
   smudgeLine?: string;
+  /** The label's address: your garage, and "Zanesville, Ohio". */
+  to?: { garage: string; place: string };
   /** Keep this stamp on that card; `replaces` when the card is full. */
   onKeep: (card: Card, target: string, replaces?: string) => void;
   /** The stamp lifted (or put down), so the table can glow. */
@@ -33,30 +39,38 @@ interface Props {
   onDetail: (card: Card) => void;
 }
 
-export default function ParcelPick({ parcel, targets, smudgeLine, onKeep, onLift, onDetail }: Props) {
-  const [faceUp, setFaceUp] = useState(false);
+export default function ParcelPick({ parcel, targets, smudgeLine, to, onKeep, onLift, onDetail }: Props) {
+  // The three flip in turn (the pack's reveal): how many are face up so far.
+  const [revealed, setRevealed] = useState(0);
+  const faceUp = revealed >= parcel.cards.length;
   const [pick, setPick] = useState<string | null>(null);
   const [target, setTarget] = useState<string | null>(null);
   useEffect(() => {
     const reduce = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const t = setTimeout(() => setFaceUp(true), reduce ? 0 : 350);
-    return () => clearTimeout(t);
-  }, []);
+    if (reduce) { setRevealed(parcel.cards.length); return; }
+    const timers = parcel.cards.map((_, i) => setTimeout(() => setRevealed(n => Math.max(n, i + 1)), 350 + i * 180));
+    return () => timers.forEach(clearTimeout);
+  }, [parcel.cards.length]);
   const chosen = parcel.cards.find(c => c.id === pick) ?? null;
   const fitting = chosen ? targets.filter(t => t.fits(chosen)) : [];
   const onto = fitting.find(t => t.key === target) ?? null;
   const lift = (c: Card | null) => { setPick(c?.id ?? null); setTarget(null); onLift(c); };
-  const label = parcel.kind === 'gift' ? 'No Return Address' : parcel.kind === 'smudged' ? `Watcher Box · ${TIER_LABEL[parcel.tier]}` : `League Issue · ${TIER_LABEL[parcel.tier]}`;
+  // The label, as the story has it (docs/story/stamps.md): the issue, the address, the sender.
+  const issue = parcel.kind === 'gift' ? 'No Return Address' : parcel.kind === 'smudged' ? 'Watcher Box' : 'League Issue';
+  const label = `${issue} · ${TIER_LABEL[parcel.tier]}`;
+  const from = parcel.kind === 'gift' ? 'From:' : parcel.kind === 'smudged' ? 'From: the Watchers' : 'From: the League';
 
   return (
-    <section className={`pp tier-${parcel.tier} ${parcel.kind === 'gift' ? 'pp-gift' : parcel.kind === 'smudged' ? 'pp-curse' : ''}`.trim()} aria-label={`${label}: keep one of three stamps`}>
-      <div className="pp-head">
-        <span className="ace-k">{label} · keep one stamp</span>
-        <span className="ace-note">{parcel.kind === 'gift' ? 'A friend upstairs sends their regards: the best odds.' : parcel.kind === 'smudged' ? 'Unlucky.' : 'Before every race.'}</span>
+    <section className={`pp pp-pack tier-${parcel.tier} ${parcel.kind === 'gift' ? 'pp-gift' : parcel.kind === 'smudged' ? 'pp-curse' : ''}`.trim()} aria-label={`${label}: keep one of three stamps`}>
+      <i className="pp-string v" aria-hidden="true" /><i className="pp-string h" aria-hidden="true" />
+      <div className="pp-label" aria-hidden="true">
+        <b>{issue.toUpperCase()} · {TIER_LABEL[parcel.tier].toUpperCase()}</b>
+        {to && <span>To: {to.garage}, {to.place}</span>}
+        <span>{from}</span>
       </div>
-      {smudgeLine && <p className="ace-note pp-smudge">{smudgeLine}</p>}
+      <svg className="pp-post" width={30} height={30} viewBox="-15 -15 30 30" aria-hidden="true"><circle r={14} fill="var(--ace-paper)" stroke="var(--ace-ink)" strokeWidth={2} /><Star cx={0} cy={0} r={8} fill="var(--ace-ink)" /></svg>
       <div className="pp-three" role="group" aria-label="Pick one of three">
-        {parcel.cards.map(c => (
+        {parcel.cards.map((c, i) => (
           <button
             key={c.id}
             type="button"
@@ -65,10 +79,13 @@ export default function ParcelPick({ parcel, targets, smudgeLine, onKeep, onLift
             aria-pressed={pick === c.id}
             onClick={() => { if (pick === c.id) onDetail(c); else lift(c); }}
           >
-            <CardFace card={c} size="small" faceDown={!faceUp} flippable={false} />
+            <CardFace card={c} size="small" faceDown={i >= revealed} flippable={false} />
           </button>
         ))}
       </div>
+      <div className="pp-foot ace-panel flat">
+      <span className="ace-k">{label} · keep one stamp · {parcel.kind === 'gift' ? 'a friend upstairs sends their regards: the best odds' : parcel.kind === 'smudged' ? 'unlucky' : 'before every race'}</span>
+      {smudgeLine && <p className="ace-note pp-smudge">{smudgeLine}</p>}
       {chosen && onto && onto.stamps.length >= onto.slots ? (
         <div className="pp-ask" role="group" aria-label="Which stamp to scrape off">
           <b>{onto.label}'s card is full. Scrape one off for {chosen.name}:</b>
@@ -96,6 +113,7 @@ export default function ParcelPick({ parcel, targets, smudgeLine, onKeep, onLift
       ) : (
         <p className="ace-note pp-keep">Tap a stamp to lift it; the other two go back. Or leave the box shut and go racing.</p>
       )}
+      </div>
     </section>
   );
 }
