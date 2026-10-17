@@ -1,11 +1,18 @@
-// TrackMap - Simplified track visualization
-// Single thin path, no lanes, marker hierarchy for emphasis
+// TrackMap: the race, drawn. Since #778 the map is a VENUE SCENE when it
+// has one (look/venues/scenes.tsx: a drawn map per kind on cream paper, its
+// own racing line and pit lane, the surface in its material), with the cars
+// as numbered roundels trailing dust that scales with pace, and a SCOPE
+// (all · mine · follow one) that decides who is big, labelled and lit. The
+// bare loop stays for a track without a scene (the lab's default).
 import { NUMBER_DY } from '../../icons/RaceNumber';
 import { useMemo, useCallback, useState } from 'react';
 import type { Driver } from '../../RaceEngine';
 import './TrackMap.css';
+import '../../look/venues.css';
 import { GameIcon } from '../../icons/GameIcon';
 import { driverCode } from './driverCode';
+import { SCENE_BAND, SceneBand, SceneDefs, type SceneCtx, type VenueScene } from '../../look/venues/scenes';
+import type { RaceScope } from './types';
 
 // Default track path (oval) if no layout provided
 const DEFAULT_TRACK_PATH = 'M 150 60 L 450 60 Q 550 60, 550 150 Q 550 240, 450 240 L 150 240 Q 50 240, 50 150 Q 50 60, 150 60 Z';
@@ -24,6 +31,12 @@ interface TrackMapProps {
   /** Live fights: the defender gets a pulsing ring, the attacker a sword. */
   battles?: { chaserId: number; aheadId: number; ticks: number }[];
   className?: string;
+  /** The venue, drawn (#778): its paper, scenery, racing line and pit lane replace the bare path. */
+  scene?: VenueScene;
+  sceneCtx?: SceneCtx;
+  /** Who the picture is about (#778): all · mine · one car followed. */
+  scope?: RaceScope;
+  followId?: number;
 }
 
 // Get a point along an SVG path at a given percentage (0-1)
@@ -74,7 +87,14 @@ function TrackMap({
   unsafetyCarPosition = 0,
   className = '',
   battles,
+  scene,
+  sceneCtx = {},
+  scope = 'all',
+  followId,
 }: TrackMapProps) {
+  // The scene's line and lane win over the layout's.
+  const path = scene?.path ?? trackPath;
+  const pit = scene?.pitLane ?? pitLanePath;
   // Store track path element in state to ensure useMemo re-runs when it's attached
   // Using state instead of refs ensures React knows about the element
   const [trackPathEl, setTrackPathEl] = useState<SVGPathElement | null>(null);
@@ -101,11 +121,15 @@ function TrackMap({
     const pitting = drivers.filter(d => d.status === 'pitting');
     const dnf = drivers.filter(d => d.status === 'dnf');
 
+    // The dust tail (#778): a short line back along the path, longer the faster the car is going this tick.
+    const vmax = racing.reduce((m, d) => Math.max(m, d.speedSmooth || 0), 0) || 1;
     // Calculate positions for racing drivers
     const racingPositions = racing.map(driver => {
       const normalizedPosition = ((driver.position % trackLength) + trackLength) % trackLength;
       const lapProgress = normalizedPosition / trackLength;
       const point = getPointAlongPath(trackPathEl, lapProgress);
+      const tailLen = scene ? 0.008 + 0.028 * Math.max(0, Math.min(1, (driver.speedSmooth || 0) / vmax)) : 0;
+      const tail = tailLen ? getPointAlongPath(trackPathEl, ((lapProgress - tailLen) % 1 + 1) % 1) : undefined;
 
       const isFocused = bigIds.includes(driver.id);
       const isHighlighted = visibleDriverIds.has(driver.id);
@@ -114,6 +138,7 @@ function TrackMap({
         driver,
         x: point.x,
         y: point.y,
+        tail,
         isFocused,
         isHighlighted,
         isDNF: false,
@@ -131,6 +156,7 @@ function TrackMap({
         driver,
         x: point.x,
         y: point.y,
+        tail: undefined as { x: number; y: number } | undefined,
         isFocused: bigIds.includes(driver.id),
         isHighlighted: visibleDriverIds.has(driver.id),
         isDNF: true,
@@ -145,11 +171,11 @@ function TrackMap({
       let point: { x: number; y: number };
       const isStopped = driver.pitPhase === 'stopped';
 
-      if (pitLanePath) {
+      if (pit) {
         // Use driver's actual pit progress (0 = just entered, 1 = about to exit)
         // For clockwise tracks, pit lane runs left→right (same as path definition)
         const pitLaneProgress = driver.pitProgress ?? 0;
-        const linePoint = getPointAlongLinePath(pitLanePath, pitLaneProgress);
+        const linePoint = getPointAlongLinePath(pit, pitLaneProgress);
 
         if (linePoint) {
           point = linePoint;
@@ -170,6 +196,7 @@ function TrackMap({
         driver,
         x: point.x,
         y: point.y,
+        tail: undefined as { x: number; y: number } | undefined,
         isFocused: bigIds.includes(driver.id),
         isHighlighted: visibleDriverIds.has(driver.id),
         isDNF: false,
@@ -193,8 +220,10 @@ function TrackMap({
       ...racingPositions.filter(p => p.isFocused),
     ];
 
-    return allPositions;
-  }, [drivers, trackLength, bigIds, visibleDriverIds, trackPathEl, pitLanePath]);
+    // Under a scope the followed car and yours come to the front.
+    const front = (p: { driver: Driver }) => (scope === 'follow' && p.driver.id === followId ? 2 : scope !== 'all' && mineDriverIds?.includes(p.driver.id) ? 1 : 0);
+    return allPositions.map((p, i) => ({ p, i })).sort((a, b) => front(a.p) - front(b.p) || a.i - b.i).map(x => x.p);
+  }, [drivers, trackLength, bigIds, visibleDriverIds, trackPathEl, pit, scene, scope, followId, mineKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Calculate start/finish line position
   const startFinish = useMemo(() => {
@@ -208,55 +237,59 @@ function TrackMap({
     return getPointAlongPath(trackPathEl, unsafetyCarPosition);
   }, [unsafetyCarActive, unsafetyCarPosition, trackPathEl]);
 
+  // A scene is a page of the program: its band on top, the scene under it (everything placed on the path moves with it).
+  const box = scene ? { w: scene.box.w, h: scene.box.h + SCENE_BAND } : { w: 600, h: 360 };
+  const sc = unsafetyCarActive;
   return (
-    <div className={`track-map ${className}`}>
+    <div className={`track-map ${scene ? 'scene' : ''} ${className}`.replace(/\s+/g, ' ').trim()}>
       <svg
-        viewBox="0 0 600 360"
+        viewBox={`0 0 ${box.w} ${box.h}`}
         preserveAspectRatio="xMidYMid meet"
         className="track-svg"
       >
-        {/* Track - white edges with black interior (yellow during safety car) */}
-        {/* Outer stroke (edges) */}
-        <path
-          d={trackPath}
-          fill="none"
-          stroke={unsafetyCarActive ? "#FFD700" : "#ffffff"}
-          strokeWidth="14"
-          strokeOpacity={unsafetyCarActive ? 0.6 : 0.4}
-          className="track-outline-outer"
-        />
-        {/* Inner black stroke (creates empty interior) */}
-        <path
-          ref={trackPathRef}
-          d={trackPath}
-          fill="none"
-          stroke="#000000"
-          strokeWidth="10"
-          className="track-outline"
-        />
+      {scene && <SceneBand ctx={sceneCtx} />}
+      <g transform={scene ? `translate(0 ${SCENE_BAND})` : undefined}>
+        {/* Patterns: the chequer, and the scenes' paper, hatching and salt */}
+        <defs>
+          <pattern id="checkered" width="4" height="4" patternUnits="userSpaceOnUse">
+            <rect width="2" height="2" fill="var(--ace-paper)" />
+            <rect x="2" y="2" width="2" height="2" fill="var(--ace-paper)" />
+            <rect x="2" width="2" height="2" fill="var(--ace-ink)" />
+            <rect y="2" width="2" height="2" fill="var(--ace-ink)" />
+          </pattern>
+          <SceneDefs />
+        </defs>
 
-        {/* Pit lane - white edges with black interior (yellow during safety car) */}
-        {pitLanePath && (
+        {/* The venue under the track (#778): paper, infield, stand, landmark */}
+        {scene?.under(sceneCtx)}
+
+        {scene ? (
           <>
-            {/* Outer stroke (edges) */}
-            <path
-              d={pitLanePath}
-              fill="none"
-              stroke={unsafetyCarActive ? "#FFD700" : "#ffffff"}
-              strokeWidth="10"
-              strokeOpacity={unsafetyCarActive ? 0.6 : 0.4}
-              strokeLinecap="round"
-              className="pit-lane-outer"
-            />
-            {/* Inner black stroke (empty interior) */}
-            <path
-              d={pitLanePath}
-              fill="none"
-              stroke="#000000"
-              strokeWidth="6"
-              strokeLinecap="round"
-              className="pit-lane"
-            />
+            {/* The surface in its material: an ink edge, the fill, then its marks */}
+            <path d={path} fill="none" stroke={sc ? 'var(--ace-yellow)' : 'var(--ace-ink)'} strokeWidth={scene.surface.width + 3} strokeLinejoin="round" strokeLinecap="round" className="track-outline-outer" opacity={sc ? 0.9 : 0.85} />
+            <path ref={trackPathRef} d={path} fill="none" stroke={scene.surface.fill} strokeWidth={scene.surface.width} strokeLinejoin="round" strokeLinecap="round" className="track-outline" />
+            {scene.surface.centreDash && <path d={path} fill="none" stroke="var(--ace-paper)" strokeWidth={1} strokeDasharray="6 8" opacity={0.7} />}
+            {scene.surface.planks && <path d={path} fill="none" stroke="var(--ace-ink)" strokeWidth={scene.surface.width} strokeDasharray="1 9" opacity={0.3} />}
+            {scene.surface.marks && <path d={path} fill="none" stroke="var(--ace-ink)" strokeWidth={3} strokeDasharray="14 26" opacity={0.18} />}
+            {pit && (
+              <>
+                <path d={pit} fill="none" stroke="var(--ace-ink)" strokeWidth={11} strokeLinecap="round" opacity={0.5} className="pit-lane-outer" />
+                <path d={pit} fill="none" stroke="var(--ace-paper-2)" strokeWidth={8} strokeLinecap="round" className="pit-lane" />
+              </>
+            )}
+            {scene.over?.(sceneCtx)}
+          </>
+        ) : (
+          <>
+            {/* The bare loop: pale edges, an ink interior (yellow under the safety car) */}
+            <path d={path} fill="none" stroke={sc ? 'var(--ace-yellow)' : 'var(--ace-paper)'} strokeWidth="14" strokeOpacity={sc ? 0.6 : 0.4} className="track-outline-outer" />
+            <path ref={trackPathRef} d={path} fill="none" stroke="var(--ace-ink)" strokeWidth="10" className="track-outline" />
+            {pit && (
+              <>
+                <path d={pit} fill="none" stroke={sc ? 'var(--ace-yellow)' : 'var(--ace-paper)'} strokeWidth="10" strokeOpacity={sc ? 0.6 : 0.4} strokeLinecap="round" className="pit-lane-outer" />
+                <path d={pit} fill="none" stroke="var(--ace-ink)" strokeWidth="6" strokeLinecap="round" className="pit-lane" />
+              </>
+            )}
           </>
         )}
 
@@ -274,15 +307,10 @@ function TrackMap({
           </g>
         )}
 
-        {/* Checkered pattern definition */}
-        <defs>
-          <pattern id="checkered" width="4" height="4" patternUnits="userSpaceOnUse">
-            <rect width="2" height="2" fill="#fff" />
-            <rect x="2" y="2" width="2" height="2" fill="#fff" />
-            <rect x="2" width="2" height="2" fill="#222" />
-            <rect y="2" width="2" height="2" fill="#222" />
-          </pattern>
-        </defs>
+        {/* Dust (#778): every racing car's tail, under the markers */}
+        {scene && driverPositions.map(({ driver, x, y, tail }) => tail && (
+          <line key={`tail-${driver.id}`} x1={tail.x} y1={tail.y} x2={x} y2={y} stroke={scene.dust} strokeWidth={scope !== 'all' && !mineDriverIds?.includes(driver.id) && driver.id !== followId ? 3 : 5} strokeLinecap="round" opacity={0.55} className="marker-dust" />
+        ))}
 
         {/* Safety Carl - The Unsafety Car */}
         {safetyCarlPosition && (
@@ -296,7 +324,7 @@ function TrackMap({
               cy={0}
               r={20}
               fill="none"
-              stroke="#FFD700"
+              stroke="var(--ace-yellow)"
               strokeWidth={2}
               opacity={0.6}
               className="safety-carl-glow"
@@ -306,8 +334,8 @@ function TrackMap({
               cx={0}
               cy={0}
               r={14}
-              fill="#FFD700"
-              stroke="#FFA500"
+              fill="var(--ace-yellow)"
+              stroke="var(--ace-brick)"
               strokeWidth={2.5}
               className="safety-carl-circle"
             />
@@ -319,12 +347,7 @@ function TrackMap({
               y={-22}
               textAnchor="middle"
               className="safety-carl-label"
-              style={{
-                fontSize: '11px',
-                fontWeight: 700,
-                fill: '#FFD700',
-                textShadow: '0 1px 3px rgba(0,0,0,0.9)',
-              }}
+              style={{ fontSize: '11px', fontWeight: 700, fill: 'var(--ace-yellow)' }}
             >
               SC
             </text>
@@ -333,29 +356,34 @@ function TrackMap({
 
         {/* Driver markers */}
         {driverPositions.map(({ driver, x, y, isFocused, isHighlighted, isDNF, isPitting }) => {
-          // Only FOCUSED drivers get full treatment (name label, large size)
-          // Highlighted (bet) drivers just get a subtle glow, not full visibility
-          const showNameLabel = isFocused;
+          // The scope (#778): under "mine" the rivals fall back to small faint dots; under "follow" one car is the picture.
+          const isMine = !!mineDriverIds?.includes(driver.id);
+          const isFollowed = scope === 'follow' && driver.id === followId;
+          const dimmed = !isDNF && ((scope === 'mine' && !isMine) || (scope === 'follow' && !isMine && !isFollowed));
+          const big = !dimmed && (isFocused || isFollowed || (scope !== 'all' && isMine));
+          // Only big drivers get the full treatment (name label, large size); highlighted (podium) ones a number and a glow.
+          const showNameLabel = big;
 
-          // Marker sizes: focused = large, highlighted = medium, normal = small
-          const radius = isFocused ? 13 : isHighlighted ? 10 : isDNF ? 5 : 7;
-          const strokeWidth = isFocused ? 2.5 : isHighlighted ? 2 : 2;
-          // Non-focused drivers are dimmed
-          const opacity = isDNF ? 0.3 : isPitting ? 0.8 : isFocused ? 1 : isHighlighted ? 0.9 : 0.7;
+          // Marker sizes: big = large, highlighted = medium, normal = small, dimmed = a dot
+          const radius = dimmed ? 5 : big ? 13 : isHighlighted ? 10 : isDNF ? 5 : 7;
+          const strokeWidth = big ? 2.5 : 2;
+          const opacity = isDNF ? 0.3 : dimmed ? 0.45 : isPitting ? 0.8 : big ? 1 : isHighlighted ? 0.9 : 0.7;
 
           return (
             <g
               key={driver.id}
-              className={`driver-marker ${isFocused ? 'focused' : ''} ${isHighlighted ? 'highlighted' : ''} ${isDNF ? 'dnf' : ''} ${isPitting ? 'pitting' : ''}`}
+              className={`driver-marker ${big ? 'focused' : ''} ${isHighlighted ? 'highlighted' : ''} ${isDNF ? 'dnf' : ''} ${isPitting ? 'pitting' : ''} ${dimmed ? 'dimmed' : ''}`}
               transform={`translate(${x}, ${y})`}
             >
               {/* Your car: a soft halo in the team colour, always (Pax, Oct 9) */}
-              {mineDriverIds?.includes(driver.id) && !isDNF && (
+              {isMine && !isDNF && (
                 <circle cx={0} cy={0} r={radius + 8} fill={driver.color} opacity={0.22} className="marker-mine-halo" />
               )}
+              {/* The followed car: a ring in the ink (#778) */}
+              {isFollowed && !isDNF && <circle cx={0} cy={0} r={radius + 11} fill="none" stroke="var(--map-ink, var(--ace-fg))" strokeWidth={1.5} strokeDasharray="4 3" className="marker-follow-ring" />}
 
-              {/* Glow for focused driver */}
-              {isFocused && (
+              {/* Glow for big drivers */}
+              {big && (
                 <circle
                   cx={0}
                   cy={0}
@@ -369,7 +397,7 @@ function TrackMap({
               )}
 
               {/* Subtle glow for highlighted (bet) drivers when not focused */}
-              {isHighlighted && !isFocused && (
+              {isHighlighted && !big && !dimmed && (
                 <circle
                   cx={0}
                   cy={0}
@@ -384,7 +412,7 @@ function TrackMap({
 
               {/* Battle: defender ring (pulsing) and attacker sword */}
               {battles?.some(b => b.aheadId === driver.id) && !isDNF && (
-                <circle cx={0} cy={0} r={radius + 4} fill="none" stroke="var(--pw-yellow)" strokeWidth={2} className="marker-battle-ring" />
+                <circle cx={0} cy={0} r={radius + 4} fill="none" stroke="var(--ace-yellow)" strokeWidth={2} className="marker-battle-ring" />
               )}
               {battles?.some(b => b.chaserId === driver.id) && !isDNF && (
                 <g transform={`translate(${radius + 1} ${-radius - 8})`} className="marker-swords"><GameIcon name="race.battle" size={10} /></g>
@@ -396,21 +424,21 @@ function TrackMap({
                 cy={0}
                 r={radius}
                 fill={driver.color}
-                stroke={driver.ink || '#fff'}
+                stroke={driver.ink || 'var(--ace-paper)'}
                 strokeWidth={strokeWidth}
                 opacity={opacity}
                 className="marker-circle"
               />
 
-              {/* Racing number (in the team's ink) inside the marker for focused and highlighted (podium) drivers */}
-              {(isFocused || isHighlighted) && !isDNF && (
+              {/* Racing number (in the team's ink) inside the marker for big and highlighted (podium) drivers */}
+              {(big || isHighlighted) && !isDNF && !dimmed && (
                 <text
                   x={0}
                   y={0}
                   dy={NUMBER_DY}
                   textAnchor="middle"
                   className="marker-emoji"
-                  style={{ fontSize: isFocused ? '11px' : '9px', fill: driver.ink || '#fff', fontFamily: 'var(--look-data, monospace)', fontWeight: 600 }}
+                  style={{ fontSize: big ? '11px' : '9px', fill: driver.ink || 'var(--ace-paper)', fontFamily: 'var(--ace-cond)', fontWeight: 600 }}
                 >
                   {driver.number ?? driver.emoji}
                 </text>
@@ -423,19 +451,14 @@ function TrackMap({
                   y={-radius - 6}
                   textAnchor="middle"
                   className="marker-label"
-                  style={{
-                    fontSize: '10px',
-                    fontWeight: 700,
-                    fill: 'var(--pw-text-1)',
-                    textShadow: '0 1px 2px rgba(0,0,0,0.8)',
-                  }}
+                  style={{ fontSize: '10px', fontWeight: 700 }}
                 >
                   {driverCode(driver.name)}
                 </text>
               )}
 
               {/* DNF indicator */}
-              {isDNF && (isFocused || isHighlighted) && (
+              {isDNF && (big || isHighlighted) && (
                 <g transform="translate(-4 -4)" className="marker-dnf">
                   <GameIcon name={driver.dnfInfo?.reason === 'tire_failure' ? 'race.tire_failure' : driver.dnfInfo?.reason === 'mechanical' ? 'race.mechanical' : 'race.crash'} size={8} />
                 </g>
@@ -444,6 +467,7 @@ function TrackMap({
             </g>
           );
         })}
+      </g>
       </svg>
     </div>
   );

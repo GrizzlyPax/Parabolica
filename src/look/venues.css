@@ -1,0 +1,7 @@
+/* The venues, drawn (#778; look/venues/scenes.tsx): the type the scenes use. Tokens only. */
+.vn-k { font-family: var(--ace-cond); font-size: 9px; letter-spacing: .14em; text-transform: uppercase; fill: var(--ace-ink-2); }
+.vn-state { font-family: var(--ace-disp); fill: var(--ace-navy-2); opacity: .22; letter-spacing: .04em; }
+.vn-title { font-family: var(--ace-script); fill: var(--ace-accent); opacity: .75; }
+.vn-crowd circle { transition: none; }
+.vn-venue { font-family: var(--ace-disp); font-size: 15px; fill: var(--ace-ink); }
+.vn-kind { font-family: var(--ace-body); font-style: italic; font-size: 12px; fill: var(--ace-ink-2); }

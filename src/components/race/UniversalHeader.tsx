@@ -45,6 +45,10 @@ function UniversalHeader({
   onReset,
   onSpeedChange,
   program,
+  scope = 'all',
+  onScopeChange,
+  followName,
+  hasMine = false,
 }: UniversalHeaderProps) {
   const state = SESSION_STATES[sessionState];
   // Publish the header's height so the phone layout can pin the track right under it.
@@ -103,6 +107,13 @@ function UniversalHeader({
             <button key={v.id} type="button" role="tab" className={`uh-tab ${activeView === v.id ? 'on' : ''}`} aria-selected={activeView === v.id} onClick={() => onViewChange(v.id)}>{v.label}</button>
           ))}
         </div>
+        {onScopeChange && (
+          <div className="uh-scope" role="group" aria-label="Who to watch">
+            <button type="button" className={`uh-scope-btn ${scope === 'all' ? 'on' : ''}`} aria-pressed={scope === 'all'} onClick={() => onScopeChange('all')}>All</button>
+            {hasMine && <button type="button" className={`uh-scope-btn ${scope === 'mine' ? 'on' : ''}`} aria-pressed={scope === 'mine'} onClick={() => onScopeChange('mine')}>Mine</button>}
+            <button type="button" className={`uh-scope-btn ${scope === 'follow' ? 'on' : ''}`} aria-pressed={scope === 'follow'} onClick={() => onScopeChange('follow')}>Follow{followName ? ` · ${followName}` : ''}</button>
+          </div>
+        )}
         <span className="uh-track"><b>{trackName}</b>{trackKind ? <span className="uh-kind"> · {trackKind}</span> : null}{weather ? <span className="uh-weather"> · {weather}</span> : null}</span>
         <WearPill tyreWear={tyreWear} />
         {priority && priority.length > 0 && <span className="uh-prio" title="Everyone gets these levels on these stats here">Priority: {priority.join(' · ')}</span>}

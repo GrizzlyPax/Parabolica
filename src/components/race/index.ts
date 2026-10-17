@@ -42,7 +42,7 @@ export type {
   ColumnConfig,
   RowContext,
   LapTimeClass,
-  RaceView,
+  RaceView, RaceScope,
   RaceSpeed,
   SessionState,
   TimingTowerProps,

@@ -18,6 +18,7 @@ const THEMED = [
   'icons/icons.css',
   'season/ui/Season.css',
   'look/look.css',
+  'look/venues.css',
   'look/race.css',
   'components/race/UniversalHeader.css',
   'WatchMode.css',

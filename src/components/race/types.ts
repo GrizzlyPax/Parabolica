@@ -78,6 +78,8 @@ export type LapTimeClass = '' | 'fastest' | 'improved' | 'slower';
 
 // View types
 export type RaceView = 'track' | 'detail' | 'lap';
+/** Who the picture is about (#778): every car, your cars, or one car the camera follows. */
+export type RaceScope = 'all' | 'mine' | 'follow';
 
 // Session state for universal header
 export type SessionState = 'qualifying' | 'racing' | 'safety-car' | 'final-lap' | 'finished';
@@ -164,6 +166,13 @@ export interface UniversalHeaderProps {
   /** The views (#778): Track · Detail · Lap chart, as tabs in the masthead. */
   activeView: RaceView;
   onViewChange: (view: RaceView) => void;
+  /** The scope (#778): all · mine · follow one, as a control in the masthead. */
+  scope?: RaceScope;
+  onScopeChange?: (scope: RaceScope) => void;
+  /** The car the camera follows under `follow`, by surname. */
+  followName?: string;
+  /** Whether "Mine" is a thing here (a Season race). */
+  hasMine?: boolean;
   /** The way out ("Paddock", "Menu", "Race Control"). */
   onExit?: () => void;
   exitLabel?: string;
