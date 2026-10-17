@@ -2,9 +2,12 @@
 // curve (the band, pinstripes and wheels follow it); a step's theme sets the
 // state's colours with ink from inkFor; the fonts are stored with the app.
 import { describe, it, expect } from 'vitest';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { Sash } from './Look';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { SASH_BOX, SASH_CURVE, bezierPoint, bezierTangent, sashGeometry, shifted, spokes } from './sash';
+import { SASH_BOX, SASH_CURVE, bezierPoint, bezierTangent, sashGeometry, sashTextSpan, shifted, spokes } from './sash';
 import { STATE_CODES, STEPS, STEP_IDS, programNumber, ribbonStep, stateLook, stepThemeVars } from './step';
 import { DEFAULT_LOOK, US_PLACES, placeById } from '../data/states';
 import { inkFor } from '../icons/ink';
@@ -13,10 +16,10 @@ describe('the sash: one centre curve', () => {
   it('the band and pinstripes are offsets of the centre; the wheels sit on it', () => {
     const g = sashGeometry();
     expect(g.box).toEqual(SASH_BOX);
-    expect(g.centre).toBe('M20 58 C82 28 178 88 240 58');
+    expect(g.centre).toBe('M20 58 C82 43 178 73 240 58');
     // The band: the top curve, down the right end, back along the bottom curve.
-    expect(g.band).toBe('M20 40 C82 10 178 70 240 40 L240 76 C178 106 82 46 20 76 Z');
-    expect(g.pins).toEqual(['M20 45 C82 15 178 75 240 45', 'M20 71 C82 41 178 101 240 71']);
+    expect(g.band).toBe('M20 38 C82 23 178 53 240 38 L240 78 C178 93 82 63 20 78 Z');
+    expect(g.pins).toEqual(['M20 43 C82 28 178 58 240 43', 'M20 73 C82 58 178 88 240 73']);
     for (const [i, w] of g.wheels.entries()) {
       const t = i === 0 ? 0.07 : 0.93;
       const [x, y] = bezierPoint(SASH_CURVE, t);
@@ -32,7 +35,7 @@ describe('the sash: one centre curve', () => {
   it('a different curve or band moves everything together', () => {
     const curve = shifted(SASH_CURVE, 10);
     const g = sashGeometry({ curve, band: 20, pin: 4, wheelAt: 0.1, wheelR: 6 });
-    expect(g.centre).toBe('M20 68 C82 38 178 98 240 68');
+    expect(g.centre).toBe('M20 68 C82 53 178 83 240 68');
     expect(g.band.startsWith('M20 58 ')).toBe(true);
     expect(g.pins[0].startsWith('M20 62 ')).toBe(true);
     expect(g.wheels[0]).toEqual(bezierPoint(curve, 0.1));
@@ -40,6 +43,19 @@ describe('the sash: one centre curve', () => {
     expect(spokes(10)).toHaveLength(8);
     expect(spokes(10)[0]).toEqual([10, 0]);
     expect(spokes(10)[2]).toEqual([0, 10]);
+  });
+
+  it('the words sit straight on the middle of the band, within the room between the wheels (#778)', () => {
+    const g = sashGeometry();
+    const span = sashTextSpan(g);
+    expect(span.x).toBe(130); expect(span.y).toBe(58);
+    expect(span.max).toBeCloseTo(g.wheels[1][0] - g.wheels[0][0] - 2 * g.wheelR - 16, 2);
+    expect(span.max).toBeGreaterThan(150);
+    // Drawn: a plain <text> at that point, never a textPath (a script's joins break on a curve).
+    const out = renderToStaticMarkup(createElement(Sash, { text: 'Ace Fredericksburg' }));
+    expect(out).not.toContain('textPath');
+    expect(out).toContain('x="130"');
+    expect(out).toContain('Ace Fredericksburg');
   });
 });
 

@@ -91,12 +91,41 @@
 .ace-statebar { display: flex; align-items: center; gap: 10px; width: calc(100% + var(--ace-gutter) * 2); margin: 0 calc(var(--ace-gutter) * -1); padding: 10px calc(var(--ace-gutter) + max(0px, (100% - var(--ace-max)) / 2)); background: var(--ace-accent); color: var(--ace-accent-ink); font-family: var(--ace-cond); font-size: 14px; letter-spacing: .06em; }
 .ace-statebar b { font-family: var(--ace-disp); font-weight: 400; letter-spacing: 0; }
 .ace-statebar svg { flex: none; }
+/* The title you hold wears its ribbon in the bar (#778, the pageant); a paper halo keeps a state's ribbon off a bar of the same colour. */
+.ace-statebar .ace-ribbon { font-size: 17px; line-height: 1.35; margin: -2px 2px; box-shadow: 0 0 0 2px var(--ace-paper); }
 
-/* The sash: it IS the title. Sized by width; the SVG scales. */
-.ace-sash { display: block; width: 270px; max-width: 100%; height: auto; filter: drop-shadow(0 3px 0 var(--ace-shadow)); }
+/* The sash: it IS the title. Sized by width; the SVG scales. The words are set straight (#778); the probe is the measuring twin. */
+.ace-sash { display: block; width: 270px; max-width: 100%; height: auto; overflow: hidden; filter: drop-shadow(0 3px 0 var(--ace-shadow)); }
 .ace-sash.wide { width: 100%; }
 .ace-sash.small { width: 180px; }
+.ace-sash .ace-sash-probe { visibility: hidden; }
 .ace-sash-wrap { display: flex; justify-content: center; }
+/* The drape (#778, the pageant): the title moment's sash lands askew, once, with a deeper shadow. */
+.ace-sash.drape { transform: rotate(-3deg); filter: drop-shadow(0 6px 0 var(--ace-shadow)); animation: ace-sash-on .9s cubic-bezier(.2, .9, .3, 1.15) both; }
+@keyframes ace-sash-on { 0% { opacity: 0; transform: translateY(-48px) rotate(-11deg) scale(.6); } 65% { opacity: 1; transform: translateY(6px) rotate(-1deg) scale(1.04); } 100% { opacity: 1; transform: rotate(-3deg) scale(1); } }
+
+/* Honours (#778, the pageant): a rosette over its ribbon, in a row */
+.ace-honours { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 22px; }
+.ace-honour { display: inline-flex; flex-direction: column; align-items: center; gap: 2px; }
+.ace-rosette { display: inline-block; flex: none; }
+.ace-rosette .ace-rosette-tails { fill: var(--ace-ros-tail); stroke: var(--ace-ink); stroke-width: 1; stroke-linejoin: round; }
+.ace-rosette .ace-rosette-pleats { fill: var(--ace-ros-pleat); stroke: var(--ace-ink); stroke-width: 1; stroke-linejoin: round; }
+.ace-rosette .ace-rosette-ring { fill: var(--ace-ros-ring); stroke: var(--ace-ink); stroke-width: 1; }
+.ace-rosette .ace-rosette-disc { fill: var(--ace-ros-disc); }
+.ace-rosette.locals { --ace-ros-pleat: var(--ace-white); --ace-ros-tail: var(--ace-paper-2); --ace-ros-ring: var(--ace-ink); --ace-ros-disc: var(--ace-white); --ace-ros-mark: var(--ace-ink); }
+.ace-rosette.state { --ace-ros-pleat: var(--ace-state-primary, var(--ace-red)); --ace-ros-tail: var(--ace-state-secondary, var(--ace-navy-2)); --ace-ros-ring: var(--ace-paper); --ace-ros-disc: var(--ace-state-primary, var(--ace-red)); --ace-ros-mark: var(--ace-state-ink, var(--ace-paper)); }
+.ace-rosette.nationals { --ace-ros-pleat: var(--ace-red); --ace-ros-tail: var(--ace-navy-2); --ace-ros-ring: var(--ace-gold); --ace-ros-disc: var(--ace-navy-2); --ace-ros-mark: var(--ace-paper); }
+
+/* Confetti (#778): falls once through the box it sits in (position: relative; overflow: hidden) */
+.ace-confetti { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.ace-confetti i { position: absolute; top: -24px; display: block; opacity: 0; animation: ace-confetti-fall linear both; }
+@keyframes ace-confetti-fall { 0% { opacity: 0; transform: translateY(0) rotate(var(--rot)); } 6% { opacity: 1; } 100% { opacity: 0; transform: translateY(620px) rotate(calc(var(--rot) + 540deg)); } }
+/* A stage: something to drop confetti on (the style page; a screen names its own) */
+.ace-stage { position: relative; overflow: hidden; display: flex; justify-content: center; padding: 28px 16px; border-top: 3px double var(--ace-gold); border-bottom: 3px double var(--ace-gold); }
+@media (prefers-reduced-motion: reduce) {
+  .ace-sash.drape { animation: none; }
+  .ace-confetti i { animation: none; opacity: .75; top: var(--y); }
+}
 
 /* The title ribbon under a driver: Playball, a swallow-tail, one look per step */
 .ace-ribbon { display: inline-block; font-family: var(--ace-script); font-size: 15px; line-height: 1.5; padding: 0 12px; border: 1.5px solid; clip-path: polygon(0 0, 100% 0, 94% 50%, 100% 100%, 0 100%, 6% 50%); white-space: nowrap; }

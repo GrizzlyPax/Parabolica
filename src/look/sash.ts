@@ -1,9 +1,12 @@
 // The sash (#705; the locked look, Pax Oct 10): "the sash is the title". One
 // CENTRE CURVE is the whole drawing: the satin band is the curve offset up and
-// down, the two pinstripes are offsets inside it, the words sit on the curve
-// (SVG textPath) and a gold wheel is centred on a point of the curve at each
-// end. Change the curve and everything follows; scale the box and nothing
-// drifts. Pure geometry; Look.tsx draws it.
+// down, the two pinstripes are offsets inside it, a gold wheel is centred on a
+// point of the curve at each end, and the words sit STRAIGHT across the
+// band's middle (#778, Pax Oct 17: on the old textPath the script's joins
+// broke on every bend, "the kerning is busted"; a connected script only holds
+// on a straight line, and a gentler wave keeps the band a sash). Change the
+// curve and everything follows; scale the box and nothing drifts. Pure
+// geometry; Look.tsx draws it.
 
 export type Pt = [number, number];
 /** A cubic Bézier: start, two controls, end. */
@@ -11,8 +14,8 @@ export interface Cubic { p0: Pt; p1: Pt; p2: Pt; p3: Pt }
 
 /** The box the sash is drawn in (viewBox units); every size scales it. */
 export const SASH_BOX = { w: 260, h: 116 } as const;
-/** The centre curve: a gentle S from left to right, as mocked. */
-export const SASH_CURVE: Cubic = { p0: [20, 58], p1: [82, 28], p2: [178, 88], p3: [240, 58] };
+/** The centre curve: a gentle S from left to right (half the mock's wave since #778, so the straight words stay inside the band). */
+export const SASH_CURVE: Cubic = { p0: [20, 58], p1: [82, 43], p2: [178, 73], p3: [240, 58] };
 
 export interface SashOptions {
   /** The band's height, top edge to bottom edge. */
@@ -74,7 +77,7 @@ export function bandPath(top: Cubic, bottom: Cubic): string {
 
 export function sashGeometry(opts: SashOptions = {}): SashGeometry {
   const curve = opts.curve ?? SASH_CURVE;
-  const band = opts.band ?? 36, pin = opts.pin ?? 5, wheelAt = opts.wheelAt ?? 0.07, wheelR = opts.wheelR ?? 10;
+  const band = opts.band ?? 40, pin = opts.pin ?? 5, wheelAt = opts.wheelAt ?? 0.07, wheelR = opts.wheelR ?? 10;
   const half = band / 2;
   const top = shifted(curve, -half), bottom = shifted(curve, half);
   const pinTop = shifted(curve, -half + pin), pinBottom = shifted(curve, half - pin);
@@ -88,6 +91,13 @@ export function sashGeometry(opts: SashOptions = {}): SashGeometry {
     wheelR,
     wheelAngles: [angle(wheelAt), angle(1 - wheelAt)],
   };
+}
+
+/** Where the words go: centred on the curve's middle, no wider than the room between the wheels (#778). */
+export function sashTextSpan(g: SashGeometry, curve: Cubic = SASH_CURVE): { x: number; y: number; max: number } {
+  const [x, y] = bezierPoint(curve, 0.5);
+  const [a, b] = g.wheels;
+  return { x: Math.round(x * 100) / 100, y: Math.round(y * 100) / 100, max: Math.round((b[0] - a[0] - 2 * g.wheelR - 16) * 100) / 100 };
 }
 
 /** The eight spokes of a wheel of radius r, as [x2, y2] pairs from the hub. */

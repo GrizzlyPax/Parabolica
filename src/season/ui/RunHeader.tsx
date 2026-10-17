@@ -8,7 +8,7 @@ import { ordinal } from '../../run/ladderView';
 import { runWhere, type RunWhere } from '../../run/where';
 import type { SeasonFacts } from '../season';
 import EndSeason from './EndSeason';
-import { Bunting, Chequer, Pennant, ProgramLine, StateBar } from '../../look/Look';
+import { Bunting, Chequer, Pennant, ProgramLine, StateBar, TitleRibbon } from '../../look/Look';
 import { programNumber } from '../../look/step';
 
 interface Props {
@@ -26,11 +26,10 @@ interface Props {
   won?: boolean;
 }
 
-/** The state bar's words: the title held leads; else the one you're going for. */
+/** The state bar's words: the title held leads, worn as its ribbon (#778, the pageant); else the one you're going for. */
 export function whereWords(w: RunWhere, won = false): ReactNode {
-  if (won) return <b>{w.goingFor}</b>;
-  const held = w.held[w.held.length - 1];
-  return held ? <><b>{held}</b> · going for {w.goingFor}</> : <><b>Going for {w.goingFor}</b></>;
+  if (won) return <TitleRibbon step={w.step} state={w.state}>{w.goingFor}</TitleRibbon>;
+  return w.latest ? <><TitleRibbon step={w.latest.step} state={w.state}>{w.latest.name}</TitleRibbon> · going for {w.goingFor}</> : <><b>Going for {w.goingFor}</b></>;
 }
 
 export function raceWords(w: RunWhere): string {

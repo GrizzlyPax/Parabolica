@@ -2,8 +2,8 @@
 // look. Every piece reads --ace-* tokens (tokens.css) so one <StepTheme>
 // re-colours it for Locals, a State or Nationals. Race Control → Style shows
 // each in every theme; Hub copies from there, never guesses.
-import { useId, type CSSProperties, type ReactNode } from 'react';
-import { sashGeometry, spokes, type SashOptions } from './sash';
+import { useId, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { sashGeometry, sashTextSpan, spokes, type SashOptions } from './sash';
 import { ribbonStep, stepThemeVars, type RibbonStep, type StateLook, type Step } from './step';
 import './tokens.css';
 import './look.css';
@@ -54,7 +54,7 @@ function WheelMarks({ r, stroke, fill = 'var(--ace-sash)', colour = 'var(--ace-w
 interface SashProps extends SashOptions {
   /** The title, in Playball: "Ace Ohio". */
   text: string;
-  /** Font size in box units (the box is 260 wide). */
+  /** The biggest font size, in box units (the box is 260 wide); a long title shrinks to fit between the wheels. */
   fontSize?: number;
   className?: string;
   /** Said to screen readers; the text when absent. */
@@ -65,6 +65,22 @@ export function Sash({ text, fontSize = 25, className, title, ...geometry }: Sas
   const id = useId().replace(/:/g, '');
   const g = sashGeometry(geometry);
   const [a, b] = g.wheels;
+  const span = sashTextSpan(g, geometry.curve);
+  // The words are set straight across the band (#778: a script's joins only hold
+  // on a straight line) and measured once the font is in: a long title shrinks
+  // to the room between the wheels, never grows. The hidden twin is measured at
+  // the full size so the fit never compounds.
+  const probe = useRef<SVGTextElement>(null);
+  const [fit, setFit] = useState(1);
+  useLayoutEffect(() => {
+    const el = probe.current;
+    if (!el || typeof el.getComputedTextLength !== 'function') return;
+    let live = true;
+    const measure = () => { if (!live) return; const w = el.getComputedTextLength(); setFit(w > span.max ? Math.round((span.max / w) * 1000) / 1000 : 1); };
+    measure();
+    if (typeof document !== 'undefined' && document.fonts?.ready) document.fonts.ready.then(measure).catch(() => {});
+    return () => { live = false; };
+  }, [text, fontSize, span.max]);
   return (
     <svg className={`ace-sash ${className ?? ''}`.trim()} viewBox={`0 0 ${g.box.w} ${g.box.h}`} role="img" aria-label={title ?? text}>
       <defs>
@@ -78,9 +94,8 @@ export function Sash({ text, fontSize = 25, className, title, ...geometry }: Sas
       <path d={g.band} fill={`url(#${id}-satin)`} stroke="var(--ace-sash-edge)" strokeWidth={3} strokeLinejoin="round" />
       <path d={g.pins[0]} fill="none" stroke="var(--ace-sash-edge)" strokeWidth={1} opacity={0.5} />
       <path d={g.pins[1]} fill="none" stroke="var(--ace-sash-edge)" strokeWidth={1} opacity={0.5} />
-      <text fontFamily="var(--ace-script)" fontSize={fontSize} fill="var(--ace-sash-ink)" textAnchor="middle" dominantBaseline="central">
-        <textPath href={`#${id}-centre`} startOffset="50%">{text}</textPath>
-      </text>
+      <text ref={probe} className="ace-sash-probe" fontFamily="var(--ace-script)" fontSize={fontSize} x={-999} y={-999} aria-hidden="true">{text}</text>
+      <text x={span.x} y={span.y} fontFamily="var(--ace-script)" fontSize={Math.round(fontSize * fit * 100) / 100} fill="var(--ace-sash-ink)" textAnchor="middle" dominantBaseline="central">{text}</text>
       <g transform={`translate(${a[0]} ${a[1]})`}><WheelMarks r={g.wheelR} stroke={2.4} /></g>
       <g transform={`translate(${b[0]} ${b[1]})`}><WheelMarks r={g.wheelR} stroke={2.4} /></g>
     </svg>
@@ -146,13 +161,49 @@ export function TitleRibbon({ step, children, state }: { step: Step | RibbonStep
   return <span className={`ace-ribbon ${look}`} style={look === 'state' && state ? stepThemeVars('state', state) : undefined}>{children}</span>;
 }
 
-/** A city pennant with its name, in the accent. */
+/** A rosette (#778, the pageant): a pleated disc with two tails, one per title, in its step's look. */
+export function Rosette({ step, state, size = 48, label }: { step: Step | RibbonStep; state?: StateLook; size?: number; label?: string }) {
+  const look = ribbonStep(step as Step);
+  const pleats = Array.from({ length: 24 }, (_, i) => {
+    const r = i % 2 === 0 ? 21 : 16;
+    const a = (i * Math.PI) / 12;
+    return `${(Math.cos(a) * r).toFixed(2)},${(Math.sin(a) * r).toFixed(2)}`;
+  }).join(' ');
+  return (
+    <svg className={`ace-rosette ${look}`} width={size} height={size * 1.5} viewBox="-24 -24 48 72" role={label ? 'img' : undefined} aria-label={label} aria-hidden={label ? undefined : true} style={look === 'state' && state ? stepThemeVars('state', state) : undefined}>
+      <g className="ace-rosette-tails"><path d="M-10 12 L-14 46 L-6 40 L0 46 L-2 12 Z" /><path d="M2 12 L0 46 L6 40 L14 46 L10 12 Z" /></g>
+      <polygon className="ace-rosette-pleats" points={pleats} />
+      <circle className="ace-rosette-ring" r={11.5} />
+      <circle className="ace-rosette-disc" r={8} />
+      <Star cx={0} cy={0.5} r={4.6} fill="var(--ace-ros-mark)" />
+    </svg>
+  );
+}
+
+/** Drawn confetti (#778, the pageant): little paper rects in the bunting's colours and gold, falling once through the box they sit in. Index-based, no RNG; still under reduced motion. */
+export function Confetti({ count = 48 }: { count?: number }) {
+  const fills = ['var(--ace-bunt-1)', 'var(--ace-bunt-2)', 'var(--ace-bunt-3)', 'var(--ace-gold)'];
+  return (
+    <div className="ace-confetti" aria-hidden="true">
+      {Array.from({ length: count }, (_, i) => {
+        const x = (i * 37 + 11) % 100, y = (i * 43 + 7) % 100, delay = ((i * 53) % 100) / 60, dur = 2.8 + ((i * 29) % 100) / 50;
+        const w = 6 + (i % 3) * 2, h = 10 + (i % 4) * 3, rot = (i * 61) % 360;
+        return <i key={i} style={{ left: `${x}%`, width: w, height: h, background: fills[i % 4], animationDelay: `${delay.toFixed(2)}s`, animationDuration: `${dur.toFixed(2)}s`, '--rot': `${rot}deg`, '--y': `${y}%` } as CSSProperties} />;
+      })}
+    </div>
+  );
+}
+
+/** A city pennant with its name, in the accent. A long name shrinks so it ends before the taper (#778). */
 export function Pennant({ name, width = 72 }: { name: string; width?: number }) {
+  const n = Math.max(1, name.length);
+  // Alfa Slab One's caps run about 0.9em wide; the name must end by x ≈ 117, where the taper meets the cap height.
+  const fontSize = Math.max(8, Math.min(15, Math.floor((95 - (n - 1)) / (0.9 * n))));
   return (
     <svg className="ace-pennant" width={width} height={Math.round(width * 0.36)} viewBox="0 0 150 54" aria-hidden="true">
       <path d="M0 0 L150 27 L0 54 Z" fill="var(--ace-accent)" stroke="var(--ace-ink)" strokeWidth={1.5} />
       <rect x={0} y={0} width={14} height={54} fill="var(--ace-paper)" stroke="var(--ace-ink)" strokeWidth={1.5} />
-      <text x={22} y={32} fontSize={15} fill="var(--ace-accent-ink)" fontFamily="var(--ace-disp)" letterSpacing={1}>{name.toUpperCase()}</text>
+      <text x={22} y={27} dominantBaseline="central" fontSize={fontSize} fill="var(--ace-accent-ink)" fontFamily="var(--ace-disp)" letterSpacing={1}>{name.toUpperCase()}</text>
     </svg>
   );
 }

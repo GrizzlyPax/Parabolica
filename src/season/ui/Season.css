@@ -330,23 +330,37 @@ button.rt-g:focus-visible { outline: 2px solid var(--ace-fg); outline-offset: -2
   .pk .pk-tables .lt-panel .rt-scroll { max-height: 520px; }
 }
 
-/* The finale as the title screen (#778): the sash, the line, the Postmark picks, the crowns, the tables. */
-.fn .fn-hero { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; padding: 8px 0 4px; }
-.fn .fn-hero .ace-k { font-size: 14px; letter-spacing: .2em; }
+/* The finale as the title screen (#778; the pageant, Pax Oct 17): the stage (confetti, the pennant, the sash draped on, your car, the honours), the Postmark struck, the deck that won it, the crowns, the tables. */
+.fn .fn-stage { position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; padding: 22px 16px 18px; border-top: 3px double var(--ace-gold); border-bottom: 3px double var(--ace-gold); background: radial-gradient(ellipse at 50% 0%, var(--ace-raised), transparent 72%); }
+.fn .fn-cong { font-family: var(--ace-body); font-style: italic; font-size: 20px; line-height: 1.2; }
+.fn .fn-stage .ace-sash-wrap { width: 100%; }
+.fn .fn-stage-car { margin-top: -4px; }
+.fn .fn-stage .ace-honours { margin-top: 2px; }
 .fn .fn-line { margin: 0; font-family: var(--ace-disp); font-size: 18px; line-height: 1.3; max-width: 720px; }
-.fn .fn-stamps { width: min(760px, 100%); text-align: left; }
-.fn .fn-stamp-row { display: grid; gap: 6px; }
+.fn .fn-stamps { width: min(960px, 100%); margin-inline: auto; text-align: left; }
+.fn .fn-stamps-line { margin: 0; font-size: 15px; }
+.fn .fn-stamp-row { display: grid; gap: 6px 16px; align-items: center; padding-top: 6px; border-top: 1px solid var(--ace-rule); }
 .fn .fn-stamp-who { display: inline-flex; align-items: center; gap: 8px; font-family: var(--ace-disp); font-size: 16px; }
 .fn .fn-stamp-stats { display: flex; flex-wrap: wrap; gap: 4px; }
 .fn .fn-stamp-stats .ace-tab { border: 1px solid var(--ace-rule); padding: 6px 10px; font-size: 12px; }
 .fn .fn-stamp-stats .ace-tab.on { border-color: var(--ace-gold); background: var(--ace-gold); }
+.fn .fn-stamp-struck { justify-content: flex-start; min-height: 54px; }
+.fn .fn-deck { width: min(960px, 100%); margin-inline: auto; }
+.fn .fn-deck-row { display: flex; flex-wrap: wrap; gap: 12px 14px; }
+.fn .fn-deck-card { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; max-width: 108px; text-align: center; }
 .fn .fn-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
 .fn .fn-grid .fn-tables { grid-template-columns: minmax(0, 1fr); }
 @media (min-width: 1024px) {
+  .fn .fn-cong { font-size: 26px; }
   .fn .fn-line { font-size: 22px; }
+  .fn .fn-stamp-row { grid-template-columns: 220px minmax(0, 1fr) auto; }
   .fn .fn-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 28px; }
   .fn.ace-page > .pk-chart, .fn > .pk-chart { max-width: none; }
 }
+/* The road (#778, the pageant): a won rung wears its sash. */
+.rl .rl-sash { justify-content: flex-start; padding: 2px 0; }
+/* The cover (#778): the titles held, under the chequer. */
+.mm .mm-titles { justify-content: center; }
 @media (max-width: 719px) {
   .pk .ace-dock .ace-btn { padding: 0 10px; font-size: 14px; letter-spacing: .08em; }
   .pk .ace-dock .ace-btn.ghost { flex: 0 0 auto; }
