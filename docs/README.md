@@ -2,7 +2,7 @@
 
 Parabolica is an F1-style race sim: draft a team, race a Season, chase two championships. Play it at **[playaceamerica.com](https://playaceamerica.com)** (the game was Parabolica until v0.8; playparabolica.com redirects). Moving the domain: [DOMAIN.md](DOMAIN.md).
 
-**New here? Read in this order:** [the latest handoff](HANDOFF_2026-10-16.md) → [`CLAUDE.md`](../CLAUDE.md) → the doc for the area you're touching.
+**New here? Read in this order:** [the latest handoff](HANDOFF_2026-10-17.md) → [`CLAUDE.md`](../CLAUDE.md) → the doc for the area you're touching.
 
 ## Start here
 | Doc | What it's for |
@@ -11,6 +11,7 @@ Parabolica is an F1-style race sim: draft a team, race a Season, chase two champ
 | [V07_PLAN](V07_PLAN.md) | **The v0.7 Suzuka plan (✅ shipped Oct 10, v0.7.4, trimmed):** the roguelite run; milestones, lanes |
 | [V06_PLAN](V06_PLAN.md) | **The v0.6 Monza plan (✅ shipped Oct 10, v0.6.1):** owner choices; decision log; v0.7 direction |
 | [V05_PLAN](V05_PLAN.md) | **The v0.5 Spa plan (✅ shipped Oct 9, v0.5.1):** milestones, lanes, order, risks, decision log |
+| [HANDOFF_2026-10-17](HANDOFF_2026-10-17.md) | **Oct 17: the UI pass (#778):** the run loop in fewer taps, one design system on `src/look`, the race view, tracks named by step and the Interval; what moved on every screen, how the new pieces fit, the traps, what's left |
 | [HANDOFF_2026-10-16](HANDOFF_2026-10-16.md) | **Oct 16: v0.8 playable end to end:** what v0.8 is and where Pax sees it, how the run, stamps, Nationals, the look, badges and the voice fit, the traps, what's left with the paste lines |
 | [HANDOFF_2026-10-08](HANDOFF_2026-10-08.md) | Oct 8: GitHub-only planning, the crew, the Almanac look, icons, metals, numbers, what's next |
 | [HANDOFF_2026-10-07](HANDOFF_2026-10-07.md) | What shipped Oct 5–7, how the pieces fit, traps, open work |
