@@ -24,8 +24,8 @@ import { WearPill } from '../../cards/WearPill';
 import { STAT_LABELS } from '../../cards/deck';
 import { STAT_ICONS } from '../../icons/registry';
 import type { Card, StatKey } from '../../cards/types';
-import { getTrackById } from '../../generators/tracks';
 import { getDeckTrackById } from '../../data/deckTracks';
+import { venueFor } from '../venues';
 import { weatherForRace } from '../../data/weather';
 import { draftState } from '../draft';
 import { openParcel, pendingParcel, teamStamps, holderFits, isInk, STAMP_SLOTS, SMUDGE_LIFE, GEAR_LIFE, TITLE_STAMP_PREFIX, type StampHolder } from '../stamps';
@@ -94,7 +94,8 @@ export default function Paddock({ facts, onChange, onMenu, onRoad, onEndRun, onG
   const lookState = stateLook(facts.setup.league?.locale?.stateId ?? 'oh');
   const round = Math.min(state.round, total - 1);
   const trackId = facts.setup.calendar[round];
-  const track = getTrackById(trackId);
+  // The venue (#750): the kind named for the step.
+  const venue = venueFor(facts, round);
   const trackFav = getDeckTrackById(trackId)?.favours ?? [];
   const weather = weatherForRace(facts.setup.seed, round, facts.setup.ruleset?.weather.weights);
   const priority = new Set([...trackFav, ...weather.favours].map(f => f.stat));
@@ -272,7 +273,7 @@ export default function Paddock({ facts, onChange, onMenu, onRoad, onEndRun, onG
             />
           )}
           <div className="pk-priority-row">
-            <PriorityLine label={`Race ${raceNo} · priority stats`} track={{ name: track?.name ?? 'the', favours: trackFav }} weather={weather} />
+            <PriorityLine label={`Race ${raceNo} · ${venue.name} · ${venue.kind}`} track={{ name: venue.name, favours: trackFav }} weather={weather} />
             <WearPill tyreWear={getDeckTrackById(trackId)?.tyreWear} />
           </div>
           {liveEffects.length > 0 && <p className="ace-note pk-hint">{liveEffects.map(e => `${e.name}: ${describeLeft(e)}`).join(' · ')}</p>}

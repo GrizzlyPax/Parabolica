@@ -131,8 +131,8 @@ export function renderGlossaryMd(g: Glossary, version: string): string {
     L.push('');
   }
   const favs = (f: { stat: keyof typeof STAT_LABELS; pct: number }[]) => f.length ? f.map(x => `+${x.pct} ${STAT_LABELS[x.stat]}`).join(' · ') : '—';
-  L.push('## Tracks', '', '*Source: `src/data/deckTracks.ts` (docs/TRACKS_WEATHER.md). Six stat-combo tracks; each favours one driver stat and one car/team stat for the race, field-wide (+10 grade points, through the card math at race build). Each has a tyre-wear dial (#536): wear per tick × `tyreWear`. Every race and season calendar draws from these; the 31 themed circuits, track events and track characters retired with Tracks & Weather v2.*', '', '| Track | Favours | Tyre wear | Layout |', '|---|---|---|---|');
-  for (const t of g.deckTracks) L.push(`| **${t.name}** \`${t.id}\` | ${favs(t.favours)} | ×${t.tyreWear} | ${t.layoutId} |`);
+  L.push('## Tracks', '', '*Source: `src/data/deckTracks.ts` (docs/TRACKS_WEATHER.md). Six stat-combo tracks; each favours one driver stat and one car/team stat for the race, field-wide (+10 grade points, through the card math at race build). Each has a tyre-wear dial (#536): wear per tick × `tyreWear`. Every race and season calendar draws from these; the 31 themed circuits, track events and track characters retired with Tracks & Weather v2.*', '', '| Track (the Nationals landmark) | Kind | Favours | Tyre wear | Layout |', '|---|---|---|---|---|');
+  for (const t of g.deckTracks) L.push(`| **${t.name}** \`${t.id}\` | ${t.kind} | ${favs(t.favours)} | ×${t.tyreWear} | ${t.layoutId} |`);
   L.push('', '## Weather', '', '*Source: `src/data/deckWeather.ts`. Neutral + five dry weathers, favours (grade points) × intensity, stacking with the track. No rain until Wet arrives in v0.6; the old weathers and the inflictions retired (the inflictions are parked as Horror-deck material).*', '', '| Weather | Odds | Favours |', '|---|---|---|');
   for (const w of g.deckWeather) L.push(`| **${w.name}** \`${w.id}\` | ${w.odds}% | ${favs(w.favours)} |`);
   L.push('');

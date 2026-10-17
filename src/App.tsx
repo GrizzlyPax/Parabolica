@@ -29,6 +29,7 @@ import { feedVoiceFor } from './season/feedVoice';
 import type { FeedVoice } from './feed/commentary';
 import { stateLook, type Step } from './look/step';
 import { generateTrack, getTrackById, Track } from './generators/tracks';
+import { trackForRound, venueFor } from './season/venues';
 import { useRoute, type Route } from './router';
 import './App.css';
 
@@ -176,7 +177,7 @@ function App() {
   // the same race to its finish. The round is recorded by settleRound (the
   // headless run of the same seeded race), so watching changes nothing.
   const onSeasonRace = route.name === 'season' && route.screen === 'race';
-  const [seasonRace, setSeasonRace] = useState<{ round: number; sealed: Set<number>; mine: number[]; nemesis: number[]; you: TeamLike; avatars: ReturnType<typeof seasonAvatars>; quali: boolean; step: Step; stateId?: string; program: string; title?: TitleTag; goingFor: string; voice: FeedVoice; facts: SeasonFacts } | null>(null);
+  const [seasonRace, setSeasonRace] = useState<{ round: number; sealed: Set<number>; mine: number[]; nemesis: number[]; you: TeamLike; avatars: ReturnType<typeof seasonAvatars>; quali: boolean; step: Step; stateId?: string; program: string; title?: TitleTag; goingFor: string; trackKind: string; lastRace: boolean; voice: FeedVoice; facts: SeasonFacts } | null>(null);
   const settlingSeason = useRef(false);
   useEffect(() => {
     if (!onSeasonRace) {
@@ -193,7 +194,8 @@ function App() {
       navigate({ name: 'season', screen: facts ? seasonScreenFor(facts) : 'setup' }, { replace: true });
       return;
     }
-    const track = getTrackById(facts.setup.calendar[state.round]);
+    // The venue's name rides on the Track (#750): the masthead, the feed and the record all say it.
+    const track = trackForRound(facts, state.round);
     if (!track) return;
     const leagueNow = leagueForRound(facts, state.round);
     engine.stop();
@@ -220,6 +222,8 @@ function App() {
       program: (() => { const w = runWhere(facts); const st = stageOf(facts, state.round); return `${whereLine(w)} · race ${state.round + 1} of ${w.total}${st?.name && !/^Race \d/.test(st.name) ? ` · ${st.name}` : ''}`; })(),
       title: (() => { const w = runWhere(facts); return w.latest ? { ...w.latest, ...(w.latest.step === 'state' ? { stateId: facts.setup.league?.locale?.stateId } : {}) } : undefined; })(),
       goingFor: runWhere(facts).goingFor,
+      trackKind: venueFor(facts, state.round).kind,
+      lastRace: state.round === facts.setup.calendar.length - 1,
       voice: feedVoiceFor(facts),
       facts,
     });
@@ -372,6 +376,8 @@ function App() {
           program={seasonRace.program}
           myTitle={seasonRace.title}
           titleName={seasonRace.goingFor}
+          trackKind={seasonRace.trackKind}
+          lastRaceOfStep={seasonRace.lastRace}
           onSkip={() => engine.fastForward(Infinity)}
           feedVoice={seasonRace.voice}
           lightsOut

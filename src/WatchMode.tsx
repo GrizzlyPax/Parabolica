@@ -33,6 +33,7 @@ import './WatchMode.css';
 import './look/race.css';
 import { StepTheme } from './look/Look';
 import { driverSurname } from './components/race/driverCode';
+import { intervalNext, intervalStart, type IntervalMoment, type IntervalState } from './feed/interval';
 import type { TitleTag } from './components/race/types';
 import type { StateLook, Step } from './look/step';
 import { GameIcon } from './icons/GameIcon';
@@ -95,6 +96,10 @@ interface WatchModeProps {
   lightsOut?: boolean;
   /** The step's title ("Ace Zanesville"): the finish sheet's sash says it when `titleWon` says yes (#778). */
   titleName?: string;
+  /** The track's kind (#750), under its name in the masthead. */
+  trackKind?: string;
+  /** The step's last race (#751): the Interval's odds rise, and the flag is a moment it can follow. */
+  lastRaceOfStep?: boolean;
   /** Does this result win the step's title (#762)? Asked once at the flag; a yes gets the caller's title line. */
   titleWon?: (digest: { finishOrder: number[]; dnfDriverIds: number[]; fastestLapDriverId: number | null }) => boolean;
 }
@@ -159,6 +164,8 @@ function WatchMode({
   feedVoice,
   lightsOut,
   titleName,
+  trackKind,
+  lastRaceOfStep = false,
   titleWon,
   myTitle,
   onSkip,
@@ -369,6 +376,7 @@ function WatchMode({
     const caller = callerFor(step);
     const meta = callerMeta(caller, state?.name);
     pushFeedItem({ lap: 1, persona: caller, personaName: meta.name, personaEmoji: meta.emoji, text: lightsOutLine(feedCtx(), raceState.totalTicks + drivers.length), emphasis: 'big' });
+    if (config.lapCuts?.length) interval('lightsOutNationals');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [raceState.totalTicks]);
 
@@ -424,7 +432,7 @@ function WatchMode({
       if (e.type === 'effect_applied') {
         seenEffectsRef.current.add(`${e.tick}-${e.driverId}-${e.description}`);
       }
-      if ((e.type === 'cut' || e.type === 'eliminated' || e.type === 'weather') && e.tick > lastCutTickRef.current) lastCutTickRef.current = e.tick;
+      if ((e.type === 'cut' || e.type === 'eliminated' || e.type === 'weather' || e.type === 'crash') && e.tick > lastCutTickRef.current) lastCutTickRef.current = e.tick;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [drivers, raceState.totalTicks]);
@@ -433,6 +441,15 @@ function WatchMode({
   const lastCutTickRef = useRef<number>(-1);
   // The title, clinched at the flag (#778): the finish sheet's sash wears it.
   const [wonTitle, setWonTitle] = useState<string | null>(null);
+  // The Interval (#751): rolled once at lights out on the race's own stream; fires at most once, after a big moment in the second half.
+  const intervalRef = useRef<IntervalState | null>(null);
+  const interval = (moment: IntervalMoment, vars: { driver?: string } = {}) => {
+    const seed = engine.getSeed() ?? 0;
+    if (!intervalRef.current) intervalRef.current = intervalStart(seed, { step, last: lastRaceOfStep, hundred: !!config.lapCuts?.length });
+    const next = intervalNext(intervalRef.current, seed, moment, { lap: leaderLapForFeed(), totalLaps, state: state?.name, track: trackInfo?.name, ...vars });
+    intervalRef.current = next.state;
+    if (next.item) pushFeedItem(next.item);
+  };
   // The cut banner across the map (#778): the last cut, for a few seconds; red when it took one of yours.
   const [cutBanner, setCutBanner] = useState<{ head: string; body: string; out: boolean } | null>(null);
   const cutTimerRef = useRef<number | null>(null);
@@ -444,9 +461,13 @@ function WatchMode({
   useEffect(() => () => { if (cutTimerRef.current) window.clearTimeout(cutTimerRef.current); }, []);
   useEffect(() => {
     if (!raceEvents || raceEvents.length === 0) return;
-    const fresh = raceEvents.filter(e => (e.type === 'cut' || e.type === 'eliminated' || e.type === 'weather') && e.tick > lastCutTickRef.current);
+    const fresh = raceEvents.filter(e => (e.type === 'cut' || e.type === 'eliminated' || e.type === 'weather' || e.type === 'crash') && e.tick > lastCutTickRef.current);
     if (!fresh.length) return;
     lastCutTickRef.current = Math.max(...fresh.map(e => e.tick));
+    // A pileup everyone walks from (#751): two or more cars in one crash, none retired.
+    const byTick = new Map<number, Set<number>>();
+    for (const e of fresh) { const id = e.driverId; if (e.type === 'crash' && typeof id === 'number') { if (!byTick.has(e.tick)) byTick.set(e.tick, new Set()); byTick.get(e.tick)!.add(id); } }
+    for (const ids of byTick.values()) if (ids.size >= 2 && [...ids].every(id => { const d = drivers.find(x => x.id === id); return !!d && !isOutOfRace(d); })) interval('pileup');
     for (const e of fresh) {
       if (e.type === 'cut') {
         const [head, body] = e.description.split(':').map(s => s.trim());
@@ -458,6 +479,7 @@ function WatchMode({
         showCut({ head: `${d?.name ?? e.driverName} is out`, body: e.description, out: true });
       } else if (e.type === 'weather') {
         addNotification('weather', 'RAIN', e.description, e.emoji, undefined, 12000);
+        interval('rain');
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -569,6 +591,7 @@ function WatchMode({
           12000,
           driver.color
         );
+        interval('quickStop', { driver: driver.name });
       });
     }
   }, [drivers, raceState.totalTicks]);
@@ -916,6 +939,7 @@ function WatchMode({
           12000,
           leader.color
         );
+        if (leaderLap >= totalLaps - 1) interval('lastLapLead', { driver: leader.name });
       }
     }
 
@@ -983,6 +1007,7 @@ function WatchMode({
             12000,
             fastest.driver.color
           );
+          interval('fastestLap', { driver: fastest.driver.name });
         }
         fastestLapRef.current = { driverId: fastest.driverId, time: fastest.time };
       }
@@ -1008,8 +1033,9 @@ function WatchMode({
           let best: { id: number; t: number } | null = null;
           for (const d of drivers) for (const t of d.lapTimes) if (!best || t < best.t) best = { id: d.id, t };
           const digest = { finishOrder: raceState.finishOrder, dnfDriverIds: drivers.filter(d => d.status === 'dnf').map(d => d.id), fastestLapDriverId: best?.id ?? null };
-          if (titleWon(digest)) { pushFeedItem(voiceTitle(feedCtx(), raceState.totalTicks)); setWonTitle(titleName ?? null); }
+          if (titleWon(digest)) { pushFeedItem(voiceTitle(feedCtx(), raceState.totalTicks)); setWonTitle(titleName ?? null); interval('title'); }
         }
+        if (lastRaceOfStep) interval('lastRace');
       }
     }
 
@@ -1293,6 +1319,7 @@ function WatchMode({
         totalLaps={totalLaps}
         sessionState={getSessionState()}
         trackName={trackInfo?.name || 'Grand Prix'}
+        trackKind={trackKind}
         conditions={headerConditions}
         priority={headerPriority}
         tyreWear={trackInfo?.id ? getDeckTrackById(trackInfo.id)?.tyreWear : undefined}

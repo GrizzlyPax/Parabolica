@@ -12,7 +12,7 @@ import type { RaceNotification } from '../WatchMode';
 import type { Step } from '../look/step';
 
 export type Caller = 'pa' | 'radio' | 'network';
-export type FeedPersona = Caller | 'marbles';
+export type FeedPersona = Caller | 'marbles' | 'interval';
 
 export interface FeedItem {
   id: number;
@@ -25,6 +25,8 @@ export interface FeedItem {
   emphasis: 'normal' | 'big';
   color?: string;
   drivers?: Array<{ id: number; name: string; emoji: string }>;
+  /** The Interval's frame (#751): a line before and after, in small type. */
+  frame?: { before: string; after: string };
 }
 
 /** What the callers know about the people in the race (built from the run's facts). */

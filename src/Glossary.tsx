@@ -344,14 +344,14 @@ export default function Glossary({ onBack, tab: tabSlug, onTabChange }: Glossary
         );
       })}
       {tab === 'tracks' && (
-        <Section {...sec('tracks:deck')} title="Tracks" count={BASE_DECK_TRACKS.length} hint={`Six tracks, one stat combo each: the favoured stats gain +10 grade for the race, and each has its own tyre-wear dial. ${NOT_YET_TRACK}`}>
+        <Section {...sec('tracks:deck')} title="Tracks" count={BASE_DECK_TRACKS.length} hint={`Six kinds, one stat combo each: the favoured stats gain +10 grade for the race, and each has its own tyre-wear dial. Named by step: at Locals the kind takes your town's name (Toledo Boards), at State a town in your state (Akron Board Speedway), at Nationals these landmarks; Quick Race and the lab race the landmarks. ${NOT_YET_TRACK}`}>
           <div className="gl-list">
-            {BASE_DECK_TRACKS.filter(t => match(t.name, t.id, t.layoutId)).map(t => (
+            {BASE_DECK_TRACKS.filter(t => match(t.name, t.kind, t.id, t.layoutId)).map(t => (
               <Row key={t.id} id={`dtrack:${t.id}`} open={isOpen(`dtrack:${t.id}`)} onToggle={toggle}
                 lead={<span className="gl-plain gl-card"><FavourIcons favours={t.favours} /> {t.name}</span>}
-                note={`${t.layoutId} · wear ×${t.tyreWear}`}
+                note={`${t.kind} · ${t.layoutId} · wear ×${t.tyreWear}`}
                 pills={<span className="gl-readout">{favourText(t.favours)}</span>}>
-                <div className="gl-facts"><Fact k="Favours">{favourText(t.favours)}</Fact><Fact k="Tyre wear">×{t.tyreWear}</Fact><Fact k="Layout">{t.layoutId}</Fact><Fact k="Id">{t.id}</Fact></div>
+                <div className="gl-facts"><Fact k="Kind">{t.kind}</Fact><Fact k="Favours">{favourText(t.favours)}</Fact><Fact k="Tyre wear">×{t.tyreWear}</Fact><Fact k="Layout">{t.layoutId}</Fact><Fact k="Id">{t.id}</Fact></div>
                 <div className="gl-src">src/data/deckTracks.ts</div>
               </Row>
             ))}
