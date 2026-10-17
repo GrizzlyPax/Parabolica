@@ -191,8 +191,13 @@ export function rivalTowns(run: RunFacts): string[] {
 
 /** The title a step is for: Ace <town> · Ace <state> · Ace America. */
 export function titleFor(run: RunFacts, step: Step): string {
-  if (step === 'locals') return `Ace ${townOf(run)}`;
-  if (step === 'state') return `Ace ${stateOf(run).name}`;
+  return titleName(step, townOf(run), stateOf(run).name);
+}
+
+/** The same, from the place names alone (a league's locale carries them, so a screen needs no run). */
+export function titleName(step: Step, town: string, stateName: string): string {
+  if (step === 'locals') return `Ace ${town}`;
+  if (step === 'state') return `Ace ${stateName}`;
   if (step === 'nationals') return 'Ace America';
   return step === 'globals' ? 'Ace Earth' : 'Ace Universe';
 }

@@ -29,16 +29,16 @@ describe('team creator', () => {
     for (const { author, id } of ids) expect(resolveIcon(id)?.author, id).toBe(author);
   });
 
-  it('a built team dresses your slot: name trimmed and capped, colour with its ink, logo', () => {
+  it('a built team dresses your slot: name trimmed and capped, colour with its ink, no logo (#778)', () => {
     const pool = generateSeasonPool(7, 10);
     const [h] = humansFor(pool, [null]);
-    const you = wearBuiltTeam(h, { name: '  Pax   Racing  ', colour: '#006EBE', logo: 'fox-head' });
-    expect(you).toMatchObject({ teamId: h.teamId, name: 'Pax Racing', color: '#006EBE', ink: '#FFFFFF', iconId: 'fox-head' });
-    expect(wearBuiltTeam(h, { name: '   ', colour: '#F4EEDE', logo: 'owl' })).toMatchObject({ name: 'Your team', ink: '#0A0A0C' });
-    expect(wearBuiltTeam(h, { name: 'x'.repeat(40), colour: '#006EBE', logo: 'owl' }).name).toHaveLength(TEAM_NAME_MAX);
+    const you = wearBuiltTeam(h, { name: '  Pax   Racing  ', colour: '#006EBE' });
+    expect(you).toMatchObject({ teamId: h.teamId, name: 'Pax Racing', color: '#006EBE', ink: '#FFFFFF', iconId: undefined });
+    expect(wearBuiltTeam(h, { name: '   ', colour: '#F4EEDE' })).toMatchObject({ name: 'Your team', ink: '#0A0A0C' });
+    expect(wearBuiltTeam(h, { name: 'x'.repeat(40), colour: '#006EBE' }).name).toHaveLength(TEAM_NAME_MAX);
     // The season shows it.
     const facts = newSeason({ seed: 7, teamCount: 10, humans: [you], calendar: ['speed-power'] });
-    expect(teamsOf(facts)[h.teamId]).toMatchObject({ name: 'Pax Racing', color: '#006EBE', iconId: 'fox-head' });
+    expect(teamsOf(facts)[h.teamId]).toMatchObject({ name: 'Pax Racing', color: '#006EBE' });
   });
 });
 
@@ -54,7 +54,7 @@ describe('one ink rule (#639)', () => {
       expect(inkFor(c.hex.toLowerCase()), c.name).toBe(c.ink);
       const team = BASE_DECK_TEAMS.find(t => t.color.toUpperCase() === c.hex);
       expect(team?.ink, `${c.name} deck team`).toBe(c.ink);
-      expect(wearBuiltTeam(h, { name: 'X', colour: c.hex, logo: 'owl' }).ink, `${c.name} in the creator`).toBe(c.ink);
+      expect(wearBuiltTeam(h, { name: 'X', colour: c.hex }).ink, `${c.name} in the creator`).toBe(c.ink);
     }
     // Raspberry is white, as Kanzaki ships (the luminance cut alone said near-black).
     expect(inkFor('#E63281')).toBe('#FFFFFF');

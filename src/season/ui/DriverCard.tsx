@@ -1,8 +1,9 @@
 // The driver card (#476, Hub's build of option A, a sheet:
 // https://claude.ai/artifact/F2e7SxoRdU9mSxJGxSLPLn). Opens from a tap on a
 // driver in the Paddock, the ladder and the race's driver panel: face and
-// number, archetype, rank with XP to the next, stat levels, cards and traits,
-// then the backstory and quirk. Rivals: who they are; levels stay sealed.
+// number, the titles won as ribbons (first: identity is your title, #778),
+// the garage small, stat levels, cards and traits, then the backstory and
+// quirk. Rivals: who they are; levels stay sealed.
 import { TitleRibbon } from '../../look/Look';
 import { stateLook } from '../../look/step';
 import { useEffect } from 'react';
@@ -35,7 +36,6 @@ export default function DriverCard({ data, onClose }: { data: DriverCardData; on
           </span>
           <div className="dc-id">
             <b className="dc-name">{data.name}</b>
-            <span className="dc-team">{data.number !== undefined ? `#${data.number} · ` : ''}{data.teamName}</span>
             {data.titles && data.titles.length > 0 && (
               <span className="dc-titles" aria-label="Titles">
                 {data.titles.map(t => (
@@ -46,8 +46,9 @@ export default function DriverCard({ data, onClose }: { data: DriverCardData; on
                 ))}
               </span>
             )}
+            <span className="dc-team">{data.teamName}</span>
           </div>
-          <button type="button" className="rs-link dc-x" onClick={onClose}>Close</button>
+          <button type="button" className="ace-link dc-x" onClick={onClose}>Close</button>
         </div>
 
         {data.readings ? (

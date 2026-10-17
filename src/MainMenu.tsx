@@ -9,19 +9,26 @@ import './MainMenu.css';
 import { carryLink, onOldDomain } from './storage/carry';
 import { version } from '../package.json';
 
-/** The saved Season, if there is one (one save slot). */
+/** The saved run, if there is one (one save slot): where it stands, in the words the run screens use (#778). */
 export interface SeasonCardSummary {
-  name: string;
+  /** "Ace Toledo · going for Ace Ohio" / "Going for Ace Toledo". */
+  line: string;
   /** 0-based round in progress. */
   round: number;
   total: number;
-  finished: boolean;
+  /** The run: racing, a step won (the title waits), won, or lost. */
+  phase: 'league' | 'league-won' | 'run-won' | 'run-lost';
+  /** The title just won, when a step is won. */
+  title?: string;
+  next?: string;
 }
 
 interface MainMenuProps {
   onSingleRace: () => void;
-  /** Play a Season: continue the saved one, or League Setup. */
+  /** Play: continue the saved run where it stands, or start one. */
   onSeason: () => void;
+  /** Start a new run (when the saved one is over, Continue shows its finale). */
+  onNewSeason: () => void;
   season?: SeasonCardSummary | null;
   onCompendium: () => void;
   onGlossary: () => void;
@@ -33,8 +40,10 @@ export function programNo(v: string): string {
   return v.split('.').slice(1).join('') || '1';
 }
 
-function MainMenu({ onSingleRace, onSeason, season, onCompendium, onGlossary, onCredits }: MainMenuProps) {
-  const live = season && !season.finished ? season : null;
+function MainMenu({ onSingleRace, onSeason, onNewSeason, season, onCompendium, onGlossary, onCredits }: MainMenuProps) {
+  const live = season && (season.phase === 'league' || season.phase === 'league-won') ? season : null;
+  const over = season && !live ? season : null;
+  const liveLine = live ? (live.phase === 'league-won' ? `You are ${live.title}${live.next ? ` · up to ${live.next}` : ''}` : `${live.line} · race ${live.round + 1} of ${live.total}`) : null;
   return (
     <StepTheme step="nationals" className="ace-page mm">
       <Bunting />
@@ -50,15 +59,21 @@ function MainMenu({ onSingleRace, onSeason, season, onCompendium, onGlossary, on
         <Sash text="Ace America" title="Ace America" className="mm-sash" fontSize={23} />
         <Racer number={16} width={210} className="mm-racer" />
         <Chequer tall />
-        <span className="ace-where">{live ? `${live.name} · race ${live.round + 1} of ${live.total}` : 'Race day'}</span>
+        <span className="ace-where">{liveLine ?? 'Locals · State · Nationals'}</span>
       </header>
 
       <nav className="ace-menu mm-menu" aria-label="Main menu">
         <span className="ace-k mm-contents">Contents</span>
-        <button type="button" className="ace-mi on" onClick={onSeason}>
+        <button type="button" className="ace-mi on" onClick={live ? onSeason : onNewSeason}>
           <span>{live ? 'Continue' : 'New season'}</span>
-          <small>{live ? `${live.name} · race ${live.round + 1}` : 'Pick your state, name your garage, then climb'}</small>
+          <small>{liveLine ?? 'Pick your state, name your garage, then climb'}</small>
         </button>
+        {over && (
+          <button type="button" className="ace-mi" onClick={onSeason}>
+            <span>The last season</span>
+            <small>{over.phase === 'run-won' ? `You are ${over.title}` : `${over.line} · the season is over`}</small>
+          </button>
+        )}
         <button type="button" className="ace-mi" onClick={onSingleRace}><span>Quick race</span><small>One random race, right now</small></button>
         <button type="button" className="ace-mi" onClick={onGlossary}><span>The World Deck</span><small>Every card, team, track and weather</small></button>
         <button type="button" className="ace-mi" onClick={onCompendium}><span>Race Control</span><small>The lab, seeded and replicable</small></button>
