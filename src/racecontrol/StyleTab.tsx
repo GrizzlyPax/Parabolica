@@ -4,6 +4,7 @@
 import { useState, type ReactNode } from 'react';
 import { AceButton, AceCard, Bunting, CarCard, Chequer, Confetti, Level, Parcel, ParcelStrip, Pennant, ProgramLine, Racer, Rosette, Roundel, Sash, Stamp, StateBar, StepTheme, TitleRibbon, Wheel } from '../look/Look';
 import TrackMap from '../components/race/TrackMap';
+import MomentPoster, { type Poster } from '../components/race/MomentPoster';
 import { VENUE_KINDS, sceneForKind } from '../look/venues/scenes';
 import { STATE_CODES, STEPS, stateLook, type Step } from '../look/step';
 import { placeById } from '../data/states';
@@ -12,6 +13,18 @@ import './StyleTab.css';
 
 const SHOWN: Step[] = ['locals', 'state', 'nationals'];
 const TOKENS = ['ground', 'paper', 'ink', 'accent', 'accent-ink', 'navy-2', 'gold', 'sash-edge', 'sash-ink', 'wheel', 'btn', 'btn-ink', 'muted', 'hair'];
+const COLEMAN = { name: 'Matt Coleman', color: 'var(--ace-accent)', ink: 'var(--ace-accent-ink)', number: 12, team: "Ernie's Garage" };
+const POSTERS: Poster[] = [
+  { moment: 'lightsOut', head: 'Lights out', sub: 'Zanesville Brickworks' },
+  { moment: 'leadChange', head: 'Takes the lead', driver: COLEMAN, mine: true },
+  { moment: 'crash', head: 'Crash', driver: COLEMAN },
+  { moment: 'out', head: 'Out', sub: 'The cut after lap 2', driver: COLEMAN, mine: true },
+  { moment: 'cut', head: 'The cut', sub: 'After lap 1 · 30 states go on, 20 cars out' },
+  { moment: 'lastLap', head: 'White flag', sub: 'The last lap' },
+  { moment: 'flag', head: 'The flag', sub: 'Wins the race', driver: COLEMAN, mine: true },
+  { moment: 'quickStop', head: 'Fast stop', sub: 'Out ahead of the pack', driver: COLEMAN },
+  { moment: 'rain', head: 'Rain', sub: 'Rain at Zanesville Brickworks: a steady fall' },
+];
 const TITLE: Record<Step, string> = { locals: 'Ace Toledo', state: 'Ace Ohio', nationals: 'Ace America', globals: 'Ace Earth', galacticals: 'Ace Universe' };
 
 /** One component in the three themes. */
@@ -82,6 +95,14 @@ export function StyleTab() {
                 <figcaption className="ace-k">{k}</figcaption>
               </figure>
             ))}
+          </div>
+        ))}
+      </Row>
+
+      <Row title="Moment posters" note="A drawn card for the race's big beats (components/race/MomentPoster.tsx), slapped over the picture for a couple of seconds before the feed's big card: lights out, a lead change, a crash, one of yours out, the cut, the white flag, the flag, a fast stop, rain. The car in the garage's colour; the winner's wears a rosette. Off at 10×.">
+        {step => themed(step, (
+          <div className="st-posters">
+            {POSTERS.map((p, i) => <MomentPoster key={i} poster={p} step={step} />)}
           </div>
         ))}
       </Row>

@@ -1,0 +1,34 @@
+/* Moment posters (#778, direction D; components/race/MomentPoster.tsx): a drawn
+   card slapped over the picture for a couple of seconds. Tokens only. */
+.moment-poster { position: absolute; left: 50%; top: 48%; width: min(480px, 72%); z-index: 4; pointer-events: none; transform: translate(-50%, -50%) rotate(-1.5deg); filter: drop-shadow(0 10px 0 var(--ace-shadow)); animation: pm-slap .32s cubic-bezier(.2, 1.4, .4, 1) both; }
+.moment-poster-svg { width: 100%; height: auto; display: block; }
+.moment-poster .pm-dot { fill: var(--ace-accent); }
+.moment-poster.alarm .pm-dot { fill: var(--ace-red); }
+.moment-poster.gold .pm-dot { fill: var(--ace-gold); }
+.moment-poster .pm-k { font-family: var(--ace-cond); font-size: 10px; letter-spacing: .16em; text-transform: uppercase; fill: var(--ace-ink-2); }
+.moment-poster .pm-head { font-family: var(--ace-disp); fill: var(--ace-ink); letter-spacing: .02em; }
+.moment-poster.alarm .pm-head { fill: var(--ace-red); }
+.moment-poster .pm-name { font-family: var(--ace-script); fill: var(--ace-accent); }
+.moment-poster .pm-sub { font-family: var(--ace-body); font-style: italic; font-size: 14px; fill: var(--ace-ink); }
+.moment-poster .pm-mine { font-family: var(--ace-cond); font-size: 9px; letter-spacing: .14em; text-transform: uppercase; fill: var(--ace-ink); }
+.moment-poster .ace-rosette { position: absolute; left: -14px; top: -18px; }
+.moment-poster .ace-confetti { inset: -40px 0 0 0; }
+@keyframes pm-slap { from { opacity: 0; transform: translate(-50%, -50%) rotate(-7deg) scale(1.18); } to { opacity: 1; transform: translate(-50%, -50%) rotate(-1.5deg) scale(1); } }
+/* The pieces that move: the car sliding in, the speed lines, the flag's wave, the cut's dash, the rain, the stopwatch's hand, the jolt. */
+.moment-poster .pm-slide { animation: pm-slide .5s cubic-bezier(.2, .9, .3, 1) both; }
+@keyframes pm-slide { from { transform: translateX(-90px); } to { transform: translateX(0); } }
+.moment-poster .pm-lines { animation: pm-lines .6s linear infinite; }
+@keyframes pm-lines { from { transform: translateX(0); } to { transform: translateX(-22px); } }
+.moment-poster .pm-flag { transform-box: fill-box; transform-origin: left center; animation: pm-wave 1.1s ease-in-out infinite; }
+@keyframes pm-wave { 0%, 100% { transform: skewY(0deg); } 50% { transform: skewY(-5deg); } }
+.moment-poster .pm-dash { animation: pm-dash .9s linear infinite; }
+@keyframes pm-dash { to { stroke-dashoffset: -24; } }
+.moment-poster .pm-rain { animation: pm-rain .7s linear infinite; }
+@keyframes pm-rain { from { transform: translate(6px, -12px); } to { transform: translate(0, 12px); } }
+.moment-poster .pm-hand { transform-box: view-box; transform-origin: 360px 54px; animation: pm-hand 2s linear infinite; }
+@keyframes pm-hand { to { transform: rotate(360deg); } }
+.moment-poster .pm-jolt { animation: pm-jolt .35s ease-out 3; }
+@keyframes pm-jolt { 0%, 100% { transform: translate(240px, 92px) rotate(-14deg); } 50% { transform: translate(236px, 95px) rotate(-16deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .moment-poster, .moment-poster .pm-slide, .moment-poster .pm-lines, .moment-poster .pm-flag, .moment-poster .pm-dash, .moment-poster .pm-rain, .moment-poster .pm-hand, .moment-poster .pm-jolt { animation: none; }
+}

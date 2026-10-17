@@ -25,5 +25,7 @@
 
 /* The venues row (#778): six small maps. */
 .st-venues { display: grid; gap: 10px; }
+.st-posters { display: grid; gap: 18px; padding: 8px 10px 14px; }
+.st-posters .moment-poster { position: static; width: 100%; transform: rotate(-1deg); animation: none; }
 .st-venue { margin: 0; display: grid; gap: 4px; }
 .st-venue .track-map { min-height: 0; aspect-ratio: 5 / 3; }
