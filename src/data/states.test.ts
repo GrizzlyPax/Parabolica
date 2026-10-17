@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { US_PLACES, placeById, fieldSize, fieldLine, FIELD_STEPS, DEFAULT_LOOK } from './states';
+import { US_PLACES, placeById, fieldSize, fieldLine, FIELD_STEPS, DEFAULT_LOOK, TOWN_POOL_OCT14 } from './states';
 import { inkFor, INK_DARK } from '../icons/ink';
 
 const SASH_CREAM = '#f6f0e2', NAVY = '#111a33';
@@ -45,6 +45,10 @@ describe('Ace America places (#695)', () => {
       expect(p.population).toBeGreaterThan(0);
       expect(p.cities.length).toBeGreaterThanOrEqual(8);
       expect(new Set(p.cities).size).toBe(p.cities.length);
+      // #778: a State fields every other town's Ace, so the pool holds the field and you; the Oct 14 pool is its first N.
+      expect(p.cities.length).toBeGreaterThanOrEqual(fieldSize(p) + 1);
+      expect(TOWN_POOL_OCT14[p.id]).toBeGreaterThanOrEqual(8);
+      expect(TOWN_POOL_OCT14[p.id]).toBeLessThanOrEqual(p.cities.length);
     }
     expect(placeById('OH')!.cities).toContain('Toledo');
     expect(placeById('CA')!.population).toBeGreaterThan(placeById('VT')!.population);

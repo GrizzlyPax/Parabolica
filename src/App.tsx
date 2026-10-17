@@ -16,7 +16,7 @@ import { leagueWon } from './run/run';
 import { stageOf } from './season/format';
 import type { TitleTag } from './components/race/types';
 import { currentRunState, loadCurrentLeague as loadSeason, saveCurrentLeague as saveSeason } from './run/current';
-import { teamsOf } from './season/ui/teams';
+import { teamsOf, teamNameLabels } from './season/ui/teams';
 import { nemesisTeam } from './season/nemesis';
 import { teamThemeVars, type TeamLike } from './icons/GameIcon';
 import { heldTitles, runWhere, whereLine } from './run/where';
@@ -177,7 +177,7 @@ function App() {
   // the same race to its finish. The round is recorded by settleRound (the
   // headless run of the same seeded race), so watching changes nothing.
   const onSeasonRace = route.name === 'season' && route.screen === 'race';
-  const [seasonRace, setSeasonRace] = useState<{ round: number; sealed: Set<number>; mine: number[]; nemesis: number[]; you: TeamLike; avatars: ReturnType<typeof seasonAvatars>; quali: boolean; step: Step; stateId?: string; program: string; title?: TitleTag; goingFor: string; trackKind: string; lastRace: boolean; voice: FeedVoice; facts: SeasonFacts } | null>(null);
+  const [seasonRace, setSeasonRace] = useState<{ round: number; sealed: Set<number>; mine: number[]; nemesis: number[]; you: TeamLike; avatars: ReturnType<typeof seasonAvatars>; quali: boolean; step: Step; stateId?: string; program: string; title?: TitleTag; goingFor: string; trackKind: string; lastRace: boolean; teamLabels: Record<string, string>; voice: FeedVoice; facts: SeasonFacts } | null>(null);
   const settlingSeason = useRef(false);
   useEffect(() => {
     if (!onSeasonRace) {
@@ -224,6 +224,7 @@ function App() {
       goingFor: runWhere(facts).goingFor,
       trackKind: venueFor(facts, state.round).kind,
       lastRace: state.round === facts.setup.calendar.length - 1,
+      teamLabels: teamNameLabels(facts),
       voice: feedVoiceFor(facts),
       facts,
     });
@@ -377,6 +378,7 @@ function App() {
           myTitle={seasonRace.title}
           titleName={seasonRace.goingFor}
           trackKind={seasonRace.trackKind}
+          teamLabels={seasonRace.teamLabels}
           lastRaceOfStep={seasonRace.lastRace}
           onSkip={() => engine.fastForward(Infinity)}
           feedVoice={seasonRace.voice}

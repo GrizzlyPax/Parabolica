@@ -38,7 +38,8 @@ import { overall, readStat, type StatReading } from '../grades';
 import ParcelPick, { type StampTarget } from './ParcelPick';
 import { CAR_STATS, CT_STATS, DRIVER_STATS, GradeCell, PAD, ReadingSheet, STAT_ABBR, TEAM_STATS } from './RosterTable';
 import { LeagueTables } from './LeagueTables';
-import { teamsOf } from './teams';
+import { garageLabels, teamsOf } from './teams';
+import { GarageName } from './GarageName';
 import { nemesisLine } from '../nemesis';
 import DriverCard, { DriverName } from './DriverCard';
 import { driverCardOf } from '../driverCard';
@@ -76,6 +77,8 @@ export default function Paddock({ facts, onChange, onMenu, onRoad, onEndRun, onG
   const pool = useMemo(() => poolFor(facts), [facts.setup]); // eslint-disable-line react-hooks/exhaustive-deps
   const badges = useMemo(() => raceBadges(facts), [facts.setup, facts.draftPicks]); // eslint-disable-line react-hooks/exhaustive-deps
   const teams = useMemo(() => teamsOf(facts), [facts.setup]); // eslint-disable-line react-hooks/exhaustive-deps
+  // How every garage is named here (#778): its title after Locals.
+  const labels = useMemo(() => garageLabels(facts), [facts.setup, facts.draftPicks]); // eslint-disable-line react-hooks/exhaustive-deps
   // The nemesis talks (#635): one line per Paddock visit (the round's moment); parked with the nemesis (NEMESIS_IN_RUN).
   const spoken = useMemo(() => nemesisLine(facts), [facts.setup, facts.results.length, facts.draftPicks.length]); // eslint-disable-line react-hooks/exhaustive-deps
   const rosters = useMemo(() => draftState(pool, facts.draftPicks).rosters, [pool, facts.draftPicks]);
@@ -138,7 +141,7 @@ export default function Paddock({ facts, onChange, onMenu, onRoad, onEndRun, onG
     return DRIVER_STATS.map(s => readStat(s, d.stats[s as keyof typeof d.stats], [...d.traits, ...held]));
   };
   const liveEffects = activeEffects(facts, viewer, round);
-  const rowName = (k: RowKey) => (k === 'car' ? car.name : k === 'team' ? you.name : pool.drivers.find(x => x.id === Number(k))!.fullName);
+  const rowName = (k: RowKey) => (k === 'car' ? car.name : k === 'team' ? labels[viewer]?.name ?? you.name : pool.drivers.find(x => x.id === Number(k))!.fullName);
 
   // Where a stamp can go: each driver card and the car card (car and garage together).
   const targets: StampTarget[] = [
@@ -238,7 +241,7 @@ export default function Paddock({ facts, onChange, onMenu, onRoad, onEndRun, onG
   // Your deck (#778, the deck-builder shape): every stamp in play, as cards, by the card it sits on.
   const deckCards = [
     ...roster.driverIds.flatMap(id => [...stamps.drivers[id], ...(stamps.titles[id] ?? [])].map(c => ({ card: c, who: rowName(String(id)) }))),
-    ...stamps.car.map(c => ({ card: c, who: c.target === 'team' ? you.name : car.name })),
+    ...stamps.car.map(c => ({ card: c, who: c.target === 'team' ? rowName('team') : car.name })),
   ];
   const fading = deckCards.filter(({ card }) => stamps.mileage[card.id] !== undefined).length;
 
@@ -272,8 +275,8 @@ export default function Paddock({ facts, onChange, onMenu, onRoad, onEndRun, onG
               key={`${parcel.round}:${parcel.teamId}`}
               parcel={parcel}
               targets={targets}
-              to={{ garage: you.name, place: [facts.setup.league?.locale?.town, lookState.name].filter(Boolean).join(', ') }}
-              smudgeLine={smudge ? `Smudged: ${smudge.name} (${smudge.stats.map(s => `${levelDelta(s.pct)} ${STAT_LABELS[s.stat]}`).join(', ')}) on ${smudge.target.kind === 'car' ? car.name : you.name} for ${SMUDGE_LIFE_TEXT}, whatever you keep. It takes no slot and wears off on its own.` : undefined}
+              to={{ garage: rowName('team'), place: [facts.setup.league?.locale?.town, lookState.name].filter(Boolean).join(', ') }}
+              smudgeLine={smudge ? `Smudged: ${smudge.name} (${smudge.stats.map(s => `${levelDelta(s.pct)} ${STAT_LABELS[s.stat]}`).join(', ')}) on ${smudge.target.kind === 'car' ? car.name : rowName('team')} for ${SMUDGE_LIFE_TEXT}, whatever you keep. It takes no slot and wears off on its own.` : undefined}
               onKeep={keep}
               onLift={setLifted}
               onDetail={c => setDetail({ card: c })}
@@ -316,7 +319,7 @@ export default function Paddock({ facts, onChange, onMenu, onRoad, onEndRun, onG
                 </tr>
                 {(['car', 'team'] as const).map(k => (
                   <tr key={k} className={rowClass(k)}>
-                    {nameCell(k, k === 'car' ? <><Avatar icon={vehicleFor(pool.seed, car.id)} color={you.color} size={26} /><span className="rt-nm">{car.name}</span></> : <><i className="rt-swatch" style={{ background: you.color }} aria-hidden="true" /><span className="rt-nm">{you.name}</span></>)}
+                    {nameCell(k, k === 'car' ? <><Avatar icon={vehicleFor(pool.seed, car.id)} color={you.color} size={26} /><span className="rt-nm">{car.name}</span></> : <><i className="rt-swatch" style={{ background: you.color }} aria-hidden="true" /><GarageName label={labels[viewer]} /></>)}
                     {gradeCells(k, rowName(k), CT_STATS, new Set(k === 'car' ? CAR_STATS : TEAM_STATS), false)}
                     {Array.from({ length: PAD }, (_, i) => <td key={i} className="rt-cell rt-pad" />)}
                     {stampsCell(k, k === 'car' ? car.traits : team.traits)}
@@ -351,7 +354,7 @@ export default function Paddock({ facts, onChange, onMenu, onRoad, onEndRun, onG
           <div className="pk-tables-head">
             <span className="ace-k">The table · {facts.results.length ? `after race ${facts.results.length} of ${total}` : `before race 1 of ${total}`}</span>
             {myRank && facts.results.length > 0 && leader && (
-              <span className="ace-note">You {ordinal(myRank.rank)} on {myRank.points} pts{leader.id !== viewer ? ` · leader ${leader.name} on ${standings[0].points}` : ''}. The garages' table decides the title.</span>
+              <span className="ace-note">You {ordinal(myRank.rank)} on {myRank.points} pts{leader.id !== viewer ? ` · leader ${labels[leader.id]?.name ?? leader.name} on ${standings[0].points}` : ''}. The garages' table decides the title.</span>
             )}
           </div>
           <LeagueTables facts={facts} pool={pool} teams={teams} rosters={rosters} lines={standings} drivers={drivers} onDriver={setCardOf} />
