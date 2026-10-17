@@ -28,6 +28,7 @@ const THEMED = [
   'components/race/LapChart.css',
   'components/race/TrackMap.css',
   'components/race/TrackCamera.css',
+  'components/race/MomentPoster.css',
   'components/race/QualiBoard.css',
   'RaceStartCountdown.css',
   'racecontrol/StyleTab.css',

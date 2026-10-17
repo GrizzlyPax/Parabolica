@@ -8,6 +8,10 @@ import {
   TimingTower,
   TrackMap,
   TrackCamera,
+  MomentPoster,
+  posterFor,
+  POSTER_MS,
+  POSTER_PRIORITY,
   TrackStrip,
   ConditionsPanel,
   LapChart,
@@ -38,6 +42,7 @@ import { driverSurname } from './components/race/driverCode';
 import { intervalNext, intervalStart, type IntervalMoment, type IntervalState } from './feed/interval';
 import { sceneForTrackId, type SceneCtx } from './look/venues/scenes';
 import type { TitleTag } from './components/race/types';
+import type { Poster } from './components/race/MomentPoster';
 import type { StateLook, Step } from './look/step';
 import { GameIcon } from './icons/GameIcon';
 
@@ -305,6 +310,23 @@ function WatchMode({
   };
 
   // Helper to add a notification
+  // Moment posters (#778): the big beats as a drawn card over the picture; off at 10×, never in qualifying.
+  const [poster, setPoster] = useState<(Poster & { id: number; at: number }) | null>(null);
+  const posterIdRef = useRef(0);
+  const posterTimerRef = useRef<number | null>(null);
+  const showPoster = (p: Poster) => {
+    if (raceSpeed === 10 || (!!onQualifyingDone && raceState.totalTicks === 0)) return;
+    setPoster(prev => {
+      const now = Date.now();
+      if (prev && POSTER_PRIORITY[prev.moment] > POSTER_PRIORITY[p.moment] && now - prev.at < POSTER_MS[prev.moment]) return prev;
+      if (posterTimerRef.current) window.clearTimeout(posterTimerRef.current);
+      const id = ++posterIdRef.current;
+      posterTimerRef.current = window.setTimeout(() => setPoster(cur => (cur?.id === id ? null : cur)), POSTER_MS[p.moment]);
+      return { ...p, id, at: now };
+    });
+  };
+  useEffect(() => () => { if (posterTimerRef.current) window.clearTimeout(posterTimerRef.current); }, []);
+
   const addNotification = (
     type: NotificationType,
     title: string,
@@ -326,6 +348,11 @@ function WatchMode({
       return; // Skip duplicate
     }
     recentNotifKeysRef.current.set(dedupeKey, { tick: currentTick, time: now });
+
+    // The poster first (#778), then the ticker and the feed.
+    const lead = involvedDrivers?.[0] ? drivers.find(x => x.id === involvedDrivers[0].id) : undefined;
+    const posterOf = posterFor(type, title, message, lead && { name: lead.name, color: lead.color, ink: lead.ink, number: lead.number, team: lead.teamName ? (teamLabels?.[lead.teamName] ?? lead.teamName) : undefined }, !!(lead && mineSet?.has(lead.id)));
+    if (posterOf) showPoster(posterOf);
 
     const newNotification: RaceNotification = {
       id: notificationIdRef.current++,
@@ -384,6 +411,7 @@ function WatchMode({
     const caller = callerFor(step);
     const meta = callerMeta(caller, state?.name);
     pushFeedItem({ lap: 1, persona: caller, personaName: meta.name, personaEmoji: meta.emoji, text: lightsOutLine(feedCtx(), raceState.totalTicks + drivers.length), emphasis: 'big' });
+    showPoster({ moment: 'lightsOut', head: 'Lights out', sub: trackInfo?.name });
     if (config.lapCuts?.length) interval('lightsOutNationals');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [raceState.totalTicks]);
@@ -1467,6 +1495,7 @@ function WatchMode({
                   followId={followId}
                 />
                 )}
+                {poster && !qualifying && <MomentPoster key={poster.id} poster={poster} step={step} />}
                 {!qualifying && (
                   <div className="bf-map-strips">
                     <TrackStrip drivers={drivers} totalLaps={totalLaps} lapLength={trackLength} mode="race" label="Race" focusedDriverIds={focusedDriverIds} />

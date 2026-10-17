@@ -6,6 +6,8 @@ export { default as DriverRow } from './DriverRow';
 export { default as UniversalHeader } from './UniversalHeader';
 export { default as TrackMap } from './TrackMap';
 export { default as TrackCamera } from './TrackCamera';
+export { default as MomentPoster, posterFor, POSTER_MS, POSTER_PRIORITY } from './MomentPoster';
+export type { Poster, PosterMoment } from './MomentPoster';
 export { default as TrackStrip } from './TrackStrip';
 export { default as LapChart, type LapChartSeries } from './LapChart';
 export { default as ConditionsBar } from './ConditionsBar';

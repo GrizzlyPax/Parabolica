@@ -88,7 +88,7 @@ const PIT_Y = 112, PIT_SCALE = 0.7;
 const INK = 'var(--ace-ink)', PAPER = 'var(--ace-paper)', PAPER2 = 'var(--ace-paper-2)';
 
 /** The program's racer, in profile, in a garage's colour: 180 × 90 in its own box, drawn here at `s`. */
-function ProfileCar({ color, ink, number, s, spin }: { color: string; ink?: string; number?: string | number; s: number; spin: boolean }) {
+export function ProfileCar({ color, ink, number, s, spin }: { color: string; ink?: string; number?: string | number; s: number; spin: boolean }) {
   return (
     <g transform={`translate(${-90 * s} ${-68 * s}) scale(${s})`}>
       <ellipse cx={92} cy={70} rx={88} ry={7} fill={INK} opacity={0.18} />
