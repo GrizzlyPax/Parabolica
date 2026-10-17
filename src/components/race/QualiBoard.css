@@ -1,41 +1,41 @@
 /* The qualifying show (#495): sits where the timing tower sits. */
-.qb { display: flex; flex-direction: column; gap: 10px; min-width: 0; height: 100%; font-family: var(--look-display, serif); color: var(--pw-text-1); }
+.qb { display: flex; flex-direction: column; gap: 10px; min-width: 0; height: 100%; font-family: var(--ace-disp); color: var(--ace-fg); }
 .qb-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 4px 4px 0; }
-.qb-k { display: inline-flex; align-items: center; gap: 6px; font-family: var(--look-data, monospace); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--pw-text-2); }
-.qb-head .qb-k { color: var(--pw-text-1); }
-.qb-count { font-style: italic; font-size: 13px; color: var(--pw-text-2); }
+.qb-k { display: inline-flex; align-items: center; gap: 6px; font-family: var(--ace-data); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ace-muted); }
+.qb-head .qb-k { color: var(--ace-fg); }
+.qb-count { font-style: italic; font-size: 13px; color: var(--ace-muted); }
 .qb-on { display: flex; flex-direction: column; gap: 6px; }
-.qb-track { border: 1px solid var(--pw-border-strong); background: var(--pw-surface); padding: 8px 10px; display: flex; flex-direction: column; gap: 6px; }
+.qb-track { border: 1px solid var(--ace-muted); background: var(--ace-surface); padding: 8px 10px; display: flex; flex-direction: column; gap: 6px; }
 .qb-track.mine { border-color: var(--team-primary); }
 .qb-track-row, .qb-grid-set { display: flex; align-items: center; gap: 8px; }
 .qb-grid-set { flex-direction: row; }
 .qb-track-nm { font-size: 15px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.qb-track-time { margin-left: auto; font-family: var(--look-data, monospace); font-size: 15px; color: var(--pw-text-2); font-variant-numeric: tabular-nums; }
+.qb-track-time { margin-left: auto; font-family: var(--ace-data); font-size: 15px; color: var(--ace-muted); font-variant-numeric: tabular-nums; }
 .qb-sectors { display: flex; gap: 4px; }
-.qb-sectors span { flex: 1; height: 4px; background: var(--pw-hairline); }
-.qb-sectors span.live { background: var(--pw-text-3); }
-.qb-sectors span.ok { background: var(--signal-green); }
-.qb-sectors span.best { background: var(--signal-purple); }
-.qb-sectors span.ruined { background: var(--signal-red); }
+.qb-sectors span { flex: 1; height: 4px; background: var(--ace-hair); }
+.qb-sectors span.live { background: var(--ace-muted); }
+.qb-sectors span.ok { background: var(--ace-green); }
+.qb-sectors span.best { background: var(--ace-purple); }
+.qb-sectors span.ruined { background: var(--ace-red-lv); }
 .qb-scroll { flex: 1; min-height: 0; overflow-y: auto; }
 /* The board is the race timing tower (#617): same header, rows, marbles, codes. */
 .qb-tower { height: auto; }
 .qb-tower .timing-row { cursor: default; }
 .qb-new .timing-row { animation: qb-drop 0.9s ease-out; }
-.qb-tower .lap-time.lap-ruined { color: var(--signal-red); }
-.qb-wait { padding: 8px 12px; color: var(--pw-text-3); font-style: italic; font-size: 13px; }
-@keyframes qb-drop { from { background: color-mix(in srgb, var(--pw-text-1) 18%, transparent); } }
+.qb-tower .lap-time.lap-ruined { color: var(--ace-red-lv); }
+.qb-wait { padding: 8px 12px; color: var(--ace-muted); font-style: italic; font-size: 13px; }
+@keyframes qb-drop { from { background: color-mix(in srgb, var(--ace-fg) 18%, transparent); } }
 @media (prefers-reduced-motion: reduce) { .qb-new .timing-row { animation: none; } }
 .qb-dock { display: flex; gap: 8px; padding-top: 4px; }
-.qb-btn { flex: 1; height: 44px; border: 1px solid var(--pw-border-strong); background: transparent; color: var(--pw-text-1); font-family: var(--look-display, serif); font-weight: 700; font-size: 15px; cursor: pointer; }
+.qb-btn { flex: 1; height: 44px; border: 1px solid var(--ace-muted); background: transparent; color: var(--ace-fg); font-family: var(--ace-disp); font-weight: 700; font-size: 15px; cursor: pointer; }
 .qb-btn:first-child:not(:only-child) { flex: 0 0 72px; }
 .qb-btn-primary { background: var(--team-primary); color: var(--team-ink); border-color: var(--team-primary); }
 
 /* Quick Race (#607): follow a team, picked while qualifying runs */
 .qb-follow { display: flex; flex-direction: column; gap: 6px; }
 .qb-follow-row { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
-.qb-follow-team { display: inline-flex; align-items: center; gap: 6px; flex: none; padding: 3px; border: 1px solid var(--pw-border); background: transparent; color: var(--pw-text-1); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.qb-follow-team { display: inline-flex; align-items: center; gap: 6px; flex: none; padding: 3px; border: 1px solid var(--ace-hair); background: transparent; color: var(--ace-fg); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
 .qb-follow-team.on { border-color: var(--team-primary); padding-right: 8px; }
-.qb-follow-team:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset: 1px; }
+.qb-follow-team:focus-visible { outline: 2px solid var(--ace-fg); outline-offset: 1px; }
 .qb-follow-nm { white-space: nowrap; }
-.qb-swatch { display: inline-block; width: 22px; height: 22px; border: 1px solid var(--pw-text-1); flex: none; }
+.qb-swatch { display: inline-block; width: 22px; height: 22px; border: 1px solid var(--ace-fg); flex: none; }

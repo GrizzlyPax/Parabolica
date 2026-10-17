@@ -4,7 +4,7 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
-  background: var(--pw-ground);
+  background: var(--ace-bg);
   padding: 0.75rem 1rem 1rem;
 }
 
@@ -17,20 +17,20 @@
 }
 
 .story-feed-label {
-  font-family: var(--font-display), var(--font-emoji);
+  font-family: var(--ace-disp);
   font-size: 0.8rem;
   font-weight: 600;
-  color: var(--pw-text-3);
+  color: var(--ace-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .story-feed-count {
-  font-family: var(--font-mono), var(--font-emoji);
+  font-family: var(--ace-data), var(--font-emoji);
   font-size: 0.7rem;
-  color: var(--pw-text-3);
+  color: var(--ace-muted);
   padding: 0.15rem 0.4rem;
-  background: var(--pw-surface);
+  background: var(--ace-surface);
   border-radius: 6px;
 }
 
@@ -43,7 +43,7 @@
   /* Cap so the feed scrolls instead of growing the page forever */
   max-height: 42vh;
   scrollbar-width: thin;
-  scrollbar-color: var(--pw-border) transparent;
+  scrollbar-color: var(--ace-hair) transparent;
 }
 
 .story-item {
@@ -51,8 +51,8 @@
   align-items: flex-start;
   gap: 0.6rem;
   padding: 0.6rem 0.7rem;
-  background: var(--pw-ground);
-  border-left: 3px solid var(--story-accent, var(--pw-border-strong));
+  background: var(--ace-bg);
+  border-left: 3px solid var(--story-accent, var(--ace-muted));
   animation: story-enter 0.35s ease-out;
 }
 
@@ -73,7 +73,7 @@
   flex-shrink: 0;
   display: inline-flex;
   padding-top: 2px;
-  color: var(--story-accent, var(--pw-text-2));
+  color: var(--story-accent, var(--ace-muted));
 }
 
 .story-body {
@@ -90,58 +90,58 @@
 }
 
 .story-persona {
-  font-family: var(--font-display), var(--font-emoji);
+  font-family: var(--ace-disp);
   font-size: 0.7rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: var(--pw-text-2);
+  color: var(--ace-muted);
 }
 
 .story-lap {
-  font-family: var(--font-mono), var(--font-emoji);
+  font-family: var(--ace-data), var(--font-emoji);
   font-size: 0.62rem;
-  color: var(--pw-border-strong);
+  color: var(--ace-muted);
 }
 
 .story-text {
   margin: 0;
   font-size: 0.85rem;
   line-height: 1.45;
-  color: var(--pw-text-2);
+  color: var(--ace-muted);
 }
 
 .story-driver-chip {
-  color: var(--pw-text-1);
+  color: var(--ace-fg);
   font-weight: 600;
   white-space: nowrap;
 }
 
 /* Persona flavors */
 .story-marbles {
-  border-left-color: var(--pw-purple);
-  background: linear-gradient(90deg, rgba(167, 139, 250, 0.07), transparent 60%);
+  border-left-color: var(--ace-purple);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--ace-purple) 7%, transparent), transparent 60%);
 }
 .story-marbles .story-persona {
-  color: var(--pw-purple);
+  color: var(--ace-purple);
 }
 
 /* Big moments: louder card */
 .story-big {
-  background: #121018;
+  background: var(--ace-bg);
   border-left-width: 4px;
-  border-left-color: var(--story-accent, var(--pw-yellow));
+  border-left-color: var(--story-accent, var(--ace-yellow));
 }
 
 .story-big .story-text {
   font-size: 0.95rem;
-  color: var(--pw-text-1);
+  color: var(--ace-fg);
   font-weight: 500;
 }
 
 .story-feed-empty {
   padding: 1.25rem 0.5rem;
-  color: var(--pw-border-strong);
+  color: var(--ace-muted);
   font-size: 0.8rem;
   font-style: normal;
 }

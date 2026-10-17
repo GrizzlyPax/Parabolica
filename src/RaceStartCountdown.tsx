@@ -14,7 +14,7 @@ interface RaceStartCountdownProps {
   stateName?: string;
 }
 
-function RaceStartCountdown({ onCountdownComplete, trackName, trackEmoji, step, stateName }: RaceStartCountdownProps) {
+function RaceStartCountdown({ onCountdownComplete, trackName, step, stateName }: RaceStartCountdownProps) {
   const [phase, setPhase] = useState<'intro' | 'lights' | 'go' | 'done'>('intro');
   const [lightsOn, setLightsOn] = useState(0);
   // The caller's lights-out line (#749): The PA, {State} Radio or The Network.
@@ -83,9 +83,9 @@ function RaceStartCountdown({ onCountdownComplete, trackName, trackEmoji, step, 
       <div className="countdown-content">
         {phase === 'intro' && (
           <div className="intro-phase">
-            <span className="track-emoji-large">{trackEmoji || <GameIcon name="race.finish" size={48} />}</span>
+            <span className="track-emoji-large"><GameIcon name="race.finish" size={44} /></span>
             <h1 className="track-name-large">{trackName || 'Grand Prix'}</h1>
-            <p className="formation-text">Formation Lap Complete</p>
+            <p className="formation-text">Formation lap complete</p>
           </div>
         )}
 

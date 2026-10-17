@@ -176,7 +176,7 @@ function App() {
   // the same race to its finish. The round is recorded by settleRound (the
   // headless run of the same seeded race), so watching changes nothing.
   const onSeasonRace = route.name === 'season' && route.screen === 'race';
-  const [seasonRace, setSeasonRace] = useState<{ round: number; sealed: Set<number>; mine: number[]; nemesis: number[]; you: TeamLike; avatars: ReturnType<typeof seasonAvatars>; quali: boolean; step: Step; stateId?: string; program: string; title?: TitleTag; voice: FeedVoice; facts: SeasonFacts } | null>(null);
+  const [seasonRace, setSeasonRace] = useState<{ round: number; sealed: Set<number>; mine: number[]; nemesis: number[]; you: TeamLike; avatars: ReturnType<typeof seasonAvatars>; quali: boolean; step: Step; stateId?: string; program: string; title?: TitleTag; goingFor: string; voice: FeedVoice; facts: SeasonFacts } | null>(null);
   const settlingSeason = useRef(false);
   useEffect(() => {
     if (!onSeasonRace) {
@@ -219,6 +219,7 @@ function App() {
       // The masthead's words (#778): the title you hold · going for the next · the race, and the stage at Nationals.
       program: (() => { const w = runWhere(facts); const st = stageOf(facts, state.round); return `${whereLine(w)} · race ${state.round + 1} of ${w.total}${st?.name && !/^Race \d/.test(st.name) ? ` · ${st.name}` : ''}`; })(),
       title: (() => { const w = runWhere(facts); return w.latest ? { ...w.latest, ...(w.latest.step === 'state' ? { stateId: facts.setup.league?.locale?.stateId } : {}) } : undefined; })(),
+      goingFor: runWhere(facts).goingFor,
       voice: feedVoiceFor(facts),
       facts,
     });
@@ -370,6 +371,7 @@ function App() {
           state={seasonRace.stateId ? stateLook(seasonRace.stateId) : undefined}
           program={seasonRace.program}
           myTitle={seasonRace.title}
+          titleName={seasonRace.goingFor}
           onSkip={() => engine.fastForward(Infinity)}
           feedVoice={seasonRace.voice}
           lightsOut

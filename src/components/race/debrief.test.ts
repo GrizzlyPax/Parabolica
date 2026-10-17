@@ -42,7 +42,7 @@ describe('race debrief', () => {
     const input = races.find(r => r.drivers.some(d => d.pitStops.some(p => p.wasSlowStop)))!;
     const d = input.drivers.find(x => x.pitStops.some(p => p.wasSlowStop))!;
     const m = driverDebrief(input, [d.id])[0].moments.find(x => x.what === 'Slow stop');
-    expect(m?.detail).toMatch(/^\+\d+\.\ds vs a normal stop$/);
+    expect(m?.detail).toMatch(/^\d+\.\ds slower than a normal stop$/);
   });
 
   it('the winner line: their grid slot, strategy and laps led', () => {
@@ -56,7 +56,8 @@ describe('race debrief', () => {
 
   it('strategy names the stops and the tyres', () => {
     const d = { usedCompounds: ['medium'], pitStops: [{ tiresAfter: 'hard' }] } as unknown as Driver;
-    expect(strategyOf(d)).toBe('1 stop · M→H');
-    expect(strategyOf({ usedCompounds: ['soft'], pitStops: [] } as unknown as Driver)).toBe('No stops · S');
+    expect(strategyOf(d)).toBe('one stop: medium, then hard');
+    expect(strategyOf({ usedCompounds: ['soft'], pitStops: [] } as unknown as Driver)).toBe('no stops, on softs');
+    expect(strategyOf({ usedCompounds: ['medium'], pitStops: [{ tiresAfter: 'hard' }, { tiresAfter: 'soft' }, { tiresAfter: 'medium' }] } as unknown as Driver)).toBe('three stops: medium, hard, soft, medium');
   });
 });

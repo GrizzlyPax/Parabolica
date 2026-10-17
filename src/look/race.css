@@ -1,10 +1,9 @@
-/* The race view in the race program (#716). Tokens only (icons/theme.test.ts).
-   Scoped to .ace-race, the class WatchMode's <StepTheme> wears: the header as
-   the program's masthead on the navy ground, the tower, feed, footer, lap
-   chart and finish sheet on cream paper, the map on the ground. The old
-   --pw-* tokens are re-pointed inside each paper panel (the bridge from
-   look.css) so the race components wear the step without a rewrite. Desktop
-   first: from 1024px the track view runs tower | map | feed side by side. */
+/* The race view in the race program (#716; every race stylesheet on --ace-*
+   since #778, no bridge left). Tokens only (icons/theme.test.ts). Scoped to
+   .ace-race, the class WatchMode's <StepTheme> wears: the masthead on the navy
+   ground, the tower, feed, footer, lap chart and finish sheet on cream paper
+   (the roles flip to ink inside them), the map on the ground. Desktop first:
+   from 1024px the track view runs tower | map | feed side by side. */
 
 .ace-race { background: var(--ace-ground); color: var(--ace-fg); font-family: var(--ace-body); }
 
@@ -13,16 +12,13 @@
 /* --- The frame: the navy ground, the program's width --- */
 .ace-race .broadcast-frame { background: var(--ace-ground); border: 0; border-radius: 0; }
 
-/* --- Paper panels: the tower, the data table, the feed, the footer, the lap chart.
-       Inside each the old tokens read the paper, and gold is the session best. --- */
-.ace-race .bf-tower, .ace-race .bf-table, .ace-race .bf-feed, .ace-race .bf-footer, .ace-race .bf-lapchart {
+/* --- Paper panels: the tower, the data table, the feed, the footer, the lap chart,
+       the finish sheet. Inside each the roles flip to ink on paper (as .ace-panel
+       does), the data face stays condensed, and gold is the session best. --- */
+.ace-race .bf-tower, .ace-race .bf-table, .ace-race .bf-feed, .ace-race .bf-footer, .ace-race .bf-lapchart, .ace-race .fs {
   background: var(--ace-paper); color: var(--ace-ink); border: 1px solid var(--ace-ink); border-radius: 0;
-  --pw-ground: var(--ace-paper); --pw-surface: var(--ace-paper-2); --pw-raised: var(--ace-paper-2);
-  --pw-text-1: var(--ace-ink); --pw-text-2: var(--ace-ink-2); --pw-text-3: var(--ace-ink-2);
-  --pw-hairline: var(--ace-rule); --pw-border: var(--ace-rule); --pw-border-strong: var(--ace-ink);
-  --pw-green: var(--ace-green); --pw-yellow: var(--ace-yellow); --pw-red: var(--ace-red-lv); --pw-red-soft: var(--ace-red-lv); --pw-purple: var(--ace-gold);
-  --signal-green: var(--ace-green); --signal-yellow: var(--ace-yellow); --signal-red: var(--ace-red-lv); --signal-purple: var(--ace-gold);
-  --look-display: var(--ace-disp); --look-serif: var(--ace-body); --look-data: var(--ace-cond);
+  --ace-fg: var(--ace-ink); --ace-muted: var(--ace-ink-2); --ace-hair: var(--ace-rule); --ace-bg: var(--ace-paper);
+  --ace-surface: var(--ace-paper-2); --ace-raised: var(--ace-paper-2); --ace-data: var(--ace-cond); --ace-purple: var(--ace-gold);
 }
 .ace-race .frame-track .bf-tower { backdrop-filter: none; }
 
@@ -114,12 +110,7 @@
 @media (max-width: 799px) { .ace-race .bf-map-strips { display: none; } }
 
 /* The finish sheet: a paper sheet with the sash across the top */
-.ace-race .fs {
-  background: var(--ace-paper); color: var(--ace-ink); border: 1px solid var(--ace-ink); border-bottom: 0; border-radius: 0; font-family: var(--ace-body);
-  --pw-ground: var(--ace-paper); --pw-surface: var(--ace-paper-2); --pw-text-1: var(--ace-ink); --pw-text-2: var(--ace-ink-2); --pw-border: var(--ace-rule); --pw-border-strong: var(--ace-ink);
-  --signal-green: var(--ace-green); --signal-red: var(--ace-red-lv); --look-display: var(--ace-disp); --look-data: var(--ace-cond);
-  --rarity-gold: var(--ace-gold); --rarity-silver: var(--ace-muted); --rarity-bronze: var(--ace-brown);
-}
+.ace-race .fs { border-bottom: 0; font-family: var(--ace-body); }
 .ace-race .fs-grab { background: var(--ace-rule); }
 .ace-race .fs-sash { display: flex; justify-content: center; }
 .ace-race .fs-k { font-family: var(--ace-cond); letter-spacing: .14em; }
@@ -148,14 +139,4 @@
   .ace-race .frame-detail .bf-table { grid-column: 1; }
   .ace-race .frame-detail .bf-feed { display: flex; flex-direction: column; grid-column: 2; padding: 0; }
   .ace-race .frame-detail .bf-feed .story-feed-list { max-height: none; flex: 1; }
-}
-
-/* The bridge, race view only (#715; the pages retired it in #778): the old
-   --pw-* / --look-* tokens re-pointed onto the program until the race view's
-   own sweep moves WatchMode.css and components/race/*.css onto --ace-*. */
-.ace-race {
-  --pw-ground: var(--ace-ground); --pw-surface: color-mix(in srgb, var(--ace-fg) 6%, var(--ace-ground)); --pw-raised: color-mix(in srgb, var(--ace-fg) 10%, var(--ace-ground));
-  --pw-hairline: var(--ace-hair); --pw-border: var(--ace-hair); --pw-border-strong: var(--ace-muted);
-  --pw-text-1: var(--ace-fg); --pw-text-2: var(--ace-muted); --pw-text-3: var(--ace-muted);
-  --look-display: var(--ace-disp); --look-serif: var(--ace-body); --look-data: var(--ace-cond);
 }

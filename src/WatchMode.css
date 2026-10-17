@@ -3,7 +3,7 @@
   flex-direction: column;
   min-height: 100vh;
   padding: 0;
-  background: var(--pw-ground);
+  background: var(--ace-bg);
   overflow-x: hidden;
   /* Allow full page to scroll */
   overflow-y: auto;
@@ -30,22 +30,22 @@
   z-index: 10;
   padding: 0.3rem 0.6rem;
   font-size: 0.7rem;
-  font-family: var(--font-display), var(--font-emoji);
+  font-family: var(--ace-disp);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: var(--pw-text-2);
-  background: rgba(40, 40, 40, 0.9);
-  border: 1px solid var(--pw-border-strong);
+  color: var(--ace-muted);
+  background: var(--ace-surface);
+  border: 1px solid var(--ace-muted);
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .clear-focus-btn:hover {
-  color: var(--pw-text-1);
-  background: rgba(60, 60, 60, 0.95);
-  border-color: var(--pw-text-3);
+  color: var(--ace-fg);
+  background: var(--ace-raised);
+  border-color: var(--ace-muted);
 }
 
 /* Tower renders at full height - no internal scrolling */
@@ -57,7 +57,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: var(--pw-ground);
+  background: var(--ace-bg);
 }
 
 .track-section .track-map {
@@ -67,19 +67,19 @@
 
 @keyframes bet-glow-green {
   0%, 100% {
-    box-shadow: 0 0 8px rgba(74, 222, 128, 0.4), inset 0 0 4px rgba(74, 222, 128, 0.1);
+    box-shadow: 0 0 8px color-mix(in srgb, var(--ace-green) 40%, transparent), inset 0 0 4px color-mix(in srgb, var(--ace-green) 10%, transparent);
   }
   50% {
-    box-shadow: 0 0 16px rgba(74, 222, 128, 0.6), inset 0 0 8px rgba(74, 222, 128, 0.2);
+    box-shadow: 0 0 16px color-mix(in srgb, var(--ace-green) 60%, transparent), inset 0 0 8px color-mix(in srgb, var(--ace-green) 20%, transparent);
   }
 }
 
 @keyframes bet-glow-red {
   0%, 100% {
-    box-shadow: 0 0 8px rgba(248, 113, 113, 0.3), inset 0 0 4px rgba(248, 113, 113, 0.1);
+    box-shadow: 0 0 8px color-mix(in srgb, var(--ace-red-lv) 30%, transparent), inset 0 0 4px color-mix(in srgb, var(--ace-red-lv) 10%, transparent);
   }
   50% {
-    box-shadow: 0 0 14px rgba(248, 113, 113, 0.5), inset 0 0 6px rgba(248, 113, 113, 0.15);
+    box-shadow: 0 0 14px color-mix(in srgb, var(--ace-red-lv) 50%, transparent), inset 0 0 6px color-mix(in srgb, var(--ace-red-lv) 15%, transparent);
   }
 }
 
@@ -92,7 +92,7 @@
 /* Focus View: zoomed camera follow */
 
 .track-outer {
-  filter: drop-shadow(0 0 12px rgba(100, 100, 120, 0.4));
+  filter: drop-shadow(0 0 12px var(--ace-shadow));
 }
 
 .track-surface {
@@ -100,9 +100,9 @@
 }
 
 .track-label {
-  font-family: var(--font-display), var(--font-emoji);
+  font-family: var(--ace-disp);
   font-size: 10px;
-  fill: #666666;
+  fill: var(--ace-muted);
   letter-spacing: 2px;
 }
 
@@ -110,11 +110,11 @@
 
 /* Pit lane styling */
 .pit-lane {
-  filter: drop-shadow(0 0 8px rgba(241, 196, 15, 0.2));
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--ace-yellow) 20%, transparent));
 }
 
 .pit-label {
-  font-family: var(--font-display), var(--font-emoji);
+  font-family: var(--ace-disp);
   font-size: 11px;
   font-weight: bold;
   letter-spacing: 2px;
@@ -150,10 +150,10 @@
 
 @keyframes emojiPulse {
   0% {
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+    filter: drop-shadow(0 2px 4px var(--ace-shadow));
   }
   100% {
-    filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.6)) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+    filter: drop-shadow(0 0 6px color-mix(in srgb, var(--ace-paper) 60%, transparent)) drop-shadow(0 2px 4px var(--ace-shadow));
   }
 }
 
@@ -190,7 +190,7 @@
 }
 
 .pit-label {
-  font-family: var(--font-display), var(--font-emoji);
+  font-family: var(--ace-disp);
   font-size: 10px;
   letter-spacing: 2px;
 }
@@ -201,7 +201,7 @@
 
 /* Pit Entry/Exit markers */
 .pit-markers text {
-  font-family: var(--font-display), var(--font-emoji);
+  font-family: var(--ace-disp);
   font-weight: 600;
 }
 
@@ -311,28 +311,28 @@
   0% {
     r: 18;
     opacity: 0.8;
-    stroke: #1a1a2e;
+    stroke: var(--ace-navy-2);
   }
   50% {
     r: 24;
     opacity: 0.4;
-    stroke: #8b0000;
+    stroke: var(--ace-brick);
   }
   100% {
     r: 18;
     opacity: 0.8;
-    stroke: #1a1a2e;
+    stroke: var(--ace-navy-2);
   }
 }
 
 @keyframes unsafetyCarLabelPulse {
   0%, 100% {
     opacity: 1;
-    fill: #8b0000;
+    fill: var(--ace-brick);
   }
   50% {
     opacity: 0.7;
-    fill: #1a1a2e;
+    fill: var(--ace-navy-2);
   }
 }
 
@@ -361,7 +361,7 @@
 .race-feed {
   display: flex;
   align-items: center;
-  background: var(--pw-ground);
+  background: var(--ace-bg);
   border: none;
   border-radius: 0;
   overflow: hidden;
@@ -369,15 +369,15 @@
 }
 
 .race-feed-label {
-  font-family: var(--font-display), var(--font-emoji);
+  font-family: var(--ace-disp);
   font-size: 0.65rem;
   font-weight: 600;
-  color: var(--pw-text-3);
+  color: var(--ace-muted);
   letter-spacing: 1px;
   white-space: nowrap;
   flex-shrink: 0;
   padding: 0 0.75rem;
-  background: var(--pw-ground);
+  background: var(--ace-bg);
   height: 100%;
   display: flex;
   align-items: center;
@@ -437,33 +437,33 @@
 /* Prominent lap indicator at top of leaderboard */
 
 .lap-label {
-  font-family: var(--font-display), var(--font-emoji);
+  font-family: var(--ace-disp);
   font-size: 0.7rem;
   font-weight: 600;
-  color: var(--pw-text-3);
+  color: var(--ace-muted);
   letter-spacing: 2px;
   text-transform: uppercase;
 }
 
 .lap-current {
-  font-family: var(--font-display), var(--font-emoji);
+  font-family: var(--ace-disp);
   font-size: 1.6rem;
   font-weight: 700;
-  color: var(--pw-text-1);
+  color: var(--ace-fg);
 }
 
 .lap-separator {
-  font-family: var(--font-display), var(--font-emoji);
+  font-family: var(--ace-disp);
   font-size: 1.2rem;
-  color: var(--pw-border-strong);
+  color: var(--ace-muted);
   margin: 0 0.1rem;
 }
 
 .lap-total {
-  font-family: var(--font-display), var(--font-emoji);
+  font-family: var(--ace-disp);
   font-size: 1.1rem;
   font-weight: 500;
-  color: var(--pw-text-3);
+  color: var(--ace-muted);
 }
 
 .tire-dot {
@@ -478,8 +478,8 @@
 }
 
 @keyframes pitPulse {
-  0%, 100% { background: rgba(60, 55, 20, 0.3); }
-  50% { background: rgba(80, 72, 30, 0.4); }
+  0%, 100% { background: color-mix(in srgb, var(--ace-yellow) 18%, transparent); }
+  50% { background: color-mix(in srgb, var(--ace-yellow) 28%, transparent); }
 }
 
 /* Position delta styles now in components/race/components.css */
@@ -515,7 +515,7 @@
 
 .stat-label {
   font-size: 0.7rem;
-  color: var(--pw-text-3);
+  color: var(--ace-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -527,7 +527,7 @@
 
 .stat-bar-container {
   height: 6px;
-  background: var(--pw-ground);
+  background: var(--ace-bg);
   border-radius: 6px;
   overflow: hidden;
 }
@@ -540,9 +540,9 @@
 
 .stat-value {
   font-size: 0.7rem;
-  color: var(--pw-text-2);
+  color: var(--ace-muted);
   text-align: right;
-  font-family: var(--font-body), var(--font-emoji);
+  font-family: var(--ace-body), var(--font-emoji);
 }
 
 /* Tags Section */
@@ -552,9 +552,9 @@
 .pit-stop-summary {
   margin-top: 0.5rem;
   padding-top: 0.4rem;
-  border-top: 1px solid var(--pw-border);
+  border-top: 1px solid var(--ace-hair);
   font-size: 0.65rem;
-  color: var(--pw-yellow);
+  color: var(--ace-yellow);
   text-align: center;
 }
 
@@ -628,17 +628,17 @@
 }
 
 .track-event-ring-positive {
-  stroke: var(--pw-green);
+  stroke: var(--ace-green);
   animation: trackEventRingExpand 2s ease-out forwards;
 }
 
 .track-event-ring-negative {
-  stroke: var(--pw-red);
+  stroke: var(--ace-red-lv);
   animation: trackEventRingExpand 2s ease-out forwards;
 }
 
 .track-event-ring-neutral {
-  stroke: var(--pw-purple);
+  stroke: var(--ace-purple);
   animation: trackEventRingExpand 2s ease-out forwards;
 }
 
@@ -673,15 +673,15 @@
 }
 
 .track-event-flash-positive {
-  fill: rgba(46, 204, 113, 0.9);
+  fill: var(--ace-green);
 }
 
 .track-event-flash-negative {
-  fill: rgba(231, 76, 60, 0.9);
+  fill: var(--ace-red-lv);
 }
 
 .track-event-flash-neutral {
-  fill: rgba(155, 89, 182, 0.9);
+  fill: var(--ace-purple);
 }
 
 @keyframes trackEventFlash {
@@ -767,8 +767,8 @@
   justify-content: center;
   gap: 0.4rem;
   padding: 0.5rem 1rem;
-  background: rgba(15, 15, 18, 0.98);
-  border-bottom: 1px solid var(--pw-border);
+  background: var(--ace-bg);
+  border-bottom: 1px solid var(--ace-hair);
   margin-bottom: 0.5rem;
 }
 
@@ -779,11 +779,11 @@
   gap: 0.5rem;
   padding: 0.6rem 1.2rem;
   min-height: 44px;
-  background: rgba(35, 35, 40, 0.8);
-  border: 1px solid #4a4a54;
+  background: var(--ace-surface);
+  border: 1px solid var(--ace-hair);
   border-radius: 6px;
-  color: var(--pw-text-3);
-  font-family: var(--font-display);
+  color: var(--ace-muted);
+  font-family: var(--ace-disp);
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
@@ -791,16 +791,16 @@
 }
 
 .view-tab:hover {
-  background: rgba(50, 50, 58, 0.9);
-  border-color: var(--pw-text-3);
-  color: var(--pw-text-2);
+  background: var(--ace-raised);
+  border-color: var(--ace-muted);
+  color: var(--ace-muted);
 }
 
 .view-tab.active {
-  background: linear-gradient(180deg, rgba(60, 80, 100, 0.9) 0%, rgba(40, 55, 70, 0.95) 100%);
-  border-color: #6a8aaa;
-  color: var(--pw-text-1);
-  box-shadow: 0 0 12px rgba(100, 140, 180, 0.2);
+  background: var(--ace-raised);
+  border-color: var(--ace-muted);
+  color: var(--ace-fg);
+  box-shadow: 0 0 12px var(--ace-shadow);
 }
 
 /* Mobile: fixed bottom tab bar */
@@ -816,7 +816,7 @@
     gap: 0.25rem;
     justify-content: space-around;
     border-bottom: none;
-    border-top: 1px solid var(--pw-border);
+    border-top: 1px solid var(--ace-hair);
     backdrop-filter: blur(10px);
   }
 
@@ -869,13 +869,13 @@
 .bf-table::-webkit-scrollbar-thumb,
 .bf-feed::-webkit-scrollbar-thumb,
 .bf-feed-strip::-webkit-scrollbar-thumb {
-  background: var(--pw-border);
+  background: var(--ace-hair);
   border-radius: 6px;
 }
 .bf-tower .timing-tower,
 .bf-table, .bf-feed, .bf-feed-strip {
   scrollbar-width: thin;
-  scrollbar-color: var(--pw-border) transparent;
+  scrollbar-color: var(--ace-hair) transparent;
 }
 
 /* Desktop / landscape: the fixed 16:9 broadcast frame. */
@@ -902,16 +902,16 @@
     max-width: calc((100dvh - 64px) * 16 / 9);
     height: 100%;
     margin: 0 auto;
-    background: var(--pw-ground);
-    border: 1px solid var(--pw-border);
+    background: var(--ace-bg);
+    border: 1px solid var(--ace-hair);
     border-radius: 10px;
     overflow: hidden;
   }
 
   /* Shared panel look: floating dark cards with quiet borders. */
   .bf-tower, .bf-table, .bf-feed, .bf-feed-strip, .bf-footer {
-    background: var(--pw-surface);
-    border: 1px solid var(--pw-raised);
+    background: var(--ace-surface);
+    border: 1px solid var(--ace-raised);
     border-radius: 8px;
     overflow: hidden;
   }
@@ -1022,7 +1022,7 @@
     position: sticky;
     top: 0;
     z-index: 5;
-    background: #0a0a0c;
+    background: var(--ace-bg);
   }
 }
 
@@ -1040,18 +1040,18 @@
 .track-strip-label {
   flex-shrink: 0;
   width: 44px;
-  font-family: var(--font-display), var(--font-emoji);
+  font-family: var(--ace-disp);
   font-size: 0.74rem;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #9a9aa4;
+  color: var(--ace-muted);
 }
 .track-strip-track { position: relative; flex: 1; min-width: 0; }
 .track-strip-line {
   position: relative;
   height: 16px;
-  border-bottom: 1px solid #303039;
+  border-bottom: 1px solid var(--ace-hair);
 }
 .track-strip-pitline {
   position: relative;
@@ -1078,7 +1078,7 @@
   height: 12px;
   margin-left: -6px;
   border-radius: 50%;
-  border: 2px solid var(--pw-text-1);
+  border: 2px solid var(--ace-fg);
 }
 /* Only the Race strip moves monotonically left→right, so it can ease. The Lap
    strip wraps at the start/finish line — easing would slide the dot back
@@ -1089,7 +1089,7 @@
   width: 15px;
   height: 15px;
   margin-left: -7.5px;
-  box-shadow: 0 0 7px rgba(255, 255, 255, 0.65);
+  box-shadow: 0 0 7px color-mix(in srgb, var(--ace-paper) 65%, transparent);
   z-index: 2;
 }
 
@@ -1100,12 +1100,12 @@
   gap: 16px;
 }
 .conditions-panel-label {
-  font-family: var(--font-display), var(--font-emoji);
+  font-family: var(--ace-disp);
   font-size: 0.58rem;
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #71717c;
+  color: var(--ace-muted);
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -1125,11 +1125,11 @@
 .conditions-panel-name {
   font-size: 0.88rem;
   font-weight: 600;
-  color: #dadae2;
+  color: var(--ace-fg);
 }
 .conditions-panel-sub {
   font-size: 0.72rem;
-  color: #80808c;
+  color: var(--ace-muted);
   text-transform: lowercase;
 }
 
@@ -1177,8 +1177,8 @@
 .bf-lapchart {
   display: flex;
   flex-direction: column;
-  background: var(--pw-surface);
-  border: 1px solid var(--pw-raised);
+  background: var(--ace-surface);
+  border: 1px solid var(--ace-raised);
   border-radius: 8px;
   overflow: hidden;
 }
@@ -1191,20 +1191,20 @@
   align-items: baseline;
   justify-content: space-between;
   padding: 10px 16px;
-  border-bottom: 1px solid var(--pw-raised);
+  border-bottom: 1px solid var(--ace-raised);
   flex-shrink: 0;
 }
 .bf-lapchart-title {
-  font-family: var(--font-display), var(--font-emoji);
+  font-family: var(--ace-disp);
   font-size: 0.95rem;
   font-weight: 700;
   letter-spacing: 0.03em;
-  color: #e8e8ec;
+  color: var(--ace-fg);
 }
 .bf-lapchart-lap {
-  font-family: var(--font-mono), monospace;
+  font-family: var(--ace-data);
   font-size: 0.85rem;
-  color: #8a8a94;
+  color: var(--ace-muted);
   font-variant-numeric: tabular-nums;
 }
 .bf-lapchart-body {
@@ -1222,16 +1222,16 @@
   gap: 14px;
 }
 .bf-copy-report-btn {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--pw-border);
-  color: var(--pw-text-2);
+  background: var(--ace-surface);
+  border: 1px solid var(--ace-hair);
+  color: var(--ace-muted);
   font-size: 0.72rem;
   font-weight: 600;
   padding: 5px 10px;
   border-radius: 6px;
   cursor: pointer;
 }
-.bf-copy-report-btn:hover { color: var(--pw-text-1); border-color: var(--pw-border-strong); }
+.bf-copy-report-btn:hover { color: var(--ace-fg); border-color: var(--ace-muted); }
 
 /* Phones (stacked layout): the track pins under the header and the tower scrolls
    below it, so a driver's panel (inside the tower) never covers the track (Pax, Oct 9). */
@@ -1239,11 +1239,11 @@
   /* clip (not hide): hiding x-overflow makes .watch-mode a scroll box and breaks sticky */
   .watch-mode { overflow-x: clip; overflow-y: visible; }
   /* The header stays on screen: fixed, with the page padded by its measured height. */
-  .watch-mode .uh { position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: var(--pw-ground); }
+  .watch-mode .uh { position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: var(--ace-bg); }
   .watch-mode { padding-top: var(--uh-height, 84px); }
   .broadcast-frame.frame-track .bf-map {
     order: -1; position: sticky; top: var(--uh-height, 84px); z-index: 10;
-    background: var(--pw-ground); padding: 6px 12px; border-bottom: 1px solid var(--pw-hairline);
+    background: var(--ace-bg); padding: 6px 12px; border-bottom: 1px solid var(--ace-hair);
   }
   .broadcast-frame.frame-track .bf-map .track-map { max-height: 30vh; }
 }

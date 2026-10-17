@@ -6,7 +6,7 @@
   width: 100%;
   aspect-ratio: 5/3;
   min-height: 180px;
-  background: var(--pw-ground);
+  background: var(--ace-bg);
   border: none;
   border-radius: 0;
   overflow: hidden;
@@ -95,4 +95,4 @@
 /* Fights on the map */
 .marker-battle-ring { animation: battle-ring 1s ease-in-out infinite; pointer-events: none; }
 @keyframes battle-ring { 0%, 100% { opacity: 0.9; } 50% { opacity: 0.3; } }
-.marker-swords { fill: var(--pw-yellow); pointer-events: none; }
+.marker-swords { fill: var(--ace-yellow); pointer-events: none; }
