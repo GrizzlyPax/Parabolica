@@ -27,7 +27,7 @@ export default function DriverCard({ data, onClose }: { data: DriverCardData; on
   }, [onClose]);
   return (
     <div className="dc-scrim" onClick={onClose}>
-      <section className="dc" role="dialog" aria-label={`${data.name}, driver card`} onClick={e => e.stopPropagation()}>
+      <section className="dc ace-panel" role="dialog" aria-label={`${data.name}, driver card`} onClick={e => e.stopPropagation()}>
         <button type="button" className="dc-grab" onClick={onClose} aria-label="Close the driver card" />
         <div className="dc-who">
           <span className="dc-face" style={{ borderColor: data.color }}>
@@ -61,7 +61,7 @@ export default function DriverCard({ data, onClose }: { data: DriverCardData; on
 
         {data.cards.length > 0 && (
           <div className="dc-cards">
-            <span className="rs-k">Cards · {data.cards.length}</span>
+            <span className="ace-k">Cards · {data.cards.length}</span>
             <span className="dc-chips">
               {data.sealed ? data.cards.map(c => <CardDot key={c.id} card={c} />) : data.cards.map(c => <CardChip key={c.id} card={c} size={30} />)}
             </span>
@@ -70,8 +70,8 @@ export default function DriverCard({ data, onClose }: { data: DriverCardData; on
 
         {(data.backstory || data.quirk) && (
           <div className="dc-story">
-            {data.backstory && <><span className="rs-k">Backstory</span><p>{data.backstory}</p></>}
-            {data.quirk && <><span className="rs-k">Quirk</span><p className="dc-quirk">{data.quirk}</p></>}
+            {data.backstory && <><span className="ace-k">Backstory</span><p>{data.backstory}</p></>}
+            {data.quirk && <><span className="ace-k">Quirk</span><p className="dc-quirk">{data.quirk}</p></>}
           </div>
         )}
       </section>

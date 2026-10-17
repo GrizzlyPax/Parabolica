@@ -68,10 +68,10 @@ export function ReadingSheet({ title, reading, icon }: { title: string; reading:
   const r = Math.round;
   return (
     <div className="pk-sheet-text">
-      <span className="rs-k">{icon && <GameIcon name={icon} size={12} />} {title}</span>
+      <span className="ace-k">{icon && <GameIcon name={icon} size={12} />} {title}</span>
       <b className={`rt-g tone-${levelTone(reading.level)}`}>Lv {reading.level}</b>
       <span className="rt-sum">
-        <span>Lv {reading.baseLevel} base roll · {r(reading.base)} points <span className="rs-hint">(0 worst, 100 best possible; 5 points a level)</span></span>
+        <span>Lv {reading.baseLevel} base roll · {r(reading.base)} points <span className="ace-note">(0 worst, 100 best possible; 5 points a level)</span></span>
         {reading.parts.map(p => <span key={p.card.id}>{levelDelta(p.points)} {STAT_LABELS[reading.stat]} · {p.card.name}</span>)}
         <span className="rt-sum-total">Lv {reading.level} · {r(reading.total)} points{reading.total > 100 ? ' · past the best possible roll' : ''}</span>
       </span>

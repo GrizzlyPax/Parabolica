@@ -60,6 +60,22 @@
 }
 @media (min-width: 1024px) { :root { --ace-gutter: 32px; } }
 
+/* Roles for what sits on the ground (#778, the bridge retired): the colour
+   behind text here, a slightly raised surface, the data face (condensed on
+   the ground, the typewriter on paper: .ace-panel re-points these), the
+   "best" purple for S grades, and the card plate (a card is a dark plate
+   wherever it sits). Declared on every step wrapper so they follow the step. */
+:root, [data-step] {
+  --ace-bg: var(--ace-ground);
+  --ace-surface: color-mix(in srgb, var(--ace-fg) 6%, var(--ace-ground));
+  --ace-raised: color-mix(in srgb, var(--ace-fg) 10%, var(--ace-ground));
+  --ace-data: var(--ace-cond);
+  --ace-purple: #a98bff;
+  --ace-plate: var(--ace-navy);
+  --ace-plate-ink: var(--ace-paper);
+  --ace-plate-muted: #a9b0c4;
+}
+
 /* Locals: black and white, generic. The accent is a dark grey, the buttons paper. */
 [data-step='locals'] {
   --ace-navy: #111111;

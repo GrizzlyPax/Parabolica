@@ -51,10 +51,10 @@ export default function ParcelPick({ parcel, targets, smudgeLine, onKeep, onLift
   return (
     <section className={`pp tier-${parcel.tier} ${parcel.kind === 'gift' ? 'pp-gift' : parcel.kind === 'smudged' ? 'pp-curse' : ''}`.trim()} aria-label={`${label}: keep one of three stamps`}>
       <div className="pp-head">
-        <span className="rs-k">{label} · keep one stamp</span>
-        <span className="rs-hint">{parcel.kind === 'gift' ? 'A friend upstairs sends their regards: the best odds.' : parcel.kind === 'smudged' ? 'Unlucky.' : 'Before every race.'}</span>
+        <span className="ace-k">{label} · keep one stamp</span>
+        <span className="ace-note">{parcel.kind === 'gift' ? 'A friend upstairs sends their regards: the best odds.' : parcel.kind === 'smudged' ? 'Unlucky.' : 'Before every race.'}</span>
       </div>
-      {smudgeLine && <p className="rs-hint pp-smudge">{smudgeLine}</p>}
+      {smudgeLine && <p className="ace-note pp-smudge">{smudgeLine}</p>}
       <div className="pp-three" role="group" aria-label="Pick one of three">
         {parcel.cards.map(c => (
           <button
@@ -91,10 +91,10 @@ export default function ParcelPick({ parcel, targets, smudgeLine, onKeep, onLift
               </button>
             ))}
           </span>
-          <span className="rs-hint">{isInk(chosen) ? `Ink: twice the strength, fades after ${GEAR_LIFE} races.` : 'A Seal: pressed in, it keeps for the run.'} Tap it again for the full card.</span>
+          <span className="ace-note">{isInk(chosen) ? `Ink: twice the strength, fades after ${GEAR_LIFE} races.` : 'A Seal: pressed in, it keeps for the run.'} Tap it again for the full card.</span>
         </div>
       ) : (
-        <p className="rs-hint pp-keep">Tap a stamp to lift it; the other two go back. Or leave the box shut and go racing.</p>
+        <p className="ace-note pp-keep">Tap a stamp to lift it; the other two go back. Or leave the box shut and go racing.</p>
       )}
     </section>
   );

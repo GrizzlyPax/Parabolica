@@ -1,11 +1,11 @@
 /* World Deck (Glossary) — compact one-line rows that open on click. The look (docs/ICONS.md). */
 .gl-search { display: inline-flex; align-items: center; gap: 10px; margin-left: auto; }
-.gl-search input { background: var(--pw-ground); color: var(--pw-text-1); border: 1px solid var(--pw-text-1); border-radius: 0; padding: 8px 12px; font: inherit; font-size: 15px; min-width: 240px; min-height: 42px; }
-.gl-search input::placeholder { color: var(--pw-text-3); font-style: italic; }
-.gl-count { color: var(--pw-text-3); margin-left: 4px; }
+.gl-search input { background: var(--ace-bg); color: var(--ace-fg); border: 1px solid var(--ace-fg); border-radius: 0; padding: 8px 12px; font: inherit; font-size: 15px; min-width: 240px; min-height: 42px; }
+.gl-search input::placeholder { color: var(--ace-muted); font-style: italic; }
+.gl-count { color: var(--ace-muted); margin-left: 4px; }
 
 .gl-list { display: flex; flex-direction: column; }
-.gl-row { border-top: 1px solid var(--pw-hairline); }
+.gl-row { border-top: 1px solid var(--ace-hair); }
 .gl-row:first-child { border-top: 0; }
 
 /* The collapsed line: lead · note · pills · chevron */
@@ -14,23 +14,23 @@
   width: 100%; padding: 7px 4px; min-height: 40px;
   background: none; border: 0; color: inherit; font: inherit; text-align: left; cursor: pointer; border-radius: 0;
 }
-.gl-line:hover { background: var(--pw-surface); }
+.gl-line:hover { background: var(--ace-surface); }
 .gl-lead { display: flex; min-width: 0; }
 .gl-lead .tag-chips { flex-wrap: nowrap; }
-.gl-plain { font-size: 16px; color: var(--pw-text-1); white-space: nowrap; }
-.gl-note { color: var(--pw-text-3); font-family: var(--look-data); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gl-plain { font-size: 16px; color: var(--ace-fg); white-space: nowrap; }
+.gl-note { color: var(--ace-muted); font-family: var(--ace-data); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .gl-pills { display: flex; min-width: 0; overflow: hidden; }
 .gl-pills .effect-pills { flex-wrap: nowrap; }
-.gl-readout { color: var(--pw-text-2); font-style: italic; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.gl-chev { color: var(--pw-text-3); font-family: var(--look-data); transition: transform 120ms; justify-self: end; }
+.gl-readout { color: var(--ace-muted); font-style: italic; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gl-chev { color: var(--ace-muted); font-family: var(--ace-data); transition: transform 120ms; justify-self: end; }
 .gl-row.open .gl-chev { transform: rotate(90deg); }
 
 /* The opened block */
-.gl-detail { padding: 4px 12px 12px 12px; margin: 0 4px 8px; border-left: 1px solid var(--pw-text-1); }
-.gl-desc { color: var(--pw-text-1); line-height: 1.4; font-size: 16px; margin: 4px 0 10px; max-width: 70ch; }
-.gl-facts { display: flex; flex-wrap: wrap; gap: 4px 18px; font-size: 14px; color: var(--pw-text-2); }
+.gl-detail { padding: 4px 12px 12px 12px; margin: 0 4px 8px; border-left: 1px solid var(--ace-fg); }
+.gl-desc { color: var(--ace-fg); line-height: 1.4; font-size: 16px; margin: 4px 0 10px; max-width: 70ch; }
+.gl-facts { display: flex; flex-wrap: wrap; gap: 4px 18px; font-size: 14px; color: var(--ace-muted); }
 .gl-fact .rs-k { margin-right: 4px; }
-.gl-src { margin-top: 8px; color: var(--pw-text-3); font-size: 11px; font-family: var(--look-data); }
+.gl-src { margin-top: 8px; color: var(--ace-muted); font-size: 11px; font-family: var(--ace-data); }
 
 @media (max-width: 799px) {
   .gl-search { margin-left: 0; width: 100%; }
@@ -40,35 +40,35 @@
   .gl-pills { grid-column: 1; }
   .gl-chev { grid-row: 1; grid-column: 2; }
 }
-.gl-roll { margin: 4px 0 0; padding-left: 22px; color: var(--pw-text-2); font-size: 15px; line-height: 1.6; max-width: 80ch; }
-.gl-roll b { color: var(--pw-text-1); font-weight: 700; }
+.gl-roll { margin: 4px 0 0; padding-left: 22px; color: var(--ace-muted); font-size: 15px; line-height: 1.6; max-width: 80ch; }
+.gl-roll b { color: var(--ace-fg); font-weight: 700; }
 .gl-swatch { display: inline-block; width: 12px; height: 12px; margin-right: 6px; vertical-align: -1px; }
 
 /* Tabs */
 .gl-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: -8px 0 0; align-items: center; }
-.gl-tab { background: none; color: var(--pw-text-2); border: 1px solid transparent; border-radius: 0; padding: 7px 12px; font-family: var(--look-data); font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; }
-.gl-tab:hover { color: var(--pw-text-1); border-color: var(--pw-border-strong); }
-.gl-tab.on { background: var(--pw-text-1); border-color: var(--pw-text-1); color: var(--pw-ground); }
-.gl-tab-add { border: 1px dashed var(--pw-border-strong); }
+.gl-tab { background: none; color: var(--ace-muted); border: 1px solid transparent; border-radius: 0; padding: 7px 12px; font-family: var(--ace-data); font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; }
+.gl-tab:hover { color: var(--ace-fg); border-color: var(--ace-muted); }
+.gl-tab.on { background: var(--ace-fg); border-color: var(--ace-fg); color: var(--ace-bg); }
+.gl-tab-add { border: 1px dashed var(--ace-muted); }
 .gl-fold { margin-left: auto; display: inline-flex; gap: 12px; align-items: center; }
 .gl-fold .rs-link { margin-left: 0; font-size: 13px; }
 
 /* Collapsible sections */
 .gl-section-head { display: flex; align-items: center; gap: 10px; }
 .gl-section-toggle { flex: 1; display: flex; align-items: baseline; gap: 10px; background: none; border: 0; color: inherit; font: inherit; text-align: left; cursor: pointer; padding: 0; min-width: 0; }
-.gl-sec-chev { color: var(--pw-text-3); font-family: var(--look-data); transition: transform 120ms; transform: rotate(90deg); display: inline-block; width: 10px; }
+.gl-sec-chev { color: var(--ace-muted); font-family: var(--ace-data); transition: transform 120ms; transform: rotate(90deg); display: inline-block; width: 10px; }
 .gl-section.collapsed .gl-sec-chev { transform: rotate(0deg); }
 .gl-section.collapsed { padding-bottom: 10px; }
 .gl-section-extra { margin-left: auto; }
-.gl-sort { background: var(--pw-ground); color: var(--pw-text-1); border: 1px solid var(--pw-border-strong); border-radius: 0; padding: 4px 6px; font-family: var(--look-data); font-size: 12px; }
+.gl-sort { background: var(--ace-bg); color: var(--ace-fg); border: 1px solid var(--ace-muted); border-radius: 0; padding: 4px 6px; font-family: var(--ace-data); font-size: 12px; }
 
 /* Add tab */
 .gl-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px 14px; }
 .gl-form label { display: flex; flex-direction: column; gap: 4px; }
 .gl-form .gl-wide { grid-column: 1 / -1; }
-.gl-form input, .gl-form select { background: var(--pw-ground); color: var(--pw-text-1); border: 1px solid var(--pw-text-1); border-radius: 0; padding: 8px 10px; font: inherit; font-size: 14px; min-height: 38px; }
+.gl-form input, .gl-form select { background: var(--ace-bg); color: var(--ace-fg); border: 1px solid var(--ace-fg); border-radius: 0; padding: 8px 10px; font: inherit; font-size: 14px; min-height: 38px; }
 .gl-form input[type=color] { padding: 2px; height: 38px; }
-.gl-preview { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 14px; padding: 10px 12px; border: 1px dashed var(--pw-border-strong); }
+.gl-preview { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 14px; padding: 10px 12px; border: 1px dashed var(--ace-muted); }
 .gl-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
 .gl-line-static { cursor: default; }
 .gl-line-static:hover { background: none; }
@@ -80,17 +80,17 @@
   .gl-add .gl-line { grid-template-columns: 1fr; }
 }
 .gl-idea { grid-template-columns: 90px 1fr 200px auto !important; }
-.gl-idea-text { white-space: normal; color: var(--pw-text-1); font-size: 15px; line-height: 1.35; }
+.gl-idea-text { white-space: normal; color: var(--ace-fg); font-size: 15px; line-height: 1.35; }
 .gl-sent { opacity: 0.55; }
 @media (max-width: 799px) { .gl-idea { grid-template-columns: 1fr !important; } }
 
 /* Credits tab (#350): game-icons.net authors, generated from the registry. */
-.gl-credit { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; padding: 8px 0; border-top: 1px solid var(--pw-hairline); }
-.gl-credit-author { min-width: 110px; color: var(--pw-text-1); font-weight: 700; }
-.gl-credit-author a, .glossary .gl-desc a, .credits .gl-desc a { color: var(--pw-text-1); text-decoration: underline; text-decoration-color: var(--pw-border-strong); }
+.gl-credit { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; padding: 8px 0; border-top: 1px solid var(--ace-hair); }
+.gl-credit-author { min-width: 110px; color: var(--ace-fg); font-weight: 700; }
+.gl-credit-author a, .glossary .gl-desc a, .credits .gl-desc a { color: var(--ace-fg); text-decoration: underline; text-decoration-color: var(--ace-muted); }
 .gl-credit-icons { display: flex; flex-wrap: wrap; gap: 6px 14px; }
-.gl-credit-icon, .gl-credit-size { display: inline-flex; align-items: center; gap: 6px; color: var(--pw-text-1); }
-.gl-credit-icon code, .gl-credit-size code { color: var(--pw-text-3); font-family: var(--look-data); font-size: 11px; }
+.gl-credit-icon, .gl-credit-size { display: inline-flex; align-items: center; gap: 6px; color: var(--ace-fg); }
+.gl-credit-icon code, .gl-credit-size code { color: var(--ace-muted); font-family: var(--ace-data); font-size: 11px; }
 @media (max-width: 799px) {
   .gl-section-head { flex-wrap: wrap; align-items: flex-start; }
   .gl-section-toggle { flex-wrap: wrap; row-gap: 4px; }
@@ -105,10 +105,10 @@
 
 /* World Deck -> Teams as a roster table (#453). */
 .gl-teams .rt-name { padding-left: 8px; }
-.gl-teams .gl-tcol { width: 120px; padding: 0 10px; font-family: var(--look-data); font-size: 12px; color: var(--pw-text-2); border-left: 1px solid var(--pw-hairline); white-space: nowrap; }
-.gl-swatch { display: inline-block; width: 14px; height: 14px; margin-right: 8px; vertical-align: middle; border: 1px solid var(--pw-border-strong); }
-.gl-teams .gl-tline { min-width: 280px; padding: 8px 12px; font-style: italic; color: var(--pw-text-2); border-left: 1px solid var(--pw-hairline); white-space: normal; height: auto; }
-.gl-teams .gl-tid { width: 170px; padding: 6px 10px; font-family: var(--look-data); font-size: 11px; color: var(--pw-text-3); border-left: 1px solid var(--pw-hairline); }
+.gl-teams .gl-tcol { width: 120px; padding: 0 10px; font-family: var(--ace-data); font-size: 12px; color: var(--ace-muted); border-left: 1px solid var(--ace-hair); white-space: nowrap; }
+.gl-swatch { display: inline-block; width: 14px; height: 14px; margin-right: 8px; vertical-align: middle; border: 1px solid var(--ace-muted); }
+.gl-teams .gl-tline { min-width: 280px; padding: 8px 12px; font-style: italic; color: var(--ace-muted); border-left: 1px solid var(--ace-hair); white-space: normal; height: auto; }
+.gl-teams .gl-tid { width: 170px; padding: 6px 10px; font-family: var(--ace-data); font-size: 11px; color: var(--ace-muted); border-left: 1px solid var(--ace-hair); }
 @media (max-width: 599px) {
   .gl-teams .gl-tcol, .gl-teams .gl-tid { display: none; }
   .gl-teams .rt-name { min-width: 140px; max-width: 150px; }
@@ -131,7 +131,7 @@
 .glossary.ace-page .gl-fold { margin-left: auto; padding-bottom: 8px; }
 .gl-state { display: inline-flex; align-items: center; gap: 10px; }
 .gl-state-sw { display: inline-flex; flex: none; }
-.gl-state-sw i { width: 14px; height: 18px; border: 1px solid var(--pw-border-strong); }
+.gl-state-sw i { width: 14px; height: 18px; border: 1px solid var(--ace-muted); }
 .gl-state-sw i + i { border-left: 0; }
 .gl-state-sw.empty i { background: none; border-style: dashed; }
 @media (min-width: 1024px) {

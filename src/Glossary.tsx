@@ -101,9 +101,9 @@ function FavourIcons({ favours }: { favours: CardStat[] }) {
 /** A deck card as the run deals it to you (#623: card text in levels at 3×). */
 const asDealt = (c: Card): Card => (c.kind === 'effect' ? c : { ...c, stats: c.stats.map(x => ({ ...x, pct: x.pct * PLAYER_CARD_SCALE })) });
 const DECK_GROUPS: { id: string; title: string; hint: string; rows: Card[] }[] = [
-  { id: 'equipment', title: 'Equipment', hint: `Driver gear: one slot, swappable (Season Mode packs). ${IN_SIM}`, rows: cardsBy({ kind: 'equipment' }) },
-  { id: 'upgrade', title: 'Upgrades', hint: `Car gear: one slot (Season Mode packs). ${IN_SIM}`, rows: cardsBy({ kind: 'upgrade' }) },
-  { id: 'facility', title: 'Facilities', hint: `Team gear: one slot, helps both drivers (Season Mode packs). ${IN_SIM}`, rows: cardsBy({ kind: 'facility' }) },
+  { id: 'equipment', title: 'Equipment', hint: `Driver gear: a stamp on the driver card, dealt by Parcels; ink fades, a Seal keeps. ${IN_SIM}`, rows: cardsBy({ kind: 'equipment' }) },
+  { id: 'upgrade', title: 'Upgrades', hint: `Car gear: a stamp on the car card, dealt by Parcels. ${IN_SIM}`, rows: cardsBy({ kind: 'upgrade' }) },
+  { id: 'facility', title: 'Facilities', hint: `Garage gear: a stamp on the car card that helps both drivers. ${IN_SIM}`, rows: cardsBy({ kind: 'facility' }) },
   { id: 'trait-driver', title: 'Driver traits', hint: `Permanent. What a driver is born with. ${IN_SIM}`, rows: cardsBy({ kind: 'trait', target: 'driver' }) },
   { id: 'trait-car', title: 'Car traits', hint: `Permanent. What a chassis is born with. ${IN_SIM}`, rows: cardsBy({ kind: 'trait', target: 'car' }) },
   { id: 'trait-team', title: 'Team traits', hint: `Permanent, shared by teammates. ${IN_SIM}`, rows: cardsBy({ kind: 'trait', target: 'team' }) },

@@ -117,7 +117,7 @@ export default function Standings({ facts, onMenu, onRoad, onEndRun, onPaddock, 
           <div className="fn-crown ace-panel ace-paper-table">
             <i className="fn-swatch" style={{ background: champion.color }} aria-hidden="true" />
             <div className="fn-crown-text">
-              <span className="rs-k"><GameIcon name="season.champion" size={14} /> Top garage{champLabel ? ` · ${champLabel}` : ''}</span>
+              <span className="ace-k"><GameIcon name="season.champion" size={14} /> Top garage{champLabel ? ` · ${champLabel}` : ''}</span>
               <span className="fn-crown-name">{champion.name}</span>
               <span className="fn-crown-stats">{table.lines[0].points} pts · {table.lines[0].wins} {table.lines[0].wins === 1 ? 'win' : 'wins'} · {podiums(champion.id)} podiums</span>
             </div>
@@ -125,7 +125,7 @@ export default function Standings({ facts, onMenu, onRoad, onEndRun, onPaddock, 
           <div className="fn-crown ace-panel ace-paper-table">
             <RaceNumber n={raceBadges(facts)[dc.driver.driverId] ?? driver(dc.driver.driverId).number} color={teams[dc.teamId].color} ink={teams[dc.teamId].ink} size={56} shape="square" />
             <div className="fn-crown-text">
-              <span className="rs-k"><GameIcon name="season.champion" size={14} /> Top driver · {teams[dc.teamId].name}{humanLabel(facts, dc.teamId) ? ` · ${humanLabel(facts, dc.teamId)}` : ''}</span>
+              <span className="ace-k"><GameIcon name="season.champion" size={14} /> Top driver · {teams[dc.teamId].name}{humanLabel(facts, dc.teamId) ? ` · ${humanLabel(facts, dc.teamId)}` : ''}</span>
               <span className="fn-crown-name"><Avatar icon={portraitFor(pool.seed, dc.driver.driverId)} color={teams[dc.teamId].color} size={26} /> {driver(dc.driver.driverId).fullName}</span>
               <span className="fn-crown-stats">{dc.driver.points} pts · {dc.driver.wins} {dc.driver.wins === 1 ? 'win' : 'wins'} · {dc.driver.podiums} podiums</span>
             </div>
@@ -136,7 +136,7 @@ export default function Standings({ facts, onMenu, onRoad, onEndRun, onPaddock, 
       <div className="fn-grid">
         {facts.results.length > 0 && (
           <section className="pk-chart">
-            <div className="rs-k">Garage points, race by race</div>
+            <div className="ace-k">Garage points, race by race</div>
             <SeasonChart standings={standings} teams={teams} mine={humans} />
           </section>
         )}

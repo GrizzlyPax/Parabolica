@@ -20,7 +20,7 @@ export function PriorityLine({ label, track, weather, className }: { label: stri
   if (!hasTrack && !hasWeather) return null;
   return (
     <p className={`pk-priority ${className ?? ''}`.trim()}>
-      <span className="rs-k">{label}</span>{' '}
+      <span className="ace-k">{label}</span>{' '}
       {hasTrack && part(track, 'track')}
       {hasWeather && <>{hasTrack && ' and '}{part(weather!, 'weather')}</>}
       , for everyone.

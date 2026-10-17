@@ -47,12 +47,13 @@ import { stateLook } from '../look/step';
 - **The race view** takes `step`, `state` and `program` props on `WatchMode` (App passes the Season race's step, its state and "State · Race 2 of 6"; Quick Race and the lab wear Nationals). From 1024px the track view runs **tower | map | feed** side by side and the detail view **table | feed**; a phone stacks them (map pinned under the header, then the tower, then the feed).
 - **State accents use `inkFor`** (`icons/ink.ts`) for readable ink, never a per-state guess: `stateLook(code)` does it.
 - The house data table (`.rt`, `season/ui/RosterTable.tsx`) sits on paper inside an `.ace-panel .rt-scroll` (its `--pw-*` tokens are re-pointed there).
-- Old screens keep working: the `--pw-*` / `--look-*` tokens and the `.rs-*` frame are untouched. Hub moves a screen by wrapping it in `StepTheme` + `.ace-page` and swapping its pieces for the components.
+- **Roles on the ground and on paper** (#778): besides `--ace-fg` / `--ace-muted` / `--ace-hair`, a stylesheet reads `--ace-bg` (the colour behind text here), `--ace-surface` / `--ace-raised` (a little lighter), `--ace-data` (the data face: Oswald on the ground, the typewriter on paper) and `--ace-purple` (S grades). `.ace-panel` and `.ace-paper-table` flip them all to paper and ink, so a component written once reads right in both places. A card is a dark plate wherever it sits: `--ace-plate` / `--ace-plate-ink` / `--ace-plate-muted`.
+- The lab's frame (`RunSetup.css`, the `.rs-*` classes the World Deck, Race Control and the idea box share) reads the same tokens; `.rs-btn` is the program's button under the old name.
 
-### The bridge (#715)
-Inside `.ace-page`, the old `--pw-*` / `--look-*` tokens point at the program's tokens, and `.rs-btn` / `.rs-btn-primary` take the program's buttons, so a screen that hasn't been swept still wears its step for free. Two cautions:
-- Old rules can beat `.ace-tab` on specificity (the Paddock's `.pk-tabs button` did): override them under the screen's own `.ace-page` class, never by raising the program's specificity.
-- `.ace-panel.ace-paper-table` re-points `--pw-*` to paper, for old components inside a paper panel (the finale's crowns use it).
+### The bridge (#715, retired for pages in #778)
+Every page stylesheet reads `--ace-*` now; the `--pw-*` / `--look-*` re-pointing survives only on `.ace-race` (`look/race.css`) until the race view's own sweep moves `WatchMode.css` and `components/race/*.css` onto the tokens. Two cautions still hold:
+- Old rules can beat `.ace-tab` on specificity: override them under the screen's own `.ace-page` class, never by raising the program's specificity.
+- `.ace-paper-table` (or any `.ace-panel`) flips the roles to paper for whatever sits inside (the finale's crowns, the Paddock's sheets).
 
 Frame children get `width` / `max-width` / `margin` at zero specificity (`:where`), so overlays and modals keep their own sizes; the bunting, the state bar and the dock opt out of the frame.
 
