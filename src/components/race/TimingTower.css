@@ -15,34 +15,6 @@
 }
 
 /* Lap Counter - compact */
-.timing-tower-lap {
-  display: flex;
-  align-items: baseline;
-  gap: 0.2rem;
-  padding: 0.4rem 0.5rem;
-  background: var(--pw-ground);
-  border-bottom: none;
-}
-
-.timing-tower-lap .lap-current {
-  font-family: var(--font-display), var(--font-emoji);
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--pw-text-1);
-}
-
-.timing-tower-lap .lap-divider {
-  font-family: var(--font-display), var(--font-emoji);
-  font-size: 0.9rem;
-  color: var(--pw-border-strong);
-}
-
-.timing-tower-lap .lap-total {
-  font-family: var(--font-display), var(--font-emoji);
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: var(--pw-text-3);
-}
 
 /* Column Headers - compact */
 .timing-tower-header {
@@ -174,69 +146,8 @@
 }
 
 /* Simplified expanded row - just name + tire */
-.expanded-content {
-  display: flex;
-  align-items: center;
-  gap: 0.9rem;
-  flex-wrap: wrap;
-  padding-bottom: 0.4rem;
-  border-bottom: 1px solid #1e1e25;
-}
-
-.expanded-full-name {
-  font-family: var(--font-display), var(--font-emoji);
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--pw-text-1);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.expanded-tire {
-  font-family: var(--font-display), var(--font-emoji);
-  font-size: 0.75rem;
-  font-weight: 700;
-  padding: 0.2rem 0.5rem;
-  border-radius: 6px;
-}
-
-.expanded-tire[data-compound="soft"] {
-  background: rgba(231, 76, 60, 0.3);
-  color: var(--pw-red);
-}
-
-.expanded-tire[data-compound="medium"] {
-  background: rgba(241, 196, 15, 0.3);
-  color: var(--pw-yellow);
-}
-
-.expanded-tire[data-compound="hard"] {
-  background: rgba(236, 240, 241, 0.3);
-  color: #ecf0f1;
-}
 
 /* Desktop expanded row */
-@media (min-width: 900px) {
-  .expanded-full-name {
-    font-size: 1.15rem;
-  }
-
-  .expanded-tire {
-    font-size: 0.85rem;
-    padding: 0.25rem 0.6rem;
-  }
-}
-
-@media (min-width: 1200px) {
-  .expanded-full-name {
-    font-size: 1.3rem;
-  }
-
-  .expanded-tire {
-    font-size: 0.9rem;
-    padding: 0.3rem 0.7rem;
-  }
-}
 
 /* Position number */
 .position-number {
@@ -320,10 +231,6 @@
   background: var(--pw-ground);
 }
 
-.timing-tower.timing-tower-track .timing-tower-lap {
-  padding: 0.5rem 0.6rem;
-}
-
 .timing-tower.timing-tower-track .timing-tower-body {
   /* NO internal scrolling - page scrolls as one */
   overflow: visible;
@@ -399,18 +306,6 @@
 
 /* Tablet and up (640px+) */
 @media (min-width: 640px) {
-  .timing-tower-lap {
-    padding: 0.5rem 0.6rem;
-  }
-
-  .timing-tower-lap .lap-current {
-    font-size: 1.4rem;
-  }
-
-  .timing-tower-lap .lap-divider,
-  .timing-tower-lap .lap-total {
-    font-size: 1rem;
-  }
 
   .timing-tower-header {
     font-size: 0.65rem;
@@ -441,18 +336,6 @@
 
 /* Desktop (900px+) */
 @media (min-width: 900px) {
-  .timing-tower-lap {
-    padding: 0.6rem 0.85rem;
-  }
-
-  .timing-tower-lap .lap-current {
-    font-size: 2rem;
-  }
-
-  .timing-tower-lap .lap-divider,
-  .timing-tower-lap .lap-total {
-    font-size: 1.3rem;
-  }
 
   .timing-tower-header {
     font-size: 0.85rem;
@@ -487,14 +370,6 @@
 
 /* Large desktop (1200px+) */
 @media (min-width: 1200px) {
-  .timing-tower-lap .lap-current {
-    font-size: 2.4rem;
-  }
-
-  .timing-tower-lap .lap-divider,
-  .timing-tower-lap .lap-total {
-    font-size: 1.5rem;
-  }
 
   .timing-tower-header {
     font-size: 0.9rem;
@@ -628,7 +503,6 @@
     animation: none !important;
   }
 }
-
 
 /* === Phones (#243 mobile pass): the tower must fit 360–430px wide ===
    Tighter gaps, no LEADER column (INT carries the story). Tracks, in order:

@@ -2,114 +2,23 @@
    rs-* page frame from RunSetup.css, black + white, white rules, square
    corners; the team colour only on the primary button and your team's mark. */
 
-.season-setup { max-width: 720px; }
-
 /* Start: top of the page, so the defaults are one tap */
-.ss-start-block { margin-left: auto; display: flex; flex-direction: column; align-items: stretch; gap: 10px; }
-.ss-confirm {
-  display: flex; flex-direction: column; gap: 10px; padding: 12px;
-  border: 1px solid var(--signal-yellow); font-size: 15px; line-height: 1.4; color: var(--pw-text-1);
-}
 
 /* League name + seed */
-.ss-name { font-family: var(--look-display); font-weight: 700; font-size: 26px; line-height: 1.1; }
-.ss-seed { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 12px 0 6px; }
-.ss-reroll { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px; font-size: 15px; }
 
 /* Steppers */
-.ss-counts { display: flex; flex-wrap: wrap; gap: 12px 28px; margin-bottom: 8px; }
-.ss-count { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
-.ss-count-label { font-family: var(--look-display); font-weight: 700; font-size: 18px; min-width: 64px; }
-.ss-stepper { display: inline-flex; align-items: stretch; border: 1px solid var(--pw-text-1); }
-.ss-step {
-  width: 44px; height: 44px; border: 0; border-radius: 0; cursor: pointer;
-  background: transparent; color: var(--pw-text-1); font-family: var(--look-data); font-size: 20px;
-}
-.ss-step:hover:not(:disabled) { background: var(--pw-surface); }
-.ss-step:disabled { color: var(--pw-text-3); cursor: default; }
-.ss-step-value {
-  min-width: 48px; display: inline-flex; align-items: center; justify-content: center;
-  border-left: 1px solid var(--pw-text-1); border-right: 1px solid var(--pw-text-1);
-  font-family: var(--look-data); font-size: 18px;
-}
 
 /* Team rows */
-.ss-team { display: flex; align-items: center; gap: 10px; min-height: 44px; border-top: 1px solid var(--pw-hairline); }
-.ss-team-name { flex: 1; min-width: 0; font-size: 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ss-badge {
-  display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px;
-  border: 1px solid var(--pw-border-strong); color: var(--pw-text-2);
-  font-family: var(--look-data); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase;
-}
-.ss-badge-human { border-color: var(--team-primary); background: var(--team-primary); color: var(--team-ink); }
 
 /* Calendar */
-.ss-calendar { list-style: none; margin: 4px 0 8px; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); column-gap: 20px; }
-.ss-race {
-  display: flex; align-items: center; gap: 12px; width: 100%; min-height: 44px; text-align: left;
-  background: transparent; border: 0; border-top: 1px solid var(--pw-hairline); border-radius: 0;
-  padding: 0; color: inherit; font: inherit; cursor: pointer;
-}
-.ss-race:hover .ss-race-chev { color: var(--pw-text-1); }
-.ss-race-no { width: 32px; font-family: var(--look-data); font-size: 12px; color: var(--pw-text-2); }
-.ss-race-name { flex: 1; font-size: 16px; }
-.ss-race-chev { font-family: var(--look-data); font-size: 18px; color: var(--pw-text-3); }
 
 /* A Season screen still to be built: where the season stands */
-.ss-holding { display: flex; flex-direction: column; gap: 12px; }
-.ss-holding-actions { display: flex; flex-wrap: wrap; gap: 10px; }
-
 
 /* Draft board */
-.ss-draft { padding-bottom: 96px; }
-.ss-third { display: inline-flex; align-items: center; gap: 6px; font-family: var(--look-data); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--pw-text-2); white-space: nowrap; }
-.ss-third-dot { width: 9px; height: 9px; border-radius: 50%; background: currentColor; }
-.ss-third.front .ss-third-dot { background: var(--signal-green); }
-.ss-third.middle .ss-third-dot { background: var(--signal-yellow); }
-.ss-third.back .ss-third-dot { background: var(--signal-red); }
-.ss-dots { display: inline-flex; gap: 4px; }
-.ss-open { display: flex; flex-wrap: wrap; gap: 4px 10px; }
-.ss-open-card { display: inline-flex; align-items: center; gap: 5px; font-style: italic; font-size: 13px; color: var(--pw-text-2); }
-.ss-roster-logo { margin-left: auto; display: inline-flex; }
-.ss-tabs { display: flex; gap: 0; }
-.ss-tab {
-  height: 40px; padding: 0 14px; border-radius: 0; cursor: pointer;
-  background: transparent; color: var(--pw-text-2); border: 1px solid var(--pw-border-strong);
-  font-family: var(--look-display); font-weight: 700; font-size: 16px;
-}
-.ss-tab + .ss-tab { border-left: 0; }
-.ss-tab.on { background: var(--pw-text-1); color: var(--pw-ground); border-color: var(--pw-text-1); }
-.ss-tab-n { font-family: var(--look-data); font-weight: 400; font-size: 11px; margin-left: 4px; }
 
 /* Paddock */
-.ss-paddock { padding-bottom: 96px; }
-.ss-strip { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
-.ss-strip-team { display: inline-flex; flex-direction: column; align-items: center; gap: 4px; padding: 4px; border: 1px solid transparent; }
-.ss-strip-team.now { border-color: var(--team-primary); }
-.ss-strip-team.done { opacity: 0.35; }
-.ss-strip-label { font-family: var(--look-data); font-size: 10px; letter-spacing: 0.06em; color: var(--pw-text-2); }
-.ss-pack-k { display: inline-flex; align-items: center; gap: 6px; }
-.ss-pack { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
-.ss-pack-place { flex: 1 1 180px; display: flex; flex-direction: column; gap: 8px; }
-.ss-place { text-align: left; height: auto; min-height: 44px; padding: 8px 12px; }
-.ss-place-note { font-family: var(--look-serif); font-weight: 400; font-style: italic; font-size: 13px; color: var(--pw-text-2); }
-.ss-lineup .ss-badge { min-width: 56px; justify-content: center; }
-.ss-gear { list-style: none; margin: 0; padding: 0; }
-.ss-gear-row { display: flex; align-items: center; gap: 10px; min-height: 48px; border-top: 1px solid var(--pw-hairline); }
-.ss-gear-row .ss-pick-name { flex: 1; min-width: 0; }
-.ss-select {
-  height: 40px; max-width: 50%; padding: 0 8px; border-radius: 0;
-  background: var(--pw-ground); color: var(--pw-text-1); border: 1px solid var(--pw-text-1);
-  font-family: var(--look-data); font-size: 13px;
-}
 
 /* The thumb dock: the one action, bottom of the screen */
-.ss-dock {
-  position: fixed; left: 0; right: 0; bottom: 0; z-index: 5;
-  display: flex; justify-content: center; padding: 12px 76px calc(12px + env(safe-area-inset-bottom)) 16px; /* right: room for the idea box */
-  background: var(--pw-ground); border-top: 1px solid var(--pw-text-1);
-}
-.ss-dock-btn { width: 100%; max-width: 688px; height: 52px; font-size: 18px; }
 
 /* Roster tables (#452): the house table. Fixed cells, one value each. */
 .rt-scroll { overflow-x: auto; border-top: 1px solid var(--pw-text-1); }
@@ -129,11 +38,6 @@
 .rt .rt-name .team-logo { margin-right: 8px; }
 .rt-numsq { margin-right: 10px; }
 .rt .rt-name .avatar { width: 26px; justify-content: center; margin-right: 8px; vertical-align: middle; }
-.rt-num {
-  display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; margin-right: 10px; border-radius: 50%;
-  background: var(--team-primary); color: var(--team-ink); border: 1.5px solid var(--team-ink);
-  font-family: var(--look-data); font-size: 11px; font-weight: 400; text-box: trim-both cap alphabetic;
-}
 .rt .rt-oc, .rt .rt-stat, .rt .rt-cell { width: 56px; min-width: 56px; text-align: center; border-left: 1px solid var(--pw-hairline); }
 .rt .rt-oc { border-left: 1px solid var(--pw-border-strong); }
 .rt-g {
@@ -167,17 +71,12 @@ button.rt-g:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset:
 .rt-cell.pv { background: color-mix(in srgb, var(--team-primary) 22%, transparent); }
 .rt-na { color: var(--pw-text-3); font-family: var(--look-data); }
 .rt .rt-pad { width: 56px; min-width: 56px; border-left: 1px solid var(--pw-hairline); }
-.rt .rt-slot { width: 64px; text-align: center; border-left: 1px solid var(--pw-border-strong); }
 .rt .rt-traits { width: 120px; border-left: 1px solid var(--pw-hairline); text-align: left; }
-.rt .rt-act { width: 84px; text-align: center; border-left: 1px solid var(--pw-hairline); }
 .rt-minis { display: inline-flex; gap: 4px; padding: 0 8px; vertical-align: middle; }
-.rt tr.aimed th.rt-name { box-shadow: inset 3px 0 0 var(--team-primary); }
-.rt-slot.droppable, .pk-locker.droppable { background: color-mix(in srgb, var(--team-primary) 12%, transparent); cursor: pointer; }
 .rt-legend { display: flex; flex-wrap: wrap; gap: 6px 18px; padding: 8px 0; font-family: var(--look-data); font-size: 11px; color: var(--pw-text-2); }
 .rt-legend > span { display: inline-flex; align-items: center; gap: 6px; }
 .rt-prio-key { background: var(--pw-text-1); color: var(--pw-ground); padding: 1px 4px; }
 .rt-notch-key { display: inline-block; width: 0; height: 0; border-top: 7px solid var(--team-primary); border-right: 7px solid transparent; }
-.rt-s-key { color: var(--signal-purple); }
 .rt-compact th, .rt-compact td { height: 36px; }
 .rt-compact .rt-name { width: auto; min-width: 160px; position: static; }
 .rt-compact .rt-pos, .rt-compact .rt-numcol { width: 48px; text-align: center; font-family: var(--look-data); font-variant-numeric: tabular-nums; }
@@ -186,28 +85,8 @@ button.rt-g:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset:
 .rt-sum-total { border-top: 1px solid var(--pw-border-strong); padding-top: 4px; }
 
 /* Paddock (#452) */
-.pk-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid var(--pw-border-strong); }
-.pk-step { display: flex; flex-direction: column; gap: 4px; padding: 8px 10px; border-left: 1px solid var(--pw-border-strong); min-width: 0; }
-.pk-step:first-child { border-left: 0; }
-.pk-step b { font-family: var(--look-display); font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.pk-step.done b { color: var(--pw-text-3); text-decoration: line-through; text-decoration-color: var(--pw-border-strong); }
-.pk-step.now { background: var(--team-primary); color: var(--team-ink); }
-.pk-step.now .rs-k { color: var(--team-ink); }
-.pk-step-btn { height: 34px; padding: 0 12px; font-size: 15px; align-self: flex-start; white-space: nowrap; }
-.pk-step.now .pk-step-btn { background: var(--pw-ground); color: var(--pw-text-1); border-color: var(--pw-ground); }
-.pk-step.now .pk-step-btn:disabled { background: transparent; color: var(--team-ink); border-color: var(--team-ink); opacity: 0.7; }
-.pk-go { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; padding: 12px; border: 1px solid var(--team-primary); }
-.pk-pack { display: flex; align-items: center; gap: 14px; }
-.pk-pack-text { display: grid; gap: 3px; min-width: 0; }
-.pk-pack-text b { font-family: var(--look-display); font-size: 18px; }
-.pk-pack-k { display: inline-flex; align-items: center; gap: 6px; }
-.pk-card { background: none; border: 0; padding: 0; cursor: pointer; display: inline-flex; }
-.pk-card.held { outline: 2px solid var(--pw-text-1); outline-offset: 2px; }
 .pk-empty { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: 1px dashed var(--pw-border-strong); color: var(--pw-text-3); font-family: var(--look-data); }
 .pk-carno { font-family: var(--look-data); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--pw-text-2); }
-.ss-paddock.pk { max-width: 1180px; }
-.pk-locker { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 10px 0; border-bottom: 1px solid var(--pw-hairline); }
-.pk-side { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px 32px; }
 .pk-sheet {
   position: fixed; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 20;
   width: min(440px, calc(100% - 32px)); display: flex; gap: 14px; padding: 14px;
@@ -219,36 +98,21 @@ button.rt-g:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset:
 .pk-sheet-x { align-self: flex-start; margin-left: 0; }
 @media (max-width: 599px) {
   .rt .rt-name { width: 150px; min-width: 150px; max-width: 150px; }
-  .pk-step { padding: 6px 7px; }
-  .pk-step b { font-size: 13px; }
-  .pk-step-btn { height: 30px; padding: 0 8px; font-size: 13px; }
-  .pk-side { grid-template-columns: 1fr; }
 }
 
 /* Placing a card (#320 follow-up): the card in hand wiggles, the rows (or slots) it fits pulse */
 @keyframes pk-wiggle { 0%, 100% { transform: rotate(0deg); } 20% { transform: rotate(-6deg); } 40% { transform: rotate(5deg); } 60% { transform: rotate(-3deg); } 80% { transform: rotate(2deg); } }
 @keyframes pk-pulse { 0%, 100% { box-shadow: inset 4px 0 0 var(--team-primary), 0 0 0 0 transparent; } 50% { box-shadow: inset 4px 0 0 var(--team-primary), inset 0 0 0 2px color-mix(in srgb, var(--team-primary) 70%, transparent); } }
 @keyframes pk-slot { 0%, 100% { outline-color: color-mix(in srgb, var(--team-primary) 30%, transparent); } 50% { outline-color: var(--team-primary); } }
-.pk-card.inhand, .pk-card.held { animation: pk-wiggle 1.4s ease-in-out infinite; outline: 2px solid var(--pw-text-1); outline-offset: 3px; }
 .rt tr.target th.rt-name { animation: pk-pulse 1.2s ease-in-out infinite; background: color-mix(in srgb, var(--team-primary) 14%, var(--pw-ground)); }
 .rt tr.target td { background: color-mix(in srgb, var(--team-primary) 7%, transparent); }
-.rt tr.aimed th.rt-name { background: color-mix(in srgb, var(--team-primary) 26%, var(--pw-ground)); }
 .rt-pick { display: flex; align-items: center; width: 100%; height: 47px; padding: 0 0 0 8px; background: none; border: 0; color: inherit; font: inherit; text-align: left; cursor: pointer; }
 .rt-pick:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset: -2px; }
-.rt-slot.pulse { outline: 2px solid var(--team-primary); outline-offset: -4px; animation: pk-slot 1s ease-in-out infinite; }
 @keyframes pk-glow { 0%, 100% { box-shadow: inset 4px 0 0 var(--team-primary); } 50% { box-shadow: inset 4px 0 0 var(--team-primary), inset 0 0 0 2px var(--team-primary); } }
-.pk-locker.pulse { animation: pk-glow 1.2s ease-in-out infinite; background: color-mix(in srgb, var(--team-primary) 14%, transparent); padding-left: 10px; cursor: pointer; }
-.pk-locker.pulse:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset: 2px; }
-.pk-step-hint { font-family: var(--look-data); font-size: 11px; letter-spacing: 0.04em; }
-.pk-confirm-btns { display: flex; gap: 10px; margin-top: 6px; }
-@media (max-width: 599px) { .pk-pack { flex-wrap: wrap; } }
 @media (prefers-reduced-motion: reduce) { .pk-card.inhand, .pk-card.held, .rt tr.target th.rt-name, .rt-slot.pulse, .pk-locker.pulse { animation: none; } }
 
 /* Paddock v2 (Pax, Oct 9): header, Team / League tabs, one-line turn */
-.pk-head { display: flex; align-items: flex-end; gap: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--pw-text-1); }
-.pk-title { display: grid; gap: 4px; min-width: 0; }
 .pk-hint { margin: 0; }
-.pk-league { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 18px 28px; align-items: start; }
 .pk-chart { border-top: 1px solid var(--pw-text-1); padding-top: 8px; display: grid; gap: 6px; }
 .pk-tables { display: grid; gap: 16px; }
 .season-chart { width: 100%; height: auto; display: block; }
@@ -258,12 +122,8 @@ button.rt-g:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset:
 .season-chart .sc-end { font-family: var(--look-data); font-size: 11px; }
 .rt-compact .rt-numsq { margin-right: 8px; }
 .rt-compact .team-logo { margin-right: 8px; }
-@media (max-width: 760px) { .pk-league { grid-template-columns: 1fr; } }
-
-
 
 /* Standings + finale (#321) */
-.ss-standings { padding-bottom: 96px; }
 
 /* Season race (#322): Skip to result, always one tap away */
 .season-skip {
@@ -273,38 +133,11 @@ button.rt-g:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset:
   font-family: var(--look-display); font-weight: 700; font-size: 17px;
 }
 
-@media (max-width: 599px) {
-  .ss-start-block { width: 100%; margin-left: 0; }
-}
-
 /* League Setup -> Teams as a roster table (#453). */
-.ss-teams-table .rt-pick { height: 35px; }
-.ss-teams-table .ss-seat { width: 120px; text-align: right; padding-right: 8px; border-left: 1px solid var(--pw-hairline); }
-.ss-teams-table tr.mine th, .ss-teams-table tr.mine td { background: color-mix(in srgb, var(--team-primary) 14%, transparent); }
-.ss-teams-table tr.held { opacity: 0.45; }
-.ss-teams-table .rt-pick:disabled { cursor: default; }
 
 /* Draft board as roster tables (#453). */
-.dr-mine .rt-traits { width: 220px; padding: 0 10px; }
-.dr-mine .dr-empty .rt-nm { color: var(--pw-text-3); font-style: italic; font-weight: 400; padding-left: 8px; }
-.dr-mine .rt-name > .rt-numsq:first-child, .dr-mine .rt-name > .avatar:first-child { margin-left: 8px; }
-.dr-pool .rt-name { min-width: 230px; }
-.dr-pool .rt-pick { height: 35px; }
-.dr-pool .rt-pick:disabled { cursor: default; }
-.dr-pool .dr-read { width: 110px; text-align: center; border-left: 1px solid var(--pw-hairline); }
-.dr-pool .dr-cards { width: 110px; padding: 0 10px; border-left: 1px solid var(--pw-hairline); }
-.dr-pool td.dr-cards .ss-open { flex-wrap: nowrap; white-space: nowrap; }
-.dr-pool .dr-by { width: 220px; padding: 0 10px; border-left: 1px solid var(--pw-hairline); white-space: nowrap; }
-.dr-pool td.dr-by { font-size: 14px; color: var(--pw-text-2); }
-.dr-pool td.dr-by .team-logo { margin-right: 8px; vertical-align: middle; }
-.dr-pool tr.taken th, .dr-pool tr.taken td { opacity: 0.4; }
-.dr-pool tr.selected th, .dr-pool tr.selected td { background: var(--pw-surface); }
-.dr-pool tr.selected th { box-shadow: inset 3px 0 0 var(--team-primary); }
-.ss-draft.season-setup { max-width: 960px; }
-.ss-draft .ss-dock-btn { max-width: 928px; }
 
 /* The finale (#453, layout A): two crowns, the chart, the tables. */
-.ss-standings.fn { max-width: 1180px; }
 .fn-crowns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 40px; padding: 8px 0 20px; border-bottom: 1px solid var(--pw-hairline); }
 .fn-crown { display: flex; align-items: center; gap: 18px; min-width: 0; }
 .fn-crown + .fn-crown { border-left: 1px solid var(--pw-hairline); padding-left: 40px; }
@@ -318,11 +151,6 @@ button.rt-g:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset:
   .fn-crown-name { font-size: 26px; }
 }
 .fn > .pk-chart { max-width: 760px; }
-.fn-result { padding: 4px 0 0; }
-.fn-result-line { margin: 0; font-size: 22px; font-family: var(--look-display); }
-.fn-result-line b { color: var(--pw-text-1); }
-
-
 
 /* Pack backs by tier (#558, Pax Oct 10; reverses Oct 8's "packs have no colour"):
    Common red · Uncommon yellow · Rare green · Legendary purple, the four F1
@@ -351,47 +179,14 @@ button.rt-g:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset:
 @media (prefers-reduced-motion: reduce) { .pp-card { transition: none; } }
 
 /* Team creator (#346, Pax picked A: one page, small) */
-.tc-badge { display: flex; align-items: center; gap: 12px; }
-.tc-name { flex: 1; min-width: 0; }
-.tc-name input { width: 100%; height: 44px; padding: 0 10px; background: transparent; border: 1px solid var(--pw-border-strong); color: var(--pw-text-1); font-family: var(--look-display, serif); font-size: 18px; font-weight: 700; }
-.tc-name input:focus-visible { outline: 2px solid var(--team-primary); outline-offset: 1px; }
-.tc-name input::placeholder { color: var(--pw-text-3); font-weight: 400; font-style: italic; }
-.tc-deckname { font-size: 18px; }
 .tc-colours { display: grid; grid-template-columns: repeat(7, minmax(0, 32px)); gap: 6px; }
 .tc-colour { aspect-ratio: 1; width: 100%; max-width: 32px; border: 0; padding: 0; cursor: pointer; }
 .tc-colour.on { outline: 2px solid var(--pw-text-1); outline-offset: 2px; }
 .tc-colour:focus-visible { outline: 2px dashed var(--pw-text-1); outline-offset: 2px; }
-.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-.tc { display: flex; flex-direction: column; gap: 12px; }
-.tc .rs-row-head { margin-bottom: 0; }
 .tc-colours { row-gap: 6px; column-gap: 6px; }
 
 /* The league ladder (#628, Pax picked A): the run's home screen */
-.rl-team { display: inline-flex; align-items: center; gap: 6px; font-style: normal; font-weight: 700; }
-.rl-banner { margin: 0; padding: 10px 12px; border: 1px solid var(--rarity-gold); color: var(--pw-text-1); font-size: 16px; }
-.rl-banner.lost { border-color: var(--signal-red); }
 .rl-ladder { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; max-width: 560px; }
-.rl-rung { border: 1px solid var(--pw-border); padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
-.rl-rung.current { border-color: var(--team-primary); background: color-mix(in srgb, var(--team-primary) 12%, transparent); }
-.rl-rung.ahead { opacity: 0.45; }
-.rl-head { display: flex; align-items: baseline; gap: 8px; }
-.rl-no { font-family: var(--look-data, monospace); font-size: 12px; color: var(--pw-text-3); width: 14px; }
-.rl-name { font-size: 18px; }
-.rl-tag { margin-left: auto; display: inline-flex; align-items: center; gap: 4px; font-family: var(--look-data, monospace); font-size: 11px; color: var(--pw-text-2); }
-.rl-tag.won { color: var(--rarity-gold); }
-.rl-tag.lost { color: var(--signal-red); }
-.rl-memory { font-size: 13px; font-style: italic; color: var(--pw-text-2); }
-.rl-races { display: flex; gap: 5px; }
-.rl-races i { width: 16px; height: 16px; border: 1px solid var(--pw-border-strong); }
-.rl-races i.done { background: var(--pw-text-1); border-color: var(--pw-text-1); }
-.rl-races i.boss { border: 2px solid var(--rarity-gold); }
-.rl-vs { display: grid; grid-template-columns: auto minmax(0, 1fr) auto minmax(0, 1fr) auto; gap: 8px; align-items: center; font-size: 14px; }
-.rl-side { min-width: 0; }
-.rl-side b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.rl-side small { display: block; font-size: 12px; color: var(--pw-text-2); }
-.rl-right { text-align: right; }
-.rl-v { font-family: var(--look-data, monospace); color: var(--pw-text-3); }
-.rl-note { margin: 0; font-size: 13px; font-style: italic; color: var(--pw-text-2); }
 
 /* The nemesis talks (#635): one line per Paddock visit */
 .nem-line { display: flex; gap: 12px; align-items: flex-start; padding: 10px 12px; border: 1px solid var(--pw-border-strong); border-left: 3px solid var(--signal-red); }
@@ -402,30 +197,6 @@ button.rt-g:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset:
 .nem-who { font-family: var(--look-data, monospace); font-size: 11px; color: var(--pw-text-2); }
 
 /* The rookie pick (#661): 6 rookies, pick 2, a car setup, Start */
-.rp { display: flex; flex-direction: column; gap: 4px; }
-.rp-count { margin-left: auto; font-family: var(--look-data, monospace); font-size: 11px; color: var(--pw-text-2); }
-.rp-rookies { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(150px, calc(50% - 4px)), 1fr)); gap: 8px; }
-.rp-rookie { display: flex; flex-direction: column; gap: 6px; text-align: left; padding: 10px; border: 1px solid var(--pw-border); background: transparent; color: var(--pw-text-1); font: inherit; cursor: pointer; min-width: 0; }
-.rp-rookie.on { border-color: var(--team-primary); box-shadow: inset 0 0 0 1px var(--team-primary); background: color-mix(in srgb, var(--team-primary) 12%, transparent); }
-.rp-rookie:disabled { opacity: 0.45; cursor: default; }
-.rp-rookie:focus-visible, .rp-setup:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset: 2px; }
-.rp-arch { font-family: var(--look-data, monospace); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--pw-text-2); }
-.rp-name { font-size: 17px; line-height: 1.1; }
-.rp-stats { display: flex; flex-direction: column; gap: 3px; font-size: 13px; }
-.rp-stat { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
-.rp-others { color: var(--pw-text-2); font-family: var(--look-data, monospace); font-size: 12px; }
-.rp-lv { display: inline-flex; min-width: 1.9em; justify-content: center; font-family: var(--look-data, monospace); font-size: 13px; padding: 0 4px; border: 1px solid currentColor; font-variant-numeric: tabular-nums; }
-.rp-flav { font-size: 13px; font-style: italic; color: var(--pw-text-2); }
-.rp-setups { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
-.rp-setup { display: flex; flex-direction: column; gap: 4px; text-align: left; padding: 8px; min-width: 0; border: 1px solid var(--pw-border); background: transparent; color: var(--pw-text-1); font: inherit; font-size: 13px; cursor: pointer; }
-.rp-setup.on { border-color: var(--team-primary); box-shadow: inset 0 0 0 1px var(--team-primary); }
-.rp-dock { gap: 8px; }
-.rp-dock .rs-btn-ghost { white-space: nowrap; }
-@media (max-width: 420px) { .rp-rookie { padding: 8px; } .rp-name { font-size: 15px; } .rp-stats { font-size: 12px; } .rp-setup { font-size: 12px; } }
-.rp-lv.tone-s { color: var(--signal-purple); }
-.rp-lv.tone-a { color: var(--signal-green); }
-.rp-lv.tone-c { color: var(--signal-yellow); }
-.rp-lv.tone-d { color: var(--signal-red); }
 
 /* The driver card (#476): a sheet */
 .dc-scrim { position: fixed; inset: 0; z-index: 300; background: color-mix(in srgb, var(--pw-ground) 60%, transparent); display: flex; align-items: flex-end; justify-content: center; }
@@ -439,13 +210,7 @@ button.rt-g:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset:
 .dc-id { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
 .dc-name { font-size: 22px; line-height: 1.05; }
 .dc-team { font-size: 13px; font-style: italic; color: var(--pw-text-2); }
-.dc-tags { display: flex; gap: 6px; flex-wrap: wrap; }
-.dc-tag { font-family: var(--look-data, monospace); font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; padding: 1px 6px; border: 1px solid currentColor; color: var(--pw-text-2); }
-.dc-rank { color: var(--rarity-gold); }
 .dc-x { align-self: start; }
-.dc-xp { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--pw-text-2); }
-.dc-bar { height: 6px; background: var(--pw-border); }
-.dc-bar i { display: block; height: 100%; background: var(--rarity-gold); }
 .dc-levels { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px; text-align: center; }
 .dc-levels div { border: 1px solid var(--pw-border); padding: 4px 0; }
 .dc-levels span { display: block; font-family: var(--look-data, monospace); font-size: 9px; color: var(--pw-text-3); }
@@ -459,11 +224,6 @@ button.rt-g:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset:
 .dc-quirk { font-style: italic; color: var(--pw-text-2); }
 .dc-pick { cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px; }
 .dc-pick:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset: 2px; }
-
-.rl-drivers { display: flex; gap: 6px; flex-wrap: wrap; }
-.rl-driver { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border: 1px solid var(--pw-border-strong); background: transparent; color: var(--pw-text-1); font: inherit; font-size: 13px; cursor: pointer; }
-.rl-driver:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset: 2px; }
-.rp-setup-blurb { color: var(--pw-text-2); font-size: 11px; font-style: italic; }
 
 /* The start page (#696): the state select and the garage name on paper. */
 .sr-select, .sr-name input { width: 100%; min-height: 44px; padding: 0 10px; background: var(--ace-paper); color: var(--ace-ink); border: 1px solid var(--ace-ink); border-radius: 0; font: inherit; font-size: 16px; }
@@ -486,15 +246,10 @@ button.rt-g:focus-visible { outline: 2px solid var(--pw-text-1); outline-offset:
 }
 
 /* The Paddock in the race program (#715): the bits look.css doesn't own. */
-.pk.ace-page .pk-head { align-items: center; padding-bottom: 0; border-bottom: 0; }
-.pk.ace-page .pk-go { border-color: var(--ace-gold); }
 .pk.ace-page .pk-sheet-panel { padding: 0; }
-.pk.ace-page .pk-locker { border-bottom-color: var(--ace-hair); }
 
 /* Standings and the finale in the race program (#717): the bits look.css doesn't own. */
 .fn.ace-page { max-width: none; }
-.fn.ace-page .fn-result { gap: 4px; }
-.fn.ace-page .fn-result-line { font-size: 18px; }
 .fn.ace-page .fn-crowns { border-bottom: 0; padding: 0; gap: 16px; }
 .fn.ace-page .fn-crown { flex-direction: row; align-items: center; gap: 18px; padding: 14px 18px; }
 .fn.ace-page .fn-crown-name { font-weight: 400; color: var(--ace-ink); }

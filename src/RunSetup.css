@@ -32,13 +32,6 @@
 /* Top bar */
 .rs-top { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 14px 28px; padding-bottom: 14px; border-bottom: 1px solid var(--pw-text-1); }
 .rs-title-block { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-.rs-back {
-  align-self: flex-start; background: none; border: 0; padding: 0 0 4px; cursor: pointer;
-  color: var(--pw-text-2); font-family: var(--look-data); font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase;
-}
-.rs-back:hover { color: var(--pw-text-1); }
-.rs-title { margin: 0; font-family: var(--look-display); font-weight: 700; font-size: 40px; line-height: 0.95; letter-spacing: -0.02em; }
-.rs-sub { font-style: italic; font-size: 15px; line-height: 1.35; color: var(--pw-text-2); max-width: 70ch; }
 .rs-seed { display: inline-flex; align-items: center; gap: 10px; }
 .rs-seed-value { font-family: var(--look-data); font-size: 14px; border: 1px solid var(--pw-border-strong); padding: 6px 10px; color: var(--pw-text-1); }
 
@@ -115,7 +108,6 @@
 
 @media (max-width: 799px) {
   .run-setup { padding: 20px 20px 32px; gap: 18px; }
-  .rs-title { font-size: 34px; }
   .rs-hand { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
   .rs-card { min-height: 0; padding: 10px 10px; gap: 4px; }
   .rs-card-name { font-size: 16px; }
@@ -127,7 +119,6 @@
   .rs-driver { grid-template-columns: minmax(0, 1fr); gap: 4px; }
   .rs-driver-stats { display: none; }
   .rs-driver-tags { text-align: left; }
-  .gen-slots { flex-wrap: wrap; }
 }
 
 /* Lab preset picker (Race Control notebook) */

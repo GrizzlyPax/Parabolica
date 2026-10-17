@@ -20,7 +20,6 @@ import { nemesisTeam } from './season/nemesis';
 import { teamThemeVars, type TeamLike } from './icons/GameIcon';
 import { runWhere, whereLine } from './run/where';
 import { applyFavours } from './cards/apply';
-import type { FantasyConfig } from './fantasy/types';
 import { prepareScheduledRace } from './league/settle';
 import { CANON_VARIABLES } from './simlab/types';
 import { mulberry32, deriveSeed, randomSeed } from './engine/rng';
@@ -135,15 +134,12 @@ function App() {
   // The lab run in progress: one seed + the hand of cards; race N derives
   // its own seed, track and weather from it (so Next Race stays replayable).
   const [quickRun, setQuickRun] = useState<{ seed: number; ruleset: Ruleset; raceIndex: number; roster: RosterDriver[] } | null>(null);
-  // Fantasy teams for the quick race on screen.
-  const [activeFantasy, setActiveFantasy] = useState<FantasyConfig | null>(null);
 
   // Qualifying plays out before the countdown (#495).
   const [quickQuali, setQuickQuali] = useState(false);
-  const handleStartRace = (roster: RosterDriver[], ruleset: Ruleset, seed: number, fantasy?: FantasyConfig) => {
+  const handleStartRace = (roster: RosterDriver[], ruleset: Ruleset, seed: number) => {
     setQuick(null);
     setQuickRun({ seed, ruleset, raceIndex: 0, roster });
-    setActiveFantasy(fantasy ?? null);
     setTrackInfo(engine.getTrackInfo());
     setScreen('race');
     setShowCountdown(false);
@@ -465,7 +461,6 @@ function App() {
         onNextRace={handleNextRace}
         onQualifyingDone={quickQuali ? endQuickQuali : undefined}
         raceEvents={raceEvents}
-        fantasy={activeFantasy ?? undefined}
         program="Race Control"
         onExit={handleExitRace}
         rulesLines={quickRun ? (quickRun.ruleset.cards.length ? quickRun.ruleset.cards.map(id => `${RULE_CARDS_BY_ID.get(id)?.emoji ?? ''} ${RULE_CARDS_BY_ID.get(id)?.name ?? id}`.trim()).concat(describeRuleset(quickRun.ruleset)) : ['default']) : undefined}

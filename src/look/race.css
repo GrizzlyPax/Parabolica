@@ -80,8 +80,6 @@
 .ace-race .tire-age-laps, .ace-race .pit-count { color: var(--ace-ink); }
 .ace-race .tire-life { background: var(--ace-rule); }
 .ace-race .tire-life-cliff { background: var(--ace-ink-2); }
-.ace-race .expanded-content { border-bottom-color: var(--ace-rule); }
-.ace-race .expanded-tire[data-compound] { background: var(--ace-paper-2); color: var(--ace-ink); border-radius: 0; }
 
 /* The feed on paper: the Booth in condensed caps, the words in the body face */
 .ace-race .story-feed { background: transparent; }

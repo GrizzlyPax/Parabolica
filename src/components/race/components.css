@@ -72,91 +72,8 @@
 }
 
 /* Bet Indicator */
-.bet-indicator {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 2px;
-  padding: 2px 4px;
-  border-radius: 6px;
-  font-family: var(--font-mono), var(--font-emoji);
-}
-
-.bet-indicator .bet-types {
-  display: flex;
-  gap: 2px;
-}
-
-.bet-indicator .bet-type-tag {
-  font-size: 0.55rem;
-  font-weight: 700;
-  padding: 0 3px;
-  border-radius: 2px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.bet-indicator .bet-type-tag.winning {
-  background: rgba(74, 222, 128, 0.3);
-  color: var(--pw-green);
-}
-
-.bet-indicator .bet-type-tag.losing {
-  background: rgba(248, 113, 113, 0.2);
-  color: var(--pw-red-soft);
-  opacity: 0.7;
-}
-
-.bet-indicator .bet-amount {
-  font-size: 0.7rem;
-  font-weight: 600;
-}
-
-.bet-indicator.winning {
-  background: rgba(74, 222, 128, 0.1);
-}
-
-.bet-indicator.winning .bet-amount {
-  color: var(--pw-green);
-  text-shadow: 0 0 4px rgba(74, 222, 128, 0.5);
-}
-
-.bet-indicator.losing {
-  background: rgba(248, 113, 113, 0.1);
-}
-
-.bet-indicator.losing .bet-amount {
-  color: var(--pw-red-soft);
-  text-shadow: 0 0 4px rgba(248, 113, 113, 0.5);
-}
-
-.bet-indicator.pending .bet-amount {
-  color: var(--pw-text-3);
-}
 
 /* Compact bet indicator */
-.bet-indicator-compact {
-  font-family: var(--font-mono), var(--font-emoji);
-  font-size: 0.7rem;
-  font-weight: 700;
-  padding: 2px 6px;
-  border-radius: 6px;
-}
-
-.bet-indicator-compact.winning {
-  background: rgba(74, 222, 128, 0.2);
-  color: var(--pw-green);
-}
-
-.bet-indicator-compact.losing {
-  background: rgba(248, 113, 113, 0.2);
-  color: var(--pw-red-soft);
-}
-
-.bet-indicator-compact.pending {
-  background: rgba(136, 136, 136, 0.2);
-  color: var(--pw-text-3);
-}
 
 /* Tire History Chart - F1 style stint visualization */
 .tire-history {
@@ -238,18 +155,6 @@
   .lap-time {
     font-size: 0.75rem;
   }
-
-  .bet-indicator .bet-type-tag {
-    font-size: 0.6rem;
-  }
-
-  .bet-indicator .bet-amount {
-    font-size: 0.75rem;
-  }
-
-  .bet-indicator-compact {
-    font-size: 0.75rem;
-  }
 }
 
 /* Desktop (900px+) */
@@ -261,18 +166,6 @@
   .position-delta {
     font-size: 0.75rem;
     padding: 2px 5px;
-  }
-
-  .bet-indicator .bet-type-tag {
-    font-size: 0.65rem;
-  }
-
-  .bet-indicator .bet-amount {
-    font-size: 0.85rem;
-  }
-
-  .bet-indicator-compact {
-    font-size: 0.85rem;
   }
 
   .driver-full-name {
@@ -293,18 +186,6 @@
   .position-delta {
     font-size: 0.85rem;
     padding: 2px 6px;
-  }
-
-  .bet-indicator .bet-type-tag {
-    font-size: 0.7rem;
-  }
-
-  .bet-indicator .bet-amount {
-    font-size: 0.95rem;
-  }
-
-  .bet-indicator-compact {
-    font-size: 0.95rem;
   }
 
   .driver-full-name {
@@ -365,11 +246,6 @@
 .rarity-word.rarity-iridium { color: var(--rarity-iridium); }
 
 /* Genesis slots (setup pages): driver / car / team, greyed until rolled */
-.gen-slots { display: inline-flex; gap: 4px; align-items: center; }
-.gen-slot { display: inline-flex; align-items: center; min-height: 24px; }
-.gen-slot.empty { padding: 0 8px; border: 1px dashed var(--pw-border); border-radius: 6px; color: var(--pw-text-3); opacity: 0.6; }
-.gen-slot-k { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; }
-.gen-slot.filled .tag-chip.named { border-width: 1px; }
 
 /* === Tag card (popover) === */
 .tag-card {
@@ -390,7 +266,6 @@
 .tag-card-tier { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; color: var(--pw-text-2); margin-top: 4px; text-transform: uppercase; }
 .tag-card-close { background: transparent; border: 0; color: var(--pw-text-3); font-size: 20px; line-height: 1; cursor: pointer; padding: 4px 6px; }
 .tag-card-close:hover { color: var(--pw-text-1); }
-.tag-card-desc { margin: 10px 0; color: #d9d8d4; line-height: 1.4; }
 .tag-card-status {
   display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
   font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; font-weight: 600;
@@ -403,7 +278,6 @@
 .tag-card-row { display: flex; gap: 10px; align-items: baseline; padding: 5px 0; border-top: 1px solid #1e1e25; }
 .tag-card-k { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; color: var(--pw-text-3); width: 44px; flex: none; text-transform: uppercase; }
 .tag-card-none { color: var(--pw-text-2); font-style: normal; }
-.tag-card-quote { color: var(--pw-text-2); }
 
 /* === Effect pills (shared by card + focus row) === */
 .effect-pills { display: inline-flex; flex-wrap: wrap; gap: 4px; }
@@ -421,18 +295,8 @@
 .effect-pill.neutral { color: var(--pw-text-3); }
 
 /* === Focus row: facts + effect stack === */
-.expanded-fact { font-size: 12px; color: var(--pw-text-2); white-space: nowrap; }
-.expanded-cards { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding: 6px 0 2px; }
-.expanded-card { display: inline-flex; align-items: center; gap: 6px; }
-.expanded-card-name { font-size: 12px; color: var(--pw-text-2); }
 .expanded-k { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; color: var(--pw-text-3); text-transform: uppercase; margin-right: 4px; }
 /* Field rank: where this driver / car stacks up on this grid. 1st purple, then thirds green / yellow / red. */
-.rank-chip { display: inline-block; white-space: nowrap; padding: 1px 7px; border-radius: 999px; border: 1px solid currentColor; font-family: var(--font-mono); font-size: 11.5px; font-weight: 600; line-height: 1.5; cursor: help; }
-.rank-chip .rank-of { font-weight: 400; opacity: 0.7; }
-.rank-chip.tone-best { color: var(--pw-purple); background: rgba(169, 139, 255, 0.12); }
-.rank-chip.tone-high { color: var(--pw-green); background: rgba(52, 210, 122, 0.10); }
-.rank-chip.tone-mid { color: var(--pw-yellow); background: rgba(242, 194, 48, 0.10); }
-.rank-chip.tone-low { color: var(--pw-red); background: rgba(255, 90, 79, 0.10); }
 .effect-stack { display: flex; flex-direction: column; gap: 2px; padding: 6px 10px 8px 14px; }
 .effect-row {
   display: flex; flex-wrap: wrap; column-gap: 8px; row-gap: 3px; align-items: center;
@@ -442,8 +306,6 @@
 .effect-row .effect-name { color: var(--pw-text-1); font-weight: 500; white-space: nowrap; }
 .effect-row .effect-reason { color: var(--pw-text-3); font-family: var(--font-mono); font-size: 11px; }
 .effect-row .effect-pills { margin-left: auto; }
-.effect-row.inactive { opacity: 0.55; }
-.effect-row.inactive .effect-emoji { filter: grayscale(0.8); }
 
 /* === Finish sheet (#521): slides up from the bottom when the flag drops === */
 .fs {
@@ -510,28 +372,8 @@
 .fs-bar-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .fs-bar-cta { margin-left: auto; font-family: var(--look-data, monospace); font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--pw-text-2); }
 
-
 /* === Focus row: history chips === */
-.driver-history {
-  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px;
-  padding: 4px 10px 8px 14px; border-top: 1px solid #1e1e25;
-}
-.history-chip {
-  display: inline-flex; align-items: center; gap: 5px;
-  padding: 2px 8px 2px 6px; border-radius: 999px;
-  background: rgba(255, 255, 255, 0.05); border: 1px solid var(--pw-border);
-  font-size: 12px; color: #d9d8d4;
-}
-.history-chip .history-emoji { font-size: 12px; }
-.history-chip .history-name { font-weight: 500; }
-.history-chip .history-laps { font-family: var(--font-mono); font-size: 11px; color: var(--pw-text-3); }
-.history-chip.kind-tag { border-color: rgba(169, 139, 255, 0.4); }
-.history-chip.kind-crash { border-color: rgba(255, 90, 79, 0.45); }
-.history-chip.kind-pass { border-color: rgba(52, 210, 122, 0.45); }
-.history-chip.kind-penalty { border-color: rgba(255, 90, 79, 0.7); color: var(--pw-red-soft); }
-.history-chip.kind-error { border-color: rgba(242, 194, 48, 0.4); }
 .tag-chip.named { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px 3px 6px; border-radius: 999px; border-color: var(--pw-border); background: rgba(255,255,255,0.05); font-size: 12px; }
-.tag-chip.named .tag-chip-name { font-family: var(--font-body); font-size: 12px; color: #d9d8d4; }
 .tag-chip.named.dormant { opacity: 0.85; filter: none; }
 .tag-chip.named.active { filter: none; }
 .tag-chip.named.rarity-bronze, .tag-chip.named.rarity-bronze.active, .tag-chip.named.rarity-bronze.dormant { border-color: color-mix(in srgb, var(--rarity-bronze) 70%, transparent); background: color-mix(in srgb, var(--rarity-bronze) 14%, transparent); box-shadow: none; }
