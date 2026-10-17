@@ -9,9 +9,11 @@ import { deriveSeed, mulberry32, shuffle } from '../engine/rng';
 import { placeById } from '../data/states';
 import { getDeckTrackById } from '../data/deckTracks';
 import { getTrackById, type Track } from '../generators/tracks';
-import type { SeasonFacts } from './season';
+import type { SeasonFacts, SeasonSetup } from './season';
 
 export interface Venue { name: string; kind: string }
+/** What a venue needs of a setup: the seed (the {City} draw), the calendar, the step and locale. A step not yet played has these (#778: the road shows what's coming). */
+export type VenueSetup = Pick<SeasonSetup, 'seed' | 'calendar' | 'league'>;
 
 /** The Locals pattern per kind: {Town}. */
 export const LOCALS_PATTERN: Record<string, (town: string) => string> = {
@@ -33,14 +35,14 @@ export const STATE_PATTERN: Record<string, { city: true; name: (city: string) =>
 };
 
 /** The {City} for each round of a State season: the state's other towns, shuffled on their own stream, no repeat until every town has had a race. */
-function cityFor(facts: SeasonFacts, round: number, town: string, cities: readonly string[]): string | undefined {
+function cityFor(setup: VenueSetup, round: number, town: string, cities: readonly string[]): string | undefined {
   const pool = cities.filter(c => c !== town);
   if (!pool.length) return undefined;
-  const order = shuffle(pool, mulberry32(deriveSeed(facts.setup.seed, 'season', 'venues')));
+  const order = shuffle(pool, mulberry32(deriveSeed(setup.seed, 'season', 'venues')));
   // The n-th round that wants a city takes the n-th town of the order.
   let n = 0;
   for (let r = 0; r < round; r++) {
-    const kind = getDeckTrackById(facts.setup.calendar[r])?.kind;
+    const kind = getDeckTrackById(setup.calendar[r])?.kind;
     if (kind && STATE_PATTERN[kind]?.city) n++;
   }
   return order[n % order.length];
@@ -48,16 +50,21 @@ function cityFor(facts: SeasonFacts, round: number, town: string, cities: readon
 
 /** The venue a round is raced at: its name for the step, and its kind. */
 export function venueFor(facts: SeasonFacts, round: number): Venue {
-  const id = facts.setup.calendar[round];
+  return venueForSetup(facts.setup, round);
+}
+
+/** The same from a setup alone (a step ahead on the road has one before it is played). */
+export function venueForSetup(setup: VenueSetup, round: number): Venue {
+  const id = setup.calendar[round];
   const deck = getDeckTrackById(id);
   if (!deck) return { name: getTrackById(id)?.name ?? id, kind: '' };
-  const step = facts.setup.league?.step;
-  const locale = facts.setup.league?.locale;
+  const step = setup.league?.step;
+  const locale = setup.league?.locale;
   const place = locale ? placeById(locale.stateId) : undefined;
   if (step === 'locals' && locale) return { name: (LOCALS_PATTERN[deck.kind] ?? (t => `${t} ${deck.kind}`))(locale.town), kind: deck.kind };
   if (step === 'state' && locale && place) {
     const p = STATE_PATTERN[deck.kind];
-    if (p?.city) { const city = cityFor(facts, round, locale.town, place.cities); if (city) return { name: p.name(city), kind: deck.kind }; }
+    if (p?.city) { const city = cityFor(setup, round, locale.town, place.cities); if (city) return { name: p.name(city), kind: deck.kind }; }
     else if (p) return { name: p.name(place.name), kind: deck.kind };
   }
   return { name: deck.name, kind: deck.kind };

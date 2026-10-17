@@ -155,16 +155,31 @@ button.rt-g:focus-visible { outline: 2px solid var(--ace-fg); outline-offset: -2
 /* Priority stats + the tyre-wear pill (#547) */
 .pk-priority-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
 
-/* Pick 1 of 3 in place (#552 follow-up): a strip at the top of the Paddock. */
-.pp { border: 2px solid var(--tier, var(--ace-muted)); background: var(--ace-surface); padding: 12px; display: flex; flex-direction: column; gap: 10px; }
-.pp-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
-.pp-three { display: flex; gap: 10px; justify-content: center; padding-top: 8px; }
+/* Pick 1 of 3 in place (#552 follow-up), as a pack since #778 (Pax, Oct 17: the deck-builder shape):
+   brown paper and cream string (the gift: midnight paper, gold string; the Watcher Box: black), the
+   typed label with the tier as its edge, a postmark, the three stamps flipping in turn on the paper,
+   the words on a paper strip along the bottom. */
+.pp { position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 0; padding: 84px 16px 0; background: var(--ace-brown); box-shadow: 0 8px 0 var(--ace-shadow); }
+.pp.pp-gift { background: var(--ace-navy-2); }
+.pp.pp-curse { background: var(--ace-ink); }
+.pp-string { position: absolute; background: var(--ace-paper); opacity: .92; }
+.pp-gift .pp-string { background: var(--ace-gold); }
+.pp-curse .pp-string { background: var(--ace-red-lv); }
+.pp-string.v { left: 64%; top: 0; bottom: 0; width: 6px; }
+.pp-string.h { top: 58px; left: 0; right: 0; height: 6px; }
+.pp-label { position: absolute; left: 14px; top: 10px; z-index: 2; display: grid; gap: 1px; background: var(--ace-paper); color: var(--ace-ink); padding: 6px 10px 6px 12px; border-left: 6px solid var(--tier, var(--ace-muted)); font-family: var(--ace-mono); font-size: 11px; line-height: 1.3; transform: rotate(-2deg); box-shadow: 0 2px 0 var(--ace-shadow); }
+.pp-label b { font-weight: 400; color: var(--ace-accent); letter-spacing: .12em; }
+.pp-curse .pp-label b { color: var(--ace-ink); }
+.pp-post { position: absolute; right: 14px; top: 10px; z-index: 2; }
+.pp-three { position: relative; z-index: 1; display: flex; gap: 14px; justify-content: center; padding: 6px 0 16px; }
 .pp-card { padding: 0; border: 0; background: none; cursor: pointer; transition: transform 0.18s ease, opacity 0.18s ease; }
 .pp-card:disabled { cursor: default; }
-.pp-card.on { transform: translateY(-8px); outline: 2px solid var(--ace-fg); outline-offset: 4px; }
-.pp-card.off { opacity: 0.45; }
-.pp-card:focus-visible { outline: 2px solid var(--ace-fg); outline-offset: 4px; }
-.pp-keep, .pp-ask { display: flex; flex-direction: column; gap: 6px; align-items: center; text-align: center; }
+.pp-card.on { transform: translateY(-12px) scale(1.08); outline: 2px solid var(--ace-paper); outline-offset: 4px; }
+.pp-card.off { opacity: 0.5; transform: translateY(4px) scale(.96); }
+.pp-card:focus-visible { outline: 2px solid var(--ace-paper); outline-offset: 4px; }
+.pp-foot.ace-panel { position: relative; z-index: 1; margin: 0 -16px; padding: 10px 16px; border: 0; gap: 6px; align-items: center; text-align: center; }
+.pp-foot .pp-smudge { margin: 0; }
+.pp-keep, .pp-ask { display: flex; flex-direction: column; gap: 6px; align-items: center; text-align: center; margin: 0; }
 .pp-ask-btns { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
 @media (max-width: 400px) { .pp-three { gap: 6px; } .pp-three .card-face { zoom: 0.92; } }
 @media (prefers-reduced-motion: reduce) { .pp-card { transition: none; } }
@@ -359,6 +374,34 @@ button.rt-g:focus-visible { outline: 2px solid var(--ace-fg); outline-offset: -2
 }
 /* The road (#778, the pageant): a won rung wears its sash. */
 .rl .rl-sash { justify-content: flex-start; padding: 2px 0; }
+/* The route (#778, the deck-builder shape): a node per race, joined by a line; done nodes in ink with your place, the next pulsing in the accent with the Parcel that waits before it, the title race under a little flag. */
+.rl .rl-route { list-style: none; margin: 0; padding: 10px 0 2px; display: flex; align-items: flex-start; }
+.rl .rl-node { position: relative; flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 5px; text-align: center; }
+.rl .rl-node::before { content: ''; position: absolute; top: 15px; right: 50%; width: 100%; height: 2px; background: var(--ace-rule); }
+.rl .rl-node:first-child::before { display: none; }
+.rl .rl-node.done::before, .rl .rl-node.next::before { background: var(--ace-ink); }
+.rl .rl-dot { position: relative; z-index: 1; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: var(--ace-paper); color: var(--ace-ink); border: 2px solid var(--ace-ink); font-family: var(--ace-cond); font-size: 12px; letter-spacing: .02em; }
+.rl .rl-node.done .rl-dot { background: var(--ace-ink); color: var(--ace-paper); }
+.rl .rl-node.ahead .rl-dot { border-style: dashed; color: var(--ace-ink-2); border-color: var(--ace-ink-2); }
+.rl .rl-node.next .rl-dot { border-color: var(--ace-accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ace-accent) 35%, transparent); animation: rl-next 1.6s ease-in-out infinite; }
+@keyframes rl-next { 50% { box-shadow: 0 0 0 7px color-mix(in srgb, var(--ace-accent) 18%, transparent); } }
+.rl .rl-node.last .rl-dot::after { content: ''; position: absolute; top: -8px; right: -10px; width: 16px; height: 11px; background: repeating-conic-gradient(var(--ace-paper) 0 25%, var(--ace-ink) 0 50%) 0 0 / 5.5px 5.5px; border: 1px solid var(--ace-ink); }
+.rl .rl-node.done.last .rl-dot { background: var(--ace-gold); color: var(--ace-ink); }
+.rl .rl-node-k { font-family: var(--ace-cond); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: var(--ace-ink-2); line-height: 1.15; max-width: 80px; }
+.rl .rl-parcel { position: absolute; z-index: 2; top: -4px; left: calc(50% - 30px); width: 18px; height: 13px; background: var(--ace-brown); box-shadow: 0 1px 0 var(--ace-shadow); }
+.rl .rl-parcel::before, .rl .rl-parcel::after { content: ''; position: absolute; background: var(--ace-paper); }
+.rl .rl-parcel::before { left: 45%; top: 0; bottom: 0; width: 2px; }
+.rl .rl-parcel::after { top: 42%; left: 0; right: 0; height: 2px; }
+.rl .rl-next { margin: 0; }
+@media (prefers-reduced-motion: reduce) { .rl .rl-node.next .rl-dot { animation: none; } }
+/* Your deck (#778): every stamp in play as a card, under the roster. */
+.pk .pk-deck { display: grid; gap: 8px; padding-top: 6px; }
+.pk .pk-deck-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; padding-bottom: 4px; border-bottom: 2px solid var(--ace-gold); }
+.pk .pk-deck-row { display: flex; flex-wrap: wrap; gap: 10px 12px; }
+.pk .pk-deck-card { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 3px; max-width: 108px; text-align: center; }
+.pk .pk-deck-btn { padding: 0; border: 0; background: none; cursor: pointer; }
+.pk .pk-deck-btn:focus-visible { outline: 2px solid var(--ace-gold); outline-offset: 3px; }
+.pk .pk-deck-card .ace-note { max-width: 108px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* The cover (#778): the titles held, under the chequer. */
 .mm .mm-titles { justify-content: center; }
 @media (max-width: 719px) {

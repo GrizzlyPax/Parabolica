@@ -1,12 +1,16 @@
-// The road (#705, #696; out of the loop since #778): the run at a glance.
-// Three rungs as cream panels, Locals on the left: a won rung wears its
-// title as a ribbon, the open one shows its races, you against the garage
-// nearest you and your drivers (tap one for their card), a lost one says
-// where it ended. Reached from the Paddock's header; the dock goes back.
+// The road (#705, #696; out of the loop since #778): the run at a glance,
+// as a run map (Pax, Oct 17: the deck-builder shape). Three rungs as cream
+// panels, Locals on the left, each with its ROUTE: every race a node with its
+// kind (the venue on hover), your place once run, a flag on the title race,
+// the next one pulsing with the Parcel that waits before it; a step ahead
+// shows its route too. A won rung wears its sash, the open one you against
+// the garage nearest you and your drivers (tap one for their card), a lost
+// one says where it ended. Reached from the Paddock's header; the dock goes
+// back.
 import { useMemo, useState } from 'react';
 import { currentLeague, loadRun } from '../../run/run';
 import { loadMeta } from '../../run/meta';
-import { ladderView, ordinal, type RungView } from '../../run/ladderView';
+import { ladderView, ordinal, type RouteNode, type RungView } from '../../run/ladderView';
 import { poolFor, seasonState } from '../season';
 import { draftState } from '../draft';
 import { portraitFor } from '../../generators/avatars';
@@ -25,11 +29,22 @@ interface Props {
   onPlay: (screen: 'paddock' | 'standings') => void;
 }
 
-function Squares({ done, total }: { done: number; total: number }) {
+/** The step's route: a node per race, joined; done ones carry your place, the next pulses, the title race flies a flag. */
+function Route({ nodes, done, open }: { nodes: RouteNode[]; done: number; open: boolean }) {
   return (
-    <span className="ace-sq" aria-label={`${done} of ${total} races run`}>
-      {Array.from({ length: total }, (_, i) => <i key={i} className={`${i < done ? 'd' : ''} ${i === total - 1 ? 'last' : ''}`.trim()} />)}
-    </span>
+    <ol className="rl-route" aria-label={`${done} of ${nodes.length} races run`}>
+      {nodes.map((n, i) => {
+        const state = i < done ? 'done' : open && i === done ? 'next' : 'ahead';
+        const label = `Race ${n.round + 1} · ${n.venue} · ${n.kind}${n.stage ? ` · ${n.stage}` : ''}${state === 'done' ? ` · ${n.place ? ordinal(n.place) : 'out'}` : ''}`;
+        return (
+          <li key={n.round} className={`rl-node ${state} ${n.last ? 'last' : ''}`.trim()} title={label} aria-label={label}>
+            {state === 'next' && <i className="rl-parcel" aria-hidden="true" />}
+            <span className="rl-dot" aria-hidden="true">{state === 'done' ? (n.place ? ordinal(n.place) : 'out') : n.round + 1}</span>
+            <span className="rl-node-k" aria-hidden="true">{n.stage ?? n.kind}</span>
+          </li>
+        );
+      })}
+    </ol>
   );
 }
 
@@ -51,16 +66,19 @@ function Rung({ r, drivers, onDriver, stateCode }: { r: RungView; drivers?: Your
       <li className={`ace-panel ${r.status === 'ahead' ? 'dim' : ''}`.trim()}>
         {head}
         {r.status === 'won' && <div className="ace-sash-wrap rl-sash"><Sash text={r.title} className="small" /></div>}
+        {r.route && <Route nodes={r.route} done={r.status === 'ahead' ? 0 : r.races?.done ?? 0} open={false} />}
         {r.memory && <p className="ace-note">{r.memory}</p>}
       </li>
     );
   }
   const fresh = !r.races?.done;
   const line = (st: NonNullable<RungView['you']>) => (fresh ? 'no races yet' : `${ordinal(st.place)} · ${st.points} pts`);
+  const next = r.route?.[r.races?.done ?? 0];
   return (
     <li className="ace-panel now">
       {head}
-      {r.races && <Squares {...r.races} />}
+      {r.route && <Route nodes={r.route} done={r.races?.done ?? 0} open />}
+      {next && <p className="ace-note rl-next">Next: race {next.round + 1} · <b>{next.venue}</b> · {next.kind}{next.stage ? ` · ${next.stage}` : ''}</p>}
       {r.stage && <p className="ace-note"><b>{r.stage.name}</b> · {r.stage.alive} of {r.stage.total} states in{r.stage.decides ? ` · ${r.stage.decides}` : ''}</p>}
       {r.you && r.rival && (
         <div className="ace-row2">
