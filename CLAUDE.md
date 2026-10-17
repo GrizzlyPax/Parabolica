@@ -54,7 +54,7 @@ for the future NPC-crowd system (BetLab was removed Oct 2026; git history has it
 - GitHub: GrizzlyPax/Parabolica
 
 ## How we work
-- **Read first:** `docs/V08_PLAN.md` (the current release: v0.8 Indianapolis, Ace America), then `docs/STORY_BIBLE.md` (the world, **canon**: Ace America) and `docs/story/ace-america.md` (working notes), then `docs/V07_PLAN.md` (the roguelite run it builds on), then the newest `docs/HANDOFF_*.md` (`HANDOFF_2026-10-16.md`: how the pieces fit, traps). v0.6's record and the run's design decisions: `docs/V06_PLAN.md`; v0.5's: `docs/V05_PLAN.md`.
+- **Read first:** `docs/V08_PLAN.md` (the current release: v0.8 Indianapolis, Ace America), then `docs/STORY_BIBLE.md` (the world, **canon**: Ace America) and `docs/story/ace-america.md` (working notes), then `docs/V07_PLAN.md` (the roguelite run it builds on), then the newest `docs/HANDOFF_*.md` (`HANDOFF_2026-10-17.md`: the UI pass; `HANDOFF_2026-10-16.md`: how the pieces fit, traps). v0.6's record and the run's design decisions: `docs/V06_PLAN.md`; v0.5's: `docs/V05_PLAN.md`.
 - **Skills (`.claude/skills/`)** hold the procedures: `write-issue` (issue shape, triage, `ready`), `ship-pr` (build → test → PR → merge rules), `republish-preview`, `balance-read`, `season-report`.
 - **GitHub is the task system. Every thread, every crew member.** No Asana, no TODO docs; the issue is the task.
   - **Milestones = sequence.** Each release splits into numbered milestones worked in order (v0.6 was `1 Choices` → `2 The bump` → `3 Ship`). v0.5 Spa shipped Oct 9, v0.6 Monza Oct 10; v0.7 Suzuka shipped Oct 10 (v0.7.4, trimmed); v0.8 is `1 Lock + the look` → `2 Foundations` → `3 Screens + words` → `4 Ship`, and `v0.8 Indianapolis · Ace America` holds v0.8 work not yet placed (`v0.7 Suzuka` still holds older unplaced work). No due dates.
@@ -130,6 +130,7 @@ Every current-release issue has a `crew:` label saying who (and which model) sho
 - `docs/RACE_CONTROL.md` - The lab: parity rule, seeds and fingerprints, physics calibration, how to replicate and export
 - `docs/ICONS.md` - Design change: game-icons.net replaces every emoji (meaning registry, currentColor), and the UI + icons take your team's colours
 - `docs/PROCEDURAL_IDENTITY.md` - Procedural universe identity (driver names #191, league names #185, team identity #183)
+- `docs/HANDOFF_2026-10-17.md` - **Oct 17: the UI pass (#778)** (read first): the run loop in fewer taps, one design system on `src/look`, the race view, tracks named by step and the Interval; what moved on every screen, how `RunHeader` / `where.ts` / `venues.ts` / `interval.ts` fit, the traps, what's left
 - `docs/HANDOFF_2026-10-16.md` - **Oct 16: v0.8 playable end to end** (read first): what v0.8 is and where Pax sees it, how the run, stamps, Nationals, the look, badges and the voice fit, this week's traps, what's left with the paste lines
 - `docs/HANDOFF_2026-10-08.md` - Oct 8: GitHub-only planning, the crew, the Almanac look, icons, metal rarity, racing numbers, what's next
 - `docs/HANDOFF_2026-10-07.md` - Week of Oct 5–7 handoff for code agents: what shipped, how the pieces fit, traps, open work (read first)
